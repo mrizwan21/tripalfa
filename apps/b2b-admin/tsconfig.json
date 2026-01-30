@@ -1,0 +1,80 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+
+    "typeRoots": [
+      "./node_modules/@types",
+      "../node_modules/@types"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@tripalfa/shared-utils": [
+        "../../packages/shared-utils"
+      ],
+      "@tripalfa/shared-utils/*": [
+        "../../packages/shared-utils/*"
+      ],
+      "@tripalfa/ui-components": [
+        "../../packages/ui-components"
+      ],
+      "@tripalfa/ui-components/*": [
+        "../../packages/ui-components/*"
+      ],
+      "@tripalfa/shared-types": [
+        "../../packages/shared-types"
+      ],
+      "@tripalfa/shared-types/*": [
+        "../../packages/shared-types/*"
+      ],
+      "@tripalfa/shared": [
+        "../../packages/shared-utils"
+      ],
+      "@tripalfa/shared/*": [
+        "../../packages/shared-utils/*"
+      ],
+      "@tripalfa/ui": [
+        "../../packages/ui-components"
+      ],
+      "@tripalfa/ui/*": [
+        "../../packages/ui-components/*"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "../../packages/ui-components/**/*",
+    "../../packages/shared-utils/**/*",
+    "../../packages/shared-types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.tsx",
+    "**/*.test.ts",
+    "**/__tests__/**"
+  ]
+}
