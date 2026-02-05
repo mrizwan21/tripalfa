@@ -144,6 +144,7 @@ model Supplier {
   
   // Relations
   bookings    Booking[]
+  inventory   Inventory[]
   
   @@map("suppliers")
 }
@@ -277,4 +278,39 @@ model BookingTag {
   
   @@unique([bookingId, tagId])
   @@map("booking_tags")
+}
+
+model Inventory {
+  id                    String   @id @default(cuid())
+  supplierId            String   @map("supplier_id")
+  productCode           String   @unique @map("product_code")
+  name                  String   @map("name")
+  description           String?  @map("description")
+  
+  // Inventory tracking
+  quantity              Int      @default(0) @map("quantity")
+  available             Int      @default(0) @map("available")
+  reserved              Int      @default(0) @map("reserved")
+  lastStockCheck        DateTime @default(now()) @map("last_stock_check")
+  
+  // Pricing
+  price                 Decimal  @map("price")
+  currency              String   @default("USD") @map("currency")
+  minimumPrice          Decimal? @map("minimum_price")
+  
+  // Status
+  status                String   @default("active") @map("status")
+  serviceTypes          String[] @default([]) @map("service_types")
+  
+  // Metadata
+  lastUpdated           DateTime @updatedAt @map("last_updated")
+  createdAt             DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  supplier              Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  
+  @@index([supplierId])
+  @@index([productCode])
+  @@index([status])
+  @@map("inventory")
 }

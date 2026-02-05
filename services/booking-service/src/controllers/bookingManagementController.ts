@@ -569,6 +569,443 @@ export class BookingManagementController {
     }
   }
 
+  // ============================================================================
+  // Inventory Management Methods
+  // ============================================================================
+
+  // Search inventory with filters and pagination
+  async searchInventory(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const searchParams = typedReq.body;
+      const page = searchParams.page || 1;
+      const limit = searchParams.limit || 10;
+      const offset = (page - 1) * limit;
+
+      const whereConditions: any = {};
+
+      if (searchParams.supplierId) {
+        whereConditions.supplierId = searchParams.supplierId;
+      }
+
+      if (searchParams.productCode) {
+        whereConditions.productCode = {
+          contains: searchParams.productCode,
+          mode: 'insensitive'
+        };
+      }
+
+      if (searchParams.name) {
+        whereConditions.name = {
+          contains: searchParams.name,
+          mode: 'insensitive'
+        };
+      }
+
+      if (searchParams.status && Array.isArray(searchParams.status)) {
+        whereConditions.status = {
+          in: searchParams.status
+        };
+      }
+
+      if (searchParams.minPrice !== undefined) {
+        whereConditions.price = {
+          gte: searchParams.minPrice
+        };
+      }
+
+      if (searchParams.maxPrice !== undefined) {
+        if (whereConditions.price) {
+          whereConditions.price.lte = searchParams.maxPrice;
+        } else {
+          whereConditions.price = { lte: searchParams.maxPrice };
+        }
+      }
+
+      if (searchParams.minAvailable !== undefined) {
+        whereConditions.available = {
+          gte: searchParams.minAvailable
+        };
+      }
+
+      if (searchParams.serviceTypes && Array.isArray(searchParams.serviceTypes) && searchParams.serviceTypes.length > 0) {
+        whereConditions.serviceTypes = {
+          hasSome: searchParams.serviceTypes
+        };
+      }
+
+      if (searchParams.search) {
+        whereConditions.OR = [
+          { productCode: { contains: searchParams.search, mode: 'insensitive' } },
+          { name: { contains: searchParams.search, mode: 'insensitive' } },
+          { description: { contains: searchParams.search, mode: 'insensitive' } }
+        ];
+      }
+
+      const [inventory, total] = await Promise.all([
+        (prisma as any).inventory.findMany({
+          where: whereConditions,
+          skip: offset,
+          take: limit,
+          include: {
+            supplier: true
+          },
+          orderBy: { createdAt: 'desc' }
+        }),
+        (prisma as any).inventory.count({ where: whereConditions })
+      ]);
+
+      logger.info('Inventory search completed', {
+        userId: typedReq.user?.id,
+        filters: searchParams,
+        resultCount: inventory.length,
+        totalCount: total
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          inventory,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+          }
+        }
+      });
+
+    } catch (error) {
+      logger.error('Inventory search failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to search inventory'
+      });
+    }
+  }
+
+  // Create inventory item
+  async createInventory(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const inventoryData = typedReq.body;
+      const userId = typedReq.user?.id;
+
+      // Check if supplier exists
+      const supplier = await prisma.supplier.findUnique({
+        where: { id: inventoryData.supplierId }
+      });
+
+      if (!supplier) {
+        return res.status(404).json({
+          success: false,
+          error: 'Supplier not found'
+        });
+      }
+
+      // Check if product code already exists
+      const existing = await (prisma as any).inventory.findUnique({
+        where: { productCode: inventoryData.productCode }
+      });
+
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          error: 'Product code already exists'
+        });
+      }
+
+      const inventory = await (prisma as any).inventory.create({
+        data: {
+          supplierId: inventoryData.supplierId,
+          productCode: inventoryData.productCode,
+          name: inventoryData.name,
+          description: inventoryData.description,
+          quantity: inventoryData.quantity,
+          available: inventoryData.quantity,
+          reserved: 0,
+          price: inventoryData.price,
+          currency: inventoryData.currency || 'USD',
+          minimumPrice: inventoryData.minimumPrice,
+          status: inventoryData.status || 'active',
+          serviceTypes: inventoryData.serviceTypes || []
+        },
+        include: {
+          supplier: true
+        }
+      });
+
+      // Cache the inventory
+      await cacheService.set(
+        cacheKeys.inventory(inventory.id),
+        inventory,
+        600
+      );
+
+      logger.info('Inventory created successfully', {
+        inventoryId: inventory.id,
+        productCode: inventory.productCode,
+        supplierId: inventory.supplierId,
+        quantity: inventory.quantity,
+        createdBy: userId
+      });
+
+      res.status(201).json({
+        success: true,
+        data: inventory
+      });
+
+    } catch (error) {
+      logger.error('Failed to create inventory', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to create inventory'
+      });
+    }
+  }
+
+  // Get specific inventory item
+  async getInventory(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { id } = typedReq.params;
+
+      // Try cache first
+      const cached = await cacheService.get(cacheKeys.inventory(id));
+      if (cached) {
+        return res.status(200).json({
+          success: true,
+          data: cached
+        });
+      }
+
+      const inventory = await (prisma as any).inventory.findUnique({
+        where: { id },
+        include: {
+          supplier: true
+        }
+      });
+
+      if (!inventory) {
+        return res.status(404).json({
+          success: false,
+          error: 'Inventory not found'
+        });
+      }
+
+      // Cache the result
+      await cacheService.set(cacheKeys.inventory(id), inventory, 600);
+
+      logger.info('Inventory retrieved', {
+        inventoryId: id,
+        userId: typedReq.user?.id
+      });
+
+      res.status(200).json({
+        success: true,
+        data: inventory
+      });
+
+    } catch (error) {
+      logger.error('Failed to get inventory', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve inventory'
+      });
+    }
+  }
+
+  // Update inventory item
+  async updateInventory(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { id } = typedReq.params;
+      const updates = typedReq.body;
+      const userId = typedReq.user?.id;
+
+      // Verify inventory exists
+      const existing = await (prisma as any).inventory.findUnique({
+        where: { id }
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          error: 'Inventory not found'
+        });
+      }
+
+      // Update available quantity if quantity was changed
+      let updateData: any = {
+        ...updates,
+        lastUpdated: new Date()
+      };
+
+      if (updates.quantity !== undefined && updates.available === undefined) {
+        const quantityDiff = updates.quantity - existing.quantity;
+        updateData.available = existing.available + quantityDiff;
+      }
+
+      const inventory = await (prisma as any).inventory.update({
+        where: { id },
+        data: updateData,
+        include: {
+          supplier: true
+        }
+      });
+
+      // Invalidate cache
+      await cacheService.del(cacheKeys.inventory(id));
+
+      logger.info('Inventory updated', {
+        inventoryId: id,
+        updates,
+        updatedBy: userId
+      });
+
+      res.status(200).json({
+        success: true,
+        data: inventory
+      });
+
+    } catch (error) {
+      logger.error('Failed to update inventory', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update inventory'
+      });
+    }
+  }
+
+  // Delete inventory item
+  async deleteInventory(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { id } = typedReq.params;
+      const userId = typedReq.user?.id;
+
+      // Verify inventory exists
+      const existing = await (prisma as any).inventory.findUnique({
+        where: { id }
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          success: false,
+          error: 'Inventory not found'
+        });
+      }
+
+      await (prisma as any).inventory.delete({
+        where: { id }
+      });
+
+      // Invalidate cache
+      await cacheService.del(cacheKeys.inventory(id));
+
+      logger.info('Inventory deleted', {
+        inventoryId: id,
+        productCode: existing.productCode,
+        deletedBy: userId
+      });
+
+      res.status(200).json({
+        success: true,
+        data: { message: 'Inventory deleted successfully' }
+      });
+
+    } catch (error) {
+      logger.error('Failed to delete inventory', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete inventory'
+      });
+    }
+  }
+
+  // Check inventory availability
+  async checkAvailability(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { id } = typedReq.params;
+      const { quantity } = typedReq.body;
+
+      const inventory = await (prisma as any).inventory.findUnique({
+        where: { id },
+        include: {
+          supplier: true
+        }
+      });
+
+      if (!inventory) {
+        return res.status(404).json({
+          success: false,
+          error: 'Inventory not found'
+        });
+      }
+
+      const isAvailable = inventory.available >= quantity;
+      const canReserve = inventory.available >= quantity && inventory.status === 'active';
+
+      logger.info('Availability check performed', {
+        inventoryId: id,
+        requestedQuantity: quantity,
+        availableQuantity: inventory.available,
+        isAvailable,
+        canReserve,
+        userId: typedReq.user?.id
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          inventoryId: id,
+          productCode: inventory.productCode,
+          name: inventory.name,
+          requestedQuantity: quantity,
+          availableQuantity: inventory.available,
+          isAvailable,
+          canReserve,
+          status: inventory.status,
+          price: inventory.price,
+          currency: inventory.currency,
+          supplier: inventory.supplier
+        }
+      });
+
+    } catch (error) {
+      logger.error('Availability check failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to check availability'
+      });
+    }
+  }
+
   // Hold inventory
   async holdInventory(req: Request, res: Response): Promise<Response | void> {
     const typedReq = req as TypedRequest;
@@ -1687,6 +2124,9 @@ export const boundBookingManagementController = {
   getInventory: bookingManagementController.getInventory.bind(bookingManagementController),
   addInventory: bookingManagementController.addInventory.bind(bookingManagementController),
   updateInventory: bookingManagementController.updateInventory.bind(bookingManagementController),
+  searchInventory: bookingManagementController.searchInventory.bind(bookingManagementController),
+  createInventory: bookingManagementController.createInventory.bind(bookingManagementController),
+  checkAvailability: bookingManagementController.checkAvailability.bind(bookingManagementController),
   getPricingRules: bookingManagementController.getPricingRules.bind(bookingManagementController),
   createPricingRule: bookingManagementController.createPricingRule.bind(bookingManagementController),
   updatePricingRule: bookingManagementController.updatePricingRule.bind(bookingManagementController),

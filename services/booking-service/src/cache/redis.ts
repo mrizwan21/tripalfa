@@ -182,6 +182,7 @@ export const cacheKeys = {
   company: (id: string) => `${CACHE_PREFIXES.COMPANY}${id}`,
   branch: (id: string) => `${CACHE_PREFIXES.BRANCH}${id}`,
   supplier: (id: string) => `${CACHE_PREFIXES.SUPPLIER}${id}`,
+  inventory: (id: string) => `inventory:${id}`,
   search: (query: string) => `${CACHE_PREFIXES.SEARCH}${Buffer.from(query).toString('base64')}`,
   stats: (type: string) => `${CACHE_PREFIXES.STATS}${type}`,
 };

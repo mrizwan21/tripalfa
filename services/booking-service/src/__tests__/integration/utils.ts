@@ -241,6 +241,38 @@ export const buildSupplierRequest = (overrides?: any) => ({
   ...overrides
 });
 
+export const buildInventoryRequest = (overrides?: any) => ({
+  supplierId: 'test-supplier-id',
+  productCode: `PROD-${Date.now()}`,
+  name: 'Test Flight Inventory',
+  description: 'Test inventory for flights',
+  quantity: 100,
+  price: 150.00,
+  currency: 'USD',
+  minimumPrice: 120.00,
+  status: 'active',
+  serviceTypes: ['flight'],
+  ...overrides
+});
+
+export const expectInventoryResponse = (res: any, expectedFields?: any) => {
+  expectSuccess(res);
+  const inventory = res.body.data ?? res.body;
+  expect(inventory).toHaveProperty('id');
+  expect(inventory).toHaveProperty('supplierId');
+  expect(inventory).toHaveProperty('productCode');
+  expect(inventory).toHaveProperty('name');
+  expect(inventory).toHaveProperty('quantity');
+  expect(inventory).toHaveProperty('available');
+  expect(inventory).toHaveProperty('price');
+  expect(inventory).toHaveProperty('status');
+  if (expectedFields) {
+    Object.keys(expectedFields).forEach(key => {
+      expect(inventory).toHaveProperty(key, expectedFields[key]);
+    });
+  }
+};
+
 export const buildSearchParams = (overrides?: any) => ({
   page: 1,
   limit: 10,

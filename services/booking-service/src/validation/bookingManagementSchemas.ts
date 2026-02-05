@@ -598,6 +598,56 @@ export const assignPermissionsSchema = Joi.object({
   roleId: Joi.string().optional()
 });
 
+// Inventory schemas
+export const createInventorySchema = Joi.object({
+  supplierId: Joi.string().required(),
+  productCode: Joi.string().min(2).max(100).required(),
+  name: Joi.string().min(2).max(255).required(),
+  description: Joi.string().max(500).optional(),
+  quantity: Joi.number().integer().min(0).required(),
+  price: Joi.number().positive().required(),
+  currency: Joi.string().length(3).uppercase().default('USD'),
+  minimumPrice: Joi.number().positive().optional(),
+  status: Joi.string().valid('active', 'inactive', 'discontinued').default('active'),
+  serviceTypes: Joi.array().items(Joi.string()).default([])
+});
+
+export const searchInventorySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  supplierId: Joi.string().optional(),
+  productCode: Joi.string().optional(),
+  name: Joi.string().min(2).optional(),
+  status: Joi.array().items(Joi.string().valid('active', 'inactive', 'discontinued')).optional(),
+  minPrice: Joi.number().min(0).optional(),
+  maxPrice: Joi.number().min(0).optional(),
+  minAvailable: Joi.number().integer().min(0).optional(),
+  serviceTypes: Joi.array().items(Joi.string()).optional(),
+  search: Joi.string().min(2).optional()
+});
+
+export const updateInventorySchema = Joi.object({
+  inventoryId: Joi.string().required(),
+  name: Joi.string().min(2).max(255).optional(),
+  description: Joi.string().max(500).optional(),
+  quantity: Joi.number().integer().min(0).optional(),
+  available: Joi.number().integer().min(0).optional(),
+  reserved: Joi.number().integer().min(0).optional(),
+  price: Joi.number().positive().optional(),
+  minimumPrice: Joi.number().positive().optional(),
+  status: Joi.string().valid('active', 'inactive', 'discontinued').optional(),
+  serviceTypes: Joi.array().items(Joi.string()).optional()
+});
+
+export const deleteInventorySchema = Joi.object({
+  inventoryId: Joi.string().required()
+});
+
+export const checkAvailabilitySchema = Joi.object({
+  inventoryId: Joi.string().required(),
+  quantity: Joi.number().integer().min(1).required()
+});
+
 // Create role schema
 export const createRoleSchema = Joi.object({
   name: Joi.string().min(2).max(50).required(),
@@ -652,5 +702,10 @@ export const bookingManagementSchemas = {
   assignPermissions: assignPermissionsSchema,
   createRole: createRoleSchema,
   updateRole: updateRoleSchema,
-  assignUserRole: assignUserRoleSchema
+  assignUserRole: assignUserRoleSchema,
+  createInventory: createInventorySchema,
+  searchInventory: searchInventorySchema,
+  updateInventorySchema: updateInventorySchema,
+  deleteInventory: deleteInventorySchema,
+  checkAvailability: checkAvailabilitySchema
 };

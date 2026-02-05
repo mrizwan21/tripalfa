@@ -117,7 +117,13 @@ declare global {
    
   var buildSupplierRequest: (overrides?: Record<string, unknown>) => any;
    
+  var buildInventoryRequest: (overrides?: Record<string, unknown>) => any;
+
+  var makeInventory: (overrides?: Record<string, unknown>) => Promise<any>;
+   
   var makePricingRule: (overrides?: Record<string, unknown>) => Promise<any>;
+
+  var expectInventoryResponse: (res: any, expectedFields?: any) => void;
 }
 
 // Quiet console noise in tests
@@ -422,6 +428,33 @@ global.makeNote = async (overrides = {}) => {
   return { id: randomId(), ...data, createdAt: new Date(), updatedAt: new Date() };
 };
 
+global.makeInventory = async (overrides = {}) => {
+  const { supplier, ...restOverrides } = overrides;
+  const resolvedSupplier = supplier || (await global.makeSupplier());
+  
+  const data = {
+    supplierId: resolvedSupplier.id,
+    productCode: `PROD-${Date.now()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+    name: 'Test Product',
+    description: 'Test inventory item',
+    quantity: 100,
+    available: 100,
+    reserved: 0,
+    price: new Decimal(150),
+    currency: 'USD',
+    minimumPrice: new Decimal(120),
+    status: 'active',
+    serviceTypes: ['flight'],
+    lastStockCheck: new Date(),
+    ...restOverrides,
+  };
+
+  if (process.env.INTEGRATION_DB === 'true') {
+    return (prisma as any).inventory.create({ data });
+  }
+  return { id: randomId(), ...data, createdAt: new Date(), lastUpdated: new Date() };
+};
+
 // Pricing factory (schema does not define Pricing; return plain object or use dynamic model when present)
 global.makePricingRule = async (overrides = {}) => {
   const data = {
@@ -463,14 +496,5 @@ global.generateDateRange = (daysFromNow?: number) => generateDateRange(daysFromN
 global.buildBookingRequest = buildBookingRequest;
 global.buildCustomerRequest = buildCustomerRequest;
 global.buildSupplierRequest = buildSupplierRequest;
-
-// Disconnect DB after tests when used
-afterAll(async () => {
-  if (process.env.INTEGRATION_DB === 'true') {
-    try {
-      await global.prismaClient.$disconnect();
-    } catch {
-      // ignore
-    }
-  }
-}, 30000);
+global.buildInventoryRequest = buildInventoryRequest;
+global.expectInventoryResponse = expectInventoryResponse;

@@ -109,6 +109,69 @@ router.post(
   bookingManagementController.createCustomer
 );
 
+// ============================================================================
+// Inventory Management Routes
+// ============================================================================
+
+// GET /api/admin/inventory - Search inventory with filters and pagination
+router.get(
+  '/admin/inventory',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('view_inventory'),
+  validate(bookingManagementSchemas.searchInventory),
+  bookingManagementController.searchInventory
+);
+
+// GET /api/admin/inventory - Get inventory with pagination/filters
+router.get(
+  '/admin/inventory',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('view_inventory'),
+  validate(bookingManagementSchemas.searchInventory),
+  bookingManagementController.searchInventory
+);
+
+// POST /api/admin/inventory - Add new inventory
+router.post(
+  '/admin/inventory',
+  authenticateToken,
+  authorize(['admin', 'manager']),
+  permissionMiddleware('manage_inventory'),
+  validate(bookingManagementSchemas.createInventory),
+  bookingManagementController.createInventory
+);
+
+// PUT /api/admin/inventory/:inventoryId - Update inventory
+router.put(
+  '/admin/inventory/:inventoryId',
+  authenticateToken,
+  authorize(['admin', 'manager']),
+  permissionMiddleware('manage_inventory'),
+  validate(bookingManagementSchemas.updateInventorySchema),
+  bookingManagementController.updateInventory
+);
+
+// DELETE /api/admin/inventory/:inventoryId - Delete inventory
+router.delete(
+  '/admin/inventory/:inventoryId',
+  authenticateToken,
+  authorize(['admin', 'manager']),
+  permissionMiddleware('manage_inventory'),
+  bookingManagementController.deleteInventory
+);
+
+// POST /api/admin/inventory/:inventoryId/check-availability - Check availability
+router.post(
+  '/admin/inventory/:inventoryId/check-availability',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('view_inventory'),
+  validate(bookingManagementSchemas.checkAvailability),
+  bookingManagementController.checkAvailability
+);
+
 // GET /api/admin/suppliers - Search suppliers
 router.get(
   '/admin/suppliers',
