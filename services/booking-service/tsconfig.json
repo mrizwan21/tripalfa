@@ -29,10 +29,10 @@
     ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "src/**/__tests__/**/*.ts"
   ],
   "exclude": [
-    "src/**/__tests__/**",
     "src/**/*.test.ts",
     "src/**/*.spec.ts",
     "prisma/**",

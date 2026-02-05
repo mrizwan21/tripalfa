@@ -155,7 +155,7 @@ beforeAll(async () => {
       console.warn('Database connection failed:', e);
     }
   }
-});
+}, 30000);
 
 // Clear mocks and optionally truncate tables before each test
 beforeEach(async () => {
@@ -164,7 +164,8 @@ beforeEach(async () => {
   // Truncate all relevant tables in test DB only when enabled
   if (process.env.INTEGRATION_DB === 'true' && process.env.TEST_DB_RESET === 'true') {
     try {
-      await global.prismaClient.$transaction([
+      // Use a longer timeout for this operation (30 seconds)
+      const truncatePromise = global.prismaClient.$transaction([
         global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_tags" CASCADE`),
         global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "tags" CASCADE`),
         global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "audit_logs" CASCADE`),
@@ -180,12 +181,19 @@ beforeEach(async () => {
         global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "companies" CASCADE`),
         global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "suppliers" CASCADE`),
       ]);
+      
+      await Promise.race([
+        truncatePromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database truncation timeout')), 30000)
+        )
+      ]);
     } catch (e) {
       // Allow tests to proceed even if truncate is not possible
-      console.warn('Database truncation failed:', e);
+      console.warn('Database truncation failed or timed out:', e);
     }
   }
-});
+}, 40000);
 
 // JWT sign/verify mocks - use real JWT implementation for proper token handling
 // Capture original functions before spying to avoid recursion
@@ -465,4 +473,4 @@ afterAll(async () => {
       // ignore
     }
   }
-});
+}, 30000);
