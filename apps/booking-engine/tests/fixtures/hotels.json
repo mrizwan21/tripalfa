@@ -1,0 +1,3 @@
+[
+  { "city": "Paris", "adults": 2, "rooms": 1, "nights": 3, "expected": "success" }
+]

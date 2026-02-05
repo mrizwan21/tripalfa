@@ -18,6 +18,7 @@
     "test:coverage": "jest --coverage --runInBand",
     "test:watch": "jest --watch",
     "test:watch:integration": "INTEGRATION_DB=true jest --testPathPattern=integration --watch --runInBand",
+    "test:integration:e2e": "NODE_ENV=test jest --testPathPattern=e2e --runInBand",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
     "docker:build": "docker build -t booking-service .",

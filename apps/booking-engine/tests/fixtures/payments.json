@@ -1,0 +1,4 @@
+[
+  { "cardNumber": "4242424242424242", "exp": "12/30", "cvc": "123", "type": "stripe-test" },
+  { "cardNumber": "4000000000000002", "exp": "12/30", "cvc": "123", "type": "stripe-decline" }
+]

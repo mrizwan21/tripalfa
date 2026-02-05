@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@alloc/quick-lru": "^5.2.0",
+    "@playwright/test": "^1.40.0",
     "@types/node": "^18.19.130",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
@@ -52,6 +53,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:errors": "npx playwright test tests/e2e/payment.spec.ts tests/e2e/validation-errors.spec.ts tests/e2e/timeout-errors.spec.ts",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report"
   }
 }

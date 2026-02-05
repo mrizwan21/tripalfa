@@ -42,7 +42,8 @@
     "prepare": "husky",
     "ci:lint": "eslint . --ext .ts,.tsx --ignore-pattern node_modules_trash/** --ignore-pattern **/node_modules_trash/**",
     "ci:enforce-no-js": "bash scripts/ci-check-no-js.sh",
-    "ci": "npm run ci:lint && npm run ci:enforce-no-js"
+    "ci": "npm run ci:lint && npm run ci:enforce-no-js",
+    "test:e2e:errors": "npm run test:e2e:errors --workspace=booking-engine"
   },
   "dependencies": {
     "lucide-react": "^0.563.0"

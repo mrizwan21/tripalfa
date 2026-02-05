@@ -498,3 +498,27 @@ global.buildCustomerRequest = buildCustomerRequest;
 global.buildSupplierRequest = buildSupplierRequest;
 global.buildInventoryRequest = buildInventoryRequest;
 global.expectInventoryResponse = expectInventoryResponse;
+
+export async function seedTestData() {
+  // Optionally, set env vars and connect DB as in beforeAll
+  if (process.env.INTEGRATION_DB !== 'true') {
+    process.env.INTEGRATION_DB = 'true';
+    process.env.TEST_DB_RESET = 'true';
+  }
+  if (!global.prismaClient) {
+    const { prisma: freshPrisma } = await import('../database/index');
+    global.prismaClient = freshPrisma;
+  }
+  try {
+    await global.prismaClient.$connect();
+  } catch {}
+  // Optionally seed users, etc. (add as needed)
+}
+
+export async function cleanupTestData() {
+  if (global.prismaClient) {
+    try {
+      await global.prismaClient.$disconnect();
+    } catch {}
+  }
+}

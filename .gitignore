@@ -119,5 +119,11 @@ Thumbs.db
 *.backup
 *.*~
 
+# Playwright test results and reports
+playwright-report/
+test-results/
+**/playwright-report/
+**/test-results/
+
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
