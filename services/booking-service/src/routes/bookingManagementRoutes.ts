@@ -1,19 +1,92 @@
 import express, { Router } from 'express';
-
-// Temporarily comment out middleware imports for testing
-// import authenticateToken from '../middleware/authenticateToken.js';
-// import authorize from '../middleware/authorize.js';
-// import { validate } from '../middleware/validate.js';
-// import { bookingManagementSchemas } from '../validation/bookingManagementSchemas.js';
-// import { boundBookingManagementController as bookingManagementController } from '../controllers/bookingManagementController.js';
-// import { adminBookingCardController } from '../controllers/adminBookingCardController.js';
-// import { permissionMiddleware } from '../middleware/permissionMiddleware.js';
+import authenticateToken from '../middleware/authenticateToken.js';
+import authorize from '../middleware/authorize.js';
+import { validate } from '../middleware/validate.js';
+import { bookingManagementSchemas } from '../validation/bookingManagementSchemas.js';
+import { boundBookingManagementController as bookingManagementController } from '../controllers/bookingManagementController.js';
+import { adminBookingCardController } from '../controllers/adminBookingCardController.js';
+import { permissionMiddleware } from '../middleware/permissionMiddleware.js';
 
 const router = Router();
 
-// Simple test route without middleware
-router.get('/test', (req, res) => {
-  res.json({ message: 'Test route works' });
-});
+// POST /api/admin/book - Create a new booking
+router.post(
+  '/admin/book',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('create_booking'),
+  validate(bookingManagementSchemas.createBooking),
+  bookingManagementController.createBooking
+);
+
+// GET /api/admin/search - Search bookings with filters
+router.get(
+  '/admin/search',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('search_bookings'),
+  validate(bookingManagementSchemas.searchBookings),
+  bookingManagementController.searchBookings
+);
+
+// POST /api/admin/hold - Hold inventory for a booking
+router.post(
+  '/admin/hold',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('hold_inventory'),
+  validate(bookingManagementSchemas.holdInventory),
+  bookingManagementController.holdInventory
+);
+
+// POST /api/admin/confirm/:bookingId - Confirm a booking
+router.post(
+  '/admin/confirm/:bookingId',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('confirm_booking'),
+  validate(bookingManagementSchemas.confirmBooking),
+  bookingManagementController.confirmBooking
+);
+
+// POST /api/admin/issue-ticket/:bookingId - Issue ticket for a booking
+router.post(
+  '/admin/issue-ticket/:bookingId',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('issue_ticket'),
+  validate(bookingManagementSchemas.issueTicket),
+  bookingManagementController.issueTicket
+);
+
+// PUT /api/admin/workflow/:bookingId/status - Update booking workflow status
+router.put(
+  '/admin/workflow/:bookingId/status',
+  authenticateToken,
+  authorize(['admin', 'supervisor', 'manager']),
+  permissionMiddleware('manage_workflow'),
+  validate(bookingManagementSchemas.updateWorkflowStatus),
+  bookingManagementController.updateWorkflowStatus
+);
+
+// PUT /api/admin/workflow/:bookingId/assign - Assign booking to agent
+router.put(
+  '/admin/workflow/:bookingId/assign',
+  authenticateToken,
+  authorize(['admin', 'supervisor', 'manager']),
+  permissionMiddleware('assign_booking'),
+  validate(bookingManagementSchemas.assignBooking),
+  bookingManagementController.assignBooking
+);
+
+// PUT /api/admin/workflow/:bookingId/priority - Update booking priority
+router.put(
+  '/admin/workflow/:bookingId/priority',
+  authenticateToken,
+  authorize(['admin', 'supervisor', 'manager']),
+  permissionMiddleware('update_priority'),
+  validate(bookingManagementSchemas.updatePriority),
+  bookingManagementController.updatePriority
+);
 
 export default router;

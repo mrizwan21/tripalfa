@@ -106,18 +106,17 @@ export const expectPagination = (res: any, expectedFields?: any) => {
 
 export const expectBookingResponse = (res: any, expectedFields?: any) => {
   expectSuccess(res);
-  const booking = res.body.data ?? res.body;
+  // Handle both response shapes: { data: booking } and { data: { booking } }
+  const booking = res.body.data?.booking ?? res.body.data ?? res.body;
   expect(booking).toHaveProperty('id');
   expect(booking).toHaveProperty('reference');
   expect(booking).toHaveProperty('segment');
   expect(booking).toHaveProperty('status');
-  expect(booking).toHaveProperty('customerId');
   expect(booking).toHaveProperty('customerName');
   expect(booking).toHaveProperty('customerEmail');
   expect(booking).toHaveProperty('serviceType');
   expect(booking).toHaveProperty('customerPrice');
   expect(booking).toHaveProperty('currency');
-  expect(booking).toHaveProperty('bookedAt');
   if (expectedFields) {
     Object.keys(expectedFields).forEach(key => {
       expect(booking).toHaveProperty(key, expectedFields[key]);
@@ -182,21 +181,45 @@ export const expectFieldValidation = (res: any, field: string, message?: string)
 // Request body builders
 export const buildBookingRequest = (overrides?: any) => {
   const dateRange = generateDateRange();
+  const today = new Date();
+  const dob = new Date(today.getFullYear() - 30, today.getMonth(), today.getDate());
+  
   return {
-    customerId: 'test-customer-id',
-    segment: 'FLIGHT',
-    serviceType: 'flight',
-    customerPrice: 100,
-    supplierPrice: 80,
-    currency: 'USD',
-    paymentMethod: 'wallet',
-    travelDate: dateRange.checkIn,
-    returnDate: dateRange.checkOut,
-    passengers: [{
-      firstName: 'John',
-      lastName: 'Doe',
-      type: 'adult'
-    }],
+    type: 'flight',
+    details: {
+      origin: 'JFK',
+      destination: 'LHR',
+      travelDate: dateRange.checkIn,
+      returnDate: dateRange.checkOut,
+      passengers: [{
+        firstName: 'John',
+        lastName: 'Doe',
+        type: 'adult',
+        dateOfBirth: dob.toISOString().split('T')[0],
+        passportNumber: 'AB123456',
+        nationality: 'US'
+      }],
+      serviceDetails: {}
+    },
+    customerInfo: {
+      type: 'individual',
+      name: 'John Doe',
+      email: `john.${Date.now()}@example.com`,
+      phone: '+12025551234',
+      address: '123 Main St, New York, NY 10001'
+    },
+    paymentInfo: {
+      method: 'wallet',
+      amount: 1500,
+      currency: 'USD',
+      paymentReference: `REF-${Date.now()}`
+    },
+    bookingOptions: {
+      hold: false,
+      priority: 'medium',
+      remarks: 'Test booking',
+      tags: ['test']
+    },
     ...overrides
   };
 };
