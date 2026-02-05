@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 import { ensureWalletExists, checkIdempotency, lockWallet, processCustomerDebit, processAgencyCredit } from '../walletOps.js';
 
 describe('walletOps', () => {
