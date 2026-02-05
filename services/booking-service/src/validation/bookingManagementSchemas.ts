@@ -337,27 +337,6 @@ export const addInventorySchema = Joi.object({
   }).optional()
 });
 
-// Update inventory schema
-export const updateInventorySchema = Joi.object({
-  inventoryId: Joi.string().required(),
-  updates: Joi.object({
-    availableCount: Joi.number().integer().min(0).optional(),
-    price: Joi.number().positive().optional(),
-    status: Joi.string().valid('available', 'sold_out', 'suspended').optional(),
-    validity: Joi.object({
-      startDate: Joi.date().iso().optional(),
-      endDate: Joi.date().iso().optional(),
-      bookingDeadline: Joi.date().iso().optional()
-    }).optional(),
-    restrictions: Joi.object({
-      minimumStay: Joi.number().integer().min(1).optional(),
-      maximumStay: Joi.number().integer().min(1).optional(),
-      blackoutDates: Joi.array().items(Joi.date().iso()).optional(),
-      cancellationPolicy: Joi.string().optional()
-    }).optional()
-  }).required()
-});
-
 // Create pricing rule schema
 export const createPricingRuleSchema = Joi.object({
   name: Joi.string().min(2).max(100).required(),
@@ -643,6 +622,10 @@ export const deleteInventorySchema = Joi.object({
   inventoryId: Joi.string().required()
 });
 
+export const getInventorySchema = Joi.object({
+  inventoryId: Joi.string().required()
+});
+
 export const checkAvailabilitySchema = Joi.object({
   inventoryId: Joi.string().required(),
   quantity: Joi.number().integer().min(1).required()
@@ -707,5 +690,6 @@ export const bookingManagementSchemas = {
   searchInventory: searchInventorySchema,
   updateInventorySchema: updateInventorySchema,
   deleteInventory: deleteInventorySchema,
+  getInventory: getInventorySchema,
   checkAvailability: checkAvailabilitySchema
 };

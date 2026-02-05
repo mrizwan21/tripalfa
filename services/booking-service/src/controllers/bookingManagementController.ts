@@ -577,9 +577,9 @@ export class BookingManagementController {
   async searchInventory(req: Request, res: Response): Promise<Response | void> {
     const typedReq = req as TypedRequest;
     try {
-      const searchParams = typedReq.body;
-      const page = searchParams.page || 1;
-      const limit = searchParams.limit || 10;
+      const searchParams = typedReq.query;
+      const page = Math.max(1, parseInt(String(searchParams.page || 1), 10));
+      const limit = Math.max(1, Math.min(100, parseInt(String(searchParams.limit || 10), 10)));
       const offset = (page - 1) * limit;
 
       const whereConditions: any = {};
@@ -602,36 +602,51 @@ export class BookingManagementController {
         };
       }
 
-      if (searchParams.status && Array.isArray(searchParams.status)) {
-        whereConditions.status = {
-          in: searchParams.status
-        };
-      }
-
-      if (searchParams.minPrice !== undefined) {
-        whereConditions.price = {
-          gte: searchParams.minPrice
-        };
-      }
-
-      if (searchParams.maxPrice !== undefined) {
-        if (whereConditions.price) {
-          whereConditions.price.lte = searchParams.maxPrice;
-        } else {
-          whereConditions.price = { lte: searchParams.maxPrice };
+      if (searchParams.status) {
+        const statusArray = Array.isArray(searchParams.status) ? searchParams.status : [searchParams.status];
+        if (statusArray.length > 0) {
+          whereConditions.status = {
+            in: statusArray
+          };
         }
       }
 
-      if (searchParams.minAvailable !== undefined) {
-        whereConditions.available = {
-          gte: searchParams.minAvailable
-        };
+      if (searchParams.minPrice !== undefined && searchParams.minPrice !== '') {
+        const minPrice = parseFloat(String(searchParams.minPrice));
+        if (!isNaN(minPrice)) {
+          whereConditions.price = {
+            gte: minPrice
+          };
+        }
       }
 
-      if (searchParams.serviceTypes && Array.isArray(searchParams.serviceTypes) && searchParams.serviceTypes.length > 0) {
-        whereConditions.serviceTypes = {
-          hasSome: searchParams.serviceTypes
-        };
+      if (searchParams.maxPrice !== undefined && searchParams.maxPrice !== '') {
+        const maxPrice = parseFloat(String(searchParams.maxPrice));
+        if (!isNaN(maxPrice)) {
+          if (whereConditions.price) {
+            whereConditions.price.lte = maxPrice;
+          } else {
+            whereConditions.price = { lte: maxPrice };
+          }
+        }
+      }
+
+      if (searchParams.minAvailable !== undefined && searchParams.minAvailable !== '') {
+        const minAvailable = parseInt(String(searchParams.minAvailable), 10);
+        if (!isNaN(minAvailable)) {
+          whereConditions.available = {
+            gte: minAvailable
+          };
+        }
+      }
+
+      if (searchParams.serviceTypes) {
+        const serviceTypesArray = Array.isArray(searchParams.serviceTypes) ? searchParams.serviceTypes : [searchParams.serviceTypes];
+        if (serviceTypesArray.length > 0) {
+          whereConditions.serviceTypes = {
+            hasSome: serviceTypesArray
+          };
+        }
       }
 
       if (searchParams.search) {
@@ -776,10 +791,10 @@ export class BookingManagementController {
   async getInventory(req: Request, res: Response): Promise<Response | void> {
     const typedReq = req as TypedRequest;
     try {
-      const { id } = typedReq.params;
+      const { inventoryId } = typedReq.params;
 
       // Try cache first
-      const cached = await cacheService.get(cacheKeys.inventory(id));
+      const cached = await cacheService.get(cacheKeys.inventory(inventoryId));
       if (cached) {
         return res.status(200).json({
           success: true,
@@ -788,7 +803,7 @@ export class BookingManagementController {
       }
 
       const inventory = await (prisma as any).inventory.findUnique({
-        where: { id },
+        where: { id: inventoryId },
         include: {
           supplier: true
         }
@@ -802,10 +817,10 @@ export class BookingManagementController {
       }
 
       // Cache the result
-      await cacheService.set(cacheKeys.inventory(id), inventory, 600);
+      await cacheService.set(cacheKeys.inventory(inventoryId), inventory, 600);
 
       logger.info('Inventory retrieved', {
-        inventoryId: id,
+        inventoryId: inventoryId,
         userId: typedReq.user?.id
       });
 
@@ -831,13 +846,13 @@ export class BookingManagementController {
   async updateInventory(req: Request, res: Response): Promise<Response | void> {
     const typedReq = req as TypedRequest;
     try {
-      const { id } = typedReq.params;
+      const { inventoryId } = typedReq.params;
       const updates = typedReq.body;
       const userId = typedReq.user?.id;
 
       // Verify inventory exists
       const existing = await (prisma as any).inventory.findUnique({
-        where: { id }
+        where: { id: inventoryId }
       });
 
       if (!existing) {
@@ -859,7 +874,7 @@ export class BookingManagementController {
       }
 
       const inventory = await (prisma as any).inventory.update({
-        where: { id },
+        where: { id: inventoryId },
         data: updateData,
         include: {
           supplier: true
@@ -867,10 +882,10 @@ export class BookingManagementController {
       });
 
       // Invalidate cache
-      await cacheService.del(cacheKeys.inventory(id));
+      await cacheService.del(cacheKeys.inventory(inventoryId));
 
       logger.info('Inventory updated', {
-        inventoryId: id,
+        inventoryId: inventoryId,
         updates,
         updatedBy: userId
       });
@@ -897,12 +912,12 @@ export class BookingManagementController {
   async deleteInventory(req: Request, res: Response): Promise<Response | void> {
     const typedReq = req as TypedRequest;
     try {
-      const { id } = typedReq.params;
+      const { inventoryId } = typedReq.params;
       const userId = typedReq.user?.id;
 
       // Verify inventory exists
       const existing = await (prisma as any).inventory.findUnique({
-        where: { id }
+        where: { id: inventoryId }
       });
 
       if (!existing) {
@@ -913,14 +928,14 @@ export class BookingManagementController {
       }
 
       await (prisma as any).inventory.delete({
-        where: { id }
+        where: { id: inventoryId }
       });
 
       // Invalidate cache
-      await cacheService.del(cacheKeys.inventory(id));
+      await cacheService.del(cacheKeys.inventory(inventoryId));
 
       logger.info('Inventory deleted', {
-        inventoryId: id,
+        inventoryId: inventoryId,
         productCode: existing.productCode,
         deletedBy: userId
       });
@@ -947,11 +962,11 @@ export class BookingManagementController {
   async checkAvailability(req: Request, res: Response): Promise<Response | void> {
     const typedReq = req as TypedRequest;
     try {
-      const { id } = typedReq.params;
+      const { inventoryId } = typedReq.params;
       const { quantity } = typedReq.body;
 
       const inventory = await (prisma as any).inventory.findUnique({
-        where: { id },
+        where: { id: inventoryId },
         include: {
           supplier: true
         }
@@ -968,7 +983,7 @@ export class BookingManagementController {
       const canReserve = inventory.available >= quantity && inventory.status === 'active';
 
       logger.info('Availability check performed', {
-        inventoryId: id,
+        inventoryId: inventoryId,
         requestedQuantity: quantity,
         availableQuantity: inventory.available,
         isAvailable,
@@ -979,7 +994,7 @@ export class BookingManagementController {
       res.status(200).json({
         success: true,
         data: {
-          inventoryId: id,
+          inventoryId: inventoryId,
           productCode: inventory.productCode,
           name: inventory.name,
           requestedQuantity: quantity,
@@ -1388,164 +1403,6 @@ export class BookingManagementController {
       res.status(500).json({
         success: false,
         error: 'Failed to update booking priority'
-      });
-    }
-  }
-
-  // Get inventory
-  async getInventory(req: Request, res: Response): Promise<Response | void> {
-    const typedReq = req as TypedRequest;
-    try {
-      const page = parseInt(typedReq.query.page as string) || 1;
-      const limit = parseInt(typedReq.query.limit as string) || 10;
-      const offset = (page - 1) * limit;
-
-      const [inventory, total] = await Promise.all([
-        (prisma as any).inventory.findMany({
-          skip: offset,
-          take: limit,
-          orderBy: { bookedAt: 'desc' },
-          include: {
-            supplier: true
-          }
-        }),
-        (prisma as any).inventory.count()
-      ]);
-
-      res.json({
-        success: true,
-        data: {
-          inventory,
-          pagination: {
-            page,
-            limit,
-            total,
-            totalPages: Math.ceil(total / limit),
-            hasNextPage: page < Math.ceil(total / limit),
-            hasPrevPage: page > 1
-          }
-        }
-      });
-
-    } catch (error) {
-      logger.error('Failed to get inventory', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: typedReq.user?.id
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Failed to get inventory'
-      });
-    }
-  }
-
-  // Add inventory
-  async addInventory(req: Request, res: Response): Promise<Response | void> {
-    const typedReq = req as TypedRequest;
-    try {
-      const inventoryData = typedReq.body;
-      const userId = typedReq.user?.id;
-
-      const inventory = await (prisma as any).inventory.create({
-        data: {
-          ...inventoryData,
-          createdBy: userId
-        }
-      });
-
-      logger.info('Inventory added successfully', {
-        inventoryId: inventory.id,
-        serviceType: inventory.serviceType,
-        supplierId: inventory.supplierId,
-        createdBy: userId
-      });
-
-      res.status(201).json({
-        success: true,
-        data: inventory
-      });
-
-    } catch (error) {
-      logger.error('Failed to add inventory', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: typedReq.user?.id
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Failed to add inventory'
-      });
-    }
-  }
-
-  // Update inventory
-  async updateInventory(req: Request, res: Response): Promise<Response | void> {
-    const typedReq = req as TypedRequest;
-    try {
-      const { inventoryId } = typedReq.params;
-      const updates = typedReq.body;
-      const userId = typedReq.user?.id;
-
-      const inventory = await (prisma as any).inventory.update({
-        where: { id: inventoryId },
-        data: updates
-      });
-
-      logger.info('Inventory updated successfully', {
-        inventoryId,
-        updates: Object.keys(updates),
-        updatedBy: userId
-      });
-
-      res.json({
-        success: true,
-        data: inventory
-      });
-
-    } catch (error) {
-      logger.error('Failed to update inventory', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: typedReq.user?.id
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update inventory'
-      });
-    }
-  }
-
-  // Delete inventory
-  async deleteInventory(req: Request, res: Response): Promise<Response | void> {
-    const typedReq = req as TypedRequest;
-    try {
-      const { inventoryId } = typedReq.params;
-      const userId = typedReq.user?.id;
-
-      await (prisma as any).inventory.delete({
-        where: { id: inventoryId }
-      });
-
-      logger.info('Inventory deleted successfully', {
-        inventoryId,
-        deletedBy: userId
-      });
-
-      res.json({
-        success: true,
-        message: 'Inventory deleted successfully'
-      });
-
-    } catch (error) {
-      logger.error('Failed to delete inventory', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        userId: typedReq.user?.id
-      });
-
-      res.status(500).json({
-        success: false,
-        error: 'Failed to delete inventory'
       });
     }
   }
@@ -2122,7 +1979,6 @@ export const boundBookingManagementController = {
   updateWorkflowStatus: bookingManagementController.updateWorkflowStatus.bind(bookingManagementController),
   updatePriority: bookingManagementController.updatePriority.bind(bookingManagementController),
   getInventory: bookingManagementController.getInventory.bind(bookingManagementController),
-  addInventory: bookingManagementController.addInventory.bind(bookingManagementController),
   updateInventory: bookingManagementController.updateInventory.bind(bookingManagementController),
   searchInventory: bookingManagementController.searchInventory.bind(bookingManagementController),
   createInventory: bookingManagementController.createInventory.bind(bookingManagementController),

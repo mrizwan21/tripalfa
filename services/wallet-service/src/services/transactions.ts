@@ -1,5 +1,5 @@
 // src/services/transactions.ts
-import type { TransactionInsertOptions, Transaction } from '../types/wallet';
+import type { TransactionInsertOptions, Transaction } from '../types/wallet.js';
 
 export async function insertTransactionRecord(client: any, opts: TransactionInsertOptions) {
   const {

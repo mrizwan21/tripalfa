@@ -123,14 +123,14 @@ router.get(
   bookingManagementController.searchInventory
 );
 
-// GET /api/admin/inventory - Get inventory with pagination/filters
+// GET /api/admin/inventory/:inventoryId - Get single inventory item
 router.get(
-  '/admin/inventory',
+  '/admin/inventory/:inventoryId',
   authenticateToken,
   authorize(['admin', 'agent', 'supervisor', 'manager']),
   permissionMiddleware('view_inventory'),
-  validate(bookingManagementSchemas.searchInventory),
-  bookingManagementController.searchInventory
+  validate(bookingManagementSchemas.getInventory),
+  bookingManagementController.getInventory
 );
 
 // POST /api/admin/inventory - Add new inventory
@@ -159,6 +159,7 @@ router.delete(
   authenticateToken,
   authorize(['admin', 'manager']),
   permissionMiddleware('manage_inventory'),
+  validate(bookingManagementSchemas.deleteInventory),
   bookingManagementController.deleteInventory
 );
 

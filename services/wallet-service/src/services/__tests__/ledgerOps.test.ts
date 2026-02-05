@@ -1,4 +1,4 @@
-import { insertLedgerEntries, createTransferLedger, reserveCommissionAndLedger } from '../ledgerOps';
+import { insertLedgerEntries, createTransferLedger, reserveCommissionAndLedger } from '../ledgerOps.js';
 
 describe('ledgerOps', () => {
   test('insertLedgerEntries calls client.query with expected SQL', async () => {

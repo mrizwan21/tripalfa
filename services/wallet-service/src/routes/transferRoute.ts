@@ -2,7 +2,7 @@
 // POST /api/wallet/transfer - atomic currency transfer with FX conversion
 
 import { Router, Request, Response } from 'express';
-import uuidv4 from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { pool } from '../config/db.js';
 import { convertAmount } from '../services/fxService.js';
 import { authMiddleware } from '../middlewares/auth.js';

@@ -1,6 +1,6 @@
 // src/services/walletOps.ts
-import type { Wallet, Transaction } from '../types/wallet';
-import { insertTransactionRecord } from './transactions';
+import type { Wallet, Transaction } from '../types/wallet.js';
+import { insertTransactionRecord } from './transactions.js';
 
 export async function ensureWalletExists(client: any, userId: string, currency: string) {
   await client.query(

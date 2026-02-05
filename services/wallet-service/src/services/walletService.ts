@@ -2,13 +2,13 @@
 // Complete wallet operations supporting multi-user flows:
 // Customers, Agencies, Travel Suppliers with selling, purchasing, settlement, and refund scenarios
 
-import uuidv4 from 'uuid';
-import { pool } from '../config/db';
-import { getLatestSnapshot } from './fxService';
-import { logger } from '../utils/logger';
-import { checkIdempotency, processCustomerDebit, processAgencyCredit, ensureWalletExists, lockWallet } from './walletOps';
-import { insertTransactionRecord } from './transactions';
-import { insertLedgerEntries, reserveCommissionAndLedger, createTransferLedger } from './ledgerOps';
+import { v4 as uuidv4 } from 'uuid';
+import { pool } from '../config/db.js';
+import { getLatestSnapshot } from './fxService.js';
+import { logger } from '../utils/logger.js';
+import { checkIdempotency, processCustomerDebit, processAgencyCredit, ensureWalletExists, lockWallet } from './walletOps.js';
+import { insertTransactionRecord } from './transactions.js';
+import { insertLedgerEntries, reserveCommissionAndLedger, createTransferLedger } from './ledgerOps.js';
 
 import type {
   Wallet,
@@ -16,7 +16,7 @@ import type {
   TransactionType,
   TransactionStatus,
   UserType,
-} from '../types/wallet';
+} from '../types/wallet.js';
 
 const SERVICE_NAME = 'walletService';
 

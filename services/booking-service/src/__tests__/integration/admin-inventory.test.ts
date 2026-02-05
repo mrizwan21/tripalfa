@@ -247,6 +247,148 @@ describe('Admin Inventory Management API', () => {
   });
 
   // ============================================================================
+  // GET /api/admin/inventory/:inventoryId - Get Single Item Tests
+  // ============================================================================
+
+  describe('GET /api/admin/inventory/:inventoryId - Get Single', () => {
+    describe('Happy Paths', () => {
+      it('should get single inventory item successfully', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id,
+          name: 'Test Inventory'
+        });
+
+        const res = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        global.expectSuccess(res, 200);
+        global.expectInventoryResponse(res);
+        expect(res.body.data.id).toBe(inventory.id);
+        expect(res.body.data.name).toBe('Test Inventory');
+      });
+
+      it('should include supplier data', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id
+        });
+
+        const res = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        global.expectSuccess(res, 200);
+        expect(res.body.data.supplier).toBeDefined();
+        expect(res.body.data.supplier.id).toBe(testSupplier.id);
+      });
+
+      it('should work for manager role', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id
+        });
+
+        const res = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${managerToken}`);
+
+        global.expectSuccess(res, 200);
+        expect(res.body.data.id).toBe(inventory.id);
+      });
+
+      it('should work for supervisor role', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id
+        });
+
+        const res = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${supervisorToken}`);
+
+        global.expectSuccess(res, 200);
+        expect(res.body.data.id).toBe(inventory.id);
+      });
+
+      it('should work for agent role', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id
+        });
+
+        const res = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${agentToken}`);
+
+        global.expectSuccess(res, 200);
+        expect(res.body.data.id).toBe(inventory.id);
+      });
+    });
+
+    describe('Error Paths', () => {
+      it('should return 401 without auth token', async () => {
+        const inventory = await global.makeInventory({ supplierId: testSupplier.id });
+        const res = await global.api.get(`/api/admin/inventory/${inventory.id}`);
+        global.expectError(res, 401);
+      });
+
+      it('should return 404 when inventory not found', async () => {
+        const res = await global.api
+          .get('/api/admin/inventory/invalid-id-12345')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        expect(res.status).toBe(404);
+        expect(res.body.success).toBe(false);
+        expect(res.body.error).toBe('Inventory not found');
+      });
+
+      it('should return 404 with non-existent UUID', async () => {
+        const res = await global.api
+          .get('/api/admin/inventory/00000000-0000-0000-0000-000000000000')
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        expect(res.status).toBe(404);
+        expect(res.body.success).toBe(false);
+      });
+    });
+
+    describe('Edge Cases', () => {
+      it('should cache result for subsequent requests', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id
+        });
+
+        const res1 = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        const res2 = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        global.expectSuccess(res1, 200);
+        global.expectSuccess(res2, 200);
+        expect(res1.body.data.id).toBe(res2.body.data.id);
+      });
+
+      it('should handle inventory with all optional fields', async () => {
+        const inventory = await global.makeInventory({
+          supplierId: testSupplier.id,
+          description: 'Premium package',
+          minimumPrice: 500,
+          serviceTypes: ['flight', 'hotel', 'transfer']
+        });
+
+        const res = await global.api
+          .get(`/api/admin/inventory/${inventory.id}`)
+          .set('Authorization', `Bearer ${adminToken}`);
+
+        global.expectSuccess(res, 200);
+        expect(res.body.data.description).toBe('Premium package');
+        expect(res.body.data.minimumPrice).toBe(500);
+        expect(res.body.data.serviceTypes).toContain('flight');
+      });
+    });
+  });
+
+  // ============================================================================
   // POST /api/admin/inventory - Create Tests
   // ============================================================================
 

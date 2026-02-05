@@ -4,7 +4,7 @@
 import { pool } from '../config/db.js';
 import { logger } from '../utils/logger.js';
 import cron from 'node-cron';
-import uuidv4 from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 const SERVICE_NAME = 'reconciliationJob';
 

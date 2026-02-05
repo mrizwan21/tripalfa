@@ -1,5 +1,5 @@
 // src/services/ledgerOps.ts
-import { insertTransactionRecord } from './transactions';
+import { insertTransactionRecord } from './transactions.js';
 
 export async function insertLedgerEntries(client: any, txId: string, entries: Array<any>) {
   if (!entries.length) return;

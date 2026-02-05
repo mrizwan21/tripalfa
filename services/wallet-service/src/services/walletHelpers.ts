@@ -1,12 +1,12 @@
 // src/services/walletHelpers.ts
 // Shared DB helper functions for walletService to improve testability and reduce file size
 
-import type { Wallet, Transaction } from '../types/wallet';
-import * as ledgerOps from './ledgerOps';
-import * as walletOps from './walletOps';
+import type { Wallet, Transaction } from '../types/wallet.js';
+import * as ledgerOps from './ledgerOps.js';
+import * as walletOps from './walletOps.js';
 
 // Re-export insertTransactionRecord from transactions module
-export { insertTransactionRecord } from './transactions';
+export { insertTransactionRecord } from './transactions.js';
 
 export const ensureWalletExists = walletOps.ensureWalletExists;
 export const checkIdempotency = walletOps.checkIdempotency;

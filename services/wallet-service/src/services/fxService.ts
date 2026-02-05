@@ -2,8 +2,8 @@
 // FX rate fetching, conversion, and snapshot management
 // Single source of truth: reads latest snapshot from Postgres
 
-import { logger } from '../utils/logger';
-import type { ExchangeRateSnapshot, FxConversionResult } from '../types/index';
+import { logger } from '../utils/logger.js';
+import { ExchangeRateSnapshot, FxConversionResult } from '../types/wallet.js';
 
 const SERVICE_NAME = 'fxService';
 

@@ -1,4 +1,7 @@
-import { ensureWalletExists, checkIdempotency, lockWallet, processCustomerDebit, processAgencyCredit } from '../walletOps';
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+import { ensureWalletExists, checkIdempotency, lockWallet, processCustomerDebit, processAgencyCredit } from '../walletOps.js';
 
 describe('walletOps', () => {
   test('ensureWalletExists inserts and returns wallet row', async () => {
@@ -31,6 +34,8 @@ describe('walletOps', () => {
       query: jest.fn()
         // ensureWalletExists INSERT
         .mockResolvedValueOnce({})
+        // ensureWalletExists SELECT
+        .mockResolvedValueOnce({ rows: [{ id: 'cw-1', userId: 'cust1', currency: 'USD', balance: 200, status: 'active' }] })
         // lockWallet SELECT
         .mockResolvedValueOnce({ rows: [{ id: 'cw-1', balance: 200 }] })
         // update balance

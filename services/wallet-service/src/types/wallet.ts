@@ -120,6 +120,9 @@ export interface ConversionResult {
   isStale: boolean;
 }
 
+// Alias for backward compatibility
+export interface FxConversionResult extends ConversionResult {}
+
 // Wallet operation options
 export interface TopupOptions {
   userId: string;
