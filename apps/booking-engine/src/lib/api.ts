@@ -225,7 +225,7 @@ export async function searchHotels(params: any) {
     console.warn('Mock data fallback failed:', mockError);
   }
 
-  throw error;
+  throw new Error('All hotel search methods failed - no results available');
 }
 
 
