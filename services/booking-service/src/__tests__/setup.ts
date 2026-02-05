@@ -3,18 +3,6 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
-const { config: dotenvConfig } = require('dotenv');
-
-// Load test environment variables
-dotenvConfig({ path: '.env.test' });
-
-// Stable env for tests - set before importing app
-process.env.NODE_ENV = 'test';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-key';
-process.env.REDIS_HOST = process.env.REDIS_HOST || 'localhost';
-process.env.REDIS_PORT = process.env.REDIS_PORT || '6379';
-process.env.DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://neondb_owner:REDACTED@ep-ancient-base-afwb58uq-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require';
 
 import { prisma } from '../database/index';
 import app from '../app';
@@ -149,18 +137,23 @@ global.testEnv = {
 
 // Supertest app instance
 beforeAll(async () => {
+  // Force reload database module after environment variables are set
+  if (process.env.INTEGRATION_DB === 'true') {
+    jest.resetModules();
+    const { prisma: freshPrisma } = await import('../database/index');
+    global.prismaClient = freshPrisma;
+  }
+
   global.api = request(app);
 
   // Optional DB connect for integration tests
   if (process.env.INTEGRATION_DB === 'true') {
-    console.log('Skipping Prisma connection for debugging...');
-    /*
     try {
-      await prisma.$connect();
+      await global.prismaClient.$connect();
     } catch (e) {
       // Continue without hard failing when DB is not available
+      console.warn('Database connection failed:', e);
     }
-    */
   }
 });
 
@@ -170,30 +163,27 @@ beforeEach(async () => {
 
   // Truncate all relevant tables in test DB only when enabled
   if (process.env.INTEGRATION_DB === 'true' && process.env.TEST_DB_RESET === 'true') {
-    console.log('Skipping database truncation for debugging...');
-    /*
     try {
-      await prisma.$transaction([
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_tags" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "tags" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "audit_logs" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_notes" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_documents" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_communications" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_amendments" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_refunds" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "booking_notifications" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "bookings" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "customers" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "branches" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "companies" CASCADE`),
-        prisma.$executeRawUnsafe(`TRUNCATE TABLE "suppliers" CASCADE`),
+      await global.prismaClient.$transaction([
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_tags" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "tags" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "audit_logs" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_notes" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_documents" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_communications" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_amendments" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_refunds" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "booking_notifications" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "bookings" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "customers" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "branches" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "companies" CASCADE`),
+        global.prismaClient.$executeRawUnsafe(`TRUNCATE TABLE "suppliers" CASCADE`),
       ]);
     } catch (e) {
       // Allow tests to proceed even if truncate is not possible
       console.warn('Database truncation failed:', e);
     }
-    */
   }
 });
 
@@ -470,7 +460,7 @@ global.buildSupplierRequest = buildSupplierRequest;
 afterAll(async () => {
   if (process.env.INTEGRATION_DB === 'true') {
     try {
-      await prisma.$disconnect();
+      await global.prismaClient.$disconnect();
     } catch {
       // ignore
     }

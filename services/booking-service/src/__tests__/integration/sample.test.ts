@@ -24,11 +24,14 @@ describe('Enhanced Test Utils', () => {
   it('should validate booking request structure', () => {
     const bookingData = global.buildBookingRequest();
 
-    expect(bookingData).toHaveProperty('customerId');
-    expect(bookingData).toHaveProperty('segment');
-    expect(bookingData).toHaveProperty('serviceType');
-    expect(bookingData).toHaveProperty('customerPrice');
-    expect(bookingData).toHaveProperty('currency');
+    expect(bookingData).toHaveProperty('type', 'flight');
+    expect(bookingData).toHaveProperty('details');
+    expect(bookingData.details).toHaveProperty('origin');
+    expect(bookingData.details).toHaveProperty('destination');
+    expect(bookingData.details).toHaveProperty('passengers');
+    expect(bookingData).toHaveProperty('customerInfo');
+    expect(bookingData).toHaveProperty('paymentInfo');
+    expect(bookingData).toHaveProperty('bookingOptions');
   });
 
   it('should generate unique test data', () => {

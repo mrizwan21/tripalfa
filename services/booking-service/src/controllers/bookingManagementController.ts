@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../database/index.js';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { cacheService, cacheKeys } from '../cache/redis.js';
 import { metricsStore } from '../monitoring/metrics.js';
 import logger from '../utils/logger.js';
@@ -418,6 +419,20 @@ export class BookingManagementController {
       });
 
     } catch (error) {
+      // Check for Prisma unique constraint violation on email
+      if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002' &&
+          error.meta?.target && Array.isArray(error.meta.target) && error.meta.target.includes('email')) {
+        logger.warn('Attempted to create customer with duplicate email', {
+          email: typedReq.body.email,
+          userId: typedReq.user?.id
+        });
+
+        return res.status(409).json({
+          success: false,
+          error: 'Customer with this email already exists'
+        });
+      }
+
       logger.error('Failed to create customer', {
         error: error instanceof Error ? error.message : 'Unknown error',
         userId: typedReq.user?.id
@@ -469,6 +484,12 @@ export class BookingManagementController {
 
       if (searchParams.status) {
         whereConditions.status = searchParams.status;
+      }
+
+      if (searchParams.serviceTypes && Array.isArray(searchParams.serviceTypes) && searchParams.serviceTypes.length > 0) {
+        whereConditions.serviceTypes = {
+          hasSome: searchParams.serviceTypes
+        };
       }
 
       const [suppliers, total] = await Promise.all([

@@ -317,8 +317,6 @@ export const hasRolePermission = (userRole: string, requiredPermission: string):
       'confirm_booking',
       'issue_ticket',
       'hold_inventory',
-      'view_customers',
-      'create_customer',
       'view_suppliers',
       'create_supplier',
       'manage_workflow',

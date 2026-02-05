@@ -89,4 +89,44 @@ router.put(
   bookingManagementController.updatePriority
 );
 
+// GET /api/admin/customers - Search customers
+router.get(
+  '/admin/customers',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('view_customers'),
+  validate(bookingManagementSchemas.searchCustomers),
+  bookingManagementController.searchCustomers
+);
+
+// POST /api/admin/customers - Create customer
+router.post(
+  '/admin/customers',
+  authenticateToken,
+  authorize(['admin', 'agent', 'supervisor', 'manager']),
+  permissionMiddleware('create_customer'),
+  validate(bookingManagementSchemas.createCustomer),
+  bookingManagementController.createCustomer
+);
+
+// GET /api/admin/suppliers - Search suppliers
+router.get(
+  '/admin/suppliers',
+  authenticateToken,
+  authorize(['admin', 'supervisor', 'manager']),
+  permissionMiddleware('view_suppliers'),
+  validate(bookingManagementSchemas.searchSuppliers),
+  bookingManagementController.searchSuppliers
+);
+
+// POST /api/admin/suppliers - Create supplier
+router.post(
+  '/admin/suppliers',
+  authenticateToken,
+  authorize(['admin', 'supervisor', 'manager']),
+  permissionMiddleware('create_supplier'),
+  validate(bookingManagementSchemas.createSupplier),
+  bookingManagementController.createSupplier
+);
+
 export default router;
