@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { Prisma, PrismaClient } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const { config: dotenvConfig } = require('dotenv');
@@ -279,14 +280,14 @@ global.makeBooking = async (overrides = {}) => {
     serviceType: 'flight' as const,
     supplierId: null,
     supplierName: null,
-    customerPrice: new Prisma.Decimal(100),
-    supplierPrice: new Prisma.Decimal(80),
-    markup: new Prisma.Decimal(20),
-    taxes: new Prisma.Decimal(0),
-    fees: new Prisma.Decimal(0),
+    customerPrice: new Decimal(100),
+    supplierPrice: new Decimal(80),
+    markup: new Decimal(20),
+    taxes: new Decimal(0),
+    fees: new Decimal(0),
     currency: 'USD' as const,
     paymentMethod: 'wallet' as const,
-    profit: new Prisma.Decimal(20),
+    profit: new Decimal(20),
     bookedAt: new Date(),
     travelDate: null,
     returnDate: null,
@@ -378,7 +379,7 @@ global.makeRefund = async (overrides = {}) => {
   const resolvedBooking = booking || (await global.makeBooking());
   const data = {
     bookingId: resolvedBooking.id,
-    amount: new Prisma.Decimal(50),
+    amount: new Decimal(50),
     reason: 'Customer cancellation',
     status: 'pending' as const,
     ...restOverrides,
