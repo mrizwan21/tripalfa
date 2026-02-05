@@ -1,0 +1,13 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Block committing .js source files (allow common build dirs)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(js|jsx|mjs|cjs)$' | grep -Ev '^(dist|build|out|coverage|node_modules|.*\/dist\/|.*\/build\/|.*\/out\/)' || true)
+if [ -n "$STAGED_JS" ]; then
+  echo "Error: Committing JavaScript files is disallowed. Use TypeScript (.ts/.tsx) instead."
+  echo "$STAGED_JS"
+  exit 1
+fi
+
+# Run lint-staged if configured
+npx --no-install lint-staged || true

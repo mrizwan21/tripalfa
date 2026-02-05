@@ -46,3 +46,18 @@ declare module '@prisma/client' {
   // Treat Decimal as any for compilation; convert/handle precisely at runtime where needed.
   type Decimal = any;
 }
+
+// Override AuthPayload to prevent conflicts with Express Request user type
+declare global {
+  interface AuthPayload {
+    userId?: string;
+    id: string;
+    role: string;
+    companyId?: string;
+    departmentId?: string;
+    permissions: string[];
+    [key: string]: any; // Allow additional properties
+  }
+}
+
+// Temporarily removed Express override to fix type issues

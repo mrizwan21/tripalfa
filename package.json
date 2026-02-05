@@ -1,0 +1,53 @@
+{
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "apps/b2b-admin/server",
+    "services/*",
+    "packages/*",
+    "automapper"
+  ],
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/express": "^5.0.6",
+    "@types/helmet": "^0.0.48",
+    "@types/ioredis": "^4.28.10",
+    "@types/jest": "^30.0.0",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.2.0",
+    "@types/node-fetch": "^2.6.13",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "electron-to-chromium": "^1.5.286",
+    "eslint": "^9.0.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "node-releases": "^2.0.27",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "format": "prettier --write .",
+    "build": "npm run build --workspaces",
+    "dev": "npm run dev --workspaces",
+    "clean": "rm -rf node_modules apps/*/dist services/*/dist packages/*/dist",
+    "prepare": "husky",
+    "ci:lint": "eslint . --ext .ts,.tsx --ignore-pattern node_modules_trash/** --ignore-pattern **/node_modules_trash/**",
+    "ci:enforce-no-js": "bash scripts/ci-check-no-js.sh",
+    "ci": "npm run ci:lint && npm run ci:enforce-no-js"
+  },
+  "dependencies": {
+    "lucide-react": "^0.563.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": "eslint --fix"
+  }
+}

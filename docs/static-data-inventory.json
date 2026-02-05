@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-02-01T00:00:00.000Z",
+  "items": [
+    {
+      "path": "apps/booking-engine/src/lib/mock-api.ts",
+      "type": "frontend-mock",
+      "exports": ["MOCK_HOTELS","MOCK_FLIGHTS","MOCK_BOOKINGS","MOCK_WALLETS","MOCK_NOTIFICATIONS","MOCK_HEPSTAR_ADDONS","listBookings","getBookingById","bookingAction","searchHotels","getHotelById","getHepstarAddons","holdHotelBooking","confirmHotelBooking","searchFlights","holdFlightBooking","confirmFlightBooking","listWallets","postTopUp","postTransfer","processCardPayment","processWalletPayment"],
+      "summary": "In-memory datasets and API stubs used by the booking-engine frontend for dev and contract testing."
+    },
+    {
+      "path": "apps/booking-engine/src/lib/constants.ts",
+      "type": "frontend-constants",
+      "exports": ["APP_NAME","API_BASE_URL","API_ENDPOINTS","MOCK_FLIGHTS","MOCK_HOTELS","STATIC_AIRPORTS_FALLBACK","STATIC_CITIES_FALLBACK"],
+      "summary": "Application constants, fallback static arrays and API endpoint URLs used by the frontend."
+    },
+    {
+      "path": "docs/StaticDataResources.md",
+      "type": "documentation",
+      "exports": [],
+      "summary": "Documentation describing supplier static resources (Duffel, LiteAPI) and local schema mapping."
+    },
+    {
+      "path": "infrastructure/wicked/wicked-config/static",
+      "type": "config-templates",
+      "exports": [],
+      "summary": "Pre-hydrated JSON templates and env configs (globals.json, env/docker.json, content/*.json) used at deploy/startup."
+    },
+    {
+      "path": "services/ingest/src/static-importer.ts",
+      "type": "ingest-script",
+      "exports": [],
+      "summary": "Central static importer that fetches supplier static data and upserts into the 'staticdatabase' Postgres instance."
+    },
+    {
+      "path": "services/ingest/src/*-importer.ts",
+      "type": "ingest-plugins",
+      "exports": [],
+      "summary": "Supplier-specific importers (hotelston, innstant, giata, etc.) that transform supplier JSON into local schema."
+    },
+    {
+      "path": "services/db-connector/src/index.ts",
+      "type": "db-connector",
+      "exports": [],
+      "summary": "Connector used by services to read from the static Postgres DB (`STATIC_DATABASE_URL`)."
+    },
+    {
+      "path": "services/*/.env",
+      "type": "env-config",
+      "exports": [],
+      "summary": "Many services reference `STATIC_DATABASE_URL` environment variable pointing at local `staticdatabase`."
+    }
+  ]
+}

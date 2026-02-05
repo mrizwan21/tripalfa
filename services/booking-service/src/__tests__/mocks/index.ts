@@ -1,0 +1,84 @@
+import { jest } from '@jest/globals';
+
+/**
+ * Mock service helpers for unit testing
+ */
+
+// Prisma mock
+export const mockPrisma = () => {
+  const mockPrismaClient = {
+    customer: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    supplier: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    booking: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    $connect: jest.fn(),
+    $disconnect: jest.fn(),
+    $transaction: jest.fn(),
+  };
+
+  return mockPrismaClient;
+};
+
+// Redis mock
+export const mockRedis = () => {
+  const mockRedisClient = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    expire: jest.fn(),
+    publish: jest.fn(),
+    subscribe: jest.fn(),
+    on: jest.fn(),
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+  };
+
+  return mockRedisClient;
+};
+
+// External API mock
+export const mockExternalAPI = (service: string, method: string, response: any) => {
+  // Note: jest.mock must be called at the top level, this is just a helper
+  console.warn('mockExternalAPI: jest.mock must be called at module level');
+
+  // Return a mock function that can be used in tests
+  return jest.fn().mockResolvedValue(response);
+};
+
+// JWT mock (already exists in setup.ts, documented here for reference)
+export const mockJWT = () => {
+  const jwt = require('jsonwebtoken');
+  return {
+    sign: jest.spyOn(jwt, 'sign').mockImplementation(() => 'mock.jwt.token'),
+    verify: jest.spyOn(jwt, 'verify').mockImplementation((token, secret, callback) => {
+      if (callback) {
+        callback(null, { id: 'test-user', role: 'user' });
+      }
+      return { id: 'test-user', role: 'user' };
+    }),
+  };
+};
+
+// Reset all mocks
+export const resetAllMocks = () => {
+  jest.clearAllMocks();
+  jest.resetAllMocks();
+  jest.restoreAllMocks();
+};

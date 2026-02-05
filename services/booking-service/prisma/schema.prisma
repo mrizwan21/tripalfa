@@ -1,0 +1,280 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Booking {
+  id                    String   @id @default(cuid())
+  reference             String   @unique @map("booking_reference")
+  segment               String   @map("booking_segment")
+  status                String   @default("PENDING") @map("booking_status")
+  paymentStatus         String   @default("PENDING") @map("payment_status")
+  
+  // Customer Information
+  customerId            String   @map("customer_id")
+  customerName          String   @map("customer_name")
+  customerEmail         String   @map("customer_email")
+  customerPhone         String?  @map("customer_phone")
+  customerType          String   @default("individual") @map("customer_type")
+  companyId             String?  @map("company_id")
+  branchId              String?  @map("branch_id")
+  
+  // Service Details
+  serviceType           String   @map("service_type")
+  supplierId            String?  @map("supplier_id")
+  supplierName          String?  @map("supplier_name")
+  supplierPnr           String?  @map("supplier_pnr")
+  supplierRef           String?  @map("supplier_ref")
+  
+  // Financial Information
+  customerPrice         Decimal  @map("customer_price")
+  supplierPrice         Decimal  @map("supplier_price")
+  markup                Decimal  @default(0) @map("markup")
+  taxes                 Decimal  @default(0) @map("taxes")
+  fees                  Decimal  @default(0) @map("fees")
+  currency              String   @default("USD")
+  paymentMethod         String   @default("wallet") @map("payment_method")
+  profit                Decimal  @default(0) @map("profit")
+  
+  // Timeline Information
+  bookedAt              DateTime @default(now()) @map("booked_at")
+  travelDate            DateTime? @map("travel_date")
+  returnDate            DateTime? @map("return_date")
+  holdUntil             DateTime? @map("hold_until")
+  lastModified          DateTime @updatedAt @map("last_modified")
+  
+  // Admin Features
+  assignedAgent         String?  @map("assigned_agent")
+  queueStatus           String   @default("pending") @map("queue_status")
+  priority              String   @default("medium") @map("priority")
+  
+  // Metadata
+  source                String   @default("b2b") @map("source")
+  ipAddress             String?  @map("ip_address")
+  userAgent             String?  @map("user_agent")
+  
+  // Relations
+  customer              Customer? @relation(fields: [customerId], references: [id])
+  company               Company?  @relation(fields: [companyId], references: [id])
+  branch                Branch?   @relation(fields: [branchId], references: [id])
+  supplier              Supplier? @relation(fields: [supplierId], references: [id])
+  
+  // Audit and Tracking
+  auditTrail            AuditLog[]
+  notes                 Note[]
+  documents             Document[]
+  communications        Communication[]
+  amendments            Amendment[]
+  refunds               Refund[]
+  notifications         Notification[]
+  
+  // Tags (using a separate table for many-to-many relationship)
+  tags                  BookingTag[]
+  
+  @@map("bookings")
+  @@index([customerId, bookedAt])
+  @@index([status, bookedAt])
+  @@index([assignedAgent, status])
+  @@index([travelDate, status])
+  @@index([currency, bookedAt])
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String   @map("customer_name")
+  email       String   @unique
+  phone       String?  @map("customer_phone")
+  type        String   @default("individual")
+  companyId   String?  @map("company_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  company     Company?  @relation(fields: [companyId], references: [id])
+  bookings    Booking[]
+  
+  @@map("customers")
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String   @map("company_name")
+  email       String   @unique
+  phone       String?  @map("company_phone")
+  address     String?  @map("company_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  customers   Customer[]
+  branches    Branch[]
+  bookings    Booking[]
+  
+  @@map("companies")
+}
+
+model Branch {
+  id          String   @id @default(cuid())
+  name        String   @map("branch_name")
+  companyId   String   @map("company_id")
+  address     String?  @map("branch_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  company     Company   @relation(fields: [companyId], references: [id])
+  bookings    Booking[]
+  
+  @@map("branches")
+}
+
+model Supplier {
+  id          String   @id @default(cuid())
+  name        String   @map("supplier_name")
+  type        String   @map("supplier_type")
+  contactName String?  @map("contact_name")
+  contactPhone String? @map("contact_phone")
+  contactEmail String? @map("contact_email")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  bookings    Booking[]
+  
+  @@map("suppliers")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  action      String   @map("action_type")
+  actor       String   @map("actor_id")
+  timestamp   DateTime @default(now()) @map("action_timestamp")
+  details     Json?    @map("action_details")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("audit_logs")
+  @@index([bookingId, timestamp])
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  content     String   @db.Text
+  author      String   @map("author_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("booking_notes")
+  @@index([bookingId, createdAt])
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  type        String   @map("document_type")
+  url         String   @map("document_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   String   @map("created_by")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("booking_documents")
+  @@index([bookingId, type])
+}
+
+model Communication {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  type        String   @map("communication_type")
+  content     String   @db.Text
+  timestamp   DateTime @default(now()) @map("communication_timestamp")
+  sender      String   @map("sender_id")
+  recipient   String   @map("recipient_id")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("booking_communications")
+  @@index([bookingId, timestamp])
+}
+
+model Amendment {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  type        String   @map("amendment_type")
+  reason      String   @db.Text
+  status      String   @default("pending") @map("amendment_status")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("booking_amendments")
+  @@index([bookingId, status])
+}
+
+model Refund {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  amount      Decimal  @map("refund_amount")
+  reason      String   @db.Text
+  status      String   @default("pending") @map("refund_status")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("booking_refunds")
+  @@index([bookingId, status])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  type        String   @map("notification_type")
+  message     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  read        Boolean  @default(false)
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  @@map("booking_notifications")
+  @@index([bookingId, read])
+}
+
+model Tag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  color       String?  @default("#007bff")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  bookings    BookingTag[]
+  
+  @@map("tags")
+}
+
+model BookingTag {
+  id          String   @id @default(cuid())
+  bookingId   String   @map("booking_id")
+  tagId       String   @map("tag_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  tag         Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([bookingId, tagId])
+  @@map("booking_tags")
+}

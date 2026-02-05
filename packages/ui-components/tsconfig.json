@@ -1,0 +1,47 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "useDefineForClassFields": true,
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext"
+        ],
+        "allowJs": false,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": false,
+        "forceConsistentCasingInFileNames": true,
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "jsx": "react-jsx",
+        "baseUrl": ".",
+        "typeRoots": [
+            "../../node_modules/@types"
+        ],
+        "paths": {
+            "@tripalfa/shared-utils": [
+                "../shared-utils"
+            ],
+            "@tripalfa/shared-utils/*": [
+                "../shared-utils/*"
+            ],
+            "@tripalfa/shared-types": [
+                "../shared-types"
+            ],
+            "@tripalfa/shared-types/*": [
+                "../shared-types/*"
+            ]
+        }
+    },
+    "include": [
+        "."
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

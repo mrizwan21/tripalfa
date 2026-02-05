@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "jest"
+    ],
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "../..",
+    "strict": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tripalfa/shared-types": [
+        "../../packages/shared-types/dist/index"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*"
+  ]
+}

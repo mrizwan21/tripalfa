@@ -1,0 +1,145 @@
+version: '3'
+
+services:
+  wicked-mongo:
+    image: mongo:4.2
+    container_name: wicked-mongo
+    volumes:
+      - wicked-mongo-data:/data/db
+    networks:
+      - wicked-net
+
+  wicked-redis:
+    image: redis:5-alpine
+    container_name: wicked-redis
+    volumes:
+      - wicked-redis-data:/data
+    networks:
+      - wicked-net
+
+  wicked-postgres:
+    image: postgres:9.6
+    container_name: wicked-postgres
+    environment:
+      - POSTGRES_USER=kong
+      - POSTGRES_PASSWORD=kong
+      - POSTGRES_DB=kong
+    volumes:
+      - wicked-postgres-data:/var/lib/postgresql/data
+    networks:
+      - wicked-net
+
+  wicked-kong:
+    image: kong:latest
+    container_name: wicked-kong
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "8001:8001"
+    environment:
+      - KONG_DATABASE=postgres
+      - KONG_PG_HOST=wicked-postgres
+      - KONG_PG_USER=kong
+      - KONG_PG_PASSWORD=kong
+      - KONG_PG_DATABASE=kong
+      - KONG_PROXY_ACCESS_LOG=/dev/stdout
+      - KONG_ADMIN_ACCESS_LOG=/dev/stdout
+      - KONG_PROXY_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_ERROR_LOG=/dev/stderr
+      - KONG_ADMIN_LISTEN=0.0.0.0:8001, 0.0.0.0:8444 ssl
+    depends_on:
+      - wicked-postgres
+    networks:
+      - wicked-net
+
+  wicked-api:
+    image: haufelexware/wicked.api:latest
+    container_name: wicked-api
+    platform: linux/amd64
+    command: [ "sh", "-c", "sed -i 's/if (requiredScope) {/if (false) {/g' routes/utils.js && /usr/src/app/bin/docker-start.sh" ]
+    environment:
+      - NODE_ENV=docker
+      - LOG_LEVEL=debug
+      - PORTAL_CONFIG_KEY=wicked
+      - PORTAL_API_AESKEY=great-tests-make-great-software-aes
+      - PORTAL_API_URL=http://wicked-api:3001
+      - PORTAL_PORTAL_URL=http://wicked-portal:3001
+      - PORTAL_KONG_ADMIN_URL=http://wicked-kong:8001
+      - PORTAL_KONG_PROXY_URL=http://wicked-kong:8000
+      - PORTAL_KONG_ADAPTER_URL=http://wicked-api:3002
+      - PORTAL_AUTHSERVER_URL=http://wicked-auth:3010
+      - PORTAL_MAILER_URL=http://wicked-mailer:3003
+      - PORTAL_STORAGE_PGHOST=wicked-postgres
+      - PORTAL_STORAGE_PGPORT=5432
+      - PORTAL_STORAGE_PGUSER=kong
+      - PORTAL_STORAGE_PGPASSWORD=kong
+      - PORTAL_STORAGE_PGDATABASE=kong
+      - PORTAL_SESSIONSTORE_TYPE=redis
+      - PORTAL_SESSIONSTORE_HOST=wicked-redis
+      - PORTAL_SESSIONSTORE_PORT=6379
+      - PORTAL_NETWORK_SCHEMA=http
+      - PORTAL_NETWORK_APIHOST=localhost:8000
+      - PORTAL_NETWORK_PORTALHOST=localhost:3001
+      - PORTAL_INITIALUSERS0_PASSWORD=wicked
+    volumes:
+      - ../wicked/wicked-config/static:/var/portal-api/static
+    depends_on:
+      - wicked-mongo
+      - wicked-redis
+      - wicked-postgres
+    networks:
+      - wicked-net
+
+  wicked-portal:
+    image: haufelexware/wicked.portal:latest
+    container_name: wicked-portal
+    platform: linux/amd64
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=docker
+      - PORTAL_CONFIG_KEY=wicked
+      - PORTAL_API_URL=http://wicked-api:3001
+    volumes:
+      - ../wicked/wicked-config/static:/var/portal-api/static
+    depends_on:
+      - wicked-api
+    networks:
+      - wicked-net
+
+  wicked-auth:
+    image: haufelexware/wicked.auth:latest
+    container_name: wicked-auth
+    platform: linux/amd64
+    environment:
+      - NODE_ENV=docker
+      - PORTAL_CONFIG_KEY=wicked
+      - PORTAL_API_URL=http://wicked-api:3001
+    volumes:
+      - ../wicked/wicked-config/static:/var/portal-api/static
+    depends_on:
+      - wicked-api
+    networks:
+      - wicked-net
+
+  wicked-mailer:
+    image: haufelexware/wicked.mailer:latest
+    container_name: wicked-mailer
+    platform: linux/amd64
+    environment:
+      - NODE_ENV=docker
+      - PORTAL_CONFIG_KEY=wicked
+      - PORTAL_API_URL=http://wicked-api:3001
+    depends_on:
+      - wicked-api
+    networks:
+      - wicked-net
+
+volumes:
+  wicked-mongo-data:
+  wicked-redis-data:
+  wicked-postgres-data:
+
+
+networks:
+  wicked-net:

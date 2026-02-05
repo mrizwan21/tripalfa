@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: staticdatabase
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    ports:
+      - "6432:6432"
+    volumes:
+      - ./pgbouncer:/etc/pgbouncer:ro
+    environment:
+      - LOGFILE=/dev/stdout
+    restart: unless-stopped
+    networks:
+      - default
+      - tripalfa
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  tripalfa:
+    external: true
+    name: tripalfa-node_default

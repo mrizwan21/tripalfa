@@ -56,7 +56,7 @@ const BannerManagement: React.FC = () => {
         isLoading: permissionsLoading 
     } = useMarketingPermissions();
 
-    const { data: banners, isLoading } = useQuery(['banners', companyId], async (): Promise<Banner[]> => {
+    const { data: banners, isLoading } = useQuery<Banner[]>({ queryKey: ['banners', companyId], queryFn: async (): Promise<Banner[]> => {
         // const { data } = await axios.get(`/api/marketing/banners?companyId=${companyId}`);
         // return data;
         // Mock data for now
@@ -64,7 +64,7 @@ const BannerManagement: React.FC = () => {
             { id: '1', title: 'Summer Sale 2026', imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e', targetUrl: '/promotions/summer', startDate: '2026-06-01', endDate: '2026-08-31', status: 'active', position: 'home_hero', impressions: 15420, clicks: 1240 },
             { id: '2', title: 'Winter Early Bird', imageUrl: 'https://images.unsplash.com/photo-1483683804023-6ccdb62f86ef', targetUrl: '/promotions/winter', startDate: '2026-09-01', endDate: '2026-11-30', status: 'scheduled', position: 'sidebar', impressions: 0, clicks: 0 },
         ] as Banner[];
-    });
+    }});
 
     const form = useForm<BannerFormValues>({
         resolver: zodResolver(bannerSchema),
@@ -93,36 +93,33 @@ const BannerManagement: React.FC = () => {
         form.reset(mapBannerToForm(editingBanner));
     }, [editingBanner, form]);
 
-    const mutation = useMutation<BannerFormValues, unknown, BannerFormValues, unknown>(
-        async (values: BannerFormValues) => {
+    const mutation = useMutation({
+        mutationFn: async (values: BannerFormValues) => {
             // return editingBanner?.id 
             //   ? axios.put(`/api/marketing/banners/${editingBanner.id}`, { ...values, companyId })
             //   : axios.post('/api/marketing/banners', { ...values, companyId });
             await new Promise<void>(resolve => setTimeout(() => resolve(), 1000)); // Mock delay
             return values;
         },
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(['banners', companyId]);
-                setIsModalOpen(false);
-                toast.success(editingBanner ? "Banner updated" : "Banner created");
-            },
-            onError: () => toast.error("Failed to save banner"),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['banners', companyId] });
+            setIsModalOpen(false);
+            toast.success(editingBanner ? "Banner updated" : "Banner created");
+        },
+        onError: () => toast.error("Failed to save banner"),
         }
     );
 
-    const deleteMutation = useMutation(
-        async (id: string) => {
+    const deleteMutation = useMutation({
+        mutationFn: async (id: string) => {
             // await axios.delete(`/api/marketing/banners/${id}`);
             await new Promise(resolve => setTimeout(resolve, 500));
         },
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(['banners', companyId]);
-                toast.success("Banner deleted");
-            },
-        }
-    );
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['banners', companyId] });
+            toast.success("Banner deleted");
+        },
+    });
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -212,7 +209,7 @@ const BannerManagement: React.FC = () => {
                                         <DropdownMenuItem onClick={() => { setEditingBanner(banner); setIsModalOpen(true); }} className="font-medium cursor-pointer">
                                             Edit Banner
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => banner.id && deleteMutation.mutate(banner.id)} className="text-red-600 font-medium cursor-pointer focus:text-red-700 focus:bg-red-50">
+                                        <DropdownMenuItem onClick={() => banner.id ? deleteMutation.mutate(banner.id) : undefined} className="text-red-600 font-medium cursor-pointer focus:text-red-700 focus:bg-red-50">
                                             Delete
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -369,10 +366,10 @@ const BannerManagement: React.FC = () => {
                                 <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="font-bold">Cancel</Button>
                                 <Button
                                     type="submit"
-                                    disabled={mutation.isLoading}
+                                    disabled={mutation.isPending}
                                     className="h-10 px-8 bg-gray-900 hover:bg-primary text-white font-bold rounded-xl shadow-lg hover:shadow-primary/30 transition-all"
                                 >
-                                    {mutation.isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                    {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                                     Save Campaign
                                 </Button>
                             </DialogFooter>

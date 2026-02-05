@@ -1,0 +1,778 @@
+id,iata_code,icao_code,name,country,logo_url,website,alliance,is_active,created_at,updated_at
+6,AA,,American Airlines,United States,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AA.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:50.985061+00
+5,BA,,British Airways,United Kingdom,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BA.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:51.575252+00
+7,DL,,Delta Air Lines,United States,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DL.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:52.223262+00
+21,ZZ,,Duffel Airways,United Kingdom,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZZ.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:52.261262+00
+1,EK,,Emirates,United Arab Emirates,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EK.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:52.357977+00
+20,FZ,,flydubai,United Arab Emirates,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FZ.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:52.6816+00
+17,IB,,Iberia,Spain,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IB.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:53.09919+00
+18,KL,,KLM,Netherlands,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KL.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:53.53428+00
+19,WY,,Oman Air,Oman,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WY.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:54.455736+00
+16,QF,,Qantas,Australia,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QF.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:54.803767+00
+12,SQ,,Singapore Airlines,Singapore,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SQ.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:55.99607+00
+11,TK,,Turkish Airlines,Turkey,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TK.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:57.265877+00
+4,VS,,Virgin Atlantic,United Kingdom,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VS.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:57.932556+00
+22,12,,12 North,,,,,t,2026-02-01 17:55:25.464009+00,2026-02-01 17:57:49.835127+00
+23,Q5,,40-Mile Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Q5.svg,,,t,2026-02-01 17:55:25.54368+00,2026-02-01 17:57:49.853021+00
+24,GB,,ABX Air,,,,,t,2026-02-01 17:55:25.549981+00,2026-02-01 17:57:49.860069+00
+25,A3,,Aegean Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/A3.svg,,,t,2026-02-01 17:55:25.560351+00,2026-02-01 17:57:49.867036+00
+26,AX,,Aergo International Pty Ltd,,,,,t,2026-02-01 17:55:25.579226+00,2026-02-01 17:57:49.873904+00
+27,EI,,Aer Lingus,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EI.svg,,,t,2026-02-01 17:55:25.603457+00,2026-02-01 17:57:49.885967+00
+28,EG,,Aer Lingus UK,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EG.svg,,,t,2026-02-01 17:55:25.610743+00,2026-02-01 17:57:49.899552+00
+29,7T,,Aero Express del Ecuador - Trans A,,,,,t,2026-02-01 17:55:25.628906+00,2026-02-01 17:57:49.904854+00
+30,SU,,Aeroflot,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SU.svg,,,t,2026-02-01 17:55:25.645251+00,2026-02-01 17:57:49.91368+00
+31,RF,,Aero-K Airlines,,,,,t,2026-02-01 17:55:25.655893+00,2026-02-01 17:57:49.920934+00
+32,EF,,Aerolinea del Caribe Peru S.A.C.,,,,,t,2026-02-01 17:55:25.669472+00,2026-02-01 17:57:49.926222+00
+33,JK,,Aerolinea Del Caribe S.A.,,,,,t,2026-02-01 17:55:25.685207+00,2026-02-01 17:57:49.93973+00
+34,AR,,Aerolineas Argentinas,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AR.svg,,,t,2026-02-01 17:55:25.704133+00,2026-02-01 17:57:49.958139+00
+35,3S,,Aerologic,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3S.svg,,,t,2026-02-01 17:55:25.717272+00,2026-02-01 17:57:49.970966+00
+36,AM,,Aeromexico,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AM.svg,,,t,2026-02-01 17:55:25.745378+00,2026-02-01 17:57:49.976949+00
+37,5D,,Aeromexico Connect,,,,,t,2026-02-01 17:55:25.751789+00,2026-02-01 17:57:49.983674+00
+38,DC,,AERONAVES DOMINICANAS SRL,,,,,t,2026-02-01 17:55:25.772347+00,2026-02-01 17:57:49.990239+00
+39,KA,,Aero Nomad Airlines LLC,,,,,t,2026-02-01 17:55:25.783847+00,2026-02-01 17:57:50.015191+00
+40,OT,,Aeropelican Air Services,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OT.svg,,,t,2026-02-01 17:55:25.79897+00,2026-02-01 17:57:50.022769+00
+41,VH,,Aeropostal Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VH.svg,,,t,2026-02-01 17:55:25.81585+00,2026-02-01 17:57:50.031636+00
+42,5L,,Aerosur,,,,,t,2026-02-01 17:55:25.830664+00,2026-02-01 17:57:50.035018+00
+43,M7,,Aerotransportes Mas de Carga,,,,,t,2026-02-01 17:55:25.840035+00,2026-02-01 17:57:50.054156+00
+44,6R,,Aerounion,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6R.svg,,,t,2026-02-01 17:55:25.859629+00,2026-02-01 17:57:50.058471+00
+45,4D,,Aerro Direkt S.R.L.,,,,,t,2026-02-01 17:55:25.861225+00,2026-02-01 17:57:50.065918+00
+47,J7,,Afrijet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/J7.svg,,,t,2026-02-01 17:55:25.89213+00,2026-02-01 17:57:50.096432+00
+48,8U,,Afriqiyah Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8U.svg,,,t,2026-02-01 17:55:25.899134+00,2026-02-01 17:57:50.104182+00
+49,ZB,,Air Albania,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZB.svg,,,t,2026-02-01 17:55:25.900955+00,2026-02-01 17:57:50.107643+00
+50,AH,,Air Algerie,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AH.svg,,,t,2026-02-01 17:55:25.905521+00,2026-02-01 17:57:50.114216+00
+51,G9,,Air Arabia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/G9.svg,,,t,2026-02-01 17:55:25.910822+00,2026-02-01 17:57:50.117077+00
+52,AK,,AirAsia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AK.svg,,,t,2026-02-01 17:55:25.922407+00,2026-02-01 17:57:50.121083+00
+53,I5,,AirAsia India,,,,,t,2026-02-01 17:55:25.926608+00,2026-02-01 17:57:50.128297+00
+54,D7,,AirAsia X,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/D7.svg,,,t,2026-02-01 17:55:25.936899+00,2026-02-01 17:57:50.132696+00
+55,KC,,Air Astana,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KC.svg,,,t,2026-02-01 17:55:25.948173+00,2026-02-01 17:57:50.135936+00
+56,CT,,Air Atlanta Europe Ltd,,,,,t,2026-02-01 17:55:25.954358+00,2026-02-01 17:57:50.150409+00
+57,UU,,Air Austral,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UU.svg,,,t,2026-02-01 17:55:25.957204+00,2026-02-01 17:57:50.154272+00
+58,BT,,Air Baltic Corporation A/S,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BT.svg,,,t,2026-02-01 17:55:25.96503+00,2026-02-01 17:57:50.162423+00
+59,KF,,Air Belgium,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KF.svg,,,t,2026-02-01 17:55:25.982884+00,2026-02-01 17:57:50.166918+00
+60,PA,,Airblue,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PA.svg,,,t,2026-02-01 17:55:26.004222+00,2026-02-01 17:57:50.200058+00
+61,BP,,Air Botswana,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BP.svg,,,t,2026-02-01 17:55:26.013103+00,2026-02-01 17:57:50.21169+00
+62,2J,,Air Burkina,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2J.svg,,,t,2026-02-01 17:55:26.026903+00,2026-02-01 17:57:50.214452+00
+10,AF,,Air France,France,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AF.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:50.419046+00
+64,SM,,Air Cairo,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SM.svg,,,t,2026-02-01 17:55:26.065366+00,2026-02-01 17:57:50.226501+00
+65,SB,,Aircalin,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SB.svg,,,t,2026-02-01 17:55:26.072527+00,2026-02-01 17:57:50.231252+00
+15,AC,,Air Canada,Canada,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AC.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:50.232755+00
+67,RV,,Air Canada Rouge,,,,,t,2026-02-01 17:55:26.238604+00,2026-02-01 17:57:50.241625+00
+68,TX,,Air Caraïbes,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TX.svg,,,t,2026-02-01 17:55:26.244001+00,2026-02-01 17:57:50.249591+00
+69,2Q,,Air Cargo Carriers,,,,,t,2026-02-01 17:55:26.245393+00,2026-02-01 17:57:50.260378+00
+70,3C,,Air Chathams,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3C.svg,,,t,2026-02-01 17:55:26.247033+00,2026-02-01 17:57:50.264588+00
+71,CA,,Air China,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CA.svg,,,t,2026-02-01 17:55:26.247951+00,2026-02-01 17:57:50.286574+00
+72,LV,,Aircompany Airzena,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LV.svg,,,t,2026-02-01 17:55:26.248827+00,2026-02-01 17:57:50.29016+00
+73,RM,,Aircompany Armenia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RM.svg,,,t,2026-02-01 17:55:26.251368+00,2026-02-01 17:57:50.301676+00
+74,ZK,,Aircompany ZetAvia,,,,,t,2026-02-01 17:55:26.255141+00,2026-02-01 17:57:50.307664+00
+75,KS,,AIR CONNECT AVIATION GROUP S.A.,,,,,t,2026-02-01 17:55:26.261943+00,2026-02-01 17:57:50.326748+00
+77,HF,,Air Côte d'Ivoire,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HF.svg,,,t,2026-02-01 17:55:26.26708+00,2026-02-01 17:57:50.355657+00
+78,YN,,Air Creebec,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YN.svg,,,t,2026-02-01 17:55:26.268042+00,2026-02-01 17:57:50.370772+00
+79,DJ,,Air Djibouti,,,,,t,2026-02-01 17:55:26.268828+00,2026-02-01 17:57:50.37714+00
+80,HD,,Air Do,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HD.svg,,,t,2026-02-01 17:55:26.271819+00,2026-02-01 17:57:50.38708+00
+81,EN,,Air Dolomiti,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EN.svg,,,t,2026-02-01 17:55:26.272873+00,2026-02-01 17:57:50.400229+00
+82,UX,,Air Europa,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UX.svg,,,t,2026-02-01 17:55:26.27377+00,2026-02-01 17:57:50.404789+00
+83,X5,,Air Europa Express,,,,,t,2026-02-01 17:55:26.274243+00,2026-02-01 17:57:50.412001+00
+85,GL,,Air Greenland,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GL.svg,,,t,2026-02-01 17:55:26.276751+00,2026-02-01 17:57:50.426003+00
+86,GT,,Air Guilin,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GT.svg,,,t,2026-02-01 17:55:26.278082+00,2026-02-01 17:57:50.431705+00
+87,HT,,Air Horizont,,,,,t,2026-02-01 17:55:26.278658+00,2026-02-01 17:57:50.433155+00
+88,RE,,Airhub Airlines Limited,,,,,t,2026-02-01 17:55:26.279248+00,2026-02-01 17:57:50.434943+00
+89,NY,,Air Iceland Connect,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NY.svg,,,t,2026-02-01 17:55:26.279687+00,2026-02-01 17:57:50.443133+00
+90,KJ,,"Air Incheon Co, Ltd",,,,,t,2026-02-01 17:55:26.280067+00,2026-02-01 17:57:50.456335+00
+14,AI,,Air India,India,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AI.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:50.464266+00
+92,IX,,Air India Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IX.svg,,,t,2026-02-01 17:55:26.280896+00,2026-02-01 17:57:50.470162+00
+93,3H,,Air Inuit,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3H.svg,,,t,2026-02-01 17:55:26.281592+00,2026-02-01 17:57:50.478538+00
+94,NQ,,Air Japan,,,,,t,2026-02-01 17:55:26.282045+00,2026-02-01 17:57:50.484133+00
+95,IK,,Air Kiribati,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IK.svg,,,t,2026-02-01 17:55:26.282906+00,2026-02-01 17:57:50.490495+00
+96,JS,,Air Koryo,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JS.svg,,,t,2026-02-01 17:55:26.283351+00,2026-02-01 17:57:50.495765+00
+97,4Z,,Airlink,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4Z.svg,,,t,2026-02-01 17:55:26.284242+00,2026-02-01 17:57:50.5042+00
+98,NX,,Air Macau,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NX.svg,,,t,2026-02-01 17:55:26.285353+00,2026-02-01 17:57:50.51245+00
+99,MD,,Air Madagascar,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MD.svg,,,t,2026-02-01 17:55:26.285834+00,2026-02-01 17:57:50.51707+00
+100,NM,,Air Madrid,,,,,t,2026-02-01 17:55:26.286583+00,2026-02-01 17:57:50.522493+00
+101,KM,,Air Malta,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KM.svg,,,t,2026-02-01 17:55:26.287247+00,2026-02-01 17:57:50.527038+00
+102,MK,,Air Mauritius,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MK.svg,,,t,2026-02-01 17:55:26.287721+00,2026-02-01 17:57:50.549424+00
+103,9U,,Air Moldova,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9U.svg,,,t,2026-02-01 17:55:26.287995+00,2026-02-01 17:57:50.555586+00
+104,NZ,,Air New Zealand,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NZ.svg,,,t,2026-02-01 17:55:26.288337+00,2026-02-01 17:57:50.562006+00
+105,EL,,Air Nippon,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EL.svg,,,t,2026-02-01 17:55:26.288885+00,2026-02-01 17:57:50.565128+00
+106,PX,,Air Niugini,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PX.svg,,,t,2026-02-01 17:55:26.289268+00,2026-02-01 17:57:50.583474+00
+107,TL,,Airnorth,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TL.svg,,,t,2026-02-01 17:55:26.289877+00,2026-02-01 17:57:50.584387+00
+108,4N,,Air North,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4N.svg,,,t,2026-02-01 17:55:26.290254+00,2026-02-01 17:57:50.592+00
+109,YW,,Air Nostrum,,,,,t,2026-02-01 17:55:26.290738+00,2026-02-01 17:57:50.615756+00
+110,7P,,Air Panama,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7P.svg,,,t,2026-02-01 17:55:26.29115+00,2026-02-01 17:57:50.631417+00
+111,P4,,Air Peace,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/P4.svg,,,t,2026-02-01 17:55:26.292927+00,2026-02-01 17:57:50.638194+00
+112,A7,,Air Plus Comet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/A7.svg,,,t,2026-02-01 17:55:26.294495+00,2026-02-01 17:57:50.653896+00
+113,YP,,Air Premia,,,,,t,2026-02-01 17:55:26.295072+00,2026-02-01 17:57:50.670905+00
+115,20,,Air Salone,,,,,t,2026-02-01 17:55:26.296519+00,2026-02-01 17:57:50.718445+00
+116,HC,,Air Senegal,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HC.svg,,,t,2026-02-01 17:55:26.299043+00,2026-02-01 17:57:50.74495+00
+117,JU,,Air Serbia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JU.svg,,,t,2026-02-01 17:55:26.300465+00,2026-02-01 17:57:50.752035+00
+118,HM,,Air Seychelles,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HM.svg,,,t,2026-02-01 17:55:26.301442+00,2026-02-01 17:57:50.768515+00
+119,VT,,Air Tahiti,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VT.svg,,,t,2026-02-01 17:55:26.302359+00,2026-02-01 17:57:50.779118+00
+120,TN,,Air Tahiti Nui,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TN.svg,,,t,2026-02-01 17:55:26.303131+00,2026-02-01 17:57:50.78353+00
+121,TC,,Air Tanzania,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TC.svg,,,t,2026-02-01 17:55:26.30416+00,2026-02-01 17:57:50.801072+00
+124,TS,,Air Transat,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TS.svg,,,t,2026-02-01 17:55:26.312011+00,2026-02-01 17:57:50.832027+00
+125,NF,,Air Vanuatu,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NF.svg,,,t,2026-02-01 17:55:26.314342+00,2026-02-01 17:57:50.848123+00
+126,D1,,Air Wakanda,,,,,t,2026-02-01 17:55:26.315206+00,2026-02-01 17:57:50.854233+00
+127,ZW,,Air Wisconsin,,,,,t,2026-02-01 17:55:26.315971+00,2026-02-01 17:57:50.863907+00
+128,UM,,Air Zimbabwe,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UM.svg,,,t,2026-02-01 17:55:26.316344+00,2026-02-01 17:57:50.865786+00
+129,QP,,Akasa Air,,,,,t,2026-02-01 17:55:26.316964+00,2026-02-01 17:57:50.871061+00
+130,AS,,Alaska Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AS.svg,,,t,2026-02-01 17:55:26.318269+00,2026-02-01 17:57:50.877043+00
+131,JN,,Alaska Air Transit,,,,,t,2026-02-01 17:55:26.319258+00,2026-02-01 17:57:50.890737+00
+132,KO,,Alaska Central Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KO.svg,,,t,2026-02-01 17:55:26.319866+00,2026-02-01 17:57:50.901368+00
+133,2B,,Albawings,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2B.svg,,,t,2026-02-01 17:55:26.322887+00,2026-02-01 17:57:50.907645+00
+134,CP,,ALISCARGO AIRLINES S.P.A.,,,,,t,2026-02-01 17:55:26.325487+00,2026-02-01 17:57:50.914222+00
+135,G4,,Allegiant Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/G4.svg,,,t,2026-02-01 17:55:26.327522+00,2026-02-01 17:57:50.921292+00
+136,QQ,,Alliance Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QQ.svg,,,t,2026-02-01 17:55:26.329508+00,2026-02-01 17:57:50.927046+00
+137,UJ,,Almasria,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UJ.svg,,,t,2026-02-01 17:55:26.330567+00,2026-02-01 17:57:50.934472+00
+138,MZ,,"Amakusa Airlines Co.,Ltd",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MZ.svg,,,t,2026-02-01 17:55:26.331291+00,2026-02-01 17:57:50.947347+00
+139,HP,,Amapola Flyg AB dba PopulAir,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HP.svg,,,t,2026-02-01 17:55:26.332276+00,2026-02-01 17:57:50.957682+00
+140,8R,,AMELIA,,,,,t,2026-02-01 17:55:26.333148+00,2026-02-01 17:57:50.969106+00
+141,NL,,Amelia International,,,,,t,2026-02-01 17:55:26.334025+00,2026-02-01 17:57:50.982539+00
+143,NH,,ANA,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NH.svg,,,t,2026-02-01 17:55:26.335631+00,2026-02-01 17:57:50.989597+00
+144,EH,,ANA Wings,,,,,t,2026-02-01 17:55:26.336445+00,2026-02-01 17:57:50.997918+00
+145,A2,,Anima Wings Aviation S.A.,,,,,t,2026-02-01 17:55:26.337203+00,2026-02-01 17:57:51.00894+00
+147,A1,,A.P.G. Distribution System,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/A1.svg,,,t,2026-02-01 17:55:26.338596+00,2026-02-01 17:57:51.03155+00
+148,DM,,Arajet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DM.svg,,,t,2026-02-01 17:55:26.339332+00,2026-02-01 17:57:51.042009+00
+149,FG,,Ariana Afghan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FG.svg,,,t,2026-02-01 17:55:26.34+00,2026-02-01 17:57:51.057659+00
+150,IZ,,Arkia Israeli Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IZ.svg,,,t,2026-02-01 17:55:26.340717+00,2026-02-01 17:57:51.069312+00
+151,6A,,Armenia Airways Air Company CJSC,,,,,t,2026-02-01 17:55:26.341633+00,2026-02-01 17:57:51.082733+00
+152,JW,,Arrow Air,,,,,t,2026-02-01 17:55:26.342328+00,2026-02-01 17:57:51.087733+00
+153,D4,,Asgard Airways,,,,,t,2026-02-01 17:55:26.344051+00,2026-02-01 17:57:51.099254+00
+154,OZ,,Asiana Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OZ.svg,,,t,2026-02-01 17:55:26.344992+00,2026-02-01 17:57:51.102125+00
+155,6K,,Asian Spirit,,,,,t,2026-02-01 17:55:26.345798+00,2026-02-01 17:57:51.108815+00
+156,4K,,Askari Aviation,,,,,t,2026-02-01 17:55:26.346528+00,2026-02-01 17:57:51.11121+00
+157,KP,,ASKY,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KP.svg,,,t,2026-02-01 17:55:26.347247+00,2026-02-01 17:57:51.115611+00
+158,5O,,ASL Airlines France,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5O.svg,,,t,2026-02-01 17:55:26.34792+00,2026-02-01 17:57:51.123179+00
+159,8V,,Astral Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8V.svg,,,t,2026-02-01 17:55:26.352842+00,2026-02-01 17:57:51.127781+00
+160,RC,,Atlantic Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RC.svg,,,t,2026-02-01 17:55:26.353717+00,2026-02-01 17:57:51.134805+00
+161,5Y,,Atlas Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5Y.svg,,,t,2026-02-01 17:55:26.354252+00,2026-02-01 17:57:51.145993+00
+162,V8,,ATRAN,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/V8.svg,,,t,2026-02-01 17:55:26.354906+00,2026-02-01 17:57:51.151553+00
+163,UI,,Auric Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UI.svg,,,t,2026-02-01 17:55:26.355601+00,2026-02-01 17:57:51.158441+00
+164,GR,,Aurigny Air Services,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GR.svg,,,t,2026-02-01 17:55:26.356368+00,2026-02-01 17:57:51.164549+00
+165,HZ,,Aurora Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HZ.svg,,,t,2026-02-01 17:55:26.357073+00,2026-02-01 17:57:51.169234+00
+166,OS,,Austrian,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OS.svg,,,t,2026-02-01 17:55:26.364177+00,2026-02-01 17:57:51.17799+00
+167,VO,,Austrian Arrows,,,,,t,2026-02-01 17:55:26.36544+00,2026-02-01 17:57:51.190573+00
+168,DP,,Aviakompaniya Pobeda,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DP.svg,,,t,2026-02-01 17:55:26.371062+00,2026-02-01 17:57:51.201318+00
+169,V2,,Avialeasing Aviation Company,,,,,t,2026-02-01 17:55:26.371671+00,2026-02-01 17:57:51.20763+00
+170,AV,,Avianca,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AV.svg,,,t,2026-02-01 17:55:26.374186+00,2026-02-01 17:57:51.214551+00
+171,LR,,Avianca Costa Rica,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LR.svg,,,t,2026-02-01 17:55:26.376419+00,2026-02-01 17:57:51.222474+00
+172,2K,,Avianca Ecuador,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2K.svg,,,t,2026-02-01 17:55:26.377175+00,2026-02-01 17:57:51.232818+00
+173,TA,,Avianca El Salvador,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TA.svg,,,t,2026-02-01 17:55:26.377841+00,2026-02-01 17:57:51.242931+00
+174,EX,,Avianca Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EX.svg,,,t,2026-02-01 17:55:26.378477+00,2026-02-01 17:57:51.249409+00
+175,GU,,Avianca Guatemala,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GU.svg,,,t,2026-02-01 17:55:26.379189+00,2026-02-01 17:57:51.254204+00
+176,YK,,Avia Traffic Company,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YK.svg,,,t,2026-02-01 17:55:26.37984+00,2026-02-01 17:57:51.258944+00
+177,Z3,,Avient Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Z3.svg,,,t,2026-02-01 17:55:26.380469+00,2026-02-01 17:57:51.270424+00
+178,X9,,Avion Express,,,,,t,2026-02-01 17:55:26.381101+00,2026-02-01 17:57:51.278607+00
+179,4X,,Avion Express Malta,,,,,t,2026-02-01 17:55:26.381767+00,2026-02-01 17:57:51.285703+00
+180,9V,,Avior Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9V.svg,,,t,2026-02-01 17:55:26.382364+00,2026-02-01 17:57:51.298192+00
+181,J2,,Azerbaijan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/J2.svg,,,t,2026-02-01 17:55:26.382959+00,2026-02-01 17:57:51.306129+00
+182,A4,,Azimuth,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/A4.svg,,,t,2026-02-01 17:55:26.383533+00,2026-02-01 17:57:51.315642+00
+184,AJ,,Aztec Worldwide Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AJ.svg,,,t,2026-02-01 17:55:26.387612+00,2026-02-01 17:57:51.33068+00
+185,AD,,Azul Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AD.svg,,,t,2026-02-01 17:55:26.388348+00,2026-02-01 17:57:51.33914+00
+186,QU,,Azur Air Ukraine,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QU.svg,,,t,2026-02-01 17:55:26.388983+00,2026-02-01 17:57:51.351534+00
+187,CJ,,BA CityFlyer,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CJ.svg,,,t,2026-02-01 17:55:26.389674+00,2026-02-01 17:57:51.358138+00
+188,A0,,BA Euroflyer,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/A0.svg,,,t,2026-02-01 17:55:26.390279+00,2026-02-01 17:57:51.364191+00
+189,UP,,Bahamasair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UP.svg,,,t,2026-02-01 17:55:26.392755+00,2026-02-01 17:57:51.369274+00
+191,PG,,Bangkok Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PG.svg,,,t,2026-02-01 17:55:26.394001+00,2026-02-01 17:57:51.395725+00
+192,RP,,Base Airlines,,,,,t,2026-02-01 17:55:26.394593+00,2026-02-01 17:57:51.398197+00
+193,ID,,Batik Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ID.svg,,,t,2026-02-01 17:55:26.39528+00,2026-02-01 17:57:51.411996+00
+194,JV,,Bearskin Airlines,,,,,t,2026-02-01 17:55:26.395868+00,2026-02-01 17:57:51.418814+00
+195,JD,,Beijing Capital Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JD.svg,,,t,2026-02-01 17:55:26.398316+00,2026-02-01 17:57:51.423925+00
+196,B2,,Belavia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B2.svg,,,t,2026-02-01 17:55:26.398881+00,2026-02-01 17:57:51.431972+00
+197,CH,,Bemidji Aviation Services,,,,,t,2026-02-01 17:55:26.399594+00,2026-02-01 17:57:51.441926+00
+198,8E,,Bering Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8E.svg,,,t,2026-02-01 17:55:26.400217+00,2026-02-01 17:57:51.451352+00
+199,J8,,Berjaya Air,,,,,t,2026-02-01 17:55:26.40086+00,2026-02-01 17:57:51.463902+00
+200,NB,,Berniq Airways,,,,,t,2026-02-01 17:55:26.401464+00,2026-02-01 17:57:51.477752+00
+201,8H,,BH Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8H.svg,,,t,2026-02-01 17:55:26.40228+00,2026-02-01 17:57:51.483688+00
+202,B3,,Bhutan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B3.svg,,,t,2026-02-01 17:55:26.402893+00,2026-02-01 17:57:51.489638+00
+203,BG,,Biman Bangladesh Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BG.svg,,,t,2026-02-01 17:55:26.403548+00,2026-02-01 17:57:51.496936+00
+204,NT,,Binter Canarias,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NT.svg,,,t,2026-02-01 17:55:26.404156+00,2026-02-01 17:57:51.505122+00
+205,0B,,Blue Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/0B.svg,,,t,2026-02-01 17:55:26.404786+00,2026-02-01 17:57:51.516539+00
+206,BZ,,Blue Bird Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BZ.svg,,,t,2026-02-01 17:55:26.405444+00,2026-02-01 17:57:51.526573+00
+207,SI,,Blue Islands,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SI.svg,,,t,2026-02-01 17:55:26.408509+00,2026-02-01 17:57:51.528248+00
+208,OB,,Boliviana de Aviación,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OB.svg,,,t,2026-02-01 17:55:26.409528+00,2026-02-01 17:57:51.533432+00
+209,4B,,Boutique Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4B.svg,,,t,2026-02-01 17:55:26.410229+00,2026-02-01 17:57:51.539416+00
+210,TF,,BRA,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TF.svg,,,t,2026-02-01 17:55:26.410814+00,2026-02-01 17:57:51.549119+00
+211,B1,,Bravo Passenger Soloutions,,,,,t,2026-02-01 17:55:26.411521+00,2026-02-01 17:57:51.55817+00
+212,MX,,Breeze Airways,,,,,t,2026-02-01 17:55:26.41217+00,2026-02-01 17:57:51.570344+00
+214,SN,,Brussels Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SN.svg,,,t,2026-02-01 17:55:26.41336+00,2026-02-01 17:57:51.581817+00
+215,U4,,Buddha Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/U4.svg,,,t,2026-02-01 17:55:26.41447+00,2026-02-01 17:57:51.59246+00
+216,BD,,Budget Lines,,,,,t,2026-02-01 17:55:26.415169+00,2026-02-01 17:57:51.608919+00
+217,FB,,Bulgaria Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FB.svg,,,t,2026-02-01 17:55:26.415927+00,2026-02-01 17:57:51.613597+00
+218,UZ,,Buraq Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UZ.svg,,,t,2026-02-01 17:55:26.416533+00,2026-02-01 17:57:51.615853+00
+219,VR,,Cabo Verde Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VR.svg,,,t,2026-02-01 17:55:26.417129+00,2026-02-01 17:57:51.622098+00
+220,9Q,,Caicos Express Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9Q.svg,,,t,2026-02-01 17:55:26.417799+00,2026-02-01 17:57:51.630685+00
+221,5C,,C.A.L Cargo Airlines,,,,,t,2026-02-01 17:55:26.418404+00,2026-02-01 17:57:51.640339+00
+222,MO,,Calm Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MO.svg,,,t,2026-02-01 17:55:26.418973+00,2026-02-01 17:57:51.642241+00
+223,QC,,Camair-Co,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QC.svg,,,t,2026-02-01 17:55:26.419594+00,2026-02-01 17:57:51.654819+00
+224,KR,,Cambodia Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KR.svg,,,t,2026-02-01 17:55:26.420215+00,2026-02-01 17:57:51.662922+00
+225,K6,,Cambodia Angkor Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/K6.svg,,,t,2026-02-01 17:55:26.422445+00,2026-02-01 17:57:51.667976+00
+226,Z7,,Camex,,,,,t,2026-02-01 17:55:26.423132+00,2026-02-01 17:57:51.684841+00
+227,AU,,Canada Jetlines Operations Ltd.,,,,,t,2026-02-01 17:55:26.423745+00,2026-02-01 17:57:51.699159+00
+228,5T,,Canadian North,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5T.svg,,,t,2026-02-01 17:55:26.424589+00,2026-02-01 17:57:51.710672+00
+229,PM,,Canaryfly,,,,,t,2026-02-01 17:55:26.42526+00,2026-02-01 17:57:51.722534+00
+230,9K,,Cape Air ,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9K.svg,,,t,2026-02-01 17:55:26.425908+00,2026-02-01 17:57:51.726921+00
+231,C3,,"Cargo Three, Inc.",,,,,t,2026-02-01 17:55:26.426537+00,2026-02-01 17:57:51.734945+00
+233,V3,,Carpatair,,,,,t,2026-02-01 17:55:26.427876+00,2026-02-01 17:57:51.753883+00
+13,CX,,Cathay Pacific,Hong Kong,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CX.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:51.759518+00
+235,KX,,Cayman Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KX.svg,,,t,2026-02-01 17:55:26.429276+00,2026-02-01 17:57:51.766089+00
+236,DG,,Cebgo,,,,,t,2026-02-01 17:55:26.429925+00,2026-02-01 17:57:51.779993+00
+237,5J,,Cebu Pacific,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5J.svg,,,t,2026-02-01 17:55:26.430573+00,2026-02-01 17:57:51.782576+00
+238,5Z,,CemAir,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5Z.svg,,,t,2026-02-01 17:55:26.43117+00,2026-02-01 17:57:51.789326+00
+239,9M,,Central Mountain Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9M.svg,,,t,2026-02-01 17:55:26.431817+00,2026-02-01 17:57:51.798307+00
+240,C0,,Centralwings,,,,,t,2026-02-01 17:55:26.432407+00,2026-02-01 17:57:51.807639+00
+241,GM,,Chair Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GM.svg,,,t,2026-02-01 17:55:26.432941+00,2026-02-01 17:57:51.814547+00
+371,I7,,GSEC Monarch and Deccan Aviation Pr,,,,,t,2026-02-01 17:55:26.527382+00,2026-02-01 17:57:52.916735+00
+243,6Q,,Cham Wings Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6Q.svg,,,t,2026-02-01 17:55:26.437846+00,2026-02-01 17:57:51.825055+00
+244,CY,,Charlie Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CY.svg,,,t,2026-02-01 17:55:26.438523+00,2026-02-01 17:57:51.831677+00
+245,EU,,Chengdu Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EU.svg,,,t,2026-02-01 17:55:26.439202+00,2026-02-01 17:57:51.835077+00
+246,CI,,China Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CI.svg,,,t,2026-02-01 17:55:26.439791+00,2026-02-01 17:57:51.841876+00
+247,I9,,"China Central Airlines Co., Ltd.",,,,,t,2026-02-01 17:55:26.44036+00,2026-02-01 17:57:51.848915+00
+248,GI,,China Central Longhao Airlines Co.,,,,,t,2026-02-01 17:55:26.441073+00,2026-02-01 17:57:51.866322+00
+250,CF,,China Postal Airlines Ltd.,,,,,t,2026-02-01 17:55:26.442425+00,2026-02-01 17:57:51.87706+00
+251,CZ,,China Southern Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CZ.svg,,,t,2026-02-01 17:55:26.443063+00,2026-02-01 17:57:51.880438+00
+252,NN,,China Travel Tours Transp Services,,,,,t,2026-02-01 17:55:26.443707+00,2026-02-01 17:57:51.884169+00
+253,KN,,China United Airlines,,,,,t,2026-02-01 17:55:26.444312+00,2026-02-01 17:57:51.889751+00
+254,OQ,,Chongqing Airlines,,,,,t,2026-02-01 17:55:26.444922+00,2026-02-01 17:57:51.904293+00
+255,MB,,Chrono Jet Inc.,,,,,t,2026-02-01 17:55:26.445654+00,2026-02-01 17:57:51.920708+00
+256,QG,,Citilink,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QG.svg,,,t,2026-02-01 17:55:26.446253+00,2026-02-01 17:57:51.929234+00
+257,VL,,City Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VL.svg,,,t,2026-02-01 17:55:26.448987+00,2026-02-01 17:57:51.949284+00
+258,WX,,CityJet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WX.svg,,,t,2026-02-01 17:55:26.449564+00,2026-02-01 17:57:51.95952+00
+259,VE,,Clic Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VE.svg,,,t,2026-02-01 17:55:26.449968+00,2026-02-01 17:57:51.970501+00
+260,IO,,Closed Joint Stock Company IrAero,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IO.svg,,,t,2026-02-01 17:55:26.450462+00,2026-02-01 17:57:51.980646+00
+261,H5,,CM Airlines,,,,,t,2026-02-01 17:55:26.453311+00,2026-02-01 17:57:51.989807+00
+262,CC,,CM Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CC.svg,,,t,2026-02-01 17:55:26.453749+00,2026-02-01 17:57:51.999331+00
+263,CQ,,Coastal Travels Ltd.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CQ.svg,,,t,2026-02-01 17:55:26.454165+00,2026-02-01 17:57:52.016102+00
+264,GY,,Colorful GuiZhou Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GY.svg,,,t,2026-02-01 17:55:26.454606+00,2026-02-01 17:57:52.024967+00
+265,CS,,Comlux Aruba,,,,,t,2026-02-01 17:55:26.455365+00,2026-02-01 17:57:52.035092+00
+266,C5,,CommuteAir,,,,,t,2026-02-01 17:55:26.455861+00,2026-02-01 17:57:52.043635+00
+267,BU,,Compagnie Africaine d'Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BU.svg,,,t,2026-02-01 17:55:26.456274+00,2026-02-01 17:57:52.054235+00
+268,DE,,Condor Flugdienst,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DE.svg,,,t,2026-02-01 17:55:26.456665+00,2026-02-01 17:57:52.064208+00
+269,8Z,,Congo Airways SA (CGA),,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8Z.svg,,,t,2026-02-01 17:55:26.457023+00,2026-02-01 17:57:52.073114+00
+270,C4,,"Conquest Air, Inc.",,,,,t,2026-02-01 17:55:26.457392+00,2026-02-01 17:57:52.082557+00
+271,V0,,Conviasa,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/V0.svg,,,t,2026-02-01 17:55:26.457791+00,2026-02-01 17:57:52.089+00
+272,CM,,Copa Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CM.svg,,,t,2026-02-01 17:55:26.458165+00,2026-02-01 17:57:52.101063+00
+273,P5,,Copa Airlines Colombia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/P5.svg,,,t,2026-02-01 17:55:26.458827+00,2026-02-01 17:57:52.108166+00
+274,0X,,Copenhagen Express,,,,,t,2026-02-01 17:55:26.459216+00,2026-02-01 17:57:52.112694+00
+275,LF,,"Corporate Flight Management, Inc.",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LF.svg,,,t,2026-02-01 17:55:26.459693+00,2026-02-01 17:57:52.120922+00
+276,SS,,Corsair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SS.svg,,,t,2026-02-01 17:55:26.460227+00,2026-02-01 17:57:52.126645+00
+277,GW,,Costa Rica Green Airways S.R.L,,,,,t,2026-02-01 17:55:26.460892+00,2026-02-01 17:57:52.141826+00
+278,OU,,Croatia Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OU.svg,,,t,2026-02-01 17:55:26.46158+00,2026-02-01 17:57:52.145976+00
+279,7K,,CSafe Global,,,,,t,2026-02-01 17:55:26.462154+00,2026-02-01 17:57:52.151629+00
+280,CU,,Cubana de Aviación,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CU.svg,,,t,2026-02-01 17:55:26.464728+00,2026-02-01 17:57:52.158557+00
+281,OK,,Czech Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OK.svg,,,t,2026-02-01 17:55:26.465112+00,2026-02-01 17:57:52.167681+00
+282,D3,,Daallo Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/D3.svg,,,t,2026-02-01 17:55:26.465515+00,2026-02-01 17:57:52.169381+00
+283,D9,,Daallo Airlines(Somalia),,,,,t,2026-02-01 17:55:26.465949+00,2026-02-01 17:57:52.173889+00
+284,9J,,Dana Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9J.svg,,,t,2026-02-01 17:55:26.466295+00,2026-02-01 17:57:52.178054+00
+285,0D,,Darwin Airline,,,,,t,2026-02-01 17:55:26.467837+00,2026-02-01 17:57:52.18506+00
+286,DX,,DAT,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DX.svg,,,t,2026-02-01 17:55:26.468557+00,2026-02-01 17:57:52.194596+00
+287,R6,,DAT LT,,,,,t,2026-02-01 17:55:26.469064+00,2026-02-01 17:57:52.212196+00
+289,L3,,DHL de Guatemala,,,,,t,2026-02-01 17:55:26.46997+00,2026-02-01 17:57:52.232156+00
+290,4Y,,Discover Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4Y.svg,,,t,2026-02-01 17:55:26.471255+00,2026-02-01 17:57:52.234576+00
+291,3R,,Divi Divi Air N.V.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3R.svg,,,t,2026-02-01 17:55:26.471622+00,2026-02-01 17:57:52.243895+00
+292,E3,,Domodedovo Airlines,,,,,t,2026-02-01 17:55:26.471961+00,2026-02-01 17:57:52.24905+00
+293,DZ,,Donghai Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DZ.svg,,,t,2026-02-01 17:55:26.472315+00,2026-02-01 17:57:52.250493+00
+294,B0,,DreamJet SAS,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B0.svg,,,t,2026-02-01 17:55:26.472907+00,2026-02-01 17:57:52.253416+00
+296,ZE,,Eastar Jet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZE.svg,,,t,2026-02-01 17:55:26.473671+00,2026-02-01 17:57:52.263665+00
+298,T3,,Eastern Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/T3.svg,,,t,2026-02-01 17:55:26.477704+00,2026-02-01 17:57:52.292899+00
+299,U2,,easyJet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/U2.svg,,,t,2026-02-01 17:55:26.478247+00,2026-02-01 17:57:52.299274+00
+300,EC,,EasyJet Europe ,,,,,t,2026-02-01 17:55:26.478766+00,2026-02-01 17:57:52.304803+00
+301,WK,,Edelweiss Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WK.svg,,,t,2026-02-01 17:55:26.479233+00,2026-02-01 17:57:52.312071+00
+302,MS,,EgyptAir,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MS.svg,,,t,2026-02-01 17:55:26.479699+00,2026-02-01 17:57:52.316009+00
+499,MP,,Martinair,,,,,t,2026-02-01 17:55:27.384206+00,2026-02-01 17:57:54.01597+00
+304,MA,,Elitavia Malta,,,,,t,2026-02-01 17:55:26.482003+00,2026-02-01 17:57:52.342964+00
+306,9E,,Endeavor Air,,,,,t,2026-02-01 17:55:26.483239+00,2026-02-01 17:57:52.373173+00
+307,MQ,,Envoy Air,,,,,t,2026-02-01 17:55:26.484062+00,2026-02-01 17:57:52.379143+00
+308,B8,,Eritrean Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B8.svg,,,t,2026-02-01 17:55:26.484654+00,2026-02-01 17:57:52.389797+00
+309,ES,,Estelar Latinoamerica C.A.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ES.svg,,,t,2026-02-01 17:55:26.485654+00,2026-02-01 17:57:52.407587+00
+310,2F,,ETF Airways d.o.o.,,,,,t,2026-02-01 17:55:26.486772+00,2026-02-01 17:57:52.413869+00
+311,ET,,Ethiopian Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ET.svg,,,t,2026-02-01 17:55:26.48746+00,2026-02-01 17:57:52.415408+00
+3,EY,,Etihad Airways,United Arab Emirates,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EY.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:52.420944+00
+313,Q4,,Euroairlines SL,,,,,t,2026-02-01 17:55:26.48882+00,2026-02-01 17:57:52.430502+00
+314,YU,,EuroAtlantic Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YU.svg,,,t,2026-02-01 17:55:26.489624+00,2026-02-01 17:57:52.43514+00
+315,K2,,Eurolot,,,,,t,2026-02-01 17:55:26.490288+00,2026-02-01 17:57:52.451345+00
+316,SE,,European Cargo Limited,,,,,t,2026-02-01 17:55:26.490999+00,2026-02-01 17:57:52.460839+00
+317,EJ,,European Cargo Services,,,,,t,2026-02-01 17:55:26.492972+00,2026-02-01 17:57:52.464493+00
+318,EW,,Eurowings,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EW.svg,,,t,2026-02-01 17:55:26.493754+00,2026-02-01 17:57:52.469336+00
+319,E2,,Eurowings Europe,,,,,t,2026-02-01 17:55:26.494137+00,2026-02-01 17:57:52.478899+00
+320,E6,,Eurowings Europe Ltd,,,,,t,2026-02-01 17:55:26.494637+00,2026-02-01 17:57:52.481936+00
+322,ZD,,Ewa Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZD.svg,,,t,2026-02-01 17:55:26.495536+00,2026-02-01 17:57:52.490223+00
+323,EV,,ExpressJet,,,,,t,2026-02-01 17:55:26.496036+00,2026-02-01 17:57:52.498579+00
+324,F1,,Farelogix Inc.,,,,,t,2026-02-01 17:55:26.496684+00,2026-02-01 17:57:52.509492+00
+325,FN,,Fastjet Zimbabwe,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FN.svg,,,t,2026-02-01 17:55:26.497027+00,2026-02-01 17:57:52.515446+00
+326,FO,,F.B. Lineas Aereas SA,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FO.svg,,,t,2026-02-01 17:55:26.497346+00,2026-02-01 17:57:52.524936+00
+327,7V,,Federal Air,,,,,t,2026-02-01 17:55:26.497764+00,2026-02-01 17:57:52.531966+00
+328,FJ,,Fiji Airways ,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FJ.svg,,,t,2026-02-01 17:55:26.498203+00,2026-02-01 17:57:52.552549+00
+329,AY,,Finnair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AY.svg,,,t,2026-02-01 17:55:26.498569+00,2026-02-01 17:57:52.559703+00
+330,FY,,Firefly,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FY.svg,,,t,2026-02-01 17:55:26.498953+00,2026-02-01 17:57:52.5816+00
+331,7F,,First Air,,,,,t,2026-02-01 17:55:26.499397+00,2026-02-01 17:57:52.597975+00
+332,W2,,FlexFlight,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/W2.svg,,,t,2026-02-01 17:55:26.499862+00,2026-02-01 17:57:52.611922+00
+333,B5,,Flightline,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B5.svg,,,t,2026-02-01 17:55:26.500207+00,2026-02-01 17:57:52.617934+00
+334,YS,,Flightlink,,,,,t,2026-02-01 17:55:26.500526+00,2026-02-01 17:57:52.625371+00
+335,F6,,Fly2Sky,,,,,t,2026-02-01 17:55:26.500886+00,2026-02-01 17:57:52.640336+00
+336,5H,,Fly540,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5H.svg,,,t,2026-02-01 17:55:26.502796+00,2026-02-01 17:57:52.646272+00
+337,F3,,flyadeal,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/F3.svg,,,t,2026-02-01 17:55:26.503223+00,2026-02-01 17:57:52.651914+00
+338,DH,,FlyAden,,,,,t,2026-02-01 17:55:26.503671+00,2026-02-01 17:57:52.66053+00
+339,EQ,,"FLY AO-LINHAS AEREAS, LIMITADA",,,,,t,2026-02-01 17:55:26.504026+00,2026-02-01 17:57:52.668385+00
+340,BE,,Flybe,,,,,t,2026-02-01 17:55:26.50438+00,2026-02-01 17:57:52.676157+00
+342,FT,,FlyEgypt,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FT.svg,,,t,2026-02-01 17:55:26.505116+00,2026-02-01 17:57:52.688056+00
+343,VK,,FlyForValue Aviation Limited,,,,,t,2026-02-01 17:55:26.50551+00,2026-02-01 17:57:52.696509+00
+344,B4,,Flyglobespan,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B4.svg,,,t,2026-02-01 17:55:26.506318+00,2026-02-01 17:57:52.710399+00
+345,XY,,Flynas,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/XY.svg,,,t,2026-02-01 17:55:26.506723+00,2026-02-01 17:57:52.714639+00
+346,5F,,Fly One,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5F.svg,,,t,2026-02-01 17:55:26.507098+00,2026-02-01 17:57:52.724009+00
+347,FP,,Fly Pro,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FP.svg,,,t,2026-02-01 17:55:26.507637+00,2026-02-01 17:57:52.732624+00
+348,FS,,Flyr,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FS.svg,,,t,2026-02-01 17:55:26.508121+00,2026-02-01 17:57:52.753382+00
+349,VG,,Fly Vaayu,,,,,t,2026-02-01 17:55:26.508818+00,2026-02-01 17:57:52.759024+00
+350,MI,,Freebird Airlines Europe Ltd.,,,,,t,2026-02-01 17:55:26.509191+00,2026-02-01 17:57:52.764462+00
+351,FA,,FREEDOM II BERMUDA LIMITED,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FA.svg,,,t,2026-02-01 17:55:26.509696+00,2026-02-01 17:57:52.770145+00
+352,BF,,French bee,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BF.svg,,,t,2026-02-01 17:55:26.510815+00,2026-02-01 17:57:52.782272+00
+353,F9,,Frontier Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/F9.svg,,,t,2026-02-01 17:55:26.511651+00,2026-02-01 17:57:52.796479+00
+354,GA,,Garuda Indonesia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GA.svg,,,t,2026-02-01 17:55:26.512232+00,2026-02-01 17:57:52.808255+00
+355,4G,,Gazpromavia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4G.svg,,,t,2026-02-01 17:55:26.516744+00,2026-02-01 17:57:52.814293+00
+356,EA,,GEMSTONE,,,,,t,2026-02-01 17:55:26.517863+00,2026-02-01 17:57:52.823021+00
+358,ZQ,,German Airways GmbH & Co.KG,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZQ.svg,,,t,2026-02-01 17:55:26.520041+00,2026-02-01 17:57:52.836313+00
+359,4U,,Germanwings,,,,,t,2026-02-01 17:55:26.520738+00,2026-02-01 17:57:52.840143+00
+360,G0,,Ghana International Airlines,,,,,t,2026-02-01 17:55:26.521387+00,2026-02-01 17:57:52.849136+00
+361,S5,,Ghodawat Enterprises Pvt.Ltd. dba Star Air,,,,,t,2026-02-01 17:55:26.521782+00,2026-02-01 17:57:52.858926+00
+362,GE,,Global Aviation Operations (PTY)Ltd,,,,,t,2026-02-01 17:55:26.522154+00,2026-02-01 17:57:52.865906+00
+363,6G,,"Go2Sky, spol s r.o.",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6G.svg,,,t,2026-02-01 17:55:26.522583+00,2026-02-01 17:57:52.870319+00
+364,G8,,Go First,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/G8.svg,,,t,2026-02-01 17:55:26.522952+00,2026-02-01 17:57:52.875033+00
+365,G7,,GoJet Airlines,,,,,t,2026-02-01 17:55:26.523339+00,2026-02-01 17:57:52.882527+00
+366,G3,,GOL,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/G3.svg,,,t,2026-02-01 17:55:26.523764+00,2026-02-01 17:57:52.890675+00
+367,IV,,GP Aviation,,,,,t,2026-02-01 17:55:26.524356+00,2026-02-01 17:57:52.892636+00
+368,CN,,"Grand China Air Co. , Ltd.",,,,,t,2026-02-01 17:55:26.525813+00,2026-02-01 17:57:52.898647+00
+369,GV,,Grant Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GV.svg,,,t,2026-02-01 17:55:26.526395+00,2026-02-01 17:57:52.902263+00
+370,R2,,Groupe Transair,,,,,t,2026-02-01 17:55:26.526949+00,2026-02-01 17:57:52.908888+00
+373,IF,,"Gulf & Caribbean Cargo, Inc",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IF.svg,,,t,2026-02-01 17:55:26.529712+00,2026-02-01 17:57:52.932104+00
+374,HR,,Hahn Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HR.svg,,,t,2026-02-01 17:55:26.532104+00,2026-02-01 17:57:52.948376+00
+375,H1,,Hahn Air Systems,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/H1.svg,,,t,2026-02-01 17:55:26.532469+00,2026-02-01 17:57:52.953164+00
+376,HU,,Hainan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HU.svg,,,t,2026-02-01 17:55:26.532803+00,2026-02-01 17:57:52.958107+00
+377,HG,,Hala Air,,,,,t,2026-02-01 17:55:26.533094+00,2026-02-01 17:57:52.96835+00
+378,HA,,Hawaiian Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HA.svg,,,t,2026-02-01 17:55:26.533525+00,2026-02-01 17:57:52.976956+00
+379,YO,,Heli Air Monaco,,,,,t,2026-02-01 17:55:26.533899+00,2026-02-01 17:57:52.982466+00
+380,JB,,Helijet,,,,,t,2026-02-01 17:55:26.534306+00,2026-02-01 17:57:52.990295+00
+381,H3,,Hello Jets,,,,,t,2026-02-01 17:55:26.534632+00,2026-02-01 17:57:52.995352+00
+383,HN,,"Heston Airlines, UAB",,,,,t,2026-02-01 17:55:26.535537+00,2026-02-01 17:57:53.008898+00
+384,5K,,Hi Fly,,,,,t,2026-02-01 17:55:26.541637+00,2026-02-01 17:57:53.014594+00
+385,3L,,Hi Fly Ltd,,,,,t,2026-02-01 17:55:26.543516+00,2026-02-01 17:57:53.02042+00
+386,H9,,Himalaya Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/H9.svg,,,t,2026-02-01 17:55:26.544412+00,2026-02-01 17:57:53.025555+00
+387,RH,,Hong Kong Air Cargo Carrier,,,,,t,2026-02-01 17:55:26.5452+00,2026-02-01 17:57:53.027925+00
+388,HX,,Hong Kong Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HX.svg,,,t,2026-02-01 17:55:26.546192+00,2026-02-01 17:57:53.03216+00
+389,UO,,Hong Kong Express Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UO.svg,,,t,2026-02-01 17:55:26.547075+00,2026-02-01 17:57:53.041265+00
+390,A5,,HOP!,,,,,t,2026-02-01 17:55:26.548243+00,2026-02-01 17:57:53.054429+00
+391,QX,,Horizon Air,,,,,t,2026-02-01 17:55:26.549121+00,2026-02-01 17:57:53.068489+00
+392,MR,,Hunnu Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MR.svg,,,t,2026-02-01 17:55:26.559215+00,2026-02-01 17:57:53.072994+00
+393,9L,,"Hyannis Air Service, Inc.",,,,,t,2026-02-01 17:55:26.565282+00,2026-02-01 17:57:53.078253+00
+394,XB,,IATA Montreal,,,,,t,2026-02-01 17:55:26.567127+00,2026-02-01 17:57:53.084443+00
+395,II,,IBC Airways,,,,,t,2026-02-01 17:55:26.568499+00,2026-02-01 17:57:53.094113+00
+397,I2,,Iberia Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/I2.svg,,,t,2026-02-01 17:55:26.570756+00,2026-02-01 17:57:53.1113+00
+398,E9,,Iberojet Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/E9.svg,,,t,2026-02-01 17:55:26.57187+00,2026-02-01 17:57:53.113692+00
+399,FW,,IBEX Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FW.svg,,,t,2026-02-01 17:55:26.573103+00,2026-02-01 17:57:53.114912+00
+400,QI,,Ibom Air,,,,,t,2026-02-01 17:55:26.574384+00,2026-02-01 17:57:53.128838+00
+401,FI,,Icelandair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FI.svg,,,t,2026-02-01 17:55:26.575942+00,2026-02-01 17:57:53.131725+00
+402,F7,,I-Fly,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/F7.svg,,,t,2026-02-01 17:55:26.577474+00,2026-02-01 17:57:53.135094+00
+403,IC,,Indian Airlines,,,,,t,2026-02-01 17:55:26.5783+00,2026-02-01 17:57:53.142528+00
+404,6E,,IndiGo,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6E.svg,,,t,2026-02-01 17:55:26.578864+00,2026-02-01 17:57:53.155941+00
+405,QZ,,Indonesia AirAsia,,,,,t,2026-02-01 17:55:26.57989+00,2026-02-01 17:57:53.161958+00
+406,G1,,Indya Airline Group,,,,,t,2026-02-01 17:55:26.581026+00,2026-02-01 17:57:53.16789+00
+407,id,,Interlink Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ID.svg,,,t,2026-02-01 17:55:26.582169+00,2026-02-01 17:57:53.175+00
+408,IR,,Iran Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IR.svg,,,t,2026-02-01 17:55:26.58299+00,2026-02-01 17:57:53.182609+00
+409,B9,,Iran Airtour,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B9.svg,,,t,2026-02-01 17:55:26.591824+00,2026-02-01 17:57:53.19885+00
+410,IA,,Iraqi Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IA.svg,,,t,2026-02-01 17:55:26.60863+00,2026-02-01 17:57:53.203071+00
+411,I6,,Iryo,,,,,t,2026-02-01 17:55:26.634947+00,2026-02-01 17:57:53.212095+00
+412,6H,,Israir,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6H.svg,,,t,2026-02-01 17:55:26.662949+00,2026-02-01 17:57:53.218554+00
+413,AZ,,ITA,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AZ.svg,,,t,2026-02-01 17:55:26.678856+00,2026-02-01 17:57:53.2246+00
+414,JL,,JAL,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JL.svg,,,t,2026-02-01 17:55:26.690494+00,2026-02-01 17:57:53.233342+00
+415,JO,,JALways,,,,,t,2026-02-01 17:55:26.692639+00,2026-02-01 17:57:53.24293+00
+416,JM,,Jambojet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JM.svg,,,t,2026-02-01 17:55:26.704389+00,2026-02-01 17:57:53.245756+00
+417,JC,,"Japan Air Commuter Co., Ltd.",,,,,t,2026-02-01 17:55:26.718281+00,2026-02-01 17:57:53.251123+00
+418,NU,,Japan Transocean Air,,,,,t,2026-02-01 17:55:26.72271+00,2026-02-01 17:57:53.264008+00
+419,J9,,Jazeera Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/J9.svg,,,t,2026-02-01 17:55:26.73043+00,2026-02-01 17:57:53.280381+00
+420,QK,,Jazz Aviation LP,,,,,t,2026-02-01 17:55:26.736883+00,2026-02-01 17:57:53.287886+00
+422,7C,,Jeju Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7C.svg,,,t,2026-02-01 17:55:26.747205+00,2026-02-01 17:57:53.308807+00
+423,LS,,Jet2.com,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LS.svg,,,t,2026-02-01 17:55:26.749111+00,2026-02-01 17:57:53.31391+00
+424,8J,,Jet4You,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8J.svg,,,t,2026-02-01 17:55:26.756694+00,2026-02-01 17:57:53.323208+00
+425,9W,,Jet Airways,,,,,t,2026-02-01 17:55:26.77046+00,2026-02-01 17:57:53.33079+00
+426,PP,,Jet Aviation Business,,,,,t,2026-02-01 17:55:26.788771+00,2026-02-01 17:57:53.335164+00
+427,B6,,JetBlue Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B6.svg,,,t,2026-02-01 17:55:26.797752+00,2026-02-01 17:57:53.343849+00
+428,JA,,JetSmart,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JA.svg,,,t,2026-02-01 17:55:26.803476+00,2026-02-01 17:57:53.354847+00
+429,JZ,,JetSMART Airlines Peru S.A.C.,,,,,t,2026-02-01 17:55:26.809773+00,2026-02-01 17:57:53.362022+00
+430,WJ,,Jetsmart Argentina,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WJ.svg,,,t,2026-02-01 17:55:26.81771+00,2026-02-01 17:57:53.364576+00
+431,JQ,,Jetstar Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JQ.svg,,,t,2026-02-01 17:55:26.825273+00,2026-02-01 17:57:53.369019+00
+432,3K,,Jetstar Asia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3K.svg,,,t,2026-02-01 17:55:26.832377+00,2026-02-01 17:57:53.381238+00
+433,GK,,Jetstar Japan,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GK.svg,,,t,2026-02-01 17:55:26.838018+00,2026-02-01 17:57:53.399222+00
+434,XE,,JetSuiteX,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/XE.svg,,,t,2026-02-01 17:55:26.842283+00,2026-02-01 17:57:53.414652+00
+435,JE,,Jettainer GmbH,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JE.svg,,,t,2026-02-01 17:55:26.848598+00,2026-02-01 17:57:53.420886+00
+436,JP,,Jettime,,,,,t,2026-02-01 17:55:26.861672+00,2026-02-01 17:57:53.424662+00
+438,R3,,Joint Stock Company Aircompany,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/R3.svg,,,t,2026-02-01 17:55:26.889026+00,2026-02-01 17:57:53.435448+00
+439,R5,,Jordan Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/R5.svg,,,t,2026-02-01 17:55:26.891544+00,2026-02-01 17:57:53.437998+00
+440,JR,,Joy Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JR.svg,,,t,2026-02-01 17:55:26.893245+00,2026-02-01 17:57:53.44464+00
+441,HO,,Juneyao Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HO.svg,,,t,2026-02-01 17:55:26.903368+00,2026-02-01 17:57:53.455413+00
+442,K5,,Kalitta Charters II LLC,,,,,t,2026-02-01 17:55:26.914987+00,2026-02-01 17:57:53.472223+00
+443,RQ,,Kam Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RQ.svg,,,t,2026-02-01 17:55:26.926248+00,2026-02-01 17:57:53.480418+00
+444,HE,,KAMPALA AEROCLUB AND FLIGHT TRAINING,,,,,t,2026-02-01 17:55:26.931809+00,2026-02-01 17:57:53.484825+00
+445,FK,,Kelowna Flightcraft Air Charter Ltd,,,,,t,2026-02-01 17:55:26.939098+00,2026-02-01 17:57:53.490032+00
+446,M5,,Kenmore Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/M5.svg,,,t,2026-02-01 17:55:26.952119+00,2026-02-01 17:57:53.499174+00
+447,KQ,,Kenya Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KQ.svg,,,t,2026-02-01 17:55:26.954106+00,2026-02-01 17:57:53.51659+00
+448,KG,,Key Lime Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KG.svg,,,t,2026-02-01 17:55:26.958938+00,2026-02-01 17:57:53.532489+00
+449,Y9,,Kish Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Y9.svg,,,t,2026-02-01 17:55:26.969628+00,2026-02-01 17:57:53.533339+00
+451,WA,,KLM Cityhopper,,,,,t,2026-02-01 17:55:26.995422+00,2026-02-01 17:57:53.542195+00
+452,KE,,Korean Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KE.svg,,,t,2026-02-01 17:55:27.026254+00,2026-02-01 17:57:53.551191+00
+453,ZC,,Korongo Airlines,,,,,t,2026-02-01 17:55:27.042422+00,2026-02-01 17:57:53.561753+00
+454,KV,,KrasAvia,,,,,t,2026-02-01 17:55:27.052191+00,2026-02-01 17:57:53.566051+00
+455,7B,,Krasnojarsky Airlines,,,,,t,2026-02-01 17:55:27.055987+00,2026-02-01 17:57:53.579524+00
+457,KY,,Kunming Airlines,,,,,t,2026-02-01 17:55:27.075392+00,2026-02-01 17:57:53.597508+00
+458,KU,,Kuwait Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KU.svg,,,t,2026-02-01 17:55:27.078836+00,2026-02-01 17:57:53.612244+00
+459,LQ,,Lanmei Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LQ.svg,,,t,2026-02-01 17:55:27.082752+00,2026-02-01 17:57:53.617308+00
+460,QV,,Lao Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QV.svg,,,t,2026-02-01 17:55:27.084599+00,2026-02-01 17:57:53.629139+00
+461,LK,,Lao Skyway dba Commercial Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LK.svg,,,t,2026-02-01 17:55:27.086488+00,2026-02-01 17:57:53.647939+00
+462,4L,,LAS SA,,,,,t,2026-02-01 17:55:27.087833+00,2026-02-01 17:57:53.650289+00
+463,LA,,LATAM Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LA.svg,,,t,2026-02-01 17:55:27.089687+00,2026-02-01 17:57:53.653967+00
+464,4C,,LATAM Airlines Colombia,,,,,t,2026-02-01 17:55:27.093605+00,2026-02-01 17:57:53.664583+00
+465,XL,,LATAM Airlines Ecuador,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/XL.svg,,,t,2026-02-01 17:55:27.097095+00,2026-02-01 17:57:53.673176+00
+466,PZ,,LATAM Airlines Paraguay,,,,,t,2026-02-01 17:55:27.102624+00,2026-02-01 17:57:53.681964+00
+467,LP,,LATAM Airlines Peru,,,,,t,2026-02-01 17:55:27.120733+00,2026-02-01 17:57:53.699319+00
+468,LW,,Lauda Europe,,,,,t,2026-02-01 17:55:27.129399+00,2026-02-01 17:57:53.713998+00
+469,KK,,LEAV Aviation,,,,,t,2026-02-01 17:55:27.135887+00,2026-02-01 17:57:53.718878+00
+470,LI,,Leeward Islands Air Transport,,,,,t,2026-02-01 17:55:27.155048+00,2026-02-01 17:57:53.731346+00
+471,N5,,Les Investissements Nolinor Inc.,,,,,t,2026-02-01 17:55:27.163937+00,2026-02-01 17:57:53.742408+00
+472,LL,,LEVEL,,,,,t,2026-02-01 17:55:27.175974+00,2026-02-01 17:57:53.75902+00
+473,0I,,LEVEL Iberia/Vueling,,,,,t,2026-02-01 17:55:27.183457+00,2026-02-01 17:57:53.765743+00
+474,LN,,Libyan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LN.svg,,,t,2026-02-01 17:55:27.188993+00,2026-02-01 17:57:53.781567+00
+475,YL,,Libyan Wings,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YL.svg,,,t,2026-02-01 17:55:27.196276+00,2026-02-01 17:57:53.784939+00
+476,Z8,,Línea Aérea Amaszonas,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Z8.svg,,,t,2026-02-01 17:55:27.210431+00,2026-02-01 17:57:53.809013+00
+477,QL,,Linea Aerea De Servicio Ejecutivo,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QL.svg,,,t,2026-02-01 17:55:27.221901+00,2026-02-01 17:57:53.817747+00
+478,JT,,Lion Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JT.svg,,,t,2026-02-01 17:55:27.230598+00,2026-02-01 17:57:53.82525+00
+479,EO,,LLC Aircompany Ikar,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EO.svg,,,t,2026-02-01 17:55:27.238859+00,2026-02-01 17:57:53.832603+00
+480,LM,,Loganair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LM.svg,,,t,2026-02-01 17:55:27.250196+00,2026-02-01 17:57:53.845346+00
+481,RD,,"LOGIC PAQ BTD, S.R.L dba Sky Cana",,,,,t,2026-02-01 17:55:27.255302+00,2026-02-01 17:57:53.851195+00
+482,LT,,LongJiang Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LT.svg,,,t,2026-02-01 17:55:27.257736+00,2026-02-01 17:57:53.869876+00
+483,LO,,LOT Polish Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LO.svg,,,t,2026-02-01 17:55:27.260736+00,2026-02-01 17:57:53.882649+00
+484,8L,,Lucky Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8L.svg,,,t,2026-02-01 17:55:27.265039+00,2026-02-01 17:57:53.894528+00
+9,LH,,Lufthansa,Germany,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LH.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:53.906622+00
+486,CL,,Lufthansa CityLine,,,,,t,2026-02-01 17:55:27.276866+00,2026-02-01 17:57:53.914433+00
+487,S1,,Lufthansa Systems GmbH & Co. KG,,,,,t,2026-02-01 17:55:27.282784+00,2026-02-01 17:57:53.919393+00
+488,BV,,Luke Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BV.svg,,,t,2026-02-01 17:55:27.288206+00,2026-02-01 17:57:53.923934+00
+489,L8,,Lulutai Airlines,,,,,t,2026-02-01 17:55:27.292788+00,2026-02-01 17:57:53.926959+00
+490,LG,,Luxair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LG.svg,,,t,2026-02-01 17:55:27.29837+00,2026-02-01 17:57:53.941636+00
+491,W5,,Mahan Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/W5.svg,,,t,2026-02-01 17:55:27.303537+00,2026-02-01 17:57:53.953698+00
+492,MH,,Malaysia Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MH.svg,,,t,2026-02-01 17:55:27.307699+00,2026-02-01 17:57:53.959914+00
+493,DB,,MALETH-AERO,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DB.svg,,,t,2026-02-01 17:55:27.311727+00,2026-02-01 17:57:53.964489+00
+494,OD,,Malindo Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OD.svg,,,t,2026-02-01 17:55:27.320025+00,2026-02-01 17:57:53.97323+00
+495,MT,,Malta MedAir,,,,,t,2026-02-01 17:55:27.322504+00,2026-02-01 17:57:53.992797+00
+497,7Y,,Mann Yadanarpon Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7Y.svg,,,t,2026-02-01 17:55:27.373508+00,2026-02-01 17:57:54.001801+00
+498,7M,,MAP Linhas Aereas,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7M.svg,,,t,2026-02-01 17:55:27.382692+00,2026-02-01 17:57:54.011997+00
+502,4M,,Mavi Gok Havacilik AS,,,,,t,2026-02-01 17:55:27.394687+00,2026-02-01 17:57:54.045995+00
+503,2M,,Maya Island Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2M.svg,,,t,2026-02-01 17:55:27.396007+00,2026-02-01 17:57:54.04933+00
+504,T2,,"MCS Aerocarga de Mexico, S.A. de CV",,,,,t,2026-02-01 17:55:27.397014+00,2026-02-01 17:57:54.058377+00
+505,YV,,Mesa Airlines,,,,,t,2026-02-01 17:55:27.398373+00,2026-02-01 17:57:54.066592+00
+506,OM,,MIAT Mongolian Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OM.svg,,,t,2026-02-01 17:55:27.400331+00,2026-02-01 17:57:54.071203+00
+507,DF,,Michael Airlines,,,,,t,2026-02-01 17:55:27.404047+00,2026-02-01 17:57:54.074964+00
+508,ME,,Middle East Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ME.svg,,,t,2026-02-01 17:55:27.406138+00,2026-02-01 17:57:54.082645+00
+509,JI,,Midway Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JI.svg,,,t,2026-02-01 17:55:27.414636+00,2026-02-01 17:57:54.09306+00
+510,K7,,"Mingalar Aviation Services Co., Ltd. Dba Mingalar Airlines",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/K7.svg,,,t,2026-02-01 17:55:27.417516+00,2026-02-01 17:57:54.103708+00
+511,WD,,Modern Transporte Aereo de Carga SA,,,,,t,2026-02-01 17:55:27.419044+00,2026-02-01 17:57:54.113149+00
+512,XF,,Mongolian Airways,,,,,t,2026-02-01 17:55:27.421806+00,2026-02-01 17:57:54.115284+00
+513,YM,,Montenegro Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YM.svg,,,t,2026-02-01 17:55:27.423016+00,2026-02-01 17:57:54.116478+00
+514,5M,,Montserrat Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5M.svg,,,t,2026-02-01 17:55:27.425659+00,2026-02-01 17:57:54.121761+00
+515,M9,,Motor Sich,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/M9.svg,,,t,2026-02-01 17:55:27.429286+00,2026-02-01 17:57:54.127036+00
+516,3E,,"Multi-Aero, Inc. dba Air Choice One",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3E.svg,,,t,2026-02-01 17:55:27.431981+00,2026-02-01 17:57:54.134967+00
+517,8M,,Myanmar Airways International,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8M.svg,,,t,2026-02-01 17:55:27.434534+00,2026-02-01 17:57:54.148836+00
+518,UB,,Myanmar National Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UB.svg,,,t,2026-02-01 17:55:27.438276+00,2026-02-01 17:57:54.151544+00
+519,9T,,MyCargo Airlines,,,,,t,2026-02-01 17:55:27.445315+00,2026-02-01 17:57:54.155005+00
+520,MJ,,MyWay Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MJ.svg,,,t,2026-02-01 17:55:27.450161+00,2026-02-01 17:57:54.156323+00
+521,IN,,Nam Air,,,,,t,2026-02-01 17:55:27.453567+00,2026-02-01 17:57:54.162071+00
+522,JY,,"National Air Charters, Inc.",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JY.svg,,,t,2026-02-01 17:55:27.456482+00,2026-02-01 17:57:54.165926+00
+523,9Y,,National Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9Y.svg,,,t,2026-02-01 17:55:27.460504+00,2026-02-01 17:57:54.169406+00
+524,ON,,Nauru Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ON.svg,,,t,2026-02-01 17:55:27.467116+00,2026-02-01 17:57:54.175061+00
+525,RA,,Nepal Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RA.svg,,,t,2026-02-01 17:55:27.472314+00,2026-02-01 17:57:54.182032+00
+526,NE,,Nesma Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NE.svg,,,t,2026-02-01 17:55:27.474526+00,2026-02-01 17:57:54.201373+00
+527,1I,,NetJets,,,,,t,2026-02-01 17:55:27.479013+00,2026-02-01 17:57:54.204761+00
+528,H6,,NIL,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/H6.svg,,,t,2026-02-01 17:55:27.486388+00,2026-02-01 17:57:54.211975+00
+529,NP,,Nile Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NP.svg,,,t,2026-02-01 17:55:27.493369+00,2026-02-01 17:57:54.215835+00
+530,DD,,Nok Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DD.svg,,,t,2026-02-01 17:55:27.497137+00,2026-02-01 17:57:54.221101+00
+531,N7,,Nordic Regional Airlines,,,,,t,2026-02-01 17:55:27.499608+00,2026-02-01 17:57:54.229176+00
+532,Y7,,NordStar,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Y7.svg,,,t,2026-02-01 17:55:27.502905+00,2026-02-01 17:57:54.235997+00
+534,N0,,Norse Atlantic Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/N0.svg,,,t,2026-02-01 17:55:27.506143+00,2026-02-01 17:57:54.253782+00
+535,NC,,"Northern Air Cargo, LLC.",,,,,t,2026-02-01 17:55:27.508548+00,2026-02-01 17:57:54.263685+00
+536,7H,,Northern Pacific Airways,,,,,t,2026-02-01 17:55:27.510348+00,2026-02-01 17:57:54.268919+00
+537,NW,,Northwest Airlines,,,,,t,2026-02-01 17:55:27.519853+00,2026-02-01 17:57:54.274777+00
+538,J3,,Northwestern Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/J3.svg,,,t,2026-02-01 17:55:27.523811+00,2026-02-01 17:57:54.281754+00
+539,CO,,North-Western Cargo International,,,,,t,2026-02-01 17:55:27.525838+00,2026-02-01 17:57:54.283792+00
+540,HW,,North-Wright Airways Ltd.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HW.svg,,,t,2026-02-01 17:55:27.527641+00,2026-02-01 17:57:54.286104+00
+541,DY,,Norwegian Air Shuttle,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DY.svg,,,t,2026-02-01 17:55:27.529867+00,2026-02-01 17:57:54.299528+00
+542,D8,,Norwegian Air Sweden,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/D8.svg,,,t,2026-02-01 17:55:27.530974+00,2026-02-01 17:57:54.302598+00
+543,DI,,Norwegian Air UK,,,,,t,2026-02-01 17:55:27.53222+00,2026-02-01 17:57:54.307533+00
+544,BJ,,Nouvelair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BJ.svg,,,t,2026-02-01 17:55:27.535033+00,2026-02-01 17:57:54.318104+00
+545,NG,,NOVAIR,,,,,t,2026-02-01 17:55:27.539663+00,2026-02-01 17:57:54.323464+00
+546,VQ,,Novoair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VQ.svg,,,t,2026-02-01 17:55:27.541479+00,2026-02-01 17:57:54.328763+00
+547,OJ,,NyxAir OU,,,,,t,2026-02-01 17:55:27.545169+00,2026-02-01 17:57:54.373778+00
+548,O8,,Oasis Hong Kong Airlines,,,,,t,2026-02-01 17:55:27.552574+00,2026-02-01 17:57:54.390129+00
+549,O6,,Oceanair,,,,,t,2026-02-01 17:55:27.555638+00,2026-02-01 17:57:54.413963+00
+550,BK,,Okay Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BK.svg,,,t,2026-02-01 17:55:27.559472+00,2026-02-01 17:57:54.430334+00
+551,OA,,Olympic Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OA.svg,,,t,2026-02-01 17:55:27.564762+00,2026-02-01 17:57:54.442958+00
+553,OY,,Omni Air International,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OY.svg,,,t,2026-02-01 17:55:27.571271+00,2026-02-01 17:57:54.465852+00
+554,O7,,OMNI-BLU,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/O7.svg,,,t,2026-02-01 17:55:27.576664+00,2026-02-01 17:57:54.473586+00
+555,8Q,,Onur Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8Q.svg,,,t,2026-02-01 17:55:27.581094+00,2026-02-01 17:57:54.482997+00
+556,6O,,Orbest,,,,,t,2026-02-01 17:55:27.584114+00,2026-02-01 17:57:54.489199+00
+557,O1,,Orbit Airlines Azerbaijan,,,,,t,2026-02-01 17:55:27.585946+00,2026-02-01 17:57:54.499137+00
+558,OX,,Orient Thai Airlines,,,,,t,2026-02-01 17:55:27.588615+00,2026-02-01 17:57:54.504128+00
+559,JF,,"OTT AIRLINES CO., LTD",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JF.svg,,,t,2026-02-01 17:55:27.592555+00,2026-02-01 17:57:54.508013+00
+560,OF,,Overland Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OF.svg,,,t,2026-02-01 17:55:27.595134+00,2026-02-01 17:57:54.511441+00
+679,D6,,Sunrise Airways Dominicana S.A,,,,,t,2026-02-01 17:55:29.006515+00,2026-02-01 17:57:56.615098+00
+562,8P,,Pacific Coastal Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8P.svg,,,t,2026-02-01 17:55:27.602287+00,2026-02-01 17:57:54.523581+00
+563,PK,,Pakistan International Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PK.svg,,,t,2026-02-01 17:55:27.604342+00,2026-02-01 17:57:54.527462+00
+564,PB,,PAL Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PB.svg,,,t,2026-02-01 17:55:27.606741+00,2026-02-01 17:57:54.528976+00
+565,2P,,PAL Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2P.svg,,,t,2026-02-01 17:55:27.608646+00,2026-02-01 17:57:54.537295+00
+566,ZP,,Paranair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZP.svg,,,t,2026-02-01 17:55:27.611434+00,2026-02-01 17:57:54.553885+00
+567,P6,,Pascan,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/P6.svg,,,t,2026-02-01 17:55:27.613544+00,2026-02-01 17:57:54.575726+00
+568,PC,,Pegasus Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PC.svg,,,t,2026-02-01 17:55:27.616156+00,2026-02-01 17:57:54.589019+00
+569,UF,,Petroleum Air Services,,,,,t,2026-02-01 17:55:27.619454+00,2026-02-01 17:57:54.603891+00
+571,PT,,Piedmont Airlines,,,,,t,2026-02-01 17:55:27.627553+00,2026-02-01 17:57:54.624391+00
+572,PH,,Pionair Australia Pty Ltd,,,,,t,2026-02-01 17:55:27.632195+00,2026-02-01 17:57:54.648422+00
+573,PU,,Plus Ultra Líneas Aéreas,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PU.svg,,,t,2026-02-01 17:55:27.656141+00,2026-02-01 17:57:54.671302+00
+574,CG,,PNG Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CG.svg,,,t,2026-02-01 17:55:27.694644+00,2026-02-01 17:57:54.672954+00
+575,PI,,Polar Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PI.svg,,,t,2026-02-01 17:55:27.76253+00,2026-02-01 17:57:54.675786+00
+576,PD,,Porter Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PD.svg,,,t,2026-02-01 17:55:27.817943+00,2026-02-01 17:57:54.677448+00
+577,P3,,Porter Airlines,,,,,t,2026-02-01 17:55:27.858936+00,2026-02-01 17:57:54.699894+00
+578,NI,,Portugalia Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NI.svg,,,t,2026-02-01 17:55:27.914228+00,2026-02-01 17:57:54.721544+00
+579,M4,,Poste Air Cargo s.r.l.,,,,,t,2026-02-01 17:55:27.944478+00,2026-02-01 17:57:54.73822+00
+580,PW,,Precision Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PW.svg,,,t,2026-02-01 17:55:27.97359+00,2026-02-01 17:57:54.759075+00
+581,P0,,Proflight Zambia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/P0.svg,,,t,2026-02-01 17:55:28.003432+00,2026-02-01 17:57:54.768041+00
+582,OH,,"PSA Airlines, Inc.",,,,,t,2026-02-01 17:55:28.022481+00,2026-02-01 17:57:54.774137+00
+583,HH,,Qanot Sharq LLC,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HH.svg,,,t,2026-02-01 17:55:28.035009+00,2026-02-01 17:57:54.793247+00
+2,QR,,Qatar Airways,Qatar,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QR.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:54.814516+00
+586,QB,,Qeshm Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QB.svg,,,t,2026-02-01 17:55:28.060644+00,2026-02-01 17:57:54.825404+00
+587,QW,,Qingdao Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QW.svg,,,t,2026-02-01 17:55:28.070051+00,2026-02-01 17:57:54.845229+00
+588,QO,,Quikjet,,,,,t,2026-02-01 17:55:28.078367+00,2026-02-01 17:57:54.849818+00
+589,L5,,RED AIR S.R.L.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/L5.svg,,,t,2026-02-01 17:55:28.085034+00,2026-02-01 17:57:54.852437+00
+590,WZ,,Red Wings,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WZ.svg,,,t,2026-02-01 17:55:28.092429+00,2026-02-01 17:57:54.854384+00
+591,8N,,Regional Air Services,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8N.svg,,,t,2026-02-01 17:55:28.099793+00,2026-02-01 17:57:54.879519+00
+592,ZL,,Regional Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZL.svg,,,t,2026-02-01 17:55:28.118672+00,2026-02-01 17:57:54.913884+00
+593,EE,,Regional Jet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EE.svg,,,t,2026-02-01 17:55:28.125845+00,2026-02-01 17:57:54.923943+00
+594,P7,,Regional Paraguaya,,,,,t,2026-02-01 17:55:28.136719+00,2026-02-01 17:57:54.929295+00
+595,4P,,Regional Sky,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4P.svg,,,t,2026-02-01 17:55:28.143875+00,2026-02-01 17:57:54.938015+00
+596,4R,,Renfe Viajeros,,,,,t,2026-02-01 17:55:28.147913+00,2026-02-01 17:57:54.949003+00
+597,YX,,Republic Airways,,,,,t,2026-02-01 17:55:28.173732+00,2026-02-01 17:57:54.97253+00
+598,RI,,Rimbun Air,,,,,t,2026-02-01 17:55:28.204185+00,2026-02-01 17:57:54.999252+00
+599,4T,,Rise Air,,,,,t,2026-02-01 17:55:28.21298+00,2026-02-01 17:57:55.007838+00
+600,NJ,,Romcargo Airlines S.R.L,,,,,t,2026-02-01 17:55:28.224915+00,2026-02-01 17:57:55.010791+00
+601,FV,,Rossiya Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FV.svg,,,t,2026-02-01 17:55:28.233553+00,2026-02-01 17:57:55.019732+00
+602,RG,,Rotana Jet Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RG.svg,,,t,2026-02-01 17:55:28.243608+00,2026-02-01 17:57:55.036253+00
+603,RW,,Royal Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RW.svg,,,t,2026-02-01 17:55:28.252615+00,2026-02-01 17:57:55.050901+00
+604,AT,,Royal Air Maroc,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AT.svg,,,t,2026-02-01 17:55:28.256246+00,2026-02-01 17:57:55.067831+00
+605,KB,,Royal Bhutan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/KB.svg,,,t,2026-02-01 17:55:28.263967+00,2026-02-01 17:57:55.075363+00
+606,BI,,Royal Brunei Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BI.svg,,,t,2026-02-01 17:55:28.280412+00,2026-02-01 17:57:55.097285+00
+607,RJ,,Royal Jordanian,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RJ.svg,,,t,2026-02-01 17:55:28.284862+00,2026-02-01 17:57:55.122018+00
+608,DR,,Ruili Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DR.svg,,,t,2026-02-01 17:55:28.290695+00,2026-02-01 17:57:55.138204+00
+609,WW,,Rutas Aereas de Venezuela RAV S.A,,,,,t,2026-02-01 17:55:28.309018+00,2026-02-01 17:57:55.193787+00
+610,WB,,RwandAir,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WB.svg,,,t,2026-02-01 17:55:28.330582+00,2026-02-01 17:57:55.230683+00
+611,FR,,Ryanair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FR.svg,,,t,2026-02-01 17:55:28.366542+00,2026-02-01 17:57:55.304422+00
+612,RK,,Ryanair UK,,,,,t,2026-02-01 17:55:28.393221+00,2026-02-01 17:57:55.341395+00
+613,S7,,S7 Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/S7.svg,,,t,2026-02-01 17:55:28.407536+00,2026-02-01 17:57:55.348728+00
+615,PV,,Saint Barth Commuter,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PV.svg,,,t,2026-02-01 17:55:28.452494+00,2026-02-01 17:57:55.452325+00
+616,OV,,Salam Air (S.A.O.C),,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OV.svg,,,t,2026-02-01 17:55:28.467333+00,2026-02-01 17:57:55.469035+00
+617,OL,,Samoa Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OL.svg,,,t,2026-02-01 17:55:28.479121+00,2026-02-01 17:57:55.492348+00
+618,6W,,Saratov Aviation Division,,,,,t,2026-02-01 17:55:28.487331+00,2026-02-01 17:57:55.549587+00
+619,SK,,SAS,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SK.svg,,,t,2026-02-01 17:55:28.500206+00,2026-02-01 17:57:55.583918+00
+621,S3,,"SATCO, INC.",,,,,t,2026-02-01 17:55:28.519439+00,2026-02-01 17:57:55.623702+00
+622,9R,,SATENA,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9R.svg,,,t,2026-02-01 17:55:28.530389+00,2026-02-01 17:57:55.659577+00
+623,SV,,Saudi Arabian Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SV.svg,,,t,2026-02-01 17:55:28.537531+00,2026-02-01 17:57:55.67983+00
+625,DV,,SCAT Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DV.svg,,,t,2026-02-01 17:55:28.547761+00,2026-02-01 17:57:55.748321+00
+626,TR,,Scoot,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TR.svg,,,t,2026-02-01 17:55:28.553856+00,2026-02-01 17:57:55.76779+00
+627,BB,,Seaborne Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BB.svg,,,t,2026-02-01 17:55:28.569283+00,2026-02-01 17:57:55.775613+00
+628,SC,,Shandong Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SC.svg,,,t,2026-02-01 17:55:28.57749+00,2026-02-01 17:57:55.803905+00
+629,FM,,Shanghai Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FM.svg,,,t,2026-02-01 17:55:28.582281+00,2026-02-01 17:57:55.822974+00
+630,SH,,Sharp Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SH.svg,,,t,2026-02-01 17:55:28.588372+00,2026-02-01 17:57:55.838824+00
+631,ZH,,Shenzhen Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZH.svg,,,t,2026-02-01 17:55:28.591013+00,2026-02-01 17:57:55.866962+00
+632,5G,,SHIRAK AVIA Limited Liability Com,,,,,t,2026-02-01 17:55:28.596197+00,2026-02-01 17:57:55.904027+00
+633,N9,,Shree Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/N9.svg,,,t,2026-02-01 17:55:28.603213+00,2026-02-01 17:57:55.93918+00
+634,3U,,Sichuan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3U.svg,,,t,2026-02-01 17:55:28.607864+00,2026-02-01 17:57:55.950344+00
+635,7L,,Silk Way West,,,,,t,2026-02-01 17:55:28.614895+00,2026-02-01 17:57:55.962459+00
+636,3M,,Silver Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3M.svg,,,t,2026-02-01 17:55:28.623502+00,2026-02-01 17:57:55.973157+00
+638,KI,,SKS Airways Sdn. Bhd.,,,,,t,2026-02-01 17:55:28.636208+00,2026-02-01 17:57:56.023507+00
+639,H2,,Sky Airline,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/H2.svg,,,t,2026-02-01 17:55:28.646142+00,2026-02-01 17:57:56.04618+00
+640,H8,,Sky Airlines Peru,,,,,t,2026-02-01 17:55:28.653304+00,2026-02-01 17:57:56.052881+00
+641,BQ,,Sky Alps,,,,,t,2026-02-01 17:55:28.669819+00,2026-02-01 17:57:56.082091+00
+642,GQ,,Sky Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GQ.svg,,,t,2026-02-01 17:55:28.675819+00,2026-02-01 17:57:56.132596+00
+643,DO,,Sky High Aviation Services,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DO.svg,,,t,2026-02-01 17:55:28.680644+00,2026-02-01 17:57:56.160055+00
+644,ML,,Sky Mali,,,,,t,2026-02-01 17:55:28.690094+00,2026-02-01 17:57:56.18033+00
+645,BC,,Skymark Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BC.svg,,,t,2026-02-01 17:55:28.697189+00,2026-02-01 17:57:56.223236+00
+646,TE,,Sky Taxi sp. z.o.o,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TE.svg,,,t,2026-02-01 17:55:28.702975+00,2026-02-01 17:57:56.22506+00
+647,PQ,,SkyUp Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PQ.svg,,,t,2026-02-01 17:55:28.708296+00,2026-02-01 17:57:56.23555+00
+648,U5,,SkyUp MT,,,,,t,2026-02-01 17:55:28.724562+00,2026-02-01 17:57:56.243243+00
+649,AL,,Skywalk Airlines,,,,,t,2026-02-01 17:55:28.73217+00,2026-02-01 17:57:56.251235+00
+650,OO,,SkyWest Airlines,,,,,t,2026-02-01 17:55:28.747771+00,2026-02-01 17:57:56.265238+00
+651,CW,,SkyWest Charter LLC,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CW.svg,,,t,2026-02-01 17:55:28.77286+00,2026-02-01 17:57:56.28156+00
+652,5N,,Smartavia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5N.svg,,,t,2026-02-01 17:55:28.778028+00,2026-02-01 17:57:56.299518+00
+653,6Y,,SmartLynx Airlines,,,,,t,2026-02-01 17:55:28.804312+00,2026-02-01 17:57:56.310255+00
+654,QS,,Smartwings,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QS.svg,,,t,2026-02-01 17:55:28.812397+00,2026-02-01 17:57:56.322912+00
+655,6J,,Solaseed Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6J.svg,,,t,2026-02-01 17:55:28.820131+00,2026-02-01 17:57:56.331753+00
+656,ZS,,SOLINAIR,,,,,t,2026-02-01 17:55:28.828535+00,2026-02-01 17:57:56.350232+00
+657,IE,,Solomon Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IE.svg,,,t,2026-02-01 17:55:28.830684+00,2026-02-01 17:57:56.356486+00
+658,YZ,,Sonoco Thermosafe,,,,,t,2026-02-01 17:55:28.833816+00,2026-02-01 17:57:56.357487+00
+659,SA,,South African Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SA.svg,,,t,2026-02-01 17:55:28.836098+00,2026-02-01 17:57:56.369115+00
+660,XO,,South East Asian Airlines (SEAIR),,,,,t,2026-02-01 17:55:28.839791+00,2026-02-01 17:57:56.387449+00
+661,9X,,Southern Airways Express,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9X.svg,,,t,2026-02-01 17:55:28.84361+00,2026-02-01 17:57:56.406546+00
+662,WN,,Southwest Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WN.svg,,,t,2026-02-01 17:55:28.845412+00,2026-02-01 17:57:56.416587+00
+663,SG,,SpiceJet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SG.svg,,,t,2026-02-01 17:55:28.850221+00,2026-02-01 17:57:56.428796+00
+664,NK,,Spirit Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/NK.svg,,,t,2026-02-01 17:55:28.855077+00,2026-02-01 17:57:56.442546+00
+665,9S,,Spring Airlines,,,,,t,2026-02-01 17:55:28.866485+00,2026-02-01 17:57:56.456901+00
+666,P8,,SprintAir,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/P8.svg,,,t,2026-02-01 17:55:28.877752+00,2026-02-01 17:57:56.476264+00
+667,UL,,SriLankan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UL.svg,,,t,2026-02-01 17:55:28.888217+00,2026-02-01 17:57:56.484389+00
+668,SJ,,Sriwijaya Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SJ.svg,,,t,2026-02-01 17:55:28.89223+00,2026-02-01 17:57:56.485468+00
+669,7G,,Star Flyer,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7G.svg,,,t,2026-02-01 17:55:28.912632+00,2026-02-01 17:57:56.495506+00
+670,JX,,Starlux Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JX.svg,,,t,2026-02-01 17:55:28.926157+00,2026-02-01 17:57:56.499196+00
+671,LE,,St Barth Executive,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LE.svg,,,t,2026-02-01 17:55:28.936821+00,2026-02-01 17:57:56.520836+00
+672,8F,,STP Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/8F.svg,,,t,2026-02-01 17:55:28.940521+00,2026-02-01 17:57:56.526524+00
+673,SD,,Sudan Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SD.svg,,,t,2026-02-01 17:55:28.948735+00,2026-02-01 17:57:56.547655+00
+674,EZ,,Sun Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EZ.svg,,,t,2026-02-01 17:55:28.958819+00,2026-02-01 17:57:56.562001+00
+675,SO,,Sun Air Aviation,,,,,t,2026-02-01 17:55:28.979087+00,2026-02-01 17:57:56.57712+00
+676,SY,,Sun Country,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SY.svg,,,t,2026-02-01 17:55:28.993708+00,2026-02-01 17:57:56.581795+00
+678,XQ,,SunExpress,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/XQ.svg,,,t,2026-02-01 17:55:29.001991+00,2026-02-01 17:57:56.606897+00
+681,Y8,,"Suparna Airlines Co., Ltd.",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Y8.svg,,,t,2026-02-01 17:55:29.026234+00,2026-02-01 17:57:56.645302+00
+682,PY,,Surinaamse Luchtvaart Maatschappij,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PY.svg,,,t,2026-02-01 17:55:29.036705+00,2026-02-01 17:57:56.655318+00
+683,WT,,Swiftair,,,,,t,2026-02-01 17:55:29.042827+00,2026-02-01 17:57:56.666679+00
+684,LX,,SWISS,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LX.svg,,,t,2026-02-01 17:55:29.047935+00,2026-02-01 17:57:56.677088+00
+685,WO,,Swoop,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WO.svg,,,t,2026-02-01 17:55:29.05266+00,2026-02-01 17:57:56.683337+00
+686,7E,,Sylt Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7E.svg,,,t,2026-02-01 17:55:29.064782+00,2026-02-01 17:57:56.699546+00
+687,RB,,Syrian Arab Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RB.svg,,,t,2026-02-01 17:55:29.076446+00,2026-02-01 17:57:56.702493+00
+688,DT,,TAAG Angola Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/DT.svg,,,t,2026-02-01 17:55:29.083401+00,2026-02-01 17:57:56.704938+00
+689,5U,,TAG Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/5U.svg,,,t,2026-02-01 17:55:29.089019+00,2026-02-01 17:57:56.70735+00
+690,JJ,,TAM Linhas Aereas S.A.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/JJ.svg,,,t,2026-02-01 17:55:29.093914+00,2026-02-01 17:57:56.711046+00
+691,QT,,Tampa Cargo S.A.S,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QT.svg,,,t,2026-02-01 17:55:29.10652+00,2026-02-01 17:57:56.714661+00
+692,TP,,TAP Air Portugal,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TP.svg,,,t,2026-02-01 17:55:29.110214+00,2026-02-01 17:57:56.719295+00
+693,3T,,Tarco Aviation Co.LTD,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/3T.svg,,,t,2026-02-01 17:55:29.121532+00,2026-02-01 17:57:56.729529+00
+694,RO,,TAROM,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/RO.svg,,,t,2026-02-01 17:55:29.134904+00,2026-02-01 17:57:56.732443+00
+695,C1,,Tectimes Sudamericana S.A.,,,,,t,2026-02-01 17:55:29.146423+00,2026-02-01 17:57:56.755024+00
+696,TQ,,Texas Wings,,,,,t,2026-02-01 17:55:29.157959+00,2026-02-01 17:57:56.763956+00
+697,FD,,Thai AirAsia,,,,,t,2026-02-01 17:55:29.165182+00,2026-02-01 17:57:56.766926+00
+699,TG,,Thai Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TG.svg,,,t,2026-02-01 17:55:29.192455+00,2026-02-01 17:57:56.789457+00
+700,WE,,Thai Smile,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WE.svg,,,t,2026-02-01 17:55:29.197294+00,2026-02-01 17:57:56.797956+00
+701,VZ,,Thai VietJet Air,,,,,t,2026-02-01 17:55:29.213011+00,2026-02-01 17:57:56.801359+00
+702,L4,,The Landline Company,,,,,t,2026-02-01 17:55:29.219627+00,2026-02-01 17:57:56.815729+00
+703,GS,,TianJin Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GS.svg,,,t,2026-02-01 17:55:29.22676+00,2026-02-01 17:57:56.833379+00
+704,TV,,Tibet Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TV.svg,,,t,2026-02-01 17:55:29.247443+00,2026-02-01 17:57:56.848725+00
+705,IT,,Tigerair Taiwan Co. Ltd,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IT.svg,,,t,2026-02-01 17:55:29.254349+00,2026-02-01 17:57:56.854768+00
+706,TT,,Tiger Airways Australia,,,,,t,2026-02-01 17:55:29.260025+00,2026-02-01 17:57:56.858187+00
+707,ZT,,Titan Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/ZT.svg,,,t,2026-02-01 17:55:29.278789+00,2026-02-01 17:57:56.865307+00
+708,TM,,Titan Airways Malta ltd,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TM.svg,,,t,2026-02-01 17:55:29.293243+00,2026-02-01 17:57:56.867849+00
+709,&T,,Tom's & co airliners,,,,,t,2026-02-01 17:55:29.328204+00,2026-02-01 17:57:56.879514+00
+710,TJ,,Tradewind Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TJ.svg,,,t,2026-02-01 17:55:29.337493+00,2026-02-01 17:57:56.885029+00
+711,Q8,,Trans Air Congo,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Q8.svg,,,t,2026-02-01 17:55:29.34782+00,2026-02-01 17:57:56.897708+00
+712,TO,,Transavia France,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TO.svg,,,t,2026-02-01 17:55:29.368478+00,2026-02-01 17:57:56.918028+00
+713,HV,,Transavia Holland,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HV.svg,,,t,2026-02-01 17:55:29.384874+00,2026-02-01 17:57:56.938383+00
+714,LU,,Transporte Aereo,,,,,t,2026-02-01 17:55:29.393351+00,2026-02-01 17:57:56.963889+00
+715,9N,,Tropic Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/9N.svg,,,t,2026-02-01 17:55:29.409491+00,2026-02-01 17:57:56.992809+00
+716,BY,,TUI Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BY.svg,,,t,2026-02-01 17:55:29.426137+00,2026-02-01 17:57:57.030729+00
+717,X3,,TUIfly,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/X3.svg,,,t,2026-02-01 17:55:29.435874+00,2026-02-01 17:57:57.058379+00
+718,TB,,TUI fly,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TB.svg,,,t,2026-02-01 17:55:29.447253+00,2026-02-01 17:57:57.095483+00
+719,OR,,TUI fly Netherlands,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/OR.svg,,,t,2026-02-01 17:55:29.45684+00,2026-02-01 17:57:57.127091+00
+720,6B,,TUIfly Nordic,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/6B.svg,,,t,2026-02-01 17:55:29.462293+00,2026-02-01 17:57:57.211369+00
+721,TU,,Tunisair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TU.svg,,,t,2026-02-01 17:55:29.484549+00,2026-02-01 17:57:57.23044+00
+723,T5,,Turkmenistan Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/T5.svg,,,t,2026-02-01 17:55:29.514386+00,2026-02-01 17:57:57.333945+00
+724,U8,,Tus Airways Ltd,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/U8.svg,,,t,2026-02-01 17:55:29.526036+00,2026-02-01 17:57:57.387688+00
+725,TW,,T'Way Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/TW.svg,,,t,2026-02-01 17:55:29.532505+00,2026-02-01 17:57:57.408919+00
+726,T7,,Twin Jet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/T7.svg,,,t,2026-02-01 17:55:29.534818+00,2026-02-01 17:57:57.41577+00
+727,UD,,UBD,,,,,t,2026-02-01 17:55:29.540939+00,2026-02-01 17:57:57.426861+00
+728,UR,,Uganda Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UR.svg,,,t,2026-02-01 17:55:29.547943+00,2026-02-01 17:57:57.443395+00
+729,PS,,Ukraine International Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PS.svg,,,t,2026-02-01 17:55:29.561817+00,2026-02-01 17:57:57.464393+00
+730,GO,,ULS Airlines Cargo,,,,,t,2026-02-01 17:55:29.576506+00,2026-02-01 17:57:57.482127+00
+731,UE,,Ultimate Air Shuttle,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UE.svg,,,t,2026-02-01 17:55:29.579367+00,2026-02-01 17:57:57.499322+00
+732,B7,,Uni Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/B7.svg,,,t,2026-02-01 17:55:29.581015+00,2026-02-01 17:57:57.510749+00
+733,R7,,Unilode Aviation Solutions,,,,,t,2026-02-01 17:55:29.582502+00,2026-02-01 17:57:57.520384+00
+734,U9,,Unilode Aviation Solutions,,,,,t,2026-02-01 17:55:29.588193+00,2026-02-01 17:57:57.52958+00
+736,4H,,United Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/4H.svg,,,t,2026-02-01 17:55:29.595205+00,2026-02-01 17:57:57.594192+00
+46,AW,,Africa World Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AW.svg,,,t,2026-02-01 17:55:25.881858+00,2026-02-01 17:57:50.082004+00
+63,BX,,Air Busan,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BX.svg,,,t,2026-02-01 17:55:26.033608+00,2026-02-01 17:57:50.219226+00
+76,XK,,Air Corsica,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/XK.svg,,,t,2026-02-01 17:55:26.265232+00,2026-02-01 17:57:50.346062+00
+738,U7,,Uniworld Air Cargo,,,,,t,2026-02-01 17:55:29.611455+00,2026-02-01 17:57:57.633561+00
+740,UQ,,Urumqi Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UQ.svg,,,t,2026-02-01 17:55:29.62284+00,2026-02-01 17:57:57.697084+00
+741,US,,US Airways,,,,,t,2026-02-01 17:55:29.626304+00,2026-02-01 17:57:57.71476+00
+742,E1,,Usa Sky Cargo,,,,,t,2026-02-01 17:55:29.628433+00,2026-02-01 17:57:57.717746+00
+743,BS,,US-Bangla Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BS.svg,,,t,2026-02-01 17:55:29.631896+00,2026-02-01 17:57:57.725101+00
+744,UT,,UTair Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UT.svg,,,t,2026-02-01 17:55:29.63494+00,2026-02-01 17:57:57.754761+00
+745,HY,,Uzbekistan Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/HY.svg,,,t,2026-02-01 17:55:29.638086+00,2026-02-01 17:57:57.756523+00
+746,VF,,Valuair,,,,,t,2026-02-01 17:55:29.6431+00,2026-02-01 17:57:57.75729+00
+747,LC,,Varig Log,,,,,t,2026-02-01 17:55:29.647197+00,2026-02-01 17:57:57.784865+00
+748,FC,,Vee H Aviation Pty Ltd.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FC.svg,,,t,2026-02-01 17:55:29.648806+00,2026-02-01 17:57:57.81174+00
+749,KT,,VickJet,,,,,t,2026-02-01 17:55:29.659341+00,2026-02-01 17:57:57.832098+00
+750,VJ,,VietJet Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VJ.svg,,,t,2026-02-01 17:55:29.669398+00,2026-02-01 17:57:57.843169+00
+751,VN,,Vietnam Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VN.svg,,,t,2026-02-01 17:55:29.674488+00,2026-02-01 17:57:57.863119+00
+752,0V,,Vietnam Air Services Company,,,,,t,2026-02-01 17:55:29.681805+00,2026-02-01 17:57:57.867183+00
+753,VU,,"Vietravel Airlines Co., Ltd.",,,,,t,2026-02-01 17:55:29.687316+00,2026-02-01 17:57:57.888683+00
+754,VP,,Villa Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VP.svg,,,t,2026-02-01 17:55:29.690886+00,2026-02-01 17:57:57.906719+00
+755,VX,,Virgin America,,,,,t,2026-02-01 17:55:29.697143+00,2026-02-01 17:57:57.920354+00
+757,VA,,Virgin Australia,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VA.svg,,,t,2026-02-01 17:55:29.708523+00,2026-02-01 17:57:57.953243+00
+758,UK,,Vistara,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UK.svg,,,t,2026-02-01 17:55:29.713212+00,2026-02-01 17:57:57.956731+00
+759,VB,,VivaAerobús,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VB.svg,,,t,2026-02-01 17:55:29.719295+00,2026-02-01 17:57:57.964365+00
+760,2Z,,Voepass Linhas Aéreas,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2Z.svg,,,t,2026-02-01 17:55:29.727986+00,2026-02-01 17:57:57.979927+00
+761,Y4,,Volaris,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Y4.svg,,,t,2026-02-01 17:55:29.738042+00,2026-02-01 17:57:57.990734+00
+762,Q6,,Volaris Costa Rica,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Q6.svg,,,t,2026-02-01 17:55:29.743883+00,2026-02-01 17:57:57.991561+00
+763,N3,,Volaris El Salvador,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/N3.svg,,,t,2026-02-01 17:55:29.758278+00,2026-02-01 17:57:57.997714+00
+764,VI,,Volga-Dnepr,,,,,t,2026-02-01 17:55:29.76371+00,2026-02-01 17:57:58.020219+00
+765,V7,,Volotea,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/V7.svg,,,t,2026-02-01 17:55:29.767206+00,2026-02-01 17:57:58.036265+00
+767,2W,,W2FLY,,,,,t,2026-02-01 17:55:29.788959+00,2026-02-01 17:57:58.092657+00
+768,EB,,Wamos Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/EB.svg,,,t,2026-02-01 17:55:29.796556+00,2026-02-01 17:57:58.109992+00
+769,PN,,West Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PN.svg,,,t,2026-02-01 17:55:29.806467+00,2026-02-01 17:57:58.119078+00
+770,WV,,Westair Aviation (PTY) Ltd.,,,,,t,2026-02-01 17:55:29.810524+00,2026-02-01 17:57:58.131153+00
+771,WU,,Western Air Ltd,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WU.svg,,,t,2026-02-01 17:55:29.817542+00,2026-02-01 17:57:58.133548+00
+772,KD,,"Western Global Airlines, Inc.",,,,,t,2026-02-01 17:55:29.854319+00,2026-02-01 17:57:58.148634+00
+773,WS,,WestJet,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WS.svg,,,t,2026-02-01 17:55:29.858118+00,2026-02-01 17:57:58.152376+00
+774,WR,,WestJet Encore,,,,,t,2026-02-01 17:55:29.862685+00,2026-02-01 17:57:58.155599+00
+775,WI,,White Airways,,,,,t,2026-02-01 17:55:29.865798+00,2026-02-01 17:57:58.159662+00
+776,WF,,Wideroe's Flyveselskap A.S.,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WF.svg,,,t,2026-02-01 17:55:29.868341+00,2026-02-01 17:57:58.162372+00
+777,WM,,Winair,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WM.svg,,,t,2026-02-01 17:55:29.870018+00,2026-02-01 17:57:58.165285+00
+778,7W,,Windrose Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/7W.svg,,,t,2026-02-01 17:55:29.872084+00,2026-02-01 17:57:58.166768+00
+779,IW,,Wings Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IW.svg,,,t,2026-02-01 17:55:29.873548+00,2026-02-01 17:57:58.172194+00
+780,W6,,Wizz Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/W6.svg,,,t,2026-02-01 17:55:29.875973+00,2026-02-01 17:57:58.181141+00
+781,5W,,Wizz Air Abu Dhabi,,,,,t,2026-02-01 17:55:29.880492+00,2026-02-01 17:57:58.18944+00
+782,W4,,Wizz Air Malta,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/W4.svg,,,t,2026-02-01 17:55:29.884763+00,2026-02-01 17:57:58.19906+00
+783,W9,,Wizz Air UK,,,,,t,2026-02-01 17:55:29.887489+00,2026-02-01 17:57:58.21569+00
+784,3P,,"World 2 Fly Portugal, S.A.",,,,,t,2026-02-01 17:55:29.888844+00,2026-02-01 17:57:58.224566+00
+785,3G,,World Cargo Airlines,,,,,t,2026-02-01 17:55:29.893734+00,2026-02-01 17:57:58.229851+00
+786,W1,,World Experience Airline,,,,,t,2026-02-01 17:55:29.903677+00,2026-02-01 17:57:58.238691+00
+787,MF,,Xiamen Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MF.svg,,,t,2026-02-01 17:55:29.908363+00,2026-02-01 17:57:58.248519+00
+788,YC,,Yamal Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YC.svg,,,t,2026-02-01 17:55:29.917823+00,2026-02-01 17:57:58.251563+00
+789,IY,,Yemenia - Yemen Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/IY.svg,,,t,2026-02-01 17:55:29.923888+00,2026-02-01 17:57:58.257752+00
+790,YT,,Yeti Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/YT.svg,,,t,2026-02-01 17:55:29.937803+00,2026-02-01 17:57:58.263828+00
+791,3Q,,Yunnan Airlines,,,,,t,2026-02-01 17:55:29.954843+00,2026-02-01 17:57:58.271371+00
+792,2N,,Yuzhmashavia,,,,,t,2026-02-01 17:55:29.964606+00,2026-02-01 17:57:58.275109+00
+793,Z6,,ZABAIKAL AIRLINES,,,,,t,2026-02-01 17:55:29.972198+00,2026-02-01 17:57:58.2783+00
+794,ZN,,Zambia Airways,,,,,t,2026-02-01 17:55:29.98474+00,2026-02-01 17:57:58.285463+00
+795,GJ,,"Zhejiang Loong Airlines Co., Ltd",,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GJ.svg,,,t,2026-02-01 17:55:29.989059+00,2026-02-01 17:57:58.300662+00
+796,XM,,Zimex Aviation,,,,,t,2026-02-01 17:55:29.993301+00,2026-02-01 17:57:58.31714+00
+797,ZG,,Zipair,,,,,t,2026-02-01 17:55:30.00728+00,2026-02-01 17:57:58.323209+00
+798,Z4,,Zoom Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/Z4.svg,,,t,2026-02-01 17:55:30.031942+00,2026-02-01 17:57:58.334827+00
+114,GZ,,Air Rarotonga,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GZ.svg,,,t,2026-02-01 17:55:26.295744+00,2026-02-01 17:57:50.699331+00
+122,ST,,Air Thanlwin,,,,,t,2026-02-01 17:55:26.305443+00,2026-02-01 17:57:50.819338+00
+123,FL,,AirTran Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/FL.svg,,,t,2026-02-01 17:55:26.309933+00,2026-02-01 17:57:50.8238+00
+146,GP,,APG Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GP.svg,,,t,2026-02-01 17:55:26.337877+00,2026-02-01 17:57:51.016629+00
+183,S4,,Azores Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/S4.svg,,,t,2026-02-01 17:55:26.384118+00,2026-02-01 17:57:51.320128+00
+190,QH,,Bamboo Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QH.svg,,,t,2026-02-01 17:55:26.393395+00,2026-02-01 17:57:51.382447+00
+232,BW,,Caribbean Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BW.svg,,,t,2026-02-01 17:55:26.427145+00,2026-02-01 17:57:51.747473+00
+242,CE,,Chalair Aviation,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/CE.svg,,,t,2026-02-01 17:55:26.433567+00,2026-02-01 17:57:51.819253+00
+249,MU,,China Eastern Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MU.svg,,,t,2026-02-01 17:55:26.441777+00,2026-02-01 17:57:51.870108+00
+297,2D,,Eastern Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2D.svg,,,t,2026-02-01 17:55:26.474048+00,2026-02-01 17:57:52.281865+00
+303,LY,,EL AL,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LY.svg,,,t,2026-02-01 17:55:26.480059+00,2026-02-01 17:57:52.330346+00
+321,BR,,EVA Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BR.svg,,,t,2026-02-01 17:55:26.495088+00,2026-02-01 17:57:52.488695+00
+357,A9,,Georgian Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/A9.svg,,,t,2026-02-01 17:55:26.519453+00,2026-02-01 17:57:52.831222+00
+372,GF,,Gulf Air Bahrain,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/GF.svg,,,t,2026-02-01 17:55:26.527799+00,2026-02-01 17:57:52.924544+00
+382,2L,,Helvetic Airways,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/2L.svg,,,t,2026-02-01 17:55:26.53499+00,2026-02-01 17:57:53.002952+00
+421,QD,,JC International Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/QD.svg,,,t,2026-02-01 17:55:26.741186+00,2026-02-01 17:57:53.301455+00
+437,LJ,,Jin Air,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/LJ.svg,,,t,2026-02-01 17:55:26.878048+00,2026-02-01 17:57:53.431111+00
+456,MN,,kulula.com,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/MN.svg,,,t,2026-02-01 17:55:27.061372+00,2026-02-01 17:57:53.585098+00
+496,AE,,Mandarin Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/AE.svg,,,t,2026-02-01 17:55:27.37069+00,2026-02-01 17:57:53.998571+00
+500,MY,,MASwings,,,,,t,2026-02-01 17:55:27.386506+00,2026-02-01 17:57:54.02505+00
+501,L6,,Mauritania Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/L6.svg,,,t,2026-02-01 17:55:27.393605+00,2026-02-01 17:57:54.034808+00
+533,N4,,Nordwind Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/N4.svg,,,t,2026-02-01 17:55:27.504102+00,2026-02-01 17:57:54.249425+00
+561,BL,,Pacific Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BL.svg,,,t,2026-02-01 17:55:27.597857+00,2026-02-01 17:57:54.514266+00
+570,PR,,Philippine Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/PR.svg,,,t,2026-02-01 17:55:27.623392+00,2026-02-01 17:57:54.605868+00
+614,F2,,Safarilink,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/F2.svg,,,t,2026-02-01 17:55:28.421545+00,2026-02-01 17:57:55.383801+00
+620,SP,,SATA Air Acores,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SP.svg,,,t,2026-02-01 17:55:28.508707+00,2026-02-01 17:57:55.59329+00
+624,SL,,Scandinavian Airlines Ireland Limited,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SL.svg,,,t,2026-02-01 17:55:28.545982+00,2026-02-01 17:57:55.736365+00
+677,SR,,Sundai,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/SR.svg,,,t,2026-02-01 17:55:28.997747+00,2026-02-01 17:57:56.595189+00
+680,WG,,Sunwing,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/WG.svg,,,t,2026-02-01 17:55:29.010698+00,2026-02-01 17:57:56.632619+00
+698,XJ,,Thai Airasia X,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/XJ.svg,,,t,2026-02-01 17:55:29.181006+00,2026-02-01 17:57:56.781361+00
+8,UA,,United Airlines,United States,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/UA.svg,,,t,2026-02-01 17:43:49.013658+00,2026-02-01 17:57:57.57289+00
+737,UN,,United Nigeria Airlines,,,,,t,2026-02-01 17:55:29.607229+00,2026-02-01 17:57:57.609437+00
+739,U6,,Ural Airlines,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/U6.svg,,,t,2026-02-01 17:55:29.615489+00,2026-02-01 17:57:57.664434+00
+766,VY,,Vueling,,https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/VY.svg,,,t,2026-02-01 17:55:29.775338+00,2026-02-01 17:57:58.060154+00

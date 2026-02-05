@@ -1,0 +1,17 @@
+{
+  "name": "import-innstant-data",
+  "version": "1.0.0",
+  "description": "Import script for Innstant Travel Static Data API",
+  "main": "import-innstant-data.js",
+  "scripts": {
+    "import": "node import-innstant-data.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

@@ -1,0 +1,1182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  relationMode      = "prisma"
+}
+
+model Airport {
+  id                Int           @id @default(autoincrement())
+  iataCode          String        @unique @map("iata_code")
+  icaoCode          String?       @map("icao_code")
+  name              String
+  city              String
+  country           String
+  countryCode       String        @map("country_code")
+  latitude          Decimal?      @db.Decimal(10, 8)
+  longitude         Decimal?      @db.Decimal(11, 8)
+  timezone          String?
+  isActive          Boolean       @default(true) @map("is_active")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  terminals         AirportTerminal[]
+  originRoutes      FlightRoute[] @relation("OriginAirport")
+  destinationRoutes FlightRoute[] @relation("DestinationAirport")
+
+  @@map("airports")
+}
+
+model AirportTerminal {
+  id        Int      @id @default(autoincrement())
+  airportId Int      @map("airport_id")
+  name      String
+  gates     Json?
+  services  Json?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  airport   Airport  @relation(fields: [airportId], references: [id], onDelete: Cascade)
+
+  @@unique([airportId, name])
+  @@index([airportId])
+  @@map("airport_terminals")
+}
+
+model City {
+  id          Int      @id @default(autoincrement())
+  name        String
+  country     String
+  countryCode String   @map("country_code")
+  countryId   Int?     @map("country_id")
+  countryRef  Country? @relation(fields: [countryId], references: [id], onDelete: SetNull)
+  latitude    Decimal? @db.Decimal(10, 8)
+  longitude   Decimal? @db.Decimal(11, 8)
+  population  Int?
+  timezone    String?
+  isPopular   Boolean  @default(false) @map("is_popular")
+  imageUrl    String?  @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([countryId])
+  @@map("cities")
+}
+
+model Airline {
+  id              Int              @id @default(autoincrement())
+  iataCode        String           @unique @map("iata_code")
+  icaoCode        String?          @map("icao_code")
+  name            String
+  country         String?
+  logoUrl         String?          @map("logo_url")
+  website         String?
+  alliance        String?
+  isActive        Boolean          @default(true) @map("is_active")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  routes          FlightRoute[]
+  loyaltyPrograms LoyaltyProgram[]
+
+  @@map("airlines")
+}
+
+model LoyaltyProgram {
+  id        Int      @id @default(autoincrement())
+  airlineId Int      @map("airline_id")
+  name      String
+  code      String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  airline   Airline  @relation(fields: [airlineId], references: [id])
+
+  @@index([airlineId])
+  @@map("loyalty_programs")
+}
+
+model HotelChain {
+  id              Int              @id @default(autoincrement())
+  name            String           @unique
+  code            String           @unique
+  website         String?
+  logoUrl         String?          @map("logo_url")
+  country         String?
+  parentChainId   Int?             @map("parent_chain_id")
+  tier            String?          @db.VarChar(20)
+  loyaltyProgram  String?          @map("loyalty_program")
+  isActive        Boolean          @default(true) @map("is_active")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  hotels          Hotel[]
+  canonicalHotels CanonicalHotel[] @relation("CanonicalHotelChain")
+  parentChain     HotelChain?      @relation("ChainHierarchy", fields: [parentChainId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  childChains     HotelChain[]     @relation("ChainHierarchy")
+
+  @@map("hotel_chains")
+}
+
+model Nationality {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  country   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("nationalities")
+}
+
+model FlightRoute {
+  id                   Int               @id @default(autoincrement())
+  airlineId            Int               @map("airline_id")
+  flightNumber         String            @map("flight_number")
+  originAirportId      Int               @map("origin_airport_id")
+  destinationAirportId Int               @map("destination_airport_id")
+  departureTime        DateTime          @map("departure_time")
+  arrivalTime          DateTime          @map("arrival_time")
+  durationMinutes      Int               @map("duration_minutes")
+  distanceKm           Int?              @map("distance_km")
+  aircraftType         String?           @map("aircraft_type")
+  isActive             Boolean           @default(true) @map("is_active")
+  createdAt            DateTime          @default(now()) @map("created_at")
+  updatedAt            DateTime          @updatedAt @map("updated_at")
+  airline              Airline           @relation(fields: [airlineId], references: [id], onDelete: Cascade)
+  originAirport        Airport           @relation("OriginAirport", fields: [originAirportId], references: [id], onDelete: Cascade)
+  destinationAirport   Airport           @relation("DestinationAirport", fields: [destinationAirportId], references: [id], onDelete: Cascade)
+  schedules            FlightSchedule[]
+  basePrices           FlightBasePrice[]
+  amenities            FlightAmenity[]
+  bookings             Booking[]
+
+  @@unique([airlineId, flightNumber, originAirportId, destinationAirportId])
+  @@map("flight_routes")
+}
+
+model FlightSchedule {
+  id            Int         @id @default(autoincrement())
+  routeId       Int         @map("route_id")
+  dayOfWeek     Int         @map("day_of_week")
+  isOperational Boolean     @default(true) @map("is_operational")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  route         FlightRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, dayOfWeek])
+  @@map("flight_schedules")
+}
+
+model FlightBasePrice {
+  id                 Int         @id @default(autoincrement())
+  routeId            Int         @map("route_id")
+  cabinClass         String      @map("cabin_class")
+  basePrice          Decimal     @map("base_price") @db.Decimal(10, 2)
+  currency           String      @default("USD")
+  validFrom          DateTime    @map("valid_from")
+  validTo            DateTime?   @map("valid_to")
+  minimumStay        Int         @default(0) @map("minimum_stay")
+  maximumStay        Int?        @map("maximum_stay")
+  cancellationPolicy String?     @map("cancellation_policy")
+  isActive           Boolean     @default(true) @map("is_active")
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+  route              FlightRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, cabinClass, validFrom])
+  @@map("flight_base_prices")
+}
+
+model FlightAmenity {
+  id          Int         @id @default(autoincrement())
+  routeId     Int         @map("route_id")
+  cabinClass  String      @map("cabin_class")
+  amenityType String      @map("amenity_type")
+  description String?
+  isAvailable Boolean     @default(true) @map("is_available")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  route       FlightRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+
+  @@map("flight_amenities")
+}
+
+model Hotel {
+  id                Int                  @id @default(autoincrement())
+  name              String
+  description       String?
+  address           String
+  city              String
+  country           String
+  postalCode        String?              @map("postal_code")
+  latitude          Decimal?             @db.Decimal(10, 8)
+  longitude         Decimal?             @db.Decimal(11, 8)
+  starRating        Decimal?             @map("star_rating") @db.Decimal(2, 1)
+  website           String?
+  phone             String?
+  email             String?
+  checkinTime       DateTime             @default(dbgenerated("'1970-01-01 15:00:00'::timestamp without time zone")) @map("checkin_time")
+  checkoutTime      DateTime             @default(dbgenerated("'1970-01-01 11:00:00'::timestamp without time zone")) @map("checkout_time")
+  amenities         Json?
+  images            Json?
+  policies          Json?
+  nearbyAttractions Json?                @map("nearby_attractions")
+  isActive          Boolean              @default(true) @map("is_active")
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  chainId           Int?                 @map("chain_id")
+  chain             HotelChain?          @relation(fields: [chainId], references: [id], onDelete: SetNull)
+  roomTypes         HotelRoomType[]
+  reviewsSummary    HotelReviewsSummary?
+  bookings          Booking[]
+
+  @@map("hotels")
+}
+
+model HotelRoomType {
+  id           Int             @id @default(autoincrement())
+  hotelId      Int             @map("hotel_id")
+  name         String
+  description  String?
+  maxOccupancy Int             @map("max_occupancy")
+  bedType      String?         @map("bed_type")
+  roomSizeSqm  Decimal?        @map("room_size_sqm") @db.Decimal(6, 2)
+  viewType     String?         @map("view_type")
+  amenities    Json?
+  images       Json?
+  isAccessible Boolean         @default(false) @map("is_accessible")
+  isActive     Boolean         @default(true) @map("is_active")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  hotel        Hotel           @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  baseRates    HotelBaseRate[]
+
+  @@map("hotel_room_types")
+}
+
+model HotelBaseRate {
+  id                 Int           @id @default(autoincrement())
+  roomTypeId         Int           @map("room_type_id")
+  seasonStart        DateTime      @map("season_start")
+  seasonEnd          DateTime      @map("season_end")
+  baseRate           Decimal       @map("base_rate") @db.Decimal(10, 2)
+  currency           String        @default("USD")
+  minimumStay        Int           @default(1) @map("minimum_stay")
+  maximumStay        Int?          @map("maximum_stay")
+  cancellationPolicy String?       @map("cancellation_policy")
+  breakfastIncluded  Boolean       @default(false) @map("breakfast_included")
+  refundable         Boolean       @default(true)
+  isActive           Boolean       @default(true) @map("is_active")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  roomType           HotelRoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
+
+  @@map("hotel_base_rates")
+}
+
+model HotelReviewsSummary {
+  id                    Int      @id @default(autoincrement())
+  hotelId               Int      @unique @map("hotel_id")
+  totalReviews          Int      @default(0) @map("total_reviews")
+  averageRating         Decimal  @default(0.00) @map("average_rating") @db.Decimal(3, 2)
+  ratingBreakdown       Json?    @map("rating_breakdown")
+  commonAmenitiesRating Decimal? @map("common_amenities_rating") @db.Decimal(3, 2)
+  locationRating        Decimal? @map("location_rating") @db.Decimal(3, 2)
+  serviceRating         Decimal? @map("service_rating") @db.Decimal(3, 2)
+  cleanlinessRating     Decimal? @map("cleanliness_rating") @db.Decimal(3, 2)
+  valueRating           Decimal? @map("value_rating") @db.Decimal(3, 2)
+  lastUpdated           DateTime @default(now()) @map("last_updated")
+  hotel                 Hotel    @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+
+  @@map("hotel_reviews_summary")
+}
+
+model User {
+  id                String                 @id @default(cuid())
+  email             String                 @unique
+  name              String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  isActive          Boolean                @default(true)
+  isVerified        Boolean                @default(false)
+  password          String?
+  phone             String?
+  role              String                 @default("user")
+  tenantId          String?                @map("tenant_id")
+  branchId          String?                @map("branch_id")
+  companyId         String?                @map("company_id")
+  searchPreferences UserSearchPreferences?
+  searchHistory     SearchHistory[]
+  bookings          Booking[]
+  walletAccounts    WalletAccount[]
+  apiKeys           ApiKey[]
+  auditLogs         AuditLog[]
+  tenant            Tenant?                @relation(fields: [tenantId], references: [id])
+  company           Company?               @relation(fields: [companyId], references: [id])
+  branch            Branch?                @relation(fields: [branchId], references: [id])
+
+  @@map("users")
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  key         String    @unique
+  name        String
+  permissions Json?
+  lastUsedAt  DateTime? @map("last_used_at")
+  expiresAt   DateTime? @map("expires_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+model UserSearchPreferences {
+  id                       Int      @id @default(autoincrement())
+  userId                   String   @unique @map("user_id")
+  preferredAirlines        Json?    @map("preferred_airlines")
+  preferredHotelChains     Json?    @map("preferred_hotel_chains")
+  preferredCabinClass      String?  @default("economy") @map("preferred_cabin_class")
+  preferredHotelStarRating Decimal? @map("preferred_hotel_star_rating") @db.Decimal(2, 1)
+  budgetRange              Json?    @map("budget_range")
+  preferredDestinations    Json?    @map("preferred_destinations")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_search_preferences")
+}
+
+model SearchHistory {
+  id               Int      @id @default(autoincrement())
+  userId           String?  @map("user_id")
+  sessionId        String?  @map("session_id")
+  searchType       String   @map("search_type")
+  searchQuery      Json     @map("search_query")
+  resultsCount     Int      @default(0) @map("results_count")
+  searchDurationMs Int?     @map("search_duration_ms")
+  userAgent        String?  @map("user_agent")
+  ipAddress        String?  @map("ip_address")
+  createdAt        DateTime @default(now()) @map("created_at")
+  user             User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("search_history")
+}
+
+model Booking {
+  id             Int             @id @default(autoincrement())
+  userId         String          @map("user_id")
+  flightRouteId  Int?            @map("flight_route_id")
+  hotelId        Int?            @map("hotel_id")
+  status         String          @default("pending")
+  totalAmount    Decimal         @map("total_amount") @db.Decimal(10, 2)
+  currency       String          @default("USD")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  bookingId      String?         @map("booking_id")
+  partnerId      String?         @map("partner_id")
+  productId      String?         @map("product_id")
+  tenantId       String?         @map("tenant_id")
+  companyId      String?         @map("company_id")
+  tenant         Tenant?         @relation(fields: [tenantId], references: [id])
+  partner        Partner?        @relation(fields: [partnerId], references: [id])
+  product        Product?        @relation(fields: [productId], references: [id])
+  company        Company?        @relation(fields: [companyId], references: [id])
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flightRoute    FlightRoute?    @relation(fields: [flightRouteId], references: [id], onDelete: SetNull)
+  hotel          Hotel?          @relation(fields: [hotelId], references: [id], onDelete: SetNull)
+  queues         Queue[]
+  invoices       Invoice[]
+  bookingDetails BookingDetail[]
+
+  @@map("bookings")
+}
+
+model BookingDetail {
+  id              Int      @id @default(autoincrement())
+  bookingId       Int      @map("booking_id")
+  passengerInfo   Json?    @map("passenger_info")
+  paymentInfo     Json?    @map("payment_info")
+  addons          Json?    @map("addons")
+  specialRequests Json?    @map("special_requests")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("booking_details")
+}
+
+model Invoice {
+  id            Int       @id @default(autoincrement())
+  bookingId     Int       @map("booking_id")
+  invoiceNumber String    @unique @map("invoice_number")
+  issueDate     DateTime  @default(now()) @map("issue_date")
+  dueDate       DateTime? @map("due_date")
+  totalAmount   Decimal   @map("total_amount") @db.Decimal(10, 2)
+  currency      String    @default("USD")
+  status        String    @default("unpaid")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  partnerId     String?   @map("partner_id")
+  tenantId      String?   @map("tenant_id")
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  partner       Partner?  @relation(fields: [partnerId], references: [id])
+  booking       Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+
+  @@map("invoices")
+}
+
+model Payment {
+  id              Int      @id @default(autoincrement())
+  invoiceId       Int      @map("invoice_id")
+  paymentMethod   String   @map("payment_method")
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  status          String   @default("pending")
+  transactionId   String?  @unique @map("transaction_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  gateway         String?  @map("gateway")
+  gatewayResponse Json?    @map("gateway_response")
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Queue {
+  id          Int       @id @default(autoincrement())
+  bookingId   Int       @map("booking_id")
+  queueType   String    @map("queue_type")
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  error       String?
+  priority    Int       @default(0)
+  processedAt DateTime? @map("processed_at")
+  retryCount  Int       @default(0)
+  booking     Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("queues")
+}
+
+model Tenant {
+  id        String     @id @default(cuid())
+  name      String
+  domain    String     @unique
+  isActive  Boolean    @default(true)
+  settings  Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  users     User[]
+  bookings  Booking[]
+  invoices  Invoice[]
+  auditLogs AuditLog[]
+  partners  Partner[]
+  products  Product[]
+  companies Company[]
+
+  @@map("tenants")
+}
+
+model Partner {
+  id         String     @id @default(cuid())
+  tenantId   String     @map("tenant_id")
+  name       String
+  email      String
+  phone      String?
+  commission Decimal    @default(0.00) @db.Decimal(5, 2)
+  isActive   Boolean    @default(true)
+  settings   Json?
+  createdAt  DateTime   @default(now()) @map("created_at")
+  updatedAt  DateTime   @updatedAt @map("updated_at")
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bookings   Booking[]
+  invoices   Invoice[]
+  auditLogs  AuditLog[]
+
+  @@map("partners")
+}
+
+model Product {
+  id          String     @id @default(cuid())
+  tenantId    String     @map("tenant_id")
+  name        String
+  description String?
+  type        String
+  pricing     Json?
+  isActive    Boolean    @default(true)
+  settings    Json?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  tenant      Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  auditLogs   AuditLog[]
+
+  @@map("products")
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  category    String
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  @map("user_id")
+  tenantId   String?  @map("tenant_id")
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  oldValues  Json?
+  newValues  Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+  partnerId  String?  @map("partner_id")
+  productId  String?  @map("product_id")
+  partner    Partner? @relation(fields: [partnerId], references: [id])
+  product    Product? @relation(fields: [productId], references: [id])
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model SystemMetric {
+  id        String   @id @default(cuid())
+  name      String
+  value     Decimal  @db.Decimal(15, 2)
+  unit      String
+  timestamp DateTime @map("timestamp")
+  category  String
+
+  @@map("system_metrics")
+}
+
+// Enhanced Static Data Models
+model Country {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique @map("code")
+  name        String   @map("name")
+  isoCode     String?  @map("iso_code")
+  continent   String?  @map("continent")
+  currency    String?  @map("currency")
+  phoneCode   String?  @map("phone_code")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  cities      City[]
+
+  @@map("countries")
+}
+
+model Currency {
+  id           Int      @id @default(autoincrement())
+  code         String   @unique @map("code")
+  name         String   @map("name")
+  symbol       String?  @map("symbol")
+  decimalPlaces Int     @default(2) @map("decimal_places")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("currencies")
+}
+
+model HotelFacility {
+  id          Int      @id @default(autoincrement())
+  name        String   @map("name")
+  category    String?  @map("category")
+  description String?  @map("description")
+  isCommon    Boolean  @default(false) @map("is_common")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("hotel_facilities")
+}
+
+model HotelType {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @map("name")
+  description String? @map("description")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("hotel_types")
+}
+
+// Data Management Models
+model DataSource {
+  id               Int      @id @default(autoincrement())
+  name             String   @map("name")
+  sourceType       String   @map("source_type")
+  endpoint         String?  @map("endpoint")
+  apiKey           String?  @map("api_key")
+  isActive         Boolean  @default(true) @map("is_active")
+  lastSyncAt       DateTime? @map("last_sync_at")
+  syncIntervalMinutes Int   @default(1440) @map("sync_interval_minutes")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("data_sources")
+}
+
+model DataImport {
+  id               Int      @id @default(autoincrement())
+  source           String   @map("source")
+  entityType       String   @map("entity_type")
+  totalRecords     Int      @map("total_records")
+  importedRecords  Int      @map("imported_records")
+  failedRecords    Int      @default(0) @map("failed_records")
+  status           String   @default("completed") @map("status")
+  startedAt        DateTime @default(now()) @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  errorDetails     String?  @map("error_details")
+  metadata         Json?    @map("metadata")
+
+  @@map("data_imports")
+}
+
+model WalletAccount {
+  id           String              @id @default(cuid())
+  userId       String              @map("user_id")
+  currency     String
+  balance      Decimal             @default(0.00) @db.Decimal(15, 2)
+  pending      Decimal             @default(0.00) @db.Decimal(15, 2)
+  isActive     Boolean             @default(true)
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@index([userId])
+  @@map("wallet_accounts")
+}
+
+model WalletTransaction {
+  id          String        @id @default(cuid())
+  accountId   String        @map("account_id")
+  type        String
+  amount      Decimal       @db.Decimal(15, 2)
+  currency    String
+  reference   String?
+  description String?
+  status      String        @default("pending")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  account     WalletAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_transactions")
+}
+
+model ConnectionPoolConfig {
+  id                 String   @id @default(cuid())
+  min_connections    Int      @default(2)
+  max_connections    Int      @default(20)
+  idle_timeout_ms    Int      @default(30000)
+  acquire_timeout_ms Int      @default(60000)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("connection_pool_config")
+}
+
+model QueryPerformance {
+  id                String   @id @default(cuid())
+  query_text        String
+  execution_time_ms Int
+  rows_returned     Int
+  timestamp         DateTime @default(now())
+
+  @@index([timestamp])
+  @@map("query_performance")
+}
+
+model CachePerformance {
+  id         String   @id @default(cuid())
+  cache_key  String
+  hit_count  Int      @default(0)
+  miss_count Int      @default(0)
+  hit_rate   Decimal  @db.Decimal(5, 4)
+  timestamp  DateTime @default(now())
+
+  @@index([timestamp])
+  @@map("cache_performance")
+}
+
+model ApiVendor {
+  id          String               @id @default(cuid())
+  name        String
+  code        String               @unique
+  baseUrl     String               @map("base_url")
+  authType    String               @map("auth_type")
+  credentials Json?
+  isActive    Boolean              @default(true) @map("is_active")
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  suppliers   Supplier[]
+  mappings    ApiEndpointMapping[]
+
+  @@map("api_vendors")
+}
+
+model ApiEndpointMapping {
+  id       String    @id @default(cuid())
+  vendorId String    @map("vendor_id")
+  action   String
+  path     String
+  method   String    @default("POST")
+  isActive Boolean   @default(true) @map("is_active")
+  vendor   ApiVendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@map("api_endpoint_mappings")
+}
+
+model Supplier {
+  id        String     @id @default(cuid())
+  name      String
+  code      String     @unique
+  category  String
+  vendorId  String?    @map("vendor_id")
+  isActive  Boolean    @default(true) @map("is_active")
+  settings  Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  vendor    ApiVendor? @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  contracts Contract[]
+
+  @@index([vendorId])
+  @@map("suppliers")
+}
+
+model Contract {
+  id          String    @id @default(cuid())
+  supplierId  String    @map("supplier_id")
+  name        String
+  currency    String    @default("USD")
+  creditLimit Decimal   @map("credit_limit") @db.Decimal(15, 2)
+  commission  Decimal   @default(0.00) @db.Decimal(5, 2)
+  validFrom   DateTime  @map("valid_from")
+  validTo     DateTime? @map("valid_to")
+  status      String    @default("ACTIVE")
+  documentUrl String?   @map("document_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  supplier    Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@map("contracts")
+}
+
+model PricingRule {
+  id          String   @id @default(cuid())
+  name        String
+  targetType  String   @map("target_type")
+  targetId    String?  @map("target_id")
+  serviceType String   @map("service_type")
+  markupType  String   @map("markup_type")
+  markupValue Decimal  @map("markup_value") @db.Decimal(15, 2)
+  status      String   @default("ACTIVE")
+  priority    Int      @default(0)
+  criteria    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("pricing_rules")
+}
+
+model Company {
+  id                 String        @id @default(cuid())
+  tenantId           String        @map("tenant_id")
+  name               String
+  legalName          String?       @map("legal_name")
+  registrationNumber String?       @map("registration_number")
+  taxId              String?       @map("tax_id")
+  iataCode           String?       @map("iata_code")
+  officeId           String?       @map("office_id")
+  tier               String        @default("standard")
+  status             String        @default("active")
+  address            Json?
+  phone              String?
+  email              String?
+  website            String?
+  logoUrl            String?       @map("logo_url")
+  settings           Json?
+  createdAt          DateTime      @default(now()) @map("created_at")
+  updatedAt          DateTime      @updatedAt @map("updated_at")
+  tenant             Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branches           Branch[]
+  departments        Department[]
+  designations       Designation[]
+  costCenters        CostCenter[]
+  users              User[]
+  bookings           Booking[]
+
+  @@map("companies")
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  companyId String   @map("company_id")
+  name      String
+  code      String?
+  address   Json?
+  phone     String?
+  email     String?
+  managerId String?  @map("manager_id")
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users     User[]
+
+  @@map("branches")
+}
+
+model Department {
+  id                 String       @id @default(cuid())
+  companyId          String       @map("company_id")
+  name               String
+  code               String?
+  parentDepartmentId String?      @map("parent_department_id")
+  status             String       @default("active")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+  company            Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  parentDepartment   Department?  @relation("DeptHierarchy", fields: [parentDepartmentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  childDepartments   Department[] @relation("DeptHierarchy")
+
+  @@map("departments")
+}
+
+model Designation {
+  id        String   @id @default(cuid())
+  companyId String   @map("company_id")
+  name      String
+  level     Int      @default(0)
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("designations")
+}
+
+model CostCenter {
+  id          String   @id @default(cuid())
+  companyId   String   @map("company_id")
+  name        String
+  code        String?
+  description String?
+  budget      Decimal? @db.Decimal(15, 2)
+  status      String   @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("cost_centers")
+}
+
+model LedgerAccount {
+  id             String        @id @default(cuid())
+  name           String
+  type           String
+  currency       String
+  balance        Decimal       @default(0.00) @db.Decimal(19, 4)
+  entityType     String?       @map("entity_type")
+  entityId       String?       @map("entity_id")
+  allowOverdraft Boolean       @default(false) @map("allow_overdraft")
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  entries        LedgerEntry[]
+
+  @@index([entityType, entityId])
+  @@map("ledger_accounts")
+}
+
+model LedgerTransaction {
+  id          String        @id @default(cuid())
+  description String?
+  reference   String?
+  type        String
+  status      String
+  metadata    Json?
+  postedAt    DateTime      @default(now()) @map("posted_at")
+  entries     LedgerEntry[]
+
+  @@map("ledger_transactions")
+}
+
+model LedgerEntry {
+  id            String            @id @default(cuid())
+  transactionId String            @map("transaction_id")
+  accountId     String            @map("account_id")
+  amount        Decimal           @db.Decimal(19, 4)
+  direction     String
+  createdAt     DateTime          @default(now()) @map("created_at")
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id])
+  account       LedgerAccount     @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+  @@index([transactionId])
+  @@index([transactionId], map: "idx_ledger_transaction_id")
+  @@map("ledger_entries")
+}
+
+// =============================================================================
+// ENHANCED STATIC DATA MODELS (Redesigned Schema)
+// =============================================================================
+
+model DataSupplier {
+  code                    String    @id
+  name                    String
+  apiType                 String?   @map("api_type")
+  baseUrl                 String?   @map("base_url")
+  providesHotels          Boolean   @default(false) @map("provides_hotels")
+  providesFlights         Boolean   @default(false) @map("provides_flights")
+  providesContent         Boolean   @default(false) @map("provides_content")
+  contentPriority         Int       @default(100) @map("content_priority")
+  isActive                Boolean   @default(true) @map("is_active")
+  lastFullSyncAt          DateTime? @map("last_full_sync_at")
+  lastIncrementalSyncAt   DateTime? @map("last_incremental_sync_at")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  @@map("data_suppliers")
+}
+
+model CanonicalHotel {
+  id                Int       @id @default(autoincrement())
+  name              String
+  slug              String?   @unique
+  address           String?
+  postalCode        String?   @map("postal_code")
+  city              String?
+  cityId            Int?      @map("city_id")
+  country           String?
+  countryCode       String?   @map("country_code") @db.VarChar(3)
+  latitude          Decimal?  @db.Decimal(10, 8)
+  longitude         Decimal?  @db.Decimal(11, 8)
+  timezone          String?
+  starRating        Decimal?  @map("star_rating") @db.Decimal(2, 1)
+  hotelTypeId       Int?      @map("hotel_type_id")
+  chainId           Int?      @map("chain_id")
+  description       String?
+  shortDescription  String?   @map("short_description")
+  website           String?
+  phone             String?
+  email             String?
+  checkinTime       DateTime? @map("checkin_time") @db.Time()
+  checkoutTime      DateTime? @map("checkout_time") @db.Time()
+  policies          Json?
+  userRating        Decimal?  @map("user_rating") @db.Decimal(3, 2)
+  reviewCount       Int       @default(0) @map("review_count")
+  contentScore      Int       @default(0) @map("content_score")
+  primarySource     String?   @map("primary_source") @db.VarChar(50)
+  isActive          Boolean   @default(true) @map("is_active")
+  amenities         Json?
+  images            Json?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  chain             HotelChain? @relation("CanonicalHotelChain", fields: [chainId], references: [id], onDelete: SetNull)
+  supplierRefs      HotelSupplierReference[]
+  hotelImages       HotelImage[]
+  amenityInstances  HotelAmenityInstance[]
+  roomTypes         CanonicalRoomType[]
+  translations      CanonicalHotelTranslation[]
+
+  @@index([city])
+  @@index([country])
+  @@index([countryCode])
+  @@index([chainId])
+  @@index([starRating])
+  @@index([isActive])
+  @@map("canonical_hotels")
+}
+
+model HotelSupplierReference {
+  id                Int       @id @default(autoincrement())
+  canonicalHotelId  Int       @map("canonical_hotel_id")
+  supplierCode      String    @map("supplier_code") @db.VarChar(50)
+  supplierHotelId   String    @map("supplier_hotel_id")
+  matchConfidence   Decimal?  @default(1.00) @map("match_confidence") @db.Decimal(3, 2)
+  matchMethod       String?   @map("match_method") @db.VarChar(50)
+  rawData           Json?     @map("raw_data")
+  lastSyncedAt      DateTime? @map("last_synced_at")
+  syncStatus        String    @default("active") @map("sync_status") @db.VarChar(20)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  canonicalHotel    CanonicalHotel @relation(fields: [canonicalHotelId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierCode, supplierHotelId])
+  @@index([canonicalHotelId])
+  @@index([syncStatus])
+  @@map("hotel_supplier_references")
+}
+
+model HotelImage {
+  id                Int       @id @default(autoincrement())
+  canonicalHotelId  Int       @map("canonical_hotel_id")
+  url               String
+  urlHash           String    @map("url_hash")
+  thumbnailUrl      String?   @map("thumbnail_url")
+  smallUrl          String?   @map("small_url")
+  mediumUrl         String?   @map("medium_url")
+  largeUrl          String?   @map("large_url")
+  caption           String?
+  category          String?   @db.VarChar(50)
+  isPrimary         Boolean   @default(false) @map("is_primary")
+  sortOrder         Int       @default(0) @map("sort_order")
+  sourceSupplier    String?   @map("source_supplier") @db.VarChar(50)
+  sourceId          String?   @map("source_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  
+  canonicalHotel    CanonicalHotel @relation(fields: [canonicalHotelId], references: [id], onDelete: Cascade)
+
+  @@unique([canonicalHotelId, urlHash])
+  @@index([canonicalHotelId])
+  @@map("hotel_images")
+}
+
+model Amenity {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique @db.VarChar(100)
+  name         String
+  category     String?   @db.VarChar(50)
+  icon         String?
+  appliesTo    String    @default("both") @map("applies_to") @db.VarChar(20)
+  isPopular    Boolean   @default(false) @map("is_popular")
+  sortOrder    Int       @default(0) @map("sort_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  
+  hotelInstances HotelAmenityInstance[]
+
+  @@map("amenities")
+}
+
+model HotelAmenityInstance {
+  canonicalHotelId  Int       @map("canonical_hotel_id")
+  amenityId         Int       @map("amenity_id")
+  sourceSupplier    String?   @map("source_supplier") @db.VarChar(50)
+  
+  canonicalHotel    CanonicalHotel @relation(fields: [canonicalHotelId], references: [id], onDelete: Cascade)
+  amenity           Amenity        @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+
+  @@id([canonicalHotelId, amenityId])
+  @@map("hotel_amenity_instances")
+}
+
+model CanonicalRoomType {
+  id                Int       @id @default(autoincrement())
+  canonicalHotelId  Int       @map("canonical_hotel_id")
+  name              String
+  standardizedName  String?   @map("standardized_name")
+  slug              String?
+  roomClass         String?   @map("room_class") @db.VarChar(50)
+  roomType          String?   @map("room_type") @db.VarChar(50)
+  description       String?
+  maxOccupancy      Int?      @map("max_occupancy")
+  maxAdults         Int?      @map("max_adults")
+  maxChildren       Int?      @map("max_children")
+  bedType           String?   @map("bed_type")
+  bedCount          Int       @default(1) @map("bed_count")
+  roomSizeSqm       Decimal?  @map("room_size_sqm") @db.Decimal(6, 2)
+  viewType          String?   @map("view_type")
+  isAccessible      Boolean   @default(false) @map("is_accessible")
+  isSmokingAllowed  Boolean   @default(false) @map("is_smoking_allowed")
+  amenities         Json?
+  images            Json?
+  contentScore      Int       @default(0) @map("content_score")
+  isActive          Boolean   @default(true) @map("is_active")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  canonicalHotel    CanonicalHotel @relation(fields: [canonicalHotelId], references: [id], onDelete: Cascade)
+  supplierRefs      RoomSupplierReference[]
+
+  @@unique([canonicalHotelId, slug])
+  @@index([canonicalHotelId])
+  @@map("canonical_room_types")
+}
+
+model RoomSupplierReference {
+  id               Int       @id @default(autoincrement())
+  canonicalRoomId  Int       @map("canonical_room_id")
+  supplierCode     String    @map("supplier_code") @db.VarChar(50)
+  supplierRoomId   String    @map("supplier_room_id")
+  matchConfidence  Decimal?  @default(1.00) @map("match_confidence") @db.Decimal(3, 2)
+  rawData          Json?     @map("raw_data")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  
+  canonicalRoom    CanonicalRoomType @relation(fields: [canonicalRoomId], references: [id], onDelete: Cascade)
+
+  @@unique([supplierCode, supplierRoomId])
+  @@index([canonicalRoomId])
+  @@map("room_supplier_references")
+}
+
+model CanonicalHotelTranslation {
+  canonicalHotelId  Int       @map("canonical_hotel_id")
+  languageCode      String    @map("language_code") @db.VarChar(10)
+  name              String?
+  description       String?
+  shortDescription  String?   @map("short_description")
+  address           String?
+  sourceSupplier    String?   @map("source_supplier") @db.VarChar(50)
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
+  canonicalHotel    CanonicalHotel @relation(fields: [canonicalHotelId], references: [id], onDelete: Cascade)
+
+  @@id([canonicalHotelId, languageCode])
+  @@map("canonical_hotel_translations")
+}
+
+// Enhanced Aircraft model
+model Aircraft {
+  id               String   @id
+  iataCode         String?  @unique @map("iata_code")
+  icaoCode         String?  @map("icao_code") @db.VarChar(5)
+  name             String
+  manufacturer     String?
+  model            String?
+  passengerCapacity Int?    @map("passenger_capacity")
+  maxRangeKm       Int?     @map("max_range_km")
+  cruiseSpeedKmh   Int?     @map("cruise_speed_kmh")
+  category         String?  @db.VarChar(50)
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("aircraft")
+}
+
+// Canonical Flight Routes
+model CanonicalFlightRoute {
+  id              Int       @id @default(autoincrement())
+  originIata      String    @map("origin_iata") @db.VarChar(10)
+  destinationIata String    @map("destination_iata") @db.VarChar(10)
+  airlineIata     String?   @map("airline_iata") @db.VarChar(10)
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@unique([originIata, destinationIata, airlineIata])
+  @@index([originIata])
+  @@index([destinationIata])
+  @@map("canonical_flight_routes")
+}

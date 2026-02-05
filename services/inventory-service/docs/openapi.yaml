@@ -1,0 +1,1359 @@
+openapi: 3.0.3
+info:
+  title: Supplier Management API
+  description: |
+    Comprehensive API for managing suppliers, API vendors, pricing rules, and inventory orchestration.
+    This API provides endpoints for supplier lifecycle management, search orchestration across multiple suppliers,
+    and dynamic pricing rule application.
+  version: 1.0.0
+  contact:
+    name: Supplier Management Team
+    email: api-support@tripalfa.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3002
+    description: Local development server
+  - url: https://api.tripalfa.com/inventory
+    description: Production server
+
+tags:
+  - name: Health
+    description: Health check and service status
+  - name: Suppliers
+    description: Supplier management operations
+  - name: API Vendors
+    description: API vendor configuration and management
+  - name: Pricing Rules
+    description: Dynamic pricing and markup rules
+  - name: Search
+    description: Inventory search across multiple suppliers
+  - name: Configuration
+    description: Service configuration and sync endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns service health status and metadata
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                    example: healthy
+                  service:
+                    type: string
+                    example: inventory-service
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2024-10-25T10:30:00Z"
+
+  /suppliers:
+    get:
+      tags:
+        - Suppliers
+      summary: Get all suppliers
+      description: Retrieve a list of all suppliers with their associated vendors and contracts
+      parameters:
+        - name: include
+          in: query
+          description: Comma-separated list of relations to include
+          schema:
+            type: string
+            enum: [vendor, contracts]
+            example: vendor,contracts
+        - name: isActive
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+            example: true
+        - name: category
+          in: query
+          description: Filter by supplier category
+          schema:
+            type: string
+            enum: [flights, hotels, LOCAL]
+            example: flights
+      responses:
+        '200':
+          description: List of suppliers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Supplier'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Suppliers
+      summary: Create a new supplier
+      description: Create a new supplier with associated vendor and configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierCreate'
+      responses:
+        '201':
+          description: Supplier created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /suppliers/{id}:
+    get:
+      tags:
+        - Suppliers
+      summary: Get supplier by ID
+      description: Retrieve a specific supplier by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Supplier ID
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Supplier retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - Suppliers
+      summary: Update supplier
+      description: Update an existing supplier's information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Supplier ID
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierUpdate'
+      responses:
+        '200':
+          description: Supplier updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Suppliers
+      summary: Delete supplier
+      description: Delete a supplier by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Supplier ID
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '204':
+          description: Supplier deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api-vendors:
+    get:
+      tags:
+        - API Vendors
+      summary: Get all API vendors
+      description: Retrieve a list of all configured API vendors with their mappings
+      responses:
+        '200':
+          description: List of API vendors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApiVendor'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - API Vendors
+      summary: Create a new API vendor
+      description: Create a new API vendor configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiVendorCreate'
+      responses:
+        '201':
+          description: API vendor created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiVendor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /pricing-rules:
+    get:
+      tags:
+        - Pricing Rules
+      summary: Get all pricing rules
+      description: Retrieve all pricing rules ordered by priority
+      parameters:
+        - name: serviceType
+          in: query
+          description: Filter by service type
+          schema:
+            type: string
+            enum: [FLIGHT, HOTEL, PACKAGE, ALL]
+            example: FLIGHT
+        - name: targetType
+          in: query
+          description: Filter by target type
+          schema:
+            type: string
+            enum: [GLOBAL, COMPANY, BRANCH, SUBAGENT]
+            example: GLOBAL
+        - name: status
+          in: query
+          description: Filter by rule status
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE]
+            example: ACTIVE
+      responses:
+        '200':
+          description: List of pricing rules retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PricingRule'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Pricing Rules
+      summary: Create a new pricing rule
+      description: Create a new pricing rule for dynamic markup application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PricingRuleCreate'
+      responses:
+        '201':
+          description: Pricing rule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PricingRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /search/flights:
+    post:
+      tags:
+        - Search
+      summary: Search for flights
+      description: |
+        Search for flights across multiple suppliers (API vendors and local database).
+        The orchestrator automatically applies pricing rules based on tenant/company context.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightSearchRequest'
+      responses:
+        '200':
+          description: Flight search completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FlightResult'
+                  metadata:
+                    type: object
+                    properties:
+                      totalResults:
+                        type: integer
+                        example: 25
+                      suppliersQueried:
+                        type: array
+                        items:
+                          type: string
+                        example: ["DUFFEL", "LOCAL"]
+                      processingTime:
+                        type: integer
+                        description: Processing time in milliseconds
+                        example: 1250
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /search/hotels:
+    post:
+      tags:
+        - Search
+      summary: Search for hotels
+      description: |
+        Search for hotels across multiple suppliers (API vendors and local database).
+        The orchestrator automatically applies pricing rules based on tenant/company context.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HotelSearchRequest'
+      responses:
+        '200':
+          description: Hotel search completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/HotelResult'
+                  metadata:
+                    type: object
+                    properties:
+                      totalResults:
+                        type: integer
+                        example: 15
+                      suppliersQueried:
+                        type: array
+                        items:
+                          type: string
+                        example: ["LITEAPI", "LOCAL"]
+                      processingTime:
+                        type: integer
+                        description: Processing time in milliseconds
+                        example: 850
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '502':
+          $ref: '#/components/responses/BadGateway'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /config/active-suppliers:
+    get:
+      tags:
+        - Configuration
+      summary: Get active suppliers configuration
+      description: |
+        Retrieve configuration for all active suppliers. This endpoint is used by the booking engine
+        to get the current supplier configuration for search orchestration.
+      responses:
+        '200':
+          description: Active suppliers configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Supplier'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Supplier:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique supplier identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          description: Supplier name
+          example: "Amadeus GDS"
+        code:
+          type: string
+          description: Supplier code
+          example: "AMADEUS"
+        category:
+          type: string
+          enum: [GDS, DIRECT_API, LOCAL]
+          description: Supplier category
+          example: "GDS"
+        vendorId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Associated API vendor ID
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        isActive:
+          type: boolean
+          default: true
+          description: Whether the supplier is active
+          example: true
+        settings:
+          type: object
+          nullable: true
+          description: Supplier-specific settings
+          example: { "timeout": 30000, "retryCount": 3 }
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-10-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-10-25T10:30:00Z"
+        vendor:
+          $ref: '#/components/schemas/ApiVendor'
+        contracts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contract'
+
+    SupplierCreate:
+      type: object
+      required:
+        - name
+        - code
+        - category
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Supplier name
+          example: "Amadeus GDS"
+        code:
+          type: string
+          minLength: 2
+          maxLength: 20
+          description: Supplier code
+          example: "AMADEUS"
+        category:
+          type: string
+          enum: [GDS, DIRECT_API, LOCAL]
+          description: Supplier category
+          example: "GDS"
+        vendorId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Associated API vendor ID
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        settings:
+          type: object
+          nullable: true
+          description: Supplier-specific settings
+          example: { "timeout": 30000, "retryCount": 3 }
+
+    SupplierUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Supplier name
+          example: "Amadeus GDS"
+        code:
+          type: string
+          minLength: 2
+          maxLength: 20
+          description: Supplier code
+          example: "AMADEUS"
+        category:
+          type: string
+          enum: [GDS, DIRECT_API, LOCAL]
+          description: Supplier category
+          example: "GDS"
+        vendorId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Associated API vendor ID
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        isActive:
+          type: boolean
+          description: Whether the supplier is active
+          example: true
+        settings:
+          type: object
+          nullable: true
+          description: Supplier-specific settings
+          example: { "timeout": 30000, "retryCount": 3 }
+
+    ApiVendor:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique API vendor identifier
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          description: API vendor name
+          example: "Duffel"
+        code:
+          type: string
+          description: API vendor code
+          example: "DUFFEL"
+        baseUrl:
+          type: string
+          format: uri
+          description: Base URL for API calls
+          example: "https://api.duffel.com"
+        authType:
+          type: string
+          enum: [BASIC, OAUTH2, API_KEY]
+          description: Authentication type
+          example: "API_KEY"
+        credentials:
+          type: object
+          nullable: true
+          description: Encrypted credentials
+          example: { "apiKey": "encrypted_key_here" }
+        isActive:
+          type: boolean
+          default: true
+          description: Whether the API vendor is active
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-10-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-10-25T10:30:00Z"
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiEndpointMapping'
+
+    ApiVendorCreate:
+      type: object
+      required:
+        - name
+        - code
+        - baseUrl
+        - authType
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: API vendor name
+          example: "Duffel"
+        code:
+          type: string
+          minLength: 2
+          maxLength: 20
+          description: API vendor code
+          example: "DUFFEL"
+        baseUrl:
+          type: string
+          format: uri
+          description: Base URL for API calls
+          example: "https://api.duffel.com"
+        authType:
+          type: string
+          enum: [BASIC, OAUTH2, API_KEY]
+          description: Authentication type
+          example: "API_KEY"
+        credentials:
+          type: object
+          nullable: true
+          description: Encrypted credentials
+          example: { "apiKey": "encrypted_key_here" }
+        mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiEndpointMappingCreate'
+
+    ApiEndpointMapping:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique mapping identifier
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        vendorId:
+          type: string
+          format: uuid
+          description: Associated vendor ID
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        action:
+          type: string
+          enum: [SEARCH, HOLD, CONFIRM, CANCEL]
+          description: API action
+          example: "SEARCH"
+        path:
+          type: string
+          description: API endpoint path
+          example: "/air/offer_requests"
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE]
+          default: "POST"
+          description: HTTP method
+          example: "POST"
+        isActive:
+          type: boolean
+          default: true
+          description: Whether the mapping is active
+          example: true
+
+    ApiEndpointMappingCreate:
+      type: object
+      required:
+        - action
+        - path
+        - method
+      properties:
+        action:
+          type: string
+          enum: [SEARCH, HOLD, CONFIRM, CANCEL]
+          description: API action
+          example: "SEARCH"
+        path:
+          type: string
+          description: API endpoint path
+          example: "/air/offer_requests"
+        method:
+          type: string
+          enum: [GET, POST, PUT, DELETE]
+          default: "POST"
+          description: HTTP method
+          example: "POST"
+
+    PricingRule:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique pricing rule identifier
+          example: "550e8400-e29b-41d4-a716-446655440003"
+        name:
+          type: string
+          description: Pricing rule name
+          example: "Weekend Markup"
+        targetType:
+          type: string
+          enum: [GLOBAL, COMPANY, BRANCH, SUBAGENT]
+          description: Target type for the rule
+          example: "GLOBAL"
+        targetId:
+          type: string
+          nullable: true
+          description: ID of the target entity
+          example: "company_123"
+        serviceType:
+          type: string
+          enum: [FLIGHT, HOTEL, PACKAGE, ALL]
+          description: Service type the rule applies to
+          example: "FLIGHT"
+        markupType:
+          type: string
+          enum: [PERCENTAGE, FIXED]
+          description: Type of markup
+          example: "PERCENTAGE"
+        markupValue:
+          type: number
+          description: Markup value
+          example: 10.5
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+          default: "ACTIVE"
+          description: Rule status
+          example: "ACTIVE"
+        priority:
+          type: integer
+          default: 0
+          description: Rule priority (higher values have higher priority)
+          example: 1
+        criteria:
+          type: object
+          nullable: true
+          description: Advanced criteria for rule application
+          example: { "airlineCodes": ["AA", "UA"], "classOfService": "Economy" }
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-10-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-10-25T10:30:00Z"
+
+    PricingRuleCreate:
+      type: object
+      required:
+        - name
+        - targetType
+        - serviceType
+        - markupType
+        - markupValue
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Pricing rule name
+          example: "Weekend Markup"
+        targetType:
+          type: string
+          enum: [GLOBAL, COMPANY, BRANCH, SUBAGENT]
+          description: Target type for the rule
+          example: "GLOBAL"
+        targetId:
+          type: string
+          nullable: true
+          description: ID of the target entity
+          example: "company_123"
+        serviceType:
+          type: string
+          enum: [FLIGHT, HOTEL, PACKAGE, ALL]
+          description: Service type the rule applies to
+          example: "FLIGHT"
+        markupType:
+          type: string
+          enum: [PERCENTAGE, FIXED]
+          description: Type of markup
+          example: "PERCENTAGE"
+        markupValue:
+          type: number
+          description: Markup value
+          example: 10.5
+        status:
+          type: string
+          enum: [ACTIVE, INACTIVE]
+          default: "ACTIVE"
+          description: Rule status
+          example: "ACTIVE"
+        priority:
+          type: integer
+          default: 0
+          description: Rule priority (higher values have higher priority)
+          example: 1
+        criteria:
+          type: object
+          nullable: true
+          description: Advanced criteria for rule application
+          example: { "airlineCodes": ["AA", "UA"], "classOfService": "Economy" }
+
+    Contract:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique contract identifier
+          example: "550e8400-e29b-41d4-a716-446655440004"
+        supplierId:
+          type: string
+          format: uuid
+          description: Associated supplier ID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          description: Contract name
+          example: "Amadeus GDS Contract 2024"
+        currency:
+          type: string
+          default: "USD"
+          description: Contract currency
+          example: "USD"
+        creditLimit:
+          type: number
+          description: Credit limit for the supplier
+          example: 50000.00
+        commission:
+          type: number
+          description: Commission rate
+          example: 1.5
+        validFrom:
+          type: string
+          format: date
+          description: Contract start date
+          example: "2024-01-01"
+        validTo:
+          type: string
+          format: date
+          nullable: true
+          description: Contract end date
+          example: "2024-12-31"
+        status:
+          type: string
+          enum: [ACTIVE, EXPIRED, PENDING]
+          default: "ACTIVE"
+          description: Contract status
+          example: "ACTIVE"
+        documentUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to contract document
+          example: "https://docs.tripalfa.com/contracts/amadeus_2024.pdf"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+          example: "2024-10-25T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-10-25T10:30:00Z"
+
+    FlightSearchRequest:
+      type: object
+      required:
+        - origin
+        - destination
+        - departureDate
+      properties:
+        origin:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Origin airport IATA code
+          example: "JFK"
+        destination:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Destination airport IATA code
+          example: "LAX"
+        departureDate:
+          type: string
+          format: date
+          description: Departure date
+          example: "2024-10-25"
+        returnDate:
+          type: string
+          format: date
+          nullable: true
+          description: Return date (for round trips)
+          example: "2024-10-30"
+        adults:
+          type: integer
+          minimum: 1
+          maximum: 9
+          default: 1
+          description: Number of adults
+          example: 2
+        children:
+          type: integer
+          minimum: 0
+          maximum: 9
+          default: 0
+          description: Number of children
+          example: 1
+        infants:
+          type: integer
+          minimum: 0
+          maximum: 9
+          default: 0
+          description: Number of infants
+          example: 0
+        cabinClass:
+          type: string
+          enum: [ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST]
+          default: "ECONOMY"
+          description: Preferred cabin class
+          example: "ECONOMY"
+        context:
+          type: object
+          nullable: true
+          description: Context for pricing rules application
+          properties:
+            tenantId:
+              type: string
+              description: Tenant ID for multi-tenancy
+              example: "tenant_123"
+            companyId:
+              type: string
+              description: Company ID for pricing rules
+              example: "company_456"
+            branchId:
+              type: string
+              description: Branch ID for pricing rules
+              example: "branch_789"
+
+    FlightResult:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Flight identifier
+          example: "flight_12345"
+        airline:
+          type: string
+          description: Airline name
+          example: "Delta Air Lines"
+        carrierCode:
+          type: string
+          minLength: 2
+          maxLength: 3
+          description: Airline carrier code
+          example: "DL"
+        flightNumber:
+          type: string
+          description: Flight number
+          example: "DL123"
+        origin:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Origin airport IATA code
+          example: "JFK"
+        destination:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Destination airport IATA code
+          example: "LAX"
+        departureTime:
+          type: string
+          format: time
+          description: Departure time
+          example: "10:30"
+        arrivalTime:
+          type: string
+          format: time
+          description: Arrival time
+          example: "14:45"
+        duration:
+          type: string
+          description: Flight duration
+          example: "5h 15m"
+        stops:
+          type: integer
+          minimum: 0
+          description: Number of stops
+          example: 0
+        amount:
+          type: number
+          description: Flight price
+          example: 250.00
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Currency code
+          example: "USD"
+        originalAmount:
+          type: number
+          nullable: true
+          description: Original amount before markup
+          example: 227.27
+        markupApplied:
+          type: string
+          nullable: true
+          description: Name of applied markup rule
+          example: "Weekend Markup"
+        supplier:
+          type: string
+          description: Supplier name
+          example: "Duffel"
+        provider:
+          type: string
+          description: Provider name
+          example: "Local"
+
+    HotelSearchRequest:
+      type: object
+      required:
+        - location
+        - checkin
+        - checkout
+      properties:
+        location:
+          type: string
+          minLength: 2
+          description: Search location (city, airport, or landmark)
+          example: "New York"
+        checkin:
+          type: string
+          format: date
+          description: Check-in date
+          example: "2024-10-25"
+        checkout:
+          type: string
+          format: date
+          description: Check-out date
+          example: "2024-10-30"
+        adults:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 2
+          description: Number of adults
+          example: 2
+        children:
+          type: integer
+          minimum: 0
+          maximum: 10
+          default: 0
+          description: Number of children
+          example: 1
+        rooms:
+          type: integer
+          minimum: 1
+          maximum: 5
+          default: 1
+          description: Number of rooms
+          example: 1
+        context:
+          type: object
+          nullable: true
+          description: Context for pricing rules application
+          properties:
+            tenantId:
+              type: string
+              description: Tenant ID for multi-tenancy
+              example: "tenant_123"
+            companyId:
+              type: string
+              description: Company ID for pricing rules
+              example: "company_456"
+            branchId:
+              type: string
+              description: Branch ID for pricing rules
+              example: "branch_789"
+
+    HotelResult:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Hotel identifier
+          example: "hotel_12345"
+        name:
+          type: string
+          description: Hotel name
+          example: "Grand Plaza Hotel"
+        image:
+          type: string
+          format: uri
+          description: Hotel image URL
+          example: "https://images.example.com/hotel_12345.jpg"
+        location:
+          type: string
+          description: Hotel location
+          example: "Times Square, New York"
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          description: Hotel star rating
+          example: 4.5
+        reviews:
+          type: integer
+          description: Number of reviews
+          example: 1250
+        pricePerNight:
+          type: number
+          description: Price per night
+          example: 180.00
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          description: Currency code
+          example: "USD"
+        originalPricePerNight:
+          type: number
+          nullable: true
+          description: Original price before markup
+          example: 163.64
+        markupApplied:
+          type: string
+          nullable: true
+          description: Name of applied markup rule
+          example: "Weekend Markup"
+        amenities:
+          type: array
+          items:
+            type: string
+          description: Hotel amenities
+          example: ["WiFi", "Pool", "Gym", "Restaurant"]
+        provider:
+          type: string
+          description: Provider name
+          example: "LiteAPI"
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            validation:
+              summary: Validation error
+              value:
+                success: false
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Invalid input parameters"
+                  details:
+                    field: "origin"
+                    message: "Origin airport code must be 3 characters"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            notFound:
+              summary: Supplier not found
+              value:
+                success: false
+                error:
+                  code: "NOT_FOUND"
+                  message: "Supplier with ID 550e8400-e29b-41d4-a716-446655440000 not found"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            conflict:
+              summary: Duplicate supplier
+              value:
+                success: false
+                error:
+                  code: "CONFLICT"
+                  message: "A supplier with this code already exists"
+                  details:
+                    field: "code"
+                    value: "AMADEUS"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+    UnprocessableEntity:
+      description: Unprocessable entity - Business logic error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unprocessable:
+              summary: Supplier inactive
+              value:
+                success: false
+                error:
+                  code: "FORBIDDEN"
+                  message: "Supplier is inactive and cannot process requests"
+                  details:
+                    supplierId: "550e8400-e29b-41d4-a716-446655440000"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+    BadGateway:
+      description: Bad gateway - Supplier service error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            supplierError:
+              summary: Supplier service error
+              value:
+                success: false
+                error:
+                  code: "SUPPLIER_ERROR"
+                  message: "Supplier Duffel API returned error"
+                  details:
+                    supplierId: "550e8400-e29b-41d4-a716-446655440000"
+                    error: "Authentication failed"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+    ServiceUnavailable:
+      description: Service unavailable - External service error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unavailable:
+              summary: Supplier timeout
+              value:
+                success: false
+                error:
+                  code: "SERVICE_UNAVAILABLE"
+                  message: "No active suppliers available for flights"
+                  details:
+                    serviceType: "flights"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            internal:
+              summary: Database error
+              value:
+                success: false
+                error:
+                  code: "INTERNAL_ERROR"
+                  message: "An unexpected error occurred"
+                  details:
+                    originalError: "Connection timeout"
+                  timestamp: "2024-10-25T10:30:00Z"
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: Error message
+              example: "Invalid input parameters"
+            details:
+              type: object
+              nullable: true
+              description: Additional error details
+              example: { "field": "origin", "message": "Invalid value" }
+            timestamp:
+              type: string
+              format: date-time
+              description: Error timestamp
+              example: "2024-10-25T10:30:00Z"
+            requestId:
+              type: string
+              nullable: true
+              description: Request ID for debugging
+              example: "req_12345"
+
+security:
+  - ApiKeyAuth:
+      - read
+      - write
+  - BearerAuth:
+      - read
+      - write
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+externalDocs:
+  description: Find more information about the Supplier Management API
+  url: https://docs.tripalfa.com/supplier-management

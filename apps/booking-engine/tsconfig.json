@@ -1,0 +1,58 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "baseUrl": ".",
+    "typeRoots": [
+      "./node_modules/@types",
+      "../../node_modules/@types"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@tripalfa/ui-components": [
+        "../../packages/ui-components"
+      ],
+      "@tripalfa/ui-components/*": [
+        "../../packages/ui-components/*"
+      ],
+      "@tripalfa/static-data": [
+        "../../packages/static-data/src"
+      ],
+      "@tripalfa/static-data/*": [
+        "../../packages/static-data/src/*"
+      ]
+    },
+    "types": ["node", "react", "react-dom", "jest"]
+  },
+  "include": [
+    "src",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

@@ -1,0 +1,4 @@
+node_modules
+database/migrations/
+database/src/generated/prisma/package.json
+scripts/*.sql

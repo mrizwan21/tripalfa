@@ -1,0 +1,14 @@
+{
+    "name": "@tripalfa/shared-utils",
+    "version": "1.0.0",
+    "private": true,
+    "main": "index.ts",
+    "types": "index.ts",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "date-fns": "^4.1.0",
+        "zod": "^3.23.8"
+    }
+}

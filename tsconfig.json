@@ -1,18 +1,37 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "node16",
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
-    "jsx": "react-jsx",
+    "skipLibCheck": true,
     "strict": false,
-    "typeRoots": ["./types", "./node_modules/@types"],
-    "types": ["node", "jest"]
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tripalfa/static-data": [
+        "packages/static-data/src"
+      ]
+    },
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["types/**/*.d.ts", "database/prisma/**/*.ts", "services/**/*"],
-  "exclude": ["node_modules", "apps/**", "packages/**"]
+  "include": [
+    "./types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
 }
