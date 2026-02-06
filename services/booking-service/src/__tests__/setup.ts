@@ -473,52 +473,68 @@ global.makePricingRule = async (overrides = {}) => {
 
 
 // Assign utility functions to global with correct signatures
-global.post = post;
-global.put = put;
-global.del = del;
-global.withAuth = withAuth;
-global.createAdminToken = createAdminToken;
-global.createAgentToken = createAgentToken;
-global.createSupervisorToken = createSupervisorToken;
-global.createManagerToken = createManagerToken;
-// postAuth expects role: string, but global type allows role?: string | undefined
-global.postAuth = (path: string, data?: any, role?: string) => postAuth(path, data, role || 'admin');
-global.expectSuccess = expectSuccess;
-global.expectError = expectError;
-global.expectBookingResponse = expectBookingResponse;
-global.expectCustomerResponse = expectCustomerResponse;
-global.expectSupplierResponse = expectSupplierResponse;
-global.generateUniqueEmail = generateUniqueEmail;
-global.generatePhoneNumber = generatePhoneNumber;
-global.generatePNR = generatePNR;
-// generateDateRange expects (daysFromNow?: number), but global type expects (daysFromNow?: number, duration?: number)
-global.generateDateRange = (daysFromNow?: number) => generateDateRange(daysFromNow);
-global.buildBookingRequest = buildBookingRequest;
-global.buildCustomerRequest = buildCustomerRequest;
-global.buildSupplierRequest = buildSupplierRequest;
-global.buildInventoryRequest = buildInventoryRequest;
-global.expectInventoryResponse = expectInventoryResponse;
+// Only assign once to prevent auth duplication on multiple setup calls
+if (!global.post) {
+  global.post = post;
+  global.put = put;
+  global.del = del;
+  global.withAuth = withAuth;
+  global.createAdminToken = createAdminToken;
+  global.createAgentToken = createAgentToken;
+  global.createSupervisorToken = createSupervisorToken;
+  global.createManagerToken = createManagerToken;
+  // postAuth expects role: string, but global type allows role?: string | undefined
+  global.postAuth = (path: string, data?: any, role?: string) => postAuth(path, data, role || 'admin');
+  global.expectSuccess = expectSuccess;
+  global.expectError = expectError;
+  global.expectBookingResponse = expectBookingResponse;
+  global.expectCustomerResponse = expectCustomerResponse;
+  global.expectSupplierResponse = expectSupplierResponse;
+  global.generateUniqueEmail = generateUniqueEmail;
+  global.generatePhoneNumber = generatePhoneNumber;
+  global.generatePNR = generatePNR;
+  // generateDateRange expects (daysFromNow?: number), but global type expects (daysFromNow?: number, duration?: number)
+  global.generateDateRange = (daysFromNow?: number) => generateDateRange(daysFromNow);
+  global.buildBookingRequest = buildBookingRequest;
+  global.buildCustomerRequest = buildCustomerRequest;
+  global.buildSupplierRequest = buildSupplierRequest;
+  global.buildInventoryRequest = buildInventoryRequest;
+  global.expectInventoryResponse = expectInventoryResponse;
+}
 
 export async function seedTestData() {
-  // Optionally, set env vars and connect DB as in beforeAll
+  // Set env vars for test database integration
   if (process.env.INTEGRATION_DB !== 'true') {
     process.env.INTEGRATION_DB = 'true';
     process.env.TEST_DB_RESET = 'true';
   }
+  
+  // Ensure only one instance of Prisma client exists
   if (!global.prismaClient) {
     const { prisma: freshPrisma } = await import('../database/index');
     global.prismaClient = freshPrisma;
   }
+  
+  // Establish database connection if needed
   try {
-    await global.prismaClient.$connect();
-  } catch {}
-  // Optionally seed users, etc. (add as needed)
+    if (!global.prismaClient) {
+      await global.prismaClient.$connect();
+    }
+  } catch {
+    // Connection may already exist or be unavailable
+  }
 }
 
 export async function cleanupTestData() {
+  // Properly disconnect and clear Prisma client to prevent auth duplication
   if (global.prismaClient) {
     try {
       await global.prismaClient.$disconnect();
-    } catch {}
+    } catch {
+      // Ignore disconnection errors
+    } finally {
+      // Clear the reference to allow fresh instantiation on next seed
+      global.prismaClient = undefined as any;
+    }
   }
 }
