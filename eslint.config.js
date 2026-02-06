@@ -154,6 +154,10 @@ export default [
       '**/.vscode/extensions/**/typescript/lib/lib.dom.d.ts',
       '.vscode/extensions/**/typescript/lib/lib.dom.d.ts',
       '/Users/*/.vscode/extensions/**/typescript/lib/lib.dom.d.ts',
+      '**/playwright-report/**',
+      '**/test-results/**',
+      'apps/booking-engine/playwright-report/**',
+      'apps/booking-engine/test-results/**',
     ],
   },
 ];

@@ -106,9 +106,28 @@ npm run build
 ```
 
 ### Testing
+
+#### Unit & Integration Tests
 ```bash
 npm test
 ```
+
+#### E2E Tests (Playwright)
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run E2E tests in UI mode (interactive)
+npm run test:e2e:ui
+
+# Run E2E tests in debug mode
+npm run test:e2e:debug
+
+# View E2E test report
+npm run test:e2e:report
+```
+
+For comprehensive E2E testing guide, see [E2E Test Execution Guide](docs/testing/E2E_TEST_EXECUTION_GUIDE.md).
 
 ### Linting
 ```bash
@@ -121,20 +140,54 @@ npm run lint
 TripAlfa - Node/
 ├── apps/
 │   ├── booking-engine/          # Main booking application
+│   │   └── tests/               # E2E tests using Playwright
 │   ├── b2b-admin/               # Admin interface
 │   └── super-admin/             # Super admin functions
 ├── services/
 │   ├── booking-service/         # Booking logic
+│   │   └── src/__tests__/       # Unit & integration tests
 │   ├── inventory-service/       # Inventory management
 │   ├── wallet-service/          # Payment processing
 │   └── api-gateway/             # API routing
 ├── packages/
 │   ├── static-data/             # Centralized static data
 │   └── automapper/              # Object mapping utilities
-├── docs/                        # Documentation
+├── docs/
+│   ├── testing/                 # Testing documentation
+│   │   ├── E2E_TEST_EXECUTION_GUIDE.md
+│   │   ├── TEST_DATA_MANAGEMENT_GUIDE.md
+│   │   └── E2E_TESTING_IMPLEMENTATION_SUMMARY.md
+│   └── ...                      # Other documentation
 ├── infrastructure/              # Infrastructure setup
 └── types/                       # TypeScript type definitions
 ```
+
+## Testing Documentation
+
+### E2E Testing
+The TripAlfa booking engine includes a comprehensive E2E testing suite using Playwright:
+
+- **[E2E Test Execution Guide](docs/testing/E2E_TEST_EXECUTION_GUIDE.md)**: How to run, debug, and troubleshoot E2E tests
+- **[Test Data Management Guide](docs/testing/TEST_DATA_MANAGEMENT_GUIDE.md)**: Managing test fixtures, seeding, and test data
+- **[Implementation Summary](docs/testing/E2E_TESTING_IMPLEMENTATION_SUMMARY.md)**: Overview of Phase 1 testing initiative
+
+**Quick Start**:
+```bash
+cd apps/booking-engine
+npm install
+npx playwright install
+npm run test:e2e
+```
+
+### Current Test Coverage
+- **Smoke Tests**: ✅ Passing (1/1)
+- **Flight Booking**: 🟡 In Progress (1/5 passing, selectors being updated)
+- **Hotel Booking**: 🟡 In Progress (selector updates needed)
+- **Booking Management**: 🟡 In Progress
+- **Wallet Operations**: 🟡 In Progress
+- **Payment Processing**: 🟡 In Progress (timeout fixes in progress)
+- **Error Scenarios**: 🟡 In Progress
+- **API Integration Tests**: ✅ Implemented (auth, booking, wallet, payment)
 
 ## Contributing
 

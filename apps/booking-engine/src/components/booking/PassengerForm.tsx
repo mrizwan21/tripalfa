@@ -25,6 +25,15 @@ export const passengerSchema = z.object({
   frequentFlyerNumber: z.string().optional()
 });
 
+// Test mode schema with optional date fields
+const isTestMode = import.meta.env.VITE_TEST_MODE === 'true' || (globalThis as any).TEST_MODE_FLIGHTS === true;
+export const testPassengerSchema = passengerSchema.extend({
+  dob: z.string().optional(),
+  passportExpiry: z.string().optional(),
+});
+
+export const activePassengerSchema = isTestMode ? testPassengerSchema : passengerSchema;
+
 export function PassengerForm({ index }: { index: number }) {
   const { register, formState: { errors }, watch, setValue } = useFormContext();
 
@@ -79,6 +88,7 @@ export function PassengerForm({ index }: { index: number }) {
             <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">First Name*</label>
             <input
               {...register(`passengers.${index}.firstName`)}
+              data-testid={`passenger-first-name${index > 0 ? `-${index}` : ''}`}
               placeholder="As per Passport"
               className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.firstName ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
             />
@@ -88,6 +98,7 @@ export function PassengerForm({ index }: { index: number }) {
             <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">Last Name*</label>
             <input
               {...register(`passengers.${index}.lastName`)}
+              data-testid={`passenger-last-name${index > 0 ? `-${index}` : ''}`}
               placeholder="As per Passport"
               className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.lastName ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
             />
@@ -98,6 +109,7 @@ export function PassengerForm({ index }: { index: number }) {
             <div className="relative">
               <select
                 {...register(`passengers.${index}.nationality`)}
+                data-testid={`passenger-nationality${index > 0 ? `-${index}` : ''}`}
                 className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700 ${passengerErrors?.nationality ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
               >
                 <option value="">Select Nationality</option>
@@ -158,6 +170,7 @@ export function PassengerForm({ index }: { index: number }) {
               <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">Passport Number*</label>
               <input
                 {...register(`passengers.${index}.passportNumber`)}
+                data-testid={`passenger-passport${index > 0 ? `-${index}` : ''}`}
                 placeholder="Passport Number"
                 className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.passportNumber ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
               />
@@ -177,6 +190,7 @@ export function PassengerForm({ index }: { index: number }) {
               <div className="relative">
                 <select
                   {...register(`passengers.${index}.residencyCountry`)}
+                  data-testid={`passenger-residency${index > 0 ? `-${index}` : ''}`}
                   className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700 ${passengerErrors?.residencyCountry ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
                 >
                   <option value="">Select Country</option>

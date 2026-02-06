@@ -23,9 +23,10 @@ interface SearchAutocompleteProps {
     onChange?: (val: string) => void; // Bubble up text change
     className?: string;
     icon?: React.ReactNode;
+    dataTestId?: string;
 }
 
-export function SearchAutocomplete({ type, placeholder, defaultValue, value, onSelect, onChange, className, icon }: SearchAutocompleteProps): React.JSX.Element {
+export function SearchAutocomplete({ type, placeholder, defaultValue, value, onSelect, onChange, className, icon, dataTestId }: SearchAutocompleteProps): React.JSX.Element {
     const [internalQuery, setInternalQuery] = useState(defaultValue || '');
     // Use controlled value if provided, else internal
     const query = value !== undefined ? value : internalQuery;
@@ -100,6 +101,7 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
                     className={`w-full h-full bg-transparent border-none text-sm font-bold text-gray-900 placeholder-gray-400 focus:ring-0 p-0 truncate ${className}`}
                     placeholder={placeholder || "Where to?"}
                     autoComplete="off"
+                    data-testid={dataTestId}
                 />
             </div>
 

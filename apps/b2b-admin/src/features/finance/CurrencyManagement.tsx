@@ -26,10 +26,17 @@ const CURRENCY_INFO = {
   CHF: { symbol: 'CHF', name: 'Swiss Franc', decimalDigits: 2 }
 };
 
+interface Currency {
+  code: string;
+  name: string;
+  symbol?: string | null;
+  decimal_digits?: number;
+  buffer_percentage?: number;
+  is_active?: boolean;
+}
+
 export function CurrencyManagement() {
-  /** @type {Array<{code:string,name:string,symbol?:string|null,decimal_digits?:number,buffer_percentage?:number,is_active?:boolean}>} */
-  const initialCurrencies = [];
-  const [currencies, setCurrencies] = useState(initialCurrencies);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
   /** @type {{[code:string]: number}} */
   const initialExchangeRates = {};
   const [exchangeRates, setExchangeRates] = useState(initialExchangeRates);

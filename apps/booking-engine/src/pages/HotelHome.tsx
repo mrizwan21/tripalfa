@@ -77,6 +77,7 @@ export default function HotelHome() {
                                         setLocation(item.title);
                                         setCountryCode(item.countryCode || null);
                                     }}
+                                    dataTestId="hotel-city"
                                 />
                             </div>
 
@@ -102,6 +103,7 @@ export default function HotelHome() {
                             <div className="col-span-12 md:col-span-2">
                                 <button
                                     onClick={handleSearch}
+                                    data-testid="hotel-search-submit"
                                     className="w-full h-14 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-lg rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
                                 >
                                     Search

@@ -41,7 +41,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
     ];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" data-testid="flight-detail-modal">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300"
@@ -286,11 +286,12 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
 
                 {/* Footer Bar */}
                 <div className="px-8 py-6 bg-white border-t border-gray-100 flex items-center justify-between flex-shrink-0">
-                    <div>
+                    <div data-testid="flight-price">
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-[3px] mb-1">Total Payable</p>
                         <p className="text-2xl font-black text-gray-900 font-sans tracking-tighter">{flight.currency} {flight.amount.toLocaleString()}</p>
                     </div>
                     <Button
+                        data-testid="book-now-button"
                         onClick={onSelect}
                         className="px-12 py-5 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[3px] shadow-2xl shadow-purple-200 transition-all hover:translate-y-[-4px] active:scale-95"
                     >

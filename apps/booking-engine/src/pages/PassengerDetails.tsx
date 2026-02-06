@@ -23,11 +23,11 @@ import { SeatSelectionPopup } from '../components/SeatSelectionPopup';
 import { AdditionalBaggagePopup } from '../components/AdditionalBaggagePopup';
 import { MealSelectionPopup } from '../components/MealSelectionPopup';
 import { SpecialRequestPopup } from '../components/SpecialRequestPopup';
-import { PassengerForm, passengerSchema } from '../components/booking/PassengerForm';
+import { PassengerForm, activePassengerSchema } from '../components/booking/PassengerForm';
 
 // Determine parent schema
 const formSchema = z.object({
-    passengers: z.array(passengerSchema).min(1, "At least one passenger required"),
+    passengers: z.array(activePassengerSchema).min(1, "At least one passenger required"),
     billingAddress: z.object({
         street: z.string().min(5, "Street address is required"),
         city: z.string().min(2, "City is required"),
@@ -249,7 +249,7 @@ export default function PassengerDetails() {
 
     return (
         <TripLogerLayout>
-            <div className="bg-[#F8F9FA] min-h-screen pb-24">
+            <div data-testid="passenger-form" className="bg-[#F8F9FA] min-h-screen pb-24">
                 <div className="container mx-auto px-4 max-w-7xl pt-12">
                     <button
                         onClick={() => navigate(-1)}

@@ -16,7 +16,9 @@ export class BasePage {
   }
 
   async waitForNavigation() {
-    await this.page.waitForNavigation({ timeout: 60000 });
+    // Reduced timeout from 60000 to 30000ms for faster failure feedback
+    // This is a fallback method - prefer waitForURL when possible
+    await this.page.waitForNavigation({ timeout: 30000 });
   }
 
   async takeScreenshot(name: string) {

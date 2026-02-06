@@ -1,24 +1,43 @@
-// frontend/components/WalletBalance.jsx
+// frontend/components/WalletBalance.tsx
 // Display wallet balances for user
 
-import React, { useEffect, useState } from 'react';
-import { getUserWallets } from '../services/walletApi.js';
+import React, { useEffect, useState } from "react";
+import { getUserWallets } from "../services/walletApi.js";
 
-export function WalletBalance({ token, refreshInterval = 30000 }) {
-  const [wallets, setWallets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface Wallet {
+  id: string;
+  currency: string;
+  balance: number;
+  status: string;
+}
+
+interface WalletsResponse {
+  wallets: Wallet[];
+}
+
+interface WalletBalanceProps {
+  token: string;
+  refreshInterval?: number;
+}
+
+export function WalletBalance({
+  token,
+  refreshInterval = 30000,
+}: WalletBalanceProps): React.ReactElement {
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchWallets = async () => {
+    const fetchWallets = async (): Promise<void> => {
       try {
         setLoading(true);
-        const data = await getUserWallets(token);
+        const data: WalletsResponse = await getUserWallets(token);
         setWallets(data.wallets || []);
         setError(null);
       } catch (err) {
-        setError(err.message);
-        console.error('Failed to fetch wallets:', err);
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Failed to fetch wallets:", err);
       } finally {
         setLoading(false);
       }
@@ -42,7 +61,7 @@ export function WalletBalance({ token, refreshInterval = 30000 }) {
           <div key={wallet.id} className="wallet-card">
             <div className="wallet-currency">{wallet.currency}</div>
             <div className="wallet-balance">
-              {parseFloat(wallet.balance).toFixed(2)}
+              {parseFloat(wallet.balance.toString()).toFixed(2)}
             </div>
             <div className="wallet-status">{wallet.status}</div>
           </div>

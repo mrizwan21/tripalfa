@@ -10,10 +10,13 @@
     "jsx": "react-jsx",
     "strict": false,
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "types": ["node", "express"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "src/types/**/*.d.ts"
   ],
   "exclude": [
     "node_modules",

@@ -117,7 +117,7 @@ export default function BookingCheckout() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[#F8F9FA] min-h-screen pb-24 font-sans">
+      <div className="bg-[#F8F9FA] min-h-screen pb-24 font-sans" data-testid="checkout-page">
 
         {/* Confirmation Modal - Elite Style */}
         {showConfirmation && (
@@ -165,6 +165,7 @@ export default function BookingCheckout() {
                   <button
                     onClick={handleConfirmPayment}
                     disabled={isProcessing}
+                    data-testid="confirm-pay-button"
                     className="h-14 rounded-2xl bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-purple-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
                     {isProcessing ? (
@@ -267,6 +268,7 @@ export default function BookingCheckout() {
                       ) : (
                         <button
                           onClick={() => setShowConfirmation(true)}
+                          data-testid="complete-booking-button"
                           className="w-full h-16 bg-[#FFD700] hover:bg-yellow-400 text-black rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
                         >
                           Complete Booking <ArrowRight size={16} strokeWidth={3} />

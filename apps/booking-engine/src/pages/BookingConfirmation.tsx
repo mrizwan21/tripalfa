@@ -46,10 +46,10 @@ export default function BookingConfirmation() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[#F8F9FA] min-h-screen pb-32 font-sans">
+      <div className="bg-[#F8F9FA] min-h-screen pb-32 font-sans" data-testid="confirmation-page">
 
         {/* Success Header Banner */}
-        <div className="bg-[#111827] text-white pt-24 pb-48 relative overflow-hidden">
+        <div className="bg-[#111827] text-white pt-24 pb-48 relative overflow-hidden" data-testid="booking-confirmation">
           <div className="absolute inset-0 bg-gradient-to-b from-[#8B5CF6]/20 to-transparent" />
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
             <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#8B5CF6] rounded-full blur-[100px]" />
@@ -75,7 +75,7 @@ export default function BookingConfirmation() {
                   {isHold ? 'Hold Reference Identifier' : 'Elite Booking Identifier'}
                 </p>
                 <div className="px-8 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                  <span className="text-2xl font-black text-[#FFD700] tracking-widest">{bookingId}</span>
+                  <span className="text-2xl font-black text-[#FFD700] tracking-widest" data-testid="booking-reference">{bookingId}</span>
                 </div>
               </div>
             </div>

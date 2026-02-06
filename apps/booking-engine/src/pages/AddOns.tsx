@@ -56,7 +56,7 @@ export default function AddOns() {
 
     return (
         <TripLogerLayout>
-            <div className="bg-[#F8F9FA] min-h-screen font-sans">
+            <div className="bg-[#F8F9FA] min-h-screen font-sans" data-testid="addons-page">
 
                 {/* Top Sticky Header: Route Summary */}
                 <div className="bg-[#1E1B4B] sticky top-0 z-40">
@@ -217,6 +217,7 @@ export default function AddOns() {
                                     <div className="flex items-center justify-between">
                                         <div className="flex gap-4">
                                             <button
+                                                data-testid="baggage-addon"
                                                 onClick={() => toggleAddon('baggage')}
                                                 className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${selectedAddons.includes('baggage') ? 'bg-[#8B5CF6] border-[#8B5CF6] text-white shadow-lg shadow-purple-200' : 'border-gray-100 text-gray-400 hover:border-[#8B5CF6] hover:text-[#8B5CF6]'
                                                     }`}
@@ -369,6 +370,7 @@ export default function AddOns() {
                                     </p>
                                 </label>
                                 <Button
+                                    data-testid="continue-button"
                                     onClick={() => navigate('/passenger-details', {
                                         state: {
                                             flight,

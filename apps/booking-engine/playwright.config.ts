@@ -1,5 +1,3 @@
-/* global process */
-
 import { defineConfig, devices } from '@playwright/test';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -12,118 +10,119 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 
 /**
- * Playwright configuration optimized for Phase 1 E2E testing
+ * Playwright Configuration for E2E Testing
+ * Phase 1: Critical E2E Testing Foundation
  *
- * Phase 1 Optimizations:
- * - Conservative timeouts for reliable test execution
- * - Single browser (Chromium) focus for faster feedback
- * - Setup project for better test isolation
- * - Comprehensive reporting (HTML + JSON)
- * - Standardized viewport and error handling
- *
- * Future Phases:
- * - Phase 2: Add Firefox and WebKit browsers
- * - Phase 3: Add mobile browser testing
- * - CI Integration: Enable JUnit reporter and webServer
+ * This configuration is optimized for:
+ * - Fast test execution (parallel mode)
+ * - Reliable test runs (auto-waiting, retries)
+ * - Great debugging (traces, screenshots, videos)
+ * - Test isolation (clean state per test)
  */
 export default defineConfig({
-  // Test directory configuration
+  // Test directory
   testDir: './tests/e2e',
 
-  // Global timeout settings - optimized for Phase 1
-  timeout: 60000, // Overall test timeout (unchanged)
-
-  // Expect timeout - reduced for faster assertion feedback
+  // Timeout settings
+  timeout: 60000, // 60 seconds per test
   expect: {
-    timeout: 10000, // Reduced from 30000ms for quicker failures
+    timeout: 10000, // 10 seconds for assertions
   },
 
-  // Parallel execution settings
-  fullyParallel: true,
-  retries: process.env.CI ? 2 : 1,
-  workers: process.env.CI ? 2 : undefined,
+  // Test execution settings
+  fullyParallel: true, // Run tests in parallel for speed
+  forbidOnly: !!process.env.CI, // Fail CI if test.only is used
+  retries: process.env.CI ? 2 : 1, // Retry failed tests
+  workers: process.env.CI ? 2 : undefined, // Parallel workers
 
-  // CI safety check - prevent accidental test.only in CI
-  forbidOnly: !!process.env.CI,
-
-  // Reporter configuration - comprehensive reporting for Phase 1
+  // Reporter configuration
   reporter: [
-    ['list'], // Console output for development
+    ['list'], // Console output
     ['html', {
-      outputFolder: 'playwright-report', // HTML report directory
-      open: 'never' // Don't auto-open in browser
+      outputFolder: 'playwright-report',
+      open: 'never' // Don't auto-open report
     }],
     ['json', {
-      outputFile: 'test-results/results.json' // JSON output for analysis
-    }]
-    // JUnit reporter commented for future CI integration
+      outputFile: 'test-results/results.json'
+    }],
+    // Add JUnit reporter for CI integration (future)
     // ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
 
-  // Browser context options - standardized for Phase 1
+  // Global test settings
   use: {
+    // Base URL for navigation
     baseURL: process.env.BASE_URL || 'http://localhost:3002',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
 
-    // Optimized timeouts for Phase 1
-    actionTimeout: 15000, // Reduced from 30000ms for responsive feedback
-    navigationTimeout: 30000, // Reduced from 60000ms for quicker detection
+    // Trace settings (for debugging)
+    trace: 'on-first-retry', // Capture trace on retry
+    screenshot: 'only-on-failure', // Screenshot on failure
+    video: 'retain-on-failure', // Video on failure
 
-    // Standardized test environment
-    viewport: { width: 1280, height: 720 }, // Consistent viewport across tests
-    ignoreHTTPSErrors: true, // Allow HTTP for local development
+    // Timeout settings
+    actionTimeout: 15000, // 15 seconds for actions
+    navigationTimeout: 30000, // 30 seconds for navigation
+
+    // Browser context options
+    viewport: { width: 1280, height: 720 },
+    ignoreHTTPSErrors: true,
+
+    // Storage state (for authenticated tests)
+    storageState: './tests/fixtures/storageState.json',
   },
 
-  // Projects configuration - Phase 1: Chromium only with setup dependency
+  // Test projects (browsers)
   projects: [
-    // Setup project runs before all tests for better isolation
+    // Setup project (runs before all tests)
     {
       name: 'setup',
       testMatch: /global\.setup\.ts/,
-      use: { storageState: undefined }, // No storage state for setup
     },
 
-    // Phase 1: Chromium only for focused testing
+    // Chromium (primary browser for Phase 1)
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], storageState: './tests/fixtures/storageState.json' },
-      dependencies: ['setup'], // Depends on setup project
+      use: {
+        ...devices['Desktop Chrome'],
+        // Use storage state from setup
+        storageState: './tests/fixtures/storageState.json',
+      },
+      dependencies: ['setup'],
     },
 
-    // Phase 2/3: Additional browsers (commented for Phase 1)
-    /*
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
-    */
+    // Add more browsers in Phase 2
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    //   dependencies: ['setup'],
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    //   dependencies: ['setup'],
+    // },
+
+    // Mobile browsers (Phase 3)
+    // {
+    //   name: 'Mobile Chrome',
+    //   use: { ...devices['Pixel 5'] },
+    //   dependencies: ['setup'],
+    // },
   ],
 
-  // Output directories
-  outputDir: 'test-results/',
-  snapshotDir: 'tests/__snapshots__',
+  // Global setup and teardown
+  // globalSetup: path.resolve(__dirname, './tests/helpers/global.setup.ts'),
+  // globalTeardown: path.resolve(__dirname, './tests/helpers/globalTeardown.ts'),
 
-  // WebServer configuration - commented for Phase 1 (manual server startup preferred)
-  /*
-  webServer: process.env.CI ? undefined : {
-    command: 'npm run dev',
-    port: 3002,
-    timeout: 120000,
-    reuseExistingServer: !process.env.CI,
-  },
-  */
+  // Output directory for test artifacts
+  outputDir: 'test-results/',
+
+  // Web server (optional - if you want Playwright to start the dev server)
+  // Uncomment if you want automatic server startup
+  // webServer: {
+  //   command: 'npm run dev',
+  //   url: 'http://localhost:3002',
+  //   reuseExistingServer: !process.env.CI,
+  //   timeout: 120000, // 2 minutes to start
+  // },
 });

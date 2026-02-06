@@ -1,18 +1,43 @@
-// frontend/components/TransferForm.jsx
+// frontend/components/TransferForm.tsx
 // Transfer funds between wallets with FX preview
 
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { transferBetweenWallets, getFxPreview } from '../services/walletApi.js';
 
-export function TransferForm({ token, wallets = [] }) {
-  const [fromCurrency, setFromCurrency] = useState('');
-  const [toCurrency, setToCurrency] = useState('');
-  const [amount, setAmount] = useState('');
-  const [fxPreview, setFxPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+interface Wallet {
+  id: string;
+  currency: string;
+  balance: number;
+  status: string;
+}
+
+interface FxPreview {
+  converted: string;
+  fxRate: string;
+}
+
+interface TransferResult {
+  success: boolean;
+  transaction?: {
+    converted: string;
+  };
+  error?: string;
+}
+
+interface TransferFormProps {
+  token: string;
+  wallets?: Wallet[];
+}
+
+export function TransferForm({ token, wallets = [] }: TransferFormProps): React.ReactElement {
+  const [fromCurrency, setFromCurrency] = useState<string>('');
+  const [toCurrency, setToCurrency] = useState<string>('');
+  const [amount, setAmount] = useState<string>('');
+  const [fxPreview, setFxPreview] = useState<FxPreview | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const currencies = [...new Set(wallets.map((w) => w.currency))];
 
@@ -21,7 +46,7 @@ export function TransferForm({ token, wallets = [] }) {
     if (fromCurrency && toCurrency && amount && fromCurrency !== toCurrency) {
       (async () => {
         try {
-          const preview = await getFxPreview(token, fromCurrency, toCurrency, amount);
+          const preview = await getFxPreview(token, fromCurrency, toCurrency, parseFloat(amount));
           setFxPreview(preview);
         } catch (err) {
           console.error('Failed to fetch FX preview:', err);
@@ -32,7 +57,7 @@ export function TransferForm({ token, wallets = [] }) {
     }
   }, [fromCurrency, toCurrency, amount, token]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
 
     if (!fromCurrency || !toCurrency || !amount) {
@@ -50,7 +75,7 @@ export function TransferForm({ token, wallets = [] }) {
       setError(null);
       setSuccess(null);
 
-      const result = await transferBetweenWallets(token, {
+      const result: TransferResult = await transferBetweenWallets(token, {
         fromCurrency,
         toCurrency,
         amount: parseFloat(amount),
@@ -59,7 +84,7 @@ export function TransferForm({ token, wallets = [] }) {
 
       if (result.success) {
         setSuccess(
-          `Transfer completed: ${amount} ${fromCurrency} → ${result.transaction.converted} ${toCurrency}`
+          `Transfer completed: ${amount} ${fromCurrency} → ${result.transaction?.converted} ${toCurrency}`
         );
         setFromCurrency('');
         setToCurrency('');
@@ -69,7 +94,7 @@ export function TransferForm({ token, wallets = [] }) {
         setError(result.error || 'Transfer failed');
       }
     } catch (err) {
-      setError(err.message);
+      setError(err instanceof Error ? err.message : 'An error occurred');
       console.error('Transfer failed:', err);
     } finally {
       setLoading(false);
@@ -128,7 +153,7 @@ export function TransferForm({ token, wallets = [] }) {
         {fxPreview && (
           <div className="fx-preview">
             <p>
-              You will receive:{' '}
+              You will receive:{" "}
               <strong>
                 {parseFloat(fxPreview.converted).toFixed(2)} {toCurrency}
               </strong>
@@ -143,7 +168,7 @@ export function TransferForm({ token, wallets = [] }) {
         {success && <div className="success-message">{success}</div>}
 
         <button type="submit" disabled={loading}>
-          {loading ? 'Processing...' : 'Transfer'}
+          {loading ? "Processing..." : "Transfer"}
         </button>
       </form>
     </div>

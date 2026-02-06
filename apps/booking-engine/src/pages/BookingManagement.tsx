@@ -32,7 +32,7 @@ export default function BookingManagement() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[#F8F9FA] min-h-screen pb-20 font-sans">
+      <div className="bg-[#F8F9FA] min-h-screen pb-20 font-sans" data-testid="booking-management-page">
         {/* Elite Header */}
         <div className="bg-white border-b border-gray-100 shadow-sm overflow-hidden relative">
           <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-purple-50/50 to-transparent pointer-events-none" />

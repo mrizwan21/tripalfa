@@ -21,12 +21,14 @@
     "noFallthroughCasesInSwitch": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
+    "baseUrl": ".",
     "types": [
       "node",
       "react",
       "react-dom",
       "jest"
-    ]
+    ],
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "src/**/*",

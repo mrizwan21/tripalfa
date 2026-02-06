@@ -44,7 +44,14 @@ export function TravelerSelector() {
     ];
 
     return (
-        <Popover.Root open={open} onOpenChange={setOpen} modal={true}>
+        <div>
+            {/* Hidden select for E2E testing */}
+            <select data-testid="flight-adults" className="hidden" value={counts.adults} onChange={(e) => updateCount('adults', parseInt(e.target.value) - counts.adults)}>
+                {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
+                    <option key={num} value={num}>{num}</option>
+                ))}
+            </select>
+            <Popover.Root open={open} onOpenChange={setOpen} modal={true}>
             <Popover.Trigger asChild>
                 <button className="flex items-center gap-2 bg-transparent text-white font-medium hover:bg-white/10 px-3 py-1.5 rounded transition-colors group">
                     <span>{total} Traveler{total !== 1 ? 's' : ''}</span>
@@ -86,5 +93,6 @@ export function TravelerSelector() {
                 </Popover.Content>
             </Popover.Portal>
         </Popover.Root>
+        </div>
     );
 }

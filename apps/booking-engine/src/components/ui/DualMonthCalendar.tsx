@@ -205,7 +205,35 @@ export function DualMonthCalendar({
   };
 
   return (
-    <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
+    <div>
+      {/* Hidden inputs for E2E testing */}
+      <input 
+        type="text" 
+        data-testid={mode === 'flight' ? 'flight-departure-date' : 'hotel-checkin-date'}
+        className="hidden" 
+        value={internalDeparture ? format(internalDeparture, 'yyyy-MM-dd') : ''} 
+        onChange={(e) => {
+          const date = new Date(e.target.value);
+          if (!isNaN(date.getTime())) {
+            setInternalDeparture(date);
+            onDepartureDateChange?.(date);
+          }
+        }}
+      />
+      <input 
+        type="text" 
+        data-testid={mode === 'flight' ? 'flight-return-date' : 'hotel-checkout-date'}
+        className="hidden" 
+        value={internalReturn ? format(internalReturn, 'yyyy-MM-dd') : ''} 
+        onChange={(e) => {
+          const date = new Date(e.target.value);
+          if (!isNaN(date.getTime())) {
+            setInternalReturn(date);
+            onReturnDateChange?.(date);
+          }
+        }}
+      />
+      <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
       <Popover.Trigger asChild>
         <div className="flex gap-2 cursor-pointer">
           {/* Departure/Check-in Input */}
@@ -336,5 +364,6 @@ export function DualMonthCalendar({
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
+    </div>
   );
 }

@@ -65,7 +65,7 @@ export default function BookingDetail() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[#F8F9FA] min-h-screen pb-32 font-sans">
+      <div className="bg-[#F8F9FA] min-h-screen pb-32 font-sans" data-testid="booking-detail-page">
         {/* Header Banner */}
         <div className="bg-[#111827] pt-32 pb-48 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-[#8B5CF6]/10 to-transparent" />
@@ -141,7 +141,7 @@ export default function BookingDetail() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <button onClick={() => setIsSeatSelectionOpen(true)} className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+                  <button onClick={() => setIsSeatSelectionOpen(true)} data-testid="seat-selection-button" className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
                     <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
                       <Map size={24} />
                     </div>
@@ -150,7 +150,7 @@ export default function BookingDetail() {
                       <p className="text-[9px] font-bold text-gray-400 mt-1">Select / Change</p>
                     </div>
                   </button>
-                  <button onClick={() => setIsBaggageOpen(true)} className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+                  <button onClick={() => setIsBaggageOpen(true)} data-testid="baggage-modification-button" className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
                     <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
                       <Luggage size={24} />
                     </div>

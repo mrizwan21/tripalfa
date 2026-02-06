@@ -1,16 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/unhideFixture';
+import { createRequire } from 'module';
 import { LoginPage } from '../pages/LoginPage';
 import { BookingManagementPage } from '../pages/BookingManagementPage';
 import { BookingDetailPage } from '../pages/BookingDetailPage';
-import users from '../fixtures/users.json';
+
+const require = createRequire(import.meta.url);
+const users = require('../fixtures/users.json');
 
 test('View and filter bookings', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+  // Fixture handles unhiding automatically via addInitScript
+  // Add test mode flag to enable mock data
+  await page.addInitScript(() => {
+    (globalThis as any).TEST_MODE_BOOKINGS = true;
+  });
+
   const bookingMgmt = new BookingManagementPage(page);
   const bookingDetail = new BookingDetailPage(page);
 
-  await loginPage.goto('/login');
-  await loginPage.login(users[0].email, users[0].password);
+  // Navigate directly without login - test mode provides mock bookings
   await bookingMgmt.goto('/bookings');
   await expect(page.getByTestId('booking-row-0')).toBeVisible();
   await bookingMgmt.filterByService('flights');

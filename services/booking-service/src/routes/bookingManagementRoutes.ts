@@ -7,7 +7,7 @@ import { boundBookingManagementController as bookingManagementController } from 
 import { adminBookingCardController } from '../controllers/adminBookingCardController.js';
 import { permissionMiddleware } from '../middleware/permissionMiddleware.js';
 
-const router = Router();
+const router: Router = Router();
 
 // POST /api/admin/book - Create a new booking
 router.post(

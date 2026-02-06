@@ -131,6 +131,7 @@ export const AncillaryPopup = ({
                             <p className="text-4xl font-black text-gray-900 tracking-tighter">{formatCurrency(totalAmount)}</p>
                         </div>
                         <Button
+                            data-testid="confirm-ancillaries"
                             onClick={onConfirm || onClose}
                             className="bg-[#111827] hover:bg-black text-white px-12 py-6 rounded-[2rem] text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-gray-200 transition-all hover:-translate-y-1 active:scale-95"
                         >

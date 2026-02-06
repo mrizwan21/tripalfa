@@ -5,7 +5,7 @@ import { jest } from '@jest/globals';
  */
 
 // Prisma mock
-export const mockPrisma = () => {
+export const mockPrisma = (): any => {
   const mockPrismaClient = {
     customer: {
       create: jest.fn(),
@@ -37,7 +37,7 @@ export const mockPrisma = () => {
 };
 
 // Redis mock
-export const mockRedis = () => {
+export const mockRedis = (): any => {
   const mockRedisClient = {
     get: jest.fn(),
     set: jest.fn(),
@@ -54,7 +54,7 @@ export const mockRedis = () => {
 };
 
 // External API mock
-export const mockExternalAPI = (service: string, method: string, response: any) => {
+export const mockExternalAPI = (service: string, method: string, response: any): jest.Mock => {
   // Note: jest.mock must be called at the top level, this is just a helper
   console.warn('mockExternalAPI: jest.mock must be called at module level');
 
@@ -63,11 +63,11 @@ export const mockExternalAPI = (service: string, method: string, response: any) 
 };
 
 // JWT mock (already exists in setup.ts, documented here for reference)
-export const mockJWT = () => {
+export const mockJWT = (): any => {
   const jwt = require('jsonwebtoken');
   return {
     sign: jest.spyOn(jwt, 'sign').mockImplementation(() => 'mock.jwt.token'),
-    verify: jest.spyOn(jwt, 'verify').mockImplementation((token, secret, callback) => {
+    verify: jest.spyOn(jwt, 'verify').mockImplementation((token: string, secret: string, callback?: (err: any, decoded: any) => void) => {
       if (callback) {
         callback(null, { id: 'test-user', role: 'user' });
       }
@@ -77,7 +77,7 @@ export const mockJWT = () => {
 };
 
 // Reset all mocks
-export const resetAllMocks = () => {
+export const resetAllMocks = (): void => {
   jest.clearAllMocks();
   jest.resetAllMocks();
   jest.restoreAllMocks();

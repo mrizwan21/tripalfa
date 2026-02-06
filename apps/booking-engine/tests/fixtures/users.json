@@ -1,4 +1,5 @@
 [
   { "email": "testuser1@example.com", "password": "Test@123", "role": "user" },
-  { "email": "guestuser@example.com", "password": "Guest@123", "role": "guest" }
+  { "email": "guestuser@example.com", "password": "Guest@123", "role": "guest" },
+  { "email": "lowbalance@example.com", "password": "Low@123", "role": "user", "walletBalance": 10 }
 ]

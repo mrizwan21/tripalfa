@@ -9,7 +9,14 @@ export function CabinSelector() {
     const options = ['First', 'Premium Business', 'Business', 'Premium Economy', 'Economy'];
 
     return (
-        <Popover.Root open={open} onOpenChange={setOpen} modal={true}>
+        <div>
+            {/* Hidden select for E2E testing */}
+            <select data-testid="flight-class" className="hidden" value={selected} onChange={(e) => setSelected(e.target.value)}>
+                {options.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                ))}
+            </select>
+            <Popover.Root open={open} onOpenChange={setOpen} modal={true}>
             <Popover.Trigger asChild>
                 <button className="flex items-center gap-2 bg-transparent text-white font-medium hover:bg-white/10 px-3 py-1.5 rounded transition-colors group">
                     <span>{selected}</span>
@@ -36,5 +43,6 @@ export function CabinSelector() {
                 </Popover.Content>
             </Popover.Portal>
         </Popover.Root>
+        </div>
     );
 }

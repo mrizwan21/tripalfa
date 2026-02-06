@@ -1,3 +1,11 @@
 [
-  { "from": "JFK", "to": "LHR", "adults": 1, "class": "economy", "expected": "success" }
+  {
+    "from": "JFK",
+    "to": "LHR",
+    "adults": 1,
+    "class": "Economy",
+    "departureDate": "2025-02-15",
+    "returnDate": "2025-02-22",
+    "expected": "success"
+  }
 ]

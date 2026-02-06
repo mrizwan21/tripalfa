@@ -400,7 +400,7 @@ export default function FlightList() {
           </div>
 
 
-          <div className="space-y-6">
+          <div className="space-y-6" data-testid="flight-results">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32 space-y-4">
                 <Loader2 size={48} className="text-[#8B5CF6] animate-spin" />
@@ -425,8 +425,8 @@ export default function FlightList() {
                 </Button>
               </div>
             ) : filteredFlights.length > 0 ? (
-              filteredFlights.map((flight) => (
-                <div key={flight.id} className="group relative bg-white rounded-[2.5rem] p-1 shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 hover:-translate-y-1">
+              filteredFlights.map((flight, index) => (
+                <div key={flight.id} data-testid={`flight-result-card-${index}`} onClick={() => handleBookNow(flight)} className="group relative bg-white rounded-[2.5rem] p-1 shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 hover:-translate-y-1 cursor-pointer">
                   <div className="absolute top-8 right-8 z-10">
                     <button className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
                       <Heart size={18} />

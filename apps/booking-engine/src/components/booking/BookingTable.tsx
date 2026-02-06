@@ -59,8 +59,8 @@ export function BookingTable({ items }: { items: Booking[] }) {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-      {items.map(b => (
-        <div key={b.id} className="group relative bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden flex flex-col">
+      {items.map((b, index) => (
+        <div key={b.id} data-testid={`booking-card-${index}`} className="group relative bg-white rounded-3xl border border-gray-100 p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 overflow-hidden flex flex-col">
           {/* Glassmorphism Background Pattern */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary-500/10 to-transparent" />
 

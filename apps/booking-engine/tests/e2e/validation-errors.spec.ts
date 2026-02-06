@@ -1,21 +1,27 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/unhideFixture';
+import { createRequire } from 'module';
 import { LoginPage } from '../pages/LoginPage';
 import { PassengerDetailsPage } from '../pages/PassengerDetailsPage';
 import { FlightHomePage } from '../pages/FlightHomePage';
 import { FlightListPage } from '../pages/FlightListPage';
 import { FlightDetailPage } from '../pages/FlightDetailPage';
-import users from '../fixtures/users.json' assert { type: 'json' };
-import flights from '../fixtures/flights.json' assert { type: 'json' };
+
+const require = createRequire(import.meta.url);
+const users = require('../fixtures/users.json');
+const flights = require('../fixtures/flights.json');
 
 test('Invalid passenger details', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+  // Fixture handles unhiding automatically via addInitScript
+  // Add test mode flag to enable mock data
+  await page.addInitScript(() => {
+    (globalThis as any).TEST_MODE_FLIGHTS = true;
+  });
+
   const flightHome = new FlightHomePage(page);
   const flightList = new FlightListPage(page);
   const flightDetail = new FlightDetailPage(page);
   const passengerDetails = new PassengerDetailsPage(page);
 
-  await loginPage.goto('/login');
-  await loginPage.login(users[0].email, users[0].password);
   await flightHome.goto('/flights');
   await flightHome.searchFlight(flights[0].from, flights[0].to, flights[0].adults, flights[0].class);
   await flightList.selectFlight(0);
@@ -26,11 +32,14 @@ test('Invalid passenger details', async ({ page }) => {
 });
 
 test('Invalid search parameters', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+  // Fixture handles unhiding automatically via addInitScript
+  // Add test mode flag to enable mock data
+  await page.addInitScript(() => {
+    (globalThis as any).TEST_MODE_FLIGHTS = true;
+  });
+
   const flightHome = new FlightHomePage(page);
 
-  await loginPage.goto('/login');
-  await loginPage.login(users[0].email, users[0].password);
   await flightHome.goto('/flights');
   await flightHome.searchFlight('XXX', 'YYY', 1, 'economy');
   await expect(page.getByTestId('error-message')).toBeVisible();
@@ -38,11 +47,14 @@ test('Invalid search parameters', async ({ page }) => {
 });
 
 test('Past date search', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+  // Fixture handles unhiding automatically via addInitScript
+  // Add test mode flag to enable mock data
+  await page.addInitScript(() => {
+    (globalThis as any).TEST_MODE_FLIGHTS = true;
+  });
+
   const flightHome = new FlightHomePage(page);
 
-  await loginPage.goto('/login');
-  await loginPage.login(users[0].email, users[0].password);
   await flightHome.goto('/flights');
   const pastDate = '2020-01-01'; // Past date
   await flightHome.searchFlight('JFK', 'LHR', 1, 'economy', pastDate);

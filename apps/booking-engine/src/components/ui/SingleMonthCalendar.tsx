@@ -129,6 +129,7 @@ export function SingleMonthCalendar({
                                         key={dayIndex}
                                         onClick={() => isCurrentMonth && !isFuture && !isTooOld && handleDateClick(date)}
                                         disabled={!isCurrentMonth || isFuture || isTooOld}
+                                        data-testid={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
                                         className={`w-8 h-8 flex items-center justify-center rounded-lg text-[10px] transition-all ${bgClass} ${textClass}`}
                                     >
                                         {format(date, 'd')}
@@ -145,7 +146,7 @@ export function SingleMonthCalendar({
     return (
         <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
             <Popover.Trigger asChild>
-                <div className="relative group/field cursor-pointer">
+                <div className="relative group/field cursor-pointer" data-testid={label.toLowerCase().replace(/\s+/g, '-')}>
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">{label}*</label>
                     <div className="w-full h-11 px-4 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 rounded-xl flex items-center justify-between text-[11px] font-bold group-hover/field:border-[#8B5CF6]/30 transition-all">
                         <span className={selectedDate ? 'text-gray-900' : 'text-gray-300'}>

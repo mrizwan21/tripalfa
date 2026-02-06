@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/unhideFixture';
+import { createRequire } from 'module';
 import { LoginPage } from '../pages/LoginPage';
 import { HotelHomePage } from '../pages/HotelHomePage';
 import { HotelListPage } from '../pages/HotelListPage';
@@ -9,13 +10,20 @@ import { BookingManagementPage } from '../pages/BookingManagementPage';
 import { FlightHomePage } from '../pages/FlightHomePage';
 import { FlightListPage } from '../pages/FlightListPage';
 import { FlightDetailPage } from '../pages/FlightDetailPage';
-import users from '../fixtures/users.json' assert { type: 'json' };
-import hotels from '../fixtures/hotels.json' assert { type: 'json' };
-import flights from '../fixtures/flights.json' assert { type: 'json' };
-import payments from '../fixtures/payments.json' assert { type: 'json' };
+
+const require = createRequire(import.meta.url);
+const users = require('../fixtures/users.json');
+const hotels = require('../fixtures/hotels.json');
+const flights = require('../fixtures/flights.json');
+const payments = require('../fixtures/payments.json');
 
 test('Card payment flow', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+  // Fixture handles unhiding automatically via addInitScript
+  // Add test mode flag to enable mock data
+  await page.addInitScript(() => {
+    (globalThis as any).TEST_MODE_HOTELS = true;
+  });
+
   const hotelHome = new HotelHomePage(page);
   const hotelList = new HotelListPage(page);
   const hotelDetail = new HotelDetailPage(page);
@@ -23,14 +31,12 @@ test('Card payment flow', async ({ page }) => {
   const checkout = new BookingCheckoutPage(page);
   const bookingManagement = new BookingManagementPage(page);
 
-  await loginPage.goto('/login');
-  await loginPage.login(users[0].email, users[0].password);
   await hotelHome.goto('/hotels');
-  await hotelHome.searchHotel(hotels[0].city, hotels[0].adults, hotels[0].rooms, hotels[0].nights);
+  await hotelHome.searchHotel(hotels[0].city, hotels[0].checkInDate, hotels[0].checkOutDate, hotels[0].adults, hotels[0].rooms);
   await hotelList.selectHotel(0);
   await hotelDetail.selectRoom();
   await passengerDetails.fillPassengerDetails('John', 'Doe');
-  await checkout.payWithCard(payments[0].cardNumber, payments[0].exp, payments[0].cvc);
+  await checkout.payWithCard(payments[0].cardNumber, payments[0].exp, payments[0].cvc, payments[0].cardholderName);
   await expect(page.getByTestId('booking-ref')).toBeVisible();
   await expect(page.getByTestId('success-message')).toBeVisible();
   await bookingManagement.goto('/bookings');
@@ -39,7 +45,12 @@ test('Card payment flow', async ({ page }) => {
 });
 
 test('Wallet payment flow', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+  // Fixture handles unhiding automatically via addInitScript
+  // Add test mode flag to enable mock data
+  await page.addInitScript(() => {
+    (globalThis as any).TEST_MODE_FLIGHTS = true;
+  });
+
   const flightHome = new FlightHomePage(page);
   const flightList = new FlightListPage(page);
   const flightDetail = new FlightDetailPage(page);
@@ -47,8 +58,6 @@ test('Wallet payment flow', async ({ page }) => {
   const checkout = new BookingCheckoutPage(page);
   const bookingManagement = new BookingManagementPage(page);
 
-  await loginPage.goto('/login');
-  await loginPage.login(users[0].email, users[0].password);
   await flightHome.goto('/flights');
   await flightHome.searchFlight(flights[0].from, flights[0].to, flights[0].adults, flights[0].class);
   await flightList.selectFlight(0);

@@ -65,6 +65,7 @@ const Login = () => {
                   type="email"
                   autoComplete="email"
                   required
+                  data-testid="login-email"
                   className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 py-2 border"
                   placeholder="you@example.com"
                 />
@@ -85,6 +86,7 @@ const Login = () => {
                   type="password"
                   autoComplete="current-password"
                   required
+                  data-testid="login-password"
                   className="block w-full pl-10 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 py-2 border"
                   placeholder="Password"
                 />
@@ -114,7 +116,7 @@ const Login = () => {
             </div>
 
             <div>
-              <Button type="submit" className="w-full" isLoading={isLoading}>
+              <Button type="submit" className="w-full" isLoading={isLoading} data-testid="login-submit">
                 Sign in
               </Button>
             </div>

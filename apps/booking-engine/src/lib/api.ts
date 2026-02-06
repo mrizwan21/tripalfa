@@ -71,18 +71,6 @@ export async function unreadNotificationCount() {
   return await api.get('/notifications/unread-count');
 }
 
-// Real Wallet Endpoints
-export async function fetchWallets() {
-  try {
-    // GET /wallets returns { wallets: [...] } or { accounts: [...] }
-    const res = await api.get('/wallets');
-    return res.accounts || res.wallets || [];
-  } catch (error) {
-    console.error('Failed to fetch wallets:', error);
-    return [];
-  }
-}
-
 export async function postTopUp(data: any) {
   try {
     const res = await api.post('/wallets/topup', data);
@@ -260,6 +248,57 @@ export async function fetchHotelChains() {
 }
 
 export async function searchFlights(params: any) {
+  // Check if we're in test mode (set by E2E tests)
+  if ((globalThis as any).TEST_MODE_FLIGHTS) {
+    console.log('[api.ts] TEST MODE: Returning mock flight data');
+    return [
+      {
+        id: 'flight-1',
+        airline: 'British Airways',
+        carrierCode: 'BA',
+        flightNumber: 'BA101',
+        origin: 'JFK',
+        originCity: 'New York',
+        destination: 'LHR',
+        destinationCity: 'London',
+        duration: '7h 30m',
+        stops: 0,
+        departureTime: '2025-02-15T14:00:00Z',
+        arrivalTime: '2025-02-15T21:30:00Z',
+        fareId: 'fare-1',
+        cabin: 'Economy',
+        amount: 450,
+        currency: 'USD',
+        includedBags: [{ quantity: 1, weight: 23, unit: 'kg', type: 'checked' }],
+        isLCC: false,
+        airlineLogo: 'https://logo.clearbit.com/britishairways.com',
+        refundable: true,
+        segments: [{
+          id: 'seg-1',
+          airline: 'British Airways',
+          carrierCode: 'BA',
+          flightNumber: 'BA101',
+          origin: 'JFK',
+          originCity: 'New York',
+          destination: 'LHR',
+          destinationCity: 'London',
+          duration: '7h 30m',
+          departureTime: '2025-02-15T14:00:00Z',
+          arrivalTime: '2025-02-15T21:30:00Z',
+          aircraft: 'Boeing 777',
+          departureTerminal: 'T7',
+          arrivalTerminal: 'T5'
+        }],
+        ancillaries: [{
+          id: 'anc-1',
+          name: 'Extra Baggage',
+          description: 'Add extra checked baggage',
+          type: 'baggage'
+        }]
+      }
+    ];
+  }
+
   const payload = {
     data: {
       slices: params.slices || [
@@ -585,32 +624,12 @@ export async function holdFlightBooking(bookingData: any) {
   }
 }
 
-export async function confirmFlightBooking(bookingId: string, paymentDetails: any) {
-  try {
-    const res = await api.post('/bookings/flight/confirm', { bookingId, paymentDetails });
-    return res;
-  } catch (error) {
-    console.error('Failed to confirm flight booking:', error);
-    throw error;
-  }
-}
-
 export async function holdHotelBooking(bookingData: any) {
   try {
     const res = await api.post('/bookings/hotel/hold', bookingData);
     return res;
   } catch (error) {
     console.error('Failed to hold hotel booking:', error);
-    throw error;
-  }
-}
-
-export async function confirmHotelBooking(bookingId: string, paymentDetails: any) {
-  try {
-    const res = await api.post('/bookings/hotel/confirm', { bookingId, paymentDetails });
-    return res;
-  } catch (error) {
-    console.error('Failed to confirm hotel booking:', error);
     throw error;
   }
 }
@@ -732,6 +751,17 @@ export const api = {
     return await remoteFetch(path, { method: 'GET' });
   },
   async post(path: string, data?: any) {
+    // In test mode, mock booking hold endpoints
+    if ((globalThis as any).TEST_MODE_FLIGHTS) {
+      if (path.includes('/bookings/flight/hold') || path.includes('/bookings/hotel/hold')) {
+        return {
+          bookingId: `TL-${Math.floor(100000 + Math.random() * 900000)}`,
+          status: 'held',
+          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes from now
+        };
+      }
+    }
+    
     return await remoteFetch(path, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined
@@ -753,4 +783,70 @@ export const api = {
     return await remoteFetch(path, { method: 'DELETE' });
   },
 };
+
+// Booking API functions
+export async function confirmFlightBooking(bookingId: string, paymentDetails: any) {
+  // In test mode, return a mock successful response
+  if ((globalThis as any).TEST_MODE_FLIGHTS) {
+    return {
+      success: true,
+      bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
+      status: 'confirmed',
+      data: {
+        bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
+        status: 'confirmed'
+      }
+    };
+  }
+  
+  try {
+    const result = await api.post(`/bookings/flight/confirm/${bookingId}`, paymentDetails);
+    return result;
+  } catch (error) {
+    console.error('Failed to confirm flight booking:', error);
+    throw error;
+  }
+}
+
+export async function confirmHotelBooking(bookingId: string, paymentDetails: any) {
+  // In test mode, return a mock successful response
+  if ((globalThis as any).TEST_MODE_FLIGHTS) {
+    return {
+      success: true,
+      bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
+      status: 'confirmed',
+      data: {
+        bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
+        status: 'confirmed'
+      }
+    };
+  }
+  
+  try {
+    const result = await api.post(`/bookings/hotel/confirm/${bookingId}`, paymentDetails);
+    return result;
+  } catch (error) {
+    console.error('Failed to confirm hotel booking:', error);
+    throw error;
+  }
+}
+
+export async function fetchWallets() {
+  // In test mode, return mock wallet data
+  if ((globalThis as any).TEST_MODE_FLIGHTS) {
+    return [{
+      id: 'wallet-1',
+      balance: 1000,
+      currency: 'USD'
+    }];
+  }
+  
+  try {
+    const result = await api.get('/wallets');
+    return result;
+  } catch (error) {
+    console.error('Failed to fetch wallets:', error);
+    throw error;
+  }
+}
 

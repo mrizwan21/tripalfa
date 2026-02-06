@@ -121,7 +121,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose} />
 
-            <div className="relative bg-white w-full max-w-5xl rounded-[3rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-gray-100 flex flex-col max-h-[95vh]">
+            <div className="relative bg-white w-full max-w-5xl rounded-[3rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.3)] overflow-hidden animate-in zoom-in-95 duration-500 border border-gray-100 flex flex-col max-h-[95vh]" data-testid="seat-selection-modal">
 
                 <div className="p-8 text-center relative border-b border-gray-50">
                     <h2 className="text-2xl font-black text-gray-900">Seat Map</h2>
@@ -260,6 +260,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                         <div className="flex flex-col items-center gap-8 w-full">
                             <Button
                                 onClick={() => setIsConfirming(true)}
+                                data-testid="confirm-seat-selection"
                                 className="w-full max-w-xl h-14 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1"
                             >
                                 Add Seat Pay ${selectedSeats.reduce((sum: number, s: any) => sum + s.price, 0)}
