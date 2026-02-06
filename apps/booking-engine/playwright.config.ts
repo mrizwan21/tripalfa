@@ -136,8 +136,8 @@ export default defineConfig({
   ],
 
   // Global setup and teardown
-  // globalSetup: path.resolve(__dirname, './tests/helpers/global.setup.ts'),
-  // globalTeardown: path.resolve(__dirname, './tests/helpers/globalTeardown.ts'),
+  globalSetup: path.resolve(__dirname, './tests/helpers/global.setup.ts'),
+  globalTeardown: path.resolve(__dirname, './tests/helpers/globalTeardown.ts'),
 
   // Output directory for test artifacts
   outputDir: 'test-results/',

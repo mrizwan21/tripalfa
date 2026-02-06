@@ -21,7 +21,7 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/duffel-api/, ''),
       },
       '/api': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3000',
         changeOrigin: true,
       },
     },

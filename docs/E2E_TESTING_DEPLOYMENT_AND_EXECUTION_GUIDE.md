@@ -272,7 +272,7 @@ npx playwright test --reporter=junit
 npx playwright test --reporter=json > performance-results.json
 
 # Analyze performance
-node scripts/analyze-performance.js performance-results.json
+node scripts/analyze-performance.ts performance-results.json
 ```
 
 ### CI/CD Monitoring
