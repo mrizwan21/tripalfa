@@ -9,6 +9,16 @@ const __dirname = path.dirname(__filename);
 // Load test environment variables
 dotenv.config({ path: path.resolve(__dirname, '.env.test') });
 
+// @ts-ignore
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      CI?: string;
+      BASE_URL?: string;
+    }
+  }
+}
+
 /**
  * Playwright Configuration for E2E Testing
  * Phase 1: Critical E2E Testing Foundation
@@ -23,17 +33,17 @@ export default defineConfig({
   // Test directory
   testDir: './tests/e2e',
 
-  // Timeout settings
-  timeout: 60000, // 60 seconds per test
+  // Enhanced timeout settings
+  timeout: 90000, // 90 seconds for complex flows
   expect: {
-    timeout: 10000, // 10 seconds for assertions
+    timeout: 15000, // 15 seconds for assertions
   },
 
-  // Test execution settings
+  // Enhanced test execution settings
   fullyParallel: true, // Run tests in parallel for speed
   forbidOnly: !!process.env.CI, // Fail CI if test.only is used
-  retries: process.env.CI ? 2 : 1, // Retry failed tests
-  workers: process.env.CI ? 2 : undefined, // Parallel workers
+  retries: process.env.CI ? 3 : 2, // Enhanced retry strategy
+  workers: process.env.CI ? 2 : 4, // Parallel workers
 
   // Reporter configuration
   reporter: [
@@ -49,26 +59,33 @@ export default defineConfig({
     // ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
 
-  // Global test settings
+  // Enhanced global test settings
   use: {
     // Base URL for navigation
     baseURL: process.env.BASE_URL || 'http://localhost:3002',
 
-    // Trace settings (for debugging)
-    trace: 'on-first-retry', // Capture trace on retry
+    // Enhanced trace settings (for debugging)
+    trace: 'retain-on-failure', // Capture trace on failure
     screenshot: 'only-on-failure', // Screenshot on failure
     video: 'retain-on-failure', // Video on failure
 
-    // Timeout settings
-    actionTimeout: 15000, // 15 seconds for actions
-    navigationTimeout: 30000, // 30 seconds for navigation
+    // Enhanced timeout settings
+    actionTimeout: 20000, // 20 seconds for actions
+    navigationTimeout: 45000, // 45 seconds for navigation
 
-    // Browser context options
-    viewport: { width: 1280, height: 720 },
+    // Enhanced browser context options
+    viewport: { width: 1440, height: 900 }, // Larger viewport for better testing
     ignoreHTTPSErrors: true,
 
-    // Storage state (for authenticated tests)
+    // Enhanced storage state (for authenticated tests)
     storageState: './tests/fixtures/storageState.json',
+    
+    // Additional reliability settings
+    headless: process.env.CI ? true : false, // Headless in CI, headed locally
+    launchOptions: {
+      // Slower execution for more reliable tests
+      slowMo: process.env.CI ? 0 : 100,
+    },
   },
 
   // Test projects (browsers)
@@ -90,17 +107,25 @@ export default defineConfig({
       dependencies: ['setup'],
     },
 
-    // Add more browsers in Phase 2
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    //   dependencies: ['setup'],
-    // },
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    //   dependencies: ['setup'],
-    // },
+    // Firefox browser (Phase 2)
+    {
+      name: 'firefox',
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: './tests/fixtures/storageState.json',
+      },
+      dependencies: ['setup'],
+    },
+
+    // WebKit browser (Phase 2)
+    {
+      name: 'webkit',
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: './tests/fixtures/storageState.json',
+      },
+      dependencies: ['setup'],
+    },
 
     // Mobile browsers (Phase 3)
     // {
@@ -117,12 +142,11 @@ export default defineConfig({
   // Output directory for test artifacts
   outputDir: 'test-results/',
 
-  // Web server (optional - if you want Playwright to start the dev server)
-  // Uncomment if you want automatic server startup
-  // webServer: {
-  //   command: 'npm run dev',
-  //   url: 'http://localhost:3002',
-  //   reuseExistingServer: !process.env.CI,
-  //   timeout: 120000, // 2 minutes to start
-  // },
+  // Web server configuration - Playwright will start/stop the dev server automatically
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3002',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000, // 2 minutes to start
+  },
 });

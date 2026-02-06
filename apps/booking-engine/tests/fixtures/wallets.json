@@ -1,3 +1,17 @@
-[
-  { "user": "testuser1@example.com", "balance": 500, "currency": "USD" }
-]
+{
+  "registeredUserWallet": {
+    "userEmail": "test.user@tripalfa.com",
+    "balance": 1000.00,
+    "currency": "USD"
+  },
+  "premiumUserWallet": {
+    "userEmail": "premium.user@tripalfa.com",
+    "balance": 5000.00,
+    "currency": "USD"
+  },
+  "lowBalanceWallet": {
+    "userEmail": "guest.user@tripalfa.com",
+    "balance": 10.00,
+    "currency": "USD"
+  }
+}

@@ -1,7 +1,7 @@
 
 
 # Block committing .js source files (allow common build dirs)
-STAGED_JS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(js|jsx|mjs|cjs)$' | grep -Ev '^(dist|build|out|coverage|node_modules|.*\/dist\/|.*\/build\/|.*\/out\/)' || true)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(js|jsx|mjs|cjs)$' | grep -Ev '^(dist|build|out|coverage|node_modules|.*\/dist\/|.*\/build\/|.*\/out\/|.*\.config\.)' || true)
 if [ -n "$STAGED_JS" ]; then
   echo "Error: Committing JavaScript files is disallowed. Use TypeScript (.ts/.tsx) instead."
   echo "$STAGED_JS"

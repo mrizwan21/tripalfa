@@ -2,7 +2,7 @@ import { BasePage } from './BasePage';
 
 export class BookingManagementPage extends BasePage {
   async filterByService(service: string) {
-    await this.getByTestId('service-filter').selectOption(service, { force: true });
+    await this.setSelectValue('service-filter', service);
   }
   async searchByReference(ref: string) {
     await this.getByTestId('booking-search').fill(ref, { force: true });

@@ -1,0 +1,194 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Browser to test (chromium, firefox, webkit, or all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - chromium
+          - firefox
+          - webkit
+          - all
+      spec_id:
+        description: 'Spec ID for tracking'
+        required: false
+        default: '49e5f285-d76a-4dda-963a-926a5b5b541a'
+      workflow_id:
+        description: 'Workflow ID for tracking'
+        required: false
+        default: '271192ed-bf0b-4f43-9915-d77b9e7dbb04'
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+
+      - name: Install Playwright
+        run: npx playwright install
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Setup test environment
+        run: |
+          cp apps/booking-engine/.env.test apps/booking-engine/.env
+          echo "TEST_MODE_FLIGHTS=true" >> apps/booking-engine/.env
+          echo "TEST_MODE_HOTELS=true" >> apps/booking-engine/.env
+          echo "CI=true" >> apps/booking-engine/.env
+
+      - name: Run E2E tests
+        run: npx playwright test --project=${{ matrix.browser }}
+        env:
+          CI: true
+          BASE_URL: ${{ secrets.BASE_URL || 'http://localhost:3002' }}
+          API_URL: ${{ secrets.API_URL || 'http://localhost:3003' }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL || 'testuser1@example.com' }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD || 'Test@123' }}
+          TEST_TIMEOUT: 90000
+          TEST_RETRY_COUNT: 3
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results-${{ matrix.browser }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.browser }}
+          path: playwright-report/
+          retention-days: 7
+
+  # Aggregate results from all browsers
+  test-summary:
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Download all test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results/
+
+      - name: Generate test summary
+        run: |
+          echo "## E2E Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Browser | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          for browser in chromium firefox webkit; do
+            if [ -d "test-results/test-results-${browser}" ]; then
+              echo "| $browser | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "| $browser | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## E2E Test Results\n\n';
+            comment += '| Browser | Status |\n';
+            comment += '|---------|--------|\n';
+            
+            const browsers = ['chromium', 'firefox', 'webkit'];
+            let allPassed = true;
+            
+            browsers.forEach(browser => {
+              const resultPath = `test-results/test-results-${browser}`;
+              if (fs.existsSync(resultPath)) {
+                comment += `| ${browser} | ✅ Passed |\n`;
+              } else {
+                comment += `| ${browser} | ❌ Failed |\n`;
+                allPassed = false;
+              }
+            });
+            
+            comment += '\n';
+            if (allPassed) {
+              comment += '🎉 All E2E tests passed across all browsers!\n';
+            } else {
+              comment += '⚠️ Some E2E tests failed. Please check the artifacts for details.\n';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # Performance monitoring job
+  performance-monitoring:
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          path: test-results/
+
+      - name: Analyze performance
+        run: |
+          echo "## Performance Analysis" >> performance-report.md
+          echo "" >> performance-report.md
+          echo "### Test Execution Times" >> performance-report.md
+          
+          for browser in chromium firefox webkit; do
+            if [ -f "test-results/test-results-${browser}/test-results.json" ]; then
+              echo "- **${browser}**: $(grep -o '"duration":[0-9]*' test-results/test-results-${browser}/test-results.json | head -1 | cut -d: -f2)ms" >> performance-report.md
+            fi
+          done
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance-report.md
+          retention-days: 30

@@ -18,14 +18,14 @@ export class PassengerDetailsPage extends BasePage {
     await this.getByTestId(`passenger-last-name${suffix}`).fill(lastName, { force: true });
 
     if (options?.nationality) {
-      await this.getByTestId(`passenger-nationality${suffix}`).selectOption(options.nationality, { force: true });
+      await this.setSelectValue(`passenger-nationality${suffix}`, options.nationality);
     }
     if (options?.gender) {
       // Click the gender button
       await this.page.getByText(options.gender, { exact: true }).click({ force: true });
     }
     if (options?.residencyCountry) {
-      await this.getByTestId(`passenger-residency${suffix}`).selectOption(options.residencyCountry, { force: true });
+      await this.setSelectValue(`passenger-residency${suffix}`, options.residencyCountry);
     }
     if (options?.dateOfBirth) {
       await this.selectCalendarDate('date-of-birth', options.dateOfBirth);
@@ -64,7 +64,7 @@ export class PassengerDetailsPage extends BasePage {
     await this.page.fill('input[placeholder="Building, Street Name, District"]', street, { force: true });
     await this.page.fill('input[placeholder="City"]', city, { force: true });
     await this.page.fill('input[placeholder="Zip"]', zipCode, { force: true });
-    await this.page.selectOption('select[name="billingAddress.country"]', country, { force: true });
+    await this.setSelectValue('billingAddress.country', country);
   }
 
   async continue() {

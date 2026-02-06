@@ -27,7 +27,7 @@ try {
     // Fallback: create a small local PG pool for static queries and a noop redis
     // This ensures the gateway can start even if monorepo resolution fails.
      
-    const { Pool } = require('pg');
+    const { Pool } = requireC('pg');
     const staticPool = new Pool({
         connectionString: process.env.STATIC_DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/staticdatabase'
     });

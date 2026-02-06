@@ -1,21 +1,31 @@
-import { cleanupTestData } from './database';
+import { FullConfig } from '@playwright/test';
+import { cleanupTestData, disconnectDatabase } from './database';
 
 /**
- * Global Teardown for E2E Tests
- * Runs once after all tests to clean up the test environment
+ * Global Teardown
+ * 
+ * Runs once after all tests
+ * - Cleans up test data
+ * - Closes database connections
+ * - Performs final cleanup
  */
-async function globalTeardown() {
-  console.log('🧹 Starting global teardown...');
-
+async function globalTeardown(config: FullConfig) {
+  console.log('🧹 Running global teardown...');
+  
   try {
+    // 1. Clean up test data
+    console.log('🗑️  Cleaning up test data...');
     await cleanupTestData();
-    console.log('✅ Test data cleanup completed');
+    
+    // 2. Disconnect database
+    console.log('🔌 Disconnecting database...');
+    await disconnectDatabase();
+    
+    console.log('✅ Global teardown complete');
   } catch (error) {
-    console.warn('⚠️ Test data cleanup failed:', error);
-    // Don't throw - teardown should not fail the test suite
+    console.error('❌ Global teardown failed:', error);
+    // Don't throw - allow tests to complete even if cleanup fails
   }
-
-  console.log('✅ Global teardown completed');
 }
 
 export default globalTeardown;

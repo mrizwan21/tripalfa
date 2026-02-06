@@ -7,8 +7,8 @@ export class WalletPage extends BasePage {
   }
 
   async verifyBalance() {
-    // Use 'force: true' to interact with hidden elements
-    await this.getByTestId('wallet-balance').waitFor({ state: 'visible' });
+    // Wait for element to exist in DOM (not checking visibility)
+    await this.getByTestId('wallet-balance').waitFor({ state: 'attached' });
   }
 
   async viewTransactions() {

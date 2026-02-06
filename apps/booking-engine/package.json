@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@alloc/quick-lru": "^5.2.0",
+    "@faker-js/faker": "^10.2.0",
     "@playwright/test": "^1.40.0",
     "@types/node": "^18.19.130",
     "@types/react": "^18.0.0",
@@ -60,6 +61,19 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:smoke": "TEST_SMOKE_ONLY=true playwright test",
+    "test:e2e:ci": "TEST_ENV=ci playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:staging": "TEST_ENV=staging playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:enhanced": "playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:visual": "TEST_VISUAL=true playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:mobile": "TEST_MOBILE=true playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:firefox": "TEST_FIREFOX=true playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:webkit": "TEST_WEBKIT=true playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:cross-browser": "TEST_FIREFOX=true TEST_WEBKIT=true playwright test --config=playwright.config.enhanced.ts",
+    "test:e2e:tagged": "playwright test --grep",
+    "test:e2e:report:enhanced": "playwright show-report playwright-report-local",
+    "test:e2e:report:ci": "playwright show-report playwright-report-ci",
+    "test:e2e:report:staging": "playwright show-report playwright-report-staging"
   }
 }

@@ -9,8 +9,15 @@ export default {
   testMatch: [
     '**/__tests__/**/*.test.[jt]s',
     '**/__tests__/**/*.spec.[jt]s',
+    '**/tests/**/*.test.[jt]s',
+    '**/tests/**/*.spec.[jt]s',
     '**/*.test.[jt]s',
     '**/*.spec.[jt]s'
+  ],
+  testPathIgnorePatterns: [
+    'node_modules',
+    'dist',
+    'coverage'
   ],
   moduleFileExtensions: ['ts', 'js', 'json', 'node'],
   moduleNameMapper: {
@@ -27,5 +34,10 @@ export default {
     'node_modules',
     'dist',
     'coverage'
-  ]
+  ],
+  // Global setup for integration tests
+  globalSetup: process.env.INTEGRATION_DB === 'true' ? '<rootDir>/tests/integration/global-setup.ts' : undefined,
+  globalTeardown: process.env.INTEGRATION_DB === 'true' ? '<rootDir>/tests/integration/global-teardown.ts' : undefined,
+  // Test timeout for integration tests
+  testTimeout: process.env.INTEGRATION_DB === 'true' ? 60000 : 10000
 };

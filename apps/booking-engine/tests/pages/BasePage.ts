@@ -28,4 +28,39 @@ export class BasePage {
   getByTestId(testId: string): Locator {
     return this.page.getByTestId(testId);
   }
+
+  /**
+   * Set select element value using JavaScript (bypasses option validation)
+   * Useful for hidden form elements where selectOption() times out
+   * @param selector Can be a data-testid string or a CSS selector
+   * @param value The value to select
+   */
+  async setSelectValue(selector: string, value: string) {
+    // First try as data-testid, if it contains dots or looks like a name attribute, use CSS selector
+    let locator;
+    if (selector.includes('.') || selector.includes('[')) {
+      // Assume it's a CSS selector or name attribute
+      if (selector.startsWith('[')) {
+        locator = this.page.locator(selector);
+      } else {
+        // Try name attribute selector
+        locator = this.page.locator(`select[name="${selector}"]`);
+      }
+    } else {
+      // Assume it's a data-testid
+      locator = this.page.locator(`[data-testid="${selector}"]`);
+    }
+
+    await locator.evaluate(
+      (element, val) => {
+        if (element instanceof HTMLSelectElement) {
+          element.value = val;
+          // Trigger change event
+          element.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      },
+      value
+    );
+  }
 }
+

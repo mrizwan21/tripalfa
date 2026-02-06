@@ -1,5 +1,42 @@
-[
-  { "email": "testuser1@example.com", "password": "Test@123", "role": "user" },
-  { "email": "guestuser@example.com", "password": "Guest@123", "role": "guest" },
-  { "email": "lowbalance@example.com", "password": "Low@123", "role": "user", "walletBalance": 10 }
-]
+{
+  "registeredUser": {
+    "email": "test.user@tripalfa.com",
+    "password": "$2b$10$j2A2tRV.eDaHhu10xYsGIeXmQyS53/s7zqrsJmxUis9Lr8AROo606",
+    "firstName": "Test",
+    "lastName": "User",
+    "phone": "+1234567890",
+    "role": "CUSTOMER",
+    "isVerified": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "premiumUser": {
+    "email": "premium.user@tripalfa.com",
+    "password": "$2b$10$D2YTKr1msg9V/n.xfIY1iu6dXzOdSztDJzNA0pYEHd4ECxlvpchAO",
+    "firstName": "Premium",
+    "lastName": "User",
+    "phone": "+1234567891",
+    "role": "CUSTOMER",
+    "isVerified": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "guestUser": {
+    "email": "guest.user@tripalfa.com",
+    "password": "$2b$10$qBVDflX63xAcgutCKmSVI.mHhSXU3zbwlOVjI7bW8G5XMHF8BwUiy",
+    "firstName": "Guest",
+    "lastName": "User",
+    "phone": "+1234567892",
+    "role": "GUEST",
+    "isVerified": false,
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  },
+  "adminUser": {
+    "email": "admin.user@tripalfa.com",
+    "password": "$2b$10$jGUCE7bH.xiQoxHcksuWhOON.LkjdNdrkztty6/CEsNcFtqIzAHR6",
+    "firstName": "Admin",
+    "lastName": "User",
+    "phone": "+1234567893",
+    "role": "ADMIN",
+    "isVerified": true,
+    "createdAt": "2026-01-01T00:00:00.000Z"
+  }
+}
