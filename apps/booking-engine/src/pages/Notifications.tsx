@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { listNotifications, markNotificationRead } from '../lib/api';
 import { format } from 'date-fns';
 import {
@@ -13,16 +13,42 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { cn } from '../lib/utils';
+import { NotificationDetailsPopup } from '../components/NotificationDetailsPopup';
+import type { NotificationItem } from '../lib/notification-types';
+import { mapApiNotificationToItem } from '../lib/notification-types';
+
+const POLLING_INTERVAL = 30000; // Poll every 30 seconds
 
 export default function Notifications() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout>();
+  const lastNotificationCountRef = useRef(0);
 
   async function load() {
     setLoading(true);
     try {
       const res = await listNotifications();
-      setItems(res);
+      
+      // Map API response to UI NotificationItem format
+      const mappedNotifications = Array.isArray(res) 
+        ? res.map(mapApiNotificationToItem) 
+        : [];
+      
+      // Check for new notifications
+      const newUnreadCount = mappedNotifications.filter(n => !n.read).length;
+      const previousUnreadCount = lastNotificationCountRef.current;
+      
+      setItems(mappedNotifications);
+      lastNotificationCountRef.current = newUnreadCount;
+
+      // Show toast if new notifications arrived
+      if (previousUnreadCount > 0 && newUnreadCount > previousUnreadCount) {
+        // Toast logic would go here
+        console.log('New notification received');
+      }
     } catch {
       setItems([]);
     } finally {
@@ -30,12 +56,73 @@ export default function Notifications() {
     }
   }
 
-  useEffect(() => { load(); }, []);
+  // Initial load
+  useEffect(() => { 
+    load(); 
+  }, []);
+
+  // Setup polling for real-time updates
+  useEffect(() => {
+    // Start polling
+    pollingIntervalRef.current = setInterval(() => {
+      load();
+    }, POLLING_INTERVAL);
+
+    // Handle page visibility (pause polling when tab is inactive)
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Pause polling
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
+      } else {
+        // Resume polling
+        load();
+        pollingIntervalRef.current = setInterval(() => {
+          load();
+        }, POLLING_INTERVAL);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   async function markRead(id: string) {
+    // First update UI immediately
+    const updatedItems = items.map(i => 
+      i.id === id ? { ...i, read: true } : i
+    );
+    setItems(updatedItems);
+    
+    // Update unread count
+    const newUnreadCount = updatedItems.filter(n => !n.read).length;
+    lastNotificationCountRef.current = newUnreadCount;
+    
+    // Then call API to persist the change
     await markNotificationRead(id);
-    setItems(prev => prev.map(i => i.id === id ? { ...i, read: true } : i));
   }
+
+  const handleViewDetails = (notification: NotificationItem) => {
+    setSelectedNotification(notification);
+    setIsPopupOpen(true);
+    // Mark as read when opening details
+    if (!notification.read) {
+      markRead(notification.id);
+    }
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+    setSelectedNotification(null);
+  };
 
   const unreadCount = items.filter(i => !i.read).length;
 
@@ -75,10 +162,11 @@ export default function Notifications() {
           <p className="text-slate-500 mt-2 max-w-xs mx-auto">You don't have any notifications at the moment. We'll alert you when something happens.</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" role="list">
           {items.map((n) => (
             <div
               key={n.id}
+              role="listitem"
               className={cn(
                 "group relative bg-white rounded-[2rem] border transition-all duration-300 overflow-hidden",
                 n.read
@@ -132,7 +220,10 @@ export default function Notifications() {
                           MARK AS READ
                         </button>
                       )}
-                      <button className="text-xs font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">
+                      <button
+                        onClick={() => handleViewDetails(n)}
+                        className="text-xs font-black text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+                      >
                         View Details
                       </button>
                     </div>
@@ -158,6 +249,15 @@ export default function Notifications() {
           </p>
           <Button className="bg-primary hover:bg-primary/90 text-white font-black px-8 py-6 rounded-2xl relative z-10 shadow-xl shadow-primary/20 active:scale-95">
             Update Settings
+
+      {/* Notification Details Popup */}
+      {selectedNotification && (
+        <NotificationDetailsPopup
+          isOpen={isPopupOpen}
+          onClose={handleClosePopup}
+          notification={selectedNotification}
+        />
+      )}
           </Button>
         </div>
       )}

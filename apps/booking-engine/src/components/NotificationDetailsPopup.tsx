@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, CheckCircle2, Clock, XCircle, AlertCircle, Info, Calendar, Shield } from 'lucide-react';
+import { format } from 'date-fns';
 import { NotificationItem } from '../lib/notification-types';
 import { cn } from '../lib/utils';
 
@@ -79,7 +80,7 @@ export function NotificationDetailsPopup({ isOpen, onClose, notification }: Noti
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                     <Calendar size={10} /> Date
                                 </p>
-                                <p className="text-slate-900 font-black text-sm">{notification.date}</p>
+                                <p className="text-slate-900 font-black text-sm">{format(new Date(notification.when), 'MMM d, yyyy h:mm a')}</p>
                             </div>
 
                             {notification.passengerName && (
@@ -115,7 +116,7 @@ export function NotificationDetailsPopup({ isOpen, onClose, notification }: Noti
                             <div className="relative">
                                 <div className="absolute -left-[21px] top-1.5 w-3 h-3 rounded-full bg-slate-200 border-2 border-white ring-4 ring-slate-50"></div>
                                 <p className="text-xs font-black text-slate-900">Request Initiated</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">{notification.date}</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">{notification.when}</p>
                             </div>
                             {notification.status !== 'PENDING' && (
                                 <div className="relative">
