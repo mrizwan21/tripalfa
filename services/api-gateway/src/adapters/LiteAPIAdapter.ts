@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Adapter, HotelResult } from '../../../../packages/shared-types/src/index.js';
+import { Adapter, HotelResult } from '@tripalfa/shared-types';
 
 export default class LiteAPIAdapter implements Adapter {
     name = 'liteapi';
@@ -82,7 +82,8 @@ export default class LiteAPIAdapter implements Adapter {
             currency: hotel.currency || 'USD',
             availableRooms: hotel.availableRooms || 10,
             amenities: hotel.amenities || ['Pool', 'WiFi', 'Spa'],
-            provider: 'LiteAPI'
+            provider: 'LiteAPI',
+            refundable: hotel.refundable || hotel.is_refundable || hotel.offers?.[0]?.cancellation_policy?.is_refundable || false
         }));
     }
 

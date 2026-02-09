@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as Popover from '@radix-ui/react-popover';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, AlertCircle } from 'lucide-react';
 import {
     format,
     addMonths,
@@ -26,6 +26,7 @@ interface SingleMonthCalendarProps {
     label?: string;
     maxDate?: Date;
     minDate?: Date;
+    error?: string;
 }
 
 export function SingleMonthCalendar({
@@ -34,7 +35,8 @@ export function SingleMonthCalendar({
     onClose,
     label = 'Select Date',
     maxDate = new Date(),
-    minDate = new Date(1920, 0, 1)
+    minDate = new Date(1920, 0, 1),
+    error
 }: SingleMonthCalendarProps) {
     const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
     const [isOpen, setIsOpen] = useState(false);
@@ -86,10 +88,17 @@ export function SingleMonthCalendar({
                             onChange={(e) => setCurrentMonth(setYear(monthDate, parseInt(e.target.value)))}
                             className="text-[10px] font-black uppercase bg-transparent outline-none cursor-pointer"
                         >
-                            {Array.from({ length: 150 }, (_, i) => {
-                                const y = getYear(new Date()) - i;
-                                return <option key={y} value={y}>{y}</option>;
-                            })}
+                            {(() => {
+                                const minYear = getYear(minDate);
+                                const maxYear = getYear(maxDate);
+                                const years: number[] = [];
+                                for (let y = maxYear; y >= minYear; y--) {
+                                    years.push(y);
+                                }
+                                return years.map((y) => (
+                                    <option key={y} value={y}>{y}</option>
+                                ));
+                            })()}
                         </select>
                     </div>
                     <button onClick={handleNextMonth} className="p-1 hover:bg-gray-100 rounded-lg transition-colors"><ChevronRight size={16} /></button>
@@ -146,14 +155,20 @@ export function SingleMonthCalendar({
     return (
         <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
             <Popover.Trigger asChild>
-                <div className="relative group/field cursor-pointer" data-testid={label.toLowerCase().replace(/\s+/g, '-')}>
+                <div className="relative group/field cursor-pointer space-y-1.5" data-testid={label.toLowerCase().replace(/\s+/g, '-')}>
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">{label}*</label>
-                    <div className="w-full h-11 px-4 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 rounded-xl flex items-center justify-between text-[11px] font-bold group-hover/field:border-[#8B5CF6]/30 transition-all">
+                    <div className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 rounded-xl flex items-center justify-between text-[11px] font-bold group-hover/field:border-[#8B5CF6]/30 transition-all ${error ? 'border-red-500/50' : 'border-transparent'}`}>
                         <span className={selectedDate ? 'text-gray-900' : 'text-gray-300'}>
                             {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'DD/MM/YYYY'}
                         </span>
                         <CalendarIcon size={14} className="text-gray-400" />
                     </div>
+                    {error && (
+                        <div className="flex items-center gap-1 text-red-500 pl-1">
+                            <AlertCircle size={8} />
+                            <span className="text-[8px] font-black uppercase tracking-widest">{error}</span>
+                        </div>
+                    )}
                 </div>
             </Popover.Trigger>
 

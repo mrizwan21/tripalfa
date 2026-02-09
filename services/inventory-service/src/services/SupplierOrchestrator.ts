@@ -1,8 +1,17 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import axios from 'axios';
-import { Intent } from '@tripalfa/shared-types';
+// import { Intent } from '../../../packages/shared-types/src/index';
+const Intent = {
+    READ_STATIC: "READ_STATIC",
+    QUERY_STATIC: "QUERY_STATIC",
+    WRITE: "WRITE",
+    READ_REALTIME: "READ_REALTIME",
+    QUERY_REALTIME: "QUERY_REALTIME",
+    ADAPTER: "ADAPTER"
+} as any;
 import { dynamicPrisma, staticPrisma, staticPool } from '../db.js';
+import { getHotelSearchService } from './index.js';
 
 const GATEWAY_URL = process.env.API_GATEWAY_URL || 'http://localhost:3001/api';
 
@@ -152,53 +161,34 @@ class SupplierOrchestrator {
 
     async searchLocalHotels(params: SearchHotelsParams) {
         try {
-            const { location } = params;
-            // Use staticPool to query canonical_hotels and its normalized relations
-            const query = `
-                SELECT 
-                    h.id, h.name, h.address, h.city, h.country, h.star_rating, h.latitude, h.longitude,
-                    img.url as primary_image,
-                    COALESCE(am.names, ARRAY[]::text[]) as amenity_names
-                FROM canonical_hotels h
-                LEFT JOIN LATERAL (
-                    SELECT url FROM hotel_images 
-                    WHERE canonical_hotel_id = h.id 
-                    ORDER BY is_primary DESC, sort_order ASC 
-                    LIMIT 1
-                ) img ON true
-                LEFT JOIN LATERAL (
-                    SELECT array_agg(a.name) as names
-                    FROM (
-                        SELECT a.name
-                        FROM hotel_amenity_instances hai
-                        JOIN amenities a ON a.id = hai.amenity_id
-                        WHERE hai.canonical_hotel_id = h.id
-                        LIMIT 10
-                    ) a
-                ) am ON true
-                WHERE h.archive = false
-                AND (h.city ILIKE $1 OR h.name ILIKE $1)
-                LIMIT 50
-            `;
+            const hotelService = getHotelSearchService();
+            const searchResult = await hotelService.searchHotels({
+                query: params.location,
+                checkIn: new Date(params.checkin),
+                checkOut: new Date(params.checkout),
+                occupancy: params.adults + params.children
+            }, 1, 50);
 
-            const searchPattern = `%${location}%`;
-            const result = await staticPool.query(query, [searchPattern]);
-
-            return result.rows.map((h: any) => {
-                return {
-                    id: `local_h_${h.id}`,
-                    name: h.name,
-                    image: h.primary_image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
-                    location: `${h.address || ''}, ${h.city}`,
-                    rating: h.star_rating ? parseFloat(h.star_rating) : 4,
-                    reviews: 100,
-                    reviewCount: 100,
-                    pricePerNight: 200,
-                    currency: 'USD',
-                    amenities: h.amenity_names,
-                    provider: 'Local'
-                };
-            });
+            return searchResult.hotels.map(h => ({
+                id: `local_h_${h.id}`,
+                name: h.name,
+                image: h.primaryImage || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
+                location: `${h.location.city}, ${h.location.countryCode}`,
+                rating: h.starRating ? Number(h.starRating) : 4,
+                reviews: h.reviewScore ? h.reviewScore * 20 : 0,
+                reviewCount: h.reviewCount || 0,
+                pricePerNight: h.minPrice || 200,
+                currency: 'USD',
+                amenities: [
+                    h.facilities.hasWifi ? 'WiFi' : null,
+                    h.facilities.hasPool ? 'Pool' : null,
+                    h.facilities.hasSpa ? 'Spa' : null,
+                    h.facilities.hasGym ? 'Gym' : null,
+                    h.facilities.hasParking ? 'Parking' : null,
+                    h.facilities.hasRestaurant ? 'Restaurant' : null
+                ].filter(Boolean),
+                provider: 'Local'
+            }));
         } catch (e) {
             console.error('Local Hotel Search Failed:', e);
             return [];

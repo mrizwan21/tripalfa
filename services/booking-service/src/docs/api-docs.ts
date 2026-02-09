@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { BookingData, BookingResponse, SearchParams, BookingStats, UserBookingStats } from '../types/index.js';
-import { isBookingData, isSearchParams } from '../types/typeGuards.js';
+import { BookingData, BookingResponse, SearchParams, BookingStats, UserBookingStats } from '../types/index';
+import { isBookingData, isSearchParams } from '../types/typeGuards';
 
 /**
  * API Documentation with Typed Endpoints

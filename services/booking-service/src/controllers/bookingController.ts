@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import bookingService from '../services/bookingService.js';
-import { BookingData, BookingResponse, SearchParams, UserBookingStats } from '../types/index.js';
+import bookingService from '../services/bookingService';
+import { BookingData, BookingResponse, SearchParams, UserBookingStats } from '../types/index';
 
 // Create a new booking
 const createBooking = async (req: Request, res: Response, next: NextFunction) => {

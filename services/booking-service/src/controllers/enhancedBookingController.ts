@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import enhancedBookingService from '../services/enhancedBookingService.js';
-import { CreateBookingRequest, SearchBookingRequest } from '../types/enhancedBooking.js';
+import enhancedBookingService from '../services/enhancedBookingService';
+import { CreateBookingRequest, SearchBookingRequest } from '../types/enhancedBooking';
 
 // Create B2B/B2C booking
 const createBooking = async (req: Request, res: Response, next: NextFunction) => {

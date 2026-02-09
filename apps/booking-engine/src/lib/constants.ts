@@ -2,10 +2,9 @@ import { Plane, Building2, Package, Car, Bell } from 'lucide-react';
 
 export const APP_NAME = 'Travel Kingdom';
 
-// PRODUCTION MODE: Hybrid Routing Architecture
-// Dynamic/External APIs → Wicked API Manager (localhost:8000)
-// Static Data → Centralized Static Data Package (via @tripalfa/static-data)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Dev: Use relative paths so Vite proxy intercepts requests (http://localhost:3000)
+// Prod: Use full URL via VITE_API_BASE_URL environment variable
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export const API_ENDPOINTS = {
   // Auth (via Wicked)

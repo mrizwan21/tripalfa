@@ -5,6 +5,9 @@
  * Handles the correct API response structure (objects with numeric keys)
  */
 
+/* eslint-disable no-undef */
+/* eslint-env node */
+
 const { Client } = require('pg');
 const fetch = require('node-fetch').default;
 

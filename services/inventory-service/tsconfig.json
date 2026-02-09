@@ -2,9 +2,17 @@
     "extends": "../../tsconfig.json",
     "compilerOptions": {
         "outDir": "./dist",
-        "rootDir": "./src",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
+        "baseUrl": ".",
+        "paths": {
+            "@tripalfa/shared-types": [
+                "../../packages/shared-types/src/index.ts"
+            ],
+            "@tripalfa/static-data": [
+                "../../packages/static-data/src/index.ts"
+            ]
+        }
     },
     "include": [
         "src/**/*"

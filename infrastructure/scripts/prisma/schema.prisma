@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -202,35 +203,87 @@ model FlightAmenity {
   @@map("flight_amenities")
 }
 
+/**
+ * Optimized Hotel Model
+ * Designed for 2M hotels at 100 RPS with <200ms latency
+ * Uses denormalized fields for fast filtering
+ */
 model Hotel {
   id                Int                  @id @default(autoincrement())
-  name              String
+  name              String               @db.VarChar(255)
+  slug              String?              @unique
   description       String?
-  address           String
-  city              String
-  country           String
+  shortDescription  String?              @map("short_description")
+  
+  // Location fields
+  address           String?
+  city              String?              @db.VarChar(100)
+  country           String?
+  countryCode       String?              @map("country_code") @db.Char(2)
   postalCode        String?              @map("postal_code")
   latitude          Decimal?             @db.Decimal(10, 8)
   longitude         Decimal?             @db.Decimal(11, 8)
+  timezone          String?
+  
+  // Classification
+  chainCode         String?              @map("chain_code") @db.VarChar(10)
+  hotelType         String?              @map("hotel_type") @db.VarChar(50)
   starRating        Decimal?             @map("star_rating") @db.Decimal(2, 1)
+  
+  // Denormalized facility flags for O(1) filtering
+  facilityIds       Int[]                @map("facility_ids") @default([])
+  hasWifi           Boolean              @map("has_wifi") @default(false)
+  hasPool           Boolean              @map("has_pool") @default(false)
+  hasSpa            Boolean              @map("has_spa") @default(false)
+  hasParking        Boolean              @map("has_parking") @default(false)
+  hasRestaurant     Boolean              @map("has_restaurant") @default(false)
+  hasGym            Boolean              @map("has_gym") @default(false)
+  hasBeach          Boolean              @map("has_beach") @default(false)
+  hasPetFriendly    Boolean              @map("has_pet_friendly") @default(false)
+  
+  // Review aggregates (denormalized for sorting)
+  reviewScore       Decimal?             @map("review_score") @db.Decimal(3, 2)
+  reviewCount       Int                  @map("review_count") @default(0)
+  
+  // Contact
   website           String?
   phone             String?
   email             String?
-  checkinTime       DateTime             @default(dbgenerated("'1970-01-01 15:00:00'::timestamp without time zone")) @map("checkin_time")
-  checkoutTime      DateTime             @default(dbgenerated("'1970-01-01 11:00:00'::timestamp without time zone")) @map("checkout_time")
-  amenities         Json?
-  images            Json?
-  policies          Json?
+  
+  // Policies (JSONB for flexibility)
+  checkinTime       DateTime?            @map("checkin_time") @db.Time()
+  checkoutTime      DateTime?            @map("checkout_time") @db.Time()
+  policies          Json?                // {"pets": {"allowed": true}, "children": {...}}
+  
+  // Media and content
+  amenities         Json?                // Legacy - use facilityIds for filtering
+  images            Json?                // [{"url": "...", "type": "main", "order": 1}]
   nearbyAttractions Json?                @map("nearby_attractions")
+  
+  // Metadata
+  primarySource     String?              @map("primary_source") @db.VarChar(50)
+  contentScore      Int                  @map("content_score") @default(0)
   isActive          Boolean              @default(true) @map("is_active")
   createdAt         DateTime             @default(now()) @map("created_at")
   updatedAt         DateTime             @updatedAt @map("updated_at")
+  
+  // Relations
   chainId           Int?                 @map("chain_id")
   chain             HotelChain?          @relation(fields: [chainId], references: [id], onDelete: SetNull)
-  roomTypes         HotelRoomType[]
+  rooms             HotelRoom[]
+  roomTypes         HotelRoomType[]      // Legacy relation
   reviewsSummary    HotelReviewsSummary?
   bookings          Booking[]
-
+  supplierRefs      HotelSupplierRef[]
+  hotelImages       HotelImageOptimized[]
+  
+  // Composite indexes for search performance
+  @@index([countryCode, city, starRating, chainCode])
+  @@index([starRating, reviewScore])
+  @@index([city])
+  @@index([countryCode])
+  @@index([chainId])
+  @@index([isActive])
   @@map("hotels")
 }
 
@@ -273,6 +326,137 @@ model HotelBaseRate {
   roomType           HotelRoomType @relation(fields: [roomTypeId], references: [id], onDelete: Cascade)
 
   @@map("hotel_base_rates")
+}
+
+/**
+ * Optimized HotelRoom Model
+ * Designed for fast room filtering with denormalized amenity flags
+ */
+model HotelRoom {
+  id              String    @id @default(uuid())
+  hotelId         Int       @map("hotel_id")
+  roomTypeCode    String    @map("room_type_code") @db.VarChar(10)
+  
+  // Room details
+  name            String    @db.VarChar(255)
+  description     String?
+  maxOccupancy    Int       @map("max_occupancy") @db.SmallInt
+  bedType         String?   @map("bed_type") @db.VarChar(50)
+  sizeSqm         Decimal?  @map("size_sqm") @db.Decimal(6, 2)
+  viewType        String?   @map("view_type") @db.VarChar(50)
+  
+  // Denormalized amenity flags for fast filtering
+  amenityIds      Int[]     @map("amenity_ids") @default([])
+  hasBalcony      Boolean   @map("has_balcony") @default(false)
+  hasKitchen      Boolean   @map("has_kitchen") @default(false)
+  hasBathtub      Boolean   @map("has_bathtub") @default(false)
+  hasAirCon       Boolean   @map("has_air_con") @default(false)
+  hasMinibar      Boolean   @map("has_minibar") @default(false)
+  hasSafe         Boolean   @map("has_safe") @default(false)
+  
+  // Media
+  images          Json      @default("[]") // [{"url": "...", "type": "main", "order": 1}]
+  
+  // Metadata
+  isAccessible    Boolean   @map("is_accessible") @default(false)
+  isActive        Boolean   @map("is_active") @default(true)
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  // Relations
+  hotel           Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  rates           RoomRate[]
+  
+  @@index([hotelId])
+  @@index([maxOccupancy])
+  @@index([viewType])
+  @@index([roomTypeCode])
+  @@map("hotel_rooms")
+}
+
+/**
+ * RoomRate Model
+ * Hot data - heavily queried for availability and pricing
+ */
+model RoomRate {
+  id                String    @id @default(uuid())
+  roomId            String    @map("room_id")
+  hotelId           Int       @map("hotel_id") // Denormalized for faster joins
+  
+  // Pricing
+  boardBasis        String    @map("board_basis") @db.VarChar(10) // RO, BB, HB, FB, AI
+  priceAmount       Decimal   @map("price_amount") @db.Decimal(10, 2)
+  currencyCode      String    @map("currency_code") @db.Char(3) @default("USD")
+  taxAmount         Decimal   @map("tax_amount") @db.Decimal(10, 2) @default(0)
+  priceIncludesTax  Boolean   @map("price_includes_tax") @default(false)
+  paymentType       String    @map("payment_type") @db.VarChar(20) // prepay, pay_at_hotel
+  
+  // Availability window
+  validFrom         DateTime  @map("valid_from") @db.Date
+  validTo           DateTime  @map("valid_to") @db.Date
+  
+  // Rate metadata
+  cancellationPolicy String?  @map("cancellation_policy") @db.VarChar(50)
+  refundable        Boolean   @default(true)
+  supplierCode      String?   @map("supplier_code") @db.VarChar(50)
+  supplierRateId    String?   @map("supplier_rate_id")
+  
+  createdAt         DateTime  @default(now()) @map("created_at")
+  
+  // Relations
+  room              HotelRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  // Indexes for price filtering and availability
+  @@index([hotelId, validFrom, validTo])
+  @@index([hotelId, boardBasis, paymentType, priceAmount])
+  @@index([priceAmount, currencyCode])
+  @@index([roomId])
+  @@map("room_rates")
+}
+
+/**
+ * Hotel Supplier Reference
+ * Maps hotels to supplier-specific IDs for multi-supplier aggregation
+ */
+model HotelSupplierRef {
+  id              Int       @id @default(autoincrement())
+  hotelId         Int       @map("hotel_id")
+  supplierCode    String    @map("supplier_code") @db.VarChar(50)
+  supplierHotelId String    @map("supplier_hotel_id")
+  matchConfidence Decimal?  @map("match_confidence") @db.Decimal(3, 2) @default(1.00)
+  matchMethod     String?   @map("match_method") @db.VarChar(50)
+  rawData         Json?     @map("raw_data")
+  lastSyncedAt    DateTime? @map("last_synced_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  hotel           Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  
+  @@unique([supplierCode, supplierHotelId])
+  @@index([hotelId])
+  @@map("hotel_supplier_refs")
+}
+
+/**
+ * Optimized Hotel Image storage
+ */
+model HotelImageOptimized {
+  id              Int       @id @default(autoincrement())
+  hotelId         Int       @map("hotel_id")
+  url             String
+  thumbnailUrl    String?   @map("thumbnail_url")
+  type            String    @db.VarChar(50) @default("general") // main, room, exterior, pool, etc.
+  caption         String?
+  sortOrder       Int       @map("sort_order") @default(0)
+  width           Int?
+  height          Int?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  
+  hotel           Hotel     @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  
+  @@index([hotelId, type])
+  @@index([hotelId, sortOrder])
+  @@map("hotel_images_optimized")
 }
 
 model HotelReviewsSummary {
@@ -592,6 +776,11 @@ model Currency {
   @@map("currencies")
 }
 
+/**
+ * @deprecated Use `Amenity` model instead. This model is kept for backward compatibility
+ * but all new code should use the unified `Amenity` model with `HotelAmenityInstance` junction table.
+ * See `amenities` table and `hotel_amenity_instances` for the canonical schema.
+ */
 model HotelFacility {
   id          Int      @id @default(autoincrement())
   name        String   @map("name")

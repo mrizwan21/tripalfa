@@ -15,7 +15,7 @@ async function ingestGlobalAirports() {
         const duffelAirports = await DuffelClient.getAirports('prod');
         console.log(`Retrieved ${duffelAirports.length} airports from Duffel.`);
 
-        for (const apt of duffelAirports) {
+        for (const apt of (duffelAirports as any[])) {
             if (!apt.iata_code) continue;
 
             const existing = await staticPrisma.airport.findUnique({ where: { iataCode: apt.iata_code } });
@@ -70,7 +70,7 @@ async function ingestGlobalAirports() {
             const locations = await AmadeusClient.getAirports(hub);
             if (!locations) continue;
 
-            for (const loc of locations) {
+            for (const loc of (locations as any[])) {
                 if (loc.subType !== 'AIRPORT') continue;
 
                 const existing = await staticPrisma.airport.findUnique({ where: { iataCode: loc.iataCode } });

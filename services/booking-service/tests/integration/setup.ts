@@ -39,8 +39,9 @@
  */
 
 import request from 'supertest';
-import app from '../../src/app.js';
-import { prisma } from '../../src/database/index.js';
+// NOTE: app import removed to avoid cascading .js import issues during global setup
+// Test files that need supertest app access should import app directly if needed
+import { prisma } from '../../src/database';
 import * as jwt from 'jsonwebtoken';
 
 // Test configuration with seeded credentials
@@ -82,8 +83,9 @@ export const TEST_CONFIG = {
   }
 } as const;
 
-// Supertest request instance
-export const api = request(app);
+
+// NOTE: Test helpers below use getApi() which is defined in individual test files
+// This approach avoids importing app during global setup (which causes .js import cascades)
 
 // Test tokens storage
 export let authTokens: {
@@ -94,8 +96,27 @@ export let authTokens: {
   manager?: string;
 } = {};
 
+// Type definition for test data tracker
+interface TestDataTracker {
+  bookings: Set<string>;
+  customers: Set<string>;
+  suppliers: Set<string>;
+  companies: Set<string>;
+  branches: Set<string>;
+  documents: Set<string>;
+  amendments: Set<string>;
+  refunds: Set<string>;
+  notes: Set<string>;
+  auditLogs: Set<string>;
+  communications: Set<string>;
+  notifications: Set<string>;
+  track(type: Exclude<keyof TestDataTracker, 'track' | 'clear' | 'getAll'>, id: string): void;
+  clear(): void;
+  getAll(): Record<Exclude<keyof TestDataTracker, 'track' | 'clear' | 'getAll'>, string[]>;
+}
+
 // Track created test data for cleanup
-export const testDataTracker = {
+export const testDataTracker: TestDataTracker = {
   bookings: new Set<string>(),
   customers: new Set<string>(),
   suppliers: new Set<string>(),
@@ -109,10 +130,9 @@ export const testDataTracker = {
   communications: new Set<string>(),
   notifications: new Set<string>(),
 
-  track(type: keyof typeof testDataTracker, id: string) {
-    if (type !== 'track' && type !== 'clear' && type !== 'getAll') {
-      this[type].add(id);
-    }
+  track(type: Exclude<keyof TestDataTracker, 'track' | 'clear' | 'getAll'>, id: string) {
+    // Type system already ensures this is a valid data set key
+    (this[type] as Set<string>).add(id);
   },
 
   clear() {
@@ -239,7 +259,8 @@ export async function setupTestEnvironment(): Promise<void> {
 
   // Verify API is running
   try {
-    const response = await api.get('/health');
+    const apiUrl = globalThis.TEST_API_URL || process.env.BOOKING_SERVICE_API || 'http://localhost:3001';
+    const response = await fetch(`${apiUrl}/health`);
     if (response.status !== 200) {
       throw new Error(`API health check failed with status: ${response.status}`);
     }
@@ -419,59 +440,84 @@ export function getAuthHeader(role: keyof typeof TEST_CONFIG.testUsers = 'admin'
 
 /**
  * Helper to create a test booking and track it for cleanup
+ * 
+ * DEPRECATED: This function references supertest which requires importing app.ts,
+ * causing cascading .js import issues in the ts-jest environment.
+ * Individual test files should use fetch() or axios to create test data instead.
+ * 
+ * @deprecated Use HTTP client (fetch/axios) with getTestApiUrl() instead
  */
 export async function createTestBooking(bookingData: any, role: keyof typeof TEST_CONFIG.testUsers = 'admin'): Promise<any> {
-  const response = await api
-    .post('/api/bookings')
-    .set(getAuthHeader(role))
-    .send(bookingData);
-
-  if (response.status === 200 || response.status === 201) {
-    const bookingId = response.body.id || response.body.bookingId || response.body.data?.id;
-    if (bookingId) {
-      testDataTracker.track('bookings', bookingId);
-    }
-  }
-
-  return response.body;
+  // Commented out due to cascading .js import issues with app.ts
+  // const response = await supertest(app)
+  //   .post('/api/bookings')
+  //   .set(getAuthHeader(role))
+  //   .send(bookingData);
+  //
+  // if (response.status === 200 || response.status === 201) {
+  //   const bookingId = response.body.id || response.body.bookingId || response.body.data?.id;
+  //   if (bookingId) {
+  //     testDataTracker.track('bookings', bookingId);
+  //   }
+  // }
+  //
+  // return response.body;
+  
+  throw new Error('createTestBooking is deprecated. Use HTTP client with getTestApiUrl() instead.');
 }
 
 /**
  * Helper to create a test customer and track it for cleanup
+ * 
+ * DEPRECATED: This function references supertest which requires importing app.ts.
+ * Use HTTP client (fetch/axios) with getTestApiUrl() instead.
+ * 
+ * @deprecated Use HTTP client (fetch/axios) with getTestApiUrl() instead
  */
 export async function createTestCustomer(customerData: any): Promise<any> {
-  const response = await api
-    .post('/api/customers')
-    .set(getAuthHeader('admin'))
-    .send(customerData);
-
-  if (response.status === 200 || response.status === 201) {
-    const customerId = response.body.id || response.body.data?.id;
-    if (customerId) {
-      testDataTracker.track('customers', customerId);
-    }
-  }
-
-  return response.body;
+  // Commented out due to cascading .js import issues with app.ts
+  // const response = await supertest(app)
+  //   .post('/api/customers')
+  //   .set(getAuthHeader('admin'))
+  //   .send(customerData);
+  //
+  // if (response.status === 200 || response.status === 201) {
+  //   const customerId = response.body.id || response.body.data?.id;
+  //   if (customerId) {
+  //     testDataTracker.track('customers', customerId);
+  //   }
+  // }
+  //
+  // return response.body;
+  
+  throw new Error('createTestCustomer is deprecated. Use HTTP client with getTestApiUrl() instead.');
 }
 
 /**
  * Helper to create a test supplier and track it for cleanup
+ * 
+ * DEPRECATED: This function references supertest which requires importing app.ts.
+ * Use HTTP client (fetch/axios) with getTestApiUrl() instead.
+ * 
+ * @deprecated Use HTTP client (fetch/axios) with getTestApiUrl() instead
  */
 export async function createTestSupplier(supplierData: any): Promise<any> {
-  const response = await api
-    .post('/api/suppliers')
-    .set(getAuthHeader('admin'))
-    .send(supplierData);
-
-  if (response.status === 200 || response.status === 201) {
-    const supplierId = response.body.id || response.body.data?.id;
-    if (supplierId) {
-      testDataTracker.track('suppliers', supplierId);
-    }
-  }
-
-  return response.body;
+  // Commented out due to cascading .js import issues with app.ts
+  // const response = await supertest(app)
+  //   .post('/api/suppliers')
+  //   .set(getAuthHeader('admin'))
+  //   .send(supplierData);
+  //
+  // if (response.status === 200 || response.status === 201) {
+  //   const supplierId = response.body.id || response.body.data?.id;
+  //   if (supplierId) {
+  //     testDataTracker.track('suppliers', supplierId);
+  //   }
+  // }
+  //
+  // return response.body;
+  
+  throw new Error('createTestSupplier is deprecated. Use HTTP client with getTestApiUrl() instead.');
 }
 
 /**

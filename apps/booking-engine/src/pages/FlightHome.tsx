@@ -91,7 +91,7 @@ export default function FlightHome() {
 
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
                             {/* Trip Type & Class (Radio/Dropdowns) can go here relative */}
-                            <div className="col-span-12 flex gap-4 mb-2 text-white text-sm font-medium px-2 items-center flex-wrap">
+                            <div className="col-span-12 flex gap-4 mb-2 text-white text-xs font-bold px-2 items-center flex-wrap uppercase tracking-wider">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="radio"
@@ -126,7 +126,7 @@ export default function FlightHome() {
                             </div>
 
                             {/* From Input */}
-                            <div className="col-span-12 md:col-span-3 h-14">
+                            <div className="col-span-12 md:col-span-3 h-12">
                                 <SearchAutocomplete
                                     type="flight"
                                     placeholder="From where?"
@@ -134,8 +134,14 @@ export default function FlightHome() {
                                     value={from}
                                     onChange={setFrom}
                                     onSelect={(loc: Suggestion) => {
-                                        setFrom(loc.title);
-                                        setFromCode(loc.code);
+                                        // Display format: "Airport Name (CODE)"
+                                        if (loc.type === 'AIRPORT') {
+                                            setFrom(`${loc.title} (${loc.code})`);
+                                            setFromCode(String(loc.code));
+                                        } else {
+                                            setFrom(loc.title);
+                                            setFromCode(loc.title);
+                                        }
                                     }}
                                     dataTestId="flight-from"
                                 />
@@ -157,7 +163,7 @@ export default function FlightHome() {
                             </div>
 
                             {/* To Input */}
-                            <div className="col-span-12 md:col-span-3 h-14">
+                            <div className="col-span-12 md:col-span-3 h-12">
                                 <SearchAutocomplete
                                     type="flight"
                                     placeholder="To where?"
@@ -165,8 +171,14 @@ export default function FlightHome() {
                                     value={to}
                                     onChange={setTo}
                                     onSelect={(loc: Suggestion) => {
-                                        setTo(loc.title);
-                                        setToCode(loc.code);
+                                        // Display format: "Airport Name (CODE)"
+                                        if (loc.type === 'AIRPORT') {
+                                            setTo(`${loc.title} (${loc.code})`);
+                                            setToCode(String(loc.code));
+                                        } else {
+                                            setTo(loc.title);
+                                            setToCode(loc.title);
+                                        }
                                     }}
                                     dataTestId="flight-to"
                                 />
@@ -190,7 +202,7 @@ export default function FlightHome() {
                                 <button
                                     onClick={handleSearch}
                                     data-testid="flight-search-submit"
-                                    className="w-full h-14 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-lg rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                                    className="w-full h-12 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
                                 >
                                     Search
                                 </button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Filter, Plane, ArrowRight, Clock, Calendar, ChevronDown, Luggage, ShieldCheck, Star, ArrowLeft } from 'lucide-react';
-import { searchFlights } from '../lib/api';
+import { createOfferRequest } from '../lib/api';
 import { formatCurrency } from '../lib/utils';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 
@@ -25,15 +25,74 @@ export default function FlightSearch() {
       setLoading(true);
       setError(null);
       try {
-        const results = await searchFlights({
-          origin,
-          destination,
-          departureDate,
-          returnDate,
-          adults: parseInt(travelers),
-          cabinClass: cabinClass.toUpperCase()
-        });
-        setFlights(results);
+        // Map search parameters to Duffel OfferRequestParams
+        const slices = [
+          {
+            origin,
+            destination,
+            departure_date: departureDate
+          }
+        ];
+
+        // Add return slice if returnDate exists
+        if (returnDate) {
+          slices.push({
+            origin: destination,
+            destination: origin,
+            departure_date: returnDate
+          });
+        }
+
+        // Create passengers array - using placeholder data that will be updated during checkout
+        const passengers = Array(parseInt(travelers))
+          .fill(null)
+          .map((_, index) => ({
+            type: 'adult' as const,
+            given_name: `Passenger${index + 1}`,
+            family_name: 'Unknown'
+          }));
+
+        const cabinClassMap: Record<string, 'economy' | 'premium_economy' | 'business' | 'first'> = {
+          'economy': 'economy',
+          'premium_economy': 'premium_economy',
+          'business': 'business',
+          'first': 'first'
+        };
+
+        const offerRequestParams = {
+          slices,
+          passengers,
+          cabin_class: cabinClassMap[cabinClass.toLowerCase()] || 'economy' as 'economy' | 'premium_economy' | 'business' | 'first'
+        };
+
+        // Call Duffel API to search for flights
+        const result = await createOfferRequest(offerRequestParams);
+
+        // Map Duffel offers to flight display format
+        const formattedFlights = result.offers?.map((offer: any) => {
+          const firstSlice = offer.slices?.[0];
+          const firstSegment = firstSlice?.segments?.[0];
+          const lastSegment = firstSlice?.segments?.[firstSlice.segments.length - 1];
+
+          return {
+            id: offer.id,
+            offerId: offer.id,
+            airline: firstSegment?.operating_carrier?.name || 'Unknown Airline',
+            flightNumber: firstSegment?.operating_carrier?.iata_code || 'N/A',
+            departureTime: firstSegment?.departure_time?.split('T')[1]?.substring(0, 5) || '',
+            origin: origin,
+            duration: firstSlice?.duration || '0h',
+            destination: destination,
+            arrivalTime: lastSegment?.arrival_time?.split('T')[1]?.substring(0, 5) || '',
+            stops: (firstSlice?.segments?.length || 1) - 1,
+            amount: parseFloat(offer.total_amount) || 0,
+            currency: offer.total_currency || 'USD',
+            includedBags: offer.passengers?.[0]?.fare?.included_bags || [],
+            rawOffer: offer // Store raw Duffel offer for later use
+          };
+        }) || [];
+
+        setFlights(formattedFlights);
       } catch (error) {
         console.error('Failed to fetch flights:', error);
         setError('Failed to find flights for this route. Please try another search.');
@@ -206,14 +265,18 @@ export default function FlightSearch() {
                     {/* Price & Selection */}
                     <div className="w-full lg:w-56 flex lg:flex-col items-center justify-between lg:justify-center gap-6 lg:border-l border-gray-100 lg:pl-10 pt-6 lg:pt-0">
                       <div className="text-right">
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Standard Economy</p>
-                        <p className="text-2xl font-black text-[#8B5CF6] tracking-tighter">{formatCurrency(flight.amount)}</p>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">
+                          {flight.rawOffer?.passengers?.[0]?.fare?.cabin_class || 'Standard'} Economy
+                        </p>
+                        <p className="text-2xl font-black text-[#8B5CF6] tracking-tighter">
+                          {formatCurrency(flight.amount, flight.currency)}
+                        </p>
                         <div className="flex items-center gap-1 justify-end text-[9px] font-bold text-green-600 mt-1 uppercase tracking-widest">
-                          <Luggage size={10} /> {flight.includedBags?.[0]?.weight}{flight.includedBags?.[0]?.unit} Included
+                          <Luggage size={10} /> {flight.includedBags?.[0]?.weight || 'Included'} {flight.includedBags?.[0]?.unit || ''}
                         </div>
                       </div>
                       <button
-                        onClick={() => navigate(`/flights/detail?id=${flight.id}`)}
+                        onClick={() => navigate(`/flights/detail?id=${flight.id}&offerId=${flight.offerId}`)}
                         className="h-12 px-10 bg-[#111827] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-black transition-all hover:-translate-y-0.5 active:scale-95"
                       >
                         Select Deal

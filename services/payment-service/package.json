@@ -11,7 +11,7 @@
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
     "docker:build": "docker build -t payment-service .",
-    "docker:run": "docker run -p 3003:3003 payment-service",
+    "docker:run": "docker run -p 3004:3004 payment-service",
     "build": "tsc -p ."
   },
   "dependencies": {

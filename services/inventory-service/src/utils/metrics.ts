@@ -126,11 +126,11 @@ class MetricsCollector {
 
     const durations = this.requestMetrics.map(m => m.duration).sort((a, b) => a - b);
     const errors = this.requestMetrics.filter(m => m.statusCode >= 400).length;
-    
+
     const avgResponseTime = durations.reduce((a, b) => a + b, 0) / durations.length;
     const p95Index = Math.floor(durations.length * 0.95);
     const p99Index = Math.floor(durations.length * 0.99);
-    
+
     return {
       avgResponseTime,
       p95ResponseTime: durations[p95Index] || 0,
@@ -157,11 +157,11 @@ class MetricsCollector {
 
     const hits = this.cacheMetrics.filter(m => m.hit);
     const misses = this.cacheMetrics.filter(m => !m.hit);
-    
+
     const hitRate = (hits.length / this.cacheMetrics.length) * 100;
     const avgHitTime = hits.length > 0 ? hits.reduce((a, b) => a + b.duration, 0) / hits.length : 0;
     const avgMissTime = misses.length > 0 ? misses.reduce((a, b) => a + b.duration, 0) / misses.length : 0;
-    
+
     return {
       hitRate,
       avgHitTime,
@@ -179,7 +179,7 @@ class MetricsCollector {
     }
   } {
     const supplierStats: { [key: string]: SupplierMetric[] } = {};
-    
+
     this.supplierMetrics.forEach(metric => {
       if (!supplierStats[metric.supplierId]) {
         supplierStats[metric.supplierId] = [];
@@ -187,18 +187,20 @@ class MetricsCollector {
       supplierStats[metric.supplierId].push(metric);
     });
 
-    const result: { [key: string]: {
-      avgResponseTime: number;
-      errorRate: number;
-      totalRequests: number;
-      successRate: number;
-    } } = {};
-    
+    const result: {
+      [key: string]: {
+        avgResponseTime: number;
+        errorRate: number;
+        totalRequests: number;
+        successRate: number;
+      }
+    } = {};
+
     Object.entries(supplierStats).forEach(([supplierId, metrics]) => {
       const durations = metrics.map(m => m.duration);
       const errors = metrics.filter(m => !m.success).length;
       const avgResponseTime = durations.reduce((a, b) => a + b, 0) / durations.length;
-      
+
       result[supplierId] = {
         avgResponseTime,
         errorRate: (errors / metrics.length) * 100,
@@ -213,7 +215,7 @@ class MetricsCollector {
   // Cleanup old metrics (keep last 24 hours)
   cleanup(): void {
     const cutoff = Date.now() - (24 * 60 * 60 * 1000);
-    
+
     this.metrics = this.metrics.filter(m => m.timestamp > cutoff);
     this.requestMetrics = this.requestMetrics.filter(m => m.timestamp > cutoff);
     this.databaseMetrics = this.databaseMetrics.filter(m => m.timestamp > cutoff);
@@ -227,14 +229,14 @@ export const metricsCollector = new MetricsCollector();
 
 // Performance monitoring decorators and utilities
 export function measurePerformance(name: string, unit: string = 'ms') {
-  return function(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = function(...args: unknown[]) {
+    descriptor.value = function (...args: unknown[]) {
       const start = performance.now();
-      
+
       const result = originalMethod.apply(this, args);
-      
+
       // Handle both sync and async methods
       if (result && typeof result.then === 'function') {
         return result.then((value: unknown) => {
@@ -259,13 +261,13 @@ export function measurePerformance(name: string, unit: string = 'ms') {
 export function timingMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
     const start = performance.now();
-    
+
     // Override res.end to capture timing
     const originalEnd = res.end;
-    res.end = function(...args: unknown[]) {
+    (res as any).end = function (...args: any[]) {
       const end = performance.now();
       const duration = end - start;
-      
+
       const metric: RequestMetric = {
         method: req.method,
         path: req.path,
@@ -275,12 +277,12 @@ export function timingMiddleware() {
         userAgent: req.get('User-Agent'),
         ip: req.ip
       };
-      
+
       metricsCollector.recordRequest(metric);
-      
+
       // Add timing header
       res.set('X-Response-Time', `${duration.toFixed(2)}ms`);
-      
+
       originalEnd.apply(this, args);
     };
 
@@ -297,7 +299,7 @@ export class DatabaseMetrics {
   ): Promise<T> {
     const start = performance.now();
     let success = false;
-    
+
     try {
       const result = await fn();
       success = true;
@@ -305,7 +307,7 @@ export class DatabaseMetrics {
     } finally {
       const end = performance.now();
       const duration = end - start;
-      
+
       const metric: DatabaseMetric = {
         operation,
         table,
@@ -313,7 +315,7 @@ export class DatabaseMetrics {
         timestamp: Date.now(),
         success
       };
-      
+
       metricsCollector.recordDatabase(metric);
     }
   }
@@ -328,7 +330,7 @@ export class CacheMetrics {
   ): Promise<T> {
     const start = performance.now();
     let hit = false;
-    
+
     try {
       const result = await fn();
       hit = true; // Assume hit if no error
@@ -336,7 +338,7 @@ export class CacheMetrics {
     } finally {
       const end = performance.now();
       const duration = end - start;
-      
+
       const metric: CacheMetric = {
         operation,
         key,
@@ -344,7 +346,7 @@ export class CacheMetrics {
         duration,
         timestamp: Date.now()
       };
-      
+
       metricsCollector.recordCache(metric);
     }
   }
@@ -361,7 +363,7 @@ export class SupplierMetrics {
     const start = performance.now();
     let success = false;
     let error: string | undefined;
-    
+
     try {
       const result = await fn();
       success = true;
@@ -372,7 +374,7 @@ export class SupplierMetrics {
     } finally {
       const end = performance.now();
       const duration = end - start;
-      
+
       const metric: SupplierMetric = {
         supplierId,
         supplierName,
@@ -382,7 +384,7 @@ export class SupplierMetrics {
         error,
         timestamp: Date.now()
       };
-      
+
       metricsCollector.recordSupplier(metric);
     }
   }
@@ -393,7 +395,7 @@ export function getHealthMetrics() {
   const requestStats = metricsCollector.getAggregatedRequestMetrics();
   const cacheStats = metricsCollector.getAggregatedCacheMetrics();
   const supplierStats = metricsCollector.getAggregatedSupplierMetrics();
-  
+
   return {
     timestamp: new Date().toISOString(),
     system: {
@@ -415,7 +417,7 @@ export function getHealthMetrics() {
 // Memory usage monitoring
 export function getMemoryMetrics() {
   const usage = process.memoryUsage();
-  
+
   return {
     rss: usage.rss,
     heapTotal: usage.heapTotal,

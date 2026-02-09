@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { prisma } from '../database/index.js';
-import { cacheService, cacheKeys } from '../cache/redis.js';
-import { metricsStore } from '../monitoring/metrics.js';
-import logger from '../utils/logger.js';
-import { Permission, UserRole } from '../types/booking.js';
+import { prisma } from '../database/index';
+import { cacheService, cacheKeys } from '../cache/redis';
+import { metricsStore } from '../monitoring/metrics';
+import logger from '../utils/logger';
+import { Permission, UserRole } from '../types/booking';
 import { TypedRequest } from '../types';
 
 export class AdminBookingCardController {

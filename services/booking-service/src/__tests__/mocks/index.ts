@@ -54,11 +54,12 @@ export const mockRedis = (): any => {
 };
 
 // External API mock
-export const mockExternalAPI = (service: string, method: string, response: any): jest.Mock => {
+export const mockExternalAPI = (service: string, method: string, response: any): any => {
   // Note: jest.mock must be called at the top level, this is just a helper
   console.warn('mockExternalAPI: jest.mock must be called at module level');
 
   // Return a mock function that can be used in tests
+  // @ts-ignore - Jest typing issue
   return jest.fn().mockResolvedValue(response);
 };
 
@@ -67,12 +68,12 @@ export const mockJWT = (): any => {
   const jwt = require('jsonwebtoken');
   return {
     sign: jest.spyOn(jwt, 'sign').mockImplementation(() => 'mock.jwt.token'),
-    verify: jest.spyOn(jwt, 'verify').mockImplementation((token: string, secret: string, callback?: (err: any, decoded: any) => void) => {
+    verify: jest.spyOn(jwt, 'verify').mockImplementation(((token: string, secret: string, callback?: (err: any, decoded: any) => void) => {
       if (callback) {
         callback(null, { id: 'test-user', role: 'user' });
       }
       return { id: 'test-user', role: 'user' };
-    }),
+    }) as any),
   };
 };
 

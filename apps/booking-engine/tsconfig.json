@@ -14,13 +14,14 @@
     "strict": false,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react",
+
     "baseUrl": ".",
     "typeRoots": [
       "./node_modules/@types",
@@ -43,8 +44,7 @@
         "../../packages/static-data/src/*"
       ]
     },
-    "types": ["node", "react", "react-dom", "jest"],
-    "ignoreDeprecations": "5.0"
+    "types": ["node", "react", "react-dom", "jest"]
   },
   "include": [
     "src",

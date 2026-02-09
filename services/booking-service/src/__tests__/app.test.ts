@@ -1,4 +1,4 @@
-import { get } from '../__tests__/integration/utils.js';
+import { get } from '../__tests__/integration/utils';
 
 describe('App basic endpoints', () => {
   it('GET /health returns healthy status', async () => {

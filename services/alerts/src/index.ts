@@ -1,4 +1,4 @@
-import { queryRealtime } from '../../db-connector/src';
+import { queryRealtime } from '../../db-connector/src/index.js';
 import fetch from 'node-fetch';
 
 // Simple alert rule evaluator: rules stored in table `alert_rules` with columns (id, name, sql, endpoint)

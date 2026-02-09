@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # API Gateway (Fastify) - WITH ANCILLARY SERVICES
+  # Port: 3000
+  # Updated: February 2026 - Added Ancillary Services & Seat Maps routes
+  # ==========================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: ./services/api-gateway/Dockerfile
+    image: api-gateway:staging
+    container_name: tripalfa-api-gateway-local
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      LOG_LEVEL: debug
+      BOOKING_SERVICE_URL: http://booking-service:3001
+      BOOKING_ENGINE_URL: http://booking-engine:5174
+      DUFFEL_TEST_API_KEY: REDACTED
+    networks:
+      - tripalfa-local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/bookings/flight/ancillary-offers"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
+      start_period: "30s"
+
+  # ==========================================
+  # Inventory Service (Node/Express)
+  # Port: 3002
+  # ==========================================
+  inventory-service:
+    image: node:20-alpine
+    container_name: tripalfa-inventory-service-local
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DATABASE_URL: "postgresql://neondb_owner:REDACTED@ep-ancient-base-afwb58uq-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require"
+      STATIC_DATABASE_URL: "postgresql://postgres:postgres@host.docker.internal:5433/staticdatabase"
+      LITEAPI_TEST_API_KEY: "sand_e79a7012-2820-4644-874f-ea71a9295a0e"
+    networks:
+      - tripalfa-local
+    volumes:
+      - ./:/app
+    working_dir: /app/services/inventory-service
+    command: tail -f /dev/null
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ==========================================
+  # Booking Service (Express/TypeScript)
+  # Port: 3001
+  # Connects to: Neon PostgreSQL via DATABASE_URL
+  # ==========================================
+  booking-service:
+    build:
+      context: .
+      dockerfile: ./services/booking-service/Dockerfile
+      target: development
+    container_name: tripalfa-booking-service-local
+    restart: unless-stopped
+    # Override command to use tsx watch without rebuilding
+    command: ["dumb-init", "npx", "tsx", "watch", "src/main.ts"]
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      LOG_LEVEL: debug
+      DATABASE_URL: "postgresql://neondb_owner:REDACTED@ep-ancient-base-afwb58uq-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require"
+      JWT_SECRET: test-jwt-secret-key-change-in-production
+      DUFFEL_API_KEY: REDACTED
+      DUFFEL_BASE_URL: https://api-sandbox.duffel.com
+      PRODUCT_ID: ${PRODUCT_ID:-booking-service}
+      SERVICE_NAME: booking-service
+    networks:
+      - tripalfa-local
+    volumes:
+      - ./services/booking-service/src:/app/services/booking-service/src
+      - ./database/prisma:/app/database/prisma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 3
+      start_period: "30s"
+    # Connection to Neon is outbound via network - no port mapping needed
+
+  # ==========================================
+  # Frontend - Booking Engine (Vite + React)
+  # Port: 5173 (Vite default)
+  # ==========================================
+  booking-engine:
+    build:
+      context: .
+      dockerfile: ./apps/booking-engine/Dockerfile
+    container_name: tripalfa-booking-engine-local
+    restart: unless-stopped
+    ports:
+      - "5174:3000"
+    environment:
+      VITE_API_BASE_URL: http://localhost:3000
+      VITE_ENV: development
+      NODE_ENV: development
+    networks:
+      - tripalfa-local
+    volumes:
+      - ./apps/booking-engine/src:/app/apps/booking-engine/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5174"]
+      interval: "15s"
+      timeout: "5s"
+      retries: 3
+      start_period: "30s"
+
+networks:
+  tripalfa-local:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Environment variables to set before running:
+# export DATABASE_URL="postgresql://user:password@ep-xxxxx.region.neon.tech/dbname"
+# export DUFFEL_SANDBOX_API_KEY="sk_sandbox_..."
+
+# Quick start:
+# docker-compose -f docker-compose.local.yml up -d
+# docker-compose -f docker-compose.local.yml logs -f
+# docker-compose -f docker-compose.local.yml down

@@ -1,28 +1,26 @@
 import React from 'react';
 // @ts-ignore
 import { useFormContext } from 'react-hook-form';
-import { User, Calendar, Mail, Phone, ChevronDown, CheckCircle2, AlertCircle, ShieldCheck, Star } from 'lucide-react';
+import { User, Calendar, Mail, Phone, ChevronDown, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { fetchLoyaltyPrograms, fetchNationalities, fetchCountries } from '../../lib/api';
+import { fetchNationalities, fetchCountries } from '../../lib/api';
 import { SingleMonthCalendar } from '../ui/SingleMonthCalendar';
 
 // Schema Definition (exported for use in parent)
 export const passengerSchema = z.object({
-  firstName: z.string().min(2, "First name is required"),
-  lastName: z.string().min(2, "Last name is required"),
-  nationality: z.string().min(1, "Country is required"),
-  dob: z.string().min(1, "Date of birth is required"), // Simplified for HTML date input
-  gender: z.enum(["Male", "Female"], { required_error: "Gender is required" }),
-  email: z.string().email("Invalid email address").optional().or(z.literal('')),
-  phone: z.string().min(10, "Invalid phone").optional().or(z.literal('')),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  nationality: z.string().min(1, "Please select a nationality"),
+  dob: z.string().min(1, "Date of birth is required"),
+  gender: z.enum(["Male", "Female"], { required_error: "Please select a gender" }),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
+  phoneCountryCode: z.string().min(1, "Country code is required"),
+  phone: z.string().min(7, "Phone number must be at least 7 digits"),
   // Travel Documents
-  passportNumber: z.string().min(6, "Passport number is required"),
-  passportExpiry: z.string().min(1, "Passport expiry is required"),
-  residencyCountry: z.string().min(1, "Residency country is required"),
-  // Optional Programs
-  frequentFlyerProgram: z.string().optional(),
-  frequentFlyerNumber: z.string().optional()
+  passportNumber: z.string().min(6, "Passport number must be at least 6 characters"),
+  passportExpiry: z.string().min(1, "Passport expiry date is required"),
+  residencyCountry: z.string().min(1, "Please select a residency country"),
 });
 
 // Test mode schema with optional date fields
@@ -39,12 +37,6 @@ export function PassengerForm({ index }: { index: number }) {
 
   const passengerErrors = (errors.passengers as any)?.[index];
   const genderValue = watch(`passengers.${index}.gender`);
-
-  const { data: programs = [] } = useQuery({
-    queryKey: ['loyalty-programs'],
-    queryFn: fetchLoyaltyPrograms,
-    staleTime: 600000
-  });
 
   const { data: nationalities = [] } = useQuery({
     queryKey: ['nationalities'],
@@ -137,7 +129,8 @@ export function PassengerForm({ index }: { index: number }) {
             label="Date of Birth"
             selectedDate={watch(`passengers.${index}.dob`) ? new Date(watch(`passengers.${index}.dob`)) : null}
             onDateChange={(date) => setValue(`passengers.${index}.dob`, date.toISOString().split('T')[0])}
-            // @ts-ignore
+            maxDate={new Date()}
+            minDate={new Date(1920, 0, 1)}
             error={passengerErrors?.dob?.message}
           />
 
@@ -182,7 +175,6 @@ export function PassengerForm({ index }: { index: number }) {
               onDateChange={(date) => setValue(`passengers.${index}.passportExpiry`, date.toISOString().split('T')[0])}
               maxDate={new Date(2045, 11, 31)}
               minDate={new Date()}
-              // @ts-ignore
               error={passengerErrors?.passportExpiry?.message}
             />
             <div className="space-y-1.5 group/field">
@@ -213,72 +205,68 @@ export function PassengerForm({ index }: { index: number }) {
           </div>
         </div>
 
-        {/* Loyalty Programs */}
-        <div className="pt-8 border-t border-dashed border-gray-100 space-y-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Star size={14} className="text-[#8B5CF6]" />
-            <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Loyalty Programs</h4>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-1.5 group/field">
-              <label className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Airline Program</label>
-              <div className="relative">
-                <select
-                  {...register(`passengers.${index}.frequentFlyerProgram`)}
-                  className="w-full h-11 px-5 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[10px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700"
-                >
-                  <option value="">Select Program</option>
-                  {programs.map((p: any) => (
-                    <option key={p.code || p.id} value={p.code}>{p.name}</option>
-                  ))}
-                </select>
-                <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDown size={12} className="text-gray-400" />
-                </div>
-              </div>
-            </div>
-            <div className="space-y-1.5 group/field">
-              <label className="text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Member Number</label>
-              <input
-                {...register(`passengers.${index}.frequentFlyerNumber`)}
-                placeholder="FF Number"
-                className="w-full h-11 px-5 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[10px] font-bold outline-none transition-all placeholder:text-gray-300"
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Contact info (If first passenger) */}
         {index === 0 && (
-          <div className="pt-8 border-t border-dashed border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-[9px] font-black text-gray-300 uppercase tracking-widest hidden md:block">Contact Info</div>
-
-            <div className="relative group/field space-y-2">
-              <div className="relative">
-                <div className="absolute left-6 top-1/2 -translate-y-1/2">
-                  <Mail size={16} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
-                </div>
-                <input
-                  {...register(`passengers.${index}.email`)}
-                  placeholder="Email Address"
-                  className={`w-full h-14 pl-14 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.email ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
-                />
-              </div>
-              {passengerErrors?.email && <div className="flex items-center gap-1 text-red-500 pl-1"><AlertCircle size={10} /><span className="text-[9px] font-black uppercase tracking-widest">{passengerErrors.email.message}</span></div>}
+          <div className="pt-8 border-t border-dashed border-gray-100 space-y-4 relative">
+            <div className="flex items-center gap-2 mb-2">
+              <Mail size={14} className="text-[#8B5CF6]" />
+              <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Contact Information</h4>
+              <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">(Required)</span>
             </div>
-
-            <div className="relative group/field space-y-2">
-              <div className="relative">
-                <div className="absolute left-6 top-1/2 -translate-y-1/2">
-                  <Phone size={16} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="relative group/field space-y-2">
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Email Address*</label>
+                <div className="relative">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2">
+                    <Mail size={16} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
+                  </div>
+                  <input
+                    {...register(`passengers.${index}.email`)}
+                    placeholder="Enter your email"
+                    className={`w-full h-14 pl-14 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.email ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
+                  />
                 </div>
-                <input
-                  {...register(`passengers.${index}.phone`)}
-                  placeholder="Mobile Number"
-                  className={`w-full h-14 pl-14 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.phone ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
-                />
+                {passengerErrors?.email && <div className="flex items-center gap-1 text-red-500 pl-1"><AlertCircle size={10} /><span className="text-[9px] font-black uppercase tracking-widest">{passengerErrors.email.message}</span></div>}
               </div>
-              {passengerErrors?.phone && <div className="flex items-center gap-1 text-red-500 pl-1"><AlertCircle size={10} /><span className="text-[9px] font-black uppercase tracking-widest">{passengerErrors.phone.message}</span></div>}
+
+              <div className="relative group/field space-y-2">
+                <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Phone Number*</label>
+                <div className="flex gap-2">
+                  <div className="relative w-32">
+                    <select
+                      {...register(`passengers.${index}.phoneCountryCode`)}
+                      className={`w-full h-14 px-3 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[10px] font-bold appearance-none outline-none transition-all cursor-pointer ${passengerErrors?.phoneCountryCode ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
+                    >
+                      <option value="">Code</option>
+                      {countries.map((c: any) => (
+                        <option key={c.code} value={c.dialCode}>{c.dialCode} ({c.code})</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown size={12} className="text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="relative flex-1">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                      <Phone size={16} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
+                    </div>
+                    <input
+                      {...register(`passengers.${index}.phone`)}
+                      placeholder="Mobile Number"
+                      className={`w-full h-14 pl-12 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.phone ? 'border-red-500/50 focus:border-red-500' : 'border-transparent'}`}
+                    />
+                  </div>
+                </div>
+                {(passengerErrors?.phoneCountryCode || passengerErrors?.phone) && (
+                  <div className="flex items-center gap-1 text-red-500 pl-1">
+                    <AlertCircle size={10} />
+                    <span className="text-[9px] font-black uppercase tracking-widest">
+                      {passengerErrors?.phoneCountryCode?.message || passengerErrors?.phone?.message}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -65,14 +65,14 @@ class DuffelClient {
                 {
                     headers: {
                         'Authorization': `Bearer ${apiKey}`,
-                        'Duffel-Version': 'beta',
+                        'Duffel-Version': 'v2',
                         'Content-Type': 'application/json',
                     },
                 }
             );
 
             return this.mapResponse(response.data.data);
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Duffel API Error:', error.response?.data || error.message);
             return [];
         }
@@ -110,7 +110,7 @@ class DuffelClient {
                 // Safety break to avoid infinite loops if pagination fails
                 if (allAirlines.length > 2000) keepFetching = false;
             }
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Duffel Airlines Fetch Error:', error.response?.data || error.message);
         }
 
@@ -149,17 +149,17 @@ class DuffelClient {
                 // Safety limit
                 if (allAirports.length > 15000) keepFetching = false;
             }
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Duffel Airports Fetch Error:', error.response?.data || error.message);
         }
 
         return allAirports;
     }
 
-    private mapResponse(data: unknown): FlightResult[] {
-        if (!data || !(data as { offers?: unknown[] }).offers) return [];
+    private mapResponse(data: any): FlightResult[] {
+        if (!data || !data.offers) return [];
 
-        return ((data as { offers: unknown[] }).offers).map((offer: unknown) => {
+        return (data.offers).map((offer: any) => {
             const slice = offer.slices[0];
             const segment = slice.segments[0];
 

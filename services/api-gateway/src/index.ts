@@ -5,6 +5,14 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 import Fastify from 'fastify';
 import { createRequire } from 'module';
 const requireC = createRequire(import.meta.url);
+
+// Import static airport data - official airport data for the application
+import { AIRPORTS, searchAirports } from './data/airports.js';
+import { AIRCRAFT, searchAircraft, getAircraftByCode } from './data/aircraft.js';
+import { LOYALTY_PROGRAMS, searchLoyaltyPrograms, getLoyaltyProgramByCode } from './data/loyalty-programs.js';
+import { COUNTRIES, searchCountries, getCountryByCode } from './data/countries.js';
+import { NATIONALITIES, searchNationalities, getNationalityByCode } from './data/nationalities.js';
+import { CITIES, searchCities, getCityById, getCitiesByCountry } from './data/cities.js';
 /*
   Dynamic resolution fallback for environments where importing sibling service
   TS files fails at runtime (ts-node-dev / ESM resolution issues).
@@ -17,22 +25,26 @@ let getRedisClient: any;
 try {
     // Try to load local shared modules (preferred in monorepo)
     // Use require to avoid ESM directory import problems at runtime.
-     
+
     const db = requireC('../../db-connector/src');
     queryStatic = db.queryStatic;
     queryRealtime = db.queryRealtime;
-     
+
     getRedisClient = requireC('../../cache/redisClient').getRedisClient;
 } catch (err) {
-    // Fallback: create a small local PG pool for static queries and a noop redis
+    // Fallback: create dummy functions that return errors
     // This ensures the gateway can start even if monorepo resolution fails.
-     
-    const { Pool } = requireC('pg');
-    const staticPool = new Pool({
-        connectionString: process.env.STATIC_DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/staticdatabase'
-    });
-    queryStatic = async (text: string, params?: any[]) => staticPool.query(text, params);
-    queryRealtime = async (text: string, params?: any[]) => staticPool.query(text, params);
+    console.warn('Warning: db-connector not available, using safe no-op database functions');
+
+    // Create safe noop database functions that will not attempt connections
+    queryStatic = async (text: string, params?: any[]) => {
+        console.error('[queryStatic] Database unavailable - returning error');
+        return { rows: [], rowCount: 0 };
+    };
+    queryRealtime = async (text: string, params?: any[]) => {
+        console.error('[queryRealtime] Database unavailable - returning error');
+        return { rows: [], rowCount: 0 };
+    };
     getRedisClient = () => {
         // very small noop redis client to avoid runtime crashes when Redis unavailable
         return {
@@ -43,16 +55,20 @@ try {
         };
     };
 }
-let Registry: any;
-try {
-    // prefer require() to avoid ESM resolution issues at runtime
-     
-    const reg = requireC('./adapters/Registry');
-    Registry = reg?.default || reg;
-} catch (err) {
-    // fallback no-op registry so the gateway can start in minimal environments
-    Registry = { getAdapter: (_: string) => null };
-}
+let Registry: any = { getAdapter: (_: string) => null }; // Default no-op registry
+
+// Initialize Registry asynchronously before server starts
+const initializeRegistry = async () => {
+    try {
+        // Use dynamic import for ESM compatibility
+        const reg = await import('./adapters/Registry.js');
+        Registry = reg?.default || reg;
+        console.log('✅ Registry initialized successfully');
+    } catch (err: any) {
+        console.error('⚠️  Registry initialization failed, using fallback:', err?.message);
+        Registry = { getAdapter: (_: string) => null };
+    }
+};
 /*
   Lightweight local Intent/RoutedRequest shims to avoid resolving
   monorepo packages at runtime in development (ts-node ESM directory import issues).
@@ -157,23 +173,51 @@ server.post('/route', async (request, reply) => {
 // --- RESTful Static Data Routes ---
 
 server.get('/airports', async (request, reply) => {
-    const { q } = request.query as { q?: string };
-    let query = 'SELECT * FROM airports WHERE is_active = true';
-    const params: any[] = [];
+    const { q, query } = request.query as { q?: string; query?: string };
+    const searchTerm = q || query;
 
-    if (q) {
-        query += ' AND (iata_code ILIKE $1 OR name ILIKE $1 OR city ILIKE $1)';
-        params.push(`%${q}%`);
-    }
+    console.log(`[/airports] Endpoint called with query: "${searchTerm || 'none'}"`);
 
-    query += ' ORDER BY iata_code ASC LIMIT 100';
-    const result = await queryStatic(query, params);
-    return result.rows;
+    // Search static airport data
+    const results = searchAirports(searchTerm);
+
+    console.log(`[/airports] Returning ${results.length} airports${searchTerm ? ` matching "${searchTerm}"` : ''}`);
+    return results.slice(0, 100);
 });
 
 server.get('/airlines', async (request, reply) => {
     const result = await queryStatic('SELECT * FROM airlines WHERE is_active = true ORDER BY name ASC', []);
     return result.rows;
+});
+
+server.get('/aircraft', async (request, reply) => {
+    const { q, query, code } = request.query as { q?: string; query?: string; code?: string };
+
+    // If code is provided, return single aircraft
+    if (code) {
+        const aircraft = getAircraftByCode(code);
+        return aircraft ? [aircraft] : [];
+    }
+
+    // Otherwise search or return all
+    const searchTerm = q || query;
+    const results = searchAircraft(searchTerm);
+    return results;
+});
+
+server.get('/loyalty-programs', async (request, reply) => {
+    const { q, query, code } = request.query as { q?: string; query?: string; code?: string };
+
+    // If airline code is provided, return that airline's program
+    if (code) {
+        const program = getLoyaltyProgramByCode(code);
+        return program ? [program] : [];
+    }
+
+    // Otherwise search or return all
+    const searchTerm = q || query;
+    const results = searchLoyaltyPrograms(searchTerm || '');
+    return results;
 });
 
 server.get('/hotels', async (request, reply) => {
@@ -389,24 +433,9 @@ server.get('/exchange-rates/latest', async (request, reply) => {
 
             return latestRates;
         } else {
-            // Return mock rates if no data in database
-            server.log.warn('No exchange rates found in database, returning mock rates');
-            return {
-                base_currency: 'USD',
-                rates: {
-                    USD: 1.0,
-                    EUR: 0.85,
-                    GBP: 0.73,
-                    AED: 3.67,
-                    SAR: 3.75,
-                    INR: 82.50,
-                    JPY: 150.0,
-                    AUD: 1.35,
-                    CAD: 1.34,
-                    CHF: 0.92
-                },
-                fetched_at: new Date().toISOString()
-            };
+            // No exchange rates in database - return error
+            server.log.warn('No exchange rates found in database');
+            return reply.code(503).send({ error: 'Exchange rates not available' });
         }
     } catch (err) {
         server.log.error({ err }, 'GET /exchange-rates/latest failed');
@@ -458,16 +487,51 @@ server.get('/currencies', async (request, reply) => {
 });
 
 server.get('/nationalities', async (request, reply) => {
-    const result = await queryStatic('SELECT * FROM nationalities ORDER BY name ASC', []);
-    return result.rows;
+    const { q, query } = request.query as { q?: string; query?: string };
+    const searchTerm = q || query;
+
+    // Use static data first
+    const results = searchNationalities(searchTerm);
+    if (results.length > 0) {
+        return results;
+    }
+
+    // Fallback to DB if available
+    try {
+        const result = await queryStatic('SELECT * FROM nationalities ORDER BY name ASC', []);
+        return result.rows;
+    } catch {
+        return NATIONALITIES;
+    }
 });
 
-server.get('/loyalty-programs', async (request, reply) => {
-    const result = await queryStatic('SELECT * FROM loyalty_programs WHERE is_active = true ORDER BY name ASC', []);
-    return result.rows;
+server.get('/countries', async (request, reply) => {
+    const { q, query } = request.query as { q?: string; query?: string };
+    const searchTerm = q || query;
+
+    // Use static data first
+    const results = searchCountries(searchTerm);
+    if (results.length > 0) {
+        return results;
+    }
+
+    // Fallback to DB if available
+    try {
+        const result = await queryStatic('SELECT * FROM countries ORDER BY name ASC', []);
+        return result.rows;
+    } catch {
+        return COUNTRIES;
+    }
 });
+
+// Note: /loyalty-programs endpoint is defined earlier using static data
 
 server.get('/static/facilities', async (request, reply) => {
+    const result = await queryStatic('SELECT * FROM amenities ORDER BY name ASC', []);
+    return result.rows;
+});
+
+server.get('/hotelFacilities', async (request, reply) => {
     const result = await queryStatic('SELECT * FROM amenities ORDER BY name ASC', []);
     return result.rows;
 });
@@ -477,25 +541,33 @@ server.get('/static/types', async (request, reply) => {
     return result.rows;
 });
 
+server.get('/hotelTypes', async (request, reply) => {
+    const result = await queryStatic('SELECT * FROM hotel_types ORDER BY name ASC', []);
+    return result.rows;
+});
+
 server.get('/static/chains', async (request, reply) => {
     const result = await queryStatic('SELECT * FROM hotel_chains ORDER BY name ASC', []);
     return result.rows;
 });
 
-server.get('/cities', async (request, reply) => {
-    const { q } = request.query as { q?: string };
-    let query = 'SELECT * FROM cities';
-    const params: any[] = [];
+server.get('/hotelChains', async (request, reply) => {
+    const result = await queryStatic('SELECT * FROM hotel_chains ORDER BY name ASC', []);
+    return result.rows;
+});
 
-    if (q) {
-        query += ' WHERE name ILIKE $1 OR country ILIKE $1';
-        params.push(`%${q}%`);
+server.get('/cities', async (request, reply) => {
+    const { q, query, country } = request.query as { q?: string; query?: string; country?: string };
+    const searchTerm = q || query;
+
+    // If country filter is provided, return cities for that country
+    if (country) {
+        return getCitiesByCountry(country);
     }
 
-    // Prefer records with country code
-    query += ' ORDER BY country_code IS NULL, is_popular DESC, name ASC LIMIT 50';
-    const result = await queryStatic(query, params);
-    return result.rows;
+    // Otherwise search by name
+    const results = searchCities(searchTerm);
+    return results;
 });
 
 // Unified Rich Search Suggestions (Cities + Airports + Hotels)
@@ -718,9 +790,73 @@ server.post('/bookings', async (request, reply) => {
     return res.json();
 });
 
+// --- Real-time LiteAPI & Loyalty Routes ---
+
+server.post('/hotels/rates', async (request, reply) => {
+    const url = `${INVENTORY_SERVICE_URL.replace(/\/$/, '')}/hotels/rates`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/rates/prebook', async (request, reply) => {
+    const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/rates/prebook`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/rates/book', async (request, reply) => {
+    const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/rates/book`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/loyalty/*', async (request, reply) => {
+    const url = `${INVENTORY_SERVICE_URL.replace(/\/$/, '')}${request.url}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/loyalty/*', async (request, reply) => {
+    const url = `${INVENTORY_SERVICE_URL.replace(/\/$/, '')}${request.url}`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.put('/loyalty/*', async (request, reply) => {
+    const url = `${INVENTORY_SERVICE_URL.replace(/\/$/, '')}${request.url}`;
+    const res = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
 // --- Inventory wrappers (proxy to inventory-service) ---
 const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL || 'http://localhost:3002';
-const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3004';
+const USER_SERVICE_URL = process.env.USER_SERVICE_URL || 'http://localhost:3003';
 
 server.get('/inventory/*', async (request, reply) => {
     const url = `${INVENTORY_SERVICE_URL.replace(/\/$/, '')}${request.url.replace('/inventory', '')}`;
@@ -740,91 +876,1056 @@ server.post('/inventory/*', async (request, reply) => {
     return res.json();
 });
 
-// TODO: Implement Booking Wrappers (createOrder, book) in Adapters first
-// server.post('/bookings/flight/hold', ...)
+// --- Booking Wrappers (Flight Order Management) ---
 
-// --- Wallet endpoints (mock for testing) ---
-server.get('/wallets', async (request, reply) => {
-    // Mock wallet data for testing
-    return {
-        accounts: [
-            { id: 'wallet_1', currency: 'USD', balance: 5000.00, type: 'main' },
-            { id: 'wallet_2', currency: 'EUR', balance: 2500.00, type: 'secondary' }
-        ]
-    };
+/**
+ * Create a flight order using the selected provider's adapter
+ * POST /bookings/flight/order
+ * Body: {
+ *   provider: 'duffel' | 'liteapi' | etc,
+ *   selectedOffers: string[],
+ *   passengers: Passenger[],
+ *   orderType: 'instant' | 'hold',
+ *   paymentMethod: { type: 'balance' | 'card', id?: string },
+ *   env: 'test' | 'prod'
+ * }
+ */
+server.post('/bookings/flight/order', async (request, reply) => {
+    try {
+        const { provider, env, ...orderData } = request.body as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.createOrder !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support order creation` });
+        }
+
+        const order = await adapter.createOrder({ ...orderData, env });
+        return { success: true, order, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Order creation error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.post('/wallets/topup', async (request, reply) => {
-    const { amount, currency } = request.body as any;
-    return { success: true, message: `Added ${amount} ${currency} to wallet`, newBalance: 5000 + (amount || 0) };
+/**
+ * Get order details
+ * GET /bookings/flight/order/:orderId
+ * Query params: provider, env
+ */
+server.get('/bookings/flight/order/:orderId', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { provider, env } = request.query as { provider?: string; env?: string };
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getOrder !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support order retrieval` });
+        }
+
+        const order = await adapter.getOrder(orderId, env || 'test');
+        return { success: true, order, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Order retrieval error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.get('/wallets/transactions', async (request, reply) => {
-    return {
-        transactions: [
-            { id: 'tx_1', type: 'credit', amount: 1000, currency: 'USD', description: 'Top-up', createdAt: new Date().toISOString() },
-            { id: 'tx_2', type: 'debit', amount: 250, currency: 'USD', description: 'Flight booking', createdAt: new Date().toISOString() }
-        ]
-    };
+/**
+ * Confirm a held order
+ * POST /bookings/flight/order/:orderId/confirm
+ * Body: { provider, env }
+ */
+server.post('/bookings/flight/order/:orderId/confirm', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { provider, env } = request.body as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.confirmOrder !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support order confirmation` });
+        }
+
+        const order = await adapter.confirmOrder(orderId, env || 'test');
+        return { success: true, order, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Order confirmation error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-// --- Auth endpoints (mock for testing) ---
-server.post('/auth/login', async (request, reply) => {
-    const { email, password } = request.body as any;
-    return {
-        accessToken: 'test_access_' + Date.now(),
-        refreshToken: 'test_refresh_' + Date.now(),
-        user: { id: 'user_1', email: email || 'test@tripalfa.com', name: 'Test User' }
-    };
+/**
+ * Create a payment intent for an order
+ * POST /bookings/flight/payment-intent
+ * Body: {
+ *   provider: string,
+ *   orderId: string,
+ *   amount: string,
+ *   currency: string,
+ *   returnUrl: string,
+ *   env: 'test' | 'prod'
+ * }
+ */
+server.post('/bookings/flight/payment-intent', async (request, reply) => {
+    try {
+        const { provider, env, ...paymentData } = request.body as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.createPaymentIntent !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support payment intents` });
+        }
+
+        const paymentIntent = await adapter.createPaymentIntent({ ...paymentData, env });
+        return { success: true, paymentIntent, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Payment intent error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.post('/auth/register', async (request, reply) => {
-    const { email, password, name } = request.body as any;
-    return {
-        accessToken: 'test_access_' + Date.now(),
-        refreshToken: 'test_refresh_' + Date.now(),
-        user: { id: 'user_' + Date.now(), email, name: name || email?.split('@')[0] }
-    };
+/**
+ * Update an order (e.g., add services)
+ * PATCH /bookings/flight/order/:orderId
+ * Body: {
+ *   provider: string,
+ *   data: any (update payload),
+ *   env: 'test' | 'prod'
+ * }
+ */
+server.patch('/bookings/flight/order/:orderId', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { provider, data, env } = request.body as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.updateOrder !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support order updates` });
+        }
+
+        const order = await adapter.updateOrder(orderId, data, env || 'test');
+        return { success: true, order, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Order update error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.post('/auth/logout', async (request, reply) => {
-    return { success: true };
+/**
+ * Get available payment methods
+ * GET /bookings/flight/payment-methods
+ * Query: {
+ *   provider: string,
+ *   env: 'test' | 'prod'
+ * }
+ */
+server.get('/bookings/flight/payment-methods', async (request, reply) => {
+    try {
+        const { provider, env } = request.query as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getPaymentMethods !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support payment methods` });
+        }
+
+        const paymentMethods = await adapter.getPaymentMethods(env || 'test');
+        return { success: true, paymentMethods, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Payment methods error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.post('/auth/refresh', async (request, reply) => {
-    return { accessToken: 'test_access_refreshed_' + Date.now() };
+/**
+ * Get available payment methods for a specific order
+ * GET /bookings/flight/order/:orderId/payment-methods
+ * Query: {
+ *   provider: string,
+ *   env: 'test' | 'prod'
+ * }
+ */
+server.get('/bookings/flight/order/:orderId/payment-methods', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { provider, env } = request.query as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getOrderPaymentMethods !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support order payment methods` });
+        }
+
+        const paymentMethods = await adapter.getOrderPaymentMethods(orderId, env || 'test');
+        return { success: true, paymentMethods, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Order payment methods error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-// --- Notification endpoints (mock for testing) ---
-server.get('/notifications', async (request, reply) => {
-    return {
-        items: [
-            { id: 'notif_1', title: 'Booking Confirmed', message: 'Your flight booking has been confirmed.', read: false, createdAt: new Date().toISOString() },
-            { id: 'notif_2', title: 'Price Alert', message: 'Prices dropped for your saved route.', read: true, createdAt: new Date().toISOString() }
-        ]
-    };
+/**
+ * Confirm a payment to finalize the booking
+ * POST /bookings/flight/payment-confirm
+ * Body: {
+ *   provider: string,
+ *   paymentIntentId: string,
+ *   env: 'test' | 'prod',
+ *   ...otherPaymentData
+ * }
+ */
+server.post('/bookings/flight/payment-confirm', async (request, reply) => {
+    try {
+        const { provider, env, ...paymentData } = request.body as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.confirmPayment !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support payment confirmation` });
+        }
+
+        const paymentResult = await adapter.confirmPayment(paymentData, env || 'test');
+        return { success: true, paymentResult, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Payment confirmation error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.post('/notifications/mark-read', async (request, reply) => {
-    return { success: true };
+/**
+ * Get payment details
+ * GET /bookings/flight/payment/:paymentId
+ * Query: {
+ *   provider: string,
+ *   env: 'test' | 'prod'
+ * }
+ */
+server.get('/bookings/flight/payment/:paymentId', async (request, reply) => {
+    try {
+        const { paymentId } = request.params as { paymentId: string };
+        const { provider, env } = request.query as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getPayment !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support payment retrieval` });
+        }
+
+        const payment = await adapter.getPayment(paymentId, env || 'test');
+        return { success: true, payment, provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Get payment error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.get('/notifications/unread-count', async (request, reply) => {
-    return { count: 1 };
+// ============================================================================
+// SEAT MAPS ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /bookings/flight/seat-maps
+ * Get seat maps for an offer (all segments)
+ */
+server.get('/bookings/flight/seat-maps', async (request, reply) => {
+    try {
+        const { offerId, provider, env } = request.query as any;
+
+        if (!offerId) {
+            return reply.code(400).send({ error: 'Offer ID is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getSeatMaps !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support seat maps` });
+        }
+
+        const seatMaps = await adapter.getSeatMaps(offerId, env || 'test');
+        return { success: true, data: seatMaps.data || [], provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Get seat maps error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-// --- User endpoints (mock for testing) ---
-server.get('/user/profile', async (request, reply) => {
-    return { id: 'user_1', email: 'test@tripalfa.com', name: 'Test User', phone: '+971501234567' };
+/**
+ * GET /bookings/flight/seat-maps/:segmentId
+ * Get seat map for a specific segment
+ */
+server.get('/bookings/flight/seat-maps/:segmentId', async (request, reply) => {
+    try {
+        const { segmentId } = request.params as { segmentId: string };
+        const { offerId, provider, env } = request.query as any;
+
+        if (!offerId) {
+            return reply.code(400).send({ error: 'Offer ID is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getSeatMapForSegment !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support seat map retrieval per segment` });
+        }
+
+        const seatMap = await adapter.getSeatMapForSegment(offerId, segmentId, env || 'test');
+        if (!seatMap) {
+            return reply.code(404).send({ error: `No seat map found for segment ${segmentId}` });
+        }
+        return { success: true, data: seatMap.data || [], provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Get seat map error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.get('/user/documents', async (request, reply) => {
-    return [];
+/**
+ * POST /bookings/flight/select-seats
+ * Select seats for passengers before creating order
+ */
+server.post('/bookings/flight/select-seats', async (request, reply) => {
+    try {
+        const { offerId, selectedSeats, provider, environment } = request.body as any;
+
+        if (!offerId) {
+            return reply.code(400).send({ error: 'Offer ID is required' });
+        }
+
+        if (!selectedSeats || !Array.isArray(selectedSeats)) {
+            return reply.code(400).send({ error: 'Selected seats array is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.selectSeats !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support seat selection` });
+        }
+
+        const result = await adapter.selectSeats(offerId, selectedSeats, environment || 'test');
+        return { success: true, data: result.data || [], provider };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Select seats error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
 });
 
-server.post('/user/documents', async (request, reply) => {
-    return { success: true, documentId: 'doc_' + Date.now() };
+// ============================================================================
+// BOOKING SERVICE SEAT MAPS PROXY ROUTES
+// Proxy to booking-service's internal seat maps implementation
+// ============================================================================
+
+/**
+ * GET /bookings/seat-maps-service
+ * Internal proxy: Get seat maps from booking-service
+ * Query: offerId, orderId
+ */
+server.get('/bookings/seat-maps-service', async (request, reply) => {
+    try {
+        const qs = new URLSearchParams(request.query as any).toString();
+        const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/bookings/flight/seat-maps${qs ? `?${qs}` : ''}`;
+        const res = await fetch(url, { method: 'GET' });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Seat maps service proxy error:');
+        return reply.code(500).send({
+            error: 'Failed to fetch seat maps from service',
+            message: error.message
+        });
+    }
 });
+
+/**
+ * POST /bookings/seat-maps-service/select
+ * Internal proxy: Select seats via booking-service
+ * Body: offerId, orderId, seats
+ */
+server.post('/bookings/seat-maps-service/select', async (request, reply) => {
+    try {
+        const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/bookings/flight/seat-maps/select`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request.body)
+        });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Seat selection service proxy error:');
+        return reply.code(500).send({
+            error: 'Failed to select seats via service',
+            message: error.message
+        });
+    }
+});
+
+// ============================================================================
+// ANCILLARY SERVICES ENDPOINTS
+// Manage seat selections, baggage, insurance, lounge access, and other ancillaries
+// ============================================================================
+
+/**
+ * GET /bookings/flight/ancillary-offers
+ * Get available ancillary offers for a specific order
+ * Query: { orderId, type?: 'seat' | 'baggage' | 'insurance' | 'lounge', provider, env }
+ */
+server.get('/bookings/flight/ancillary-offers', async (request, reply) => {
+    try {
+        const { orderId, type, provider, env } = request.query as any;
+
+        if (!orderId) {
+            return reply.code(400).send({ error: 'Order ID is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.getAncillaryOffers !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support ancillary offers retrieval` });
+        }
+
+        const offers = await adapter.getAncillaryOffers({
+            orderId,
+            type,
+            env: env || 'test'
+        });
+
+        return {
+            success: true,
+            data: offers.data || offers,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Get ancillary offers error');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+/**
+ * POST /bookings/flight/ancillary-select
+ * Select an ancillary service (seat, baggage, insurance, lounge, etc.)
+ * Body: { orderId, serviceId, quantity?, passengerId?, provider, env }
+ */
+server.post('/bookings/flight/ancillary-select', async (request, reply) => {
+    try {
+        const { orderId, serviceId, quantity, passengerId, provider, env } = request.body as any;
+
+        if (!orderId) {
+            return reply.code(400).send({ error: 'Order ID is required' });
+        }
+
+        if (!serviceId) {
+            return reply.code(400).send({ error: 'Service ID is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.selectAncillaryService !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support ancillary service selection` });
+        }
+
+        const result = await adapter.selectAncillaryService({
+            orderId,
+            serviceId,
+            quantity,
+            passengerId,
+            env: env || 'test'
+        });
+
+        return {
+            success: true,
+            data: result.data || result,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Select ancillary service error');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+/**
+ * DELETE /bookings/flight/ancillary/:serviceId
+ * Remove an ancillary service from an order
+ * Query: { orderId, provider, env }
+ */
+server.delete('/bookings/flight/ancillary/:serviceId', async (request, reply) => {
+    try {
+        const { serviceId } = request.params as { serviceId: string };
+        const { orderId, provider, env } = request.query as any;
+
+        if (!orderId) {
+            return reply.code(400).send({ error: 'Order ID is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.removeAncillaryService !== 'function') {
+            return reply.code(501).send({ error: `Provider ${provider} does not support ancillary service removal` });
+        }
+
+        const result = await adapter.removeAncillaryService(
+            orderId,
+            serviceId,
+            env || 'test'
+        );
+
+        return {
+            success: true,
+            data: result.data || result,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Remove ancillary service error');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+// ============================================================================
+// BAGGAGE MANAGEMENT ENDPOINTS
+// Manage baggage allowances and add-ons
+// ============================================================================
+
+/**
+ * GET /bookings/flight/baggage/:orderId
+ * Get baggage details for a booking
+ * Query: { provider, env }
+ */
+server.get('/bookings/flight/baggage/:orderId', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { provider, env } = request.query as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        // Retrieve baggage information via ancillary offers with type='baggage'
+        if (typeof adapter.getAncillaryOffers !== 'function') {
+            return reply.code(501).send({
+                error: `Provider ${provider} does not support baggage information retrieval`
+            });
+        }
+
+        const baggageOffers = await adapter.getAncillaryOffers({
+            orderId,
+            type: 'baggage',
+            env: env || 'test'
+        });
+
+        return {
+            success: true,
+            data: baggageOffers.data || baggageOffers,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Get baggage error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+/**
+ * POST /bookings/flight/baggage/:orderId/add
+ * Add baggage to a booking
+ * Body: { passengerId?, quantity, baggageType, provider, env }
+ */
+server.post('/bookings/flight/baggage/:orderId/add', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { passengerId, quantity, baggageType, provider, env } = request.body as any;
+
+        if (!quantity) {
+            return reply.code(400).send({ error: 'Quantity is required' });
+        }
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        // This operation uses selectAncillaryService with baggage service ID
+        if (typeof adapter.selectAncillaryService !== 'function') {
+            return reply.code(501).send({
+                error: `Provider ${provider} does not support baggage addition`
+            });
+        }
+
+        const result = await adapter.selectAncillaryService({
+            orderId,
+            serviceId: `baggage_${baggageType || 'standard'}_${quantity}`,
+            quantity,
+            passengerId,
+            env: env || 'test'
+        });
+
+        return {
+            success: true,
+            data: result.data || result,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Add baggage error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+/**
+ * DELETE /bookings/flight/baggage/:orderId/:baggageId
+ * Remove baggage from a booking
+ * Query: { provider, env }
+ */
+server.delete('/bookings/flight/baggage/:orderId/:baggageId', async (request, reply) => {
+    try {
+        const { orderId, baggageId } = request.params as { orderId: string; baggageId: string };
+        const { provider, env } = request.query as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        if (typeof adapter.removeAncillaryService !== 'function') {
+            return reply.code(501).send({
+                error: `Provider ${provider} does not support baggage removal`
+            });
+        }
+
+        const result = await adapter.removeAncillaryService(
+            orderId,
+            baggageId,
+            env || 'test'
+        );
+
+        return {
+            success: true,
+            data: result.data || result,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Remove baggage error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+/**
+ * GET /bookings/flight/baggage-summary/:orderId
+ * Get summary of baggage allowances and current usage
+ * Query: { provider, env }
+ */
+server.get('/bookings/flight/baggage-summary/:orderId', async (request, reply) => {
+    try {
+        const { orderId } = request.params as { orderId: string };
+        const { provider, env } = request.query as any;
+
+        if (!provider) {
+            return reply.code(400).send({ error: 'Provider is required' });
+        }
+
+        const adapter = Registry.getAdapter(provider.toLowerCase());
+        if (!adapter) {
+            return reply.code(400).send({ error: `Unsupported provider: ${provider}` });
+        }
+
+        // Retrieve baggage summary information
+        if (typeof adapter.getAncillaryOffers !== 'function') {
+            return reply.code(501).send({
+                error: `Provider ${provider} does not support baggage summary`
+            });
+        }
+
+        const baggageSummary = await adapter.getAncillaryOffers({
+            orderId,
+            type: 'baggage',
+            env: env || 'test'
+        });
+
+        return {
+            success: true,
+            data: baggageSummary.data || baggageSummary,
+            provider
+        };
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Get baggage summary error:');
+        return reply.code(400).send({
+            error: error.message,
+            details: error.response?.data
+        });
+    }
+});
+
+// ============================================================================
+// ANCILLARY SERVICES PROXY ROUTES (Booking Service)
+// Internal proxies to the booking-service for ancillary operations
+// ============================================================================
+
+/**
+ * GET /bookings/ancillary-offers-service
+ * Internal proxy: Get ancillary offers from booking-service
+ * Query: orderId
+ */
+server.get('/bookings/ancillary-offers-service', async (request, reply) => {
+    try {
+        const qs = new URLSearchParams(request.query as any).toString();
+        const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/bookings/flight/ancillary-offers${qs ? `?${qs}` : ''}`;
+        const res = await fetch(url, { method: 'GET' });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Ancillary offers service proxy error');
+        return reply.code(500).send({
+            error: 'Failed to fetch ancillary offers from service',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * POST /bookings/ancillary-select-service
+ * Internal proxy: Select ancillary service via booking-service
+ * Body: orderId, serviceId, quantity, passengerId
+ */
+server.post('/bookings/ancillary-select-service', async (request, reply) => {
+    try {
+        const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/bookings/flight/ancillary-select`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request.body)
+        });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Ancillary select service proxy error');
+        return reply.code(500).send({
+            error: 'Failed to select ancillary via service',
+            message: error.message
+        });
+    }
+});
+
+/**
+ * DELETE /bookings/ancillary-remove-service
+ * Internal proxy: Remove ancillary service via booking-service
+ * Query: orderId, serviceId
+ */
+server.delete('/bookings/ancillary-remove-service', async (request, reply) => {
+    try {
+        const { orderId, serviceId } = request.query as any;
+        if (!orderId || !serviceId) {
+            return reply.code(400).send({ error: 'orderId and serviceId are required' });
+        }
+        const url = `${BOOKING_SERVICE_URL.replace(/\/$/, '')}/bookings/flight/ancillary-remove?orderId=${orderId}&serviceId=${serviceId}`;
+        const res = await fetch(url, { method: 'DELETE' });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (error: any) {
+        server.log.error({ err: error }, 'Ancillary remove service proxy error');
+        return reply.code(500).send({
+            error: 'Failed to remove ancillary via service',
+            message: error.message
+        });
+    }
+});
+
+// ============================================================================
+// ENHANCED USER PREFERENCES ENDPOINTS
+// Store and retrieve user travel preferences
+// ============================================================================
+
+/**
+ * GET /user/preferences/travel
+ * Get travel-specific preferences
+ * Returns: seatPreference, bagPref, insurance, lounge, etc.
+ */
+server.get('/user/preferences/travel', async (request, reply) => {
+    try {
+        const auth = (request.headers && (request.headers as any).authorization) || '';
+        const headers: any = {};
+        if (auth) headers['Authorization'] = auth as string;
+
+        const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/user/preferences/travel`;
+        const res = await fetch(url, { method: 'GET', headers });
+        if (!res.ok) {
+            // Fallback to defaults
+            return {
+                seatPreference: 'aisle',
+                bagAllowance: 'standard',
+                insuranceEnabled: false,
+                loungePreference: null,
+                notifications: true
+            };
+        }
+        return await res.json();
+    } catch (err) {
+        server.log.error({ err }, 'GET /user/preferences/travel error');
+        return {
+            seatPreference: 'aisle',
+            bagAllowance: 'standard',
+            insuranceEnabled: false,
+            loungePreference: null,
+            notifications: true
+        };
+    }
+});
+
+/**
+ * POST /user/preferences/travel
+ * Save travel preferences
+ * Body: { seatPreference, bagAllowance, insuranceEnabled, loungePreference, notifications }
+ */
+server.post('/user/preferences/travel', async (request, reply) => {
+    try {
+        const auth = (request.headers && (request.headers as any).authorization) || '';
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (auth) headers['Authorization'] = auth as string;
+
+        const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/user/preferences/travel`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request.body)
+        });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (err) {
+        server.log.error({ err }, 'POST /user/preferences/travel error');
+        return { success: false };
+    }
+});
+
+/**
+ * GET /user/preferences/ancillary-defaults
+ * Get default ancillary preferences (baggage, insurance, lounge)
+ */
+server.get('/user/preferences/ancillary-defaults', async (request, reply) => {
+    try {
+        const auth = (request.headers && (request.headers as any).authorization) || '';
+        const headers: any = {};
+        if (auth) headers['Authorization'] = auth as string;
+
+        const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/user/preferences/ancillary-defaults`;
+        const res = await fetch(url, { method: 'GET', headers });
+        if (!res.ok) {
+            // Fallback to defaults
+            return {
+                baggageType: 'standard',
+                bagQuantity: 1,
+                insuranceType: 'basic',
+                loungeAccess: false
+            };
+        }
+        return await res.json();
+    } catch (err) {
+        server.log.error({ err }, 'GET /user/preferences/ancillary-defaults error');
+        return {
+            baggageType: 'standard',
+            bagQuantity: 1,
+            insuranceType: 'basic',
+            loungeAccess: false
+        };
+    }
+});
+
+/**
+ * POST /user/preferences/ancillary-defaults
+ * Save default ancillary preferences
+ * Body: { baggageType, bagQuantity, insuranceType, loungeAccess }
+ */
+server.post('/user/preferences/ancillary-defaults', async (request, reply) => {
+    try {
+        const auth = (request.headers && (request.headers as any).authorization) || '';
+        const headers: any = { 'Content-Type': 'application/json' };
+        if (auth) headers['Authorization'] = auth as string;
+
+        const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/user/preferences/ancillary-defaults`;
+        const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(request.body)
+        });
+        if (!res.ok) return reply.code(res.status).send(await res.text());
+        return res.json();
+    } catch (err) {
+        server.log.error({ err }, 'POST /user/preferences/ancillary-defaults error');
+        return { success: false };
+    }
+});
+
+// Note: Mock endpoints for wallet, auth, notifications, and user profile have been removed.
+// These endpoints should be provided by their respective microservices (user-service, wallet-service, notification-service).
 
 server.get('/user/preferences', async (request, reply) => {
     try {
@@ -867,8 +1968,10 @@ server.post('/user/preferences', async (request, reply) => {
 
 const start = async () => {
     try {
-        await server.listen({ port: Number(process.env.API_GATEWAY_PORT || 3000), host: '0.0.0.0' });
-        console.log('API Gateway listening on port', process.env.API_GATEWAY_PORT || 3000);
+        // Initialize Registry before starting server
+        await initializeRegistry();
+        await server.listen({ port: Number(process.env.API_GATEWAY_PORT || 8000), host: '0.0.0.0' });
+        console.log('API Gateway listening on port', process.env.API_GATEWAY_PORT || 8000);
     } catch (err) {
         server.log.error(err);
         process.exit(1);

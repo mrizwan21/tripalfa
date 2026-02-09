@@ -35,7 +35,7 @@ class AmadeusClient {
             // Expires in seconds, subtract 60s buffer
             this.tokenExpiry = Date.now() + (res.data.expires_in * 1000) - 60000;
             return this.token;
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error('Amadeus Auth Failed:', error.response?.data || error.message);
             return null;
         }
@@ -51,7 +51,7 @@ class AmadeusClient {
                 params
             });
             return res.data.data;
-        } catch (error: unknown) {
+        } catch (error: any) {
             console.error(`Amadeus Request Failed [${url}]:`, error.response?.data || error.message);
             return [];
         }

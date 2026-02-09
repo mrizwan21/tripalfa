@@ -200,7 +200,7 @@ export function DualMonthCalendar({
   };
 
   const formatDisplayDate = (date: Date | null) => {
-    if (!date) return 'Select date';
+    if (!date) return '';
     return format(date, 'EEE, d MMM');
   };
 
@@ -234,31 +234,26 @@ export function DualMonthCalendar({
         }}
       />
       <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
-      <Popover.Trigger asChild>
-        <div className="flex gap-2 cursor-pointer">
+          <Popover.Trigger asChild>
+        <div className="flex gap-2 cursor-pointer h-12">
           {/* Departure/Check-in Input */}
           <div 
-            className={`flex items-center gap-2 bg-white px-4 py-3 rounded-xl border-2 transition-all ${
+            className={`flex items-center gap-2 bg-white px-4 h-12 rounded-xl border-2 transition-all ${
               selectionMode === 'departure' && isOpen 
-                ? 'border-purple-500 ring-2 ring-purple-100' 
+                ? 'border-[#8B5CF6] ring-2 ring-purple-100' 
                 : 'border-gray-100 hover:border-gray-200'
             }`}
             onClick={() => { setSelectionMode('departure'); setIsOpen(true); }}
           >
-            <Calendar size={18} className="text-purple-500" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                {mode === 'hotel' ? 'Check-in' : departureLabel}
-              </span>
-              <span className="text-sm font-bold text-gray-900">
-                {formatDisplayDate(internalDeparture)}
-              </span>
-            </div>
+            <Calendar size={18} className="text-[#8B5CF6]" />
+            <span className="text-sm font-bold text-gray-900">
+              {formatDisplayDate(internalDeparture) || (mode === 'hotel' ? 'Check-in' : 'Departure')}
+            </span>
           </div>
 
           {/* Return/Check-out Input */}
           <div 
-            className={`flex items-center gap-2 bg-white px-4 py-3 rounded-xl border-2 transition-all ${
+            className={`flex items-center gap-2 bg-white px-4 h-12 rounded-xl border-2 transition-all ${
               selectionMode === 'return' && isOpen 
                 ? 'border-green-500 ring-2 ring-green-100' 
                 : 'border-gray-100 hover:border-gray-200'
@@ -266,14 +261,9 @@ export function DualMonthCalendar({
             onClick={() => { setSelectionMode('return'); setIsOpen(true); }}
           >
             <Calendar size={18} className="text-green-500" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                {mode === 'hotel' ? 'Check-out' : returnLabel}
-              </span>
-              <span className="text-sm font-bold text-gray-900">
-                {formatDisplayDate(internalReturn)}
-              </span>
-            </div>
+            <span className="text-sm font-bold text-gray-900">
+              {formatDisplayDate(internalReturn) || (mode === 'hotel' ? 'Check-out' : 'Return')}
+            </span>
           </div>
         </div>
       </Popover.Trigger>

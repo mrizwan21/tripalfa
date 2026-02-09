@@ -13,16 +13,29 @@ export default defineConfig({
   },
   build: { outDir: "dist" },
   server: {
-    port: 3002,
+    port: 5174,
     proxy: {
       '/duffel-api': {
         target: 'https://api.duffel.com/air',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/duffel-api/, ''),
       },
+      '/search': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+      },
+      '/static': {
+        target: 'http://localhost:3002', // Direct to inventory-service for performance
+        changeOrigin: true,
+      },
+      '/inventory': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/inventory/, ''),
       },
     },
   },

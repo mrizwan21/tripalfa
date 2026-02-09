@@ -1,23 +1,23 @@
 import express, { Router } from 'express';
-import authenticateToken from '../middleware/authenticateToken.js';
-import authorize from '../middleware/authorize.js';
-import { validate } from '../middleware/validate.js';
-import { bookingManagementSchemas } from '../validation/bookingManagementSchemas.js';
-import { 
-  createBooking, 
-  importFromGDS, 
-  searchBookings, 
-  processQueue, 
-  processPayment, 
-  processRefund, 
-  processAmendment, 
-  issueTicket, 
-  getBookingHistory, 
-  getBookingDocuments, 
-  sendDocument, 
-  downloadDocument 
-} from '../controllers/enhancedBookingController.js';
-import { permissionMiddleware } from '../middleware/permissionMiddleware.js';
+import authenticateToken from '../middleware/authenticateToken';
+import authorize from '../middleware/authorize';
+import { validate } from '../middleware/validate';
+import { bookingManagementSchemas } from '../validation/bookingManagementSchemas';
+import {
+  createBooking,
+  importFromGDS,
+  searchBookings,
+  processQueue,
+  processPayment,
+  processRefund,
+  processAmendment,
+  issueTicket,
+  getBookingHistory,
+  getBookingDocuments,
+  sendDocument,
+  downloadDocument
+} from '../controllers/enhancedBookingController';
+import { permissionMiddleware } from '../middleware/permissionMiddleware';
 
 const router: Router = Router();
 
@@ -72,8 +72,16 @@ router.delete(
 );
 
 // POST /api/bookings/:bookingId/hold - Hold inventory for a booking
+// Note: Skip if bookingId is 'hotel' or 'flight' to avoid conflict with holdOrdersRoutes
 router.post(
   '/:bookingId/hold',
+  (req, res, next) => {
+    // Skip this route for /hotel/hold and /flight/hold to prevent route collision
+    if (req.params.bookingId === 'hotel' || req.params.bookingId === 'flight') {
+      return next('route');
+    }
+    next();
+  },
   authenticateToken,
   authorize(['user', 'admin', 'agent', 'supervisor', 'manager']),
   permissionMiddleware('hold_inventory'),
@@ -259,6 +267,38 @@ router.post(
   permissionMiddleware('update_metrics'),
   validate(bookingManagementSchemas.createBooking),
   createBooking
+);
+
+// --- LiteAPI Specific Real-time Endpoints ---
+
+// POST /api/bookings/rates/prebook
+router.post(
+  '/rates/prebook',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const liteApiClient = (await import('../services/LiteAPIClient')).default;
+      const result = await liteApiClient.prebook(req.body);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// POST /api/bookings/rates/book
+router.post(
+  '/rates/book',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const liteApiClient = (await import('../services/LiteAPIClient')).default;
+      const result = await liteApiClient.book(req.body);
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 );
 
 export default router;

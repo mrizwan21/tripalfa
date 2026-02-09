@@ -13,7 +13,7 @@ import transferRoute from './routes/transferRoute.js';
 import customerPurchaseRoute from './routes/customerPurchaseRoute.js';
 import settlementRoute from './routes/settlementRoute.js';
 
-const PORT = process.env.PORT || 3007;
+const PORT = process.env.PORT || 3008;
 const app: Express = express();
 
 console.log('Starting wallet service...');

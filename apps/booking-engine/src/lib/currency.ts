@@ -165,30 +165,13 @@ async function fetchExchangeRates(): Promise<Record<string, number>> {
       return data.rates || {};
     }
 
-    // Fallback to mock rates if API fails
-    return getMockExchangeRates();
+    // Return empty rates if API fails - no mock data
+    console.warn('Failed to fetch exchange rates, returning empty rates');
+    return {};
   } catch (error) {
     console.warn('Failed to fetch exchange rates:', error);
-    return getMockExchangeRates();
+    return {};
   }
-}
-
-/**
- * Get mock exchange rates for development
- */
-function getMockExchangeRates(): Record<string, number> {
-  return {
-    USD: 1.0,
-    EUR: 0.85,
-    GBP: 0.73,
-    AED: 3.67,
-    SAR: 3.75,
-    INR: 82.50,
-    JPY: 150.0,
-    AUD: 1.35,
-    CAD: 1.34,
-    CHF: 0.92
-  };
 }
 
 /**

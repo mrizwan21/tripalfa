@@ -5,7 +5,7 @@
  * - API-008: POST /api/payments/process
  */
 
-import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup.js';
+import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup';
 
 describe('Payment API Integration Tests', () => {
   beforeAll(async () => {

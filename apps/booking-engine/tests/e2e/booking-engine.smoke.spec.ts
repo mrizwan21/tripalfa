@@ -1,7 +1,7 @@
 // E2E Test Foundation for Booking Engine
 // This file sets up the basic structure for end-to-end tests.
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../fixtures/unhideFixture';
 
 // Example smoke test for Booking Engine homepage
 test.describe('Booking Engine E2E Smoke Tests', () => {

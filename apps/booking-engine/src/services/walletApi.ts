@@ -1,7 +1,7 @@
 // frontend/services/walletApi.ts
 // React API client for wallet service
 
-const API_BASE = process.env.REACT_APP_WALLET_API || 'http://localhost:3007/api';
+const API_BASE = import.meta.env.VITE_WALLET_API || 'http://localhost:3007/api';
 
 /**
  * Get user's wallets with balances

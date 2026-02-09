@@ -1,0 +1,210 @@
+{
+  "info": {
+    "_postman_id": "email-template-testing",
+    "name": "Email Template Testing",
+    "description": "Collection for testing booking confirmation email templates",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Get Available Templates",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates"]
+        },
+        "description": "Get list of all available email template styles"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Test Default Template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"default\",\n  \"toEmail\": \"{{test_email}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email using default template (professional, balanced)"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Test Modern Minimal Template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"modern-minimal\",\n  \"toEmail\": \"{{test_email}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email using modern-minimal template (clean, purple gradient, minimalist)"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Test Compact Template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"compact\",\n  \"toEmail\": \"{{test_email}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email using compact template (space-efficient, information-dense)"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Test Detailed Template",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"detailed\",\n  \"toEmail\": \"{{test_email}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email using detailed template (comprehensive, all details)"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Test With Custom Data",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"detailed\",\n  \"toEmail\": \"{{test_email}}\",\n  \"testOrderData\": {\n    \"id\": \"ord_custom_test_001\",\n    \"booking_reference\": \"CUSTOM1A2B\",\n    \"custom_metadata\": {\n      \"customer_id\": \"cust_custom_001\"\n    },\n    \"created_at\": \"2024-01-15T10:00:00Z\",\n    \"total_price\": \"1299.99\",\n    \"total_currency\": \"USD\",\n    \"base_amount\": \"1000.00\",\n    \"tax_amount\": \"299.99\",\n    \"total_amount\": \"1299.99\",\n    \"email\": \"{{test_email}}\",\n    \"passengers\": [\n      {\n        \"id\": \"pas_001\",\n        \"name\": \"Executive Traveler\",\n        \"email\": \"{{test_email}}\",\n        \"given_name\": \"Executive\",\n        \"family_name\": \"Traveler\",\n        \"cabin_class\": \"business\",\n        \"seat_designator\": \"1A\"\n      },\n      {\n        \"id\": \"pas_002\",\n        \"name\": \"Companion Traveler\",\n        \"given_name\": \"Companion\",\n        \"family_name\": \"Traveler\",\n        \"cabin_class\": \"business\",\n        \"seat_designator\": \"1B\"\n      }\n    ],\n    \"slices\": [\n      {\n        \"id\": \"slice_001\",\n        \"segments\": [\n          {\n            \"id\": \"seg_001\",\n            \"operating_flight_number\": \"LH456\",\n            \"flight_number\": \"LH456\",\n            \"departing_at\": \"2024-02-01T08:00:00Z\",\n            \"arriving_at\": \"2024-02-01T18:30:00Z\",\n            \"origin\": {\n              \"iata_code\": \"SFO\",\n              \"city_name\": \"San Francisco\",\n              \"icao_code\": \"KSFO/T1\"\n            },\n            \"destination\": {\n              \"iata_code\": \"LHR\",\n              \"city_name\": \"London\",\n              \"icao_code\": \"EGLL/T2\"\n            },\n            \"airlines\": [\n              {\n                \"name\": \"Lufthansa\"\n              }\n            ],\n            \"operating_carrier\": {\n              \"name\": \"Lufthansa\"\n            },\n            \"aircraft\": {\n              \"name\": \"Airbus A350\"\n            }\n          }\n        ]\n      }\n    ]\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email with custom booking data (Business class, international flight)"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Test With Template Options",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"detailed\",\n  \"toEmail\": \"{{test_email}}\",\n  \"templateOptions\": {\n    \"includeTerminals\": true,\n    \"includeOperatingAirline\": true,\n    \"includeDuration\": true,\n    \"includeSeatInfo\": true,\n    \"includePricingBreakdown\": true\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email with all template options enabled"
+      },
+      "response": []
+    },
+    {
+      "name": "8. Test With Minimal Options",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"templateStyle\": \"modern-minimal\",\n  \"toEmail\": \"{{test_email}}\",\n  \"templateOptions\": {\n    \"includeTerminals\": false,\n    \"includeOperatingAirline\": false,\n    \"includeDuration\": false,\n    \"includeSeatInfo\": false,\n    \"includePricingBreakdown\": false\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/webhooks/email-templates/send-test",
+          "host": ["{{base_url}}"],
+          "path": ["api", "webhooks", "email-templates", "send-test"]
+        },
+        "description": "Send test email with minimal options (essential information only)"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3007",
+      "type": "string"
+    },
+    {
+      "key": "test_email",
+      "value": "your-email@example.com",
+      "type": "string"
+    }
+  ]
+}

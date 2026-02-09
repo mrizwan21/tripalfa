@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Booking, BookingQueue, BookingHistory, BookingDocument } from '../types/enhancedBooking.js';
+import { Booking, BookingQueue, BookingHistory, BookingDocument } from '../types/enhancedBooking';
 import { GDSIntegrationService } from './gdsIntegrationService';
 import { DocumentGenerationService } from './documentGenerationService';
 
@@ -85,7 +85,7 @@ class EnhancedBookingService {
   async createBooking(request: CreateBookingRequest): Promise<Booking> {
     const bookingId = uuidv4();
     const bookingRef = this.generateBookingRef(request.customerType);
-    const confirmationNumber = request.bookingType === 'instant' 
+    const confirmationNumber = request.bookingType === 'instant'
       ? await this.generateConfirmationNumber(request.type, request.supplierId)
       : undefined;
 
@@ -143,7 +143,7 @@ class EnhancedBookingService {
   // Import booking from GDS supplier
   async importFromGDS(gdsType: 'amadeus' | 'sabre' | 'travelport', pnr: string, supplierRef: string): Promise<Booking> {
     const gdsData = await this.gdsService.retrievePNR(gdsType, pnr);
-    
+
     const booking: Booking = {
       id: uuidv4(),
       bookingRef: this.generateBookingRef('B2B'),
@@ -190,7 +190,7 @@ class EnhancedBookingService {
     // This is a simplified version
     const bookings: Booking[] = []; // Query from database
     const total = bookings.length;
-    
+
     // Get related queues and history
     const queues: BookingQueue[] = []; // Query booking queues
     const history: BookingHistory[] = []; // Query booking history
@@ -206,7 +206,7 @@ class EnhancedBookingService {
   // Process booking queues
   async processQueue(queueType: string, bookingId: string, action: string, reason?: string): Promise<Booking> {
     const booking = await this.getBookingById(bookingId);
-    
+
     switch (queueType) {
       case 'hold':
         return await this.processHoldQueue(booking, action, reason);
@@ -252,7 +252,7 @@ class EnhancedBookingService {
   async processRefund(bookingOrId: Booking | string, refundType: 'full' | 'partial', reason: string, amount?: number): Promise<Booking> {
     const booking = typeof bookingOrId === 'string' ? await this.getBookingById(bookingOrId) : bookingOrId;
     const refundAmount = refundType === 'full' ? booking.pricing.customerPrice : (amount || 0);
-    
+
     const refundResult = await this.paymentService.processRefund({
       bookingId: booking.id,
       amount: refundAmount,
@@ -263,7 +263,7 @@ class EnhancedBookingService {
     if (refundResult.success) {
       // Generate credit note
       await this.documentService.generateCreditNote(booking, refundAmount, reason);
-      
+
       // Update booking
       booking.status = 'refunded';
       booking.refunds.push({
@@ -284,7 +284,7 @@ class EnhancedBookingService {
     const booking = typeof bookingOrId === 'string' ? await this.getBookingById(bookingOrId) : bookingOrId;
     // Calculate price difference
     const priceDifference = this.calculatePriceDifference(booking, changes);
-    
+
     // Create amendment request
     const amendment = {
       id: uuidv4(),
@@ -298,7 +298,7 @@ class EnhancedBookingService {
 
     // Add to booking
     booking.amendments.push(amendment);
-    
+
     // Generate amendment invoice if needed
     if (priceDifference > 0) {
       await this.documentService.generateAmendmentInvoice(booking, priceDifference);
@@ -355,17 +355,20 @@ class EnhancedBookingService {
   private async generateBookingDocuments(booking: Booking): Promise<void> {
     // Generate invoice
     await this.documentService.generateInvoice(booking);
-    
+
     // Generate receipt
-    await this.documentService.generateReceipt(booking);
-    
-    // Generate e-ticket if applicable
-    if (booking.type === 'flight') {
+    // Only generate receipt if payment is completed
+    if (booking.payment.status === 'completed') {
+      await this.documentService.generateReceipt(booking);
+    }
+
+    // Generate e-ticket if applicable and not on hold
+    if (booking.type === 'flight' && booking.bookingType !== 'hold') {
       await this.documentService.generateETicket(booking);
     }
-    
-    // Generate hotel voucher if applicable
-    if (booking.type === 'hotel') {
+
+    // Generate hotel voucher if applicable and not on hold
+    if (booking.type === 'hotel' && booking.bookingType !== 'hold') {
       await this.documentService.generateHotelVoucher(booking);
     }
   }

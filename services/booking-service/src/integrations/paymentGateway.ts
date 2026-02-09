@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
-import logger from '../utils/logger.js';
-import { CacheService } from '../cache/redis.js';
-import { metricsStore } from '../monitoring/metrics.js';
+import logger from '../utils/logger';
+import { CacheService } from '../cache/redis';
+import { metricsStore } from '../monitoring/metrics';
 
 export interface PaymentGatewayConfig {
   id: string;

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { MapPin, Plane, Bed, Building2 } from 'lucide-react';
 import { fetchSuggestions } from '../../lib/api';
 
@@ -8,7 +8,7 @@ export interface Suggestion {
     icon: string;
     title: string;
     subtitle: string;
-    code: string;
+    code: string | number;
     city: string;
     country: string;
     countryCode?: string;
@@ -48,35 +48,53 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
     }, []);
 
     const handleSearch = async (val: string) => {
+        console.log(`[SearchAutocomplete] Input changed to: "${val}"`);
         if (value === undefined) setInternalQuery(val);
         if (onChange) onChange(val);
 
-        if (val.length > 1) {
-            setLoading(true);
-            try {
-                const data = await fetchSuggestions(val, type);
-                const suggestions: Suggestion[] = (data as any[]).map((item) => ({
-                    type: item.type === 'airport' ? 'AIRPORT' : (item.icon === 'bed' ? 'HOTEL' : 'CITY'),
-                    icon: item.icon || (item.type === 'airport' ? 'plane' : 'map-pin'),
-                    title: item.name,
-                    subtitle: item.subtitle || item.country || '',
-                    code: item.iata_code || '',
-                    city: item.type === 'city' ? item.name : '',
-                    country: item.country || '',
-                    countryCode: item.country_code
-                }));
-                // Deduplicate mapping code - oops I typed it twice in reasoning but corrected here? No wait.
-                // I will just use clean replacement.
-                setResults(suggestions);
-                setIsOpen(true);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        } else {
+        // If empty or less than 2 chars, don't fetch
+        if (val.length < 2) {
+            console.log(`[SearchAutocomplete] Query too short (${val.length} chars), not fetching`);
             setIsOpen(false);
             setResults([]);
+            return;
+        }
+
+        // Fetch from API
+        console.log(`[SearchAutocomplete] Fetching suggestions for: "${val}"`);
+        setLoading(true);
+        try {
+            const data = await fetchSuggestions(val, type);
+            console.log(`[SearchAutocomplete] Received data:`, data);
+            const suggestions: Suggestion[] = (data as any[])
+                .filter(item => item && item.title) // Filter out invalid items
+                // Filter to only AIRPORT results when flight search
+                .filter(item => type === 'flight' ? item.type === 'AIRPORT' : true)
+                .map((item) => ({
+                    type: (item.type === 'AIRPORT' ? 'AIRPORT' : (item.type === 'HOTEL' ? 'HOTEL' : 'CITY')) as 'AIRPORT' | 'HOTEL' | 'CITY',
+                    icon: item.icon || (item.type === 'AIRPORT' ? 'plane' : (item.type === 'HOTEL' ? 'bed' : 'map-pin')),
+                    title: item.title,
+                    subtitle: item.subtitle || item.country || '',
+                    code: item.code,
+                    city: item.city || '',
+                    country: item.country || '',
+                    countryCode: item.countryCode
+                }))
+                // Sort to prioritize AIRPORT entries first, then HOTEL, then CITY
+                .sort((a, b) => {
+                    const typeOrder: Record<string, number> = { 'AIRPORT': 0, 'HOTEL': 1, 'CITY': 2 };
+                    return (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99);
+                });
+            console.log(`[SearchAutocomplete] Transformed suggestions:`, suggestions);
+            setResults(suggestions);
+            setIsOpen(suggestions.length > 0);
+            console.log(`[SearchAutocomplete] Opening dropdown with ${suggestions.length} items`);
+        } catch (err) {
+            console.error('[SearchAutocomplete] Failed to fetch suggestions:', err);
+            setResults([]);
+            setIsOpen(false);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -88,7 +106,7 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
     };
 
     return (
-        <div className="relative w-full h-full bg-white rounded-xl border-2 border-gray-100 hover:border-gray-200 transition-all group" ref={wrapperRef}>
+        <div className="relative w-full h-12 bg-white rounded-xl border-2 border-gray-100 hover:border-gray-200 transition-all group" ref={wrapperRef}>
             <div className="relative h-full flex items-center px-4">
                 <div className="mr-3 text-gray-400 flex-shrink-0">
                     {icon ? icon : <MapPin className="text-[#6366F1]" size={16} />}
@@ -97,12 +115,15 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
                     type="text"
                     value={query}
                     onChange={(e) => handleSearch(e.target.value)}
-                    onFocus={() => query.length > 1 && setIsOpen(true)}
+                    onFocus={() => {
+                        if (query.length > 0) setIsOpen(true);
+                    }}
                     className={`w-full h-full bg-transparent border-none text-sm font-bold text-gray-900 placeholder-gray-400 focus:ring-0 p-0 truncate ${className}`}
                     placeholder={placeholder || "Where to?"}
                     autoComplete="off"
                     data-testid={dataTestId}
                 />
+                {loading && <span className="text-xs text-gray-400">Loading...</span>}
             </div>
 
             {/* Dropdown Results */}
@@ -131,7 +152,7 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
                                     </div>
                                     {item.code && (
                                         <span className="text-[10px] font-black uppercase bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded ml-2">
-                                            {item.code}
+                                            {typeof item.code === 'string' ? item.code : item.code}
                                         </span>
                                     )}
                                 </div>
@@ -143,3 +164,5 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
         </div>
     );
 }
+
+

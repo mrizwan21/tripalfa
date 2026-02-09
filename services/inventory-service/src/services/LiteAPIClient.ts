@@ -20,6 +20,15 @@ interface HotelResult {
     currency: string;
     amenities: string[];
     provider: string;
+    // Granular fields for ingestion
+    latitude?: number;
+    longitude?: number;
+    address?: string;
+    zip?: string;
+    website?: string;
+    phone?: string;
+    email?: string;
+    description?: string;
 }
 
 class LiteAPIClient {
@@ -60,8 +69,12 @@ class LiteAPIClient {
         }
     }
 
+
+    /**
+     * Retrieve a list of hotels with pagination
+     */
     async getHotels(countryCode: string, offset: number = 0, limit: number = 1000): Promise<any[]> {
-        const apiKey = this.prodKey || this.testKey; // Prefer prod for static data if available
+        const apiKey = this.prodKey || this.testKey;
         if (!apiKey) {
             console.warn('No LiteAPI key found');
             return [];
@@ -98,6 +111,303 @@ class LiteAPIClient {
             amenities: hotel.amenities ? hotel.amenities.map((a: any) => a.name) : [],
             provider: 'LiteAPI'
         }));
+    }
+    /**
+     * Get detailed information about a specific hotel
+     */
+    async getHotel(hotelId: string): Promise<HotelResult | null> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return null;
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/hotel`, {
+                headers: { 'X-API-Key': apiKey },
+                params: { hotelId }
+            });
+            const data = response.data?.data;
+            return data ? this.mapResponse([data])[0] : null;
+        } catch (error: any) {
+            console.error(`LiteAPI Hotel Details Failed [${hotelId}]:`, error.response?.data || error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Get reviews for a specific hotel
+     */
+    async getReviews(hotelId: string, limit: number = 10, offset: number = 0): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/reviews`, {
+                headers: { 'X-API-Key': apiKey },
+                params: { hotelId, limit, offset }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error(`LiteAPI Reviews Failed [${hotelId}]:`, error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Fetch a list of cities within a specified country
+     */
+    async getCities(countryCode: string, limit: number = 1000, offset: number = 0): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/cities`, {
+                headers: { 'X-API-Key': apiKey },
+                params: { countryCode, limit, offset }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error(`LiteAPI Cities Failed [${countryCode}]:`, error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Obtain a list of all countries
+     */
+    async getCountries(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/countries`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI Countries Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Retrieve a list of supported currencies
+     */
+    async getCurrencies(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/currencies`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI Currencies Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Get IATA codes for airports and cities
+     */
+    async getIataCodes(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/iataCodes`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI IATA Codes Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * List the Hotel facilities
+     */
+    async getFacilities(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/facilities`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI Facilities Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * List of the Hotel types
+     */
+    async getHotelTypes(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/hotelTypes`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI Hotel Types Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * List of Hotel chains
+     */
+    async getChains(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/data/chains`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI Chains Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Fetch room rates for a list of hotel IDs
+     */
+    async getHotelsRates(params: {
+        hotelIds: string[];
+        checkin: string;
+        checkout: string;
+        currency?: string;
+        guestNationality?: string;
+        occupancies: Array<{ adults: number; children?: number[] }>;
+    }): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.post(`${this.baseUrl}/hotels/rates`, params, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.hotels || [];
+        } catch (error: any) {
+            console.error('LiteAPI Hotels Rates Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+    /**
+     * Fetch all guests with loyalty info
+     */
+    async getGuests(): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/guests`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error('LiteAPI Get Guests Failed:', error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Fetch a specific guest
+     */
+    async getGuest(guestId: string): Promise<any | null> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return null;
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/guests/${guestId}`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || null;
+        } catch (error: any) {
+            console.error(`LiteAPI Get Guest Failed [${guestId}]:`, error.response?.data || error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Fetch all guest's bookings
+     */
+    async getGuestBookings(guestId: string): Promise<any[]> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return [];
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/guests/${guestId}/bookings`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || [];
+        } catch (error: any) {
+            console.error(`LiteAPI Get Guest Bookings Failed [${guestId}]:`, error.response?.data || error.message);
+            return [];
+        }
+    }
+
+    /**
+     * Enable the loyalty program
+     */
+    async enableLoyalty(cashbackRate: string = "0.03"): Promise<any> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return null;
+
+        try {
+            const response = await axios.post(`${this.baseUrl}/loyalties`, { cashback: cashbackRate }, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || null;
+        } catch (error: any) {
+            console.error('LiteAPI Enable Loyalty Failed:', error.response?.data || error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Update the loyalty program
+     */
+    async updateLoyalty(params: { status?: string; cashback?: string }): Promise<any> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return null;
+
+        try {
+            const response = await axios.put(`${this.baseUrl}/loyalties`, params, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || null;
+        } catch (error: any) {
+            console.error('LiteAPI Update Loyalty Failed:', error.response?.data || error.message);
+            return null;
+        }
+    }
+
+    /**
+     * Get the loyalty program settings
+     */
+    async getLoyaltySettings(): Promise<any> {
+        const apiKey = this.prodKey || this.testKey;
+        if (!apiKey) return null;
+
+        try {
+            const response = await axios.get(`${this.baseUrl}/loyalties`, {
+                headers: { 'X-API-Key': apiKey }
+            });
+            return response.data?.data || null;
+        } catch (error: any) {
+            console.error('LiteAPI Get Loyalty Settings Failed:', error.response?.data || error.message);
+            return null;
+        }
     }
 }
 

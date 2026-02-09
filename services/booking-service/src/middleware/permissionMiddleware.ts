@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { prisma } from '../database/index.js';
-import logger from '../utils/logger.js';
+import { prisma } from '../database/index';
+import logger from '../utils/logger';
 import { TypedRequest } from '../types';
 
 interface PermissionRule {
@@ -195,7 +195,7 @@ const PERMISSION_RULES: Record<string, PermissionRule> = {
 export const permissionMiddleware = (requiredPermission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     const typedReq = req as TypedRequest;
-    
+
     try {
       const user = typedReq.user;
 
@@ -400,7 +400,7 @@ export const hasRolePermission = (userRole: string, requiredPermission: string):
   };
 
   const userPermissions = rolePermissions[userRole] || [];
-  
+
   // Check for wildcard permissions
   if (userPermissions.includes('*')) {
     return true;

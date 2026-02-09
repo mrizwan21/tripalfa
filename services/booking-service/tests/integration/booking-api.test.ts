@@ -21,7 +21,7 @@ import {
   cleanupTestBooking,
   testDataTracker,
   TEST_CONFIG
-} from './setup.js';
+} from './setup';
 
 describe('Booking API Integration Tests', () => {
   let testBookingId: string;

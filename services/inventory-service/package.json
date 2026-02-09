@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Inventory service for Travel Kingdom microservices architecture",
   "type": "module",
-  "main": "src/app.js",
+  "main": "src/app.ts",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "tsx src/app.ts",
     "dev": "tsx watch src/app.ts",
     "build": "tsc",
     "test": "jest",

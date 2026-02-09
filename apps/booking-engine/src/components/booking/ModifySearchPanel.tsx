@@ -19,6 +19,8 @@ export function ModifySearchPanel() {
     // Initialize state from URL params
     const [from, setFrom] = useState(searchParams.get('from') || searchParams.get('origin') || '');
     const [to, setTo] = useState(searchParams.get('to') || searchParams.get('destination') || '');
+    const [fromCode, setFromCode] = useState(searchParams.get('origin') || '');
+    const [toCode, setToCode] = useState(searchParams.get('destination') || '');
 
     // safeParseDate prevents "Invalid Date" which crashes date-fns
     const [departureDate, setDepartureDate] = useState<Date | null>(
@@ -33,8 +35,12 @@ export function ModifySearchPanel() {
 
     const handleSearch = () => {
         const params = new URLSearchParams();
-        if (from) params.set('origin', from);
-        if (to) params.set('destination', to);
+        if (fromCode) params.set('origin', fromCode);
+        else if (from) params.set('origin', from);
+
+        if (toCode) params.set('destination', toCode);
+        else if (to) params.set('destination', to);
+
         if (departureDate) params.set('departureDate', format(departureDate, 'yyyy-MM-dd'));
         if (returnDate) params.set('returnDate', format(returnDate, 'yyyy-MM-dd'));
         params.set('adults', adults);
@@ -56,7 +62,15 @@ export function ModifySearchPanel() {
                             icon={<MapPin size={16} className="text-[#6366F1]" />}
                             value={from}
                             onChange={setFrom}
-                            onSelect={(item: Suggestion) => setFrom(item.title)}
+                            onSelect={(item: Suggestion) => {
+                                if (item.type === 'AIRPORT') {
+                                    setFrom(`${item.title} (${item.code})`);
+                                    setFromCode(String(item.code));
+                                } else {
+                                    setFrom(item.title);
+                                    setFromCode(item.title);
+                                }
+                            }}
                         />
                     </div>
                     <div className="h-12">
@@ -66,7 +80,15 @@ export function ModifySearchPanel() {
                             icon={<MapPin size={16} className="text-[#6366F1]" />}
                             value={to}
                             onChange={setTo}
-                            onSelect={(item: Suggestion) => setTo(item.title)}
+                            onSelect={(item: Suggestion) => {
+                                if (item.type === 'AIRPORT') {
+                                    setTo(`${item.title} (${item.code})`);
+                                    setToCode(String(item.code));
+                                } else {
+                                    setTo(item.title);
+                                    setToCode(item.title);
+                                }
+                            }}
                         />
                     </div>
                 </div>
@@ -89,7 +111,7 @@ export function ModifySearchPanel() {
                     <select
                         value={adults}
                         onChange={(e) => setAdults(e.target.value)}
-                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-bold text-gray-900 outline-none focus:border-[#8B5CF6]"
+                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#8B5CF6]"
                     >
                         {[1, 2, 3, 4, 5, 6].map(num => (
                             <option key={num} value={num}>{num} Traveler{num > 1 ? 's' : ''}</option>
@@ -99,7 +121,7 @@ export function ModifySearchPanel() {
                     <select
                         value={cabinClass}
                         onChange={(e) => setCabinClass(e.target.value)}
-                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-bold text-gray-900 outline-none focus:border-[#8B5CF6]"
+                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#8B5CF6]"
                     >
                         <option value="Economy">Economy</option>
                         <option value="Premium Economy">Premium Eco</option>
@@ -111,7 +133,7 @@ export function ModifySearchPanel() {
                 {/* Search Button */}
                 <button
                     onClick={handleSearch}
-                    className="w-full lg:w-auto h-12 px-8 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all"
+                    className="w-full lg:w-auto h-12 px-8 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all"
                 >
                     <Search size={16} />
                     <span>Update</span>

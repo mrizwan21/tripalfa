@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Plane, Building2, Loader2 } from 'lucide-react';
-import { getLocations } from '@tripalfa/static-data';
+import { getAirports } from '@tripalfa/static-data';
 
 interface Location {
     code: string;
@@ -33,13 +33,47 @@ export function LocationAutocomplete({
     const [results, setResults] = useState<Location[]>([]);
     const [loading, setLoading] = useState(false);
     const searchRef = useRef(search);
+    const [staticLocations, setStaticLocations] = useState<Location[]>([]);
 
-    // Initial static data - will be replaced by centralized system
-    const staticLocations: Location[] = [];
+    // Load popular airports and cities on mount
+    useEffect(() => {
+        const loadStaticLocations = async () => {
+            try {
+                // Get a list of popular locations by fetching with common characters
+                const popularCodes = ['LHR', 'JFK', 'DXB', 'SIN', 'HKG'];
+                const locations: Location[] = [];
+                
+                // Manually add popular airports - fallback data
+                const defaults: Location[] = [
+                    { code: 'LHR', name: 'London Heathrow', city: 'London', country: 'United Kingdom', type: 'airport' },
+                    { code: 'JFK', name: 'John F. Kennedy', city: 'New York', country: 'United States', type: 'airport' },
+                    { code: 'DXB', name: 'Dubai International', city: 'Dubai', country: 'UAE', type: 'airport' },
+                    { code: 'SIN', name: 'Singapore Changi', city: 'Singapore', country: 'Singapore', type: 'airport' },
+                    { code: 'HKG', name: 'Hong Kong', city: 'Hong Kong', country: 'Hong Kong', type: 'airport' },
+                    { code: '', name: 'London', city: 'London', country: 'United Kingdom', type: 'city' },
+                    { code: '', name: 'New York', city: 'New York', country: 'United States', type: 'city' },
+                    { code: '', name: 'Dubai', city: 'Dubai', country: 'UAE', type: 'city' },
+                ];
+                
+                setStaticLocations(defaults);
+            } catch (error) {
+                console.error('Failed to load static locations:', error);
+      }
+        };
+        
+        loadStaticLocations();
+    }, []);
 
     useEffect(() => {
         searchRef.current = search;
     }, [search]);
+
+    // Initialize results with static data when component mounts or when results are empty
+    useEffect(() => {
+        if (results.length === 0 && staticLocations.length > 0) {
+            setResults(staticLocations.slice(0, 50));
+        }
+    }, [staticLocations]);
 
     useEffect(() => {
         // If empty or short, use static data
@@ -54,20 +88,21 @@ export function LocationAutocomplete({
 
             setLoading(true);
             try {
-                const locations = await getLocations(search);
+                const response = await getAirports({ query: search });
+                const airports = response.data;
                 
                 // Map to our Location interface
-                const mappedLocations: Location[] = locations.map((loc: any) => ({
-                    code: loc.iata_code || loc.code || 'XXX',
-                    name: loc.name,
-                    city: loc.city || loc.name,
-                    country: loc.country,
-                    type: loc.type
+                const mappedLocations: Location[] = airports.map((airport: any) => ({
+                    code: airport.iata_code || 'XXX',
+                    name: airport.name || '',
+                    city: airport.city || '',
+                    country: airport.country || '',
+                    type: 'airport' as const
                 }));
 
                 setResults(mappedLocations.slice(0, 50));
             } catch (error) {
-                console.error('Failed to fetch locations:', error);
+                console.error('Failed to fetch airports:', error);
                 // Fallback to empty results
                 setResults([]);
             } finally {

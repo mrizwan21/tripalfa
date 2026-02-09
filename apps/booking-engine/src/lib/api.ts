@@ -8,15 +8,66 @@
 
 import { API_BASE_URL, API_ENDPOINTS } from './constants';
 import {
-  getAirports,
   getAirlines,
   getCities,
   getCurrencies,
   getHotelChains,
   getHotelFacilities,
-  getHotelTypes,
-  getLocations
+  getHotelTypes
 } from '@tripalfa/static-data';
+// Import static flight data directly for frontend use
+import { FLIGHT_STATIC_DATA } from '@tripalfa/static-data/frontend-index';
+
+// Duffel Flight Booking API (Offers, Orders, Payments)
+export {
+  createOfferRequest,
+  getOfferDetails,
+  createFlightOrder,
+  getFlightOrder,
+  updateFlightOrder,
+  createPaymentIntent,
+  confirmFlightOrder,
+  completeBookingFlow,
+  handlePaymentCallback,
+  getPaymentMethods,
+  getOrderPaymentMethods,
+  confirmPayment,
+  getPayment,
+  type OfferRequestParams,
+  type PassengerData,
+  type CreateOrderParams,
+  type PaymentIntentParams,
+  type PaymentMethod,
+  type PaymentConfirmParams,
+  type SeatElement,
+  type SeatSection,
+  type SeatRow,
+  type Cabin,
+  type SeatMap,
+  type SelectedSeat,
+} from '../services/duffelBookingApi';
+
+// Seat Maps API
+export {
+  getSeatMaps,
+  getSeatMapsForBooking,
+  selectSeats,
+  getSeatMapForSegment,
+  updateBookingSeats,
+  getBookingSeatHistory,
+  getAircraftLayout,
+  parseSeatPattern,
+  generateSeatDesignators,
+  type SeatMapWithAircraft,
+  type AircraftConfig,
+  type CabinLayout,
+  type PostBookingSeatResponse,
+  type SeatOperationContext,
+  type SeatOperationRequest,
+} from '../services/seatMapsApi';
+
+// Supplier Payment API
+export { processSupplierPayment } from '../services/supplierPaymentApi';
 
 // Innstant Travel Static Data API Configuration (disabled - using centralized package)
 // const INNSTANT_API_KEY = '$2y$10$yWot7dUYoc7.viH8vK1s0OG.D0n5uKm19Z84WznDiB.ESBnPOikr6';
@@ -38,6 +89,12 @@ export async function fetchHotelById(id: string) {
 
 // Helper function to map hotel results to consistent format
 function mapHotelResult(hotel: any) {
+  // Extract refundability from various potential structures (LiteAPI, Inventory, etc.)
+  const isRefundable = hotel.refundable === true ||
+    hotel.is_refundable === true ||
+    hotel.offers?.[0]?.cancellation_policy?.is_refundable === true ||
+    hotel.offers?.[0]?.refundable === true;
+
   return {
     id: hotel.id,
     name: hotel.name,
@@ -47,7 +104,9 @@ function mapHotelResult(hotel: any) {
     reviews: hotel.reviews || hotel.reviewCount || 100,
     price: hotel.price || { amount: hotel.pricePerNight || 200, currency: hotel.currency || 'USD' },
     amenities: hotel.amenities || hotel.amenity_names || [],
-    provider: hotel.provider || 'Local'
+    provider: hotel.provider || 'Local',
+    refundable: isRefundable,
+    offers: hotel.offers || []
   };
 }
 
@@ -161,56 +220,31 @@ export async function searchHotels(params: any) {
     if (res.ok) {
       const data = await res.json();
       const hotels = data.hotels || [];
-      const mappedHotels = hotels.map((hotel: any) => ({
-        id: hotel.id,
-        name: hotel.name,
-        image: hotel.main_photo || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
-        location: hotel.address,
-        rating: hotel.rating || 0,
-        reviews: 0, // LiteAPI doesn't provide review count
-        price: { 
-          amount: hotel.offers?.[0]?.offerRetailRate || 0, 
-          currency: 'USD' 
-        },
-        amenities: [], // LiteAPI doesn't provide amenities in search
-        provider: 'LiteAPI',
-        offers: hotel.offers || [] // Include full offer data for booking
-      }));
+      const mappedHotels = hotels.map((hotel: any) => {
+        const firstOffer = hotel.offers?.[0];
+        const isRefundable = firstOffer?.cancellation_policy?.is_refundable === true || firstOffer?.refundable === true;
+
+        return {
+          id: hotel.id,
+          name: hotel.name,
+          image: hotel.main_photo || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
+          location: hotel.address,
+          rating: hotel.rating || 0,
+          reviews: 0, // LiteAPI doesn't provide review count
+          price: {
+            amount: firstOffer?.offerRetailRate || 0,
+            currency: 'USD'
+          },
+          amenities: [], // LiteAPI doesn't provide amenities in search
+          provider: 'LiteAPI',
+          offers: hotel.offers || [], // Include full offer data for booking
+          refundable: isRefundable
+        };
+      });
       return { hotels: mappedHotels };
     }
   } catch (directError) {
     console.warn('LiteAPI rates search failed:', directError);
-  }
-
-  // 4. Final fallback to static data with mock results
-  try {
-    const mockHotels = [
-      {
-        id: 'mock_1',
-        name: 'Grand Hotel Example',
-        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
-        location: `${params.location || 'Paris'}, France`,
-        rating: 4.5,
-        reviews: 250,
-        price: { amount: 180, currency: 'USD' },
-        amenities: ['WiFi', 'Pool', 'Spa'],
-        provider: 'Mock-Data'
-      },
-      {
-        id: 'mock_2',
-        name: 'Luxury Resort Example',
-        image: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?auto=format&fit=crop&q=80',
-        location: `${params.location || 'Paris'}, France`,
-        rating: 4.8,
-        reviews: 180,
-        price: { amount: 250, currency: 'USD' },
-        amenities: ['Beach', 'Restaurant', 'Gym'],
-        provider: 'Mock-Data'
-      }
-    ];
-    return { hotels: mockHotels };
-  } catch (mockError) {
-    console.warn('Mock data fallback failed:', mockError);
   }
 
   throw new Error('All hotel search methods failed - no results available');
@@ -248,55 +282,10 @@ export async function fetchHotelChains() {
 }
 
 export async function searchFlights(params: any) {
-  // Check if we're in test mode (set by E2E tests)
-  if ((globalThis as any).TEST_MODE_FLIGHTS) {
-    console.log('[api.ts] TEST MODE: Returning mock flight data');
-    return [
-      {
-        id: 'flight-1',
-        airline: 'British Airways',
-        carrierCode: 'BA',
-        flightNumber: 'BA101',
-        origin: 'JFK',
-        originCity: 'New York',
-        destination: 'LHR',
-        destinationCity: 'London',
-        duration: '7h 30m',
-        stops: 0,
-        departureTime: '2025-02-15T14:00:00Z',
-        arrivalTime: '2025-02-15T21:30:00Z',
-        fareId: 'fare-1',
-        cabin: 'Economy',
-        amount: 450,
-        currency: 'USD',
-        includedBags: [{ quantity: 1, weight: 23, unit: 'kg', type: 'checked' }],
-        isLCC: false,
-        airlineLogo: 'https://logo.clearbit.com/britishairways.com',
-        refundable: true,
-        segments: [{
-          id: 'seg-1',
-          airline: 'British Airways',
-          carrierCode: 'BA',
-          flightNumber: 'BA101',
-          origin: 'JFK',
-          originCity: 'New York',
-          destination: 'LHR',
-          destinationCity: 'London',
-          duration: '7h 30m',
-          departureTime: '2025-02-15T14:00:00Z',
-          arrivalTime: '2025-02-15T21:30:00Z',
-          aircraft: 'Boeing 777',
-          departureTerminal: 'T7',
-          arrivalTerminal: 'T5'
-        }],
-        ancillaries: [{
-          id: 'anc-1',
-          name: 'Extra Baggage',
-          description: 'Add extra checked baggage',
-          type: 'baggage'
-        }]
-      }
-    ];
+  // Validate input parameters
+  if (!params.origin || !params.destination || !params.departureDate) {
+    console.error('[api.ts] Missing required flight search parameters:', { origin: params.origin, destination: params.destination, departureDate: params.departureDate });
+    throw new Error('Missing required flight search parameters: origin, destination, or departureDate');
   }
 
   const payload = {
@@ -314,45 +303,56 @@ export async function searchFlights(params: any) {
     }
   };
 
+  console.log('[api.ts] Flight search payload prepared:', JSON.stringify(payload, null, 2));
+
   try {
-    console.log('[api.ts] SEARCH FLIGHTS CALLED (via API Gateway)');
+    console.log('[api.ts] SEARCH FLIGHTS: Attempting API Gateway request to /search/flights');
     // Delegate to API Gateway (which uses DuffelAdapter with backend keys)
     const response = await api.post('/search/flights', payload);
-    const offers = response.data?.offers || response.offers || [];
-    return mapDuffelResponse({ offers });
+    console.log('[api.ts] API Gateway response received:', response);
 
+    // The backend's DuffelAdapter already transforms the response to FlightResult[]
+    // Check if response is already transformed (has airline/carrierCode properties)
+    // or if it's raw Duffel format (needs mapDuffelResponse)
+    const results = Array.isArray(response) ? response : (response.data || response.offers || []);
 
-
-  } catch (error) {
-    console.error('[api.ts] API Gateway search failed, trying direct search:', String(error));
-
-    // Fallback: Direct connection to Duffel via Vite Proxy
-    try {
-      console.log('[api.ts] DIRECT DUFFEL SEARCH START');
-      const res = await fetch('/duffel-api/air/offer_requests', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Duffel-Version': 'v2',
-          'Authorization': `Bearer ${(import.meta as any).env.VITE_DUFFEL_API_KEY}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => null);
-        throw new Error(`Duffel Direct Error: ${res.status} ${text}`);
-      }
-
-      const response = await res.json();
-      const offers = response.data?.offers || response.offers || [];
-      console.log('[api.ts] DIRECT DUFFEL SEARCH SUCCESS:', offers.length);
-      return mapDuffelResponse({ offers });
-    } catch (directError) {
-      console.error('[api.ts] Duffel direct search failed:', String(directError));
-      throw error; // Throw the original error or the direct error
+    if (results.length > 0 && results[0].carrierCode && !results[0].slices) {
+      // Already transformed by backend - use directly
+      console.log('[api.ts] Using pre-transformed backend response, flights:', results.length);
+      return results;
     }
 
+    // Raw Duffel format - needs transformation
+    console.log('[api.ts] Raw Duffel format detected, transforming offers...');
+    const offers = response.data?.offers || response.offers || results || [];
+    console.log('[api.ts] Extracted offers count:', Array.isArray(offers) ? offers.length : 'N/A');
+    return mapDuffelResponse({ offers: Array.isArray(offers) ? offers : [] });
+
+  } catch (error: any) {
+    console.error('[api.ts] API Gateway search failed:', {
+      message: error?.message,
+      status: error?.status,
+      toString: String(error)
+    });
+
+    // Fallback: try again with explicit logging
+    console.log('[api.ts] Retrying API Gateway with enhanced diagnostics...');
+    try {
+      const response = await api.post('/search/flights', payload);
+      console.log('[api.ts] Retry successful');
+
+      // Same check for transformed vs raw response
+      const results = Array.isArray(response) ? response : (response.data || response.offers || []);
+      if (results.length > 0 && results[0].carrierCode && !results[0].slices) {
+        return results;
+      }
+
+      const offers = response.data?.offers || response.offers || results || [];
+      return mapDuffelResponse({ offers: Array.isArray(offers) ? offers : [] });
+    } catch (retryError: any) {
+      console.error('[api.ts] Retry also failed:', retryError?.message);
+      throw new Error(`Flight search failed after retry: ${error?.message || 'Unknown error'}`);
+    }
   }
 }
 
@@ -384,7 +384,18 @@ function mapDuffelResponse(data: any): any[] {
 
   // Helper to create a flight object from a Duffel offer
   const mapSingleOffer = (offer: any) => {
+    // Validate offer structure with detailed error context
+    if (!offer.slices || !Array.isArray(offer.slices) || offer.slices.length === 0) {
+      console.warn('[mapDuffelResponse] Offer missing slices:', { offerId: offer?.id, keys: Object.keys(offer || {}) });
+      return null;
+    }
+
     const slice = offer.slices[0];
+    if (!slice.segments || !Array.isArray(slice.segments) || slice.segments.length === 0) {
+      console.warn('[mapDuffelResponse] Slice missing segments:', { offerId: offer?.id, sliceKeys: Object.keys(slice || {}) });
+      return null;
+    }
+
     const firstSegment = slice.segments[0];
     const lastSegment = slice.segments[slice.segments.length - 1];
     const durationStr = formatDuration(slice.duration);
@@ -449,22 +460,36 @@ function mapDuffelResponse(data: any): any[] {
   const groups: Record<string, any[]> = {};
 
   offers.forEach((offer: any) => {
+    // Validate before grouping
+    if (!offer.slices || !Array.isArray(offer.slices) || offer.slices.length === 0) {
+      console.warn('[mapDuffelResponse] Skipping offer - missing slices:', offer?.id);
+      return;
+    }
+
     const slice = offer.slices[0];
+    if (!slice.segments || !Array.isArray(slice.segments) || slice.segments.length === 0) {
+      console.warn('[mapDuffelResponse] Skipping offer - missing segments:', offer?.id);
+      return;
+    }
+
     const identity = slice.segments.map((s: any) =>
-      `${s.marketing_carrier.iata_code}${s.marketing_carrier_flight_number}-${s.departing_at}`
+      `${s.marketing_carrier?.iata_code || 'UNKNOWN'}${s.marketing_carrier_flight_number || ''}-${s.departing_at}`
     ).join('|');
 
     if (!groups[identity]) groups[identity] = [];
-    groups[identity].push(mapSingleOffer(offer));
+    const mapped = mapSingleOffer(offer);
+    if (mapped) groups[identity].push(mapped);
   });
 
   // For each group, pick the cheapest as main and rest as upsells
-  return Object.values(groups).map((groupOffers: any[]) => {
-    const sorted = groupOffers.sort((a, b) => a.amount - b.amount);
-    const bestOffer = sorted[0];
-    bestOffer.upsells = sorted.slice(1);
-    return bestOffer;
-  });
+  return Object.values(groups)
+    .filter(groupOffers => groupOffers.length > 0)
+    .map((groupOffers: any[]) => {
+      const sorted = groupOffers.sort((a: any, b: any) => a.amount - b.amount);
+      const bestOffer = sorted[0];
+      bestOffer.upsells = sorted.slice(1);
+      return bestOffer;
+    });
 }
 
 // Fetch Seat Maps from Duffel
@@ -524,10 +549,70 @@ export async function fetchFlightById(id: string) {
 // Static Data Fetchers (from Centralized Static Data Package)
 export async function fetchAirports(query?: string) {
   try {
-    const response = await getAirports({ query });
-    return response.data;
+    // Use static frontend data directly instead of fetching from API
+    const airports = FLIGHT_STATIC_DATA.AIRPORTS.all;
+
+    // Filter by query if provided
+    let filtered = airports;
+    if (query && query.trim()) {
+      const q = query.toLowerCase();
+      filtered = airports.filter(airport =>
+        airport.name.toLowerCase().includes(q) ||
+        airport.iata_code.toLowerCase().includes(q) ||
+        airport.city.toLowerCase().includes(q) ||
+        airport.country.toLowerCase().includes(q)
+      );
+    }
+
+    // Transform airports to match the expected format for UI components
+    return filtered.map(airport => ({
+      type: 'AIRPORT' as const,
+      icon: 'plane',
+      title: airport.name,
+      subtitle: `${airport.city}, ${airport.country}`,
+      code: airport.iata_code,
+      city: airport.city,
+      country: airport.country,
+      countryCode: airport.country_code
+    }));
   } catch (error) {
     console.error('Failed to fetch airports:', error);
+    return [];
+  }
+}
+
+// Fetch suggestions for search autocomplete
+export async function fetchSuggestions(query: string, type: 'flight' | 'hotel' = 'flight') {
+  try {
+    if (type === 'flight') {
+      // Fetch airports for flight search
+      const airports = await fetchAirports(query);
+      return airports.map((airport: any) => ({
+        type: 'AIRPORT',
+        icon: 'plane',
+        title: airport.title,
+        subtitle: airport.subtitle,
+        code: airport.code,
+        city: airport.city,
+        country: airport.country,
+        countryCode: airport.countryCode
+      }));
+    } else {
+      // For hotel search, fetch cities
+      const cities = await fetchCities(query);
+      return cities.map((city: any) => ({
+        type: 'CITY',
+        icon: 'map-pin',
+        title: city.name,
+        subtitle: `${city.country}`,
+        code: city.code || city.id,
+        city: city.name,
+        country: city.country,
+        countryCode: city.country_code
+      }));
+    }
+  } catch (error) {
+    console.error('Failed to fetch suggestions:', error);
     return [];
   }
 }
@@ -544,11 +629,18 @@ export async function fetchAirlines() {
 
 export async function fetchAircrafts() {
   try {
-    const res = await api.get('/inventory/static/data?type=aircraft');
+    const res = await api.get('/aircraft');
     return res || [];
   } catch (error) {
     console.error('Failed to fetch aircrafts:', error);
-    return [];
+    // Return fallback aircraft data
+    return [
+      { iata_code: '320', name: 'Airbus A320' },
+      { iata_code: '321', name: 'Airbus A321' },
+      { iata_code: '77W', name: 'Boeing 777-300ER' },
+      { iata_code: '789', name: 'Boeing 787-9' },
+      { iata_code: '388', name: 'Airbus A380-800' }
+    ];
   }
 }
 
@@ -562,26 +654,29 @@ export async function fetchCurrencies() {
   }
 }
 
-export async function fetchLoyaltyPrograms() {
+export async function fetchLoyaltyPrograms(query?: string) {
   try {
-    const res = await api.get('/inventory/static/data?type=loyalty-programs');
+    const params = query ? `?query=${encodeURIComponent(query)}` : '';
+    const res = await api.get(`/loyalty-programs${params}`);
     return res || [];
   } catch (error) {
     console.error('Failed to fetch loyalty programs:', error);
-    return [];
+    // Fallback with common programs
+    return [
+      { id: 'skywards', airlineCode: 'EK', airlineName: 'Emirates', programName: 'Emirates Skywards' },
+      { id: 'privilege-club', airlineCode: 'QR', airlineName: 'Qatar Airways', programName: 'Privilege Club' },
+      { id: 'alfursan', airlineCode: 'SV', airlineName: 'Saudia', programName: 'Alfursan' },
+      { id: 'miles-more', airlineCode: 'LH', airlineName: 'Lufthansa', programName: 'Miles & More' },
+      { id: 'flying-blue', airlineCode: 'AF', airlineName: 'Air France', programName: 'Flying Blue' },
+      { id: 'executive-club', airlineCode: 'BA', airlineName: 'British Airways', programName: 'Executive Club' },
+      { id: 'aadvantage', airlineCode: 'AA', airlineName: 'American Airlines', programName: 'AAdvantage' },
+      { id: 'mileageplus', airlineCode: 'UA', airlineName: 'United Airlines', programName: 'MileagePlus' },
+      { id: 'skymiles', airlineCode: 'DL', airlineName: 'Delta Air Lines', programName: 'SkyMiles' },
+      { id: 'krisflyer', airlineCode: 'SQ', airlineName: 'Singapore Airlines', programName: 'KrisFlyer' },
+    ];
   }
 }
 
-export async function fetchSuggestions(query: string, type: 'flight' | 'hotel' = 'hotel') {
-  try {
-    // @ts-ignore
-    const locations = await getLocations({ query, type });
-    return locations;
-  } catch (error) {
-    console.error('Failed to fetch suggestions:', error);
-    return [];
-  }
-}
 
 export async function fetchCities(query?: string) {
   try {
@@ -593,23 +688,44 @@ export async function fetchCities(query?: string) {
   }
 }
 
-export async function fetchCountries() {
+export async function fetchCountries(query?: string) {
   try {
-    const res = await api.get('/inventory/static/data?type=countries');
+    const params = query ? `?query=${encodeURIComponent(query)}` : '';
+    const res = await api.get(`/countries${params}`);
     return res || [];
   } catch (error) {
     console.error('Failed to fetch countries:', error);
-    return [];
+    // Fallback with common countries
+    return [
+      { code: 'SA', name: 'Saudi Arabia' },
+      { code: 'AE', name: 'United Arab Emirates' },
+      { code: 'QA', name: 'Qatar' },
+      { code: 'KW', name: 'Kuwait' },
+      { code: 'US', name: 'United States' },
+      { code: 'GB', name: 'United Kingdom' },
+      { code: 'IN', name: 'India' },
+      { code: 'PK', name: 'Pakistan' },
+    ];
   }
 }
 
-export async function fetchNationalities() {
+export async function fetchNationalities(query?: string) {
   try {
-    const res = await api.get('/inventory/static/data?type=nationalities');
+    const params = query ? `?query=${encodeURIComponent(query)}` : '';
+    const res = await api.get(`/nationalities${params}`);
     return res || [];
   } catch (error) {
     console.error('Failed to fetch nationalities:', error);
-    return [];
+    // Fallback with common nationalities
+    return [
+      { code: 'SA', name: 'Saudi Arabia', demonym: 'Saudi' },
+      { code: 'AE', name: 'United Arab Emirates', demonym: 'Emirati' },
+      { code: 'QA', name: 'Qatar', demonym: 'Qatari' },
+      { code: 'US', name: 'United States', demonym: 'American' },
+      { code: 'GB', name: 'United Kingdom', demonym: 'British' },
+      { code: 'IN', name: 'India', demonym: 'Indian' },
+      { code: 'PK', name: 'Pakistan', demonym: 'Pakistani' },
+    ];
   }
 }
 
@@ -724,25 +840,40 @@ export function clearTokens() {
 
 // Helper to call real backend; returns parsed JSON or throws
 async function remoteFetch(path: string, opts: RequestInit = {}) {
-  if (!API_BASE_URL) throw new Error('API_BASE_URL not configured');
+  // Allow empty string for dev mode (Vite proxy intercepts), but check for null/undefined
+  if (API_BASE_URL === null || typeof API_BASE_URL === 'undefined') {
+    throw new Error('API_BASE_URL not configured');
+  }
   const url = path.startsWith('http') ? path : `${API_BASE_URL.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+  console.log(`[remoteFetch] Request: ${opts.method || 'GET'} ${url}`);
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(opts.headers as Record<string, string> || {}),
   };
   if (inMemoryAccessToken) headers['Authorization'] = `Bearer ${inMemoryAccessToken}`;
-  const res = await fetch(url, { credentials: 'include', ...opts, headers });
-  if (!res.ok) {
-    const text = await res.text().catch(() => null);
-    const msg = text || `HTTP ${res.status}`;
-    const err: any = new Error(msg);
-    err.status = res.status;
-    throw err;
+
+  try {
+    const res = await fetch(url, { credentials: 'include', ...opts, headers });
+    console.log(`[remoteFetch] Response: ${res.status} ${res.statusText} from ${url}`);
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => null);
+      const msg = text || `HTTP ${res.status}`;
+      console.error(`[remoteFetch] Error: ${res.status} ${res.statusText} - ${msg}`);
+      const err: any = new Error(msg);
+      err.status = res.status;
+      throw err;
+    }
+    // Some endpoints might return empty body
+    const contentType = res.headers.get('content-type') || '';
+    const result = contentType.includes('application/json') ? await res.json() : await res.text();
+    console.log(`[remoteFetch] Success: received ${typeof result} response from ${url}`);
+    return result;
+  } catch (error: any) {
+    console.error(`[remoteFetch] Exception: ${error?.message} for ${url}`);
+    throw error;
   }
-  // Some endpoints might return empty body
-  const contentType = res.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) return res.json();
-  return res.text();
 }
 
 // Real API object - no mock fallbacks
@@ -751,17 +882,6 @@ export const api = {
     return await remoteFetch(path, { method: 'GET' });
   },
   async post(path: string, data?: any) {
-    // In test mode, mock booking hold endpoints
-    if ((globalThis as any).TEST_MODE_FLIGHTS) {
-      if (path.includes('/bookings/flight/hold') || path.includes('/bookings/hotel/hold')) {
-        return {
-          bookingId: `TL-${Math.floor(100000 + Math.random() * 900000)}`,
-          status: 'held',
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes from now
-        };
-      }
-    }
-    
     return await remoteFetch(path, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined
@@ -786,19 +906,6 @@ export const api = {
 
 // Booking API functions
 export async function confirmFlightBooking(bookingId: string, paymentDetails: any) {
-  // In test mode, return a mock successful response
-  if ((globalThis as any).TEST_MODE_FLIGHTS) {
-    return {
-      success: true,
-      bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
-      status: 'confirmed',
-      data: {
-        bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
-        status: 'confirmed'
-      }
-    };
-  }
-  
   try {
     const result = await api.post(`/bookings/flight/confirm/${bookingId}`, paymentDetails);
     return result;
@@ -809,19 +916,6 @@ export async function confirmFlightBooking(bookingId: string, paymentDetails: an
 }
 
 export async function confirmHotelBooking(bookingId: string, paymentDetails: any) {
-  // In test mode, return a mock successful response
-  if ((globalThis as any).TEST_MODE_FLIGHTS) {
-    return {
-      success: true,
-      bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
-      status: 'confirmed',
-      data: {
-        bookingId: bookingId || `TL-${Math.floor(100000 + Math.random() * 900000)}`,
-        status: 'confirmed'
-      }
-    };
-  }
-  
   try {
     const result = await api.post(`/bookings/hotel/confirm/${bookingId}`, paymentDetails);
     return result;
@@ -832,20 +926,93 @@ export async function confirmHotelBooking(bookingId: string, paymentDetails: any
 }
 
 export async function fetchWallets() {
-  // In test mode, return mock wallet data
-  if ((globalThis as any).TEST_MODE_FLIGHTS) {
-    return [{
-      id: 'wallet-1',
-      balance: 1000,
-      currency: 'USD'
-    }];
-  }
-  
   try {
     const result = await api.get('/wallets');
     return result;
   } catch (error) {
     console.error('Failed to fetch wallets:', error);
+    throw error;
+  }
+}
+
+// --- Real-time LiteAPI Handlers ---
+
+export async function fetchHotelRates(params: {
+  hotelIds: string[];
+  checkin: string;
+  checkout: string;
+  currency?: string;
+  guestNationality?: string;
+  occupancies: Array<{ adults: number; children?: number[] }>;
+}) {
+  try {
+    return await api.post('/hotels/rates', params);
+  } catch (error) {
+    console.error('fetchHotelRates failed:', error);
+    throw error;
+  }
+}
+
+export async function prebookHotel(params: {
+  offerId: string;
+  price: number;
+  currency: string;
+}) {
+  try {
+    return await api.post('/rates/prebook', params);
+  } catch (error) {
+    console.error('prebookHotel failed:', error);
+    throw error;
+  }
+}
+
+export async function bookHotel(params: {
+  prebookId: string;
+  guestDetails: any;
+  paymentDetails?: any;
+}) {
+  try {
+    return await api.post('/rates/book', params);
+  } catch (error) {
+    console.error('bookHotel failed:', error);
+    throw error;
+  }
+}
+
+// --- Loyalty API Handlers ---
+
+export async function fetchLoyaltySettings() {
+  try {
+    return await api.get('/loyalty/loyalties');
+  } catch (error) {
+    console.error('fetchLoyaltySettings failed:', error);
+    throw error;
+  }
+}
+
+export async function updateLoyaltySettings(settings: any) {
+  try {
+    return await api.put('/loyalty/loyalties', settings);
+  } catch (error) {
+    console.error('updateLoyaltySettings failed:', error);
+    throw error;
+  }
+}
+
+export async function fetchGuests() {
+  try {
+    return await api.get('/loyalty/guests');
+  } catch (error) {
+    console.error('fetchGuests failed:', error);
+    throw error;
+  }
+}
+
+export async function fetchGuestDetail(guestId: string) {
+  try {
+    return await api.get(`/loyalty/guests/${guestId}`);
+  } catch (error) {
+    console.error(`fetchGuestDetail failed for ${guestId}:`, error);
     throw error;
   }
 }

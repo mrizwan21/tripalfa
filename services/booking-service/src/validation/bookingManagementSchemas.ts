@@ -658,6 +658,110 @@ export const assignUserRoleSchema = Joi.object({
   expiryDate: Joi.date().iso().optional()
 });
 
+// Cancel order schema
+export const cancelOrderSchema = Joi.object({
+  bookingId: Joi.string().optional(),
+  orderId: Joi.string().optional(),
+  reason: Joi.string().max(500).optional()
+}).external(() => {
+  // At least one of bookingId or orderId is required
+  return new Promise((resolve, reject) => {
+    reject(new Error('Either bookingId or orderId is required'));
+  });
+}).messages({
+  'any.invalid': 'Either bookingId or orderId is required'
+});
+
+// Get cancellation status schema
+export const getCancellationStatusSchema = Joi.object({
+  bookingId: Joi.string().optional(),
+  orderId: Joi.string().optional()
+}).external(() => {
+  // At least one of bookingId or orderId is required
+  return new Promise((resolve, reject) => {
+    reject(new Error('Either bookingId or orderId is required'));
+  });
+}).messages({
+  'any.invalid': 'Either bookingId or orderId is required'
+});
+
+// Get available airline credits schema
+export const getAvailableAirlineCreditsSchema = Joi.object({
+  customerId: Joi.string().optional(),
+  bookingId: Joi.string().optional(),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20)
+}).external(() => {
+  // At least one of customerId or bookingId is required
+  return new Promise((resolve, reject) => {
+    reject(new Error('Either customerId or bookingId is required'));
+  });
+}).messages({
+  'any.invalid': 'Either customerId or bookingId is required'
+});
+
+// Combined payment schema
+export const combinedPaymentSchema = Joi.object({
+  bookingId: Joi.string().uuid().required().messages({
+    'string.guid': 'bookingId must be a valid UUID',
+    'any.required': 'bookingId is required'
+  }),
+  customerId: Joi.string().uuid().required().messages({
+    'string.guid': 'customerId must be a valid UUID',
+    'any.required': 'customerId is required'
+  }),
+  totalAmount: Joi.number().positive().required().messages({
+    'number.positive': 'totalAmount must be positive',
+    'any.required': 'totalAmount is required'
+  }),
+  currency: Joi.string().length(3).uppercase().default('USD').valid('USD', 'EUR', 'GBP', 'AED', 'SAR', 'INR').messages({
+    'string.length': 'currency must be a 3-letter code',
+    'any.only': 'currency must be a valid currency code'
+  }),
+  useWallet: Joi.boolean().default(true),
+  walletAmount: Joi.number().min(0).optional().messages({
+    'number.min': 'walletAmount cannot be negative'
+  }),
+  useCredits: Joi.boolean().default(true),
+  creditIds: Joi.array().items(Joi.string().uuid()).default([]),
+  cardAmount: Joi.number().positive().optional().messages({
+    'number.positive': 'cardAmount must be positive if provided'
+  })
+}).with('useWallet', 'walletAmount').with('useCredits', 'creditIds');
+
+// Get payment options schema
+export const getPaymentOptionsSchema = Joi.object({
+  customerId: Joi.string().uuid().required(),
+  totalAmount: Joi.number().positive().required(),
+  currency: Joi.string().length(3).uppercase().default('USD').valid('USD', 'EUR', 'GBP', 'AED', 'SAR', 'INR')
+});
+
+// Create booking with combined payment schema
+export const createBookingWithCombinedPaymentSchema = Joi.object({
+  serviceType: Joi.string().valid('flight', 'hotel', 'package', 'transfer', 'visa', 'insurance').default('flight'),
+  customerId: Joi.string().uuid().required(),
+  customerName: Joi.string().min(2).max(100).required(),
+  customerEmail: Joi.string().email().required(),
+  customerPhone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
+  totalAmount: Joi.number().positive().required(),
+  supplierPrice: Joi.number().positive().optional(),
+  currency: Joi.string().length(3).uppercase().default('USD'),
+  useWallet: Joi.boolean().default(true),
+  walletAmount: Joi.number().min(0).optional(),
+  useCredits: Joi.boolean().default(true),
+  creditIds: Joi.array().items(Joi.string().uuid()).default([]),
+  cardAmount: Joi.number().positive().optional()
+});
+
+// Apply credits to booking schema
+export const applyCreditsToBookingSchema = Joi.object({
+  bookingId: Joi.string().uuid().required(),
+  creditIds: Joi.array().items(Joi.string().uuid()).min(1).required().messages({
+    'array.min': 'At least one creditId is required',
+    'any.required': 'creditIds array is required'
+  })
+});
+
 // Export all schemas
 export const bookingManagementSchemas = {
   createBooking: createBookingSchema,
@@ -691,5 +795,12 @@ export const bookingManagementSchemas = {
   updateInventorySchema: updateInventorySchema,
   deleteInventory: deleteInventorySchema,
   getInventory: getInventorySchema,
-  checkAvailability: checkAvailabilitySchema
+  checkAvailability: checkAvailabilitySchema,
+  cancelOrder: cancelOrderSchema,
+  getCancellationStatus: getCancellationStatusSchema,
+  getAvailableAirlineCredits: getAvailableAirlineCreditsSchema,
+  combinedPayment: combinedPaymentSchema,
+  getPaymentOptions: getPaymentOptionsSchema,
+  createBookingWithCombinedPayment: createBookingWithCombinedPaymentSchema,
+  applyCreditsToBooking: applyCreditsToBookingSchema
 };

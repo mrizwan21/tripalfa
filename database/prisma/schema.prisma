@@ -1,0 +1,548 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Organization Models
+// ============================================
+
+model User {
+  id                    String                @id @default(cuid())
+  externalId            String?               @unique
+  email                 String                @unique
+  phoneNumber           String?
+  firstName             String?
+  lastName              String?
+  avatarUrl             String?
+  preferences           UserPreferences?
+  notifications         Notification[]
+  notificationTargets   NotificationTarget[]
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+model UserPreferences {
+  id                    String                @id @default(cuid())
+  userId                String                @unique
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailNotifications    Boolean               @default(true)
+  smsNotifications      Boolean               @default(true)
+  pushNotifications     Boolean               @default(true)
+  inAppNotifications    Boolean               @default(true)
+  unsubscribeCategories String[]              @default([])
+  marketingEmails       Boolean               @default(false)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([userId])
+}
+
+// ============================================
+// Notification Models
+// ============================================
+
+model Notification {
+  id                    String                @id @default(cuid())
+  userId                String
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId               String?
+  bookingId             String?
+  
+  // Notification details
+  notificationType      String                // booking_confirmation, payment_reminder, etc.
+  priority              String                @default("medium") // low, medium, high, urgent
+  status                String                @default("pending") // pending, sent, delivered, failed, opened, clicked
+  
+  // Channels
+  channels              String[]              // ["email", "sms", "push", "in_app"]
+  channelStatus         ChannelStatus         @relation(fields: [channelStatusId], references: [id])
+  channelStatusId       String
+  
+  // Content
+  content               Json                  // Structured content for each channel
+  contentHash           String?               // For deduplication
+  
+  // Metadata
+  metadata              Json?
+  tags                  String[]              @default([])
+  
+  // Delivery tracking
+  sentAt                DateTime?
+  deliveredAt           DateTime?
+  openedAt              DateTime?
+  clickedAt             DateTime?
+  failedAt              DateTime?
+  failureReason         String?
+  failureDetails        Json?
+  
+  // Provider tracking
+  providerMessageIds    Json?                 // { email: "msg-123", sms: "sms-456", ... }
+  
+  // Retry tracking
+  retryCount            Int                   @default(0)
+  maxRetries            Int                   @default(5)
+  nextRetryAt           DateTime?
+  
+  // Dead Letter Queue
+  isDLQ                 Boolean               @default(false)
+  dlqReason             String?
+  dlqMovedAt            DateTime?
+  dlqReplays            Int                   @default(0)
+  
+  // Engagement tracking
+  opened                Boolean               @default(false)
+  clicked                Boolean               @default(false)
+  dismissed             Boolean               @default(false)
+  
+  // Soft delete
+  deletedAt             DateTime?
+  
+  timestamps
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  // Relations
+  channelStatuses       ChannelStatus[]      @relation("NotificationChannelStatus")
+  retryAttempts         NotificationRetry[]
+  analyticsEvents       NotificationAnalytics[]
+  webhookEvents         WebhookEvent[]
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([bookingId])
+  @@index([notificationType])
+  @@index([status])
+  @@index([channels])
+  @@index([createdAt])
+  @@index([priority])
+  @@index([isDLQ])
+  @@fulltext([content]) // For full-text search
+}
+
+model ChannelStatus {
+  id                    String                @id @default(cuid())
+  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade, name: "NotificationChannelStatus")
+  notificationId        String
+  
+  email                 String                @default("pending") // pending, sent, delivered, failed, bounced, complained
+  sms                   String                @default("pending")
+  push                  String                @default("pending") // pending, sent, delivered, opened, failed
+  in_app                String                @default("pending")
+  
+  // Timestamps for each channel
+  email_sent_at         DateTime?
+  sms_sent_at           DateTime?
+  push_sent_at          DateTime?
+  in_app_sent_at        DateTime?
+  
+  email_delivered_at    DateTime?
+  sms_delivered_at      DateTime?
+  push_delivered_at     DateTime?
+  in_app_delivered_at   DateTime?
+  
+  email_opened_at       DateTime?
+  sms_opened_at         DateTime?
+  push_opened_at        DateTime?
+  in_app_opened_at      DateTime?
+  
+  email_clicked_at      DateTime?
+  push_clicked_at       DateTime?
+  
+  // Error tracking
+  email_error           String?
+  sms_error             String?
+  push_error            String?
+  in_app_error          String?
+  
+  // Provider message IDs
+  email_message_id      String?
+  sms_message_id        String?
+  push_message_id       String?
+  in_app_message_id     String?
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@unique([notificationId])
+}
+
+model NotificationTemplate {
+  id                    String                @id @default(cuid())
+  name                  String
+  slug                  String                @unique
+  category              String                // booking, payment, order, system, marketing
+  description           String?
+  
+  // Template content (Handlebars format)
+  templates             Json                  // { en: "...", fr: "...", de: "..." }
+  
+  // Channel templates
+  emailTemplate         String?               // Handlebars template for email
+  smsTemplate           String?               // Handlebars template for SMS
+  pushTemplate          String?               // Handlebars template for push
+  inAppTemplate         String?               // Handlebars template for in-app
+  
+  // Variables documentation
+  variables             Json?                 // Available variables for this template
+  
+  // Configuration
+  enabled               Boolean               @default(true)
+  requiredChannels      String[]
+  optionalChannels      String[]
+  
+  metadata              Json?
+  
+  // Versioning
+  version               Int                   @default(1)
+  previousVersionId     String?
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([enabled])
+}
+
+// ============================================
+// Scheduled Notifications (BullMQ)
+// ============================================
+
+model ScheduledNotification {
+  id                    String                @id @default(cuid())
+  
+  // Job details
+  jobId                 String                @unique           // BullMQ job ID
+  status                String                @default("scheduled") // scheduled, processing, completed, failed, cancelled
+  
+  // Notification template
+  notificationType      String
+  userId                String
+  orderId               String?
+  
+  // Scheduling
+  scheduledTime         DateTime
+  cron                  String?               // For recurring notifications
+  recurringPattern      String?               // daily, weekly, monthly, custom
+  
+  // Execution
+  executedAt            DateTime?
+  completedAt           DateTime?
+  nextOccurrence        DateTime?
+  failedAt              DateTime?
+  failureReason         String?
+  
+  // Notification payload
+  content               Json
+  metadata              Json?
+  
+  // Control
+  active                Boolean               @default(true)
+  attempts              Int                   @default(0)
+  maxAttempts           Int                   @default(3)
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([scheduledTime])
+  @@index([active])
+  @@index([createdAt])
+}
+
+// ============================================
+// Notification Retry & DLQ
+// ============================================
+
+model NotificationRetry {
+  id                    String                @id @default(cuid())
+  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId        String
+  
+  // Retry details
+  attempt               Int
+  maxAttempts           Int
+  failureReason         String
+  errorDetails          Json?
+  
+  // Retry scheduling
+  scheduledRetryAt      DateTime
+  retriedAt             DateTime?
+  
+  // Strategy
+  backoffMultiplier     Float                 @default(2)
+  delayMs               Int
+  jitter                Boolean               @default(true)
+  
+  // Channel-specific
+  channel               String
+  status                String                @default("pending") // pending, completed, failed
+  
+  createdAt             DateTime              @default(now())
+
+  @@index([notificationId])
+  @@index([attempt])
+  @@index([status])
+}
+
+model DeadLetterQueue {
+  id                    String                @id @default(cuid())
+  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId        String
+  
+  // DLQ details
+  reason                String                // max_retries_exceeded, unsupported_channel, permanent_error
+  failureCount          Int                   @default(0)
+  lastError             String?
+  errorDetails          Json?
+  
+  // Retry metadata
+  replayAttempts        Int                   @default(0)
+  maxReplayAttempts     Int                   @default(3)
+  lastReplayAt          DateTime?
+  
+  // Status
+  status                String                @default("pending") // pending, replaying, resolved
+  
+  movedAt               DateTime              @default(now())
+  resolvedAt            DateTime?
+  createdAt             DateTime              @default(now())
+
+  @@index([notificationId])
+  @@index([status])
+  @@index([reason])
+}
+
+// ============================================
+// Webhook Events
+// ============================================
+
+model WebhookEvent {
+  id                    String                @id @default(cuid())
+  
+  // Webhook source
+  supplier              String                // duffel, innstant, hotelston, amadeus
+  eventType             String                // order.schedule_changed, order.cancelled, etc.
+  supplierId            String?
+  
+  // Message
+  externalEventId       String?
+  signature             String?               // HMAC signature for verification
+  raw_payload           Json
+  
+  // Notification link
+  notification          Notification?         @relation(fields: [notificationId], references: [id])
+  notificationId        String?
+  
+  // Processing
+  processed             Boolean               @default(false)
+  processedAt           DateTime?
+  error                 String?
+  
+  // Idempotency
+  idempotencyKey        String?
+  
+  createdAt             DateTime              @default(now())
+
+  @@index([supplierId])
+  @@index([eventType])
+  @@index([processed])
+  @@index([externalEventId])
+}
+
+// ============================================
+// Notification Analytics
+// ============================================
+
+model NotificationAnalytics {
+  id                    String                @id @default(cuid())
+  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  notificationId        String
+  
+  // Metrics
+  channel               String
+  sent                  Boolean               @default(false)
+  delivered             Boolean               @default(false)
+  opened                Boolean               @default(false)
+  clicked               Boolean               @default(false)
+  bounced               Boolean               @default(false)
+  complained            Boolean               @default(false)
+  
+  // Latency (in milliseconds)
+  latencyMs             Int?
+  creationToSentMs      Int?
+  creationToDeliveredMs Int?
+  
+  // Engagement
+  engagementCount       Int                   @default(0)
+  engagementType        String?               // click, open, reply, share
+  
+  // A/B Testing
+  variantId             String?
+  testGroup             String?
+  
+  // User segments
+  userSegment           String?               // premium, standard, free
+  userTier              String?
+  
+  createdAt             DateTime              @default(now())
+
+  @@index([notificationId])
+  @@index([channel])
+  @@index([sent])
+  @@index([opened])
+  @@index([clicked])
+}
+
+model NotificationMetrics {
+  id                    String                @id @default(cuid())
+  
+  // Aggregated metrics
+  date                  DateTime
+  channel               String
+  notificationType      String
+  
+  // Counts
+  sent                  Int                   @default(0)
+  delivered             Int                   @default(0)
+  failed                Int                   @default(0)
+  bounced               Int                   @default(0)
+  
+  // Engagement
+  opened                Int                   @default(0)
+  clicked               Int                   @default(0)
+  complained           Int                   @default(0)
+  
+  // Rates
+  deliveryRate          Float?
+  openRate              Float?
+  clickRate             Float?
+  
+  // Performance
+  avgLatencyMs          Float?
+  p50LatencyMs          Float?
+  p95LatencyMs          Float?
+  p99LatencyMs          Float?
+  
+  createdAt             DateTime              @default(now())
+
+  @@unique([date, channel, notificationType])
+  @@index([date])
+  @@index([channel])
+}
+
+// ============================================
+// Notification Targets (User Delivery Info)
+// ============================================
+
+model NotificationTarget {
+  id                    String                @id @default(cuid())
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                String
+  
+  // Contact info
+  email                 String?
+  phoneNumber           String?
+  deviceTokens          String[]              // For push notifications
+  
+  // Channel availability
+  emailVerified         Boolean               @default(false)
+  phoneVerified         Boolean               @default(false)
+  
+  // Preferences
+  primaryChannel        String?               // preferred channel for priority notifications
+  
+  // Status
+  active                Boolean               @default(true)
+  unsubscribedChannels  String[]              @default([])
+  
+  lastUpdatedAt         DateTime              @updatedAt
+  createdAt             DateTime              @default(now())
+
+  @@unique([userId, email])
+  @@index([userId])
+  @@index([email])
+}
+
+// ============================================
+// Payment & Wallet Notifications
+// ============================================
+
+model WalletReconciliation {
+  id                    String                @id @default(cuid())
+  
+  // Reconciliation details
+  reconciliationDate    DateTime
+  reconciliationTime    String                @default("02:00") // 2 AM UTC
+  
+  // Status
+  status                String                @default("pending") // pending, processing, completed, failed
+  
+  // Metrics
+  totalTransactions     Int                   @default(0)
+  processedTransactions Int                   @default(0)
+  discrepancies         Int                   @default(0)
+  corrections           Int                   @default(0)
+  
+  // FX Updates
+  fxRatesUpdated        Boolean               @default(false)
+  fxCurrencyPairs       String[]
+  
+  // Performance
+  startedAt             DateTime?
+  completedAt           DateTime?
+  durationMs            Int?
+  
+  metadata              Json?
+  
+  createdAt             DateTime              @default(now())
+
+  @@index([reconciliationDate])
+  @@index([status])
+}
+
+// ============================================
+// Circuit Breaker Pattern
+// ============================================
+
+model CircuitBreaker {
+  id                    String                @id @default(cuid())
+  
+  // Service
+  service               String                // email_provider, sms_provider, push_provider
+  channel               String?               // email, sms, push, in_app
+  
+  // State
+  state                 String                @default("closed") // closed, open, half_open
+  
+  // Metrics
+  failureCount          Int                   @default(0)
+  successCount          Int                   @default(0)
+  lastFailureAt         DateTime?
+  lastSuccessAt         DateTime?
+  
+  // Configuration
+  failureThreshold      Int                   @default(5)
+  recoveryTimeout       Int                   @default(60000) // milliseconds
+  
+  // Control
+  enabled               Boolean               @default(true)
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@unique([service, channel])
+  @@index([state])
+}

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { performance } from 'perf_hooks';
-import logger from '../utils/logger.js';
+import logger from '../utils/logger';
 
 // Typed metrics interfaces
 export interface RequestMetrics {

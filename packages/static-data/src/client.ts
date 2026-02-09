@@ -30,11 +30,38 @@ export class StaticDataClient {
   private config: StaticDataConfig;
 
   constructor(config?: Partial<StaticDataConfig>) {
+    // Determine API base URL - supports multiple environments:
+    // 1. Browser: localhost:3000 (direct to host via Docker port mapping)
+    // 2. Node.js in container: http://api-gateway:3000 (Docker service name)
+    const getApiBaseUrl = (): string => {
+      // Try to detect if running in Node.js environment (not browser)
+      const isBrowser = typeof globalThis !== 'undefined' && typeof (globalThis as any).window === 'object';
+
+      if (!isBrowser && typeof process !== 'undefined' && process.env) {
+        // Node.js environment - use Docker service name for internal calls
+        const nodeBase = process.env.REACT_APP_API_BASE_URL || process.env.VITE_API_BASE_URL;
+        if (nodeBase) return nodeBase;
+        // Default to Docker service name when running in Node.js (server-side or SSR)
+        if (process.env.NODE_ENV === 'development') {
+          return 'http://api-gateway:3000';
+        }
+      }
+
+      // Browser and fallback: use current origin/static to leverage proxy
+      if (isBrowser) {
+        // If we're in the browser, always use relative path to leverage Vite proxy
+        return '/api';
+      }
+      return 'http://localhost:8000';
+    };
+
+    const apiBaseUrl = getApiBaseUrl();
+
     this.config = {
-      apiBase: config?.apiBase || 'http://localhost:3000',
+      apiBase: config?.apiBase || apiBaseUrl,
       cache: { ...DEFAULT_CACHE_CONFIG, ...config?.cache },
       sources: config?.sources || [
-        { name: 'local-db', priority: 1, endpoint: 'http://localhost:3000', enabled: true, timeout: 5000 },
+        { name: 'local-db', priority: 1, endpoint: apiBaseUrl, enabled: true, timeout: 5000 },
         { name: 'wicked-gateway', priority: 2, endpoint: 'http://localhost:8000', enabled: true, timeout: 10000 }
       ],
       fallbackEnabled: config?.fallbackEnabled ?? true

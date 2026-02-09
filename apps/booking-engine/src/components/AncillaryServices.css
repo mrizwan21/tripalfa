@@ -1,0 +1,379 @@
+/**
+ * Ancillary Services Component Styles
+ * Styling for ancillary services (baggage, meals, seats, special requests)
+ */
+
+.ancillary-services-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.ancillary-services-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.ancillary-services-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: #f0f0f0;
+  color: #1a1a1a;
+}
+
+.error-message {
+  padding: 1rem;
+  background-color: #fee;
+  border-left: 4px solid #f33;
+  color: #933;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Category Filter */
+.category-filter {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #666;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.category-btn:hover {
+  border-color: #999;
+  background-color: #f3f3f3;
+}
+
+.category-btn.active {
+  background-color: #003366;
+  color: #ffffff;
+  border-color: #003366;
+}
+
+.category-btn .icon {
+  font-size: 1.1rem;
+}
+
+.category-btn .name {
+  display: inline;
+}
+
+/* Services List */
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.services-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.services-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.services-list::-webkit-scrollbar-thumb {
+  background: #b3b3b3;
+  border-radius: 10px;
+}
+
+.services-list::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+.service-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fafafa;
+  transition: all 0.2s;
+}
+
+.service-card:hover {
+  border-color: #999;
+  background-color: #f5f5f5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.service-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.service-info {
+  flex: 1;
+}
+
+.service-info h3 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.service-info .description {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.service-info .restrictions {
+  font-size: 0.8rem;
+  color: #999;
+  font-style: italic;
+}
+
+.service-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.service-price .amount {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #003366;
+}
+
+.service-price .type {
+  font-size: 0.75rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.service-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+.qty-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  color: #666;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.qty-btn:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  color: #1a1a1a;
+}
+
+.qty-btn:disabled {
+  color: #ddd;
+  cursor: not-allowed;
+}
+
+.qty-input {
+  border: none;
+  background: none;
+  width: 50px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  padding: 0.25rem;
+}
+
+.qty-input:focus {
+  outline: none;
+}
+
+.service-total {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #003366;
+  white-space: nowrap;
+}
+
+.no-services {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Summary */
+.summary {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: #666;
+  padding: 0.5rem 0;
+}
+
+.summary-row.total {
+  border-top: 1px solid #ddd;
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.btn-primary {
+  background-color: #003366;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #002244;
+  box-shadow: 0 2px 8px rgba(0, 51, 102, 0.2);
+}
+
+.btn-primary:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #f0f0f0;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #e0e0e0;
+  border-color: #999;
+}
+
+.btn-secondary:disabled {
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ancillary-services-container {
+    padding: 1rem;
+    margin: 0 -1rem -1rem -1rem;
+    border-radius: 0;
+  }
+
+  .service-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .service-price {
+    align-items: flex-start;
+  }
+
+  .service-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .category-btn .name {
+    display: none;
+  }
+}

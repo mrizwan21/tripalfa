@@ -1,5 +1,4 @@
-import { test, expect } from '../fixtures/unhideFixture';
-import { createRequire } from 'module';
+import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
 import { WalletPage } from '../pages/WalletPage';
 import { WalletTopUpPage } from '../pages/WalletTopUpPage';
@@ -12,10 +11,22 @@ import { PassengerDetailsPage } from '../pages/PassengerDetailsPage';
 import { BookingCheckoutPage } from '../pages/BookingCheckoutPage';
 import { BookingConfirmationPage } from '../pages/BookingConfirmationPage';
 
-const require = createRequire(import.meta.url);
-const users = require('../fixtures/users.json');
-const flights = require('../fixtures/flights.json');
-const payments = require('../fixtures/payments.json');
+// Import fixtures using dynamic imports (ES modules compatible)
+const usersModule = await import('../fixtures/users.json', { with: { type: 'json' } });
+const flightsModule = await import('../fixtures/flights.json', { with: { type: 'json' } });
+const paymentsModule = await import('../fixtures/payments.json', { with: { type: 'json' } });
+
+const users = usersModule.default;
+const flights = flightsModule.default;
+const payments = paymentsModule.default;
+
+// Node.js process object
+declare const process: {
+  env: {
+    TEST_USER_EMAIL?: string;
+    TEST_USER_PASSWORD?: string;
+  };
+};
 
 test.describe('Wallet Operations Flow', () => {
   test.beforeEach(async ({ page }) => {

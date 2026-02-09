@@ -5,18 +5,19 @@ import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 // @ts-ignore
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import {
     User, Mail, Phone, Calendar, Globe, ArrowRight, ArrowLeft,
     MapPin, Edit3, ShieldCheck, Heart, ChevronRight, CreditCard,
     Sparkles, LogIn, Lock, Info, CheckCircle2, Luggage, Briefcase,
-    Plus, Plane, ChevronDown, UserCheck, Shield, RefreshCw,
+    Plus, Plane, ChevronDown, UserCheck, AlertCircle,
     Utensils, Clock, Map
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { formatCurrency } from '../lib/utils';
-import { api, fetchLoyaltyPrograms } from '../lib/api';
+import { api, fetchCountries } from '../lib/api';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { FareRulesPopup } from '../components/FareRulesPopup';
 import { SeatSelectionPopup } from '../components/SeatSelectionPopup';
@@ -34,12 +35,7 @@ const formSchema = z.object({
         zipCode: z.string().min(4, "Zip code is required"),
         country: z.string().min(1, "Country is required")
     }),
-    discountCoupon: z.string().optional(),
-    addOns: z.object({
-        travelInsurance: z.boolean().default(false),
-        refundProtect: z.boolean().default(false),
-        baggageTrace: z.boolean().default(false)
-    })
+    discountCoupon: z.string().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -70,7 +66,7 @@ export default function PassengerDetails() {
                 {
                     firstName: '', lastName: '', nationality: '', dob: '', gender: 'Male',
                     passportNumber: '', passportExpiry: '', residencyCountry: '',
-                    frequentFlyerProgram: '', frequentFlyerNumber: ''
+                    phoneCountryCode: '', phone: '', email: ''
                 }
             ],
             billingAddress: {
@@ -79,12 +75,7 @@ export default function PassengerDetails() {
                 zipCode: '',
                 country: ''
             },
-            discountCoupon: '',
-            addOns: {
-                travelInsurance: false,
-                refundProtect: false,
-                baggageTrace: false
-            }
+            discountCoupon: ''
         }
     });
 
@@ -92,6 +83,13 @@ export default function PassengerDetails() {
     const { fields } = useFieldArray({
         control,
         name: "passengers"
+    });
+
+    // Fetch countries for billing address dropdown
+    const { data: countries = [] } = useQuery({
+        queryKey: ['countries'],
+        queryFn: fetchCountries,
+        staleTime: 600000
     });
 
     const onSubmit = async (data: FormValues) => {
@@ -221,18 +219,7 @@ export default function PassengerDetails() {
     } : null;
 
     // Dynamic Calculations
-    const addOns = methods.watch('addOns');
-    const addOnsPrices = {
-        travelInsurance: 45,
-        refundProtect: 29,
-        baggageTrace: 15
-    };
-
-    const addOnsTotal = Object.entries(addOns).reduce((sum, [key, selected]) => {
-        return selected ? sum + (addOnsPrices[key as keyof typeof addOnsPrices] || 0) : sum;
-    }, 0);
-
-    const subtotal = isHotel ? (hotelSummary?.price || 0) + addOnsTotal : flightSummary.price + flightSummary.taxes + addOnsTotal + seatsTotal + baggageTotal + mealsTotal;
+    const subtotal = isHotel ? (hotelSummary?.price || 0) : flightSummary.price + flightSummary.taxes + seatsTotal + baggageTotal + mealsTotal;
     const discountAmount = (subtotal * couponDiscount) / 100;
     const finalTotal = subtotal - discountAmount;
 
@@ -297,53 +284,6 @@ export default function PassengerDetails() {
                                     ))}
                                 </form>
                             </FormProvider>
-
-                            {/* Specialized Travel Services */}
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#8B5CF6]">
-                                        <Shield size={20} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-sm font-black text-gray-900 tracking-tight uppercase">Specialized Travel Services</h3>
-                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Protect your journey with premium add-ons</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {[
-                                        { id: 'travelInsurance', label: 'Travel Insurance', icon: <ShieldCheck />, price: 45, desc: 'Medical & cancellation coverage' },
-                                        { id: 'refundProtect', label: 'Refund Protect', icon: <RefreshCw />, price: 29, desc: '100% refund for any reason' },
-                                        { id: 'baggageTrace', label: 'Baggage Trace Me', icon: <Luggage />, price: 15, desc: 'Smart tracking for your bags' }
-                                    ].map((service) => {
-                                        const fieldId = String(service.id);
-                                        const isSelected = methods.watch(`addOns.${fieldId}` as any);
-                                        return (
-                                            <div
-                                                key={service.id}
-                                                onClick={() => methods.setValue(`addOns.${fieldId}` as any, !isSelected)}
-                                                className={`cursor-pointer bg-white rounded-[2rem] border-2 p-8 transition-all hover:shadow-xl group ${isSelected ? 'border-[#8B5CF6] ring-4 ring-purple-50' : 'border-gray-100 hover:border-gray-200'}`}
-                                            >
-                                                <div className="flex flex-col gap-4">
-                                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${isSelected ? 'bg-[#8B5CF6] text-white' : 'bg-gray-50 text-gray-400 group-hover:text-[#8B5CF6]'}`}>
-                                                        {React.cloneElement(service.icon as React.ReactElement<any>, { size: 24 })}
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-widest">{service.label}</h4>
-                                                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter mt-1">{service.desc}</p>
-                                                    </div>
-                                                    <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                                                        <span className="text-xs font-black text-gray-900">{formatCurrency(service.price)}</span>
-                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected ? 'bg-green-500 text-white' : 'bg-gray-100'}`}>
-                                                            {isSelected && <CheckCircle2 size={14} />}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
 
                             {/* Tactical Ancillary Buttons */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -412,6 +352,12 @@ export default function PassengerDetails() {
                                             placeholder="Building, Street Name, District"
                                             className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.street ? 'border-red-500/50' : 'border-transparent'}`}
                                         />
+                                        {methods.formState.errors.billingAddress?.street && (
+                                            <div className="flex items-center gap-1 text-red-500 pl-1">
+                                                <AlertCircle size={10} />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">{methods.formState.errors.billingAddress.street.message}</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="space-y-2 group/field">
                                         <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">City*</label>
@@ -420,6 +366,12 @@ export default function PassengerDetails() {
                                             placeholder="City"
                                             className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.city ? 'border-red-500/50' : 'border-transparent'}`}
                                         />
+                                        {methods.formState.errors.billingAddress?.city && (
+                                            <div className="flex items-center gap-1 text-red-500 pl-1">
+                                                <AlertCircle size={10} />
+                                                <span className="text-[9px] font-black uppercase tracking-widest">{methods.formState.errors.billingAddress.city.message}</span>
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="grid grid-cols-2 gap-6">
                                         <div className="space-y-2 group/field">
@@ -429,18 +381,35 @@ export default function PassengerDetails() {
                                                 placeholder="Zip"
                                                 className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.zipCode ? 'border-red-500/50' : 'border-transparent'}`}
                                             />
+                                            {methods.formState.errors.billingAddress?.zipCode && (
+                                                <div className="flex items-center gap-1 text-red-500 pl-1">
+                                                    <AlertCircle size={10} />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">{methods.formState.errors.billingAddress.zipCode.message}</span>
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="space-y-2 group/field">
                                             <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Country*</label>
-                                            <select
-                                                {...methods.register('billingAddress.country')}
-                                                className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-red-500/50' : 'border-transparent'}`}
-                                            >
-                                                <option value="">Select</option>
-                                                <option value="US">USA</option>
-                                                <option value="AE">UAE</option>
-                                                <option value="GB">UK</option>
-                                            </select>
+                                            <div className="relative">
+                                                <select
+                                                    {...methods.register('billingAddress.country')}
+                                                    className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-red-500/50' : 'border-transparent'}`}
+                                                >
+                                                    <option value="">Select</option>
+                                                    {countries.map((c: any) => (
+                                                        <option key={c.code} value={c.code}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                    <ChevronDown size={14} className="text-gray-400" />
+                                                </div>
+                                            </div>
+                                            {methods.formState.errors.billingAddress?.country && (
+                                                <div className="flex items-center gap-1 text-red-500 pl-1">
+                                                    <AlertCircle size={10} />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">{methods.formState.errors.billingAddress.country.message}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -507,12 +476,6 @@ export default function PassengerDetails() {
                                                 <span className="text-gray-900">{formatCurrency(flightSummary.taxes)}</span>
                                             </div>
                                         )}
-                                        {addOnsTotal > 0 && (
-                                            <div className="flex justify-between items-center text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">
-                                                <span>Services & Coverage</span>
-                                                <span className="text-gray-900">+{formatCurrency(addOnsTotal)}</span>
-                                            </div>
-                                        )}
                                         {(seatsTotal > 0 || baggageTotal > 0 || mealsTotal > 0) && (
                                             <div className="flex justify-between items-center text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest px-2 group">
                                                 <div className="flex items-center gap-1">
@@ -562,12 +525,21 @@ export default function PassengerDetails() {
                                         >
                                             Pay with Wallet <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                                         </button>
-                                        <button
-                                            onClick={() => handleFormSubmit('hold')}
-                                            className="h-14 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] hover:text-[#8B5CF6] text-gray-500 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all"
-                                        >
-                                            Hold Booking
-                                        </button>
+
+                                        {(isHotel ? summary?.hotel?.refundable : passedFlight?.refundable) ? (
+                                            <button
+                                                onClick={() => handleFormSubmit('hold')}
+                                                className="h-14 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] hover:text-[#8B5CF6] text-gray-500 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all"
+                                            >
+                                                Hold Booking
+                                            </button>
+                                        ) : (
+                                            <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
+                                                <p className="text-[9px] font-black text-orange-600 uppercase tracking-widest text-center">
+                                                    Hold option unavailable for non-refundable {isHotel ? 'rates' : 'fares'}
+                                                </p>
+                                            </div>
+                                        )}
                                         {(Object.keys(errors).length > 0) && (
                                             <p className="text-center text-red-500 text-[10px] font-bold uppercase tracking-widest animate-pulse">
                                                 Please fix errors above to proceed

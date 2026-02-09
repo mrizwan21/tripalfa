@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
-import logger from '../utils/logger.js';
-import { cacheService } from '../cache/redis.js';
-import { CacheService } from '../cache/redis.js';
-import { metricsStore } from '../monitoring/metrics.js';
+import logger from '../utils/logger';
+import { cacheService } from '../cache/redis';
+import { CacheService } from '../cache/redis';
+import { metricsStore } from '../monitoring/metrics';
 
 export interface SupplierConfig {
   id: string;
@@ -235,7 +235,7 @@ export class SupplierIntegration {
 
     const cacheKey = this.getCacheKey('flights', supplierId, request);
     const cached = await this.cache.get(cacheKey);
-    
+
     if (cached) {
       (metricsStore as any).increment('supplier_cache_hit', { supplier: supplierId });
       return JSON.parse(String(cached));
@@ -249,10 +249,10 @@ export class SupplierIntegration {
     try {
       const response = await client.post('/flights/search', request);
       const result = this.transformFlightResponse(response.data, supplierId);
-      
+
       // Cache for 10 minutes
       await this.cache.set(cacheKey, JSON.stringify(result), 600);
-      
+
       return result;
     } catch (error) {
       logger.error(`Flight search failed for supplier ${supplierId}`, {
@@ -275,7 +275,7 @@ export class SupplierIntegration {
 
     const cacheKey = this.getCacheKey('hotels', supplierId, request);
     const cached = await this.cache.get(cacheKey);
-    
+
     if (cached) {
       (metricsStore as any).increment('supplier_cache_hit', { supplier: supplierId });
       return JSON.parse(String(cached));
@@ -289,10 +289,10 @@ export class SupplierIntegration {
     try {
       const response = await client.post('/hotels/search', request);
       const result = this.transformHotelResponse(response.data, supplierId);
-      
+
       // Cache for 15 minutes
       await this.cache.set(cacheKey, JSON.stringify(result), 900);
-      
+
       return result;
     } catch (error) {
       logger.error(`Hotel search failed for supplier ${supplierId}`, {
@@ -346,7 +346,9 @@ export class SupplierIntegration {
     }
 
     try {
-      const response = await client.post('/hotels/book', bookingData);
+      // LiteAPI specific endpoint for booking
+      const endpoint = supplierId === 'liteapi' ? '/rates/book' : '/hotels/book';
+      const response = await client.post(endpoint, bookingData);
       return this.transformBookingResponse(response.data, supplierId);
     } catch (error) {
       logger.error(`Hotel booking failed for supplier ${supplierId}`, {
@@ -356,6 +358,79 @@ export class SupplierIntegration {
       });
       throw error;
     }
+  }
+
+  async getRoomRates(supplierId: string, hotelIds: string[], checkIn: string, checkOut: string, guests: any[]): Promise<any> {
+    const client = this.getClient(supplierId);
+    try {
+      // LiteAPI: POST /hotels/rates
+      const response = await client.post('/hotels/rates', {
+        hotelIds,
+        checkin: checkIn,
+        checkout: checkOut,
+        occupancies: guests
+      });
+      return response.data?.data || [];
+    } catch (error) {
+      logger.error(`Get Room Rates failed for ${supplierId}`, error);
+      throw error;
+    }
+  }
+
+  async prebookHotel(supplierId: string, bookingData: any): Promise<any> {
+    const client = this.getClient(supplierId);
+    try {
+      // LiteAPI: POST /rates/prebook
+      const response = await client.post('/rates/prebook', bookingData);
+      return response.data?.data || null;
+    } catch (error) {
+      logger.error(`Prebook failed for ${supplierId}`, error);
+      throw error;
+    }
+  }
+
+  async listBookings(supplierId: string, params?: any): Promise<any[]> {
+    const client = this.getClient(supplierId);
+    try {
+      // LiteAPI: GET /bookings
+      const response = await client.get('/bookings', { params });
+      return response.data?.data || [];
+    } catch (error) {
+      logger.error(`List Bookings failed for ${supplierId}`, error);
+      return [];
+    }
+  }
+
+  async getBooking(supplierId: string, bookingId: string): Promise<any> {
+    const client = this.getClient(supplierId);
+    try {
+      // LiteAPI: GET /bookings/{bookingId}
+      const response = await client.get(`/bookings/${bookingId}`);
+      return response.data?.data || null;
+    } catch (error) {
+      logger.error(`Get Booking failed for ${supplierId}`, error);
+      throw error;
+    }
+  }
+
+  async cancelBooking(supplierId: string, bookingId: string): Promise<any> {
+    const client = this.getClient(supplierId);
+    try {
+      // LiteAPI: PUT /bookings/{bookingId}
+      const response = await client.put(`/bookings/${bookingId}`);
+      return response.data;
+    } catch (error) {
+      logger.error(`Cancel Booking failed for ${supplierId}`, error);
+      throw error;
+    }
+  }
+
+  private getClient(supplierId: string): AxiosInstance {
+    const client = this.clients.get(supplierId);
+    if (!client) {
+      throw new Error(`Client for supplier ${supplierId} not initialized`);
+    }
+    return client;
   }
 
   private transformFlightResponse(data: any, supplierId: string): FlightSearchResponse {

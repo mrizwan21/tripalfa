@@ -156,16 +156,16 @@ export class RulePermissionUtils {
    * Check if user can perform a specific operation on any rule category
    */
   static canPerformOperation(userPermissions: string[], operation: string): boolean {
-    const operationPermissions = this.getPermissionsForOperation(operation);
-    return this.hasAnyPermission(userPermissions, operationPermissions);
+    const operationPermissions = RulePermissionUtils.getPermissionsForOperation(operation);
+    return RulePermissionUtils.hasAnyPermission(userPermissions, operationPermissions);
   }
 
   /**
    * Check if user can perform any operation on a specific rule category
    */
   static canManageCategory(userPermissions: string[], category: string): boolean {
-    const categoryPermissions = this.getPermissionsForCategory(category);
-    return this.hasAnyPermission(userPermissions, categoryPermissions);
+    const categoryPermissions = RulePermissionUtils.getPermissionsForCategory(category);
+    return RulePermissionUtils.hasAnyPermission(userPermissions, categoryPermissions);
   }
 
   /**
@@ -180,14 +180,14 @@ export class RulePermissionUtils {
    * Check if user has admin-level permissions for rules
    */
   static isAdmin(userPermissions: string[]): boolean {
-    return this.hasPermission(userPermissions, RULE_PERMISSIONS.RULE_AUDIT);
+    return RulePermissionUtils.hasPermission(userPermissions, RULE_PERMISSIONS.RULE_AUDIT);
   }
 
   /**
    * Check if user has read-only access to rules
    */
   static canViewRules(userPermissions: string[]): boolean {
-    return this.hasAnyPermission(userPermissions, [
+    return RulePermissionUtils.hasAnyPermission(userPermissions, [
       RULE_PERMISSIONS.MARKUP_VIEW,
       RULE_PERMISSIONS.COMMISSION_VIEW,
       RULE_PERMISSIONS.COUPON_VIEW,
@@ -199,7 +199,7 @@ export class RulePermissionUtils {
    * Check if user can create rules
    */
   static canCreateRules(userPermissions: string[]): boolean {
-    return this.hasAnyPermission(userPermissions, [
+    return RulePermissionUtils.hasAnyPermission(userPermissions, [
       RULE_PERMISSIONS.MARKUP_CREATE,
       RULE_PERMISSIONS.COMMISSION_CREATE,
       RULE_PERMISSIONS.COUPON_CREATE,
@@ -211,7 +211,7 @@ export class RulePermissionUtils {
    * Check if user can edit rules
    */
   static canEditRules(userPermissions: string[]): boolean {
-    return this.hasAnyPermission(userPermissions, [
+    return RulePermissionUtils.hasAnyPermission(userPermissions, [
       RULE_PERMISSIONS.MARKUP_EDIT,
       RULE_PERMISSIONS.COMMISSION_EDIT,
       RULE_PERMISSIONS.COUPON_EDIT,
@@ -223,7 +223,7 @@ export class RulePermissionUtils {
    * Check if user can delete rules
    */
   static canDeleteRules(userPermissions: string[]): boolean {
-    return this.hasAnyPermission(userPermissions, [
+    return RulePermissionUtils.hasAnyPermission(userPermissions, [
       RULE_PERMISSIONS.MARKUP_DELETE,
       RULE_PERMISSIONS.COMMISSION_DELETE,
       RULE_PERMISSIONS.COUPON_DELETE,
@@ -255,23 +255,23 @@ export class RulePermissionUtils {
     };
   } {
     return {
-      admin: this.isAdmin(userPermissions),
-      canView: this.canViewRules(userPermissions),
-      canCreate: this.canCreateRules(userPermissions),
-      canEdit: this.canEditRules(userPermissions),
-      canDelete: this.canDeleteRules(userPermissions),
+      admin: RulePermissionUtils.isAdmin(userPermissions),
+      canView: RulePermissionUtils.canViewRules(userPermissions),
+      canCreate: RulePermissionUtils.canCreateRules(userPermissions),
+      canEdit: RulePermissionUtils.canEditRules(userPermissions),
+      canDelete: RulePermissionUtils.canDeleteRules(userPermissions),
       categories: {
-        markup: this.canManageCategory(userPermissions, 'markup'),
-        commission: this.canManageCategory(userPermissions, 'commission'),
-        coupon: this.canManageCategory(userPermissions, 'coupon'),
-        airlineDeal: this.canManageCategory(userPermissions, 'airline_deal')
+        markup: RulePermissionUtils.canManageCategory(userPermissions, 'markup'),
+        commission: RulePermissionUtils.canManageCategory(userPermissions, 'commission'),
+        coupon: RulePermissionUtils.canManageCategory(userPermissions, 'coupon'),
+        airlineDeal: RulePermissionUtils.canManageCategory(userPermissions, 'airline_deal')
       },
       operations: {
-        view: this.canPerformOperation(userPermissions, 'view'),
-        create: this.canPerformOperation(userPermissions, 'create'),
-        edit: this.canPerformOperation(userPermissions, 'edit'),
-        delete: this.canPerformOperation(userPermissions, 'delete'),
-        manage: this.canPerformOperation(userPermissions, 'manage')
+        view: RulePermissionUtils.canPerformOperation(userPermissions, 'view'),
+        create: RulePermissionUtils.canPerformOperation(userPermissions, 'create'),
+        edit: RulePermissionUtils.canPerformOperation(userPermissions, 'edit'),
+        delete: RulePermissionUtils.canPerformOperation(userPermissions, 'delete'),
+        manage: RulePermissionUtils.canPerformOperation(userPermissions, 'manage')
       }
     };
   }
@@ -280,7 +280,7 @@ export class RulePermissionUtils {
    * Validate permission format
    */
   static isValidPermission(permission: string): boolean {
-    const validPermissionPattern = /^rule:(markup|commission|coupon|airline_deal):(view|create|edit|delete|manage)$/;
+    const validPermissionPattern = /^rules:(markup|commission|coupon|airline_deal):(markup_rules|commission_rules|coupon_campaigns|airline_deals|rule_analytics|rule_audit):(view|create|edit|delete|manage|approve|publish|analyze|export|import|activate|deactivate)$/;
     return validPermissionPattern.test(permission);
   }
 
@@ -300,8 +300,8 @@ export class RulePermissionUtils {
     missingOperations: string[];
     recommendations: string[];
   } {
-    const effectivePermissions = this.getEffectivePermissions(userPermissions);
-    const hierarchy = this.getPermissionHierarchy(userPermissions);
+    const effectivePermissions = RulePermissionUtils.getEffectivePermissions(userPermissions);
+    const hierarchy = RulePermissionUtils.getPermissionHierarchy(userPermissions);
 
     const missingCategories: string[] = [];
     const missingOperations: string[] = [];
@@ -347,15 +347,15 @@ export class RulePermissionUtils {
     category: string,
     operation: string
   ): PermissionCheckResult {
-    const categoryPermissions = this.getPermissionsForCategory(category);
-    const operationPermissions = this.getPermissionsForOperation(operation);
-    
+    const categoryPermissions = RulePermissionUtils.getPermissionsForCategory(category);
+    const operationPermissions = RulePermissionUtils.getPermissionsForOperation(operation);
+
     // Find the intersection of category and operation permissions
-    const matchingPermissions = categoryPermissions.filter(permission => 
+    const matchingPermissions = categoryPermissions.filter(permission =>
       operationPermissions.includes(permission)
     );
 
-    return this.checkPermissions(userPermissions, matchingPermissions);
+    return RulePermissionUtils.checkPermissions(userPermissions, matchingPermissions);
   }
 
   /**
@@ -373,7 +373,7 @@ export class RulePermissionUtils {
     const result: Record<string, string[]> = {};
 
     for (const category of categories) {
-      result[category] = this.getPermissionsForCategory(category);
+      result[category] = RulePermissionUtils.getPermissionsForCategory(category);
     }
 
     return result;
@@ -387,7 +387,7 @@ export class RulePermissionUtils {
     const result: Record<string, string[]> = {};
 
     for (const operation of operations) {
-      result[operation] = this.getPermissionsForOperation(operation);
+      result[operation] = RulePermissionUtils.getPermissionsForOperation(operation);
     }
 
     return result;
@@ -425,8 +425,8 @@ export class PermissionValidator {
 
     for (let i = 0; i < permissions.length; i++) {
       const permission = permissions[i];
-      const validation = this.validatePermission(permission);
-      
+      const validation = PermissionValidator.validatePermission(permission);
+
       if (!validation.isValid) {
         errors.push(`Permission at index ${i}: ${validation.error}`);
       }
@@ -446,7 +446,7 @@ export class PermissionValidator {
       .map(permission => RulePermissionUtils.normalizePermission(permission))
       .filter(permission => permission.length > 0);
 
-    const validation = this.validatePermissions(normalized);
+    const validation = PermissionValidator.validatePermissions(normalized);
 
     return {
       normalized,

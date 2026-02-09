@@ -6,7 +6,7 @@
  * - API-007: POST /api/wallet/topup
  */
 
-import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup.js';
+import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup';
 
 describe('Wallet API Integration Tests', () => {
   beforeAll(async () => {

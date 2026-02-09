@@ -33,9 +33,9 @@ services:
     image: kong:latest
     container_name: wicked-kong
     ports:
-      - "8000:8000"
-      - "8443:8443"
-      - "8001:8001"
+      - "9000:8000"
+      - "9443:8443"
+      - "9001:8001"
     environment:
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=wicked-postgres
@@ -95,7 +95,7 @@ services:
     container_name: wicked-portal
     platform: linux/amd64
     ports:
-      - "3001:3000"
+      - "3009:3000"
     environment:
       - NODE_ENV=docker
       - PORTAL_CONFIG_KEY=wicked

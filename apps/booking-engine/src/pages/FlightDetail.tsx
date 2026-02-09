@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { fetchFlightById } from '../lib/api';
+import { fetchFlightById, getOfferDetails } from '../lib/api';
 import { formatCurrency } from '../lib/utils';
 import { FareCard } from '../components/flight/FareCard';
 
@@ -16,6 +16,11 @@ export default function FlightDetail() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const id = searchParams.get('id');
+  const offerId = searchParams.get('offerId');
+  
+  // Get passenger counts from search params
+  const adults = searchParams.get('adults') || '1';
+  const children = searchParams.get('children') || '0';
 
   const [flight, setFlight] = useState<any>(location.state?.flight || null);
   const [loading, setLoading] = useState(false);
@@ -23,8 +28,23 @@ export default function FlightDetail() {
   const [activeTab, setActiveTab] = useState('segments');
 
   useEffect(() => {
-    // If flight data passed via state, usage that. Otherwise fetch by ID.
-    if (!flight && id) {
+    // If we have a Duffel offerId, fetch offer details
+    if (offerId && !flight) {
+      setLoading(true);
+      getOfferDetails(offerId)
+        .then(offerData => {
+          // Map Duffel offer to flight format
+          const mappedFlight = mapDuffelOfferToFlight(offerData);
+          setFlight(mappedFlight);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to fetch offer details:', err);
+          setError('Failed to load flight details');
+          setLoading(false);
+        });
+    } else if (!flight && id && !offerId) {
+      // Fallback to original fetchFlightById for backward compatibility
       setLoading(true);
       fetchFlightById(id)
         .then(res => {
@@ -37,7 +57,35 @@ export default function FlightDetail() {
           setLoading(false);
         });
     }
-  }, [id, flight]);
+  }, [id, offerId, flight]);
+
+  // Helper function to map Duffel offer to flight details format
+  const mapDuffelOfferToFlight = (offer: any) => {
+    const firstSlice = offer.slices?.[0];
+    const segments = firstSlice?.segments || [];
+
+    return {
+      id: offer.id,
+      origin: firstSlice?.origin_iata || 'N/A',
+      destination: firstSlice?.destination_iata || 'N/A',
+      airline: segments[0]?.operating_carrier?.name || 'Unknown',
+      flightNumber: segments[0]?.operating_carrier?.iata_code || 'N/A',
+      cabin: offer.passengers?.[0]?.fare?.cabin_class || 'economy',
+      amount: parseFloat(offer.total_amount),
+      currency: offer.total_currency || 'USD',
+      segments: segments.map((segment: any) => ({
+        from: segment.origin_iata,
+        to: segment.destination_iata,
+        depart: segment.departure_time,
+        arrive: segment.arrival_time,
+        airline: segment.operating_carrier?.name,
+        number: segment.operating_carrier?.iata_code,
+        aircraft: segment.aircraft?.iata_code,
+        duration: segment.duration
+      })),
+      rawOffer: offer
+    };
+  };
 
   if (loading) {
     return (
@@ -236,8 +284,10 @@ export default function FlightDetail() {
             <div className="lg:col-span-4">
               <FareCard
                 amount={flight.amount}
-                currency="SAR"
-                onSelect={() => navigate(`/flights/addons?id=${flight.id}`)}
+                currency={flight.currency || 'SAR'}
+                onSelect={() => navigate(`/seat-selection?offerId=${flight.id}&adults=${adults}&children=${children}`, { 
+                  state: { offer: flight.rawOffer, flight } 
+                })}
               />
             </div>
           </div>

@@ -4,32 +4,40 @@
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "lib": [
-      "ESNext",
-      "DOM"
+      "ESNext"
     ],
     "types": [
-      "node",
-      "react",
-      "react-dom",
-      "jest"
+      "node"
     ],
     "declaration": true,
-    "outDir": "dist",
-    "rootDir": "../..",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "strict": false,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": false,
+    "noImplicitAny": false,
     "baseUrl": ".",
     "paths": {
       "@tripalfa/shared-types": [
-        "../../packages/shared-types/dist/index"
+        "../../packages/shared-types/dist/index.d.ts"
+      ],
+      "@tripalfa/static-data": [
+        "../../packages/static-data/dist/index.d.ts"
       ]
     }
   },
   "include": [
     "src/**/*"
+  ],
+  "exclude": [
+    "src/**/__tests__",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "node_modules",
+    "dist"
   ]
 }

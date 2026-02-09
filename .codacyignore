@@ -2,3 +2,21 @@ node_modules
 database/migrations/
 database/src/generated/prisma/package.json
 scripts/*.sql
+**/nginx.conf
+**/*.md
+Dockerfile
+**/Dockerfile
+**/dockerfile
+**/Dockerfile.*
+docker-compose*.yml
+docker-compose*.yaml
+services/**/Dockerfile
+services/booking-service/Dockerfile
+
+# TypeScript/JavaScript files - Pylint is a Python linter and cannot parse these
+**/*.ts
+**/*.tsx
+**/*.js
+**/*.jsx
+**/*.mjs
+**/*.cjs

@@ -164,14 +164,14 @@ describe('RulePermissionUtils', () => {
 
   describe('Permission Validation', () => {
     test('should validate permission format', () => {
-      expect(isValidPermission('rule:markup:view')).toBe(true);
-      expect(isValidPermission('rule:invalid:operation')).toBe(false);
+      expect(isValidPermission(RULE_PERMISSIONS.MARKUP_VIEW)).toBe(true);
+      expect(isValidPermission('rules:invalid:operation')).toBe(false);
       expect(isValidPermission('invalid_format')).toBe(false);
     });
 
     test('should normalize permission strings', () => {
-      expect(normalizePermission('  RULE:MARKUP:VIEW  ')).toBe('rule:markup:view');
-      expect(normalizePermission('RULE:COMMISSION:CREATE')).toBe('rule:commission:create');
+      expect(normalizePermission('  RULES:MARKUP:MARKUP_RULES:VIEW  ')).toBe('rules:markup:markup_rules:view');
+      expect(normalizePermission('RULES:COMMISSION:COMMISSION_RULES:CREATE')).toBe('rules:commission:commission_rules:create');
     });
 
     test('should get permission suggestions', () => {
@@ -253,8 +253,8 @@ describe('PermissionValidator', () => {
 
     test('should normalize and validate permissions', () => {
       const result = normalizeAndValidate([
-        '  RULE:MARKUP:VIEW  ',
-        'RULE:COMMISSION:CREATE',
+        '  ' + RULE_PERMISSIONS.MARKUP_VIEW.toUpperCase() + '  ',
+        RULE_PERMISSIONS.COMMISSION_CREATE.toUpperCase(),
         'invalid_permission'
       ]);
 
@@ -345,60 +345,4 @@ describe('Integration Tests', () => {
     expect(suggestions.recommendations.length).toBeGreaterThan(0);
   });
 });
-function expect<T>(actual: T) {
-  const format = (v: any) => {
-    try { return JSON.stringify(v); } catch { return String(v); }
-  };
 
-  const build = (negate = false) => ({
-    toBe(expected: any) {
-      const pass = actual === expected;
-      if (pass === negate) {
-        throw new Error(`Expected ${format(actual)} ${negate ? 'not ' : ''}to be ${format(expected)}.`);
-      }
-    },
-
-    toContain(expected: any) {
-      const val: any = actual as any;
-      let pass = false;
-      if (Array.isArray(val) || typeof val === 'string') {
-        pass = (val as any).includes(expected);
-      } else if (val instanceof Set) {
-        pass = val.has(expected);
-      } else if (val && typeof val === 'object') {
-        pass = Object.values(val).includes(expected);
-      }
-      if (pass === negate) {
-        throw new Error(`Expected ${format(actual)} ${negate ? 'not ' : ''}to contain ${format(expected)}.`);
-      }
-    },
-
-    toHaveLength(expected: number) {
-      const val: any = actual as any;
-      const len = val && typeof val.length === 'number' ? val.length : undefined;
-      if (len === undefined) {
-        throw new Error(`Value ${format(actual)} has no length property.`);
-      }
-      const pass = len === expected;
-      if (pass === negate) {
-        throw new Error(`Expected length of ${format(actual)} ${negate ? 'not ' : ''}to be ${expected} (received ${len}).`);
-      }
-    },
-
-    toBeGreaterThan(expected: number) {
-      if (typeof actual !== 'number') {
-        throw new Error(`Actual value ${format(actual)} is not a number.`);
-      }
-      const pass = (actual as unknown as number) > expected;
-      if (pass === negate) {
-        throw new Error(`Expected ${format(actual)} ${negate ? 'not ' : ''}to be greater than ${expected}.`);
-      }
-    },
-
-    get not() {
-      return build(!negate);
-    }
-  });
-
-  return build(false);
-}

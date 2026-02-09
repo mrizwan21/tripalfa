@@ -11,7 +11,7 @@ async function ingestGlobalAirlines() {
         const airlines = await DuffelClient.getAirlines('prod');
         console.log(`Received ${airlines.length} airlines from Duffel.`);
 
-        for (const airline of airlines) {
+        for (const airline of (airlines as any[])) {
             if (!airline.iata_code) continue;
 
             const existing = await staticPrisma.airline.findUnique({ where: { iataCode: airline.iata_code } });
@@ -49,7 +49,7 @@ async function ingestGlobalAirlines() {
         if (amadeusAirlines) {
             console.log(`Checking ${amadeusAirlines.length} airlines from Amadeus for enrichment...`);
 
-            for (const air of amadeusAirlines) {
+            for (const air of (amadeusAirlines as any[])) {
                 const iata = air.iataCode;
                 if (!iata) continue;
 

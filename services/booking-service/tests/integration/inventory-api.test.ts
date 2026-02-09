@@ -5,7 +5,7 @@
  * - API-009: GET /api/inventory/search
  */
 
-import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup.js';
+import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup';
 
 describe('Inventory API Integration Tests', () => {
   beforeAll(async () => {

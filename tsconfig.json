@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "node16",
+    "module": "nodenext",
     "lib": [
       "ES2020",
       "DOM"
@@ -18,6 +18,9 @@
     "paths": {
       "@tripalfa/static-data": [
         "packages/static-data/src"
+      ],
+      "@tripalfa/shared-types": [
+        "packages/shared-types/src"
       ]
     },
     "forceConsistentCasingInFileNames": true

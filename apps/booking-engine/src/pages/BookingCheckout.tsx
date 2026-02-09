@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Wallet, ChevronDown, Check, X, Plane, CreditCard, ShieldCheck,
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { formatCurrency } from '../lib/utils';
-import { api, confirmFlightBooking, confirmHotelBooking, fetchWallets } from '../lib/api';
+import { api, confirmFlightBooking, confirmHotelBooking, fetchWallets, createFlightOrder, confirmFlightOrder, createPaymentIntent, getPaymentMethods, getOrderPaymentMethods, confirmPayment, processSupplierPayment } from '../lib/api';
 import { useQuery } from '@tanstack/react-query';
 
 export default function BookingCheckout() {
@@ -15,15 +15,22 @@ export default function BookingCheckout() {
   const { state } = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('wallet'); // Always wallet for Duffel
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
+  const [walletInfo, setWalletInfo] = useState<any>(null);
 
   // Extract booking data and summary from state
   const bookingData = state?.bookingData;
   const summary = state?.summary;
+  const offer = state?.offer; // Duffel offer from FlightDetail
+  const flight = state?.flight; // Flight display data
   const passengers = bookingData?.passengers || [{ firstName: 'Guest', lastName: 'User' }];
   const billingAddress = bookingData?.billingAddress;
   const addOns = bookingData?.addOns || {};
 
-  const flightPrice = summary?.flight?.price || 0;
+  // Calculate prices
+  const flightPrice = summary?.flight?.price || offer?.total_amount || flight?.amount || 0;
   const taxes = summary?.flight?.taxes || 0;
   const ancillariesTotal = (summary?.ancillaries?.seats || 0) +
     (summary?.ancillaries?.baggage || 0) +
@@ -53,8 +60,45 @@ export default function BookingCheckout() {
     queryFn: fetchWallets
   });
 
-  const walletBalance = wallets?.[0]?.balance || 0;
+  // Get the Duffel supplier wallet
+  const supplierWallet = wallets?.find((w: any) => w.type === 'duffel' || w.provider === 'duffel');
+  const walletBalance = supplierWallet?.balance || wallets?.[0]?.balance || 0;
   const hasInsufficientBalance = walletBalance < totalPayable;
+  
+  useEffect(() => {
+    if (supplierWallet) {
+      setWalletInfo(supplierWallet);
+      console.log('[Checkout] Using Duffel supplier wallet:', {
+        balance: supplierWallet.balance,
+        currency: supplierWallet.currency,
+        provider: supplierWallet.provider
+      });
+    }
+  }, [supplierWallet]);
+
+  // Fetch available payment methods when component mounts or offer changes
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      try {
+        setLoadingPaymentMethods(true);
+        const methods = await getPaymentMethods('duffel', 'test');
+        if (Array.isArray(methods)) {
+          setPaymentMethods([{ id: 'wallet', name: 'Supplier Wallet', type: 'balance' }]);
+        }
+        setSelectedPaymentMethod('wallet');
+        setLoadingPaymentMethods(false);
+      } catch (error) {
+        console.error('Failed to fetch payment methods:', error);
+        setLoadingPaymentMethods(false);
+        setPaymentMethods([{ id: 'wallet', name: 'Supplier Wallet', type: 'balance' }]);
+        setSelectedPaymentMethod('wallet');
+      }
+    };
+
+    if (offer) {
+      fetchPaymentMethods();
+    }
+  }, [offer]);
 
   const handleConfirmPayment = async () => {
     setIsProcessing(true);
@@ -62,50 +106,138 @@ export default function BookingCheckout() {
       let result;
       const paymentDetails = {
         amount: totalPayable,
-        currency: 'USD',
-        method: 'wallet'
+        currency: offer?.total_currency || 'USD',
+        method: 'wallet' // Always wallet for Duffel bookings
       };
 
-      // Determine if it's a flight or hotel booking based on summary type
-      if (summary?.type === 'hotel') {
-        // For hotels, we expect a bookingId if it was already held, or we might need to hold it.
-        // Assuming bookingData contains necessary info. 
-        // If we have a booking ID in state, use it. Otherwise, this might fail if we skip Hold step.
-        // Ideally, previous steps should have created a booking ID (Hold).
-        const bookingId = bookingData?.id || state?.bookingId;
-        if (bookingId) {
-          result = await confirmHotelBooking(bookingId, paymentDetails);
-        } else {
-          // Fallback or Error: 'Booking session expired' or similar. 
-          // For migration safety, we can try to "Hold" here if we had `holdHotelBooking` ready with full data.
-          // But let's assume ID is passed for now or throw error.
-          throw new Error("Missing booking reference. Please restart booking.");
-        }
-      } else {
-        // Flight Booking
-        const bookingId = bookingData?.id || state?.bookingId;
-        if (bookingId) {
-          result = await confirmFlightBooking(bookingId, paymentDetails);
-        } else {
-          // For flights, often we hold right before payment.
-          // If ID is missing, we might need to call holdFlightBooking(bookingData) first.
-          throw new Error("Missing booking reference. Please restart booking.");
-        }
-      }
+      // If we have a Duffel offer, use the Duffel booking flow
+      if (offer) {
+        try {
+          console.log('[Checkout] Starting Duffel booking flow with wallet payment');
+          // Step 1: Create flight order with passenger details
+          const createOrderParams = {
+            selectedOffers: [offer.id],
+            passengers: passengers.map((p: any) => ({
+              id: p.id || `passenger_${Math.random().toString(36).substr(2, 9)}`,
+              email: p.email || '', 
+              type: 'adult',
+              given_name: p.firstName || p.given_name,
+              family_name: p.lastName || p.family_name,
+              phone_number: p.phone || '',
+              born_at: p.dob ? new Date(p.dob).toISOString().split('T')[0] : '',
+              gender: p.gender?.charAt(0).toUpperCase() || 'M'
+            }))
+          };
 
-      if (result && (result.success || result.status === 'confirmed' || result.data?.status === 'confirmed')) {
-        navigate('/confirmation', {
-          state: {
-            ...state,
-            bookingId: result.bookingId || result.id || bookingData?.id,
-            paymentMode: 'wallet',
-            passengerName: passengers[0].firstName,
-            totalPaid: totalPayable,
-            status: 'confirmed'
+          // Create the order
+          const orderResult = await createFlightOrder(createOrderParams);
+          const orderId = orderResult.id || orderResult.data?.id;
+
+          if (!orderId) {
+            throw new Error('Failed to create flight order');
           }
-        });
+
+          // Step 2: Create payment intent
+          const paymentIntentParams = {
+            order_id: orderId,
+            amount: {
+              amount: Math.round(totalPayable * 100), // Convert to cents
+              currency: offer.total_currency || 'USD'
+            }
+          };
+
+          const paymentIntentResult = await createPaymentIntent(paymentIntentParams);
+          const paymentIntentId = paymentIntentResult.id || paymentIntentResult.data?.id;
+
+          if (!paymentIntentId) {
+            throw new Error('Failed to create payment intent');
+          }
+
+          // Step 3: Confirm the payment using Duffel API with wallet
+          console.log('[Checkout] Step 3: Confirming Duffel payment with wallet');
+          
+          const confirmPaymentParams = {
+            paymentIntentId,
+            orderId,
+            amount: totalPayable,
+            currency: offer.total_currency || 'USD',
+            paymentMethodId: 'wallet', // Always wallet
+            provider: 'duffel',
+            environment: 'test'
+          };
+
+          const paymentConfirmResult = await confirmPayment(confirmPaymentParams);
+          console.log('[Checkout] Duffel payment confirmed:', paymentConfirmResult);
+
+          // Step 4: Process payment through supplier wallet (TripAlfa system)
+          console.log('[Checkout] Step 4: Processing supplier wallet payment for order:', orderId);
+          
+          const supplierPaymentResult = await processSupplierPayment(
+            orderId,
+            totalPayable,
+            'wallet' // Always wallet for supplier payment
+          );
+          
+          console.log('[Checkout] Supplier wallet payment processed:', supplierPaymentResult);
+
+          // Step 5: Confirm the order after successful payment
+          console.log('[Checkout] Step 5: Confirming flight order:', orderId);
+          
+          const confirmResult = await confirmFlightOrder(orderId);
+
+          if (confirmResult && (confirmResult.success || confirmResult.status === 'confirmed' || confirmResult.data?.status === 'confirmed')) {
+            navigate('/confirmation', {
+              state: {
+                ...state,
+                bookingId: orderId,
+                bookingType: 'flight',
+                orderStatus: 'confirmed',
+                paymentMethod: 'wallet',
+                paymentConfirmed: true,
+                supplierPaymentProcessed: true,
+                walletInfo: walletInfo
+              }
+            });
+          } else {
+            throw new Error('Failed to confirm flight order');
+          }
+        } catch (duffelError) {
+          console.error('Duffel booking error:', duffelError);
+          throw duffelError;
+        }
       } else {
-        throw new Error('Payment confirmation failed.');
+        // Fall back to original logic for non-Duffel bookings
+        // Determine if it's a flight or hotel booking based on summary type
+        if (summary?.type === 'hotel') {
+          const bookingId = bookingData?.id || state?.bookingId;
+          if (bookingId) {
+            result = await confirmHotelBooking(bookingId, paymentDetails);
+          } else {
+            throw new Error("Missing booking reference. Please restart booking.");
+          }
+        } else {
+          const bookingId = bookingData?.id || state?.bookingId;
+          if (bookingId) {
+            result = await confirmFlightBooking(bookingId, paymentDetails);
+          } else {
+            throw new Error("Missing booking reference. Please restart booking.");
+          }
+        }
+
+        if (result && (result.success || result.status === 'confirmed' || result.data?.status === 'confirmed')) {
+          navigate('/confirmation', {
+            state: {
+              ...state,
+              bookingId: result.bookingId || result.id || bookingData?.id,
+              paymentMode: selectedPaymentMethod,
+              passengerName: passengers[0].firstName,
+              totalPaid: totalPayable,
+              status: 'confirmed'
+            }
+          });
+        } else {
+          throw new Error('Payment confirmation failed.');
+        }
       }
     } catch (err: any) {
       console.error('Payment error:', err);

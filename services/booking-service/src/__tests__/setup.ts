@@ -27,8 +27,10 @@ import {
   generateDateRange,
   buildBookingRequest,
   buildCustomerRequest,
-  buildSupplierRequest
-} from './integration/utils.js';
+  buildSupplierRequest,
+  buildInventoryRequest,
+  expectInventoryResponse
+} from './integration/utils';
 
 // Augment globals for convenience in tests
 declare global {
@@ -517,8 +519,8 @@ export async function seedTestData() {
   
   // Establish database connection if needed
   try {
-    if (!global.prismaClient) {
-      await global.prismaClient.$connect();
+    if (!global.prismaClient && (global.prismaClient as any)?.$connect) {
+      await (global.prismaClient as any).$connect();
     }
   } catch {
     // Connection may already exist or be unavailable

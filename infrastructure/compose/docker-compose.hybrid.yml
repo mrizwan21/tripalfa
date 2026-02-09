@@ -9,14 +9,14 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_static_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   redis-cache:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_hybrid_data:/data
 
@@ -58,5 +58,7 @@ services:
       - postgres-static
 
 volumes:
-  postgres_static_data:
+  postgres_data:
+    external: true
+    name: compose_postgres_data
   redis_hybrid_data:

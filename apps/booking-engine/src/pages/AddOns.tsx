@@ -1,10 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plane, ChevronLeft, ChevronRight, Shield, Briefcase, Info, BadgeCheck, Star, ArrowLeft, Check, Ticket, Gift, CreditCard, ChevronDown } from 'lucide-react';
+import { Plane, ChevronLeft, ChevronRight, Shield, Briefcase, Info, BadgeCheck, Star, ArrowLeft, Check, Ticket, Gift, CreditCard, ChevronDown, Armchair, Utensils, Luggage, User } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { formatCurrency } from '../lib/utils';
 import { FlightSegment } from '../lib/srs-types';
+import { fetchLoyaltyPrograms } from '../lib/api';
+import { 
+    SeatSelectionPopup, 
+    BaggageSelectionPopup, 
+    MealSelectionPopup, 
+    SpecialServicesPopup 
+} from '../components/ancillary';
+import { 
+    Passenger, 
+    FlightSegmentInfo, 
+    SelectedSeat, 
+    SelectedBaggage, 
+    SelectedMeal, 
+    SelectedSpecialService,
+    AncillarySelections,
+    calculateAncillarySummary,
+    getPassengerAvatar
+} from '../lib/ancillary-types';
+
+interface LoyaltyProgram {
+    id: string;
+    airlineCode: string;
+    airlineName: string;
+    programName: string;
+}
 
 export default function AddOns() {
     const navigate = useNavigate();
@@ -16,6 +41,111 @@ export default function AddOns() {
     const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
     const [couponApplied, setCouponApplied] = useState(false);
     const [couponCode, setCouponCode] = useState('');
+    const [loyaltyPrograms, setLoyaltyPrograms] = useState<LoyaltyProgram[]>([]);
+    const [selectedProgram, setSelectedProgram] = useState<string>('');
+    const [frequentFlyerNumber, setFrequentFlyerNumber] = useState('');
+    const [loyaltyDropdownOpen, setLoyaltyDropdownOpen] = useState(false);
+
+    // Ancillary popup visibility states
+    const [showSeatPopup, setShowSeatPopup] = useState(false);
+    const [showBaggagePopup, setShowBaggagePopup] = useState(false);
+    const [showMealPopup, setShowMealPopup] = useState(false);
+    const [showSpecialServicesPopup, setShowSpecialServicesPopup] = useState(false);
+
+    // Ancillary selections
+    const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
+    const [selectedBaggage, setSelectedBaggage] = useState<SelectedBaggage[]>([]);
+    const [selectedMeals, setSelectedMeals] = useState<SelectedMeal[]>([]);
+    const [selectedSpecialServices, setSelectedSpecialServices] = useState<SelectedSpecialService[]>([]);
+
+    // Fetch loyalty programs on mount
+    useEffect(() => {
+        const loadLoyaltyPrograms = async () => {
+            try {
+                const programs = await fetchLoyaltyPrograms();
+                setLoyaltyPrograms(programs);
+            } catch (error) {
+                console.error('Failed to load loyalty programs:', error);
+            }
+        };
+        loadLoyaltyPrograms();
+    }, []);
+
+    // Format passengers for ancillary components
+    const formattedPassengers: Passenger[] = useMemo(() => {
+        const passengerList: Passenger[] = [];
+        let id = 1;
+        
+        // Add adults
+        for (let i = 0; i < (passengers?.adults || 1); i++) {
+            passengerList.push({
+                id: `adult-${i + 1}`,
+                type: 'Adult',
+                firstName: `Adult ${i + 1}`,
+                lastName: '',
+                avatar: getPassengerAvatar(`Adult ${i + 1}`)
+            });
+            id++;
+        }
+        
+        // Add children
+        for (let i = 0; i < (passengers?.children || 0); i++) {
+            passengerList.push({
+                id: `child-${i + 1}`,
+                type: 'Child',
+                firstName: `Child ${i + 1}`,
+                lastName: '',
+                avatar: getPassengerAvatar(`Child ${i + 1}`)
+            });
+            id++;
+        }
+        
+        // Add infants (only for meals and special services, not seats)
+        for (let i = 0; i < (passengers?.infants || 0); i++) {
+            passengerList.push({
+                id: `infant-${i + 1}`,
+                type: 'Infant',
+                firstName: `Infant ${i + 1}`,
+                lastName: '',
+                avatar: getPassengerAvatar(`Infant ${i + 1}`)
+            });
+            id++;
+        }
+        
+        return passengerList;
+    }, [passengers]);
+
+    // Format segments for ancillary components
+    const formattedSegments: FlightSegmentInfo[] = useMemo(() => {
+        if (!flight?.segments) return [];
+        
+        return flight.segments.map((seg: FlightSegment, idx: number) => ({
+            id: `segment-${idx + 1}`,
+            flightNumber: seg.flightNumber || `${seg.airline || 'XX'}${100 + idx}`,
+            origin: seg.origin,
+            destination: seg.destination,
+            originCity: seg.originCity,
+            destinationCity: seg.destinationCity,
+            departureTime: seg.departureTime,
+            arrivalTime: seg.arrivalTime,
+            airline: seg.airline,
+            airlineLogo: seg.airlineLogo
+        }));
+    }, [flight]);
+
+    // Passengers eligible for seat selection (exclude infants)
+    const seatEligiblePassengers = formattedPassengers.filter(p => p.type !== 'Infant');
+
+    // Check if flight is LCC (low cost carrier)
+    const isLCC = flight?.isLCC || flight?.carrierType === 'LCC' || false;
+
+    // Calculate ancillary totals
+    const ancillarySummary = calculateAncillarySummary({
+        seats: selectedSeats,
+        baggage: selectedBaggage,
+        meals: selectedMeals,
+        specialServices: selectedSpecialServices
+    });
 
     const adults = passengers?.adults || 1;
     const children = passengers?.children || 0;
@@ -37,7 +167,8 @@ export default function AddOns() {
     };
 
     const addonTotal = calculateAddonTotal();
-    const subTotal = baseFare + addonTotal;
+    const ancillaryTotal = ancillarySummary.total;
+    const subTotal = baseFare + addonTotal + ancillaryTotal;
     const discount = couponApplied ? 129 : 0;
     const finalTotal = subTotal - discount;
 
@@ -69,7 +200,7 @@ export default function AddOns() {
                         </button>
 
                         {/* Segments Loop */}
-                        {flight.segments.map((seg: FlightSegment, i: number) => (
+                        {(flight.segments || []).map((seg: FlightSegment, i: number) => (
                             <div key={i} className="px-8 flex items-center gap-6">
                                 <div className="flex items-center gap-3">
                                     <div className="text-center">
@@ -236,6 +367,190 @@ export default function AddOns() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Seat Selection Card */}
+                            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                                <div className="h-48 relative bg-gradient-to-br from-purple-600 to-indigo-700">
+                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05')] bg-cover bg-center opacity-30" />
+                                    <div className="absolute inset-0 p-10 flex flex-col justify-end">
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white"><Armchair size={24} /></div>
+                                            <h2 className="text-2xl font-black text-white">Seat Selection</h2>
+                                        </div>
+                                        <p className="text-white/80 text-xs font-medium">Choose your preferred seats for a comfortable journey</p>
+                                    </div>
+                                </div>
+                                <div className="p-10">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="flex -space-x-2">
+                                            {seatEligiblePassengers.map((p, i) => (
+                                                <div key={p.id} className="w-8 h-8 rounded-full bg-purple-100 border-2 border-white flex items-center justify-center text-xs font-bold text-purple-600">
+                                                    {p.firstName.charAt(0)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">
+                                            {seatEligiblePassengers.length} passenger{seatEligiblePassengers.length !== 1 ? 's' : ''} - {formattedSegments.length} flight{formattedSegments.length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    
+                                    {selectedSeats.length > 0 && (
+                                        <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
+                                            <p className="text-sm font-bold text-green-700">
+                                                {selectedSeats.length} seat{selectedSeats.length !== 1 ? 's' : ''} selected - {formatCurrency(ancillarySummary.seats)}
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <button
+                                            onClick={() => setShowSeatPopup(true)}
+                                            className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[#8B5CF6] text-white shadow-lg shadow-purple-200 hover:bg-[#7C3AED] transition-all"
+                                        >
+                                            {selectedSeats.length > 0 ? 'Modify Seats' : 'Select Seats'}
+                                        </button>
+                                        <p className="text-lg font-black text-gray-400">From {formatCurrency(isLCC ? 150 : 250)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Meal Selection Card */}
+                            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                                <div className="h-48 relative bg-gradient-to-br from-orange-500 to-red-600">
+                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544025162-d76694265947')] bg-cover bg-center opacity-30" />
+                                    <div className="absolute inset-0 p-10 flex flex-col justify-end">
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white"><Utensils size={24} /></div>
+                                            <h2 className="text-2xl font-black text-white">In-Flight Meals</h2>
+                                        </div>
+                                        <p className="text-white/80 text-xs font-medium">{isLCC ? 'Pre-order delicious meals for your flight' : 'Choose your preferred meal options'}</p>
+                                    </div>
+                                </div>
+                                <div className="p-10">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="flex -space-x-2">
+                                            {formattedPassengers.map((p, i) => (
+                                                <div key={p.id} className="w-8 h-8 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-bold text-orange-600">
+                                                    {p.firstName.charAt(0)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">
+                                            {formattedPassengers.length} passenger{formattedPassengers.length !== 1 ? 's' : ''} - {formattedSegments.length} flight{formattedSegments.length !== 1 ? 's' : ''}
+                                        </span>
+                                    </div>
+                                    
+                                    {selectedMeals.length > 0 && (
+                                        <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
+                                            <p className="text-sm font-bold text-green-700">
+                                                {selectedMeals.length} meal{selectedMeals.length !== 1 ? 's' : ''} selected - {formatCurrency(ancillarySummary.meals)}
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <button
+                                            onClick={() => setShowMealPopup(true)}
+                                            className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[#8B5CF6] text-white shadow-lg shadow-purple-200 hover:bg-[#7C3AED] transition-all"
+                                        >
+                                            {selectedMeals.length > 0 ? 'Modify Meals' : 'Select Meals'}
+                                        </button>
+                                        <p className="text-lg font-black text-gray-400">{isLCC ? `From ${formatCurrency(350)}` : 'Included'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Extra Baggage Card */}
+                            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                                <div className="h-48 relative bg-gradient-to-br from-teal-500 to-cyan-600">
+                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1565026057447-bc90a3dceb87')] bg-cover bg-center opacity-30" />
+                                    <div className="absolute inset-0 p-10 flex flex-col justify-end">
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white"><Luggage size={24} /></div>
+                                            <h2 className="text-2xl font-black text-white">Extra Baggage</h2>
+                                        </div>
+                                        <p className="text-white/80 text-xs font-medium">Add additional checked baggage to your booking</p>
+                                    </div>
+                                </div>
+                                <div className="p-10">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="flex -space-x-2">
+                                            {formattedPassengers.filter(p => p.type !== 'Infant').map((p, i) => (
+                                                <div key={p.id} className="w-8 h-8 rounded-full bg-teal-100 border-2 border-white flex items-center justify-center text-xs font-bold text-teal-600">
+                                                    {p.firstName.charAt(0)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">
+                                            {isLCC ? 'No baggage included' : '23kg per passenger included'}
+                                        </span>
+                                    </div>
+                                    
+                                    {selectedBaggage.length > 0 && (
+                                        <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
+                                            <p className="text-sm font-bold text-green-700">
+                                                {selectedBaggage.length} extra bag{selectedBaggage.length !== 1 ? 's' : ''} - {formatCurrency(ancillarySummary.baggage)}
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <button
+                                            onClick={() => setShowBaggagePopup(true)}
+                                            className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[#8B5CF6] text-white shadow-lg shadow-purple-200 hover:bg-[#7C3AED] transition-all"
+                                        >
+                                            {selectedBaggage.length > 0 ? 'Modify Baggage' : 'Add Baggage'}
+                                        </button>
+                                        <p className="text-lg font-black text-gray-400">From {formatCurrency(500)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Special Services Card */}
+                            <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+                                <div className="h-48 relative bg-gradient-to-br from-pink-500 to-rose-600">
+                                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d')] bg-cover bg-center opacity-20" />
+                                    <div className="absolute inset-0 p-10 flex flex-col justify-end">
+                                        <div className="flex items-center gap-4 mb-2">
+                                            <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white"><User size={24} /></div>
+                                            <h2 className="text-2xl font-black text-white">Special Services</h2>
+                                        </div>
+                                        <p className="text-white/80 text-xs font-medium">Request wheelchair, bassinet, or other assistance</p>
+                                    </div>
+                                </div>
+                                <div className="p-10">
+                                    <div className="flex items-center gap-4 mb-6">
+                                        <div className="flex -space-x-2">
+                                            {formattedPassengers.map((p, i) => (
+                                                <div key={p.id} className="w-8 h-8 rounded-full bg-pink-100 border-2 border-white flex items-center justify-center text-xs font-bold text-pink-600">
+                                                    {p.firstName.charAt(0)}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <span className="text-sm text-gray-500">
+                                            Subject to availability
+                                        </span>
+                                    </div>
+                                    
+                                    {selectedSpecialServices.length > 0 && (
+                                        <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
+                                            <p className="text-sm font-bold text-green-700">
+                                                {selectedSpecialServices.length} service{selectedSpecialServices.length !== 1 ? 's' : ''} requested - {ancillarySummary.specialServices === 0 ? 'Free' : formatCurrency(ancillarySummary.specialServices)}
+                                            </p>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <button
+                                            onClick={() => setShowSpecialServicesPopup(true)}
+                                            className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[#8B5CF6] text-white shadow-lg shadow-purple-200 hover:bg-[#7C3AED] transition-all"
+                                        >
+                                            {selectedSpecialServices.length > 0 ? 'Modify Services' : 'Request Service'}
+                                        </button>
+                                        <p className="text-lg font-black text-gray-400">Usually Free</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Sidebar: Fare Summary */}
@@ -286,7 +601,7 @@ export default function AddOns() {
                                                 </div>
                                             ))
                                         ) : (
-                                            <p className="text-[11px] font-bold text-gray-300 italic">No add-ons selected</p>
+                                            <p className="text-[11px] font-bold text-gray-300 italic">No protection add-ons selected</p>
                                         )}
                                         <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-100">
                                             <span className="text-sm font-black text-gray-900">Add-ons Total:</span>
@@ -294,6 +609,43 @@ export default function AddOns() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Ancillary Services Breakdown */}
+                                {ancillaryTotal > 0 && (
+                                    <div className="pt-8 border-t border-gray-50 space-y-6">
+                                        <p className="text-sm font-black text-gray-900 uppercase tracking-widest">Ancillary Services</p>
+                                        <div className="space-y-3">
+                                            {selectedSeats.length > 0 && (
+                                                <div className="flex justify-between text-[11px] font-bold text-gray-500">
+                                                    <span>Seat Selection ({selectedSeats.length}):</span>
+                                                    <span>{formatCurrency(ancillarySummary.seats)}</span>
+                                                </div>
+                                            )}
+                                            {selectedMeals.length > 0 && (
+                                                <div className="flex justify-between text-[11px] font-bold text-gray-500">
+                                                    <span>Meals ({selectedMeals.length}):</span>
+                                                    <span>{formatCurrency(ancillarySummary.meals)}</span>
+                                                </div>
+                                            )}
+                                            {selectedBaggage.length > 0 && (
+                                                <div className="flex justify-between text-[11px] font-bold text-gray-500">
+                                                    <span>Extra Baggage ({selectedBaggage.length}):</span>
+                                                    <span>{formatCurrency(ancillarySummary.baggage)}</span>
+                                                </div>
+                                            )}
+                                            {selectedSpecialServices.length > 0 && (
+                                                <div className="flex justify-between text-[11px] font-bold text-gray-500">
+                                                    <span>Special Services ({selectedSpecialServices.length}):</span>
+                                                    <span>{ancillarySummary.specialServices === 0 ? 'Free' : formatCurrency(ancillarySummary.specialServices)}</span>
+                                                </div>
+                                            )}
+                                            <div className="flex justify-between items-center pt-2 border-t border-dashed border-gray-100">
+                                                <span className="text-sm font-black text-gray-900">Ancillary Total:</span>
+                                                <span className="text-sm font-black text-gray-900">{formatCurrency(ancillaryTotal)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Totals Bar */}
                                 <div className="bg-[#FFD700] rounded-[2rem] p-8 -mx-4 shadow-xl shadow-yellow-100">
@@ -351,10 +703,63 @@ export default function AddOns() {
                                 </div>
                                 <p className="text-[10px] text-gray-400 font-bold leading-relaxed mb-6 uppercase tracking-widest">Being part of a family is a rewarding experience. Which is why we have redefined loyalty.</p>
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between h-12 px-4 rounded-xl border border-gray-100 text-sm font-bold text-gray-400">Choose <ChevronDown size={18} /></div>
+                                    {/* Loyalty Program Dropdown */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setLoyaltyDropdownOpen(!loyaltyDropdownOpen)}
+                                            className="w-full flex items-center justify-between h-12 px-4 rounded-xl border border-gray-100 text-sm font-bold text-gray-700 hover:border-[#8B5CF6] transition-colors"
+                                        >
+                                            <span className={selectedProgram ? 'text-gray-900' : 'text-gray-400'}>
+                                                {selectedProgram 
+                                                    ? loyaltyPrograms.find(p => p.id === selectedProgram)?.programName 
+                                                    : 'Select Loyalty Program'}
+                                            </span>
+                                            <ChevronDown size={18} className={`transition-transform ${loyaltyDropdownOpen ? 'rotate-180' : ''}`} />
+                                        </button>
+                                        {loyaltyDropdownOpen && (
+                                            <div className="absolute z-20 mt-2 w-full bg-white rounded-xl border border-gray-100 shadow-xl max-h-64 overflow-y-auto">
+                                                {loyaltyPrograms.length === 0 ? (
+                                                    <div className="px-4 py-3 text-sm text-gray-400">Loading programs...</div>
+                                                ) : (
+                                                    loyaltyPrograms.map(program => (
+                                                        <button
+                                                            key={program.id}
+                                                            onClick={() => {
+                                                                setSelectedProgram(program.id);
+                                                                setLoyaltyDropdownOpen(false);
+                                                            }}
+                                                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
+                                                                selectedProgram === program.id ? 'bg-purple-50' : ''
+                                                            }`}
+                                                        >
+                                                            <div className="text-sm font-bold text-gray-900">{program.programName}</div>
+                                                            <div className="text-xs text-gray-400">{program.airlineName} ({program.airlineCode})</div>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="flex gap-2">
-                                        <input id="frequent-flyer-number" name="frequent-flyer-number" type="text" placeholder="Frequent Flyer Number" className="flex-1 h-12 rounded-xl border border-gray-100 px-4 text-sm font-bold outline-none" />
-                                        <Button className="bg-[#8B5CF6] text-white px-8 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest">Submit</Button>
+                                        <input 
+                                            id="frequent-flyer-number" 
+                                            name="frequent-flyer-number" 
+                                            type="text" 
+                                            value={frequentFlyerNumber}
+                                            onChange={(e) => setFrequentFlyerNumber(e.target.value)}
+                                            placeholder="Frequent Flyer Number" 
+                                            className="flex-1 h-12 rounded-xl border border-gray-100 px-4 text-sm font-bold outline-none focus:border-[#8B5CF6]" 
+                                        />
+                                        <Button 
+                                            onClick={() => {
+                                                if (selectedProgram && frequentFlyerNumber) {
+                                                    console.log('Loyalty saved:', { program: selectedProgram, number: frequentFlyerNumber });
+                                                }
+                                            }}
+                                            className="bg-[#8B5CF6] text-white px-8 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                        >
+                                            Submit
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
@@ -377,7 +782,13 @@ export default function AddOns() {
                                             passengers,
                                             selectedFare,
                                             selectedAddons,
-                                            finalTotal
+                                            finalTotal,
+                                            ancillarySelections: {
+                                                seats: selectedSeats,
+                                                baggage: selectedBaggage,
+                                                meals: selectedMeals,
+                                                specialServices: selectedSpecialServices
+                                            }
                                         }
                                     })}
                                     className="w-full py-5 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[3px] shadow-[0_12px_40_rgba(139,92,246,0.3)] transition-all active:scale-95"
@@ -391,6 +802,59 @@ export default function AddOns() {
                 </div>
 
             </div>
+
+            {/* Ancillary Popups */}
+            <SeatSelectionPopup
+                isOpen={showSeatPopup}
+                onClose={() => setShowSeatPopup(false)}
+                onConfirm={(seats) => {
+                    setSelectedSeats(seats);
+                    setShowSeatPopup(false);
+                }}
+                isLCC={isLCC}
+                offerId={flight?.offerId}
+                passengers={seatEligiblePassengers}
+                segments={formattedSegments}
+                existingSelections={selectedSeats}
+            />
+
+            <BaggageSelectionPopup
+                isOpen={showBaggagePopup}
+                onClose={() => setShowBaggagePopup(false)}
+                onConfirm={(baggage) => {
+                    setSelectedBaggage(baggage);
+                    setShowBaggagePopup(false);
+                }}
+                isLCC={isLCC}
+                passengers={formattedPassengers.filter(p => p.type !== 'Infant')}
+                segments={formattedSegments}
+                existingSelections={selectedBaggage}
+            />
+
+            <MealSelectionPopup
+                isOpen={showMealPopup}
+                onClose={() => setShowMealPopup(false)}
+                onConfirm={(meals) => {
+                    setSelectedMeals(meals);
+                    setShowMealPopup(false);
+                }}
+                isLCC={isLCC}
+                passengers={formattedPassengers}
+                segments={formattedSegments}
+                existingSelections={selectedMeals}
+            />
+
+            <SpecialServicesPopup
+                isOpen={showSpecialServicesPopup}
+                onClose={() => setShowSpecialServicesPopup(false)}
+                onConfirm={(services) => {
+                    setSelectedSpecialServices(services);
+                    setShowSpecialServicesPopup(false);
+                }}
+                passengers={formattedPassengers}
+                segments={formattedSegments}
+                existingSelections={selectedSpecialServices}
+            />
         </TripLogerLayout>
     );
 }

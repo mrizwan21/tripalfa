@@ -1,4 +1,4 @@
-import bookingService from '../../services/bookingService.js';
+import bookingService from '../../services/bookingService';
 
 // Mock supplier integration
 jest.mock('../../integrations/supplierIntegration', () => ({

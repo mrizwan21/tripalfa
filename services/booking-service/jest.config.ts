@@ -2,7 +2,16 @@ export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.json' }]
+    '^.+\\.ts$': ['ts-jest', { 
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        module: 'commonjs',
+        target: 'ES2020',
+        strict: true,
+        skipLibCheck: true
+      }
+    }]
   },
   setupFiles: ['<rootDir>/src/__tests__/env-setup.ts'],
   setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],

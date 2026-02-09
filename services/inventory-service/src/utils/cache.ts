@@ -1,5 +1,6 @@
 import NodeCache from 'node-cache';
 import { Request, Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
 
 // Cache configuration
 const CACHE_CONFIG = {
@@ -201,7 +202,7 @@ export function cacheMiddleware(ttl: number = CACHE_CONFIG.DEFAULT_TTL) {
 
 // Cache warming functions
 export class CacheWarmer {
-  static async warmSupplierCache(prisma: unknown): Promise<void> {
+  static async warmSupplierCache(prisma: PrismaClient): Promise<void> {
     try {
       const activeSuppliers = await prisma.supplier.findMany({
         where: { isActive: true },
@@ -222,7 +223,7 @@ export class CacheWarmer {
     }
   }
 
-  static async warmPricingCache(prisma: unknown): Promise<void> {
+  static async warmPricingCache(prisma: PrismaClient): Promise<void> {
     try {
       const rules = await prisma.pricingRule.findMany({
         orderBy: { priority: 'desc' }
@@ -233,7 +234,7 @@ export class CacheWarmer {
       // Cache rules by target type
       const groupedRules = groupBy(rules, 'targetType');
       for (const [targetType, rulesForType] of Object.entries(groupedRules)) {
-        const groupedByTargetId = groupBy(rulesForType, 'targetId');
+        const groupedByTargetId = groupBy(rulesForType, 'targetId' as any);
         for (const [targetId, rulesForTarget] of Object.entries(groupedByTargetId)) {
           // Explicit cast or ensure type compatibility if needed, using 'as string' for key
           await CacheService.setPricingRulesByTarget(targetType, targetId || undefined, rulesForTarget);
@@ -244,7 +245,7 @@ export class CacheWarmer {
     }
   }
 
-  static async warmApiVendorCache(prisma: unknown): Promise<void> {
+  static async warmApiVendorCache(prisma: PrismaClient): Promise<void> {
     try {
       const vendors = await prisma.apiVendor.findMany({
         include: { mappings: { where: { isActive: true } } }
@@ -259,7 +260,7 @@ export class CacheWarmer {
     }
   }
 
-  static async warmAllCaches(prisma: unknown): Promise<void> {
+  static async warmAllCaches(prisma: PrismaClient): Promise<void> {
     await Promise.all([
       this.warmSupplierCache(prisma),
       this.warmPricingCache(prisma),
@@ -282,7 +283,7 @@ function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {
 
 // Cache invalidation strategies
 export class CacheInvalidation {
-  static async invalidateOnSupplierChange(supplierId: string, prisma: unknown): Promise<void> {
+  static async invalidateOnSupplierChange(supplierId: string, prisma: PrismaClient): Promise<void> {
     // Invalidate supplier cache
     CacheService.invalidateSupplierCache(supplierId);
 
@@ -290,7 +291,7 @@ export class CacheInvalidation {
     await CacheWarmer.warmSupplierCache(prisma);
   }
 
-  static async invalidateOnPricingRuleChange(prisma: unknown, targetType: string, targetId?: string): Promise<void> {
+  static async invalidateOnPricingRuleChange(prisma: PrismaClient, targetType: string, targetId?: string): Promise<void> {
     // Invalidate pricing cache
     CacheService.invalidatePricingCache(targetType, targetId);
 
@@ -298,7 +299,7 @@ export class CacheInvalidation {
     await CacheWarmer.warmPricingCache(prisma);
   }
 
-  static async invalidateOnApiVendorChange(vendorId: string, prisma: unknown): Promise<void> {
+  static async invalidateOnApiVendorChange(vendorId: string, prisma: PrismaClient): Promise<void> {
     // Invalidate API vendor cache
     CacheService.invalidateApiVendorCache(vendorId);
 

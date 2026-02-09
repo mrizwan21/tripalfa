@@ -7,7 +7,7 @@
  * - API-012: Unauthorized Access
  */
 
-import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup.js';
+import { api, setupTestEnvironment, teardownTestEnvironment, getAuthHeader } from './setup';
 
 describe('Auth API Integration Tests', () => {
   beforeAll(async () => {

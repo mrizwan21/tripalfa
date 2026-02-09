@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import compression from 'compression';
 import helmet from 'helmet';
-import { cacheService, cacheKeys } from '../cache/redis.js';
-import { metricsStore } from '../monitoring/metrics.js';
-import logger from '../utils/logger.js';
+import { cacheService, cacheKeys } from '../cache/redis';
+import { metricsStore } from '../monitoring/metrics';
+import logger from '../utils/logger';
 
 // Extend Express Request interface to include queryTimeout
 declare global {
@@ -208,7 +208,7 @@ export class PerformanceOptimizer {
       etag: true,
       lastModified: true,
       setHeaders: (res: Response, path: string) => {
-        if (path.endsWith('.js') || path.endsWith('.css')) {
+        if (path.endsWith('') || path.endsWith('.css')) {
           res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year for static assets
         }
       }

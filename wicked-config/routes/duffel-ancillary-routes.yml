@@ -1,0 +1,120 @@
+# Kong Routes Configuration for Duffel Ancillary Services
+# File: wicked-config/routes/duffel-ancillary-routes.yml
+# Purpose: Route all Duffel ancillary endpoints through Kong API Manager
+
+services:
+  - name: duffel-ancillary
+    host: api.duffel.com
+    port: 443
+    protocol: https
+    path: /air
+    retries: 3
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    enabled: true
+
+routes:
+  # ====== SEAT MAPS ENDPOINTS ======
+  - name: duffel-seat-maps
+    service: duffel-ancillary
+    paths:
+      - /seat_maps
+    methods:
+      - GET
+      - POST
+    strip_path: false
+    protocols:
+      - https
+    redirect_http_code: 301
+    tags:
+      - ancillary-services
+      - duffel
+  
+  # ====== ANCILLARY OFFERS ENDPOINTS ======
+  - name: duffel-ancillary-offers
+    service: duffel-ancillary
+    paths:
+      - /ancillary_offers
+    methods:
+      - GET
+      - POST
+    strip_path: false
+    protocols:
+      - https
+    redirect_http_code: 301
+    tags:
+      - ancillary-services
+      - duffel
+
+  # ====== ORDER ENDPOINTS ======
+  - name: duffel-orders
+    service: duffel-ancillary
+    paths:
+      - /orders
+    methods:
+      - GET
+      - POST
+      - PATCH
+    strip_path: false
+    protocols:
+      - https
+    redirect_http_code: 301
+    tags:
+      - orders
+      - duffel
+
+  # ====== PAYMENT METHODS ======
+  - name: duffel-payment-methods
+    service: duffel-ancillary
+    paths:
+      - /payment_methods
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - https
+    redirect_http_code: 301
+    tags:
+      - payment
+      - duffel
+
+plugins:
+  # Authentication - Use API Key
+  - name: key-auth
+    service: duffel-ancillary
+    config:
+      key_names:
+        - Authorization
+        - X-API-Key
+      key_in_header: true
+      anonymous: null
+
+  # Rate limiting
+  - name: rate-limiting
+    service: duffel-ancillary
+    config:
+      minute: 100
+      hour: 1000
+      policy: local
+      fault_tolerant: true
+
+  # Request/Response transformer
+  - name: request-transformer
+    service: duffel-ancillary
+    config:
+      add:
+        headers:
+          - "Duffel-Version:v2"
+          - "Content-Type:application/json"
+      remove:
+        headers:
+          - X-Internal-Token
+
+  # Logging
+  - name: http-log
+    service: duffel-ancillary
+    config:
+      http_endpoint: http://logging-service:8000/logs
+      method: POST
+      timeout: 1000

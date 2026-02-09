@@ -1,4 +1,4 @@
-import { Booking } from '../types/enhancedBooking.js';
+import { Booking } from '../types/enhancedBooking';
 
 interface GDSConfig {
   amadeus: {

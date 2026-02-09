@@ -8,6 +8,7 @@ const FlightSearch = lazy(() => import("./pages/FlightSearch"));
 const FlightList = lazy(() => import("./pages/FlightList"));
 const FlightDetail = lazy(() => import("./pages/FlightDetail"));
 const FlightAddons = lazy(() => import("./pages/FlightAddons"));
+const SeatSelection = lazy(() => import("./pages/SeatSelection"));
 const PassengerDetails = lazy(() => import("./pages/PassengerDetails"));
 const AddOns = lazy(() => import("./pages/AddOns"));
 const HotelHome = lazy(() => import("./pages/HotelHome"));
@@ -92,6 +93,7 @@ function App() {
           <Route path="/hotel-booking-card/:id" element={<HotelBookingCard />} />
 
           {/* Booking Flow Routes - Standalone Layout */}
+          <Route path="/seat-selection" element={<SeatSelection />} />
           <Route path="/passenger-details" element={<PassengerDetails />} />
           <Route path="/checkout" element={<BookingCheckout />} />
           <Route path="/confirmation" element={<BookingConfirmation />} />

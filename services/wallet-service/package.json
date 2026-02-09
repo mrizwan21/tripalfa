@@ -17,7 +17,7 @@
     "fx:schedule": "node dist/jobs/fxFetcher.js",
     "reconcile": "node dist/jobs/reconciliationJob.js --now",
     "docker:build": "docker build -t wallet-service .",
-    "docker:run": "docker run -p 3007:3007 wallet-service"
+    "docker:run": "docker run -p 3008:3008 wallet-service"
   },
   "dependencies": {
     "@nestjs/swagger": "^11.2.6",

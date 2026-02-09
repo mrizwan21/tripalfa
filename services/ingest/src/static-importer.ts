@@ -137,39 +137,8 @@ async function main() {
     }
 }
 
-async function ingestMockAirports() {
-    console.log('✈️ Ingesting MOCK Airports...');
-    const mockAirports = [
-        { iata_code: 'LHR', name: 'London Heathrow', city_name: 'London', country_name: 'United Kingdom', iata_country_code: 'GB', latitude: 51.4700, longitude: -0.4543 },
-        { iata_code: 'JFK', name: 'John F. Kennedy', city_name: 'New York', country_name: 'United States', iata_country_code: 'US', latitude: 40.6413, longitude: -73.7781 }
-    ];
-    await upsertAirports(mockAirports);
-}
-
-async function ingestMockAirlines() {
-    console.log('🛩️ Ingesting MOCK Airlines...');
-    const mockAirlines = [
-        { iata_code: 'BA', name: 'British Airways', logo_symbol_url: 'https://logo.clearbit.com/britishairways.com' },
-        { iata_code: 'AA', name: 'American Airlines', logo_symbol_url: 'https://logo.clearbit.com/aa.com' }
-    ];
-    await upsertAirlines(mockAirlines);
-}
-
-async function ingestMockLiteAPIChains() {
-    console.log('🏨 Ingesting MOCK LiteAPI Chains...');
-    const mockChains = [
-        { name: 'Marriott International', id: 'MAR' },
-        { name: 'Hilton Worldwide', id: 'HIL' }
-    ];
-    await upsertChains(mockChains);
-}
-
-async function ingestMockLiteAPIExtras() {
-    console.log('💱 Ingesting MOCK LiteAPI Extras...');
-    await pool.query(`INSERT INTO currencies (code, name, symbol, updated_at) VALUES ('USD', 'US Dollar', '$', NOW()) ON CONFLICT (code) DO NOTHING`);
-    await pool.query(`INSERT INTO hotel_facilities (name, category, updated_at) VALUES ('WiFi', 'General', NOW()) ON CONFLICT (name) DO NOTHING`);
-    await pool.query(`INSERT INTO hotel_types (name, updated_at) VALUES ('Hotel', NOW()) ON CONFLICT (name) DO NOTHING`);
-}
+// Mock ingestion functions have been removed.
+// All static data must be ingested from real external APIs.
 
 async function upsertAirports(airports: any[]) {
     for (const airport of airports) {

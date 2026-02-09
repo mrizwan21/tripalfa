@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { setTimeout as delay } from 'timers/promises';
-import supplierIntegration from '../integrations/supplierIntegration.js';
+import supplierIntegration from '../integrations/supplierIntegration';
 
 // Mock database (in real implementation, this would be a database)
 interface Booking {
@@ -28,71 +28,6 @@ class CustomError extends Error {
 }
 
 let bookings: Booking[] = [];
-
-// Mock booking data for demonstration
-const mockBookings = [
-  {
-    id: uuidv4(),
-    type: 'flight',
-    status: 'confirmed',
-    userId: 'user1',
-    totalAmount: 250.00,
-    serviceFee: 10.00,
-    passengers: [
-      {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john@example.com',
-        phone: '+1234567890',
-        dateOfBirth: '1990-01-01',
-        passportNumber: 'AB123456'
-      }
-    ],
-    flightDetails: {
-      flightNumber: 'AA100',
-      origin: 'JFK',
-      destination: 'LAX',
-      departureTime: '2024-01-15T10:00:00Z',
-      arrivalTime: '2024-01-15T13:00:00Z',
-      cabinClass: 'economy'
-    },
-    confirmationNumber: 'TK-1234567890-ABC',
-    createdAt: new Date('2024-01-10T10:00:00Z'),
-    updatedAt: new Date('2024-01-10T10:00:00Z'),
-  },
-  {
-    id: uuidv4(),
-    type: 'hotel',
-    status: 'confirmed',
-    userId: 'user2',
-    totalAmount: 400.00,
-    serviceFee: 15.00,
-    passengers: [
-      {
-        firstName: 'Jane',
-        lastName: 'Smith',
-        email: 'jane@example.com',
-        phone: '+1234567891',
-        dateOfBirth: '1985-05-15',
-        passportNumber: 'CD789012'
-      }
-    ],
-    hotelDetails: {
-      hotelName: 'Grand Plaza Hotel',
-      hotelCode: 'GP001',
-      checkInDate: '2024-02-01',
-      checkOutDate: '2024-02-05',
-      numberOfRooms: 1,
-      roomType: 'deluxe'
-    },
-    confirmationNumber: 'TK-0987654321-XYZ',
-    createdAt: new Date('2024-01-08T15:30:00Z'),
-    updatedAt: new Date('2024-01-08T15:30:00Z'),
-  }
-];
-
-// Initialize with mock data
-bookings = mockBookings;
 
 class BookingService {
   // Create a new booking

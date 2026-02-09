@@ -74,17 +74,41 @@ export interface Nationality {
 export interface HotelChain {
   name: string;
   code: string;
+  website?: string;
+  logo_url?: string;
+  tier?: string;
+  loyalty_program?: string;
+  is_active?: boolean;
   updated_at: string;
 }
 
-export interface HotelFacility {
+/**
+ * HotelAmenity - Unified amenity type for both hotel and room level
+ * This consolidates the previous hotel_facilities and amenities concepts
+ */
+export interface HotelAmenity {
+  code: string;
   name: string;
   category: string;
+  icon?: string;
+  /** Whether this amenity applies to 'hotel', 'room', or 'both' */
+  applies_to: 'hotel' | 'room' | 'both';
+  is_popular?: boolean;
+  sort_order?: number;
   updated_at: string;
 }
 
+/**
+ * @deprecated Use HotelAmenity instead. This alias is kept for backward compatibility.
+ */
+export type HotelFacility = HotelAmenity;
+
 export interface HotelType {
+  code?: string;
   name: string;
+  description?: string;
+  icon?: string;
+  sort_order?: number;
   updated_at: string;
 }
 

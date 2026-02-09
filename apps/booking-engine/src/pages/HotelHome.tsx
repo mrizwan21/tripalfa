@@ -66,7 +66,7 @@ export default function HotelHome() {
 
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                             {/* Destination Input */}
-                            <div className="col-span-12 md:col-span-4 h-14">
+                            <div className="col-span-12 md:col-span-4 h-12">
                                 <SearchAutocomplete
                                     type="hotel"
                                     placeholder="City, Property, District or Address"
@@ -95,7 +95,7 @@ export default function HotelHome() {
                             </div>
 
                             {/* Guests Input */}
-                            <div className="col-span-12 md:col-span-2 h-14">
+                            <div className="col-span-12 md:col-span-2 h-12">
                                 <GuestSelector />
                             </div>
 
@@ -104,7 +104,7 @@ export default function HotelHome() {
                                 <button
                                     onClick={handleSearch}
                                     data-testid="hotel-search-submit"
-                                    className="w-full h-14 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-lg rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                                    className="w-full h-12 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
                                 >
                                     Search
                                 </button>

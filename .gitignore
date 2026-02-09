@@ -127,3 +127,9 @@ test-results/
 
 #Ignore vscode AI rules
 .github/instructions/codacy.instructions.md
+
+# Documentation archive - old/duplicate docs
+docs/archive/
+
+# Session/timestamped documentation files (keep only essential ones)
+[0-9]*-*.md

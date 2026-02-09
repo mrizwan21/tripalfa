@@ -215,10 +215,10 @@ export const FlightBookingFormSchema = z.object({
 export const sanitizeInput = (input: string): string => {
   return input
     .trim()
-    .replace(/[<>]/g, '') // Remove potentially dangerous characters
-    .replace(/script/gi, '') // Remove script tags
+    .replace(/<[^>]*>/g, '') // Remove HTML tags
     .replace(/javascript:/gi, '') // Remove javascript: URLs
-    .replace(/on\w+=/gi, '') // Remove event handlers
+    .replace(/on\w+\s*=\s*["'][^"']*["']/gi, '') // Remove event handlers
+    .replace(/on\w+\s*=\s*[^>\s]*/gi, '') // Remove event handlers without quotes
 };
 
 export const sanitizeEmail = (email: string): string => {

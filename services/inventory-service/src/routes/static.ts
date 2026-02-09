@@ -1,76 +1,150 @@
 import express, { Request, Response } from 'express';
 import { staticPrisma } from '../db.js';
+import { getHotelCacheService, hotelCacheKeys, CACHE_TTL } from '../cache/index.js';
 
 const router = express.Router();
 
-// GET /static/data?type=airports|airlines|aircraft|chains|currencies|facilities|types
-router.get('/data', async (req: Request, res: Response) => {
+// Helper for caching and fetching
+const serveStaticData = async (
+    req: Request,
+    res: Response,
+    key: string,
+    fetcher: () => Promise<any>
+) => {
     try {
-        const { type } = req.query;
+        const cacheService = getHotelCacheService();
+        const cacheKey = hotelCacheKeys.static(key);
 
-        let data;
-        switch (type) {
-            case 'airports':
-                data = await staticPrisma.airport.findMany({ where: { isActive: true } });
-                break;
-            case 'airlines':
-                data = await staticPrisma.airline.findMany({ where: { isActive: true } });
-                break;
-            case 'aircraft':
-                data = await staticPrisma.aircraft.findMany({ where: { isActive: true } });
-                break;
-            case 'chains':
-                data = await staticPrisma.hotelChain.findMany();
-                break;
-            case 'currencies':
-                data = await staticPrisma.currency.findMany({ where: { isActive: true } });
-                break;
-            case 'facilities':
-                data = await staticPrisma.hotelFacility.findMany();
-                break;
-            case 'types':
-                data = await staticPrisma.hotelType.findMany();
-                break;
-            case 'loyalty-programs':
-                data = await staticPrisma.loyaltyProgram.findMany({ where: { isActive: true } });
-                break;
-            case 'nationalities':
-                data = await staticPrisma.nationality.findMany();
-                break;
-            case 'countries':
-                // Note: Cities model has country and countryCode. Airports also has country.
-                // For now, we can extract distinct countries from Airport or City if a dedicated Country model doesn't exist.
-                // Assuming based on previous plan, we might need a dedicated model or just distinct names.
-                // Let's check Airport first as it's likely already populated.
-                const countriesRaw = await staticPrisma.airport.findMany({
-                    select: { country: true, countryCode: true },
-                    distinct: ['countryCode']
-                });
-                data = countriesRaw.map(c => ({ name: c.country, code: c.countryCode }));
-                break;
-            default:
-                return res.status(400).json({ error: 'Invalid or missing type parameter' });
+        // Try cache first
+        const cached = await cacheService.get(cacheKey);
+        if (cached) {
+            return res.json(cached);
+        }
+
+        const data = await fetcher();
+
+        // Cache for 6 hours
+        if (data) {
+            await cacheService.set(cacheKey, data, CACHE_TTL.STATIC_DATA);
         }
 
         res.json(data);
     } catch (error) {
-        console.error('Static Data Fetch Error:', error);
-        res.status(500).json({ error: 'Failed to fetch static data' });
+        console.error(`Static Data Fetch Error (${key}):`, error);
+        res.status(500).json({ error: `Failed to fetch ${key}` });
     }
+};
+
+router.get('/airports', (req, res) => {
+    serveStaticData(req, res, 'airports', () =>
+        staticPrisma.airport.findMany({ where: { isActive: true } })
+    );
 });
 
-// GET /static/currencies
-router.get('/currencies', async (req: Request, res: Response) => {
-    try {
-        const currs = await staticPrisma.currency.findMany({
+router.get('/airlines', (req, res) => {
+    serveStaticData(req, res, 'airlines', () =>
+        staticPrisma.airline.findMany({ where: { isActive: true } })
+    );
+});
+
+router.get('/aircraft', (req, res) => {
+    serveStaticData(req, res, 'aircraft', () =>
+        staticPrisma.aircraft.findMany({ where: { isActive: true } })
+    );
+});
+
+router.get('/chains', (req, res) => {
+    serveStaticData(req, res, 'chains', () =>
+        staticPrisma.hotelChain.findMany()
+    );
+});
+
+router.get('/hotelChains', (req, res) => {
+    serveStaticData(req, res, 'hotelChains', () =>
+        staticPrisma.hotelChain.findMany()
+    );
+});
+
+router.get('/currencies', (req, res) => {
+    serveStaticData(req, res, 'currencies', () =>
+        staticPrisma.currency.findMany({
             where: { isActive: true },
             orderBy: { code: 'asc' }
+        })
+    );
+});
+
+router.get('/facilities', (req, res) => {
+    serveStaticData(req, res, 'facilities', () =>
+        staticPrisma.hotelFacility.findMany()
+    );
+});
+
+router.get('/hotelFacilities', (req, res) => {
+    serveStaticData(req, res, 'hotelFacilities', () =>
+        staticPrisma.hotelFacility.findMany()
+    );
+});
+
+router.get('/types', (req, res) => {
+    serveStaticData(req, res, 'types', () =>
+        staticPrisma.hotelType.findMany()
+    );
+});
+
+router.get('/hotelTypes', (req, res) => {
+    serveStaticData(req, res, 'hotelTypes', () =>
+        staticPrisma.hotelType.findMany()
+    );
+});
+
+router.get('/loyalty-programs', (req, res) => {
+    serveStaticData(req, res, 'loyalty-programs', () =>
+        staticPrisma.loyaltyProgram.findMany({ where: { isActive: true } })
+    );
+});
+
+router.get('/nationalities', (req, res) => {
+    serveStaticData(req, res, 'nationalities', () =>
+        staticPrisma.nationality.findMany()
+    );
+});
+
+router.get('/countries', (req, res) => {
+    serveStaticData(req, res, 'countries', async () => {
+        const countriesRaw = await staticPrisma.airport.findMany({
+            select: { country: true, countryCode: true },
+            distinct: ['countryCode']
         });
-        res.json(currs);
-    } catch (error) {
-        console.error('GET /static/currencies error', error);
-        res.status(500).json({ error: 'Failed to fetch currencies' });
+        return countriesRaw.map(c => ({ name: c.country, code: c.countryCode }));
+    });
+});
+
+// Deprecated: legacy query param support for backward compatibility if needed
+router.get('/data', async (req: Request, res: Response) => {
+    const { type } = req.query;
+    if (typeof type === 'string') {
+        const typeMap: Record<string, string> = {
+            'airports': '/airports',
+            'airlines': '/airlines',
+            'aircraft': '/aircraft',
+            'chains': '/chains',
+            'currencies': '/currencies',
+            'facilities': '/facilities',
+            'types': '/types',
+            'loyalty-programs': '/loyalty-programs',
+            'nationalities': '/nationalities',
+            'countries': '/countries'
+        };
+
+        if (typeMap[type]) {
+            // Redirect or internal call? Redirect is easiest but 301 might cache bad. 
+            // Better to re-route logic.
+            // But for now, let's just return error or minimal support.
+            return res.redirect(req.baseUrl + typeMap[type]);
+        }
     }
+    res.status(400).json({ error: 'Use specific endpoints e.g. /static/airports' });
 });
 
 export default router;

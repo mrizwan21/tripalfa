@@ -1,6 +1,6 @@
-import logger from '../utils/logger.js';
-import { CacheService } from '../cache/redis.js';
-import { metricsStore } from '../monitoring/metrics.js';
+import logger from '../utils/logger';
+import { CacheService } from '../cache/redis';
+import { metricsStore } from '../monitoring/metrics';
 // Booking shape is complex across modules; use `any` here to avoid tight coupling in this service.
 type Booking = any;
 

@@ -1,6 +1,7 @@
 import DuffelAdapter from './DuffelAdapter.js';
 import LiteAPIAdapter from './LiteAPIAdapter.js';
 import StripeAdapter from './StripeAdapter.js';
+import AncillaryServicesAdapter from './AncillaryServicesAdapter.js';
 
 type Adapter = { request?: (body: any) => Promise<any> } | null;
 
@@ -9,7 +10,8 @@ const Registry = {
     const adapters = {
       'duffel': new DuffelAdapter(),
       'liteapi': new LiteAPIAdapter(),
-      'stripe': new StripeAdapter()
+      'stripe': new StripeAdapter(),
+      'ancillary_services': new AncillaryServicesAdapter()
     };
     return adapters[name.toLowerCase()] || null;
   },

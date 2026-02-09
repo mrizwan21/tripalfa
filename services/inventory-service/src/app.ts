@@ -13,6 +13,8 @@ import morgan from 'morgan';
 import SupplierOrchestrator from './services/SupplierOrchestrator.js';
 import staticRouter from './routes/static.js';
 import webhooksRouter from './routes/webhooks.js';
+import hotelsRouter from './routes/hotels.js';
+import loyaltyRouter from './routes/loyalty.js';
 
 import { dynamicPrisma, staticPool } from './db.js';
 
@@ -169,88 +171,10 @@ app.post('/search/hotels', async (req: Request, res: Response) => {
   }
 });
 
-app.get('/hotels/:id', async (req: Request, res: Response) => {
-  try {
-    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    // Strip prefix if present
-    const numericId = (rawId || '').replace('local_h_', '');
-
-    // Fetch hotel details with normalized relations
-    const hotelQuery = `
-        SELECT 
-            h.id, h.name, h.address, h.city, h.country, h.star_rating, h.latitude, h.longitude, h.description, h.policies,
-            (SELECT jsonb_agg(img) FROM (
-                SELECT url, caption, is_primary, sort_order 
-                FROM hotel_images 
-                WHERE canonical_hotel_id = h.id 
-                ORDER BY is_primary DESC, sort_order ASC
-                LIMIT 50
-            ) img) as normalized_images,
-            (SELECT jsonb_agg(am) FROM (
-                SELECT a.name, a.code, a.category 
-                FROM hotel_amenity_instances hai 
-                JOIN amenities a ON a.id = hai.amenity_id 
-                WHERE hai.canonical_hotel_id = h.id
-                LIMIT 50
-            ) am) as normalized_amenities
-        FROM canonical_hotels h
-        WHERE h.id = $1
-    `;
-    const hotelResult = await staticPool.query(hotelQuery, [numericId]);
-
-    if (hotelResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Hotel not found' });
-    }
-
-    const h = hotelResult.rows[0];
-
-    // Fetch room types
-    const roomsQuery = `
-            SELECT id, name, description, max_occupancy 
-            FROM canonical_room_types 
-            WHERE canonical_hotel_id = $1
-            AND is_active = true
-        `;
-    const roomsResult = await staticPool.query(roomsQuery, [numericId]);
-
-    // Map to API format
-    const images = h.normalized_images || [];
-    const imageUrl = (images.length > 0) ? images[0].url : 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80';
-    const amenityNames = (h.normalized_amenities || []).map((a: unknown) => (a as { name: string }).name);
-
-    const hotel = {
-      id: `local_h_${h.id}`,
-      name: h.name,
-      image: imageUrl,
-      location: `${h.address || ''}, ${h.city}`,
-      rating: h.star_rating ? parseFloat(h.star_rating) : 4,
-      reviews: 100,
-      pricePerNight: 200,
-      currency: 'USD',
-      amenities: amenityNames,
-      description: h.description || '',
-      latitude: h.latitude,
-      longitude: h.longitude,
-      images: images,
-      rooms: roomsResult.rows.map(r => ({
-        id: `r_${r.id}`,
-        name: r.name,
-        roomView: r.description,
-        boardType: 'Room Only',
-        originalPrice: { amount: 200, currency: 'USD' },
-        availability: 5
-      })),
-      provider: 'Local'
-    };
-
-    res.json(hotel);
-  } catch (error: unknown) {
-    console.error('Fetch Hotel Failed:', error);
-    res.status(500).json({ error: 'Failed to fetch hotel' });
-  }
-});
+app.use('/hotels', hotelsRouter);
 
 app.use('/static', staticRouter);
+app.use('/loyalty', loyaltyRouter);
 
 // ===== SUPPLIER & API VENDOR MANAGEMENT ENDPOINTS =====
 
@@ -276,9 +200,9 @@ app.post('/api-vendors', async (req: Request, res: Response) => {
         code,
         baseUrl,
         authType,
-        credentials,
+        credentials: credentials as any,
         mappings: {
-          create: mappings || []
+          create: (mappings as any[]) || []
         }
       }
     });
@@ -308,7 +232,7 @@ app.post('/suppliers', async (req: Request, res: Response) => {
     const body = req.body as SupplierRequestBody;
     const { name, code, category, vendorId, settings } = body;
     const supplier = await dynamicPrisma.supplier.create({
-      data: { name, code, category, vendorId, settings }
+      data: { name, code, category, vendorId, settings: settings as any }
     });
     res.json(supplier);
   } catch {
@@ -342,7 +266,7 @@ app.post('/pricing-rules', async (req: Request, res: Response) => {
         markupValue: parseFloat(markupValue.toString()),
         status,
         priority: priority || 0,
-        criteria
+        criteria: criteria as any
       }
     });
     res.json(rule);
@@ -360,7 +284,7 @@ app.patch('/suppliers/:id', async (req: Request, res: Response) => {
       where: { id },
       data: {
         ...(isActive !== undefined && { isActive }),
-        ...(settings && { settings })
+        ...(settings && { settings: settings as any })
       }
     });
     res.json(supplier);

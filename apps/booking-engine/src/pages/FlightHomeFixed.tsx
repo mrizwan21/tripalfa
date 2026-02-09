@@ -89,8 +89,8 @@ export default function FlightHome() {
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
-                            {/* Trip Type & Class (Radio/Dropdowns) can go here relative */}
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                            {/* Trip Type & Class */}
                             <div className="col-span-12 flex gap-4 mb-2 text-white text-sm font-medium px-2 items-center flex-wrap">
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
@@ -98,7 +98,7 @@ export default function FlightHome() {
                                         name="trip"
                                         checked={tripType === 'roundTrip'}
                                         onChange={() => setTripType('roundTrip')}
-                                        className="accent-[#FFD700]"
+                                        className="accent-[#8B5CF6] w-4 h-4"
                                     /> Round Trip
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -107,7 +107,7 @@ export default function FlightHome() {
                                         name="trip"
                                         checked={tripType === 'oneWay'}
                                         onChange={() => setTripType('oneWay')}
-                                        className="accent-[#FFD700]"
+                                        className="accent-[#8B5CF6] w-4 h-4"
                                     /> One Way
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -116,7 +116,7 @@ export default function FlightHome() {
                                         name="trip"
                                         checked={tripType === 'multiCity'}
                                         onChange={() => setTripType('multiCity')}
-                                        className="accent-[#FFD700]"
+                                        className="accent-[#8B5CF6] w-4 h-4"
                                     /> Multi-City
                                 </label>
                                 <div className="ml-auto flex items-center gap-4">
@@ -126,7 +126,7 @@ export default function FlightHome() {
                             </div>
 
                             {/* From Input */}
-                            <div className="col-span-12 md:col-span-3 h-14">
+                            <div className="col-span-12 md:col-span-3">
                                 <SearchAutocomplete
                                     type="flight"
                                     placeholder="From where?"
@@ -134,15 +134,20 @@ export default function FlightHome() {
                                     value={from}
                                     onChange={setFrom}
                                     onSelect={(loc: Suggestion) => {
-                                        setFrom(loc.title);
-                                        setFromCode(loc.code);
+                                        if (loc.type === 'AIRPORT') {
+                                            setFrom(`${loc.title} (${loc.code})`);
+                                            setFromCode(String(loc.code));
+                                        } else {
+                                            setFrom(loc.title);
+                                            setFromCode(loc.title);
+                                        }
                                     }}
                                     dataTestId="flight-from"
                                 />
                             </div>
 
                             {/* Swap Icon */}
-                            <div className="hidden md:flex col-span-1 items-center justify-center">
+                            <div className="hidden md:flex col-span-1 items-center justify-center pb-2">
                                 <button
                                     onClick={() => {
                                         const tmp = from; setFrom(to); setTo(tmp);
@@ -151,13 +156,13 @@ export default function FlightHome() {
                                     className="bg-white/20 p-2 rounded-full hover:bg-white/30 backdrop-blur-sm text-white transition-colors"
                                 >
                                     <div className="bg-white rounded-full p-1 shadow-lg">
-                                        <ChevronRight size={16} className="text-[#003B95]" />
+                                        <ChevronRight size={16} className="text-[#8B5CF6]" />
                                     </div>
                                 </button>
                             </div>
 
                             {/* To Input */}
-                            <div className="col-span-12 md:col-span-3 h-14">
+                            <div className="col-span-12 md:col-span-3">
                                 <SearchAutocomplete
                                     type="flight"
                                     placeholder="To where?"
@@ -165,8 +170,13 @@ export default function FlightHome() {
                                     value={to}
                                     onChange={setTo}
                                     onSelect={(loc: Suggestion) => {
-                                        setTo(loc.title);
-                                        setToCode(loc.code);
+                                        if (loc.type === 'AIRPORT') {
+                                            setTo(`${loc.title} (${loc.code})`);
+                                            setToCode(String(loc.code));
+                                        } else {
+                                            setTo(loc.title);
+                                            setToCode(loc.title);
+                                        }
                                     }}
                                     dataTestId="flight-to"
                                 />
@@ -190,8 +200,9 @@ export default function FlightHome() {
                                 <button
                                     onClick={handleSearch}
                                     data-testid="flight-search-submit"
-                                    className="w-full h-14 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-lg rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                                    className="w-full h-12 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold text-base rounded-xl shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center gap-2"
                                 >
+                                    <Search size={20} />
                                     Search
                                 </button>
                             </div>

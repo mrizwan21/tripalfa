@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
-import { prisma } from '../database/index.js';
+import { prisma } from '../database/index';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { cacheService, cacheKeys } from '../cache/redis.js';
-import { metricsStore } from '../monitoring/metrics.js';
-import logger from '../utils/logger.js';
-import { BookingStatus, ServiceType, Priority } from '../types/booking.js';
-import { CreateBookingRequest, SearchBookingsRequest, HoldInventoryRequest } from '../types/bookingManagement.js';
+import { cacheService, cacheKeys } from '../cache/redis';
+import { metricsStore } from '../monitoring/metrics';
+import logger from '../utils/logger';
+import { BookingStatus, ServiceType, Priority } from '../types/booking';
+import { CreateBookingRequest, SearchBookingsRequest, HoldInventoryRequest } from '../types/bookingManagement';
 import { TypedRequest } from '../types';
 
 export class BookingManagementController {
@@ -306,6 +306,326 @@ export class BookingManagementController {
 
   async bulkUpdateBookings(_req: Request, res: Response): Promise<Response> {
     return this.respondNotImplemented(res, 'bulkUpdateBookings');
+  }
+
+  // ============================================================================
+  // Order Cancellation Routes (Duffel Integration)
+  // ============================================================================
+
+  /**
+   * Cancel a flight order
+   * Handles both reservation-only cancellations (hold bookings) and ticket cancellations
+   * with smart timing logic for void (same-day) vs refund (next-day) operations.
+   */
+  async cancelOrder(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { bookingId, orderId, reason } = typedReq.body;
+      const userId = typedReq.user?.id;
+
+      if (!bookingId && !orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Either bookingId or orderId is required'
+        });
+      }
+
+      // Import the cancellation service
+      const { duffelOrderCancellationService } = await import('../services/duffelOrderCancellationService');
+
+      // Get Duffel order ID if only booking ID provided
+      let duffelOrderId = orderId;
+      if (!duffelOrderId && bookingId) {
+        const booking = await prisma.booking.findUnique({
+          where: { id: bookingId }
+        });
+
+        if (!booking || !booking.supplierRef) {
+          return res.status(404).json({
+            success: false,
+            error: 'Booking not found or has no associated Duffel order'
+          });
+        }
+
+        duffelOrderId = booking.supplierRef;
+      }
+
+      logger.info('Starting order cancellation', {
+        bookingId,
+        orderId: duffelOrderId,
+        userId,
+        reason
+      });
+
+      // Call the cancellation service
+      const cancellationResult = await duffelOrderCancellationService.cancelOrder({
+        orderId: duffelOrderId,
+        reason: reason || 'Customer requested cancellation'
+      });
+
+      if (!cancellationResult.success) {
+        logger.warn('Order cancellation failed', {
+          bookingId,
+          orderId: duffelOrderId,
+          message: cancellationResult.message
+        });
+
+        return res.status(422).json({
+          success: false,
+          error: cancellationResult.message,
+          details: cancellationResult
+        });
+      }
+
+      // Record cancellation in audit trail
+      if (bookingId) {
+        await prisma.auditLog.create({
+          data: {
+            bookingId,
+            action: 'user_initiated_cancellation',
+            actor: userId || 'unknown',
+            details: {
+              orderId: duffelOrderId,
+              cancellationId: cancellationResult.cancellationId,
+              method: cancellationResult.cancellationMethod,
+              reason,
+              timestamp: new Date().toISOString()
+            }
+          }
+        });
+      }
+
+      logger.info('Order cancelled successfully', {
+        bookingId,
+        orderId: duffelOrderId,
+        cancellationId: cancellationResult.cancellationId,
+        method: cancellationResult.cancellationMethod
+      });
+
+      res.status(200).json({
+        success: true,
+        data: cancellationResult,
+        message: 'Order cancelled successfully'
+      });
+
+    } catch (error) {
+      logger.error('Failed to cancel order', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to cancel order',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Get cancellation status for an order
+   */
+  async getCancellationStatus(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { bookingId, orderId } = typedReq.query;
+
+      if (!bookingId && !orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Either bookingId or orderId is required'
+        });
+      }
+
+      const { duffelOrderCancellationService } = await import('../services/duffelOrderCancellationService');
+
+      // Get Duffel order ID if only booking ID provided
+      let duffelOrderId = orderId as string;
+      if (!duffelOrderId && bookingId) {
+        const booking = await prisma.booking.findUnique({
+          where: { id: bookingId as string }
+        });
+
+        if (!booking) {
+          return res.status(404).json({
+            success: false,
+            error: 'Booking not found'
+          });
+        }
+
+        duffelOrderId = booking.supplierRef || booking.id;
+      }
+
+      logger.info('Fetching cancellation status', {
+        bookingId,
+        orderId: duffelOrderId
+      });
+
+      const status = await duffelOrderCancellationService.getCancellationStatus(duffelOrderId);
+
+      res.status(200).json({
+        success: true,
+        data: status
+      });
+
+    } catch (error) {
+      logger.error('Failed to fetch cancellation status', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch cancellation status'
+      });
+    }
+  }
+
+  // Get available airline credits for a customer
+  async getAvailableAirlineCredits(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { customerId, bookingId } = typedReq.query;
+      const page = parseInt(typedReq.query.page as string) || 1;
+      const limit = parseInt(typedReq.query.limit as string) || 20;
+      const offset = (page - 1) * limit;
+
+      let targetCustomerId = customerId as string;
+
+      // If bookingId provided, get the customer from the booking
+      if (bookingId && !targetCustomerId) {
+        const booking = await prisma.booking.findUnique({
+          where: { id: bookingId as string },
+          select: { customerId: true }
+        });
+
+        if (!booking) {
+          return res.status(404).json({
+            success: false,
+            error: 'Booking not found'
+          });
+        }
+
+        targetCustomerId = booking.customerId;
+      }
+
+      if (!targetCustomerId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Either customerId or bookingId is required'
+        });
+      }
+
+      // Verify customer exists
+      const customer = await prisma.customer.findUnique({
+        where: { id: targetCustomerId }
+      });
+
+      if (!customer) {
+        return res.status(404).json({
+          success: false,
+          error: 'Customer not found'
+        });
+      }
+
+      logger.info('Fetching available airline credits', {
+        customerId: targetCustomerId,
+        page,
+        limit
+      });
+
+      // Get available airline credits (not spent, not invalidated, not expired)
+      const now = new Date();
+
+      const [credits, total] = await Promise.all([
+        prisma.airlineCredit.findMany({
+          where: {
+            customerId: targetCustomerId,
+            status: 'active',
+            availableForUse: true,
+            expiresAt: {
+              gt: now
+            },
+            spentAt: null,
+            invalidatedAt: null
+          },
+          select: {
+            id: true,
+            duffelCreditId: true,
+            code: true,
+            amount: true,
+            currency: true,
+            type: true,
+            airlineIataCode: true,
+            givenName: true,
+            familyName: true,
+            issuedOn: true,
+            expiresAt: true,
+            booking: {
+              select: {
+                id: true,
+                reference: true,
+                travelDate: true
+              }
+            }
+          },
+          orderBy: { expiresAt: 'asc' },
+          take: limit,
+          skip: offset
+        }),
+        prisma.airlineCredit.count({
+          where: {
+            customerId: targetCustomerId,
+            status: 'active',
+            availableForUse: true,
+            expiresAt: {
+              gt: now
+            },
+            spentAt: null,
+            invalidatedAt: null
+          }
+        })
+      ]);
+
+      // Calculate expiration warnings
+      const creditsWithWarnings = credits.map((credit: any) => ({
+        ...credit,
+        expiresIn: Math.ceil((credit.expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)),
+        expiringSoon: credit.expiresAt.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000 // Less than 7 days
+      }));
+
+      const totalAmount = credits.reduce((sum: number, c: any) => sum + Number(c.amount), 0);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          credits: creditsWithWarnings,
+          pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit)
+          },
+          summary: {
+            totalCredits: total,
+            totalAmount,
+            currency: credits[0]?.currency || 'USD',
+            expiringInNext7Days: creditsWithWarnings.filter((c: any) => c.expiresIn <= 7).length
+          }
+        }
+      });
+
+    } catch (error) {
+      logger.error('Failed to fetch available airline credits', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: typedReq.user?.id
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch available airline credits'
+      });
+    }
   }
 
   // Search customers
@@ -1955,6 +2275,922 @@ export class BookingManagementController {
     // Implementation for compliance report generation
     return { report: 'compliance_report_data' };
   }
+
+  /**
+   * Get available payment options for customer (combined wallet + credits)
+   */
+  async getPaymentOptions(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { customerId } = typedReq.params;
+      const { totalAmount, currency = 'USD' } = typedReq.query;
+
+      if (!customerId || !totalAmount) {
+        return res.status(400).json({
+          success: false,
+          error: 'customerId and totalAmount are required',
+        });
+      }
+
+      const bookingPaymentService = (await import('../services/bookingPaymentService')).default;
+      const paymentOptions = await bookingPaymentService.getAvailablePaymentOptions(
+        customerId,
+        parseFloat(totalAmount as string),
+        (currency as string) || 'USD'
+      );
+
+      logger.info('Retrieved payment options', {
+        customerId,
+        totalAmount,
+        walletBalance: paymentOptions.walletBalance,
+        totalCreditsAvailable: paymentOptions.totalCreditAvailable,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: paymentOptions,
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error getting payment options', { error: errorMsg });
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Process combined payment (wallet + airline credits + card)
+   */
+  async processCombinedPayment(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const paymentRequest = typedReq.body;
+      const userId = typedReq.user?.id;
+
+      // Validate booking exists
+      const booking = await prisma.booking.findUnique({
+        where: { id: paymentRequest.bookingId },
+        select: { id: true, customerId: true, customerPrice: true, currency: true },
+      });
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          error: 'Booking not found',
+        });
+      }
+
+      // Verify customer authorization
+      if (booking.customerId !== paymentRequest.customerId) {
+        return res.status(403).json({
+          success: false,
+          error: 'Unauthorized: Customer ID does not match booking',
+        });
+      }
+
+      const bookingPaymentService = (await import('../services/bookingPaymentService')).default;
+      const paymentBreakdown = await bookingPaymentService.processCombinedPayment({
+        bookingId: paymentRequest.bookingId,
+        customerId: paymentRequest.customerId,
+        totalAmount: parseFloat(booking.customerPrice.toString()),
+        currency: booking.currency,
+        useWallet: paymentRequest.useWallet ?? true,
+        walletAmount: paymentRequest.walletAmount,
+        useCredits: paymentRequest.useCredits ?? true,
+        creditIds: paymentRequest.creditIds,
+        cardAmount: paymentRequest.cardAmount,
+      });
+
+      logger.info('Combined payment processed successfully', {
+        bookingId: paymentRequest.bookingId,
+        customerId: paymentRequest.customerId,
+        walletUsed: paymentBreakdown.walletUsed,
+        creditsUsed: paymentBreakdown.creditsUsed,
+        cardRequired: paymentBreakdown.cardRequired,
+        creditsCount: paymentBreakdown.creditsApplied.length,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: paymentBreakdown,
+        message: 'Combined payment processed successfully',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error processing combined payment', { error: errorMsg, body: typedReq.body });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Get booking payment details
+   */
+  async getBookingPaymentDetails(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { bookingId } = typedReq.params;
+
+      if (!bookingId) {
+        return res.status(400).json({
+          success: false,
+          error: 'bookingId is required',
+        });
+      }
+
+      const bookingPaymentService = (await import('../services/bookingPaymentService')).default;
+      const paymentDetails = await bookingPaymentService.getBookingPaymentDetails(bookingId);
+
+      return res.status(200).json({
+        success: true,
+        data: paymentDetails,
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error getting booking payment details', { error: errorMsg });
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Refund combined payment
+   */
+  async refundCombinedPayment(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { bookingId } = typedReq.params;
+
+      if (!bookingId) {
+        return res.status(400).json({
+          success: false,
+          error: 'bookingId is required',
+        });
+      }
+
+      const bookingPaymentService = (await import('../services/bookingPaymentService')).default;
+      await bookingPaymentService.refundCombinedPayment(bookingId);
+
+      logger.info('Combined payment refunded', { bookingId });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Combined payment refunded successfully',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error refunding combined payment', { error: errorMsg });
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Create booking with combined payment
+   */
+  async createBookingWithCombinedPayment(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const bookingData = typedReq.body;
+      const userId = typedReq.user?.id;
+
+      // Create booking first
+      const booking = await prisma.booking.create({
+        data: {
+          serviceType: bookingData.serviceType || 'flight',
+          status: 'PENDING',
+          reference: await this.generateBookingReference(),
+          segment: 'default',
+          customerId: bookingData.customerId,
+          customerName: bookingData.customerName,
+          customerEmail: bookingData.customerEmail,
+          customerPhone: bookingData.customerPhone,
+          customerPrice: bookingData.totalAmount,
+          supplierPrice: bookingData.supplierPrice || bookingData.totalAmount,
+          currency: bookingData.currency || 'USD',
+          paymentMethod: 'combined',
+        },
+      });
+
+      // Process combined payment
+      const bookingPaymentService = (await import('../services/bookingPaymentService')).default;
+      const paymentBreakdown = await bookingPaymentService.processCombinedPayment({
+        bookingId: booking.id,
+        customerId: bookingData.customerId,
+        totalAmount: bookingData.totalAmount,
+        currency: bookingData.currency || 'USD',
+        useWallet: bookingData.useWallet ?? true,
+        walletAmount: bookingData.walletAmount,
+        useCredits: bookingData.useCredits ?? true,
+        creditIds: bookingData.creditIds,
+        cardAmount: bookingData.cardAmount,
+      });
+
+      logger.info('Booking created with combined payment', {
+        bookingId: booking.id,
+        customerId: bookingData.customerId,
+        paymentBreakdown,
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          booking: {
+            id: booking.id,
+            reference: booking.reference,
+            status: booking.status,
+          },
+          payment: paymentBreakdown,
+        },
+        message: 'Booking created with combined payment',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error creating booking with combined payment', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Apply airline credits to existing booking
+   */
+  async applyCreditsToBooking(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { bookingId } = typedReq.params;
+      const { creditIds } = typedReq.body;
+
+      if (!bookingId || !creditIds || creditIds.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'bookingId and creditIds array are required',
+        });
+      }
+
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+        select: { id: true, customerId: true, customerPrice: true },
+      });
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          error: 'Booking not found',
+        });
+      }
+
+      const bookingPaymentService = (await import('../services/bookingPaymentService')).default;
+      const paymentBreakdown = await bookingPaymentService.processCombinedPayment({
+        bookingId,
+        customerId: booking.customerId,
+        totalAmount: parseFloat(booking.customerPrice.toString()),
+        currency: 'USD',
+        useWallet: false,
+        useCredits: true,
+        creditIds,
+      });
+
+      logger.info('Credits applied to booking', {
+        bookingId,
+        creditsCount: creditIds.length,
+        creditsUsed: paymentBreakdown.creditsUsed,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: paymentBreakdown,
+        message: 'Credits applied to booking successfully',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error applying credits to booking', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Check if a Duffel order is changeable
+   * Returns available changeable slices
+   */
+  async checkOrderChangeEligibility(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { orderId } = typedReq.params;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'orderId is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const { changeable, changeableSlices } = await duffelClient.isOrderChangeable(orderId);
+
+      logger.info('Order change eligibility checked', {
+        orderId,
+        changeable,
+        changeableSlicesCount: changeableSlices.length,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          changeable,
+          changeableSlices: changeableSlices.map((slice: any) => ({
+            id: slice.id,
+            origin: slice.segments?.[0]?.origin?.iata_code,
+            destination: slice.segments?.[slice.segments.length - 1]?.destination?.iata_code,
+            departureDate: slice.segments?.[0]?.departing_at?.split('T')?.[0],
+            passengers: slice.passengers?.length || 0,
+          })),
+        },
+        message: changeable ? 'Order is changeable' : 'Order is not changeable',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error checking order change eligibility', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Check if baggage can be added to an order
+   * Returns available baggage services for the order
+   */
+  async checkBaggageEligibility(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const { orderId } = req.params as { orderId: string };
+      const typedReq = req as any;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Order ID is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const eligible = await duffelClient.isOrderEligibleForBaggage(orderId);
+      const availableBaggages = await duffelClient.getAvailableBaggages(orderId);
+
+      logger.info('Baggage eligibility checked', {
+        orderId,
+        eligible,
+        availableBaggagesCount: availableBaggages.length,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          eligible,
+          availableBaggages: availableBaggages.map((baggage: any) => ({
+            id: baggage.id,
+            type: baggage.type,
+            quantity: baggage.quantity,
+            maximumQuantity: baggage.maximum_quantity,
+            totalAmount: baggage.total_amount,
+            totalCurrency: baggage.total_currency,
+            metadata: baggage.metadata,
+            segmentIds: baggage.segment_ids,
+            passengerIds: baggage.passenger_ids,
+          })),
+        },
+        message: eligible ? 'Baggage services available for this order' : 'No baggage services available',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error checking baggage eligibility', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Get available baggage services for an order
+   */
+  async getAvailableBaggages(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const { orderId } = req.params as { orderId: string };
+      const typedReq = req as any;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Order ID is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const availableBaggages = await duffelClient.getAvailableBaggages(orderId);
+
+      logger.info('Available baggages retrieved', {
+        orderId,
+        count: availableBaggages.length,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          orderId,
+          baggagesCount: availableBaggages.length,
+          baggages: availableBaggages.map((baggage: any) => ({
+            id: baggage.id,
+            type: baggage.type,
+            quantity: baggage.quantity,
+            maximumQuantity: baggage.maximum_quantity,
+            totalAmount: baggage.total_amount,
+            totalCurrency: baggage.total_currency,
+            metadata: baggage.metadata,
+            segmentIds: baggage.segment_ids,
+            passengerIds: baggage.passenger_ids,
+          })),
+        },
+        message: `${availableBaggages.length} baggage service(s) available`,
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching available baggages', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Book baggage services for an order
+   */
+  async bookBaggageServices(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const { orderId } = req.params as { orderId: string };
+      const { baggages, payment } = req.body as {
+        baggages: Array<{ id: string; quantity: number }>;
+        payment?: { type: string; currency: string; amount: string };
+      };
+      const typedReq = req as any;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Order ID is required',
+        });
+      }
+
+      if (!baggages || baggages.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'At least one baggage service is required',
+        });
+      }
+
+      // Validate baggage items
+      for (const baggage of baggages) {
+        if (!baggage.id) {
+          return res.status(400).json({
+            success: false,
+            error: 'Each baggage must have an id',
+          });
+        }
+
+        if (!baggage.quantity || baggage.quantity < 1) {
+          return res.status(400).json({
+            success: false,
+            error: 'Each baggage must have a quantity of at least 1',
+          });
+        }
+      }
+
+      if (!payment) {
+        return res.status(400).json({
+          success: false,
+          error: 'Payment information is required',
+        });
+      }
+
+      if (!payment.type || !payment.currency || !payment.amount) {
+        return res.status(400).json({
+          success: false,
+          error: 'Payment must include type, currency, and amount',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+
+      logger.info('Booking baggage services', {
+        orderId,
+        baggagesCount: baggages.length,
+        paymentAmount: payment.amount,
+        paymentCurrency: payment.currency,
+      });
+
+      const result = await duffelClient.addServicesToOrder(orderId, baggages, payment);
+
+      logger.info('Baggage services booked successfully', {
+        orderId,
+        baggagesBooked: baggages.length,
+      });
+
+      // Extract services from the updated order
+      const bookedServices = result?.services || [];
+      const bookedBaggages = bookedServices.filter((service: any) => service.type === 'baggage');
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          orderId,
+          baggagesBooked: baggages.length,
+          bookedServices: bookedBaggages.map((baggage: any) => ({
+            id: baggage.id,
+            type: baggage.type,
+            quantity: baggage.quantity,
+            totalAmount: baggage.total_amount,
+            totalCurrency: baggage.total_currency,
+            metadata: baggage.metadata,
+          })),
+          totalAmount: payment.amount,
+          totalCurrency: payment.currency,
+        },
+        message: `${baggages.length} baggage service(s) booked successfully`,
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error booking baggage services', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Get booked baggage services for an order
+   */
+  async getOrderBaggages(req: Request, res: Response): Promise<Response | void> {
+    try {
+      const { orderId } = req.params as { orderId: string };
+      const typedReq = req as any;
+
+      if (!orderId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Order ID is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const bookedBaggages = await duffelClient.getOrderBaggages(orderId);
+
+      logger.info('Booked baggages retrieved', {
+        orderId,
+        count: bookedBaggages.length,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          orderId,
+          baggagesCount: bookedBaggages.length,
+          baggages: bookedBaggages.map((baggage: any) => ({
+            id: baggage.id,
+            type: baggage.type,
+            quantity: baggage.quantity,
+            totalAmount: baggage.total_amount,
+            totalCurrency: baggage.total_currency,
+            metadata: baggage.metadata,
+            segmentIds: baggage.segment_ids,
+            passengerIds: baggage.passenger_ids,
+          })),
+        },
+        message: `${bookedBaggages.length} baggage service(s) booked on this order`,
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error fetching booked baggages', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Step 1: Create an order change request
+   * Initiates the order change process
+   */
+  async createOrderChangeRequest(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { orderId } = typedReq.params;
+      const { slices } = typedReq.body;
+
+      if (!orderId || !slices || !slices.remove || !slices.add) {
+        return res.status(400).json({
+          success: false,
+          error: 'orderId, slices.remove array, and slices.add array are required',
+        });
+      }
+
+      // Validate remove slices
+      if (!Array.isArray(slices.remove) || slices.remove.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'At least one slice must be specified in remove array',
+        });
+      }
+
+      // Validate add slices
+      if (!Array.isArray(slices.add) || slices.add.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'At least one slice must be specified in add array',
+        });
+      }
+
+      // Validate add slice structure
+      for (const addSlice of slices.add) {
+        if (!addSlice.origin || !addSlice.destination || !addSlice.departure_date || !addSlice.cabin_class) {
+          return res.status(400).json({
+            success: false,
+            error: 'Each slice in add array must have origin, destination, departure_date, and cabin_class',
+          });
+        }
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const changeRequest = await duffelClient.createOrderChangeRequest(orderId, slices);
+
+      logger.info('Order change request created', {
+        orderId,
+        changeRequestId: changeRequest.id,
+        removeSlicesCount: slices.remove.length,
+        addSlicesCount: slices.add.length,
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          id: changeRequest.id,
+          orderId: changeRequest.order_id,
+          slices: changeRequest.slices,
+          createdAt: changeRequest.created_at,
+        },
+        message: 'Order change request created successfully',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error creating order change request', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Step 2: Get order change request with available offers
+   * Reviews available change offers and pricing
+   */
+  async getOrderChangeOffers(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { orderChangeRequestId } = typedReq.params;
+
+      if (!orderChangeRequestId) {
+        return res.status(400).json({
+          success: false,
+          error: 'orderChangeRequestId is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const changeRequest = await duffelClient.getOrderChangeRequest(orderChangeRequestId);
+
+      if (!changeRequest) {
+        return res.status(404).json({
+          success: false,
+          error: 'Order change request not found',
+        });
+      }
+
+      const offers = changeRequest.order_change_offers || [];
+
+      logger.info('Order change offers retrieved', {
+        changeRequestId: orderChangeRequestId,
+        offersCount: offers.length,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          changeRequestId: changeRequest.id,
+          offersCount: offers.length,
+          offers: offers.map((offer: any) => ({
+            id: offer.id,
+            slices: offer.slices,
+            changeTotalAmount: offer.change_total_amount,
+            changeTotalCurrency: offer.change_total_currency,
+            penaltyTotalAmount: offer.penalty_total_amount,
+            penaltyTotalCurrency: offer.penalty_total_currency,
+            createdAt: offer.created_at,
+          })),
+        },
+        message: `${offers.length} change offer(s) available`,
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error retrieving order change offers', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Step 3: Create a pending order change
+   * Selects a change offer to proceed
+   */
+  async createPendingOrderChange(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { orderChangeOfferId } = typedReq.body;
+
+      if (!orderChangeOfferId) {
+        return res.status(400).json({
+          success: false,
+          error: 'orderChangeOfferId is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const pendingChange = await duffelClient.createPendingOrderChange(orderChangeOfferId);
+
+      logger.info('Pending order change created', {
+        changeId: pendingChange.id,
+        offerId: orderChangeOfferId,
+        confirmedAt: pendingChange.confirmed_at,
+      });
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          id: pendingChange.id,
+          orderId: pendingChange.order_id,
+          slices: pendingChange.slices,
+          changeTotalAmount: pendingChange.change_total_amount,
+          changeTotalCurrency: pendingChange.change_total_currency,
+          confirmedAt: pendingChange.confirmed_at,
+          createdAt: pendingChange.created_at,
+        },
+        message: 'Pending order change created successfully. Review pricing before confirming.',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error creating pending order change', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Get current status of a pending order change
+   * Useful for reviewing final price before confirmation
+   */
+  async getPendingOrderChangeStatus(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { orderChangeId } = typedReq.params;
+
+      if (!orderChangeId) {
+        return res.status(400).json({
+          success: false,
+          error: 'orderChangeId is required',
+        });
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const orderChange = await duffelClient.getPendingOrderChange(orderChangeId);
+
+      if (!orderChange) {
+        return res.status(404).json({
+          success: false,
+          error: 'Order change not found',
+        });
+      }
+
+      logger.info('Pending order change status retrieved', {
+        changeId: orderChangeId,
+        confirmedAt: orderChange.confirmed_at,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: orderChange.id,
+          orderId: orderChange.order_id,
+          slices: orderChange.slices,
+          changeTotalAmount: orderChange.change_total_amount,
+          changeTotalCurrency: orderChange.change_total_currency,
+          penaltyTotalAmount: orderChange.penalty_total_amount,
+          penaltyTotalCurrency: orderChange.penalty_total_currency,
+          confirmed: !!orderChange.confirmed_at,
+          confirmedAt: orderChange.confirmed_at,
+          createdAt: orderChange.created_at,
+        },
+        message: orderChange.confirmed_at ? 'Order change confirmed' : 'Order change is pending',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error retrieving pending order change status', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
+
+  /**
+   * Step 4: Confirm the order change
+   * Finalizes the order change with payment
+   */
+  async confirmOrderChange(req: Request, res: Response): Promise<Response | void> {
+    const typedReq = req as TypedRequest;
+    try {
+      const { orderChangeId } = typedReq.params;
+      const { payment } = typedReq.body;
+
+      if (!orderChangeId) {
+        return res.status(400).json({
+          success: false,
+          error: 'orderChangeId is required',
+        });
+      }
+
+      // Payment is optional - if order change is a credit, no payment needed
+      if (payment) {
+        if (!payment.type || !payment.currency || !payment.amount) {
+          return res.status(400).json({
+            success: false,
+            error: 'Payment must include type, currency, and amount',
+          });
+        }
+      }
+
+      const { duffelClient } = await import('../integrations/duffelApiClient');
+      const confirmedChange = await duffelClient.confirmOrderChange(orderChangeId, payment);
+
+      logger.info('Order change confirmed', {
+        changeId: orderChangeId,
+        orderId: confirmedChange.order_id,
+        confirmedAt: confirmedChange.confirmed_at,
+        paymentApplied: !!payment,
+      });
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          id: confirmedChange.id,
+          orderId: confirmedChange.order_id,
+          slices: confirmedChange.slices,
+          changeTotalAmount: confirmedChange.change_total_amount,
+          changeTotalCurrency: confirmedChange.change_total_currency,
+          confirmed: true,
+          confirmedAt: confirmedChange.confirmed_at,
+          createdAt: confirmedChange.created_at,
+        },
+        message: 'Order change confirmed successfully',
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error confirming order change', { error: errorMsg });
+      return res.status(400).json({
+        success: false,
+        error: errorMsg,
+      });
+    }
+  }
 }
 
 export const bookingManagementController = new BookingManagementController();
@@ -1999,5 +3235,24 @@ export const boundBookingManagementController = {
   generateReport: bookingManagementController.generateReport.bind(bookingManagementController),
   getDashboardStats: bookingManagementController.getDashboardStats.bind(bookingManagementController),
   bulkUpdateBookings: bookingManagementController.bulkUpdateBookings.bind(bookingManagementController),
-  getComplianceReport: bookingManagementController.getComplianceReport.bind(bookingManagementController)
+  getComplianceReport: bookingManagementController.getComplianceReport.bind(bookingManagementController),
+  cancelOrder: bookingManagementController.cancelOrder.bind(bookingManagementController),
+  getCancellationStatus: bookingManagementController.getCancellationStatus.bind(bookingManagementController),
+  getAvailableAirlineCredits: bookingManagementController.getAvailableAirlineCredits.bind(bookingManagementController),
+  getPaymentOptions: bookingManagementController.getPaymentOptions.bind(bookingManagementController),
+  processCombinedPayment: bookingManagementController.processCombinedPayment.bind(bookingManagementController),
+  getBookingPaymentDetails: bookingManagementController.getBookingPaymentDetails.bind(bookingManagementController),
+  refundCombinedPayment: bookingManagementController.refundCombinedPayment.bind(bookingManagementController),
+  createBookingWithCombinedPayment: bookingManagementController.createBookingWithCombinedPayment.bind(bookingManagementController),
+  applyCreditsToBooking: bookingManagementController.applyCreditsToBooking.bind(bookingManagementController),
+  checkOrderChangeEligibility: bookingManagementController.checkOrderChangeEligibility.bind(bookingManagementController),
+  createOrderChangeRequest: bookingManagementController.createOrderChangeRequest.bind(bookingManagementController),
+  getOrderChangeOffers: bookingManagementController.getOrderChangeOffers.bind(bookingManagementController),
+  createPendingOrderChange: bookingManagementController.createPendingOrderChange.bind(bookingManagementController),
+  getPendingOrderChangeStatus: bookingManagementController.getPendingOrderChangeStatus.bind(bookingManagementController),
+  confirmOrderChange: bookingManagementController.confirmOrderChange.bind(bookingManagementController),
+  checkBaggageEligibility: bookingManagementController.checkBaggageEligibility.bind(bookingManagementController),
+  getAvailableBaggages: bookingManagementController.getAvailableBaggages.bind(bookingManagementController),
+  bookBaggageServices: bookingManagementController.bookBaggageServices.bind(bookingManagementController),
+  getOrderBaggages: bookingManagementController.getOrderBaggages.bind(bookingManagementController)
 };

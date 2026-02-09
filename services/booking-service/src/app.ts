@@ -10,22 +10,27 @@ if (process.env.NODE_ENV !== 'test') {
 // import { prisma } from './database';
 
 // Import routes
-import bookingManagementRoutes from './routes/bookingManagementRoutes.js';
-import enhancedBookingRoutes from './routes/enhancedBookings.js';
+import bookingManagementRoutes from './routes/bookingManagementRoutes';
+import enhancedBookingRoutes from './routes/enhancedBookings';
+import seatMapsRoutes from './routes/seatMapsRoutes';
+import ancillaryServicesRoutes from './routes/ancillaryServicesRoutes';
+import holdOrdersRoutes from './routes/holdOrdersRoutes';
+import paymentWalletRoutes from './routes/paymentWalletRoutes';
+import combinedPaymentRoutes from './routes/combinedPaymentRoutes';
+import webhookRoutes from './routes/webhookRoutes';
+import notificationRoutes from './routes/notificationRoutes';
 
 // Import middleware
-import { securityHeaders, corsOptions, rateLimiters } from './config/security.js';
-import { errorHandler } from './middleware/enhancedErrorHandler.js';
+import { securityHeaders, corsOptions, rateLimiters } from './config/security';
+import { errorHandler } from './middleware/enhancedErrorHandler';
+import express from 'express';
+import cors from 'cors';
+import morgan from 'morgan';
+import compression from 'compression';
 import type { ErrorRequestHandler } from 'express';
 
 // Import logger
-import logger from './utils/logger.js';
-
-// Import CommonJS modules using require for compatibility
-const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const compression = require('compression');
+import logger from './utils/logger';
 
 // Create Express app
 const app: Express = express();
@@ -65,8 +70,15 @@ app.get('/health', (req: Request, res: Response) => {
 
 // API routes
 app.use('/api', bookingManagementRoutes);
+app.use('/api/notifications', rateLimiters.general, notificationRoutes);
 app.use('/api/bookings', rateLimiters.booking, enhancedBookingRoutes);
+app.use('/api/bookings', rateLimiters.booking, combinedPaymentRoutes);
+app.use('/api/webhooks', webhookRoutes); // Webhooks without rate limiting (supplier->service)
+app.use('/bookings', rateLimiters.booking, holdOrdersRoutes);
+app.use('/bookings', rateLimiters.booking, seatMapsRoutes);
+app.use('/bookings', rateLimiters.booking, ancillaryServicesRoutes);
 app.use('/bookings', rateLimiters.booking, enhancedBookingRoutes);
+app.use('/bookings', rateLimiters.booking, paymentWalletRoutes);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {
@@ -79,15 +91,6 @@ app.use('*', (req: Request, res: Response) => {
 
 // Error handler
 app.use(errorHandler as ErrorRequestHandler);
-
-if (process.env.NODE_ENV !== 'test') {
-  // Start server only outside test environment
-  console.log(`About to call app.listen on port ${PORT}`);
-  const server = app.listen(PORT, () => {
-    console.log(`Booking service started successfully on port ${PORT}`);
-  });
-  console.log(`app.listen called, server object:`, server ? 'created' : 'null');
-}
 
 // Graceful shutdown
 // process.on('SIGINT', async () => {

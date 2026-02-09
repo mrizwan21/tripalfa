@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { hasRolePermission } from '../../middleware/permissionMiddleware.js';
+import { hasRolePermission } from '../../middleware/permissionMiddleware';
 
 describe('Permission Middleware', () => {
   describe('hasRolePermission', () => {

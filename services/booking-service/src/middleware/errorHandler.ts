@@ -9,7 +9,7 @@ import {
   TooManyRequestsError, 
   InternalServerError,
   ErrorResponse 
-} from '../types/errors.js';
+} from '../types/errors';
 
 // Custom error classes for better error handling
 export const errorHandler = (

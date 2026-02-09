@@ -1,0 +1,41 @@
+# Codacy ignore file
+
+## Ignore all TypeScript and JavaScript files
+
+*.ts
+*.tsx
+*.js
+*.jsx
+
+# Ignore configuration files
+
+*.json
+*.config.js
+*.config.ts
+*.config.json
+*.d.ts
+
+# Ignore test files and directories
+
+tests/
+test-results/
+playwright-report/
+
+# Ignore build and dependency directories
+
+node_modules/
+dist/
+build/
+coverage/
+
+# Ignore documentation and other non-code files
+
+*.md
+*.txt
+*.log
+*.html
+*.css
+*.scss
+*.less
+*.vue
+*.svelte
