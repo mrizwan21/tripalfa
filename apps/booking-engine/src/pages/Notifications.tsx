@@ -512,7 +512,7 @@ export default function Notifications() {
                 return (
                   <Button
                     key={pageNum}
-                    variant={currentPage === pageNum ? "default" : "outline"}
+                    variant={currentPage === pageNum ? "primary" : "outline"}
                     size="sm"
                     onClick={() => setCurrentPage(pageNum)}
                     className="px-3 py-2 min-w-[40px]"
@@ -573,3 +573,4 @@ export default function Notifications() {
       </>
     );
   }
+}

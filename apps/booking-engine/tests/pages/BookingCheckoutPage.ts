@@ -28,11 +28,7 @@ export class BookingCheckoutPage extends BasePage {
     return parseFloat(amountText?.replace(/[^0-9.]/g, '') || '0');
   }
 
-  // New methods for Day 5-6 wallet integration
-  async selectPaymentMethod(method: 'wallet' | 'card' | 'paypal' | 'bank') {
-    await this.setSelectValue('payment-method', method);
-    await this.page.waitForTimeout(500); // Wait for payment form to update
-  }
+
 
   async completeWalletPayment() {
     // Select wallet payment method
@@ -82,15 +78,7 @@ export class BookingCheckoutPage extends BasePage {
     return parseFloat(amountText?.replace(/[^0-9.]/g, '') || '0');
   }
 
-  async verifyPaymentSuccess(): Promise<boolean> {
-    const success = await this.page.locator('[data-testid="payment-success"]').isVisible();
-    return success;
-  }
 
-  async getBookingReference(): Promise<string> {
-    const ref = await this.getByTestId('booking-reference').textContent();
-    return ref || '';
-  }
 
   // Payment finalization methods
   async proceedToPaymentFinalization(holdOrderId: string) {
@@ -172,18 +160,7 @@ export class BookingCheckoutPage extends BasePage {
     await this.page.waitForSelector('[data-testid="wire-details-modal"]', { timeout: 5000 });
   }
 
-  // Payment reminder methods
-  async schedulePaymentReminder(options: {
-    bookingId: string;
-    dueDate: Date;
-    amount: number;
-  }) {
-    await this.page.evaluate((opts) => {
-      window.dispatchEvent(new CustomEvent('schedulePaymentReminder', {
-        detail: opts
-      }));
-    }, options);
-  }
+
 
   // Refund methods
   async initiateRefund(options: {

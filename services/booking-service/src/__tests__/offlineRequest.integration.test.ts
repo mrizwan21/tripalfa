@@ -319,10 +319,7 @@ describe('Offline Request Workflow Integration Tests', () => {
     );
 
     // Go to completed directly (zero price difference)
-    const updatedRequest = await new Promise(async (resolve) => {
-      const req = await offlineRequestService.getRequestById(newRequest.id);
-      resolve(req);
-    });
+    const updatedRequest = await offlineRequestService.getRequestById(newRequestId);
 
     // Try to record payment on non-PAYMENT_PENDING request - should fail
     try {

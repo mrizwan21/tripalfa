@@ -193,7 +193,7 @@ export function deepMerge(target: any, source: any): any {
   const output = Object.assign({}, target);
 
   for (const key in source) {
-    if (source.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(source, key)) {
       if (source[key] instanceof Object && key in target) {
         output[key] = deepMerge(target[key], source[key]);
       } else {

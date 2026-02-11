@@ -357,9 +357,7 @@ describe('Template Rendering System', () => {
       it(`should support ${docType} template rendering`, async () => {
         // This is a placeholder test - actual implementation would test specific templates
         expect(docType).toBeDefined();
-        expect(['BOOKING_CONFIRMATION', 'INVOICE', 'ITINERARY', 'RECEIPT', 'AMENDMENT'].includes(docType)).toBe(
-          true,
-        );
+        expect(['BOOKING_CONFIRMATION', 'INVOICE', 'ITINERARY', 'RECEIPT', 'AMENDMENT'].includes(docType)).toBe(true);
       });
     });
   });
