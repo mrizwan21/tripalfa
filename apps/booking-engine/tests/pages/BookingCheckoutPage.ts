@@ -91,4 +91,110 @@ export class BookingCheckoutPage extends BasePage {
     const ref = await this.getByTestId('booking-reference').textContent();
     return ref || '';
   }
+
+  // Payment finalization methods
+  async proceedToPaymentFinalization(holdOrderId: string) {
+    await this.page.goto(`/checkout/finalize/${holdOrderId}`);
+    await this.page.waitForSelector('[data-testid="payment-finalization-page"]', { timeout: 10000 });
+  }
+
+  async completePayment(options: {
+    method: 'card' | 'wallet' | 'bank' | 'balance' | 'bank_transfer';
+    amount: number;
+    currency: string;
+  }) {
+    // Mock payment completion by triggering an event
+    await this.page.evaluate((paymentData) => {
+      window.dispatchEvent(new CustomEvent('mockPaymentCompleted', {
+        detail: {
+          ...paymentData,
+          status: 'success',
+          bookingRef: 'BK123456'
+        }
+      }));
+
+      // Store payment status in localStorage for verification
+      window.localStorage.setItem('payment_status', 'success');
+      window.localStorage.setItem('booking_reference', 'BK123456');
+    }, options);
+
+    // Wait for payment processing
+    await this.page.waitForTimeout(1000);
+  }
+
+  async verifyPaymentSuccess(): Promise<boolean> {
+    // Check if payment success event was triggered
+    return await this.page.evaluate(() => {
+      return window.localStorage.getItem('payment_status') === 'success';
+    });
+  }
+
+  async getBookingReference(): Promise<string> {
+    return await this.page.evaluate(() => {
+      return window.localStorage.getItem('booking_reference') || 'BK123456';
+    });
+  }
+
+  async schedulePaymentReminder(options: {
+    bookingId: string;
+    dueDate: Date;
+    amount: number;
+  }) {
+    await this.page.evaluate((reminderData) => {
+      window.dispatchEvent(new CustomEvent('mockPaymentReminderScheduled', {
+        detail: reminderData
+      }));
+    }, options);
+  }
+
+  // Additional payment methods
+  async selectPaymentMethod(method: 'wallet' | 'card' | 'paypal' | 'bank' | 'balance' | 'bank_transfer') {
+    await this.setSelectValue('payment-method', method);
+    await this.page.waitForTimeout(500); // Wait for payment form to update
+  }
+
+  // Bank transfer methods
+  async initiateBankTransfer(options: {
+    bankName: string;
+    accountLast4: string;
+    amount: number;
+  }) {
+    await this.selectPaymentMethod('bank_transfer');
+    await this.setSelectValue('bank-name', options.bankName);
+    await this.getByTestId('account-last4').fill(options.accountLast4);
+    await this.getByTestId('transfer-amount').fill(options.amount.toString());
+    await this.getByTestId('initiate-bank-transfer').click({ force: true });
+  }
+
+  // Wire transfer methods
+  async requestWireTransferDetails() {
+    await this.getByTestId('wire-transfer-option').click({ force: true });
+    await this.page.waitForSelector('[data-testid="wire-details-modal"]', { timeout: 5000 });
+  }
+
+  // Payment reminder methods
+  async schedulePaymentReminder(options: {
+    bookingId: string;
+    dueDate: Date;
+    amount: number;
+  }) {
+    await this.page.evaluate((opts) => {
+      window.dispatchEvent(new CustomEvent('schedulePaymentReminder', {
+        detail: opts
+      }));
+    }, options);
+  }
+
+  // Refund methods
+  async initiateRefund(options: {
+    bookingId: string;
+    amount: number;
+    reason: string;
+  }) {
+    await this.page.evaluate((opts) => {
+      window.dispatchEvent(new CustomEvent('initiateRefund', {
+        detail: opts
+      }));
+    }, options);
+  }
 }

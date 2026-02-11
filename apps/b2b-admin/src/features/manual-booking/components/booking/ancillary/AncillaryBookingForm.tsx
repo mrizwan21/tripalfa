@@ -287,7 +287,7 @@ export function AncillaryBookingForm({ mode, initialData, onSubmit, onCancel }: 
             {!isReadOnly && (
               <NotificationPanel 
                 customerId={customerId} 
-                onSend={handleNotificationSend}
+                onNotificationSent={handleNotificationSend}
               />
             )}
           </div>

@@ -19,6 +19,7 @@ export type BookingStatus =
 export interface Booking {
   id: string;
   bookingId?: string; // TL-###### when issued
+  userId?: string; // Added for wallet integration
   product: 'hotel' | 'flight';
   status: BookingStatus | string;
   reference?: string;

@@ -1924,6 +1924,306 @@ server.post('/user/preferences/ancillary-defaults', async (request, reply) => {
     }
 });
 
+// --- AUTH ROUTES (Mock Implementation) ---
+server.post('/auth/login', async (request, reply) => {
+    const { email, password } = request.body as { email: string; password: string };
+
+    if (!email || !password) {
+        return reply.code(400).send({ error: 'Email and password are required' });
+    }
+
+    // Mock authentication - accept any email/password combination
+    const mockUser = {
+        id: 'user_' + Date.now(),
+        email,
+        name: email.split('@')[0],
+        role: 'user'
+    };
+
+    const mockResponse = {
+        data: {
+            accessToken: 'mock_access_token_' + Date.now(),
+            refreshToken: 'mock_refresh_token_' + Date.now(),
+            user: mockUser
+        }
+    };
+
+    return mockResponse;
+});
+
+server.post('/auth/register', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/auth/register`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/auth/logout', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/auth/logout`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/user/profile', async (request, reply) => {
+    const auth = (request.headers && (request.headers as any).authorization) || '';
+    const headers: any = {};
+    if (auth) headers['Authorization'] = auth as string;
+
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/user/profile`;
+    const res = await fetch(url, { method: 'GET', headers });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/auth/profile', async (request, reply) => {
+    const auth = (request.headers && (request.headers as any).authorization) || '';
+    const headers: any = {};
+    if (auth) headers['Authorization'] = auth as string;
+
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/auth/profile`;
+    const res = await fetch(url, { method: 'GET', headers });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- USER MANAGEMENT PROXY ROUTES ---
+server.get('/admin/staff', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/staff${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/users', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/users${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/staff/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/staff/${id}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- BRANCH MANAGEMENT PROXY ROUTES ---
+server.get('/branches', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/branches${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/branches', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/branches`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- COMPANY MANAGEMENT PROXY ROUTES ---
+server.get('/admin/companies', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/companies`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/companies/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/companies/${id}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.patch('/admin/companies/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/companies/${id}`;
+    const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- DEPARTMENT AND DESIGNATION PROXY ROUTES ---
+server.get('/departments', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/departments${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/departments', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/departments`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/designations', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/designations${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/cost-centers', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/cost-centers${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- ROLES AND PERMISSIONS PROXY ROUTES ---
+server.get('/admin/roles', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/roles`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/permissions', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/permissions`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- BRANDING PROXY ROUTES ---
+server.get('/admin/branding', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/branding`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- REFERENCE DATA PROXY ROUTES ---
+server.get('/admin/languages', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/languages`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/currencies', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/currencies`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/regions', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/regions`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/ip-whitelist', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/ip-whitelist${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/regions/countries', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/regions/countries`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+// --- AUDIT LOGS PROXY ROUTES ---
+server.get('/admin/audit-logs', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/audit-logs/stats', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs/stats`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/audit-logs/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs/${id}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/audit-logs/user/:userId', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs/user/${userId}${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/audit-logs/suspicious', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs/suspicious${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.get('/admin/audit-logs/export', async (request, reply) => {
+    const qs = new URLSearchParams(request.query as any).toString();
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs/export${qs ? `?${qs}` : ''}`;
+    const res = await fetch(url, { method: 'GET' });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
+server.post('/admin/audit-logs/block-ip', async (request, reply) => {
+    const url = `${USER_SERVICE_URL.replace(/\/$/, '')}/admin/audit-logs/block-ip`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request.body)
+    });
+    if (!res.ok) return reply.code(res.status).send(await res.text());
+    return res.json();
+});
+
 // Note: Mock endpoints for wallet, auth, notifications, and user profile have been removed.
 // These endpoints should be provided by their respective microservices (user-service, wallet-service, notification-service).
 

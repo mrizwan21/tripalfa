@@ -1,19 +1,6 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { staticPool } from '../db.js';
 import liteApiClient from '../services/LiteAPIClient.js';
-
-const prisma = new PrismaClient({
-    datasources: {
-        db: {
-            url: process.env.STATIC_DATABASE_URL
-        }
-    },
-    // Add timeout to handle slow checkpoints
-    errorFormat: 'minimal',
-});
-// Note: Prisma 5.x+ uses a different way for timeout but we'll stick to basic retry for now.
-// For the connection itself:
-process.env.PRISMA_CLIENT_ENGINE_TYPE = 'binary';
 
 const isProd = !!process.env.LITEAPI_PROD_API_KEY;
 console.log(`LiteAPI Ingestion Mode: ${isProd ? 'PRODUCTION' : 'SANDBOX/TEST'}`);
@@ -45,11 +32,17 @@ async function ingestCountries() {
         const code = (c.code || c.iso_code || '').toUpperCase();
         if (!code) continue;
 
-        await prisma.country.upsert({
-            where: { code },
-            update: { name: c.name },
-            create: { code, name: c.name }
-        }).catch(e => console.warn(`Country upsert failed: ${c.name}`, e.message));
+        try {
+            await staticPool.query(`
+                INSERT INTO countries (code, name, updated_at)
+                VALUES ($1, $2, NOW())
+                ON CONFLICT (code) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    updated_at = NOW()
+            `, [code, c.name]);
+        } catch (e: any) {
+            console.warn(`Country upsert failed: ${c.name}`, e.message);
+        }
     }
     console.log('Countries Ingestion Completed.');
 }
@@ -65,30 +58,17 @@ async function ingestCurrencies() {
         const precision = c.decimal_places !== undefined ? c.decimal_places : 2; // ISO 4217 alignment
 
         try {
-            await prisma.currency.upsert({
-                where: { code: c.code },
-                update: {
-                    name: name,
-                    decimalPlaces: precision
-                },
-                create: {
-                    code: c.code,
-                    name: name,
-                    symbol: c.symbol || '$',
-                    decimalPlaces: precision
-                }
-            });
+            await staticPool.query(`
+                INSERT INTO currencies (code, name, symbol, decimal_digits, updated_at)
+                VALUES ($1, $2, $3, $4, NOW())
+                ON CONFLICT (code) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    symbol = EXCLUDED.symbol,
+                    decimal_digits = EXCLUDED.decimal_digits,
+                    updated_at = NOW()
+            `, [c.code, name, c.symbol || '$', precision]);
         } catch (e: any) {
-            if (e.message.includes('decimal_places')) {
-                // Fallback if column missing
-                await prisma.currency.upsert({
-                    where: { code: c.code },
-                    update: { name: name },
-                    create: { code: c.code, name: name, symbol: c.symbol || '$' }
-                }).catch(err => console.warn(`Currency fallback failed: ${c.code}`, err.message));
-            } else {
-                console.warn(`Currency upsert failed: ${c.code}`, e.message);
-            }
+            console.warn(`Currency upsert failed: ${c.code}`, e.message);
         }
     }
     console.log('Currencies Ingestion Completed.');
@@ -103,25 +83,18 @@ async function ingestAmenities() {
         if (!f.name) continue; // Skip if name is missing
         const code = f.name.toUpperCase().replace(/\s+/g, '_').substring(0, 50);
 
-        // Use findFirst since name isn't unique in schema
-        const existing = await prisma.amenity.findFirst({
-            where: { name: f.name }
-        });
-
-        if (existing) {
-            await prisma.amenity.update({
-                where: { id: existing.id },
-                data: { category: 'General' }
-            });
-        } else {
-            await prisma.amenity.create({
-                data: {
-                    name: f.name,
-                    code: code,
-                    category: 'General',
-                    appliesTo: 'both'
-                }
-            }).catch(e => console.warn(`Amenity creation failed: ${f.name}`, e.message));
+        try {
+            await staticPool.query(`
+                INSERT INTO hotel_facilities (name, code, category, applies_to, updated_at)
+                VALUES ($1, $2, $3, $4, NOW())
+                ON CONFLICT (name) DO UPDATE SET
+                    code = EXCLUDED.code,
+                    category = EXCLUDED.category,
+                    applies_to = EXCLUDED.applies_to,
+                    updated_at = NOW()
+            `, [f.name, code, 'General', 'both']);
+        } catch (e: any) {
+            console.warn(`Amenity upsert failed: ${f.name}`, e.message);
         }
     }
     console.log('Amenities Ingestion Completed.');
@@ -135,28 +108,14 @@ async function ingestHotelTypes() {
     for (const t of types) {
         if (!t.name) continue;
         try {
-            await prisma.hotelType.upsert({
-                where: { name: t.name },
-                update: { updatedAt: new Date() },
-                create: {
-                    name: t.name
-                }
-            });
+            await staticPool.query(`
+                INSERT INTO hotel_types (name, updated_at)
+                VALUES ($1, NOW())
+                ON CONFLICT (name) DO UPDATE SET
+                    updated_at = NOW()
+            `, [t.name]);
         } catch (e: any) {
-            if (e.message.includes('description')) {
-                // If description is missing in DB, try without it
-                try {
-                    await prisma.hotelType.upsert({
-                        where: { name: t.name },
-                        update: { updatedAt: new Date() },
-                        create: { name: t.name }
-                    });
-                } catch (err: any) {
-                    console.warn(`HotelType fallback failed: ${t.name}`, err.message);
-                }
-            } else {
-                console.warn(`HotelType upsert failed: ${t.name}`, e.message);
-            }
+            console.warn(`HotelType upsert failed: ${t.name}`, e.message);
         }
     }
     console.log('Hotel Types Ingestion Completed.');
@@ -171,26 +130,16 @@ async function ingestHotelChains() {
         if (!c.name || !c.id) continue;
         const code = c.id.toString();
 
-        // Handle name uniqueness conflict: upsert by code but check if name is already taken
-        const existingByName = await prisma.hotelChain.findFirst({
-            where: { name: c.name }
-        });
-
-        if (existingByName && existingByName.code !== code) {
-            // If name exists but with different code, update existing one or skip
-            await prisma.hotelChain.update({
-                where: { id: existingByName.id },
-                data: { code: code }
-            }).catch(e => console.warn(`HotelChain update failed: ${c.name}`, e.message));
-        } else {
-            await prisma.hotelChain.upsert({
-                where: { code: code },
-                update: { name: c.name },
-                create: {
-                    code: code,
-                    name: c.name
-                }
-            }).catch(e => console.warn(`HotelChain upsert failed: ${c.name}`, e.message));
+        try {
+            await staticPool.query(`
+                INSERT INTO hotel_chains (code, name, updated_at)
+                VALUES ($1, $2, NOW())
+                ON CONFLICT (code) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    updated_at = NOW()
+            `, [code, c.name]);
+        } catch (e: any) {
+            console.warn(`HotelChain upsert failed: ${c.name}`, e.message);
         }
     }
     console.log('Hotel Chains Ingestion Completed.');
@@ -198,9 +147,9 @@ async function ingestHotelChains() {
 
 async function ingestCities() {
     console.log('Starting Cities Ingestion...');
-    const countries = await prisma.country.findMany();
+    const countries = await staticPool.query('SELECT code, name FROM countries');
 
-    for (const country of countries) {
+    for (const country of countries.rows) {
         console.log(`Fetching cities for ${country.code}...`);
         let offset = 0;
         const limit = 100; // Safer limit for LiteAPI
@@ -226,23 +175,15 @@ async function ingestCities() {
                     continue;
                 }
 
-                const existing = await prisma.city.findFirst({
-                    where: { name: cityName, countryCode: country.code }
-                });
-
-                if (existing) {
-                    await prisma.city.update({
-                        where: { id: existing.id },
-                        data: { updatedAt: new Date() }
-                    });
-                } else {
-                    await prisma.city.create({
-                        data: {
-                            name: cityName,
-                            countryCode: country.code,
-                            country: country.name
-                        }
-                    }).catch(e => console.warn(`City creation failed: ${cityName}`, e.message));
+                try {
+                    await staticPool.query(`
+                        INSERT INTO cities (name, country, country_code, updated_at)
+                        VALUES ($1, $2, $3, NOW())
+                        ON CONFLICT (name, country_code) DO UPDATE SET
+                            updated_at = NOW()
+                    `, [cityName, country.name, country.code]);
+                } catch (e: any) {
+                    console.warn(`City upsert failed: ${cityName}`, e.message);
                 }
             }
 
@@ -256,14 +197,15 @@ async function ingestCities() {
 
 async function ingestHotels() {
     console.log('Starting Hotels Ingestion...');
-    const countries = await prisma.country.findMany();
+    const countries = await staticPool.query('SELECT code, name FROM countries');
 
     let totalHotelsIngested = 0;
 
-    for (const country of countries) {
+    for (const country of countries.rows) {
         // Skip check: If we already have many hotels for this country, ask to skip or just continue
         // (For now, just log and continue, but we could add a skip threshold)
-        const existingCount = await withRetry(() => prisma.hotel.count({ where: { countryCode: country.code } }));
+        const existingCountResult = await staticPool.query('SELECT COUNT(*) as count FROM hotels WHERE country_code = $1', [country.code]);
+        const existingCount = parseInt(existingCountResult.rows[0].count);
         if (existingCount > 0) {
             console.log(`Country ${country.code} already has ${existingCount} hotels. Checking for missing reviews...`);
             // We still enter to check for reviews, but we'll use the skip logic inside
@@ -305,20 +247,19 @@ async function ingestHotels() {
                 if (!liteApiHotelId) continue;
 
                 // Check mapping and reviews to decide if we can skip (Resume Logic)
-                const mapping = await withRetry(() => prisma.hotelSupplierRef.findUnique({
-                    where: {
-                        supplierCode_supplierHotelId: {
-                            supplierCode: 'liteapi',
-                            supplierHotelId: liteApiHotelId
-                        }
-                    }
-                }));
+                const mappingResult = await staticPool.query(`
+                    SELECT hotel_id FROM hotel_supplier_refs
+                    WHERE supplier_code = 'liteapi' AND supplier_hotel_id = $1
+                `, [liteApiHotelId]);
+
+                const mapping = mappingResult.rows[0];
 
                 if (mapping) {
-                    const reviewSummary = await withRetry(() => prisma.hotelReviewsSummary.findUnique({
-                        where: { hotelId: mapping.hotelId }
-                    }));
-                    if (reviewSummary) {
+                    const reviewSummaryResult = await staticPool.query(`
+                        SELECT id FROM hotel_reviews_summaries WHERE hotel_id = $1
+                    `, [mapping.hotel_id]);
+
+                    if (reviewSummaryResult.rows.length > 0) {
                         // Skip if both exist
                         totalHotelsIngested++;
                         if (totalHotelsIngested % 1000 === 0) {
@@ -343,45 +284,43 @@ async function ingestHotels() {
 
                 let dbHotelId: number;
                 if (mapping) {
-                    await withRetry(() => prisma.hotel.update({
-                        where: { id: mapping.hotelId },
-                        data: {
-                            ...hotelData,
-                            updatedAt: new Date()
-                        }
-                    }));
-                    dbHotelId = mapping.hotelId;
+                    await staticPool.query(`
+                        UPDATE hotels SET
+                            name = $1, star_rating = $2, city = $3, country_code = $4,
+                            latitude = $5, longitude = $6, address = $7, postal_code = $8,
+                            primary_source = $9, updated_at = NOW()
+                        WHERE id = $10
+                    `, [
+                        hotelData.name, hotelData.starRating, hotelData.city, hotelData.countryCode,
+                        hotelData.latitude, hotelData.longitude, hotelData.address, hotelData.postalCode,
+                        hotelData.primarySource, mapping.hotel_id
+                    ]);
+                    dbHotelId = mapping.hotel_id;
                 } else {
-                    const newHotel = await withRetry(() => prisma.hotel.create({
-                        data: {
-                            ...hotelData,
-                            isActive: true,
-                            hasWifi: false,
-                            hasPool: false,
-                            hasSpa: false,
-                            hasParking: false,
-                            hasRestaurant: false
-                        }
-                    }));
-                    dbHotelId = newHotel.id;
+                    const newHotelResult = await staticPool.query(`
+                        INSERT INTO hotels (
+                            name, star_rating, city, country_code, latitude, longitude,
+                            address, postal_code, primary_source, is_active,
+                            has_wifi, has_pool, has_spa, has_parking, has_restaurant
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                        RETURNING id
+                    `, [
+                        hotelData.name, hotelData.starRating, hotelData.city, hotelData.countryCode,
+                        hotelData.latitude, hotelData.longitude, hotelData.address, hotelData.postalCode,
+                        hotelData.primarySource, true, false, false, false, false, false
+                    ]);
+                    dbHotelId = newHotelResult.rows[0].id;
 
-                    await withRetry(() => prisma.hotelSupplierRef.create({
-                        data: {
-                            hotelId: newHotel.id,
-                            supplierCode: 'liteapi',
-                            supplierHotelId: liteApiHotelId,
-                            matchConfidence: 1.0,
-                            matchMethod: 'direct_id'
-                        }
-                    }));
+                    await staticPool.query(`
+                        INSERT INTO hotel_supplier_refs (
+                            hotel_id, supplier_code, supplier_hotel_id, match_confidence, match_method
+                        ) VALUES ($1, $2, $3, $4, $5)
+                    `, [dbHotelId, 'liteapi', liteApiHotelId, 1.0, 'direct_id']);
                 }
                 totalHotelsIngested++;
                 if (totalHotelsIngested % 100 === 0) {
                     console.log(`Progress: Ingested ${totalHotelsIngested} hotels so far...`);
                 }
-
-                // PARALLEL REVIEWS: Collect IDs for batch processing
-                // Note: We process in sub-batches of 10 for parallelism to avoid rate limits
             }
 
             // Ingest Reviews in Parallel for the current 100-hotel batch
@@ -395,36 +334,28 @@ async function ingestHotels() {
                 const subBatch = hotelsWithIds.slice(i, i + reviewConcurrency);
                 await Promise.all(subBatch.map(async (h) => {
                     // Find the dbHotelId for this liteApiHotelId
-                    const supplierRef = await withRetry(() => prisma.hotelSupplierRef.findUnique({
-                        where: {
-                            supplierCode_supplierHotelId: {
-                                supplierCode: 'liteapi',
-                                supplierHotelId: h.liteApiId
-                            }
-                        }
-                    }));
+                    const supplierRefResult = await staticPool.query(`
+                        SELECT hotel_id FROM hotel_supplier_refs
+                        WHERE supplier_code = 'liteapi' AND supplier_hotel_id = $1
+                    `, [h.liteApiId]);
 
-                    if (supplierRef) {
+                    if (supplierRefResult.rows.length > 0) {
+                        const supplierRef = supplierRefResult.rows[0];
                         try {
                             // Only fetch and upsert if not already present or if we want to force update
                             // (In resume mode, we trust the skip logic above, but this is a safety check)
                             const reviews = await liteApiClient.getReviews(h.liteApiId, 10);
                             if (reviews && reviews.length > 0) {
-                                await withRetry(() => prisma.hotelReviewsSummary.upsert({
-                                    where: { hotelId: supplierRef.hotelId },
-                                    update: {
-                                        totalReviews: reviews.length,
-                                        averageRating: 0,
-                                        lastUpdated: new Date(),
-                                        ratingBreakdown: { reviews }
-                                    },
-                                    create: {
-                                        hotelId: supplierRef.hotelId,
-                                        totalReviews: reviews.length,
-                                        averageRating: 0,
-                                        ratingBreakdown: { reviews }
-                                    }
-                                }));
+                                await staticPool.query(`
+                                    INSERT INTO hotel_reviews_summaries (
+                                        hotel_id, total_reviews, average_rating, rating_breakdown, last_updated
+                                    ) VALUES ($1, $2, $3, $4, NOW())
+                                    ON CONFLICT (hotel_id) DO UPDATE SET
+                                        total_reviews = EXCLUDED.total_reviews,
+                                        average_rating = EXCLUDED.average_rating,
+                                        rating_breakdown = EXCLUDED.rating_breakdown,
+                                        last_updated = NOW()
+                                `, [supplierRef.hotel_id, reviews.length, 0, JSON.stringify({ reviews })]);
                             }
                         } catch (e: any) {
                             // Suppress logs for high volume
@@ -465,6 +396,6 @@ main()
         process.exit(1);
     })
     .finally(async () => {
-        await prisma.$disconnect();
+        await staticPool.end();
     });
 

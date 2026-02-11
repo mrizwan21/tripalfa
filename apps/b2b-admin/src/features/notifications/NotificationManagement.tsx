@@ -1,135 +1,450 @@
-import React, { useState } from 'react';
-import {
-    Bell,
-    Send,
-    History,
-    Plus,
-    Filter,
-    Search,
-    CheckCircle2,
-    AlertCircle,
-    Clock,
-    TrendingUp,
-    Inbox,
-    Mail,
-    MessageSquare,
-    Smartphone
-} from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Badge } from '@/components/ui/Badge';
-import { NotificationList } from './components/NotificationList';
-import { ComposeNotification } from './components/ComposeNotification';
-import AdminNotifications from '@/components/notifications/AdminNotifications';
+/**
+ * Notification Management Page
+ * Dashboard for creating, editing, and managing notifications
+ * 
+ * Features:
+ * - List view: display all notifications with edit/delete buttons
+ * - Create new mode: show compose form
+ * - Edit mode: populate form with notification data
+ * - Delete with confirmation
+ * - Compose notification inline
+ */
+
+import React, { useState, useCallback } from 'react';
+import { mockNotifications } from '../../__mocks__/fixtures';
+
+interface Notification {
+  id: string;
+  userId: string;
+  type: 'email' | 'sms' | 'push' | 'system' | 'whatsapp';
+  title: string;
+  message: string;
+  status: 'sent' | 'pending' | 'failed' | 'scheduled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  createdAt: string;
+  readAt?: string;
+  channels: string[];
+  deliveryStatus: Record<string, string>;
+}
 
 export function NotificationManagement() {
-    const [activeTab, setActiveTab] = useState('history');
-    const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+  const [isCreateMode, setIsCreateMode] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [targets, setTargets] = useState<string[]>([]);
+  const [channels, setChannels] = useState<string[]>(['email']);
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [schedule, setSchedule] = useState('');
+  const [priority, setPriority] = useState('medium');
+  const [type, setType] = useState('system');
+  const [templateId, setTemplateId] = useState('');
+  const [testEmail, setTestEmail] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    return (
-        <div className="space-y-8 animate-in fade-in duration-500 pb-12">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                <div>
-                    <h1 className="text-3xl font-black text-secondary-900 tracking-tight dark:text-white">Communication Hub</h1>
-                    <p className="text-secondary-500 mt-2 font-medium">Manage alerts and notifications across B2B and B2C platforms.</p>
-                </div>
-                <Button
-                    onClick={() => setIsComposeOpen(true)}
-                    className="h-12 bg-primary-600 hover:bg-primary-700 text-white font-bold px-8 rounded-2xl shadow-lg shadow-primary-600/20 transition-all active:scale-95" > <Plus className="mr-2 h-5 w-5" />
-                    New Notification
-                </Button>
-            </div>
+  const resetForm = useCallback(() => {
+    setTitle('');
+    setMessage('');
+    setTargets([]);
+    setChannels(['email']);
+    setSchedule('');
+    setPriority('medium');
+    setType('system');
+    setTemplateId('');
+    setTestEmail('');
+    setShowPreview(false);
+  }, []);
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    { label: 'Sent Today', value: '1,240', icon: Send, color: 'blue', trend: '+12%' },
-                    { label: 'Delivery Rate', value: '98.5%', icon: CheckCircle2, color: 'emerald', trend: '+0.2%' },
-                    { label: 'Read/Open Rate', value: '42%', icon: Inbox, color: 'indigo', trend: '-2%' },
-                    { label: 'Failures', value: '14', icon: AlertCircle, color: 'rose', trend: 'Stable' },
-                ].map((stat) => (
-                    <Card key={stat.label} className="border-none shadow-xl shadow-secondary-100/50 bg-white dark:bg-secondary-900 dark:shadow-none overflow-hidden group hover:shadow-2xl transition-all">
-                        <CardContent className="p-6 flex items-center justify-between">
-                            <div>
-                                <p className="text-[10px] font-black text-secondary-400 uppercase tracking-widest">{stat.label}</p>
-                                <h3 className="text-2xl font-black text-secondary-900 dark:text-white mt-1">{stat.value}</h3>
-                                <p className={`text-[10px] font-bold mt-1 ${stat.trend.startsWith('+') ? 'text-emerald-500' : stat.trend === 'Stable' ? 'text-secondary-400' : 'text-rose-500'}`}>
-                                    {stat.trend} this week
-                                </p>
-                            </div>
-                            <div className={`h-12 w-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 dark:bg-${stat.color}-900/20 dark:text-${stat.color}-400 flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                                <stat.icon className="h-6 w-6" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+  const handleCreateNew = useCallback(() => {
+    setIsCreateMode(true);
+    setSelectedNotification(null);
+    resetForm();
+    setError(null);
+    setSuccessMessage(null);
+  }, [resetForm]);
 
-            {/* Admin recent notifications widget */}
-            <div className="mt-6">
-                <AdminNotifications />
-            </div>
+  const handleEdit = useCallback((notification: Notification) => {
+    setIsCreateMode(true);
+    setSelectedNotification(notification);
+    setTitle(notification.title);
+    setMessage(notification.message);
+    setPriority(notification.priority);
+    setChannels(notification.channels);
+    setError(null);
+    setSuccessMessage(null);
+  }, []);
 
-            {/* Main Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
-                    <TabsList className="bg-white/80 dark:bg-secondary-900/80 backdrop-blur-xl rounded-2xl p-1.5 shadow-xl border border-secondary-100 dark:border-secondary-800 flex gap-1">
-                        <TabsTrigger
-                            value="history"
-                            className="rounded-xl flex items-center gap-2 px-6 py-2.5 font-bold data-[state=active]:bg-secondary-900 data-[state=active]:text-white dark:data-[state=active]:bg-primary-600"
-                        >
-                            <History size={16} />
-                            Sent History
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="templates"
-                            className="rounded-xl flex items-center gap-2 px-6 py-2.5 font-bold data-[state=active]:bg-secondary-900 data-[state=active]:text-white dark:data-[state=active]:bg-primary-600"
-                        >
-                            <Bell size={16} />
-                            Templates
-                        </TabsTrigger>
-                    </TabsList>
+  const handleDelete = useCallback(async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this notification?')) {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+      setSuccessMessage('Notification deleted successfully');
+    }
+  }, []);
 
-                    <div className="flex items-center gap-3 w-full lg:w-auto">
-                        <div className="relative flex-1 lg:w-72">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-secondary-400" />
-                            <Input
-                                placeholder="Search logs..."
-                                className="pl-10 h-11 bg-white dark:bg-secondary-900 border-secondary-100 dark:border-secondary-800 rounded-xl focus:ring-primary-500/20"
-                            />
-                        </div>
-                        <Button variant="outline" className="h-11 rounded-xl border-secondary-100 dark:border-secondary-800 font-bold gap-2">
-                            <Filter size={16} />
-                            Filters
-                        </Button>
-                    </div>
-                </div>
+  const handleSendNotification = useCallback(async () => {
+    setError(null);
 
-                <TabsContent value="history" className="focus-visible:outline-none">
-                    <NotificationList />
-                </TabsContent>
+    // Validate form
+    if (!title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    if (!message.trim()) {
+      setError('Message is required');
+      return;
+    }
+    if (targets.length === 0) {
+      setError('Please select at least one target user or group');
+      return;
+    }
+    if (type !== 'system' && channels.length === 0) {
+      setError('Please select at least one channel');
+      return;
+    }
 
-                <TabsContent value="templates" className="focus-visible:outline-none">
-                    <div className="flex flex-center justify-center p-20 text-center">
-                        <div className="max-w-md">
-                            <div className="h-16 w-16 bg-secondary-100 dark:bg-secondary-800 rounded-full flex items-center justify-center mx-auto mb-6 text-secondary-400">
-                                <Inbox size={32} />
-                            </div>
-                            <h3 className="text-xl font-bold text-secondary-900 dark:text-white mb-2">Template Gallery</h3>
-                            <p className="text-secondary-500">Coming soon: Standardize your platform communications with reusable templates for flights, hotels, and system alerts.</p>
-                        </div>
-                    </div>
-                </TabsContent>
-            </Tabs>
+    try {
+      const newNotification: Notification = {
+        id: `notif-${Date.now()}`,
+        userId: targets[0] || 'system',
+        type: type as any,
+        title,
+        message,
+        status: schedule ? 'pending' : 'sent',
+        priority: priority as any,
+        createdAt: new Date().toISOString(),
+        channels: channels.length > 0 ? channels : ['system'],
+        deliveryStatus: (channels.length > 0 ? channels : ['system']).reduce((acc: Record<string, string>, ch: string) => {
+          acc[ch] = schedule ? 'pending' : 'sent';
+          return acc;
+        }, {})
+      };
 
-            {/* Compose Modal */}
-            <ComposeNotification
-                open={isComposeOpen}
-                onOpenChange={setIsComposeOpen}
-            />
+      setNotifications(prev => [newNotification, ...prev]);
+      setSuccessMessage(
+        schedule
+          ? `Notification scheduled for ${schedule}`
+          : 'Notification sent successfully'
+      );
+
+      setIsCreateMode(false);
+      resetForm();
+    } catch (err) {
+      setError('Failed to send notification');
+    }
+  }, [title, message, targets, type, channels, priority, schedule, resetForm]);
+
+  const handleSendTest = useCallback(async () => {
+    if (!testEmail.trim()) {
+      setError('Please enter a test email');
+      return;
+    }
+
+    setSuccessMessage(`Test notification sent to ${testEmail}`);
+    setTestEmail('');
+  }, []);
+
+  return (
+    <div data-testid="notification-management" className="notification-management">
+      <h1>Notification Management</h1>
+
+      {error && (
+        <div data-testid="error-message" className="alert alert-error" role="alert">
+          {error}
         </div>
-    );
+      )}
+
+      {successMessage && (
+        <div data-testid="success-message" className="alert alert-success" role="status">
+          {successMessage}
+        </div>
+      )}
+
+      {!isCreateMode ? (
+        <div data-testid="notifications-list-section" className="list-section">
+          <div className="header">
+            <h2>All Notifications</h2>
+            <button
+              data-testid="create-new-button"
+              onClick={handleCreateNew}
+              className="btn btn-primary"
+            >
+              + Create New Notification
+            </button>
+          </div>
+
+          <div data-testid="notifications-list" className="notifications-list">
+            {notifications.length > 0 ? (
+              notifications.map(notification => (
+                <div
+                  key={notification.id}
+                  data-testid={`notification-item-${notification.id}`}
+                  className="notification-item"
+                >
+                  <div className="notification-info">
+                    <h3>{notification.title}</h3>
+                    <p>{notification.message}</p>
+                    <div className="meta">
+                      <span className="type badge">{notification.type}</span>
+                      <span className="status badge">{notification.status}</span>
+                      <span className="priority badge">{notification.priority}</span>
+                    </div>
+                  </div>
+                  <div className="actions">
+                    <button
+                      data-testid={`edit-${notification.id}`}
+                      onClick={() => handleEdit(notification)}
+                      className="btn btn-sm btn-secondary"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      data-testid={`delete-${notification.id}`}
+                      onClick={() => handleDelete(notification.id)}
+                      className="btn btn-sm btn-danger"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="empty-state">
+                <p>No notifications yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div data-testid="compose-section" className="compose-section">
+          <div className="compose-header">
+            <h2>{selectedNotification ? 'Edit' : 'Create'} Notification</h2>
+            <button
+              data-testid="close-compose"
+              onClick={() => {
+                setIsCreateMode(false);
+                resetForm();
+              }}
+              className="btn btn-sm"
+            >
+              ← Back
+            </button>
+          </div>
+
+          <div className="compose-form">
+            {/* Title */}
+            <div className="form-group">
+              <label htmlFor="title">Title *</label>
+              <input
+                id="title"
+                data-testid="title-input"
+                type="text"
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setError(null);
+                }}
+                placeholder="Enter notification title"
+                className="input"
+              />
+            </div>
+
+            {/* Message */}
+            <div className="form-group">
+              <label htmlFor="message">Message *</label>
+              <textarea
+                id="message"
+                data-testid="message-input"
+                value={message}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  setError(null);
+                }}
+                placeholder="Enter notification message"
+                rows={5}
+                className="input textarea"
+              />
+            </div>
+
+            {/* Type Selection */}
+            <div className="form-group">
+              <label htmlFor="type">Notification Type *</label>
+              <select
+                id="type"
+                data-testid="type-select"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="select"
+              >
+                <option value="system">System</option>
+                <option value="email">Email</option>
+                <option value="sms">SMS</option>
+                <option value="push">Push</option>
+                <option value="whatsapp">WhatsApp</option>
+              </select>
+            </div>
+
+            {/* Priority Selection */}
+            <div className="form-group">
+              <label htmlFor="priority">Priority</label>
+              <select
+                id="priority"
+                data-testid="priority-select"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="select"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+            </div>
+
+            {/* Channel Selection */}
+            <div className="form-group">
+              <label>Channels *</label>
+              <div data-testid="channels-checkboxes" className="checkboxes">
+                {['email', 'sms', 'push', 'system'].map(channel => (
+                  <div key={channel} className="checkbox">
+                    <input
+                      id={`channel-${channel}`}
+                      type="checkbox"
+                      data-testid={`channel-${channel}`}
+                      checked={channels.includes(channel)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setChannels(prev => [...prev, channel]);
+                        } else {
+                          setChannels(prev => prev.filter(c => c !== channel));
+                        }
+                      }}
+                      className="checkbox-input"
+                    />
+                    <label htmlFor={`channel-${channel}`} className="checkbox-label">{channel}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Target Users/Groups */}
+            <div className="form-group">
+              <label htmlFor="targets">Target Users/Groups *</label>
+              <input
+                id="targets"
+                data-testid="targets-input"
+                type="text"
+                placeholder="Enter user IDs, comma-separated (e.g., user-001, user-002)"
+                onChange={(e) => setTargets(e.target.value.split(',').map(s => s.trim()).filter(Boolean))}
+                className="input"
+              />
+              {targets.length > 0 && (
+                <div className="targets-list">
+                  {targets.map(t => (
+                    <span key={t} className="badge badge-info">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Schedule */}
+            <div className="form-group">
+              <label htmlFor="schedule">Schedule (Optional)</label>
+              <input
+                id="schedule"
+                data-testid="schedule-input"
+                type="datetime-local"
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value)}
+                className="input"
+              />
+            </div>
+
+            {/* Preview Toggle */}
+            <div className="form-group">
+              <button
+                data-testid="toggle-preview"
+                onClick={() => setShowPreview(!showPreview)}
+                className="btn btn-sm btn-secondary"
+              >
+                {showPreview ? '✓ Hide Preview' : 'Preview'}
+              </button>
+            </div>
+
+            {/* Preview */}
+            {showPreview && (
+              <div data-testid="preview-pane" className="preview-pane">
+                <h3>Preview</h3>
+                <div className="preview-content">
+                  <h4>{title || '(Title)'}</h4>
+                  <p>{message || '(Message)'}</p>
+                  <div className="preview-meta">
+                    <span>Type: {type}</span>
+                    <span>Priority: {priority}</span>
+                    <span>Channels: {channels.length > 0 ? channels.join(', ') : 'None'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Test Email */}
+            <div className="form-group">
+              <label htmlFor="test-email">Send Test Notification</label>
+              <div className="form-row">
+                <input
+                  id="test-email"
+                  data-testid="test-email-input"
+                  type="email"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  placeholder="Enter email for test"
+                  className="input"
+                />
+                <button
+                  data-testid="send-test-button"
+                  onClick={handleSendTest}
+                  className="btn btn-secondary"
+                >
+                  Send Test
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="compose-actions">
+            <button
+              data-testid="send-button"
+              onClick={handleSendNotification}
+              className="btn btn-primary"
+            >
+              {schedule ? 'Schedule Notification' : 'Send Notification'}
+            </button>
+            <button
+              data-testid="draft-button"
+              onClick={() => {
+                setSuccessMessage('Notification saved as draft');
+                setIsCreateMode(false);
+                resetForm();
+              }}
+              className="btn btn-secondary"
+            >
+              Save as Draft
+            </button>
+            <button
+              data-testid="cancel-button"
+              onClick={() => {
+                setIsCreateMode(false);
+                resetForm();
+              }}
+              className="btn btn-tertiary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

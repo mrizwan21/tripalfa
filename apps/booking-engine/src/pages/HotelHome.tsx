@@ -23,6 +23,7 @@ export default function HotelHome() {
         navigate(`/hotels/list?${params.toString()}`);
     };
 
+
     return (
         <TripLogerLayout>
             {/* Hero Section */}
@@ -48,7 +49,8 @@ export default function HotelHome() {
                     <p className="text-white/80 font-bold text-lg uppercase tracking-[0.3em] mb-8">Curated Hotels Worldwide</p>
 
                     {/* Glassmorphic Search Card */}
-                    <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 shadow-2xl">
+                    <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md border border-white/20 rounded-3xl p-6 shadow-2xl"
+                        data-testid="hotel-search-form">
                         {/* Tabs */}
                         <div className="inline-flex bg-white/20 rounded-full p-1 mb-6 backdrop-blur-sm">
                             <button

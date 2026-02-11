@@ -29,10 +29,9 @@ describe('HoldOrdersService', () => {
                     }
                 }
             };
-            // Mocking the instance call
-            (holdOrdersService as any).duffelClient = {
-                get: jest.fn().mockResolvedValue(mockOffer)
-            };
+
+            // Mocking the instance call using spyOn
+            jest.spyOn(holdOrdersService.duffelClient, 'get').mockResolvedValue(mockOffer as any);
 
             const eligibility = await holdOrdersService.checkHoldEligibility('offer_123', 'flight');
             expect(eligibility.eligible).toBe(true);
@@ -75,7 +74,7 @@ describe('HoldOrdersService', () => {
                 paymentRequiredBy: null
             });
 
-            // Mock Duffel Response - NON REFUNDABLE
+            // Mock Duffel Response - NON REFUNDABLE using spyOn
             const mockDuffelOrder = {
                 data: {
                     data: {
@@ -88,10 +87,7 @@ describe('HoldOrdersService', () => {
                     }
                 }
             };
-
-            (holdOrdersService as any).duffelClient = {
-                post: jest.fn().mockResolvedValue(mockDuffelOrder)
-            };
+            jest.spyOn(holdOrdersService.duffelClient, 'post').mockResolvedValue(mockDuffelOrder as any);
 
             await expect(holdOrdersService.createHoldOrder(data)).rejects.toThrow('This flight fare is non-refundable and cannot be held.');
         });

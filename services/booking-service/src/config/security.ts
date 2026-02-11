@@ -42,7 +42,7 @@ const createRateLimiter = (windowMs: number, max: number, message: string) => {
     message: {
       success: false,
       error: message
-    },
+    } as any,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res) => {

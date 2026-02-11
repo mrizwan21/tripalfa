@@ -1,4 +1,4 @@
-import { CacheService } from '../../services/cacheService';
+import { CacheService } from '../../../cache/redis';
 
 /**
  * Mock implementations for testing
@@ -7,16 +7,17 @@ import { CacheService } from '../../services/cacheService';
 export class MockCacheService implements Partial<CacheService> {
   private store: Map<string, string> = new Map();
 
-  async get(key: string): Promise<string | null> {
-    return this.store.get(key) || null;
+  async get<T>(key: string): Promise<T | null> {
+    const data = this.store.get(key);
+    return data ? JSON.parse(data) as T : null;
   }
 
-  async set(key: string, value: string, ttl?: number): Promise<void> {
-    this.store.set(key, value);
+  async set(key: string, value: any, ttl?: number): Promise<void> {
+    this.store.set(key, JSON.stringify(value));
   }
 
-  async del(key: string): Promise<boolean> {
-    return this.store.delete(key);
+  async del(key: string): Promise<void> {
+    this.store.delete(key);
   }
 
   async exists(key: string): Promise<boolean> {

@@ -32,6 +32,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Notifications = lazy(() => import("./pages/Notifications"));
+const NotificationPreferencesPage = lazy(() => import("./pages/NotificationPreferencesPage"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const Home = lazy(() => import("./pages/Home"));
 const TranslationTest = lazy(() => import("./pages/TranslationTest"));
@@ -65,6 +66,7 @@ function App() {
 
             {/* Notifications */}
             <Route path="notifications" element={<Notifications />} />
+            <Route path="settings/notifications" element={<NotificationPreferencesPage />} />
 
             {/* Bookings */}
             <Route path="bookings" element={<BookingManagement />} />

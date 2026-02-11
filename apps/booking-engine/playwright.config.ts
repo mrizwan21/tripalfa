@@ -62,7 +62,7 @@ export default defineConfig({
   // Enhanced global test settings
   use: {
     // Base URL for navigation
-    baseURL: process.env.BASE_URL || 'http://localhost:3002',
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
 
     // Enhanced trace settings (for debugging)
     trace: 'retain-on-failure', // Capture trace on failure
@@ -144,9 +144,14 @@ export default defineConfig({
 
   // Web server configuration - Playwright will start/stop the dev server automatically
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3002',
+    command: 'npm run dev:test',
+    url: 'http://localhost:5174',
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // 2 minutes to start
+    env: {
+      NODE_ENV: 'test',
+      VITE_TEST_MODE: 'true',
+      VITE_API_BASE_URL: 'http://localhost:3003',
+    },
   },
 });

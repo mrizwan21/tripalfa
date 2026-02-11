@@ -1,12 +1,16 @@
 /**
  * Webhook Routes
- * Receives incoming webhooks from external suppliers (Duffel)
+ * Receives incoming webhooks from external suppliers (Duffel, LiteAPI)
  * Routes are public and do not require authentication
  * All security is handled via webhook signature validation
+ * 
+ * IMPORTANT: Raw body capture happens in app.ts via express.raw() middleware
+ * mounted BEFORE express.json() for the /api/webhooks path. This ensures
+ * the raw bytes are available to rawBodyMiddleware for signature validation.
  */
 
 import express, { Router } from 'express';
-import { handleDuffelWebhook, webhookHealthCheck, testWebhookHandler } from '../api/webhookController';
+import { handleDuffelWebhook, handleLiteAPIWebhook, webhookHealthCheck, testWebhookHandler, handleAPIManagerEvent, handleSupplierOnboardingEvent, handleCustomerOnboardingEvent } from '../api/webhookController';
 import { getAvailableEmailTemplates, sendTestBookingEmail } from '../api/emailTemplateTestController';
 import { rawBodyMiddleware } from '../middleware/rawBodyMiddleware';
 
@@ -25,9 +29,66 @@ const router: Router = Router();
  */
 router.post(
   '/duffel',
-  rawBodyMiddleware, // Required to validate webhook signature on raw payload
-  handleDuffelWebhook
+  rawBodyMiddleware, // Captures raw body (available via express.raw) and parses JSON
+  handleDuffelWebhook // Handler uses req.rawBody for signature validation after middleware
 );
+
+// ============================================================================
+// LiteAPI Webhook Routes (Public - No Authentication Required)
+// ============================================================================
+
+/**
+ * POST /api/webhooks/liteapi
+ * Main webhook endpoint for LiteAPI (hotel provider) events
+ * Accepts: confirmed, voucher_issued, cancelled, failed
+ * Signature validation required via X-API-Signature header
+ * Routes events to centralized notification management module
+ */
+router.post(
+  '/liteapi',
+  rawBodyMiddleware, // Captures raw body (available via express.raw) and parses JSON
+  handleLiteAPIWebhook // Handler uses req.rawBody for signature validation after middleware
+);
+
+// ============================================================================
+// API Manager Event Routes (Internal - Receives Rate Limits, Quota, Key Events)
+// ============================================================================
+
+/**
+ * POST /api/webhooks/api-manager
+ * Webhook endpoint for API manager events (rate limits, quota, key expiration, health checks)
+ * Receives: rate_limit_warning, quota_exceeded, api_key_expiring, api_key_expired,
+ *           api_health_check_failed, rate_limit_reset, quota_limit_increased
+ * Dispatches admin notifications via email, SMS, and in-app channels
+ * No signature validation required (internal event source)
+ */
+router.post('/api-manager', express.json(), handleAPIManagerEvent);
+
+// ============================================================================
+// Supplier Onboarding Event Routes (Internal - Supplier Lifecycle Events)
+// ============================================================================
+
+/**
+ * POST /api/webhooks/supplier-onboarding
+ * Webhook endpoint for supplier lifecycle events (registration, wallet assignment, wallet activation)
+ * Receives: supplier_registered, wallet_assigned, wallet_activated
+ * Dispatches admin and supplier notifications via email, SMS, and in-app channels
+ * No signature validation required (internal event source)
+ */
+router.post('/supplier-onboarding', express.json(), handleSupplierOnboardingEvent);
+
+// ============================================================================
+// Customer Onboarding Event Routes (Internal - Customer Lifecycle Events)
+// ============================================================================
+
+/**
+ * POST /api/webhooks/customer-onboarding
+ * Webhook endpoint for customer lifecycle events (registration, profile completion, verification, payment)
+ * Receives: customer_registered, profile_completed, account_verified, payment_method_added
+ * Dispatches admin and customer notifications via email, SMS, and in-app channels
+ * No signature validation required (internal event source)
+ */
+router.post('/customer-onboarding', express.json(), handleCustomerOnboardingEvent);
 
 /**
  * GET /api/webhooks/health

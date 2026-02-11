@@ -232,7 +232,7 @@ export function HotelBookingForm({ mode, initialData, onSubmit, onCancel }: Hote
             {!isReadOnly && (
               <NotificationPanel 
                 customerId={customerId} 
-                onSend={handleNotificationSend}
+                onNotificationSent={handleNotificationSend}
               />
             )}
           </div>

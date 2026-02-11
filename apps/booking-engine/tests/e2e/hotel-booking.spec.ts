@@ -38,6 +38,8 @@ test.describe('Hotel Booking Flow', () => {
 
     // Step 1: Navigate to hotel search
     await hotelHome.goto('/hotels');
+    // Wait for the form to be attached to the DOM before asserting visibility
+    await page.waitForSelector('[data-testid="hotel-search-form"]', { timeout: 20000 });
     await expect(page.getByTestId('hotel-search-form')).toBeVisible();
 
     // Step 2: Search for hotels

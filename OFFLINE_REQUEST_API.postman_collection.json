@@ -1,0 +1,399 @@
+{
+  "info": {
+    "name": "Offline Request Management API",
+    "description": "Complete API collection for offline request management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "1. Create Offline Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookingId\": \"booking-123\",\n  \"bookingRef\": \"BK-2026-001\",\n  \"requestType\": \"hotel_change_request\",\n  \"priority\": \"high\",\n  \"originalDetails\": {\n    \"serviceName\": \"Hotel Stay\",\n    \"pricing\": {\n      \"baseFare\": 500,\n      \"taxes\": 50,\n      \"markup\": 25,\n      \"totalPrice\": 575\n    },\n    \"additionalInfo\": {\n      \"hotelName\": \"Grand Plaza\",\n      \"checkInDate\": \"2026-02-15\",\n      \"nights\": 3\n    }\n  },\n  \"requestedChanges\": {\n    \"roomType\": \"suite\",\n    \"specialRequests\": \"High floor preferred\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Get Request by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Request by Reference",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/ref/{{requestRef}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "ref", "{{requestRef}}"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Customer Requests",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/customer/my-requests?bookingId={{bookingId}}&limit=50&offset=0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "customer", "my-requests"],
+          "query": [
+            {
+              "key": "bookingId",
+              "value": "{{bookingId}}"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Get Staff Queue",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/queue?status=PENDING_STAFF&limit=50&offset=0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "queue"],
+          "query": [
+            {
+              "key": "status",
+              "value": "PENDING_STAFF"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Submit Pricing (Staff)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"newBaseFare\": 550,\n  \"newTaxes\": 55,\n  \"newMarkup\": 30,\n  \"newTotalPrice\": 635,\n  \"currency\": \"USD\",\n  \"staffNotes\": \"Premium room upgrade available for this request\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/pricing",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "pricing"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Customer Approves Request",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/approve",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "approve"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Customer Rejects Request",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"rejectionReason\": \"Price increase is too high compared to current booking\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/reject",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "reject"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. Record Payment (Staff)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"paymentId\": \"pay-12345\",\n  \"amount\": 60,\n  \"method\": \"credit_card\",\n  \"transactionRef\": \"txn-abc123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/payment",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "payment"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. Complete Request (Staff)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documentUrls\": [\n    \"https://cdn.example.com/new-itinerary.pdf\",\n    \"https://cdn.example.com/confirmation.pdf\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/complete",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "complete"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "11. Cancel Request",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reason\": \"Customer changed mind - proceeding with original booking\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/cancel",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "cancel"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12. Add Internal Note (Staff)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{staffToken}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"note\": \"Contacted hotel - premium room upgrade confirmed for February 15\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/notes",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "notes"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "13. Get Audit Log",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/offline-requests/{{requestId}}/audit?limit=100&offset=0",
+          "host": ["{{base_url}}"],
+          "path": ["api", "offline-requests", "{{requestId}}", "audit"],
+          "query": [
+            {
+              "key": "limit",
+              "value": "100"
+            },
+            {
+              "key": "offset",
+              "value": "0"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_CUSTOMER_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "staffToken",
+      "value": "YOUR_STAFF_JWT_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "bookingId",
+      "value": "booking-123",
+      "type": "string"
+    },
+    {
+      "key": "requestId",
+      "value": "req-abc123",
+      "type": "string"
+    },
+    {
+      "key": "requestRef",
+      "value": "REQ-2026-001",
+      "type": "string"
+    }
+  ]
+}

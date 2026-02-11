@@ -1,0 +1,100 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: document-postgres
+    environment:
+      POSTGRES_DB: document_service
+      POSTGRES_USER: doc_user
+      POSTGRES_PASSWORD: doc_password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U doc_user -d document_service']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: document-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Document Service
+  document-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: document-service
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://doc_user:doc_password@postgres:5432/document_service
+      REDIS_URL: redis://redis:6379
+      SERVICE_PORT: 3004
+      LOG_LEVEL: info
+      JWT_SECRET: dev-secret-key
+      TEMPLATE_CACHE_TTL: 3600
+      DOCUMENT_RETENTION_DAYS: 90
+    ports:
+      - '3004:3004'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3004/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - document-network
+
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    container_name: document-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres
+    networks:
+      - document-network
+
+  # Redis Commander for cache inspection
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: document-redis-commander
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    ports:
+      - '8081:8081'
+    depends_on:
+      - redis
+    networks:
+      - document-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  document-network:
+    driver: bridge

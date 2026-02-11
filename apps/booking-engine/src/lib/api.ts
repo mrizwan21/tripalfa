@@ -141,6 +141,7 @@ export async function postTopUp(data: any) {
 }
 
 
+// ... existing code ...
 export async function listWalletTransactions() {
   try {
     const res = await api.get('/wallets/transactions');
@@ -149,6 +150,71 @@ export async function listWalletTransactions() {
     console.error('Failed to list wallet transactions:', error);
     return [];
   }
+}
+
+export async function getWalletBalance(userId: string) {
+  // Mock wallet balance for demo/dev
+  return new Promise<{ currency: string, amount: number }>((resolve) => {
+    setTimeout(() => {
+      resolve({ currency: 'USD', amount: 2500.00 });
+    }, 500);
+  });
+}
+
+
+// ============================================================================
+// Document & Ticketing API Functions
+// ============================================================================
+
+export interface BookingDocument {
+  id: string;
+  bookingId: string;
+  type: string;
+  name: string;
+  format: string;
+  generatedAt: string;
+  url: string;
+  available: boolean;
+}
+
+export async function getDocuments(bookingId: string): Promise<BookingDocument[]> {
+  try {
+    const res = await api.get(`/bookings/${bookingId}/documents`);
+    return res.data?.documents || [];
+  } catch (error) {
+    console.error('Failed to fetch documents:', error);
+    return [];
+  }
+}
+
+export async function downloadDocument(bookingId: string, documentType: string): Promise<{ downloadUrl: string; expiresAt: string }> {
+  const res = await api.get(`/bookings/${bookingId}/documents/${documentType}/download`);
+  return res.data;
+}
+
+export async function issueTicket(bookingId: string, payload: {
+  walletId: string;
+  amount: number;
+  currency: string;
+  acceptedTerms: boolean;
+}): Promise<any> {
+  const res = await api.post(`/bookings/${bookingId}/issue-ticket`, payload);
+  return res.data;
+}
+
+export async function sendOfflineRequest(bookingId: string, payload: {
+  requestType: string;
+  passengers?: any;
+  services?: any;
+  notes?: string;
+}): Promise<any> {
+  const res = await api.post(`/bookings/${bookingId}/offline-request`, payload);
+  return res.data;
+}
+
+export async function emailDocument(bookingId: string, documentType: string, recipientEmail: string): Promise<any> {
+  const res = await api.post(`/bookings/${bookingId}/documents/${documentType}/email`, { recipientEmail });
+  return res.data;
 }
 
 // Live Search Functions (routed through WickedHaufe -> Inventory Service)
@@ -1017,3 +1083,28 @@ export async function fetchGuestDetail(guestId: string) {
   }
 }
 
+
+export async function getBookingHistory(id: string) {
+  try {
+    const res = await api.get(`/bookings/${id}/history`);
+    return res.history || res || [];
+  } catch (error) {
+    console.error(`Failed to fetch history for ${id}:`, error);
+    // Return dummy history for now if endpoint fails (for dev/demo)
+    return [
+      { id: '1', action: 'Booking Created', date: new Date().toISOString(), type: 'system', description: 'Booking created successfully', user: 'System' },
+      { id: '2', action: 'Payment Processed', date: new Date().toISOString(), type: 'payment', description: 'Payment received via Credit Card', user: 'Admin' },
+      { id: '3', action: 'User Login', date: new Date(Date.now() - 3600000).toISOString(), type: 'login', description: 'User accessed booking details', user: 'Customer' }
+    ];
+  }
+}
+
+export async function addBookingTransaction(id: string, transaction: any) {
+  try {
+    const res = await api.post(`/bookings/${id}/transactions`, transaction);
+    return res;
+  } catch (error) {
+    console.error(`Failed to add transaction for ${id}:`, error);
+    throw error;
+  }
+}

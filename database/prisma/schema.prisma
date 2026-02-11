@@ -66,8 +66,6 @@ model Notification {
   
   // Channels
   channels              String[]              // ["email", "sms", "push", "in_app"]
-  channelStatus         ChannelStatus         @relation(fields: [channelStatusId], references: [id])
-  channelStatusId       String
   
   // Content
   content               Json                  // Structured content for each channel
@@ -108,12 +106,12 @@ model Notification {
   // Soft delete
   deletedAt             DateTime?
   
-  timestamps
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
 
   // Relations
   channelStatuses       ChannelStatus[]      @relation("NotificationChannelStatus")
+  deadLetters           DeadLetterQueue[]
   retryAttempts         NotificationRetry[]
   analyticsEvents       NotificationAnalytics[]
   webhookEvents         WebhookEvent[]
@@ -127,13 +125,12 @@ model Notification {
   @@index([createdAt])
   @@index([priority])
   @@index([isDLQ])
-  @@fulltext([content]) // For full-text search
 }
 
 model ChannelStatus {
   id                    String                @id @default(cuid())
-  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade, name: "NotificationChannelStatus")
   notificationId        String
+  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade, name: "NotificationChannelStatus")
   
   email                 String                @default("pending") // pending, sent, delivered, failed, bounced, complained
   sms                   String                @default("pending")
@@ -299,8 +296,8 @@ model NotificationRetry {
 
 model DeadLetterQueue {
   id                    String                @id @default(cuid())
-  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade)
   notificationId        String
+  notification          Notification          @relation(fields: [notificationId], references: [id], onDelete: Cascade)
   
   // DLQ details
   reason                String                // max_retries_exceeded, unsupported_channel, permanent_error
@@ -545,4 +542,221 @@ model CircuitBreaker {
 
   @@unique([service, channel])
   @@index([state])
+}
+
+// ============================================
+// Offline Request Management
+// ============================================
+
+model OfflineChangeRequest {
+  id                    String                @id @default(cuid())
+  requestRef            String                @unique           // e.g., "OCR-2024-001234"
+  bookingId             String                                  // Reference to booking (stored as string for flexibility)
+  bookingRef            String                                  // Booking reference number
+  
+  // Request Type & Status
+  requestType           String                                  // flight_change, hotel_change, date_change, passenger_change, other
+  status                String                @default("pending_staff") // pending_staff, pricing_submitted, pending_customer_approval, approved, payment_pending, completed, rejected, cancelled
+  priority              String                @default("medium") // low, medium, high, urgent
+  
+  // Original Booking Details (Snapshot)
+  originalDetails       Json                  @db.JsonB         // FlightItinerary | HotelItinerary with pricing
+  
+  // Requested Changes
+  requestedChanges      Json                  @db.JsonB         // New itinerary + change reason + customer notes
+  
+  // Staff Financial Details (filled by staff)
+  staffPricing          Json?                 @db.JsonB         // new pricing, supplier reference, staff notes, etc.
+  
+  // Calculated Difference
+  priceDifference       Json?                 @db.JsonB         // baseFareDiff, taxesDiff, markupDiff, totalDiff
+  
+  // Customer Approval
+  customerApproval      Json?                 @db.JsonB         // approved boolean, approval date, rejection reason
+  
+  // Payment Details
+  payment               Json?                 @db.JsonB         // paymentId, amount, method, status, transaction ref
+  
+  // Re-issued Documents
+  reissuedDocuments     Json?                 @db.JsonB         // new ticket/voucher numbers, invoice ID, document URLs
+  
+  // Timeline & Audit
+  timeline              Json                  @db.JsonB         // requestedAt, staffPricedAt, approvedAt, completedAt, etc.
+  
+  // Metadata
+  tags                  String[]              @default([])
+  internalNotes         String[]              @default([])
+  
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  // Relations
+  auditLog              OfflineRequestAuditLog[]
+  notificationQueue     OfflineRequestNotificationQueue[]
+
+  @@index([bookingId])
+  @@index([bookingRef])
+  @@index([status])
+  @@index([requestType])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([requestRef])
+}
+
+model OfflineRequestAuditLog {
+  id                    String                @id @default(cuid())
+  offlineRequest        OfflineChangeRequest  @relation(fields: [offlineRequestId], references: [id], onDelete: Cascade)
+  offlineRequestId      String
+  
+  // Audit details
+  action                String                // created, pricing_submitted, approved, rejected, payment_processed, documents_issued, etc.
+  actorId               String                // User ID of the person performing the action
+  actorType             String                // customer, staff, system
+  
+  // Change details
+  oldValues             Json?                 @db.JsonB         // Previous state
+  newValues             Json?                 @db.JsonB         // New state
+  details               Json?                 @db.JsonB         // Additional context
+  
+  createdAt             DateTime              @default(now())
+
+  @@index([offlineRequestId])
+  @@index([action])
+  @@index([actorType])
+  @@index([createdAt])
+}
+
+model OfflineRequestNotificationQueue {
+  id                    String                @id @default(cuid())
+  offlineRequestId      String?
+  offlineRequest        OfflineChangeRequest? @relation(fields: [offlineRequestId], references: [id], onDelete: Cascade)
+  
+  // Queue metadata
+  status                String                @default("pending") // pending, sent, failed
+  notificationType      String                // offline_request_created, offline_request_priced, offline_request_approved, offline_request_completed
+  
+  // Recipients
+  recipientIds          String[]              // Staff or customer IDs
+  
+  // Content
+  content               Json                  @db.JsonB
+  
+  // Retry
+  attemptCount          Int                   @default(0)
+  maxAttempts           Int                   @default(5)
+  nextRetryAt           DateTime?
+  lastError             String?
+  
+  sentAt                DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@index([offlineRequestId])
+  @@index([status])
+  @@index([notificationType])
+  @@index([createdAt])
+}
+
+// ============================================
+// Document Generation System (Phase 5)
+// ============================================
+
+model DocumentTemplate {
+  id                    String                @id @default(cuid())
+  name                  String                // "Booking Confirmation", "Invoice", "Receipt"
+  type                  DocumentType
+  format                DocumentFormat        // HTML, PDF, BOTH
+  content               String                @db.Text // Handlebars template
+  version               Int                   @default(1)
+  isActive              Boolean               @default(true)
+  description           String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  documents             Document[]
+
+  @@unique([name, type, version])
+  @@index([type])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model Document {
+  id                    String                @id @default(cuid())
+  type                  DocumentType
+  status                GenerationStatus      // pending, generated, failed, sent, archived
+  userId                String
+  bookingId             String?               // Reference to booking
+  invoiceId             String?               // Reference to invoice
+  templateId            String
+  template              DocumentTemplate      @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  storagePath           String?               // S3 path or local path
+  metadata              Json?                 @db.JsonB // { booking_ref, invoice_num, etc }
+  content               String?               @db.Text // HTML before PDF conversion
+  fileUrl               String?               // Public download link with expiration
+  fileSize              Int?                  // File size in bytes
+  generatedAt           DateTime?
+  sentAt                DateTime?
+  expiresAt             DateTime?             // Retention expiration
+  accessedAt            DateTime?             // Last access time for audit
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  accesses              DocumentAccess[]
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([invoiceId])
+  @@index([type])
+  @@index([status])
+  @@index([templateId])
+  @@index([expiresAt])
+  @@index([createdAt])
+}
+
+model DocumentAccess {
+  id                    String                @id @default(cuid())
+  documentId            String
+  document              Document              @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  userId                String                // Accessing user
+  action                String                // view, download, print, email-resent, regenerate
+  ipAddress             String?
+  userAgent             String?
+  timestamp             DateTime              @default(now())
+
+  @@index([documentId])
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+}
+
+model DocumentRetention {
+  id                    String                @id @default(cuid())
+  documentType          DocumentType
+  retentionDays         Int                   // Days to keep document
+  autoDelete            Boolean               @default(true)
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+
+  @@unique([documentType])
+  @@index([documentType])
+}
+
+enum DocumentType {
+  BOOKING_CONFIRMATION
+  INVOICE
+  RECEIPT
+  OFFLINE_REQUEST_CONFIRMATION
+}
+
+enum GenerationStatus {
+  PENDING
+  GENERATED
+  FAILED
+  SENT
+  ARCHIVED
+}
+
+enum DocumentFormat {
+  HTML
+  PDF
+  BOTH
 }

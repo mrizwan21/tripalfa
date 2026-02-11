@@ -13,6 +13,7 @@
     "test:server:ci": "node src/notifications/tests/producer_worker_integration.test.js",
     "migrate:neon": "ts-node src/notifications/scripts/apply_migration_neon.ts",
     "test": "jest --runInBand",
+    "test:webhooks": "TEST_WEBHOOKS_ONLY=true jest --testPathPattern='webhooks' --runInBand",
     "test:unit": "INTEGRATION_DB=false jest --testPathPattern=unit --runInBand",
     "test:integration": "INTEGRATION_DB=true TEST_DB_RESET=true jest --testPathPattern=integration --runInBand",
     "test:integration:api": "INTEGRATION_DB=true TEST_DB_RESET=true jest --testPathPattern='tests/integration' --runInBand",

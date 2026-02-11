@@ -136,6 +136,33 @@ export function mapDuffelEventToNotification(
         orderId: eventData.id,
         updatedAt: eventData.updated_at,
       };
+
+      // Detect itinerary changes (schedule changes) from order.updated events
+      if (eventData.slices && Array.isArray(eventData.slices)) {
+        const hasScheduleChange = eventData.slices.some((slice: any) => {
+          // Check if segment details have changed (departure/arrival times, aircraft, etc)
+          return slice.segments && slice.segments.some((segment: any) => {
+            return segment.departing_at || segment.arriving_at || segment.aircraft;
+          });
+        });
+
+        if (hasScheduleChange) {
+          baseNotification.type = 'duffel_order_itinerary_change';
+          baseNotification.title = '🔔 Your Itinerary Has Changed';
+          baseNotification.message = `Schedule changes detected for your booking (Order ${eventData.id}). Please review the updated flight times.`;
+          baseNotification.priority = 'high';
+          baseNotification.channels = ['in_app', 'email', 'sms'];
+          baseNotification.metadata = {
+            ...baseNotification.metadata,
+            requiresAction: true,
+            actionType: 'review_itinerary_change',
+            oldItinerary: eventData.previous_slices || [],
+            newItinerary: eventData.slices || [],
+            scheduleChangeDetected: true,
+            suggestedActions: ['Review new times', 'Check connection times', 'Update calendar'],
+          };
+        }
+      }
       return baseNotification;
 
     case 'order.airline_initiated_change_detected':
@@ -148,6 +175,43 @@ export function mapDuffelEventToNotification(
         orderId: eventData.id,
         requiresAction: true,
         actionType: 'review_schedule_change',
+      };
+      return baseNotification;
+
+    case 'order.cancelled':
+      baseNotification.title = '❌ Booking Cancelled';
+      baseNotification.message = `Your booking (Order ${eventData.id}) has been cancelled.`;
+      baseNotification.priority = 'urgent';
+      baseNotification.channels = ['in_app', 'email', 'sms'];
+      baseNotification.metadata = {
+        ...baseNotification.metadata,
+        orderId: eventData.id,
+        cancelledAt: eventData.cancelled_at || new Date().toISOString(),
+        cancellationReason: eventData.cancellation_reason || 'Unknown',
+        refundStatus: eventData.refund_status || 'pending',
+        refundAmount: eventData.refund_amount || eventData.total_amount,
+        refundCurrency: eventData.total_currency,
+        requiresAction: eventData.refund_status !== 'completed',
+        actionType: 'check_refund_status',
+        refundTimeline: eventData.estimated_refund_date || 'Within 5-7 business days',
+      };
+      return baseNotification;
+
+    case 'order.payment_required':
+      baseNotification.title = '💳 Payment Required';
+      baseNotification.message = `Your booking (Order ${eventData.id}) requires payment to complete.`;
+      baseNotification.priority = 'high';
+      baseNotification.channels = ['in_app', 'email'];
+      baseNotification.metadata = {
+        ...baseNotification.metadata,
+        orderId: eventData.id,
+        amountDue: eventData.total_amount,
+        currency: eventData.total_currency,
+        dueBy: eventData.expires_at || eventData.payment_deadline,
+        requiresAction: true,
+        actionType: 'complete_payment',
+        paymentMethods: eventData.payment_methods || [],
+        guidanceText: 'Please complete the payment to confirm your booking. Failure to pay by the due date may result in automatic cancellation.',
       };
       return baseNotification;
 

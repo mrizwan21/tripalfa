@@ -87,6 +87,7 @@ export interface Supplier {
 export interface Booking {
   id: string;
   reference: string;
+  userId?: string; // Added for wallet integration
   type: 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
   status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'REFUNDED' | 'EXPIRED' | 'HOLD';
   customerInfo: {

@@ -111,6 +111,105 @@ describe('Booking Engine - Notification System', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  describe('Error Notification Flows', () => {
+    it('should display error notification for booking failure', () => {
+      render(
+        <NotificationToast
+          notification={{
+            id: 'error-booking',
+            type: 'error',
+            title: 'Booking Failed',
+            message: 'Unable to complete your booking. Please try again.',
+          }}
+          onDismiss={() => {}}
+        />
+      );
+      expect(screen.getByText('Booking Failed')).toBeInTheDocument();
+      expect(screen.getByText('Unable to complete your booking. Please try again.')).toBeInTheDocument();
+    });
+
+    it('should display error notification for payment failure', () => {
+      render(
+        <NotificationToast
+          notification={{
+            id: 'error-payment',
+            type: 'error',
+            title: 'Payment Failed',
+            message: 'Your payment could not be processed.',
+          }}
+          onDismiss={() => {}}
+        />
+      );
+      expect(screen.getByText('Payment Failed')).toBeInTheDocument();
+      expect(screen.getByText('Your payment could not be processed.')).toBeInTheDocument();
+    });
+
+    it('should display system error notification', () => {
+      render(
+        <NotificationToast
+          notification={{
+            id: 'error-system',
+            type: 'error',
+            title: 'System Error',
+            message: 'A system error occurred. Please contact support.',
+          }}
+          onDismiss={() => {}}
+        />
+      );
+      expect(screen.getByText('System Error')).toBeInTheDocument();
+      expect(screen.getByText('A system error occurred. Please contact support.')).toBeInTheDocument();
+    });
+  });
+
+  describe('Notification Timing and UX', () => {
+    it('should auto-dismiss notification after specified duration', () => {
+      vi.useFakeTimers();
+      const onDismiss = vi.fn();
+      render(
+        <NotificationToast
+          notification={{
+            id: 'timing-1',
+            type: 'info',
+            title: 'Auto Dismiss',
+            message: 'This will disappear after 2s',
+            duration: 2000,
+          }}
+          onDismiss={onDismiss}
+        />
+      );
+      vi.advanceTimersByTime(2000);
+      expect(onDismiss).toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('should show loading state for async notification', async () => {
+      function AsyncNotification() {
+        const [loading, setLoading] = React.useState(true);
+        React.useEffect(() => {
+          setTimeout(() => setLoading(false), 500);
+        }, []);
+        return loading ? (
+          <div data-testid="notification-loading">Loading...</div>
+        ) : (
+          <NotificationToast
+            notification={{
+              id: 'async-1',
+              type: 'success',
+              title: 'Loaded',
+              message: 'Async notification loaded',
+            }}
+            onDismiss={() => {}}
+          />
+        );
+      }
+      vi.useFakeTimers();
+      render(<AsyncNotification />);
+      expect(screen.getByTestId('notification-loading')).toBeInTheDocument();
+      vi.advanceTimersByTime(500);
+      expect(screen.getByText('Loaded')).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+  });
 
   describe('Notification Display', () => {
     it('should display a success notification', () => {

@@ -19,6 +19,8 @@ import paymentWalletRoutes from './routes/paymentWalletRoutes';
 import combinedPaymentRoutes from './routes/combinedPaymentRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import notificationRoutes from './routes/notificationRoutes';
+import documentRoutes from './routes/documentRoutes';
+import offlineRequestRoutes from './routes/offlineRequestRoutes';
 
 // Import middleware
 import { securityHeaders, corsOptions, rateLimiters } from './config/security';
@@ -31,6 +33,9 @@ import type { ErrorRequestHandler } from 'express';
 
 // Import logger
 import logger from './utils/logger';
+
+// Import services
+import { apiManagerService } from './services/apiManagerService';
 
 // Create Express app
 const app: Express = express();
@@ -51,9 +56,24 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev', {
   }
 }));
 
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ============================================================================
+// Raw Body Middleware for Webhook Routes (MUST be before JSON parser)
+// ============================================================================
+// Mount raw body parser specifically for /api/webhooks to capture raw bytes
+// for signature validation before any JSON parsing
+app.use('/api/webhooks', express.raw({ type: '*/*', limit: '10mb' }));
+
+// Body parsing middleware - skip /api/webhooks (handled separately above)
+app.use((req: Request, res: Response, next) => {
+  // Skip JSON/URL parsing for webhook paths - they handle raw bodies
+  if (req.path.startsWith('/api/webhooks')) {
+    return next();
+  }
+  // For all other paths, apply JSON and URL parsing
+  express.json({ limit: '10mb' })(req, res, () => {
+    express.urlencoded({ extended: true, limit: '10mb' })(req, res, next);
+  });
+});
 
 // Rate limiting
 app.use('/api', rateLimiters.general);
@@ -71,6 +91,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API routes
 app.use('/api', bookingManagementRoutes);
 app.use('/api/notifications', rateLimiters.general, notificationRoutes);
+app.use('/api/offline-requests', rateLimiters.general, offlineRequestRoutes);
 app.use('/api/bookings', rateLimiters.booking, enhancedBookingRoutes);
 app.use('/api/bookings', rateLimiters.booking, combinedPaymentRoutes);
 app.use('/api/webhooks', webhookRoutes); // Webhooks without rate limiting (supplier->service)
@@ -79,6 +100,7 @@ app.use('/bookings', rateLimiters.booking, seatMapsRoutes);
 app.use('/bookings', rateLimiters.booking, ancillaryServicesRoutes);
 app.use('/bookings', rateLimiters.booking, enhancedBookingRoutes);
 app.use('/bookings', rateLimiters.booking, paymentWalletRoutes);
+app.use('/api/bookings', rateLimiters.booking, documentRoutes);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {

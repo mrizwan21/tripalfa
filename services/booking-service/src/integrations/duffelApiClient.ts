@@ -4,6 +4,7 @@
  */
 
 import logger from '../utils/logger';
+import { apiManagerService, APIUsageRecord } from '../services/apiManagerService';
 
 export class DuffelApiClient {
   private baseUrl: string;
@@ -514,6 +515,10 @@ export class DuffelApiClient {
     method: string = 'GET',
     body?: any
   ): Promise<any> {
+    const startTime = Date.now();
+    let statusCode = 0;
+    let errorMessage: string | undefined;
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -534,6 +539,7 @@ export class DuffelApiClient {
 
       const response = await fetch(url, options);
       clearTimeout(timeoutId);
+      statusCode = response.status;
 
       if (!response.ok) {
         const error: any = new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -549,15 +555,53 @@ export class DuffelApiClient {
       }
 
       const data = await response.json();
+
+      // Record successful API usage
+      await this.recordAPIUsage(url, method, startTime, statusCode);
+
       return data;
     } catch (error: any) {
       if (error.name === 'AbortError') {
         const timeoutError: any = new Error('Request timeout');
         timeoutError.code = 'TIMEOUT';
+        errorMessage = 'Request timeout';
         throw timeoutError;
       }
 
+      // Record failed API usage
+      await this.recordAPIUsage(url, method, startTime, error.statusCode || 0, error.message || errorMessage);
+
       throw error;
+    }
+  }
+
+  /**
+   * Record API usage for monitoring and alerting
+   */
+  private async recordAPIUsage(
+    url: string,
+    method: string,
+    startTime: number,
+    statusCode: number,
+    error?: string
+  ): Promise<void> {
+    try {
+      const responseTime = Date.now() - startTime;
+
+      const record: APIUsageRecord = {
+        apiKey: this.apiKey,
+        endpoint: url,
+        method,
+        timestamp: startTime,
+        responseTime,
+        statusCode,
+        error
+      };
+
+      await apiManagerService.recordUsage(record);
+    } catch (recordError) {
+      logger.error('[DuffelClient] Failed to record API usage:', recordError);
+      // Don't throw - API monitoring failure shouldn't break the API call
     }
   }
 }

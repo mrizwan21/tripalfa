@@ -11,6 +11,7 @@ export * from './company';
 export * from './user';
 export * from './rbac';
 export * from './booking';
+export * from './offline-request';
 export * from './supplier';
 export * from './payment';
 export * from './finance';

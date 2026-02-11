@@ -246,7 +246,7 @@ export function FlightBookingFormOptimized({ mode, initialData, onSubmit, onCanc
             {!isReadOnly && (
               <NotificationPanel 
                 customerId={customerId} 
-                onSend={handleNotificationSend}
+                onNotificationSent={handleNotificationSend}
               />
             )}
           </div>

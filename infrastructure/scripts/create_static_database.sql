@@ -101,6 +101,80 @@ CREATE TABLE IF NOT EXISTS currencies (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Hotel Facilities (Amenities)
+CREATE TABLE IF NOT EXISTS hotel_facilities (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    code VARCHAR(50),
+    category VARCHAR(50) DEFAULT 'General',
+    applies_to VARCHAR(20) DEFAULT 'both',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Hotel Types
+CREATE TABLE IF NOT EXISTS hotel_types (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Hotel Chains
+CREATE TABLE IF NOT EXISTS hotel_chains (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Hotels
+CREATE TABLE IF NOT EXISTS hotels (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    star_rating NUMERIC(2,1) DEFAULT 0,
+    city TEXT,
+    country_code VARCHAR(2),
+    latitude DECIMAL(10,8),
+    longitude DECIMAL(11,8),
+    address TEXT,
+    postal_code VARCHAR(20),
+    primary_source VARCHAR(50) DEFAULT 'liteapi',
+    is_active BOOLEAN DEFAULT true,
+    has_wifi BOOLEAN DEFAULT false,
+    has_pool BOOLEAN DEFAULT false,
+    has_spa BOOLEAN DEFAULT false,
+    has_parking BOOLEAN DEFAULT false,
+    has_restaurant BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Hotel Supplier References
+CREATE TABLE IF NOT EXISTS hotel_supplier_refs (
+    id SERIAL PRIMARY KEY,
+    hotel_id INTEGER REFERENCES hotels(id),
+    supplier_code VARCHAR(50) NOT NULL,
+    supplier_hotel_id TEXT NOT NULL,
+    match_confidence DECIMAL(3,2) DEFAULT 1.0,
+    match_method VARCHAR(50) DEFAULT 'direct_id',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(supplier_code, supplier_hotel_id)
+);
+
+-- Hotel Reviews Summary
+CREATE TABLE IF NOT EXISTS hotel_reviews_summaries (
+    id SERIAL PRIMARY KEY,
+    hotel_id INTEGER REFERENCES hotels(id) UNIQUE,
+    total_reviews INTEGER DEFAULT 0,
+    average_rating DECIMAL(3,2) DEFAULT 0,
+    rating_breakdown JSONB,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Exchange Rate Snapshots
 CREATE TABLE IF NOT EXISTS exchange_rate_snapshots (
     id SERIAL PRIMARY KEY,
@@ -332,6 +406,56 @@ BEGIN
     ) THEN
         CREATE TRIGGER update_canonical_flight_routes_updated_at
         BEFORE UPDATE ON canonical_flight_routes
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger t
+        JOIN pg_class c ON t.tgrelid = c.oid
+        WHERE t.tgname = 'update_hotel_facilities_updated_at'
+    ) THEN
+        CREATE TRIGGER update_hotel_facilities_updated_at
+        BEFORE UPDATE ON hotel_facilities
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger t
+        JOIN pg_class c ON t.tgrelid = c.oid
+        WHERE t.tgname = 'update_hotel_types_updated_at'
+    ) THEN
+        CREATE TRIGGER update_hotel_types_updated_at
+        BEFORE UPDATE ON hotel_types
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger t
+        JOIN pg_class c ON t.tgrelid = c.oid
+        WHERE t.tgname = 'update_hotel_chains_updated_at'
+    ) THEN
+        CREATE TRIGGER update_hotel_chains_updated_at
+        BEFORE UPDATE ON hotel_chains
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger t
+        JOIN pg_class c ON t.tgrelid = c.oid
+        WHERE t.tgname = 'update_hotels_updated_at'
+    ) THEN
+        CREATE TRIGGER update_hotels_updated_at
+        BEFORE UPDATE ON hotels
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger t
+        JOIN pg_class c ON t.tgrelid = c.oid
+        WHERE t.tgname = 'update_hotel_reviews_summaries_updated_at'
+    ) THEN
+        CREATE TRIGGER update_hotel_reviews_summaries_updated_at
+        BEFORE UPDATE ON hotel_reviews_summaries
         FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     END IF;
 END;

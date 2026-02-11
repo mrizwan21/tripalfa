@@ -260,7 +260,7 @@ global.makeSupplier = async (overrides = {}) => {
   const data = {
     name: 'Supplier Test',
     contactEmail: `supplier.${Date.now()}@example.com`,
-    type: 'airline' as const,
+    type: 'airline',
     contactPhone: '+1987654321',
     contactName: 'Test Contact',
     ...overrides,

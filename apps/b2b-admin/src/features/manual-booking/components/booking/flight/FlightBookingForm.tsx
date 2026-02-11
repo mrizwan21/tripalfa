@@ -225,7 +225,7 @@ export function FlightBookingForm({ mode, initialData, onSubmit, onCancel }: Fli
             {!isReadOnly && (
               <NotificationPanel 
                 customerId={customerId} 
-                onSend={handleNotificationSend}
+                onNotificationSent={handleNotificationSend}
               />
             )}
           </div>

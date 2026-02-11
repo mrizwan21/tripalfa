@@ -14,7 +14,48 @@ export default {
     }]
   },
   setupFiles: ['<rootDir>/src/__tests__/env-setup.ts'],
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+  setupFilesAfterEnv: (process.env.TEST_WEBHOOKS_ONLY === 'true') ? [] : ['<rootDir>/src/__tests__/setup.ts'],
+  projects: [
+    {
+      displayName: 'webhooks',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/__tests__/webhooks/**/*.test.ts'],
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { 
+          tsconfig: {
+            esModuleInterop: true,
+            allowSyntheticDefaultImports: true,
+            module: 'commonjs',
+            target: 'ES2020',
+            strict: true,
+            skipLibCheck: true
+          }
+        }]
+      },
+      setupFiles: ['<rootDir>/src/__tests__/env-setup.ts'],
+      setupFilesAfterEnv: [],
+    },
+    {
+      displayName: 'integration',
+      testEnvironment: 'node',
+      testMatch: ['<rootDir>/src/__tests__/**/*.test.ts'],
+      testPathIgnorePatterns: ['<rootDir>/src/__tests__/webhooks/'],
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { 
+          tsconfig: {
+            esModuleInterop: true,
+            allowSyntheticDefaultImports: true,
+            module: 'commonjs',
+            target: 'ES2020',
+            strict: true,
+            skipLibCheck: true
+          }
+        }]
+      },
+      setupFiles: ['<rootDir>/src/__tests__/env-setup.ts'],
+      setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup.ts'],
+    }
+  ],
   testMatch: [
     '**/__tests__/**/*.test.[jt]s',
     '**/__tests__/**/*.spec.[jt]s',

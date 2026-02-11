@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import { cn } from '../../lib/utils';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';

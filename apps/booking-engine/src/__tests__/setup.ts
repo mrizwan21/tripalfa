@@ -44,9 +44,27 @@ global.ResizeObserver = class ResizeObserver {
 // Mock scrollIntoView
 Element.prototype.scrollIntoView = vi.fn();
 
-// Suppress console warnings in tests
-global.console = {
-  ...console,
-  warn: vi.fn(),
-  error: vi.fn(),
-};
+// Suppress console warnings in tests (selectively)
+const originalError = console.error;
+const originalWarn = console.warn;
+
+console.error = vi.fn((...args: any[]) => {
+  // Only suppress React/testing library warnings
+  if (
+    typeof args[0] === 'string' &&
+    (args[0].includes('Warning: ReactDOM.render') ||
+      args[0].includes('Not wrapped in act') ||
+      args[0].includes('inside a test was not wrapped in act'))
+  ) {
+    return;
+  }
+  originalError.call(console, ...args);
+});
+
+console.warn = vi.fn((...args: any[]) => {
+  // Only suppress specific warnings
+  if (typeof args[0] === 'string' && args[0].includes('Warning:')) {
+    return;
+  }
+  originalWarn.call(console, ...args);
+});

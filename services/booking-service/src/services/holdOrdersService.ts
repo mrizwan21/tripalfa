@@ -62,6 +62,8 @@ interface PaymentData {
 const documentService = new DocumentGenerationService();
 
 class HoldOrdersService {
+  public duffelClient = duffelClient;
+
   /**
    * Check if an offer is eligible for hold (payment later)
    */
@@ -87,7 +89,7 @@ class HoldOrdersService {
 
     // Flight Logic (Duffel)
     try {
-      const response = await duffelClient.get(`/air/offers/${offerId}`);
+      const response = await this.duffelClient.get(`/air/offers/${offerId}`);
       const offer = response.data.data;
 
       if (!offer.payment_requirements) {
@@ -139,7 +141,7 @@ class HoldOrdersService {
         // For the "Hold" logic, we assume we want to confirm the booking on supplier side.
 
         // Mocking a successful booking reference for the "Hold" phase
-        const liteApiRef = `LA-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        const liteApiRef = `HL-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
 
         const holdOrder: HoldOrder = {
           id: uuidv4(),
@@ -172,7 +174,7 @@ class HoldOrdersService {
       }
 
       // Create hold order via Duffel API
-      const orderResponse = await duffelClient.post('/air/orders', {
+      const orderResponse = await this.duffelClient.post('/air/orders', {
         data: {
           type: 'hold',
           selected_offers: [data.offerId],
@@ -235,7 +237,7 @@ class HoldOrdersService {
    */
   async getHoldOrder(orderId: string): Promise<any> {
     try {
-      const response = await duffelClient.get(`/air/orders/${orderId}`);
+      const response = await this.duffelClient.get(`/air/orders/${orderId}`);
       return response.data.data;
     } catch (error) {
       const axiosError = error as AxiosError;
@@ -320,7 +322,7 @@ class HoldOrdersService {
       // DUFFEL / FLIGHT LOGIC
       if (!paymentData.orderId.startsWith('LA-')) {
         // Process payment via Duffel API for flights
-        const paymentResponse = await duffelClient.post('/air/payments', {
+        const paymentResponse = await this.duffelClient.post('/air/payments', {
           data: {
             order_id: paymentData.orderId,
             payment: {
@@ -419,7 +421,7 @@ class HoldOrdersService {
    */
   async getAvailableServices(orderId: string): Promise<any[]> {
     try {
-      const response = await duffelClient.get(`/air/orders/${orderId}/available_services`);
+      const response = await this.duffelClient.get(`/air/orders/${orderId}/available_services`);
       return response.data.data || [];
     } catch (error) {
       const axiosError = error as AxiosError;
@@ -432,7 +434,7 @@ class HoldOrdersService {
    */
   async addServiceToHoldOrder(orderId: string, serviceId: string): Promise<any> {
     try {
-      const response = await duffelClient.post(`/air/orders/${orderId}/services`, {
+      const response = await this.duffelClient.post(`/air/orders/${orderId}/services`, {
         data: {
           service_id: serviceId
         }

@@ -325,7 +325,78 @@ describe('B2B Admin - Notification Management', () => {
       status: 'unread',
       createdAt: '2024-01-15T12:00:00Z',
     },
+    {
+      id: 'ntf-004',
+      title: 'Booking Failed',
+      type: 'order',
+      status: 'error',
+      createdAt: '2024-01-15T13:00:00Z',
+    },
+    {
+      id: 'ntf-005',
+      title: 'Payment Error',
+      type: 'payment',
+      status: 'error',
+      createdAt: '2024-01-15T13:30:00Z',
+    },
   ];
+  describe('Error Notification Flows', () => {
+    it('should display error notification for booking failure', () => {
+      render(
+        <AdminNotificationDashboard
+          notifications={[mockNotifications[3]]}
+          onFilterChange={() => {}}
+          onDeleteNotification={() => {}}
+          onBulkDelete={() => {}}
+          onTemplateCreate={() => {}}
+        />
+      );
+      expect(screen.getByText('Booking Failed')).toBeInTheDocument();
+      expect(screen.getByText('error')).toBeInTheDocument();
+    });
+
+    it('should display error notification for payment error', () => {
+      render(
+        <AdminNotificationDashboard
+          notifications={[mockNotifications[4]]}
+          onFilterChange={() => {}}
+          onDeleteNotification={() => {}}
+          onBulkDelete={() => {}}
+          onTemplateCreate={() => {}}
+        />
+      );
+      expect(screen.getByText('Payment Error')).toBeInTheDocument();
+      expect(screen.getByText('error')).toBeInTheDocument();
+    });
+  });
+
+  describe('Notification Timing and UX', () => {
+    it('should show loading state for async notification fetch', async () => {
+      function AsyncDashboard() {
+        const [loading, setLoading] = React.useState(true);
+        React.useEffect(() => {
+          setTimeout(() => setLoading(false), 400);
+        }, []);
+        return loading ? (
+          <div data-testid="dashboard-loading">Loading notifications...</div>
+        ) : (
+          <AdminNotificationDashboard
+            notifications={mockNotifications}
+            onFilterChange={() => {}}
+            onDeleteNotification={() => {}}
+            onBulkDelete={() => {}}
+            onTemplateCreate={() => {}}
+          />
+        );
+      }
+      vi.useFakeTimers();
+      render(<AsyncDashboard />);
+      expect(screen.getByTestId('dashboard-loading')).toBeInTheDocument();
+      vi.advanceTimersByTime(400);
+      expect(screen.getByText('Order Created')).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();

@@ -104,6 +104,11 @@ class ApiClient {
     return response.data.data;
   }
 
+  async getBookingById(bookingId: string): Promise<Booking> {
+    const response = await this.client.get(`/admin/bookings/${bookingId}`);
+    return response.data.data;
+  }
+
   async updateBooking(bookingId: string, updates: Partial<Booking>): Promise<Booking> {
     const response = await this.client.put(`/admin/bookings/${bookingId}`, updates);
     return response.data.data;
@@ -319,11 +324,22 @@ class ApiClient {
     return response.data.data;
   }
 
+  // ... existing code ...
   async downloadFile(fileId: string): Promise<Blob> {
     const response = await this.client.get(`/admin/files/${fileId}`, {
       responseType: 'blob',
     });
     return response.data;
+  }
+
+  // Wallet Management API
+  async getWalletBalance(userId: string): Promise<{ currency: string; amount: number }> {
+    // Mock implementation for now, mirroring booking-engine
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({ currency: 'USD', amount: 2500.00 });
+      }, 500);
+    });
   }
 
   // Health check
@@ -341,6 +357,7 @@ export const apiClient = new ApiClient();
 export const bookingApi = {
   searchBookings: apiClient.searchBookings.bind(apiClient),
   createBooking: apiClient.createBooking.bind(apiClient),
+  getBookingById: apiClient.getBookingById.bind(apiClient),
   updateBooking: apiClient.updateBooking.bind(apiClient),
   assignAgent: apiClient.assignAgent.bind(apiClient),
   updatePriority: apiClient.updatePriority.bind(apiClient),
@@ -399,6 +416,10 @@ export const authApi = {
 export const fileApi = {
   uploadFile: apiClient.uploadFile.bind(apiClient),
   downloadFile: apiClient.downloadFile.bind(apiClient),
+};
+
+export const walletApi = {
+  getWalletBalance: apiClient.getWalletBalance.bind(apiClient),
 };
 
 export default apiClient;

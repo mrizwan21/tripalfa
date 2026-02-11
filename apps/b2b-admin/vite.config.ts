@@ -7,19 +7,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-      '@tripalfa/shared': path.resolve(__dirname, '../../packages/shared-utils'),
-      '@tripalfa/ui': path.resolve(__dirname, '../../packages/ui-components')
-    }
-  },
-  optimizeDeps: {
-    disabled: true
-  },
+  mode: 'development',
+  plugins: [react({
+    jsxRuntime: 'classic'
+  })],
   server: {
-    port: 5173,
+    port: 5177,
     proxy: {
       '/api': {
         target: process.env.VITE_API_BASE_URL || 'http://localhost:3000',

@@ -1,6 +1,6 @@
-export type NotificationType = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR';
+export type NotificationType = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR' | 'SSR' | 'ITINERARY_CHANGE' | 'AMENDMENT' | 'SYSTEM';
 
-export type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED';
+export type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED' | 'CONFIRMATION';
 
 export interface NotificationItem {
     id: string;
@@ -34,7 +34,11 @@ export function mapApiNotificationToItem(apiNotification: any): NotificationItem
         'payment_refunded': 'INFO',
         'agent_assigned': 'INFO',
         'booking_reminder': 'INFO',
-        'payment_reminder': 'WARNING'
+        'payment_reminder': 'WARNING',
+        'ssr': 'SSR',
+        'itinerary_change': 'ITINERARY_CHANGE',
+        'amendment': 'AMENDMENT',
+        'system': 'SYSTEM'
     };
 
     // Map API status to UI status (read boolean)
@@ -67,7 +71,9 @@ function mapApiStatusToUIStatus(apiStatus: string): NotificationStatus {
         'pending': 'PENDING',
         'sent': 'CONFIRMED',
         'delivered': 'CONFIRMED',
-        'failed': 'REJECTED'
+        'failed': 'REJECTED',
+        'cancelled': 'CANCELLED',
+        'confirmed': 'CONFIRMATION'
     };
     return statusMap[apiStatus] || 'INFO';
 }

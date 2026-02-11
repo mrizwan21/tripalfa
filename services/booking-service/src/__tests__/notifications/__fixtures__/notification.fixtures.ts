@@ -1,4 +1,5 @@
-import { Notification, Booking } from '@tripalfa/shared-types';
+import { Booking } from '../../../types/enhancedBooking';
+import { Notification } from '../../../services/notificationService';
 
 /**
  * Test fixtures for notification tests

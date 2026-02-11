@@ -1,165 +1,452 @@
-import React, { useState } from 'react';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogDescription
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/Select';
-import {
-    Bell,
-    Send,
-    Target,
-    Layers,
-    Mail,
-    MessageSquare,
-    Smartphone,
-    Info
-} from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
+import React, { useState, useCallback } from 'react';
+import { notificationsApi } from '@/components/notifications/notificationsApi';
+import { mockNotificationTemplates } from '@/__mocks__/fixtures';
 
 interface ComposeNotificationProps {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+  onSubmit?: (data: any) => void;
+  onNotificationSent?: (id: string) => void;
 }
 
-export function ComposeNotification({ open, onOpenChange }: ComposeNotificationProps) {
-    const [channel, setChannel] = useState('SYSTEM');
-    const [target, setTarget] = useState('ALL');
+interface FormState {
+  title: string;
+  message: string;
+  type: string;
+  priority: string;
+  channels: string[];
+  selectedUsers: string[];
+  selectedGroups: string[];
+  schedule: string;
+  isDraft: boolean;
+  templateId: string;
+}
 
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl rounded-[2.5rem] bg-white/95 backdrop-blur-2xl border-secondary-100 dark:border-secondary-800 dark:bg-secondary-950/95 p-0 overflow-hidden shadow-2xl">
-                <div className="bg-secondary-900 dark:bg-black px-8 py-10 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 opacity-20" />
+interface FormErrors {
+  title?: string;
+  message?: string;
+  channels?: string;
+  targets?: string;
+  submit?: string;
+  [key: string]: string | undefined;
+}
 
-                    <DialogHeader className="relative z-10">
-                        <DialogTitle className="text-3xl font-black tracking-tight flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-2xl bg-primary-600 flex items-center justify-center">
-                                <Send size={24} className="text-white" />
-                            </div>
-                            Compose Broadcast
-                        </DialogTitle>
-                        <DialogDescription className="text-secondary-400 font-medium text-lg mt-2">
-                            Send targeted alerts to agents and customers across the platform.
-                        </DialogDescription>
-                    </DialogHeader>
-                </div>
+export function ComposeNotification({ onSubmit, onNotificationSent }: ComposeNotificationProps) {
+  const [formData, setFormData] = useState<FormState>({
+    title: '',
+    message: '',
+    type: 'system',
+    priority: 'medium',
+    channels: [],
+    selectedUsers: [],
+    selectedGroups: [],
+    schedule: '',
+    isDraft: false,
+    templateId: ''
+  });
 
-                <div className="p-8 space-y-8">
-                    {/* Targeting and Channel */}
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                            <Label className="text-xs font-black uppercase tracking-widest text-secondary-500 flex items-center gap-2">
-                                <Target size={14} className="text-primary-600" />
-                                Targeting Segment
-                            </Label>
-                            <Select value={target} onValueChange={setTarget}>
-                                <SelectTrigger className="h-14 rounded-2xl border-secondary-100 dark:border-secondary-800 font-bold bg-secondary-50/30">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl shadow-2xl border-secondary-100 p-2">
-                                    <SelectItem value="ALL" className="rounded-xl py-3 font-bold">All Platform Users</SelectItem>
-                                    <SelectItem value="B2B" className="rounded-xl py-3 font-bold">B2B Agents Only</SelectItem>
-                                    <SelectItem value="B2C" className="rounded-xl py-3 font-bold">B2C Customers Only</SelectItem>
-                                    <SelectItem value="SPECIFIC" className="rounded-xl py-3 font-bold">Specific ID / Group</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+  const [showPreview, setShowPreview] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [successMessage, setSuccessMessage] = useState('');
+  const [substitutedMessage, setSubstitutedMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-                        <div className="space-y-3">
-                            <Label className="text-xs font-black uppercase tracking-widest text-secondary-500 flex items-center gap-2">
-                                <Layers size={14} className="text-primary-600" />
-                                Delivery Channel
-                            </Label>
-                            <div className="flex bg-secondary-50/50 dark:bg-secondary-900/50 p-1.5 rounded-2xl border border-secondary-100 dark:border-secondary-800">
-                                {[
-                                    { id: 'SYSTEM', icon: Bell },
-                                    { id: 'EMAIL', icon: Mail },
-                                    { id: 'SMS', icon: Smartphone },
-                                    { id: 'WHATSAPP', icon: MessageSquare },
-                                ].map((ch) => (
-                                    <button
-                                        key={ch.id}
-                                        onClick={() => setChannel(ch.id)}
-                                        className={`flex-1 flex items-center justify-center p-2.5 rounded-xl transition-all ${channel === ch.id
-                                                ? 'bg-white dark:bg-secondary-800 text-primary-600 shadow-sm'
-                                                : 'text-secondary-400 hover:text-secondary-600'
-                                            }`}
-                                    >
-                                        <ch.icon size={20} />
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+  const validateForm = useCallback((): boolean => {
+    const newErrors: FormErrors = {};
 
-                    {/* Content Section */}
-                    <div className="space-y-6">
-                        <div className="space-y-3">
-                            <Label htmlFor="subject" className="text-xs font-black uppercase tracking-widest text-secondary-500">
-                                Subject / Title
-                            </Label>
-                            <Input
-                                id="subject"
-                                placeholder="e.g. System Maintenance Scheduled"
-                                className="h-14 rounded-2xl border-secondary-100 dark:border-secondary-800 font-bold bg-secondary-50/20 px-6"
-                            />
-                        </div>
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required';
+    }
+    if (!formData.message.trim()) {
+      newErrors.message = 'Message is required';
+    }
+    if (formData.type !== 'system' && formData.channels.length === 0) {
+      newErrors.channels = 'At least one channel must be selected';
+    }
+    if (formData.selectedUsers.length === 0 && formData.selectedGroups.length === 0) {
+      newErrors.targets = 'Select at least one user or group';
+    }
 
-                        <div className="space-y-3">
-                            <Label htmlFor="body" className="text-xs font-black uppercase tracking-widest text-secondary-500">
-                                Message Content
-                            </Label>
-                            <Textarea
-                                id="body"
-                                placeholder="Type your message here..."
-                                className="min-h-[160px] rounded-[2rem] border-secondary-100 dark:border-secondary-800 font-medium bg-secondary-50/20 p-6 focus:ring-primary-500/20"
-                                rows={6}
-                            />
-                        </div>
-                    </div>
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
 
-                    {/* Meta/Priority */}
-                    <div className="bg-primary-50/50 dark:bg-primary-900/10 rounded-3xl p-6 border border-primary-100 dark:border-primary-900/30 flex items-start gap-4">
-                        <div className="h-10 w-10 shrink-0 rounded-2xl bg-white dark:bg-secondary-900 flex items-center justify-center text-primary-600 shadow-sm">
-                            <Info size={20} />
-                        </div>
-                        <div>
-                            <h4 className="text-sm font-black text-primary-900 dark:text-primary-100">Delivery Information</h4>
-                            <p className="text-xs font-bold text-primary-700/70 dark:text-primary-400/70 mt-1 leading-relaxed">
-                                This message will be sent to approximately <span className="text-primary-900 font-black">4,250</span> recipients.
-                                Estimated delivery time is within <span className="text-primary-900 font-black">5 minutes</span>.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+  const handleTemplateSelect = useCallback((id: string) => {
+    const template = mockNotificationTemplates.find(t => t.id === id);
+    if (template) {
+      setFormData(prev => ({
+        ...prev,
+        templateId: id,
+        title: template.subject || template.name,
+        message: template.body || ''
+      }));
+    }
+  }, []);
 
-                <DialogFooter className="p-8 bg-secondary-50/50 dark:bg-secondary-900/50 flex-col sm:flex-row gap-4">
-                    <Button
-                        variant="ghost"
-                        onClick={() => onOpenChange(false)}
-                        className="rounded-2xl font-bold h-14 bg-white dark:bg-secondary-800 border-secondary-100 dark:border-secondary-700 active:scale-95"
-                    >
-                        Save as Draft
-                    </Button>
-                    <Button className="flex-1 rounded-2xl font-black h-14 bg-primary-600 hover:bg-primary-700 text-white shadow-xl shadow-primary-600/20 active:scale-95">
-                        Send Notification
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+  const handleSubstituteVariables = useCallback((message: string) => {
+    let substituted = message;
+    const regex = /\{\{(\w+)\}\}/g;
+    substituted = substituted.replace(regex, (match, variable) => {
+      const sampleValues: Record<string, string> = {
+        customerName: 'John Doe',
+        bookingId: 'BK-12345',
+        hotelName: 'Sample Hotel',
+        checkInDate: '2024-02-15',
+        paymentDeadline: '2024-02-10'
+      };
+      return sampleValues[variable] || match;
+    });
+    setSubstitutedMessage(substituted);
+    return substituted;
+  }, []);
+
+  const handlePreviewToggle = useCallback(() => {
+    setShowPreview(!showPreview);
+    if (!showPreview && formData.message) {
+      handleSubstituteVariables(formData.message);
+    }
+  }, [showPreview, formData.message, handleSubstituteVariables]);
+
+  const handleSend = useCallback(async (asDraft?: boolean, asSchedule?: boolean) => {
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const messageToSend = substitutedMessage || formData.message;
+      
+      const notificationData = {
+        title: formData.title,
+        message: messageToSend,
+        userIds: formData.selectedUsers,
+        type: formData.type,
+        channels: formData.channels,
+        priority: formData.priority,
+        ...(formData.schedule && { schedule: formData.schedule }),
+        ...(formData.templateId && { template: formData.templateId })
+      };
+
+      if (onSubmit) {
+        onSubmit(notificationData);
+      }
+
+      // Simulate API call
+      await notificationsApi.sendNotification(notificationData as any);
+
+      const successMsg = asDraft
+        ? 'Notification saved as draft'
+        : asSchedule
+        ? 'Notification scheduled successfully'
+        : 'Notification sent successfully';
+
+      setSuccessMessage(successMsg);
+
+      // Reset form after success
+      setTimeout(() => {
+        setFormData({
+          title: '',
+          message: '',
+          type: 'system',
+          priority: 'medium',
+          channels: [],
+          selectedUsers: [],
+          selectedGroups: [],
+          schedule: '',
+          isDraft: false,
+          templateId: ''
+        });
+        setSuccessMessage('');
+        setErrors({});
+        setShowPreview(false);
+      }, 2000);
+    } catch (error) {
+      setErrors({ submit: 'Failed to send notification' });
+    } finally {
+      setLoading(false);
+    }
+  }, [formData, substitutedMessage, validateForm, onSubmit]);
+
+  const handleReset = useCallback(() => {
+    setFormData({
+      title: '',
+      message: '',
+      type: 'system',
+      priority: 'medium',
+      channels: [],
+      selectedUsers: [],
+      selectedGroups: [],
+      schedule: '',
+      isDraft: false,
+      templateId: ''
+    });
+    setErrors({});
+    setSuccessMessage('');
+    setShowPreview(false);
+  }, []);
+
+  return (
+    <div data-testid="compose-container" className="w-full max-w-2xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Compose Notification</h1>
+
+      {successMessage && (
+        <div data-testid="success-alert" className="alert alert-success mb-4 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
+          {successMessage}
+        </div>
+      )}
+
+      <form data-testid="compose-form" className="space-y-6" onSubmit={(e) => { e.preventDefault(); handleSend(); }}>
+        {/* Title Field */}
+        <div data-testid="title-field" className="form-group">
+          <label htmlFor="title" className="block text-sm font-bold mb-2">Title *</label>
+          <input
+            id="title"
+            data-testid="title-input"
+            type="text"
+            value={formData.title}
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Enter notification title"
+            aria-invalid={!!errors.title}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.title && (
+            <span data-testid="title-error" className="error text-red-600 text-sm mt-1 block">
+              {errors.title}
+            </span>
+          )}
+        </div>
+
+        {/* Message Field */}
+        <div data-testid="message-field" className="form-group">
+          <label htmlFor="message" className="block text-sm font-bold mb-2">Message *</label>
+          <textarea
+            id="message"
+            data-testid="message-input"
+            value={formData.message}
+            onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+            placeholder="Enter notification message"
+            rows={6}
+            aria-invalid={!!errors.message}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.message && (
+            <span data-testid="message-error" className="error text-red-600 text-sm mt-1 block">
+              {errors.message}
+            </span>
+          )}
+        </div>
+
+        {/* Type Selection */}
+        <div data-testid="type-field" className="form-group">
+          <label htmlFor="type" className="block text-sm font-bold mb-2">Type</label>
+          <select
+            id="type"
+            data-testid="type-select"
+            value={formData.type}
+            onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="system">System</option>
+            <option value="email">Email</option>
+            <option value="sms">SMS</option>
+            <option value="push">Push</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+
+        {/* Priority Selection */}
+        <div data-testid="priority-field" className="form-group">
+          <label htmlFor="priority" className="block text-sm font-bold mb-2">Priority</label>
+          <select
+            id="priority"
+            data-testid="priority-select"
+            value={formData.priority}
+            onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+
+        {/* Channel Selection */}
+        <div data-testid="channels-field" className="form-group">
+          <label className="block text-sm font-bold mb-2">Channels *</label>
+          <div data-testid="channels-checkboxes" className="space-y-2">
+            {['email', 'sms', 'push', 'system'].map(channel => (
+              <label key={channel} className="checkbox-label flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  data-testid={`channel-${channel}`}
+                  checked={formData.channels.includes(channel)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setFormData(prev => ({ ...prev, channels: [...prev.channels, channel] }));
+                    } else {
+                      setFormData(prev => ({ ...prev, channels: prev.channels.filter(c => c !== channel) }));
+                    }
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="capitalize text-sm">{channel}</span>
+              </label>
+            ))}
+          </div>
+          {errors.channels && (
+            <span data-testid="channels-error" className="error text-red-600 text-sm mt-1 block">
+              {errors.channels}
+            </span>
+          )}
+        </div>
+
+        {/* User Selection */}
+        <div data-testid="users-field" className="form-group">
+          <label htmlFor="selected-users" className="block text-sm font-bold mb-2">Select Users</label>
+          <input
+            id="selected-users"
+            data-testid="users-input"
+            type="text"
+            placeholder="Enter user IDs (comma-separated)"
+            onChange={(e) => setFormData(prev => ({ ...prev, selectedUsers: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Group Selection */}
+        <div data-testid="groups-field" className="form-group">
+          <label htmlFor="selected-groups" className="block text-sm font-bold mb-2">Select Groups</label>
+          <input
+            id="selected-groups"
+            data-testid="groups-input"
+            type="text"
+            placeholder="Enter group IDs (comma-separated)"
+            onChange={(e) => setFormData(prev => ({ ...prev, selectedGroups: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {errors.targets && (
+          <span data-testid="targets-error" className="error text-red-600 text-sm block">
+            {errors.targets}
+          </span>
+        )}
+
+        {/* Template Selection */}
+        <div data-testid="template-field" className="form-group">
+          <label htmlFor="template" className="block text-sm font-bold mb-2">Use Template</label>
+          <select
+            id="template"
+            data-testid="template-select"
+            value={formData.templateId}
+            onChange={(e) => handleTemplateSelect(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">-- No Template --</option>
+            {mockNotificationTemplates.map(t => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Template Variables Info */}
+        {formData.templateId && (
+          <div data-testid="template-variables-info" className="info-box p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <strong className="text-blue-900">Template variables detected:</strong>
+            <ul className="mt-2 list-disc list-inside text-sm text-blue-800">
+              <li>{'{{'}<span className="font-mono">customerName</span>{'}}'}</li>
+              <li>{'{{'}<span className="font-mono">bookingId</span>{'}}'}</li>
+              <li>{'{{'}<span className="font-mono">hotelName</span>{'}}'}</li>
+            </ul>
+          </div>
+        )}
+
+        {/* Schedule */}
+        <div data-testid="schedule-field" className="form-group">
+          <label htmlFor="schedule" className="block text-sm font-bold mb-2">Schedule (Optional)</label>
+          <input
+            id="schedule"
+            data-testid="schedule-input"
+            type="datetime-local"
+            value={formData.schedule}
+            onChange={(e) => setFormData(prev => ({ ...prev, schedule: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Preview Section */}
+        <div className="section">
+          <button
+            type="button"
+            data-testid="preview-button"
+            onClick={handlePreviewToggle}
+            className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 font-semibold"
+          >
+            {showPreview ? 'Hide Preview' : 'Show Preview'}
+          </button>
+
+          {showPreview && (
+            <div data-testid="preview-content" className="preview-box mt-4 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+              <div className="preview-section mb-4">
+                <h4 className="font-bold text-sm">Title:</h4>
+                <p data-testid="preview-title" className="text-sm">{formData.title || '(empty)'}</p>
+              </div>
+              <div className="preview-section mb-4">
+                <h4 className="font-bold text-sm">Message:</h4>
+                <p data-testid="preview-message" className="text-sm">
+                  {substitutedMessage || formData.message || '(empty)'}
+                </p>
+              </div>
+              <div className="preview-meta text-xs text-gray-600 space-y-1">
+                <span>Type: {formData.type}</span>
+                <span>Priority: {formData.priority}</span>
+                <span>Channels: {formData.channels.length > 0 ? formData.channels.join(', ') : 'none'}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </form>
+
+      {/* Action Buttons */}
+      <div data-testid="action-buttons" className="button-group mt-6 flex gap-3 flex-wrap">
+        <button
+          data-testid="send-button"
+          onClick={() => handleSend(false, false)}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold disabled:bg-gray-400"
+        >
+          Send Notification
+        </button>
+        <button
+          data-testid="draft-button"
+          onClick={() => handleSend(true, false)}
+          disabled={loading}
+          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-semibold disabled:bg-gray-400"
+        >
+          Save as Draft
+        </button>
+        <button
+          data-testid="schedule-button"
+          onClick={() => handleSend(false, true)}
+          disabled={!formData.schedule || loading}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold disabled:bg-gray-400"
+        >
+          Schedule Only
+        </button>
+        <button
+          data-testid="reset-button"
+          onClick={handleReset}
+          disabled={loading}
+          className="px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400 font-semibold disabled:bg-gray-400"
+        >
+          Reset
+        </button>
+      </div>
+
+      {errors.submit && (
+        <div data-testid="submit-error" className="error-box mt-4 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+          {errors.submit}
+        </div>
+      )}
+    </div>
+  );
 }

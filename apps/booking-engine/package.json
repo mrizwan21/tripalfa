@@ -48,6 +48,7 @@
     "autoprefixer": "^10.4.23",
     "dotenv": "^16.6.1",
     "jsdom": "^23.0.1",
+    "msw": "^2.1.5",
     "postcss": "^8.5.6",
     "stylelint": "^17.0.0",
     "stylelint-config-standard": "^40.0.0",
@@ -59,6 +60,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:test": "NODE_ENV=test VITE_TEST_MODE=true vite --port 5174",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
