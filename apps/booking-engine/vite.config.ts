@@ -71,7 +71,7 @@ export default defineConfig({
         rewrite: (p) => `/api${p}`,
       },
       '/static': {
-        target: 'http://localhost:3001', // Direct to booking-service (PostgreSQL-backed)
+        target: 'http://localhost:3002', // Direct to static-data-service (PostgreSQL-backed)
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/static/, ''),
       },

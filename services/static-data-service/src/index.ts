@@ -1113,6 +1113,53 @@ app.get('/destinations/:id/suppliers', async (req: Request, res: Response) => {
   }
 });
 
+// ─── Hotel Types ─────────────────────────────────────────────────────────────
+// GET /hotel-types?limit=100
+app.get('/hotel-types', async (req: Request, res: Response) => {
+  const parsedLimit = Number(req.query.limit);
+  const limit = Math.min(Number.isFinite(parsedLimit) ? parsedLimit : 100, 500);
+  try {
+    const rows = await query(
+      `SELECT id, code, name, description, icon, "sortOrder", "isActive"
+       FROM "HotelType"
+       WHERE "isActive" = true
+       ORDER BY "sortOrder" ASC, name
+       LIMIT $1`,
+      [limit]
+    );
+    return res.json({ data: rows, total: rows.length });
+  } catch (e: any) {
+    console.error('[hotel-types]', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Addon Prices (Travel Insurance, Refund Protection, etc.) ───────────────
+// GET /addon-prices
+// Returns standardized pricing for booking add-ons (travel insurance, refund protection, etc.)
+// If no addon pricing data is available, returns empty array so UI hides add-on cards.
+app.get('/addon-prices', async (_req: Request, res: Response) => {
+  try {
+    // Attempt to fetch from AddonPrice table (if it exists)
+    // For now, the table does not exist, so this query will fail and return empty array
+    const rows = await query(
+      `SELECT id, code, name, category, currency, "basePrice", "pricePercentOfTotal",
+              "minPrice", "maxPrice", description, "isActive", "appliesTo"
+       FROM "AddonPrice"
+       WHERE "isActive" = true
+       ORDER BY "sortOrder" ASC, name`,
+      []
+    );
+    return res.json({ data: rows, total: rows.length });
+  } catch (e: any) {
+    // On any error (table not found, DB connection issue, etc.),
+    // return empty array so frontend hides add-on cards instead of showing stale data.
+    // Do NOT fall back to hardcoded prices.
+    console.warn('[addon-prices] Unable to fetch from database, returning empty array', e.message);
+    return res.json({ data: [], total: 0 });
+  }
+});
+
 // ─── Static Files (Airline Logos, etc.) ───────────────────────────────────────
 // Serve static files from /public directory
 const publicDir = path.join(__dirname, '..', 'public');
