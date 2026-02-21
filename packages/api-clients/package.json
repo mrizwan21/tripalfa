@@ -22,7 +22,7 @@
     "@tripalfa/shared-utils": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
+    "typescript": "^5.9.3",
     "@types/node": "^20.19.30"
   }
 }

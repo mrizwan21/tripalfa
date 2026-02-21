@@ -1,6 +1,67 @@
+# Dependencies
 **/node_modules
+.pnpm-store
+
+# Build outputs
 **/dist
-**/.env
-**/.DS_Store
-**/.git
 **/.next
+**/build
+
+# Environment files
+**/.env
+**/.env.*
+!.env.example
+
+# System files
+**/.DS_Store
+Thumbs.db
+
+# Version control
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Large data directories - not needed for build
+services/ingest/storage
+services/ingest/static-logos
+
+# MCP servers - not needed for Docker builds
+mcp-servers
+
+# Test files
+**/__tests__
+**/*.test.ts
+**/*.spec.ts
+**/test
+**/tests
+coverage
+
+# Documentation
+docs
+*.md
+!README.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Docker files (prevent recursive builds)
+docker-compose*.yml
+Dockerfile*
+.docker
+
+# Misc
+secrets
+*.tgz
+.eslintcache
+.tsbuildinfo

@@ -21,6 +21,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     --ignore-scripts \
     --fetch-timeout=300000
 
+# Generate Prisma client
+RUN pnpm --filter @tripalfa/shared-database generate
+
 # Build the service
 RUN find . -name "*.tsbuildinfo" -delete
 RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/static-data-service... build
