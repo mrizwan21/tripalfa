@@ -1,7 +1,9 @@
 // src/services/transactions.ts
-import type { TransactionInsertOptions, Transaction } from '../types/wallet.js';
+// Prisma-based transaction operations
+import { prisma } from '@tripalfa/shared-database';
+import type { WalletTransaction, TransactionInsertOptions } from '../types/wallet.js';
 
-export async function insertTransactionRecord(client: any, opts: TransactionInsertOptions) {
+export async function insertTransactionRecord(opts: TransactionInsertOptions): Promise<WalletTransaction> {
   const {
     walletId,
     type,
@@ -16,25 +18,45 @@ export async function insertTransactionRecord(client: any, opts: TransactionInse
     status = 'completed',
   } = opts;
 
-  const result = await client.query(
-    `INSERT INTO transactions (wallet_id, type, flow, amount, currency, payer_id, payee_id, booking_id, invoice_id, idempotency_key, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-     RETURNING id, wallet_id as "walletId", type, flow, amount, currency, payer_id as "payerId", payee_id as "payeeId", booking_id as "bookingId", invoice_id as "invoiceId", status, idempotency_key as "idempotencyKey", created_at as "createdAt", updated_at as "updatedAt"`,
-    [
+  const transaction = await prisma.walletTransaction.create({
+    data: {
       walletId,
       type,
       flow,
       amount,
       currency,
-      payerId || null,
-      payeeId || null,
-      bookingId || null,
-      invoiceId || null,
-      idempotencyKey || null,
+      payerId,
+      payeeId,
+      bookingId,
+      invoiceId,
+      idempotencyKey,
       status,
-    ]
-  );
-  return result.rows[0] as Transaction;
+    },
+  });
+
+  return transaction;
 }
 
-export default { insertTransactionRecord };
+export async function insertLedgerEntries(
+  transactionId: string,
+  entries: Array<{
+    account: string;
+    debit?: number;
+    credit?: number;
+    currency: string;
+    description?: string;
+  }>
+): Promise<void> {
+  await prisma.walletLedger.createMany({
+    data: entries.map((entry) => ({
+      transactionId,
+      account: entry.account,
+      debit: entry.debit || 0,
+      credit: entry.credit || 0,
+      currency: entry.currency,
+      description: entry.description,
+    })),
+  });
+}
+
+export default { insertTransactionRecord, insertLedgerEntries };

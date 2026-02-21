@@ -5,7 +5,58 @@
  * This eliminates duplication between frontend-index and fallbacks.
  */
 
-import { HotelChain, HotelAmenity, HotelType, HotelFacility } from '../types';
+import { HotelChain, HotelAmenity, HotelType } from '../types';
+
+// ============================================
+// AMENITY ICON MAPPING (Lucide icons)
+// ============================================
+
+/**
+ * Maps amenity codes to Lucide icon names for dynamic rendering
+ * Usage: const IconComponent = Icons[amenity.icon] || Info;
+ */
+export const AMENITY_ICONS: Record<string, string> = {
+  // Technology
+  'WIFI': 'Wifi',
+  
+  // Recreation
+  'SWIMMING_POOL': 'Waves',
+  'KIDS_CLUB': 'Baby',
+  'BEACH_ACCESS': 'Umbrella',
+  
+  // Wellness
+  'FITNESS_CENTER': 'Dumbbell',
+  'SPA': 'Sparkles',
+  
+  // Dining
+  'RESTAURANT': 'Utensils',
+  'BAR': 'Wine',
+  
+  // Transportation
+  'PARKING': 'Car',
+  'AIRPORT_SHUTTLE': 'Bus',
+  
+  // Services
+  'ROOM_SERVICE': 'RoomService',
+  'LAUNDRY_SERVICE': 'Shirt',
+  'PET_FRIENDLY': 'Dog',
+  'RECEPTION_24H': 'Clock',
+  'CONCIERGE': 'Bell',
+  
+  // Business
+  'BUSINESS_CENTER': 'Briefcase',
+  'CONFERENCE_ROOMS': 'Presentation',
+  
+  // Room
+  'AIR_CONDITIONING': 'Thermometer',
+  'MINIBAR': 'GlassWater',
+  'SAFE': 'Lock',
+  'TV': 'Tv',
+  'BALCONY': 'DoorOpen',
+  
+  // Default fallback
+  'DEFAULT': 'Info'
+};
 
 // ============================================
 // HOTEL CHAINS
@@ -89,14 +140,6 @@ export const HOTEL_LEVEL_AMENITIES = HOTEL_AMENITIES.filter(a => a.applies_to ==
 export const ROOM_LEVEL_AMENITIES = HOTEL_AMENITIES.filter(a => a.applies_to === 'room' || a.applies_to === 'both');
 export const POPULAR_AMENITIES = HOTEL_AMENITIES.filter(a => a.is_popular);
 
-/**
- * @deprecated Use HOTEL_AMENITIES instead
- */
-export const HOTEL_FACILITIES: HotelFacility[] = HOTEL_AMENITIES;
-/** @deprecated Use HOTEL_AMENITIES_BY_NAME instead */
-export const HOTEL_FACILITIES_BY_NAME = HOTEL_AMENITIES_BY_NAME;
-/** @deprecated Use HOTEL_AMENITIES_BY_CATEGORY instead */
-export const HOTEL_FACILITIES_BY_CATEGORY = HOTEL_AMENITIES_BY_CATEGORY;
 
 // ============================================
 // HOTEL TYPES
@@ -161,18 +204,8 @@ export interface HotelDestination {
   popularity: number;
 }
 
-export const POPULAR_HOTEL_DESTINATIONS: HotelDestination[] = [
-  { city: 'Dubai', country: 'United Arab Emirates', country_code: 'AE', popularity: 1 },
-  { city: 'London', country: 'United Kingdom', country_code: 'GB', popularity: 2 },
-  { city: 'Paris', country: 'France', country_code: 'FR', popularity: 3 },
-  { city: 'New York', country: 'United States', country_code: 'US', popularity: 4 },
-  { city: 'Singapore', country: 'Singapore', country_code: 'SG', popularity: 5 },
-  { city: 'Tokyo', country: 'Japan', country_code: 'JP', popularity: 6 },
-  { city: 'Barcelona', country: 'Spain', country_code: 'ES', popularity: 7 },
-  { city: 'Rome', country: 'Italy', country_code: 'IT', popularity: 8 },
-  { city: 'Sydney', country: 'Australia', country_code: 'AU', popularity: 9 },
-  { city: 'Bangkok', country: 'Thailand', country_code: 'TH', popularity: 10 }
-];
+// Populated from PostgreSQL at build time - do not hardcode
+export const POPULAR_HOTEL_DESTINATIONS: HotelDestination[] = [];
 
 // ============================================
 // ROOM TYPES

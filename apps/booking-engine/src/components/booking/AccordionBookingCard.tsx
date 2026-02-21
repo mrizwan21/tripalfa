@@ -1,6 +1,6 @@
 import React from 'react';
 import { Booking } from '../../lib/srs-types';
-import { Accordion, AccordionItem } from '../ui/Accordion';
+import { Accordion, AccordionItem } from '../ui/accordion';
 import { GeneralSection } from './sections/GeneralSection';
 import { ContactSection } from './sections/ContactSection';
 import { CostingSection } from './sections/CostingSection';

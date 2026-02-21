@@ -81,22 +81,8 @@ app.get('/duffel/orders/:id', (req: express.Request, res: express.Response) => {
   });
 });
 
-// Mock Hotelston API
-app.get('/hotelston/search', (req: express.Request, res: express.Response) => {
-  res.json({
-    hotels: [
-      {
-        id: 'hotel_123',
-        name: 'Test Hotel',
-        location: 'New York',
-        price: 200,
-        rating: 4.5
-      }
-    ]
-  });
-});
 
-app.post('/hotelston/bookings', (req: express.Request, res: express.Response) => {
+  app.post('/api/hotels/book', (req: express.Request, res: express.Response) => {
   res.json({
     booking_id: `booking_${crypto.randomBytes(8).toString('hex')}`,
     status: 'confirmed',
@@ -457,8 +443,8 @@ app.listen(PORT, () => {
   console.log('Available endpoints:');
   console.log('  POST /duffel/orders - Create order');
   console.log('  GET  /duffel/orders/:id - Get order');
-  console.log('  GET  /hotelston/search - Search hotels');
-  console.log('  POST /hotelston/bookings - Book hotel');
+  
+  
   console.log('  POST /stripe/payment_intents - Process payment');
   console.log('  POST /twilio/messages - Send SMS');
   console.log('  POST /sendgrid/mail/send - Send email');

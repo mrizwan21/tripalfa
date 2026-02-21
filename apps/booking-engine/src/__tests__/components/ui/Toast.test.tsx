@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Toast, Toaster, ToastType } from '../../../components/ui/Toast';
+import { Toast, Toaster, ToastType } from '../../../components/ui/toast';
 
 describe('Toast Component', () => {
   describe('Appearance', () => {

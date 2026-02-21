@@ -1,7 +1,8 @@
-import express from 'express';
+import express, { Router } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import WalletController from '../controllers/WalletController.js';
 
-const router = express.Router();
+const router: ExpressRouter = Router();
 
 // Account Management
 router.post('/', WalletController.createAccount);

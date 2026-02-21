@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-// @ts-ignore
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
-// @ts-ignore
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
@@ -10,13 +8,13 @@ import {
     User, Mail, Phone, Calendar, Globe, ArrowRight, ArrowLeft,
     MapPin, Edit3, ShieldCheck, Heart, ChevronRight, CreditCard,
     Sparkles, LogIn, Lock, Info, CheckCircle2, Luggage, Briefcase,
-    Plus, Plane, ChevronDown, UserCheck, AlertCircle,
-    Utensils, Clock, Map
+    Plus, Plane, ChevronDown, UserCheck, AlertCircle, Gift,
+    Utensils, Clock, Map, Star
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { formatCurrency } from '../lib/utils';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { api, fetchCountries } from '../lib/api';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { FareRulesPopup } from '../components/FareRulesPopup';
@@ -25,6 +23,9 @@ import { AdditionalBaggagePopup } from '../components/AdditionalBaggagePopup';
 import { MealSelectionPopup } from '../components/MealSelectionPopup';
 import { SpecialRequestPopup } from '../components/SpecialRequestPopup';
 import { PassengerForm, activePassengerSchema } from '../components/booking/PassengerForm';
+import { useCouponValidation } from '../hooks/useCouponValidation';
+import { useLoyaltyBalance } from '../hooks/useLoyaltyBalance';
+import { FlightSummary, HotelSummary, Ancillaries, PaymentMode, FormValues } from '../types/booking';
 
 // Determine parent schema
 const formSchema = z.object({
@@ -38,7 +39,8 @@ const formSchema = z.object({
     discountCoupon: z.string().optional()
 });
 
-type FormValues = z.infer<typeof formSchema>;
+// Redefining FormValues locally if needed or using imported one
+// type FormValues = z.infer<typeof formSchema>;
 
 export default function PassengerDetails() {
     const navigate = useNavigate();
@@ -51,15 +53,46 @@ export default function PassengerDetails() {
     const [isSpecialRequestOpen, setIsSpecialRequestOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    // Ancillary state totals
+    // Loyalty hook for tier discount calculations
+    const { balance } = useLoyaltyBalance();
+
+    // Coupon validation hook with debounce and cache
+    const { validateCoupon, isValidating, validationResult } = useCouponValidation();
+    const couponData = validationResult;
+
+    // ── Ancillary state – initialised from FlightAddons navigation state ──────
+    // selectedServices: [{id, quantity}]  – Duffel available_service IDs
+    // mealSSRs: string[]                  – IATA meal SSR codes (e.g. 'VGML')
+    // specialSSRs: string[]               – IATA assistance SSR codes (e.g. 'WCHR')
+    // passengersCount: { adults, children, infants } – passed from FlightSearch/FlightAddons
+    const passedSelectedServices: Array<{ id: string; quantity: number }> =
+        location.state?.selectedServices || [];
+    const passedMealSSRs: string[] = location.state?.mealSSRs || [];
+    const passedSpecialSSRs: string[] = location.state?.specialSSRs || [];
+    // Passenger counts from the search form (adults + children used for popup selectors)
+    const passengersCount: { adults: number; children: number; infants: number } | null =
+        location.state?.passengersCount ?? null;
+
+    // baggageTotal is the sum of priced Duffel services – pre-computed in FlightAddons
+    // We re-derive from totalPrice - flight.amount to stay consistent
+    const passedTotalPrice: number = location.state?.totalPrice ?? 0;
+    const passedFlight2 = location.state?.flight;
+    const derivedBaggageTotal = passedTotalPrice > 0 && passedFlight2?.amount
+        ? Math.max(0, passedTotalPrice - passedFlight2.amount)
+        : 0;
+
     const [seatsTotal, setSeatsTotal] = useState(0);
-    const [baggageTotal, setBaggageTotal] = useState(0);
+    const [baggageTotal, setBaggageTotal] = useState(derivedBaggageTotal);
     const [mealsTotal, setMealsTotal] = useState(0);
-    const [ssrRequests, setSsrRequests] = useState<any[]>([]);
-    const [paymentModeState, setPaymentModeState] = useState<'wallet' | 'hold'>('wallet');
+    // SSR requests merged from both meal + special requests
+    const [ssrRequests, setSsrRequests] = useState<any[]>([
+        ...passedMealSSRs.map((code: string) => ({ type: 'meal', code })),
+        ...passedSpecialSSRs.map((code: string) => ({ type: 'special_assistance', code })),
+    ]);
+    const [paymentModeState, setPaymentModeState] = useState<PaymentMode>('wallet');
 
     // Initialize Form
-    const methods = useForm<FormValues>({
+    const methods = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
             passengers: [
@@ -90,7 +123,7 @@ export default function PassengerDetails() {
         queryKey: ['countries'],
         queryFn: fetchCountries,
         staleTime: 600000
-    });
+    } as any);
 
     const onSubmit = async (data: FormValues) => {
         // Handle valid submission
@@ -141,7 +174,7 @@ export default function PassengerDetails() {
                     },
                     totals: {
                         subtotal,
-                        discount: discountAmount,
+                        discount: totalDiscounts,
                         final: finalTotal
                     }
                 }
@@ -160,9 +193,10 @@ export default function PassengerDetails() {
                     }
                 });
             }
-        } catch (err: any) {
-            console.error("Booking failed:", err);
-            alert(err.message || "Failed to process booking. Please try again.");
+        } catch (err: unknown) {
+            const error = err as Error;
+            console.error("Booking failed:", error);
+            alert(error.message || "Failed to process booking. Please try again.");
         }
     };
 
@@ -173,41 +207,79 @@ export default function PassengerDetails() {
 
     const [couponCode, setCouponCode] = useState('');
     const [couponDiscount, setCouponDiscount] = useState(0);
+    const [tierDiscount, setTierDiscount] = useState(0);
     const [couponError, setCouponError] = useState('');
+
+    // Calculate tier-based discount (5% per tier)
+    const getTierDiscount = (tierName: string | undefined) => {
+        const tierMultipliers: Record<string, number> = {
+            'Bronze': 0.02, 'Silver': 0.05, 'Gold': 0.08, 'Platinum': 0.10, 'Diamond': 0.15
+        };
+        return tierMultipliers[tierName || 'Bronze'] || 0;
+    };
+
+    const handleApplyCoupon = async () => {
+        const input = methods.getValues('discountCoupon');
+        if (!input?.trim()) {
+            setCouponError('Enter a coupon code');
+            return;
+        }
+
+        try {
+            const result = await validateCoupon(input, subtotal, isHotel ? 'hotel' : 'flight');
+            if (result?.valid) {
+                setCouponDiscount(result.discountPercentage || 0);
+                setCouponError('');
+            } else {
+                setCouponDiscount(0);
+                setCouponError(result?.error || 'Invalid coupon code');
+            }
+        } catch (err) {
+            setCouponDiscount(0);
+            setCouponError('Failed to validate coupon');
+        }
+    };
 
     const summary = location.state?.summary || location.state;
     const isHotel = summary?.type === 'hotel' || !!summary?.hotel;
 
     const passedFlight = location.state?.flight;
 
+    // ── Map Duffel segment fields to the display format used by the sidebar ──
+    // Duffel segment keys: origin, destination, departureTime, arrivalTime, airline, flightNumber
+    // Previous code incorrectly used s.from / s.to / s.depart / s.arrive
+    const mapSegment = (s: any) => ({
+        from: s.origin || s.from || '',
+        to:   s.destination || s.to || '',
+        carrier: s.airline || s.carrier || passedFlight?.airline || '',
+        code: s.flightNumber || s.code || `${passedFlight?.carrierCode || ''}${passedFlight?.flightNumber || ''}`,
+        date: (s.departureTime || s.depart)
+            ? format(new Date(s.departureTime || s.depart), 'dd MMM')
+            : 'N/A',
+        time: (s.departureTime || s.depart) && (s.arrivalTime || s.arrive)
+            ? `${format(new Date(s.departureTime || s.depart), 'hh:mm a')} - ${format(new Date(s.arrivalTime || s.arrive), 'hh:mm a')}`
+            : 'N/A',
+        duration: s.duration || passedFlight?.duration || 'N/A',
+    });
+
     const flightSummary = passedFlight ? {
         cabin: passedFlight.cabin || 'Economy',
-        route: `${passedFlight.origin} — ${passedFlight.destination}`,
-        price: passedFlight.amount,
+        route: `${passedFlight.origin || ''} — ${passedFlight.destination || ''}`,
+        price: passedFlight.amount || 0,
         taxes: passedFlight.taxes || 0,
-        isLCC: passedFlight.isLCC,
+        isLCC: passedFlight.isLCC || false,
         airlineLogo: passedFlight.airlineLogo,
-        airlineName: passedFlight.airline,
-        segments: passedFlight.segments.map((s: any) => ({
-            from: s.from,
-            to: s.to,
-            carrier: s.carrier || passedFlight.airline,
-            code: `${s.carrierCode || passedFlight.carrierCode}${s.flightNumber || passedFlight.flightNumber}`,
-            date: s.depart ? format(new Date(s.depart), 'dd MMM') : 'N/A',
-            time: (s.depart && s.arrive) ?
-                `${format(new Date(s.depart), 'hh:mm a')} - ${format(new Date(s.arrive), 'hh:mm a')}` : 'N/A',
-            duration: passedFlight.duration || 'N/A'
-        }))
+        airlineName: passedFlight.airline || '',
+        segments: (passedFlight.segments || []).map(mapSegment),
     } : (summary?.flight || {
-        cabin: 'Business Class',
-        route: 'San Francisco (SFO) — Dubai (DXB)',
-        price: 3220,
-        taxes: 240,
+        // No flight in state → empty / null summary (no hardcoded data)
+        cabin: '',
+        route: '',
+        price: 0,
+        taxes: 0,
         isLCC: false,
-        airlineName: 'Emirates',
-        segments: [
-            { from: 'SFO', to: 'DXB', carrier: 'Emirates', code: 'EK226', date: '15 Feb', time: '11:30 AM - 7:00 PM', duration: '15h 30m' },
-        ]
+        airlineName: '',
+        segments: [],
     });
 
     const hotelSummary = summary?.hotel ? {
@@ -218,21 +290,13 @@ export default function PassengerDetails() {
         image: summary.hotel.image
     } : null;
 
-    // Dynamic Calculations
+    // Dynamic Calculations with tier discount
     const subtotal = isHotel ? (hotelSummary?.price || 0) : flightSummary.price + flightSummary.taxes + seatsTotal + baggageTotal + mealsTotal;
-    const discountAmount = (subtotal * couponDiscount) / 100;
-    const finalTotal = subtotal - discountAmount;
-
-    const handleApplyCoupon = () => {
-        const input = methods.getValues('discountCoupon');
-        if (input === 'DISCOUNT10') {
-            setCouponDiscount(10);
-            setCouponError('');
-        } else {
-            setCouponDiscount(0);
-            setCouponError('Invalid coupon');
-        }
-    };
+    const tierDiscountPercent = balance?.tier.discountPercentage || 0;
+    const tierDiscountAmount = (subtotal * tierDiscountPercent) / 100;
+    const couponDiscountAmount = (subtotal * couponDiscount) / 100;
+    const totalDiscounts = tierDiscountAmount + couponDiscountAmount;
+    const finalTotal = subtotal - totalDiscounts;
 
     return (
         <TripLogerLayout>
@@ -396,7 +460,7 @@ export default function PassengerDetails() {
                                                     className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-red-500/50' : 'border-transparent'}`}
                                                 >
                                                     <option value="">Select</option>
-                                                    {countries.map((c: any) => (
+                                                    {((countries as any[]) || []).map((c: any) => (
                                                         <option key={c.code} value={c.code}>{c.name}</option>
                                                     ))}
                                                 </select>
@@ -485,10 +549,25 @@ export default function PassengerDetails() {
                                                 <span className="">+{formatCurrency(seatsTotal + baggageTotal + mealsTotal)}</span>
                                             </div>
                                         )}
+                                        {tierDiscountAmount > 0 && (
+                                            <div className="flex justify-between items-center text-[10px] font-black text-blue-600 uppercase tracking-widest px-2 group">
+                                                <div className="flex items-center gap-1">
+                                                    <Star size={10} className="text-blue-500" />
+                                                    <span>Tier Discount ({(tierDiscountPercent * 100).toFixed(0)}%)</span>
+                                                </div>
+                                                <span className="">-{formatCurrency(tierDiscountAmount)}</span>
+                                            </div>
+                                        )}
                                         {couponDiscount > 0 && (
                                             <div className="flex justify-between items-center text-[10px] font-black text-green-600 uppercase tracking-widest px-2">
-                                                <span>Discount (10%)</span>
-                                                <span className="">-{formatCurrency(discountAmount)}</span>
+                                                <span>Coupon Discount ({couponDiscount}%)</span>
+                                                <span className="">-{formatCurrency(couponDiscountAmount)}</span>
+                                            </div>
+                                        )}
+                                        {totalDiscounts > 0 && (
+                                            <div className="flex justify-between items-center text-[10px] font-black text-purple-600 uppercase tracking-widest px-2 border-t pt-2">
+                                                <span>Total Savings</span>
+                                                <span className="">-{formatCurrency(totalDiscounts)}</span>
                                             </div>
                                         )}
                                         <div className="h-px bg-gray-100" />
@@ -504,18 +583,19 @@ export default function PassengerDetails() {
                                             <input
                                                 {...methods.register('discountCoupon')}
                                                 placeholder="ENTER COUPON CODE"
-                                                className={`w-full h-14 px-6 bg-gray-50 border-2 focus:border-[#8B5CF6]/30 focus:bg-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all placeholder:text-gray-300 ${couponError ? 'border-red-500/50' : 'border-transparent'}`}
+                                                className={`w-full h-14 px-6 pr-16 bg-gray-50 border-2 focus:border-[#8B5CF6]/30 focus:bg-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all placeholder:text-gray-300 ${couponError ? 'border-red-500/50' : couponDiscount > 0 ? 'border-green-500/50' : 'border-transparent'}`}
                                             />
                                             <button
                                                 type="button"
                                                 onClick={handleApplyCoupon}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 h-8 px-4 bg-[#111827] text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-black transition-colors"
+                                                disabled={isValidating}
+                                                className={`absolute right-3 top-1/2 -translate-y-1/2 h-8 px-4 text-white text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors ${isValidating ? 'bg-gray-400 cursor-wait' : 'bg-[#111827] hover:bg-black'}`}
                                             >
-                                                Apply
+                                                {isValidating ? 'Checking...' : 'Apply'}
                                             </button>
                                         </div>
-                                        {couponError && <p className="text-[9px] font-bold text-red-500 mt-2 ml-2 uppercase tracking-widest animate-pulse">{couponError}</p>}
-                                        {couponDiscount > 0 && <p className="text-[9px] font-bold text-green-600 mt-2 ml-2 uppercase tracking-widest">Coupon Applied Successfully!</p>}
+                                        {couponError && <p className="text-[9px] font-bold text-red-500 mt-2 ml-2 uppercase tracking-widest animate-pulse flex items-center gap-1"><AlertCircle size={10} /> {couponError}</p>}
+                                        {couponDiscount > 0 && <p className="text-[9px] font-bold text-green-600 mt-2 ml-2 uppercase tracking-widest flex items-center gap-1"><CheckCircle2 size={10} /> Coupon Applied: {couponDiscount}% Off</p>}
                                     </div>
 
                                     <div className="flex flex-col gap-4 pt-4">
@@ -572,9 +652,14 @@ export default function PassengerDetails() {
                 isOpen={isBaggageOpen}
                 onClose={() => setIsBaggageOpen(false)}
                 isLCC={flightSummary.isLCC}
-                availableServices={passedFlight?.available_services}
+                // Pass real Duffel ancillary services (baggage type) from the offer
+                availableServices={passedFlight?.ancillaries?.filter((a: any) => a.type === 'baggage').map((a: any) => a.raw).filter(Boolean)}
+                // Total passengers from FlightAddons state (adults + children)
+                passengerCount={(passedSelectedServices?.length > 0 || passengersCount)
+                    ? ((passengersCount?.adults || 1) + (passengersCount?.children || 0))
+                    : (fields.length || 1)}
                 onConfirm={(bags) => {
-                    setBaggageTotal(bags.reduce((sum: number, b: any) => sum + b.price, 0));
+                    setBaggageTotal(bags.reduce((sum: number, b: any) => sum + (b.price || 0), 0));
                     setIsBaggageOpen(false);
                 }}
             />
@@ -582,10 +667,14 @@ export default function PassengerDetails() {
                 isOpen={isMealSelectionOpen}
                 onClose={() => setIsMealSelectionOpen(false)}
                 isLCC={flightSummary.isLCC}
-                availableServices={passedFlight?.available_services}
+                // Meal services from Duffel (if any)
+                availableServices={passedFlight?.ancillaries?.filter((a: any) => a.raw?.type === 'meal').map((a: any) => a.raw).filter(Boolean)}
+                // Total passengers from FlightAddons state (adults + children)
+                passengerCount={(passengersCount)
+                    ? ((passengersCount?.adults || 1) + (passengersCount?.children || 0))
+                    : (fields.length || 1)}
                 onConfirm={(meals) => {
-                    // Logic to calculate meal total could be more complex, but for mock:
-                    setMealsTotal(meals.reduce((sum: number, m: any) => sum + m.price, 0));
+                    setMealsTotal(meals.reduce((sum: number, m: any) => sum + (m.price || 0), 0));
                     setIsMealSelectionOpen(false);
                 }}
             />

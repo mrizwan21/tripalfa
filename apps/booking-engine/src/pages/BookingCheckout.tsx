@@ -6,8 +6,8 @@ import {
   Shield, RefreshCw, Luggage, Plus
 } from 'lucide-react';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { formatCurrency } from '../lib/utils';
-import { api, confirmFlightBooking, confirmHotelBooking, fetchWallets, createFlightOrder, confirmFlightOrder, createPaymentIntent, getPaymentMethods, getOrderPaymentMethods, confirmPayment, processSupplierPayment } from '../lib/api';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { api, confirmFlightBooking, confirmHotelBooking, fetchWallets, createFlightOrder, confirmFlightOrder, createPaymentIntent, getPaymentMethods, getOrderPaymentMethods, confirmPayment, processSupplierPayment, fetchAddonPrices } from '../lib/api';
 import { useQuery } from '@tanstack/react-query';
 
 export default function BookingCheckout() {
@@ -19,6 +19,7 @@ export default function BookingCheckout() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('wallet'); // Always wallet for Duffel
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [walletInfo, setWalletInfo] = useState<any>(null);
+  const [addonPrices, setAddonPrices] = useState<Record<string, number>>({});
 
   // Extract booking data and summary from state
   const bookingData = state?.bookingData;
@@ -27,7 +28,27 @@ export default function BookingCheckout() {
   const flight = state?.flight; // Flight display data
   const passengers = bookingData?.passengers || [{ firstName: 'Guest', lastName: 'User' }];
   const billingAddress = bookingData?.billingAddress;
-  const addOns = bookingData?.addOns || {};
+  const addOns = state?.addOns || bookingData?.addOns || {};
+  const passedAddonPrices = state?.addonPrices || {};
+
+  // Consume passed addon prices from HotelAddons, or fetch if not available
+  useEffect(() => {
+    const loadAddonPrices = async () => {
+      try {
+        // If prices were passed from HotelAddons, use those; otherwise fetch
+        if (Object.keys(passedAddonPrices).length > 0) {
+          setAddonPrices(passedAddonPrices);
+        } else {
+          const prices = await fetchAddonPrices();
+          setAddonPrices(prices);
+        }
+      } catch (error) {
+        console.warn('Failed to load addon prices:', error);
+        setAddonPrices(passedAddonPrices || {});
+      }
+    };
+    loadAddonPrices();
+  }, [passedAddonPrices]);
 
   // Calculate prices
   const flightPrice = summary?.flight?.price || offer?.total_amount || flight?.amount || 0;
@@ -36,19 +57,13 @@ export default function BookingCheckout() {
     (summary?.ancillaries?.baggage || 0) +
     (summary?.ancillaries?.meals || 0);
 
-  const addOnsPrices = {
-    travelInsurance: 45,
-    refundProtect: 29,
-    baggageTrace: 15
-  };
-
   const selectedAddOns = Object.entries(addOns)
     .filter(([_, selected]) => selected)
     .map(([id]) => ({
       id,
       label: id === 'travelInsurance' ? 'Travel Insurance' :
         id === 'refundProtect' ? 'Refund Protect' : 'Baggage Trace',
-      price: addOnsPrices[id as keyof typeof addOnsPrices] || 0
+      price: addonPrices[id as keyof typeof addonPrices] ?? 0
     }));
 
   const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + item.price, 0);

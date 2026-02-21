@@ -1,56 +1,57 @@
+# Dockerfile for b2b-admin - Frontend App
+# This Dockerfile follows the shared template at infrastructure/templates/app.Dockerfile.template
+# Parameters: APP_NAME=b2b-admin, PORT=3000
+
+# Build stage
 FROM node:20-alpine AS builder
 
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Set the working directory
 WORKDIR /app
 
-# Copy package files for caching
-COPY package.json ./
-COPY apps/b2b-admin/package.json ./apps/b2b-admin/
-COPY apps/b2b-admin/server/package.json ./apps/b2b-admin/server/
-COPY packages/shared-utils/package.json ./packages/shared-utils/
-COPY packages/ui-components/package.json ./packages/ui-components/
-COPY packages/shared-types/package.json ./packages/shared-types/
+# Copy monorepo root files
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.json tsconfig.base.json ./
+COPY tsconfig.json tsconfig.base.json ./
+COPY packages ./packages
+COPY scripts ./scripts
+COPY apps/b2b-admin ./apps/b2b-admin
 
-# Install dependencies (include workspace devDependencies so app-local types are available)
-RUN npm install --include=dev
+# Install dependencies using pnpm with cache mount
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --fetch-timeout=300000
 
-# Copy source
-COPY . .
+# Build shared-types first
+RUN find . -name "*.tsbuildinfo" -delete
+RUN pnpm --filter @tripalfa/shared-types build
 
-# Build the frontend (Admin SPA)
+# Build shared-utils which depends on shared-types
+RUN pnpm --filter @tripalfa/shared-utils build
+
+# Build api-clients which depends on shared-types
+RUN pnpm --filter @tripalfa/api-clients build
+
+# Reinstall to link built packages
+# Using --fetch-timeout for better handling of slow connections
+RUN pnpm install --frozen-lockfile --fetch-timeout=300000
+
+# Build the application (skip type check in Docker - vite will handle it)
 WORKDIR /app/apps/b2b-admin
+RUN npx vite build
 
-RUN npm run build
+# Use nginx to serve the built application
+FROM nginx:alpine
 
-# Build the backend (Express Server)
-WORKDIR /app/apps/b2b-admin/server
-RUN npm run build
+# Copy built application to nginx
+COPY --from=builder /app/apps/b2b-admin/dist /usr/share/nginx/html
 
-# Final stage
-FROM node:20-alpine
+# Copy nginx configuration
+COPY apps/b2b-admin/nginx.conf /etc/nginx/conf.d/default.conf
 
-WORKDIR /app
-
-
-
-# Copy the built frontend and server dist
-COPY --from=builder /app/apps/b2b-admin/dist /app/apps/b2b-admin/dist
-COPY --from=builder /app/apps/b2b-admin/server/dist /app/apps/b2b-admin/server/dist
-
-# Copy root package.json and lockfile for workspace install
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
-COPY --from=builder /app/apps/b2b-admin/server/package.json /app/apps/b2b-admin/server/package.json
-
-# Install only production dependencies for the server workspace
-RUN npm install --omit=dev --workspace=@tripalfa/server
-
-WORKDIR /app/apps/b2b-admin/server
-
-# Use the production environment and listen on port 3000 to match compose mapping
+# Expose port
 EXPOSE 3000
 
-ENV NODE_ENV=production
-ENV ADMIN_DIST_PATH=/app/apps/b2b-admin/dist
-ENV PORT=3000
-
-CMD ["node", "dist/index.js"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

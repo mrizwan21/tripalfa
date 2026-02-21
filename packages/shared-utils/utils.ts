@@ -1,5 +1,7 @@
-// Super Admin Panel - Utility Functions
+// Admin Panel - Utility Functions
+// @ts-ignore
 import { clsx, type ClassValue } from 'clsx';
+// @ts-ignore
 import { format, formatDistanceToNow, parseISO } from 'date-fns';
 import { DATE_FORMAT, DATE_TIME_FORMAT, DEFAULT_CURRENCY } from './constants';
 

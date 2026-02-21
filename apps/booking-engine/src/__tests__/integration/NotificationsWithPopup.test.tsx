@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import Notifications from '../../../pages/Notifications';
+import Notifications from '../../pages/Notifications';
 import * as api from '../../../lib/api';
 
 vi.mock('../../../lib/api');
@@ -116,8 +116,10 @@ describe('Notifications with Popup Integration', () => {
       await waitFor(() => {
         const closeButton = screen.getByLabelText('Close notification details');
         expect(closeButton).toBeInTheDocument();
-        await user.click(closeButton);
       });
+
+      const closeButton = screen.getByLabelText('Close notification details');
+      await user.click(closeButton);
 
       // After closing, popup should be hidden
       await waitFor(() => {

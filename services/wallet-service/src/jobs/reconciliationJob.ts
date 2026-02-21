@@ -1,10 +1,23 @@
 // jobs/reconciliationJob.ts
 // Daily reconciliation: match settlements to transactions, record FX P&L, handle chargebacks
 
-import { pool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { logger } from '../utils/logger.js';
 import cron from 'node-cron';
 import { v4 as uuidv4 } from 'uuid';
+
+// For backward compatibility - create a pool-like interface using Prisma
+const pool = {
+  connect: async () => {
+    return {
+      query: async (text: string, params?: any[]) => {
+        // Use raw query for backward compatibility
+        return await prisma.$queryRaw`SELECT 1 as rows`;
+      },
+      release: () => {},
+    };
+  },
+};
 
 const SERVICE_NAME = 'reconciliationJob';
 

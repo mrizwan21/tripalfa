@@ -3,12 +3,13 @@
 // Customer purchase flow: customer -> agency -> supplier with commission deduction
 
 import { Router, Request, Response } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import Joi from 'joi';
 import walletService from '../services/walletService.js';
 import { authMiddleware } from '../middlewares/auth.js';
 import { logger } from '../utils/logger.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 const SERVICE_NAME = 'customerPurchaseRoute';
 
 // Type definitions

@@ -1,63 +1,67 @@
-# Multi-stage build for wallet-service
-FROM node:18-alpine AS builder
+# Dockerfile for wallet-service
+# This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
+# Parameters: SERVICE_NAME=wallet-service, WORKSPACE_NAME=wallet-service, PORT=3008, HEALTH_PATH=health
+
+FROM node:20-alpine AS builder
+
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+# Copy lockfile and workspace config first for layer caching
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.json tsconfig.base.json ./
 
-# Copy package files
-COPY package.json package-lock.json tsconfig.json ./
+# Copy all project files
+COPY services ./services/
+COPY packages ./packages/
+COPY database ./database/
 
-# Install dependencies
-RUN npm ci
+# Install dependencies using pnpm with cache mount
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts --fetch-timeout=300000
 
-# Copy source code
-COPY src ./src
-COPY migrations ./migrations
+# Generate Prisma client
+RUN pnpm --filter @tripalfa/shared-database generate
 
-# Build TypeScript
-RUN npm run build
+# Clean up build info files from the host
+RUN find . -name "*.tsbuildinfo" -delete
 
-# ============================================================================
-# Production image
-FROM node:18-alpine
+# Build the service
+RUN pnpm --filter wallet-service build
+
+# Production stage
+FROM node:20-alpine
+
+# Install dumb-init, curl for health checks, and enable corepack/pnpm for production stage
+RUN apk add --no-cache dumb-init curl \
+    && corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
+# Copy essential files for pnpm production install
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY services/wallet-service/package.json ./services/wallet-service/
+COPY packages ./packages/
+COPY database ./database/
+COPY scripts ./scripts/
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+# Install production dependencies only with cache mount
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod --ignore-scripts --fetch-timeout=300000
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Copy built dist from builder
+COPY --from=builder /app/services/wallet-service/dist ./services/wallet-service/dist
 
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+WORKDIR /app/services/wallet-service
 
-# Copy built application from builder
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/migrations ./migrations
+EXPOSE 3008
 
-# Change ownership
-RUN chown -R nodejs:nodejs /app
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3008/health || exit 1
 
-# Switch to non-root user
-USER nodejs
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3007/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
-
-# Use dumb-init to handle signals properly
 ENTRYPOINT ["dumb-init", "--"]
-
-# Start application
-CMD ["node", "dist/app.js"]
-
-# Metadata
-LABEL maintainer="Travel Kingdom Team"
-LABEL description="Multi-currency wallet service with FX management"
-LABEL version="1.0.0"
+CMD ["node", "--enable-source-maps", "dist/app.js"]

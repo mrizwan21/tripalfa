@@ -18,7 +18,7 @@ import {
   ChevronLeft, AlertCircle, Check, Luggage, Plane
 } from 'lucide-react';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { 
   getSeatMaps, 
   getSeatMapsForBooking,

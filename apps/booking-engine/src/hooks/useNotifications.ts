@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface Notification {
   id: string;
@@ -232,7 +232,7 @@ export const usePushNotifications = () => {
       // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.REACT_APP_VAPID_PUBLIC_KEY,
+        applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY,
       });
 
       // Send subscription to server
@@ -286,7 +286,7 @@ export const useRealtimeNotifications = () => {
     if (!token) return;
 
     const ws = new WebSocket(
-      `${process.env.REACT_APP_WS_URL || 'ws://localhost:3001'}/notifications?token=${token}`
+      `${import.meta.env.VITE_WS_URL || 'ws://localhost:3001'}/notifications?token=${token}`
     );
 
     ws.onopen = () => setIsConnected(true);

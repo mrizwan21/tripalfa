@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Search, ChevronDown, Smile, Frown, MessageSquare, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 
 interface GuestReviewsModalProps {
     isOpen: boolean;

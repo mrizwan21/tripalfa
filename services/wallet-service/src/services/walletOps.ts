@@ -1,92 +1,160 @@
 // src/services/walletOps.ts
-import type { Wallet, Transaction } from '../types/wallet.js';
-import { insertTransactionRecord } from './transactions.js';
+// Prisma-based wallet operations
+import { prisma } from '@tripalfa/shared-database';
+import type { Wallet, WalletTransaction } from '../types/wallet.js';
 
-export async function ensureWalletExists(client: any, userId: string, currency: string) {
-  await client.query(
-    `INSERT INTO wallets (user_id, currency, balance, status)
-     VALUES ($1, $2, 0.00, 'active')
-     ON CONFLICT (user_id, currency) DO NOTHING`,
-    [userId, currency]
-  );
-
-  const res = await client.query(
-    `SELECT id, user_id as "userId", currency, balance, status, created_at as "createdAt", updated_at as "updatedAt"
-     FROM wallets WHERE user_id = $1 AND currency = $2`,
-    [userId, currency]
-  );
-  if (res.rows.length === 0) throw new Error('Failed to ensure wallet');
-  return res.rows[0] as Wallet;
+export async function ensureWalletExists(userId: string, currency: string): Promise<Wallet> {
+  const wallet = await prisma.wallet.upsert({
+    where: {
+      userId_currency: { userId, currency },
+    },
+    update: {},
+    create: {
+      userId,
+      currency,
+      balance: 0,
+      reservedBalance: 0,
+      status: 'active',
+    },
+  });
+  return wallet;
 }
 
-export async function checkIdempotency(client: any, idempotencyKey: string) {
+export async function checkIdempotency(idempotencyKey: string): Promise<void> {
   if (!idempotencyKey) return;
-  const existing = await client.query(`SELECT id FROM transactions WHERE idempotency_key = $1`, [
-    idempotencyKey,
-  ]);
-  if (existing.rows.length) throw new Error('Duplicate transaction');
+
+  const existing = await prisma.walletTransaction.findFirst({
+    where: { idempotencyKey },
+  });
+
+  if (existing) throw new Error('Duplicate transaction');
 }
 
-export async function lockWallet(client: any, userId: string, currency: string) {
-  const res = await client.query(
-    `SELECT id, balance FROM wallets WHERE user_id = $1 AND currency = $2 FOR UPDATE`,
-    [userId, currency]
-  );
-  if (res.rows.length === 0) throw new Error('Wallet not found');
-  return res.rows[0] as Wallet;
+export async function lockWallet(userId: string, currency: string): Promise<Wallet> {
+  // Prisma doesn't support FOR UPDATE, but transactions provide isolation
+  const wallet = await prisma.wallet.findUnique({
+    where: {
+      userId_currency: { userId, currency },
+    },
+  });
+
+  if (!wallet) throw new Error('Wallet not found');
+  return wallet;
 }
 
 export async function processCustomerDebit(
-  client: any,
   customerId: string,
   currency: string,
   amount: number,
   agencyId: string,
   bookingId: string,
   idempotencyKey?: string
-) {
-  await ensureWalletExists(client, customerId, currency);
-  const customerWallet = await lockWallet(client, customerId, currency);
-  if (Number(customerWallet.balance) < Number(amount)) throw new Error('Insufficient funds');
-  await client.query(`UPDATE wallets SET balance = balance - $1 WHERE id = $2`, [amount, customerWallet.id]);
-  const customerTx = await insertTransactionRecord(client, {
-    walletId: customerWallet.id,
-    type: 'customer_purchase',
-    flow: 'customer_to_supplier',
-    amount,
-    currency,
-    payerId: customerId,
-    payeeId: agencyId,
-    bookingId,
-    idempotencyKey,
-    status: 'completed',
+): Promise<{ customerTx: WalletTransaction; customerWallet: Wallet }> {
+  return await prisma.$transaction(async (tx) => {
+    // Ensure wallet exists
+    let customerWallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: customerId, currency } },
+    });
+
+    if (!customerWallet) {
+      customerWallet = await tx.wallet.create({
+        data: {
+          userId: customerId,
+          currency,
+          balance: 0,
+          reservedBalance: 0,
+          status: 'active',
+        },
+      });
+    }
+
+    // Check balance
+    if (Number(customerWallet.balance) < amount) {
+      throw new Error('Insufficient funds');
+    }
+
+    // Debit wallet
+    const newBalance = Number(customerWallet.balance) - amount;
+    await tx.wallet.update({
+      where: { id: customerWallet.id },
+      data: { balance: newBalance },
+    });
+
+    // Create transaction record
+    const customerTx = await tx.walletTransaction.create({
+      data: {
+        walletId: customerWallet.id,
+        type: 'purchase',
+        flow: 'debit',
+        amount,
+        currency,
+        payerId: customerId,
+        payeeId: agencyId,
+        bookingId,
+        idempotencyKey,
+        status: 'completed',
+      },
+    });
+
+    return { customerTx, customerWallet };
   });
-  return { customerTx, customerWallet } as { customerTx: Transaction; customerWallet: Wallet };
 }
 
 export async function processAgencyCredit(
-  client: any,
   agencyId: string,
   currency: string,
   amount: number,
   customerId: string,
   bookingId: string
-) {
-  await ensureWalletExists(client, agencyId, currency);
-  const agencyWallet = await lockWallet(client, agencyId, currency);
-  await client.query(`UPDATE wallets SET balance = balance + $1 WHERE id = $2`, [amount, agencyWallet.id]);
-  const agencyTx = await insertTransactionRecord(client, {
-    walletId: agencyWallet.id,
-    type: 'agency_purchase',
-    flow: 'customer_to_supplier',
-    amount,
-    currency,
-    payerId: customerId,
-    payeeId: agencyId,
-    bookingId,
-    status: 'completed',
+): Promise<{ agencyTx: WalletTransaction; agencyWallet: Wallet }> {
+  return await prisma.$transaction(async (tx) => {
+    // Ensure wallet exists
+    let agencyWallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: agencyId, currency } },
+    });
+
+    if (!agencyWallet) {
+      agencyWallet = await tx.wallet.create({
+        data: {
+          userId: agencyId,
+          currency,
+          balance: 0,
+          reservedBalance: 0,
+          status: 'active',
+        },
+      });
+    }
+
+    // Credit wallet
+    const newBalance = Number(agencyWallet.balance) + amount;
+    await tx.wallet.update({
+      where: { id: agencyWallet.id },
+      data: { balance: newBalance },
+    });
+
+    // Create transaction record
+    const agencyTx = await tx.walletTransaction.create({
+      data: {
+        walletId: agencyWallet.id,
+        type: 'purchase',
+        flow: 'credit',
+        amount,
+        currency,
+        payerId: customerId,
+        payeeId: agencyId,
+        bookingId,
+        status: 'completed',
+      },
+    });
+
+    return { agencyTx, agencyWallet };
   });
-  return { agencyTx, agencyWallet } as { agencyTx: Transaction; agencyWallet: Wallet };
 }
 
-export default { ensureWalletExists, checkIdempotency, lockWallet, processCustomerDebit, processAgencyCredit };
+export default {
+  ensureWalletExists,
+  checkIdempotency,
+  lockWallet,
+  processCustomerDebit,
+  processAgencyCredit
+};

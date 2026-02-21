@@ -1,0 +1,19 @@
+{
+    "api": {
+        "upstream_url": "http://host.docker.internal:5000",
+        "request_path": "/api",
+        "strip_uri": false,
+        "preserve_host": true
+    },
+    "plugins": [
+        {
+            "config": {
+                "key_names": [
+                    "apikey"
+                ],
+                "hide_credentials": true
+            },
+            "name": "key-auth"
+        }
+    ]
+}

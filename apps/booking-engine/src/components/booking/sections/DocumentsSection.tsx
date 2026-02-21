@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { FileText, Download, Printer, Mail, Ticket, AlertCircle, FileCheck, CreditCard, CheckCircle2 } from 'lucide-react';
 import { Booking } from '../../../lib/srs-types';
-import { Card, CardHeader, CardTitle, CardContent } from '../../ui/Card';
-import { Button } from '../../ui/Button';
+import { Card, CardHeader, CardTitle, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
 import { IssueTicketModal } from '../../modals/IssueTicketModal';
 import { SpecialRequestPopup } from '../../SpecialRequestPopup';
 

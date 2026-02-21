@@ -1,10 +1,64 @@
-FROM node:18-alpine
-RUN apk add --no-cache wget
+# Dockerfile for payment-service - NEON Database Support
+# This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
+# Parameters: SERVICE_NAME=payment-service, WORKSPACE_NAME=@tripalfa/payment-service, PORT=3007, HEALTH_PATH=health
+
+FROM node:20-alpine AS builder
+
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app
-COPY services/payment-service/package*.json ./
-RUN npm install
-COPY database/prisma ./database/prisma
-RUN npx prisma generate --schema=./database/prisma/schema.prisma
-COPY services/payment-service .
-EXPOSE 3003
-CMD ["npm", "start"]
+
+# Copy lockfile and workspace config first for layer caching
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.json tsconfig.base.json ./
+
+# Copy all project files
+COPY services ./services/
+COPY packages ./packages/
+COPY database ./database/
+
+# Install dependencies using pnpm with cache mount
+# Using --network-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts --fetch-timeout=300000
+
+# Generate Prisma client
+RUN pnpm --filter @tripalfa/shared-database generate
+
+# Build the service with cache mount for TypeScript incremental build info
+RUN find . -name "*.tsbuildinfo" -delete
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/payment-service... build
+
+# Production stage
+FROM node:20-alpine
+
+# Install dumb-init and curl for health checks, enable corepack and pnpm
+RUN apk add --no-cache dumb-init curl && corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy essential files for pnpm production install
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY services/payment-service/package.json ./services/payment-service/
+COPY packages ./packages/
+COPY database ./database/
+COPY scripts ./scripts/
+
+# Install production dependencies only with cache mount
+# Using --network-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --prod --ignore-scripts --fetch-timeout=300000
+
+# Copy built dist from builder
+COPY --from=builder /app/services/payment-service/dist ./services/payment-service/dist
+
+WORKDIR /app/services/payment-service
+
+EXPOSE 3007
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3007/health || exit 1
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "--enable-source-maps", "dist/index.js"]

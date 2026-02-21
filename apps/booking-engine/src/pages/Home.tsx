@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Calendar, Users, ArrowRight, ShoppingCart, Sparkles, Plane, Hotel, Car } from 'lucide-react';
-import { formatCurrency } from '../lib/utils';
-import { cn } from '../lib/utils';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
+import { cn, formatCurrency } from '@tripalfa/shared-utils/utils';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { Input } from '../components/ui/input';
 import { api, fetchAirports } from '../lib/api';
 
 interface CartSummaryResponse {

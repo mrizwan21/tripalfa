@@ -27,7 +27,8 @@ This guide provides comprehensive instructions for deploying and optimizing the 
 
 ```env
 # Database URL for NEOn MCP Server
-DATABASE_URL="postgresql://neondb_owner:REDACTED@ep-ancient-base-afwb58uq-pooler.c-2.us-west-2.aws.neon.tech/neondb?sslmode=require"
+# Replace <DB_PASSWORD> and <NEON_HOST> with your actual credentials
+DATABASE_URL="postgresql://neondb_owner:<DB_PASSWORD>@<NEON_HOST>/neondb?sslmode=require"
 
 # Connection Pooling Settings
 DB_POOL_MIN=2
@@ -312,6 +313,7 @@ scrape_configs:
 ### Database Security
 
 1. **Connection Encryption**
+
    ```sql
    -- Enable SSL connections
    ALTER SYSTEM SET ssl = on;
@@ -320,6 +322,7 @@ scrape_configs:
    ```
 
 2. **User Permissions**
+
    ```sql
    -- Create limited user for application
    CREATE USER tripalfa_app WITH PASSWORD 'secure_password';
@@ -329,6 +332,7 @@ scrape_configs:
    ```
 
 3. **Regular Security Audits**
+
    ```sql
    -- Check for unused accounts
    SELECT
@@ -345,6 +349,7 @@ scrape_configs:
 ### Application Security
 
 1. **SQL Injection Prevention**
+
    ```javascript
    // Use parameterized queries
    const bookings = await globalPrisma.booking.findMany({
@@ -356,6 +361,7 @@ scrape_configs:
    ```
 
 2. **API Rate Limiting**
+
    ```javascript
    // Implement rate limiting
    const rateLimit = require('express-rate-limit');
@@ -438,6 +444,7 @@ SELECT * FROM search_history WHERE user_id = 'user_123' ORDER BY created_at DESC
 
 **Symptoms**: High response times, database timeouts
 **Solutions**:
+
 - Check query execution plans
 - Add missing indexes
 - Optimize query structure
@@ -447,6 +454,7 @@ SELECT * FROM search_history WHERE user_id = 'user_123' ORDER BY created_at DESC
 
 **Symptoms**: "Too many connections" errors
 **Solutions**:
+
 - Increase pool size
 - Optimize connection usage
 - Implement connection reuse
@@ -456,6 +464,7 @@ SELECT * FROM search_history WHERE user_id = 'user_123' ORDER BY created_at DESC
 
 **Symptoms**: System slowdowns, OOM errors
 **Solutions**:
+
 - Adjust shared_buffers
 - Optimize work_mem
 - Add more RAM
@@ -503,7 +512,7 @@ ps aux | grep postgres
 4. **Capacity Planning**: Plan for future growth
 5. **Security Updates**: Apply security patches promptly
 
-## Advanced Performance Features
+## Advanced Database Optimization
 
 ### Materialized Views Implementation
 

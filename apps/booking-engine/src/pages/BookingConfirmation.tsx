@@ -1,15 +1,42 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Check, Mail, Share2, Printer, ArrowRight, Bell,
   Instagram, Facebook, Twitter, Linkedin, Plane,
   Search, CreditCard, Hotel, ChevronRight, Globe, Info,
   Calendar, Sparkles, MapPin, Download, CheckCircle2,
-  Shield
+  Shield, Star, Clock, Wallet, FileText
 } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { fetchDestinationsDB, getBookingById, api, searchFlights } from '../lib/api';
+import { usePopularDestinations } from '../hooks/useHotelStaticData';
+
+// Types for cross-selling
+interface HotelOffer {
+  id: string;
+  name: string;
+  location: string;
+  price: number;
+  currency: string;
+  rating: number;
+  image: string;
+  description: string;
+}
+
+interface FlightOffer {
+  id: string;
+  origin: string;
+  originCity: string;
+  destination: string;
+  destinationCity: string;
+  price: number;
+  currency: string;
+  airline: string;
+  departureDate: string;
+  duration: string;
+}
 
 export default function BookingConfirmation() {
   const { state } = useLocation();
@@ -27,6 +54,182 @@ export default function BookingConfirmation() {
   const isHotel = bookingState?.summary?.type === 'hotel';
   const hotelSummary = bookingState?.summary?.hotel;
 
+  // Dynamic booking data from API
+  const [bookingData, setBookingData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+
+  // Cross-selling data
+  const [crossSellHotels, setCrossSellHotels] = useState<HotelOffer[]>([]);
+  const [crossSellFlights, setCrossSellFlights] = useState<FlightOffer[]>([]);
+  const [userLocation, setUserLocation] = useState<{ city: string; country: string; countryCode: string } | null>(null);
+
+  // Fetch user IP location
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        setUserLocation({
+          city: data.city || 'Dubai',
+          country: data.country_name || 'UAE',
+          countryCode: data.country_code || 'AE'
+        });
+      } catch (error) {
+        console.error('Failed to fetch user location:', error);
+        setUserLocation({ city: 'Dubai', country: 'UAE', countryCode: 'AE' });
+      }
+    };
+    fetchUserLocation();
+  }, []);
+
+  // Fetch booking data from API
+  useEffect(() => {
+    const fetchBookingData = async () => {
+      try {
+        setLoading(true);
+        const data = await getBookingById(bookingId);
+        setBookingData(data);
+        
+        // Fetch available documents
+        try {
+          const docs = await api.get(`/bookings/${bookingId}/documents`);
+          setDocuments(docs?.data?.documents || []);
+        } catch (docError) {
+          console.error('Failed to fetch documents:', docError);
+        }
+      } catch (error) {
+        console.error('Failed to fetch booking:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBookingData();
+  }, [bookingId]);
+
+  // Fetch popular destinations for Elite Stays section
+  const { data: recommendedDestinations = [] } = usePopularDestinations(4);
+
+  // Get destination city for cross-selling
+  const getDestinationCity = () => {
+    if (isHotel && hotelSummary) {
+      return hotelSummary.location?.split(',')[0] || hotelSummary.city || 'Dubai';
+    }
+    if (flight?.segments?.length > 0) {
+      const lastSegment = flight.segments[flight.segments.length - 1];
+      return lastSegment.to || lastSegment.arrivalCity || 'New York';
+    }
+    return 'Dubai';
+  };
+
+  const destinationCity = getDestinationCity();
+
+  // Fetch cross-selling data based on booking type
+  useEffect(() => {
+    const fetchCrossSellData = async () => {
+      try {
+        if (!isHotel && flight) {
+          // Flight booking: fetch hotels at destination
+          const hotels = await fetchDestinationsDB({ type: 'hotel', search: destinationCity });
+          const hotelOffers: HotelOffer[] = hotels.slice(0, 3).map((dest: any, i: number) => ({
+            id: `hotel-${dest.code || i}`,
+            name: `${dest.name || destinationCity} Premium Hotel`,
+            location: dest.name || destinationCity,
+            price: dest.avgPrice || undefined,
+            currency: 'USD',
+            rating: dest.averageRating || undefined,
+            image: dest.imageUrl || [
+              'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80',
+              'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80',
+              'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80'
+            ][i % 3],
+            description: `Special rate at ${dest.name || destinationCity}`
+          }));
+          setCrossSellHotels(hotelOffers);
+        } else if (isHotel && hotelSummary) {
+          // Hotel booking: search for flights from user location to destination using Duffel
+          const originCode = userLocation?.countryCode === 'AE' ? 'DXB' : 
+                            userLocation?.countryCode === 'GB' ? 'LHR' : 'DXB';
+          
+          // Extract destination code from hotel summary or use default
+          const destinationCode = hotelSummary?.code || hotelSummary?.destination || 'DXB';
+          
+          // Perform Duffel flight search
+          try {
+            const searchParams = {
+              origin: originCode,
+              destination: destinationCode,
+              departureDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              passengers: 1,
+              cabinClass: 'economy'
+            };
+            
+            const flightResults = await searchFlights(searchParams);
+            
+            // Map Duffel results to FlightOffer interface
+            const flightOffers: FlightOffer[] = (Array.isArray(flightResults) ? flightResults : [])
+              .slice(0, 3)
+              .map((flight: any, i: number) => ({
+                id: flight.id || `flight-${i}`,
+                origin: flight.slices?.[0]?.origin_airport?.iata_code || originCode,
+                originCity: userLocation?.city || 'Dubai',
+                destination: flight.slices?.[0]?.destination_airport?.iata_code || destinationCode,
+                destinationCity: hotelSummary?.city || hotelSummary?.name || 'Dubai',
+                price: flight.total_amount || undefined,
+                currency: flight.total_currency || 'USD',
+                airline: flight.slices?.[0]?.segments?.[0]?.operating_carrier?.iata_code || 'Airline',
+                departureDate: flight.slices?.[0]?.departure_date_time?.split('T')[0] || searchParams.departureDate,
+                duration: flight.slices?.[0]?.duration || undefined
+              }));
+            
+            setCrossSellFlights(flightOffers);
+          } catch (error) {
+            console.error('Failed to fetch Duffel flights for cross-sell:', error);
+            setCrossSellFlights([]); // Empty array on failure, section will be omitted
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch cross-sell data:', error);
+      }
+    };
+
+    fetchCrossSellData();
+  }, [isHotel, flight, hotelSummary, destinationCity, userLocation]);
+
+  // Remove duplicate useEffect - keep only one
+
+  // Handle document download
+  const handleDownloadDocument = async (docType: string) => {
+    try {
+      const response = await api.get(`/bookings/${bookingId}/documents/${docType}/download?bookingType=${isHotel ? 'hotel' : 'flight'}`);
+      if (response?.data?.content) {
+        // Open document in new window
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(response.data.content);
+          newWindow.document.close();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to download document:', error);
+    }
+  };
+
+  // Handle view invoice
+  const handleViewInvoice = (invoice: any) => {
+    setSelectedInvoice(invoice);
+    setShowInvoiceModal(true);
+    handleDownloadDocument(invoice.type);
+  };
+
+  // Handle pay for hold booking
+  const handlePayNow = () => {
+    setShowPaymentModal(true);
+  };
+
   const itinerary = flight ? flight.segments.map((seg: any) => ({
     route: `${seg.from} - ${seg.to}`,
     airport: `${seg.from} International - ${seg.to} International`,
@@ -35,14 +238,22 @@ export default function BookingConfirmation() {
     date: seg.date,
     time: seg.time,
     duration: seg.duration,
-    terminal: '4' // Mock terminal
+    terminal: seg.departureTerminal || seg.terminal || null
   })) : [];
 
-  const hotelDeals = [
-    { name: 'Burj Al Arab Jumeirah', price: '$1,290', image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80', desc: 'Experience world-class luxury at the sail-shaped icon.' },
-    { name: 'Atlantis The Royal', price: '$850', image: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80', desc: 'A new landmark of luxury and entertainment.' },
-    { name: 'Palazzo Versace Dubai', price: '$450', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80', desc: 'Fashion-inspired luxury on the Jaddaf Waterfront.' }
-  ];
+  // Dynamic hotel deals from recommended destinations
+  const hotelDeals = recommendedDestinations.length > 0 
+    ? recommendedDestinations.map((dest, i) => ({
+        name: `Premium Hotels in ${dest.city || dest.name}`,
+        price: dest.avgPrice ? `$${dest.avgPrice.toLocaleString()}` : 'Price on request',
+        image: dest.imageUrl || [
+          'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80'
+        ][i % 3],
+        desc: `${dest.hotelCount || '500+'} hotels available in ${dest.city || dest.name}, ${dest.country || ''}`
+      }))
+    : [];
 
   return (
     <TripLogerLayout>
@@ -81,14 +292,35 @@ export default function BookingConfirmation() {
             </div>
 
             <div className="flex items-center justify-center gap-6 pt-4">
-              {!isHold && (
-                <button className="h-14 px-10 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group">
+              {isHold ? (
+                <button 
+                  onClick={handlePayNow}
+                  className="h-14 px-10 rounded-2xl bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group animate-pulse"
+                >
+                  <Wallet size={18} className="group-hover:translate-y-0.5 transition-transform" /> Pay Now to Confirm
+                </button>
+              ) : (
+                <button 
+                  onClick={() => handleDownloadDocument('ticket')}
+                  className="h-14 px-10 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group"
+                >
                   <Download size={18} className="group-hover:translate-y-0.5 transition-transform" /> E-Ticket
                 </button>
               )}
-              <button className="h-14 px-10 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
+              <button 
+                onClick={() => handleDownloadDocument('receipt')}
+                className="h-14 px-10 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3"
+              >
                 <Printer size={18} /> {isHold ? 'Booking Summary' : 'Receipt'}
               </button>
+              {!isHold && (
+                <button 
+                  onClick={() => handleDownloadDocument('invoice')}
+                  className="h-14 px-10 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3"
+                >
+                  <FileText size={18} /> View Invoice
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -174,8 +406,12 @@ export default function BookingConfirmation() {
                               <p className="text-2xl font-black text-gray-900 leading-none mb-2">{seg.airline}</p>
                               <div className="flex items-center gap-3">
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{seg.flight}</span>
-                                <span className="w-1 h-1 rounded-full bg-gray-300" />
-                                <span className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">Premium Terminal {seg.terminal}</span>
+                                {seg.terminal && (
+                                  <>
+                                    <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                    <span className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">Premium Terminal {seg.terminal}</span>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -208,6 +444,96 @@ export default function BookingConfirmation() {
                   )}
                 </div>
               </div>
+
+              {/* Intelligent Cross-Selling Banner */}
+              {(!isHotel && crossSellHotels.length > 0) || (isHotel && crossSellFlights.length > 0) ? (
+                <div className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] rounded-[3.5rem] p-12 shadow-2xl space-y-8 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
+                        {isHotel ? <Plane size={24} /> : <Hotel size={24} />}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black uppercase tracking-widest">
+                          {isHotel 
+                            ? `Flights from ${userLocation?.city || 'your location'} to ${destinationCity}`
+                            : `Hotels in ${destinationCity}`
+                          }
+                        </h3>
+                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Special offers for you</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Cross-selling hotels for flight bookings */}
+                      {!isHotel && crossSellHotels.map((hotel, i) => (
+                        <div key={hotel.id} className="bg-white/10 backdrop-blur-sm rounded-[2rem] p-6 hover:bg-white/20 transition-all cursor-pointer group">
+                          <div className="h-32 rounded-2xl overflow-hidden mb-4">
+                            <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          </div>
+                          <h4 className="text-sm font-black mb-1 truncate">{hotel.name}</h4>
+                          <div className="flex items-center gap-2 mb-3">
+                            <Star size={12} className="text-[#FFD700] fill-current" />
+                            <span className="text-[10px] font-bold">{hotel.rating.toFixed(1)}</span>
+                            <span className="text-[10px] text-white/60">| {hotel.location}</span>
+                          </div>
+                          <div className="flex items-end justify-between">
+                            <div>
+                              <p className="text-[10px] text-white/60">From</p>
+                              <p className="text-xl font-black text-[#FFD700]">${hotel.price}</p>
+                            </div>
+                            <button className="h-10 px-4 rounded-xl bg-white text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Cross-selling flights for hotel bookings */}
+                      {isHotel && crossSellFlights.map((flightOffer, i) => (
+                        <div key={flightOffer.id} className="bg-white/10 backdrop-blur-sm rounded-[2rem] p-6 hover:bg-white/20 transition-all cursor-pointer group">
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-lg font-black">
+                              {flightOffer.airline.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-black">{flightOffer.airline}</h4>
+                              <p className="text-[10px] text-white/60">{flightOffer.duration}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="text-center">
+                              <p className="text-xl font-black">{flightOffer.origin}</p>
+                              <p className="text-[10px] text-white/60">{flightOffer.originCity}</p>
+                            </div>
+                            <div className="flex-1 flex flex-col items-center px-2">
+                              <div className="w-full h-0.5 bg-white/20 relative">
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white" />
+                              </div>
+                              <p className="text-[8px] text-white/40 mt-1">{flightOffer.duration}</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xl font-black">{flightOffer.destination}</p>
+                              <p className="text-[10px] text-white/60">{flightOffer.destinationCity}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-end justify-between">
+                            <div>
+                              <p className="text-[10px] text-white/60">{flightOffer.departureDate}</p>
+                              <p className="text-xl font-black text-[#FFD700]">${flightOffer.price}</p>
+                            </div>
+                            <button className="h-10 px-4 rounded-xl bg-white text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">
+                              Book
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
             </div>
 
             {/* Right: Recommendations Sidebar */}
@@ -252,6 +578,64 @@ export default function BookingConfirmation() {
 
           </div>
         </div>
+
+        {/* Hold Payment Modal */}
+        {showPaymentModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-[#111827]/80 backdrop-blur-md" onClick={() => setShowPaymentModal(false)} />
+            <div className="relative bg-white w-full max-w-md rounded-[3rem] shadow-2xl p-10 animate-in zoom-in-95 duration-300">
+              <button 
+                onClick={() => setShowPaymentModal(false)}
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 transition-colors"
+              >
+                ×
+              </button>
+              
+              <div className="text-center space-y-6">
+                <div className="w-20 h-20 rounded-[2rem] bg-amber-50 flex items-center justify-center mx-auto">
+                  <Clock size={40} className="text-amber-500" />
+                </div>
+                
+                <div>
+                  <h2 className="text-2xl font-black text-gray-900">Complete Your Payment</h2>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-2">Booking #{bookingId}</p>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">Total Amount</span>
+                    <span className="text-2xl font-black text-gray-900">{formatCurrency(totalPaid)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-gray-400 uppercase">Expires</span>
+                    <span className="text-sm font-black text-amber-500">24 hours</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      navigate('/booking-checkout', { state: { bookingId, isHoldPayment: true } });
+                    }}
+                    className="w-full h-14 rounded-2xl bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#7C3AED] transition-colors flex items-center justify-center gap-3"
+                  >
+                    <CreditCard size={18} /> Pay with Card
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowPaymentModal(false);
+                      navigate('/booking-checkout', { state: { bookingId, isHoldPayment: true } });
+                    }}
+                    className="w-full h-14 rounded-2xl bg-gray-900 text-white font-black text-[10px] uppercase tracking-widest hover:bg-gray-800 transition-colors flex items-center justify-center gap-3"
+                  >
+                    <Wallet size={18} /> Pay with Wallet
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </TripLogerLayout>
   );

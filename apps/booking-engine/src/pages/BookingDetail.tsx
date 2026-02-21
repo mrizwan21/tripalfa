@@ -9,7 +9,7 @@ import {
   Map, Luggage, Utensils, Heart, Shield, Sparkles,
   ChevronDown, ChevronRight, Info
 } from 'lucide-react';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { SeatSelectionPopup } from '../components/SeatSelectionPopup';
 import { AdditionalBaggagePopup } from '../components/AdditionalBaggagePopup';
 import { MealSelectionPopup } from '../components/MealSelectionPopup';

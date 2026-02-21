@@ -1,6 +1,6 @@
 import React from 'react';
 import { Download, FileText } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 interface ExportButtonProps {
     onExport: (format: 'csv' | 'pdf') => void;

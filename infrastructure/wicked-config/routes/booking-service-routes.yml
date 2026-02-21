@@ -1,0 +1,684 @@
+# Kong Configuration for Booking Service (Hold Orders API & LITEAPI)
+# Routes all hold orders, payment, and LITEAPI endpoints through Kong API Manager
+# Environment: Development & Staging
+
+version: "1.0"
+_format_version: "2.1"
+
+services:
+  # Booking Service - Internal API
+  - name: booking-service
+    url: http://localhost:3003
+    protocol: http
+    host: localhost
+    port: 3007
+    path: ""
+    retries: 2
+    connect_timeout: 5000
+    write_timeout: 10000
+    read_timeout: 10000
+    tags:
+      - booking
+      - internal
+      - hold-orders
+
+routes:
+  # ============ HOLD ORDERS - ELIGIBILITY ============
+  - name: hold-eligibility
+    service: booking-service
+    paths:
+      - /bookings/hold/eligibility
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - eligibility
+
+  # ============ HOLD ORDERS - MANAGEMENT ============
+  - name: hold-create-order
+    service: booking-service
+    paths:
+      - /bookings/hold/orders
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - create
+
+  - name: hold-retrieve-order
+    service: booking-service
+    paths:
+      - /bookings/hold/orders
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - retrieve
+
+  - name: hold-cancel-order
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/cancel
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - cancel
+
+  # ============ HOLD ORDERS - PRICE & SCHEDULE CHECKS ============
+  - name: hold-check-price
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/check-price
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - price-check
+
+  - name: hold-check-schedule
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/check-schedule
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - schedule-check
+
+  # ============ PAYMENTS ============
+  - name: hold-payment
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/payment
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - payments
+
+  - name: hold-payment-methods
+    service: booking-service
+    paths:
+      - /bookings/hold/payment-methods
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - payment-methods
+
+  - name: hold-payment-details
+    service: booking-service
+    paths:
+      - /bookings/hold/payments/*
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - payments
+
+  - name: hold-order-payments
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/payments
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - payments
+
+  - name: hold-refund-payment
+    service: booking-service
+    paths:
+      - /bookings/hold/payments/*/refund
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - refunds
+
+  # ============ SERVICES (ANCILLARY) ============
+  - name: hold-services-list
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/services
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - services
+
+  - name: hold-services-add
+    service: booking-service
+    paths:
+      - /bookings/hold/orders/*/services
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hold-orders
+      - services
+
+  # ============ PAYMENT FINALIZATION & WALLET ============
+  - name: payment-finalize
+    service: booking-service
+    paths:
+      - /bookings/payment/finalize
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - payments
+      - finalization
+
+  - name: wallet-topup
+    service: booking-service
+    paths:
+      - /bookings/wallet/topup
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - wallet
+      - topup
+
+  - name: wallet-balance
+    service: booking-service
+    paths:
+      - /bookings/wallet/balance/*
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - wallet
+      - balance
+
+  - name: wallet-transactions
+    service: booking-service
+    paths:
+      - /bookings/wallet/transactions/*
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - wallet
+      - transactions
+
+  # ============ LITEAPI HOTEL SEARCH & RATES ============
+  - name: liteapi-search-hotels
+    service: booking-service
+    paths:
+      - /api/search/hotels
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - hotels
+
+  - name: liteapi-hotel-rates
+    service: booking-service
+    paths:
+      - /api/hotels/rates
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - hotels
+
+  # ============ LITEAPI BOOKING ============
+  - name: liteapi-prebook
+    service: booking-service
+    paths:
+      - /api/rates/prebook
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - booking
+
+  - name: liteapi-book
+    service: booking-service
+    paths:
+      - /api/rates/book
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - booking
+
+  # ============ LITEAPI BOOKING MANAGEMENT ============
+  - name: liteapi-list-bookings
+    service: booking-service
+    paths:
+      - /api/bookings
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - bookings
+
+  - name: liteapi-get-booking
+    service: booking-service
+    paths:
+      - /api/bookings/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - bookings
+
+  - name: liteapi-cancel-booking
+    service: booking-service
+    paths:
+      - /api/bookings/
+    methods:
+      - PUT
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - bookings
+
+  # ============ LITEAPI LOYALTY ============
+  - name: liteapi-get-loyalty
+    service: booking-service
+    paths:
+      - /api/loyalties
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-post-loyalty
+    service: booking-service
+    paths:
+      - /api/loyalties
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-put-loyalty
+    service: booking-service
+    paths:
+      - /api/loyalties
+    methods:
+      - PUT
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-get-guests
+    service: booking-service
+    paths:
+      - /api/guests
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - guests
+
+  - name: liteapi-get-guest
+    service: booking-service
+    paths:
+      - /api/guests/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - guests
+
+  - name: liteapi-get-guest-bookings
+    service: booking-service
+    paths:
+      - /api/guests/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - guests
+
+  # ============ LITEAPI LOYALTY WITH /loyalty prefix ============
+  - name: liteapi-get-loyalty-settings
+    service: booking-service
+    paths:
+      - /api/loyalty/loyalties
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-post-loyalty-settings
+    service: booking-service
+    paths:
+      - /api/loyalty/loyalties
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-put-loyalty-settings
+    service: booking-service
+    paths:
+      - /api/loyalty/loyalties
+    methods:
+      - PUT
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-get-loyalty-guests
+    service: booking-service
+    paths:
+      - /api/loyalty/guests
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  - name: liteapi-get-loyalty-guest
+    service: booking-service
+    paths:
+      - /api/loyalty/guests/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - loyalty
+
+  # ============ LOYALTY USER ENDPOINTS ============
+  - name: loyalty-get-user
+    service: booking-service
+    paths:
+      - /api/loyalty/user/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - user
+
+  - name: loyalty-redeem-points
+    service: booking-service
+    paths:
+      - /api/loyalty/user/*/redeem-points
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - points
+
+  - name: loyalty-expiring-points
+    service: booking-service
+    paths:
+      - /api/loyalty/user/*/expiring-points
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - points
+
+  - name: loyalty-award-points
+    service: booking-service
+    paths:
+      - /api/loyalty/user/*/award-points
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - points
+
+  - name: loyalty-transactions
+    service: booking-service
+    paths:
+      - /api/loyalty/transactions/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - transactions
+
+  - name: loyalty-tiers
+    service: booking-service
+    paths:
+      - /api/loyalty/tiers
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - tiers
+
+  - name: loyalty-tier-detail
+    service: booking-service
+    paths:
+      - /api/loyalty/tiers/
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - loyalty
+      - tiers
+
+# Plugins Configuration
+plugins:
+  - name: rate-limiting
+    service: booking-service
+    config:
+      minute: 2000
+      hour: 20000
+      policy: local
+      fault_tolerant: true
+
+  - name: cors
+    service: booking-service
+    config:
+      origins:
+        - "*"
+      methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - OPTIONS
+      headers:
+        - Accept
+        - Accept-Language
+        - Content-Language
+        - Content-Type
+        - Authorization
+        - Duffel-Version
+      max_age: 3600
+      credentials: true
+
+  - name: request-transformer
+    service: booking-service
+    config:
+      add:
+        headers:
+          - Content-Type:application/json
+          - X-Service:booking-service
+          - X-Forwarded-Proto:http
+
+# Upstreams (for load balancing if needed)
+upstreams:
+  - name: booking-service-upstream
+    algorithm: round_robin
+    targets:
+      - target: localhost:3007
+        weight: 100
+
+# Consumer Configuration (if API key auth needed)
+consumers:
+  - username: api-gateway
+    tags:
+      - internal
+      - api-gateway
+
+consumers_credentials:
+  - consumer: api-gateway
+    type: key-auth
+    tags:
+      - internal

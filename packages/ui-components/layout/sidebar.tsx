@@ -1,6 +1,7 @@
 'use client';
 
-// Super Admin Panel - Sidebar Navigation
+// Admin Panel - Sidebar Navigation
+// @ts-ignore
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
@@ -73,7 +74,7 @@ interface SidebarProps {
   onClose: () => void;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose }: SidebarProps): React.ReactElement {
   const { pathname } = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
 
@@ -220,7 +221,7 @@ interface HeaderProps {
   onMenuClick: () => void;
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+export function Header({ onMenuClick }: HeaderProps): React.ReactElement {
   const { theme, setTheme } = useTheme();
 
   return (
@@ -233,7 +234,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Menu className="h-5 w-5" />
         </button>
         <h1 className="text-lg font-semibold text-secondary-900 dark:text-white lg:text-xl">
-          Super Admin Panel
+          Admin Panel
         </h1>
       </div>
 
@@ -263,7 +264,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           </div>
           <div className="hidden sm:block">
             <p className="text-sm font-medium text-secondary-900 dark:text-white">
-              Super Admin
+              Admin
             </p>
             <p className="text-xs text-secondary-500">admin@tripalfa.com</p>
           </div>

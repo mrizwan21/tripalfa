@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tag } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 import { Modal } from '../ui/Modal';
 
 interface DiscountModalProps {

@@ -6,6 +6,9 @@ import { SearchAutocomplete, Suggestion } from '../components/ui/SearchAutocompl
 import { GuestSelector } from '../components/ui/GuestSelector';
 import { DualMonthCalendar } from '../components/ui/DualMonthCalendar';
 import { format } from 'date-fns';
+import { usePopularDestinations } from '../hooks/useHotelStaticData';
+
+const PLACEHOLDER_HOTEL_IMAGE = '/images/placeholder-hotel.jpg';
 
 export default function HotelHome() {
     const navigate = useNavigate();
@@ -13,6 +16,9 @@ export default function HotelHome() {
     const [checkinDate, setCheckinDate] = useState<Date | null>(null);
     const [checkoutDate, setCheckoutDate] = useState<Date | null>(null);
     const [countryCode, setCountryCode] = useState<string | null>(null);
+
+    // Fetch popular destinations from DB
+    const popularDestinations = usePopularDestinations(8);
 
     const handleSearch = () => {
         const params = new URLSearchParams();
@@ -167,20 +173,22 @@ export default function HotelHome() {
                     </div>
                 </div>
 
-                {/* Carousel Cards */}
+                {/* Carousel Cards - Using dynamic popular destinations from PostgreSQL */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-                    {[
-                        { name: 'Melbourne', label: 'An amazing journey', img: 'https://images.unsplash.com/photo-1514395465013-2af9ff512306?auto=format&fit=crop&q=80' },
-                        { name: 'Paris', label: 'Eiffel Tower', img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80' },
-                        { name: 'London', label: 'London Eye', img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=80' },
-                        { name: 'Columbia', label: 'Amazing streets', img: 'https://images.unsplash.com/photo-1526129318478-62ed807ebdf9?auto=format&fit=crop&q=80' }
-                    ].map((dest, i) => (
-                        <div key={i} className="group rounded-xl overflow-hidden shadow-lg border border-gray-100">
+                    {popularDestinations.slice(0, 4).map((dest, i) => (
+                        <div key={i} className="group rounded-xl overflow-hidden shadow-lg border border-gray-100 cursor-pointer" onClick={() => {
+                            setLocation(dest.city);
+                            navigate(`/hotels/list?location=${encodeURIComponent(dest.city)}&countryCode=${dest.country_code}`);
+                        }}>
                             <div className="relative h-64 overflow-hidden">
-                                <img src={dest.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                <img 
+                                    src={dest.imageUrl || PLACEHOLDER_HOTEL_IMAGE} 
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                                    alt={dest.city}
+                                />
                                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pt-12 text-center">
-                                    <h3 className="text-white font-bold text-lg">{dest.name}</h3>
-                                    <p className="text-white/80 text-xs font-medium">{dest.label}</p>
+                                    <h3 className="text-white font-bold text-lg">{dest.city}</h3>
+                                    <p className="text-white/80 text-xs font-medium">{dest.country}</p>
                                 </div>
                             </div>
                             <div className="p-4 bg-white">

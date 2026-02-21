@@ -1,4 +1,4 @@
-import { Plane, Building2, Package, Car, Bell } from 'lucide-react';
+import { Plane, Building2, Package, Car, Bell, Gift } from 'lucide-react';
 
 export const APP_NAME = 'Travel Kingdom';
 
@@ -48,7 +48,8 @@ export const NAV_LINKS = [
   { label: 'Hotels', href: '/hotels', icon: Building2 },
   { label: 'Packages', href: '/packages', icon: Package }, // Placeholder
   { label: 'Transfers', href: '/transfers', icon: Car }, // Placeholder
-  { label: 'Notifications', href: '/notifications', icon: Bell },
+  { label: 'Loyalty', href: '/loyalty', icon: Gift },
+  { label: 'Alerts', href: '/alerts', icon: Bell },
 ];
 
 export const FLIGHT_CLASSES = [

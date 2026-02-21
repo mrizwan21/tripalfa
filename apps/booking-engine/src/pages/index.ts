@@ -25,3 +25,4 @@ export { default as NotFound } from './NotFound';
 export { default as Notifications } from './Notifications';
 export { default as HelpCenter } from './HelpCenter';
 export { default as Home } from './Home';
+export { default as AdminBookingCards } from './AdminBookingCards';

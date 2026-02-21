@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { CreditCard, Wallet, Building2 } from 'lucide-react';
-import { cn } from '../../lib/utils';
-import { Button } from '../ui/Button'; // Assuming Button component exists or using HTML button
+import { cn } from '@tripalfa/ui-components';
+import { Button } from '../ui/button'; // Assuming Button component exists or using HTML button
 import { Modal } from '../ui/Modal';
 
 interface ReceivePaymentModalProps {

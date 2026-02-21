@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 export const handlers = [
   // Authentication
   http.post('/api/auth/login', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { email, password, testMode } = body as { email: string; password: string; testMode?: boolean };
 
     // In test mode, accept any credentials
@@ -24,31 +24,31 @@ export const handlers = [
   }),
 
   // Flight search
-    http.get('/api/flights/search', ({ request }) => {
-      // Support pagination via ?page=1&pageSize=10
-      const url = new URL(request.url);
-      const page = parseInt(url.searchParams.get('page') || '1', 10);
-      const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
-      const total = 39;
-      const flights = Array.from({ length: total }, (_, i) => ({
-        id: `flight_${i + 1}`,
-        airline: `Test Airlines ${i + 1}`,
-        flight_number: `TA${100 + i}`,
-        departure: { airport: 'JFK', time: `2026-03-15T${(10 + i % 10).toString().padStart(2, '0')}:00:00Z` },
-        arrival: { airport: 'LHR', time: `2026-03-15T${(22 + i % 2).toString().padStart(2, '0')}:00:00Z` },
-        price: 1200 + i * 10,
-        currency: 'USD'
-      }));
-      const start = (page - 1) * pageSize;
-      const end = start + pageSize;
-      const paginatedFlights = flights.slice(start, end);
-      return HttpResponse.json({
-        flights: paginatedFlights,
-        total,
-        page,
-        pageSize
-      });
-    }),
+  http.get('/api/flights/search', ({ request }) => {
+    // Support pagination via ?page=1&pageSize=10
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
+    const total = 39;
+    const flights = Array.from({ length: total }, (_, i) => ({
+      id: `flight_${i + 1}`,
+      airline: `Test Airlines ${i + 1}`,
+      flight_number: `TA${100 + i}`,
+      departure: { airport: 'JFK', time: `2026-03-15T${(10 + i % 10).toString().padStart(2, '0')}:00:00Z` },
+      arrival: { airport: 'LHR', time: `2026-03-15T${(22 + i % 2).toString().padStart(2, '0')}:00:00Z` },
+      price: 1200 + i * 10,
+      currency: 'USD'
+    }));
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const paginatedFlights = flights.slice(start, end);
+    return HttpResponse.json({
+      flights: paginatedFlights,
+      total,
+      page,
+      pageSize
+    });
+  }),
 
   // Hotel search with pagination
   http.get('/api/hotels/search', ({ request }) => {
@@ -78,7 +78,7 @@ export const handlers = [
 
   // Booking creation
   http.post('/api/bookings', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     return HttpResponse.json({
       booking_id: `booking_${Date.now()}`,
       status: 'confirmed',
@@ -89,7 +89,7 @@ export const handlers = [
 
   // Payment processing
   http.post('/api/payments', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     return HttpResponse.json({
       payment_id: `payment_${Date.now()}`,
       status: 'succeeded',
@@ -123,7 +123,7 @@ export const handlers = [
   }),
 
   http.post('/api/wallet/fund', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     return HttpResponse.json({
       transaction_id: `txn_${Date.now()}`,
       amount: body.amount,
@@ -142,7 +142,7 @@ export const handlers = [
   }),
 
   http.put('/api/user/preferences', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     return HttpResponse.json({
       ...body,
       updated_at: new Date().toISOString()
@@ -155,7 +155,7 @@ export const handlers = [
 
   // Payment success webhook
   http.post('/api/webhooks/payments/success', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { transactionId, bookingId, amount, currency, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -182,7 +182,7 @@ export const handlers = [
 
   // Payment failure webhook
   http.post('/api/webhooks/payments/failure', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { transactionId, bookingId, amount, currency, failureCode, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -210,7 +210,7 @@ export const handlers = [
 
   // Refund webhook
   http.post('/api/webhooks/payments/refund', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { transactionId, refundId, bookingId, amount, currency, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -238,7 +238,7 @@ export const handlers = [
 
   // Chargeback webhook
   http.post('/api/webhooks/payments/chargeback', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { transactionId, chargebackId, bookingId, amount, currency, reason, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -267,7 +267,7 @@ export const handlers = [
   // Webhook with signature validation
   http.post('/api/webhooks/payments/signature-test', async ({ request }) => {
     const signature = request.headers.get('x-webhook-signature');
-    const body = await request.json();
+    const body = await request.json() as any;
 
     if (signature === 'valid_signature_123') {
       // Trigger frontend event for testing
@@ -307,7 +307,7 @@ export const handlers = [
 
   // Idempotent webhook
   http.post('/api/webhooks/payments/idempotent', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { eventId, transactionId, status, customerId } = body as any;
 
     // Check for duplicate event ID (simple mock)
@@ -361,7 +361,7 @@ export const handlers = [
 
   // Webhook retry handling
   http.post('/api/webhooks/payments/retry', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { eventId, retryCount, error } = body as any;
 
     // Simulate failure on first attempt
@@ -410,7 +410,7 @@ export const handlers = [
 
   // Wallet credit
   http.post('/api/wallet/credit', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { walletId, amount, currency, userId } = body as any;
 
     const newBalance = 1200.00; // Mock balance
@@ -440,7 +440,7 @@ export const handlers = [
 
   // Wallet debit
   http.post('/api/wallet/debit', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { walletId, amount, currency, bookingId, userId } = body as any;
 
     const remainingBalance = 1000.00; // Mock balance
@@ -471,7 +471,7 @@ export const handlers = [
 
   // Low balance alert
   http.post('/api/wallet/check-balance', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { walletId, threshold, userId } = body as any;
 
     const currentBalance = 50.00; // Mock low balance
@@ -498,7 +498,7 @@ export const handlers = [
 
   // Wallet transfer
   http.post('/api/wallet/transfer', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { fromWalletId, toWalletId, amount, currency, userId } = body as any;
 
     const remainingBalance = 700.00; // Mock balance
@@ -552,7 +552,7 @@ export const handlers = [
 
   // Failed wallet transaction
   http.post('/api/wallet/transaction-failed', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { walletId, amount, currency, error, userId } = body as any;
 
     // Trigger frontend event for testing
@@ -580,7 +580,7 @@ export const handlers = [
 
   // Hold order creation
   http.post('/api/hold-orders', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { totalAmount, currency, customerId, customerName, type } = body as any;
 
     const holdOrderId = `HOLD${Date.now()}`;
@@ -607,9 +607,9 @@ export const handlers = [
   }),
 
   // Payment finalization
-  http.post('/api/payments/finalize/:holdOrderId', async ({ request }) => {
-    const { holdOrderId } = request.params as any;
-    const body = await request.json();
+  http.post('/api/payments/finalize/:holdOrderId', async ({ request, params }) => {
+    const { holdOrderId } = params as any;
+    const body = await request.json() as any;
     const { paymentMethod, amount, currency } = body as any;
 
     // Trigger frontend event for testing
@@ -641,7 +641,7 @@ export const handlers = [
 
   // Payment success
   http.post('/api/payments/success', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { transactionId, bookingId, amount, currency, method, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -666,7 +666,7 @@ export const handlers = [
 
   // Payment failure
   http.post('/api/payments/failure', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { bookingId, amount, currency, error, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -691,7 +691,7 @@ export const handlers = [
 
   // Refund processing
   http.post('/api/payments/refund', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { transactionId, bookingId, refundAmount, currency, reason, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -717,7 +717,7 @@ export const handlers = [
 
   // Partial payment
   http.post('/api/payments/partial', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { bookingId, paidAmount, totalAmount, currency, remainingAmount, customerId } = body as any;
 
     // Trigger frontend event for testing
@@ -744,7 +744,7 @@ export const handlers = [
 
   // Payment reminder
   http.post('/api/payments/reminder', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { bookingId, dueDate, amount, currency, customerId, daysUntilDue } = body as any;
 
     // Trigger frontend event for testing
@@ -775,7 +775,7 @@ export const handlers = [
 
   // Booking with pending payment
   http.post('/api/bookings/pending-payment', async ({ request }) => {
-    const body = await request.json();
+    const body = await request.json() as any;
     const { bookingId, dueDate, amount, currency, customerId } = body as any;
 
     // Trigger frontend event for testing

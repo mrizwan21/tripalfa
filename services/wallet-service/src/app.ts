@@ -8,7 +8,7 @@ import morgan from 'morgan';
 import 'dotenv/config.js';
 
 // // import { logger } from './utils/logger.js';
-import { pool } from './config/db.js';
+import { prisma } from '@tripalfa/shared-database';
 import transferRoute from './routes/transferRoute.js';
 import customerPurchaseRoute from './routes/customerPurchaseRoute.js';
 import settlementRoute from './routes/settlementRoute.js';
@@ -52,11 +52,13 @@ app.get('/ready', async (req, res) => {
 // ============================================================================
 
 import walletRoutes from './routes/walletRoutes.js';
+import kiwiRoutes from './routes/kiwiRoutes.js';
 
 app.use(transferRoute);
 app.use(customerPurchaseRoute);
 app.use(settlementRoute);
 app.use('/api/v1/ledger', walletRoutes);
+app.use('/api/kiwi', kiwiRoutes);
 
 // ============================================================================
 // ERROR HANDLING
@@ -90,7 +92,7 @@ console.log('Server object created, about to listen...');
 process.on('SIGTERM', async () => {
   console.log('SIGTERM received, shutting down gracefully...');
   server.close(async () => {
-    await pool.end();
+    await prisma.$disconnect();
     console.log('Server closed');
     process.exit(0);
   });
@@ -99,7 +101,7 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   console.log('SIGINT received, shutting down gracefully...');
   server.close(async () => {
-    await pool.end();
+    await prisma.$disconnect();
     console.log('Server closed');
     process.exit(0);
   });

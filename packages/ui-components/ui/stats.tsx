@@ -1,6 +1,6 @@
 'use client';
 
-// Super Admin Panel - Stat Cards & Dashboard Components
+// Admin Panel - Stat Cards & Dashboard Components
 import { ReactNode } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn, formatCurrency, formatNumber, formatPercent } from '@tripalfa/shared-utils';
@@ -31,7 +31,7 @@ export function StatCard({
   icon,
   iconBg = 'bg-primary-100 dark:bg-primary-900/30',
   loading = false,
-}: StatCardProps) {
+}: StatCardProps): React.ReactElement {
   if (loading) {
     return (
       <div className="card animate-pulse">
@@ -101,7 +101,7 @@ interface StatsGridProps {
   columns?: 2 | 3 | 4 | 5;
 }
 
-export function StatsGrid({ children, columns = 4 }: StatsGridProps) {
+export function StatsGrid({ children, columns = 4 }: StatsGridProps): React.ReactElement {
   return (
     <div
       className={cn(
@@ -127,7 +127,7 @@ interface MiniStatProps {
   color?: 'default' | 'success' | 'warning' | 'error';
 }
 
-export function MiniStat({ label, value, color = 'default' }: MiniStatProps) {
+export function MiniStat({ label, value, color = 'default' }: MiniStatProps): React.ReactElement {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-secondary-500">{label}</span>
@@ -164,7 +164,7 @@ export function ProgressCard({
   total,
   unit = '',
   color = 'primary',
-}: ProgressCardProps) {
+}: ProgressCardProps): React.ReactElement {
   const percentage = total > 0 ? (current / total) * 100 : 0;
 
   return (
@@ -214,7 +214,7 @@ export function ActivityItem({
   description,
   timestamp,
   action,
-}: ActivityItemProps) {
+}: ActivityItemProps): React.ReactElement {
   return (
     <div className="flex gap-4">
       {icon && (
@@ -254,7 +254,7 @@ export function ActivityFeed({
   title = 'Recent Activity',
   showViewAll = false,
   onViewAll,
-}: ActivityFeedProps) {
+}: ActivityFeedProps): React.ReactElement {
   return (
     <div className="card">
       <div className="flex items-center justify-between">
@@ -289,7 +289,7 @@ interface EmptyStateProps {
   };
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action }: EmptyStateProps): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {icon && (

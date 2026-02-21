@@ -46,7 +46,7 @@ async function globalSetup(config: FullConfig) {
     //     ...process.env,
     //     NODE_ENV: 'test',
     //     PORT: '3003',
-    //     DATABASE_URL: 'postgresql://neondb_owner:password@localhost:5432/neondb_test'
+    //     DATABASE_URL: 'postgresql://postgres:password@localhost:5432/tripalfa_test'
     //   }
     // });
 
@@ -90,14 +90,14 @@ async function setupTestDatabase(): Promise<void> {
     execSync('npm run db:migrate', {
       cwd: path.resolve(__dirname, '../../../'),
       stdio: 'inherit',
-      env: { ...process.env, DATABASE_URL: 'postgresql://neondb_owner:password@localhost:5432/neondb_test' }
+      env: { ...process.env, DATABASE_URL: 'postgresql://postgres:password@localhost:5432/tripalfa_test' }
     });
 
     // Seed test data
     execSync('npm run db:seed:test', {
       cwd: path.resolve(__dirname, '../../../'),
       stdio: 'inherit',
-      env: { ...process.env, DATABASE_URL: 'postgresql://neondb_owner:password@localhost:5432/neondb_test' }
+      env: { ...process.env, DATABASE_URL: 'postgresql://postgres:password@localhost:5432/tripalfa_test' }
     });
 
   } catch (error) {

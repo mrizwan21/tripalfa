@@ -1,6 +1,6 @@
 'use client';
 
-// Super Admin Panel - Modal & Dialog Components
+// Admin Panel - Modal & Dialog Components
 import { Fragment, ReactNode, useEffect } from 'react';
 import { X, AlertTriangle, CheckCircle, Info, AlertCircle } from 'lucide-react';
 import { cn } from '@tripalfa/shared-utils';
@@ -39,7 +39,7 @@ export function Modal({
   footer,
   closeOnOverlay = true,
   showCloseButton = true,
-}: ModalProps) {
+}: ModalProps): React.ReactElement | null {
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -162,7 +162,7 @@ export function ConfirmDialog({
   cancelLabel = 'Cancel',
   type = 'info',
   loading = false,
-}: ConfirmDialogProps) {
+}: ConfirmDialogProps): React.ReactElement {
   const config = typeConfig[type];
   const Icon = config.icon;
 
@@ -243,7 +243,7 @@ const alertConfig = {
   },
 };
 
-export function Alert({ type = 'info', title, message, onClose, action }: AlertProps) {
+export function Alert({ type = 'info', title, message, onClose, action }: AlertProps): React.ReactElement {
   const config = alertConfig[type];
   const Icon = config.icon;
 
@@ -318,7 +318,7 @@ export function SlideOver({
   footer,
   position = 'right',
   size = 'md',
-}: SlideOverProps) {
+}: SlideOverProps): React.ReactElement | null {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();

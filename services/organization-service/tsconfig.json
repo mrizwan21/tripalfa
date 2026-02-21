@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "5.0",
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "../../",
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "paths": {
+      "@tripalfa/shared-types": ["packages/shared-types"],
+      "@tripalfa/shared-types/*": ["packages/shared-types/*"],
+      "@tripalfa/shared-utils": ["packages/shared-utils"],
+      "@tripalfa/shared-utils/*": ["packages/shared-utils/*"],
+      "@tripalfa/shared-database": ["packages/shared-database"],
+      "@tripalfa/shared-database/*": ["packages/shared-database/*"],
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"],
+  "references": [
+    { "path": "../../packages/shared-database" },
+    { "path": "../../packages/shared-utils" },
+    { "path": "../../packages/shared-types" }
+  ]
+}

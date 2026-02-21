@@ -2,13 +2,64 @@
     "name": "@tripalfa/shared-utils",
     "version": "1.0.0",
     "private": true,
-    "main": "index.ts",
-    "types": "index.ts",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        },
+        "./logger": {
+            "types": "./dist/logger.d.ts",
+            "import": "./dist/logger.js",
+            "default": "./dist/logger.js"
+        },
+        "./utils": {
+            "types": "./dist/utils.d.ts",
+            "import": "./dist/utils.js",
+            "default": "./dist/utils.js"
+        },
+        "./api": {
+            "types": "./dist/api.d.ts",
+            "import": "./dist/api.js",
+            "default": "./dist/api.js"
+        },
+        "./constants": {
+            "types": "./dist/constants.d.ts",
+            "import": "./dist/constants.js",
+            "default": "./dist/constants.js"
+        },
+        "./hooks": {
+            "types": "./dist/hooks.d.ts",
+            "import": "./dist/hooks.js",
+            "default": "./dist/hooks.js"
+        },
+        "./types": {
+            "types": "./dist/types.d.ts",
+            "import": "./dist/types.js",
+            "default": "./dist/types.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
     "scripts": {
-        "build": "tsc"
+        "build": "tsc -p tsconfig.json",
+        "dev": "npx tsc -p tsconfig.build.json --watch",
+        "lint": "eslint src --ext .ts,.tsx",
+        "type-check": "tsc -p tsconfig.build.json --noEmit",
+        "clean": "rm -rf dist"
     },
     "dependencies": {
+        "@tripalfa/shared-types": "workspace:*",
+        "clsx": "^2.1.0",
         "date-fns": "^4.1.0",
+        "pino": "^9.0.0",
         "zod": "^3.23.8"
+    },
+    "devDependencies": {
+        "@types/react": "^18.0.0",
+        "@types/node": "^20.0.0"
     }
 }

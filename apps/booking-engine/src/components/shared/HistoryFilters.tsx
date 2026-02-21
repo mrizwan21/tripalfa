@@ -1,6 +1,6 @@
 import React from 'react';
 import { Filter, Calendar as CalendarIcon, User as UserIcon } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 interface HistoryFiltersProps {
     onFilterChange: (filters: any) => void;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, AlertCircle, Clock, CreditCard, User, FileText, Key } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 export interface HistoryEvent {
     id: string;

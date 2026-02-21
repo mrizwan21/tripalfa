@@ -53,15 +53,47 @@ export interface User {
   updatedAt: Date;
 }
 
-// Wallet model
+// Wallet model (Prisma-compatible)
 export interface Wallet {
   id: string;
   userId: string;
   currency: string;
-  balance: number;
-  status: 'active' | 'frozen' | 'closed';
+  balance: any; // Decimal from Prisma
+  reservedBalance?: any; // Decimal from Prisma
+  status: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// WalletTransaction (Prisma-compatible)
+export interface WalletTransaction {
+  id: string;
+  walletId: string;
+  type: string;
+  flow?: string | null;
+  amount: any; // Decimal from Prisma
+  currency: string;
+  payerId?: string | null;
+  payeeId?: string | null;
+  bookingId?: string | null;
+  invoiceId?: string | null;
+  idempotencyKey?: string | null;
+  status: string;
+  description?: string | null;
+  metadata?: any;
+  createdAt: Date;
+}
+
+// WalletLedger (Prisma-compatible)
+export interface WalletLedger {
+  id: string;
+  transactionId: string;
+  account: string;
+  debit: any; // Decimal from Prisma
+  credit: any; // Decimal from Prisma
+  currency: string;
+  description?: string | null;
+  createdAt: Date;
 }
 
 // Transaction model

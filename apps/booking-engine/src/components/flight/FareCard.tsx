@@ -1,6 +1,6 @@
 import React from 'react';
 import { Info, ShieldCheck, CreditCard } from 'lucide-react';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 
 interface FareCardProps {
   amount: number;

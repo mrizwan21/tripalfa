@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MapPin, Star, Filter, ArrowUpDown, ChevronRight, Wifi, Coffee, Waves, Search, RotateCcw, ChevronDown, Calendar, User, Check } from 'lucide-react';
 import { searchHotels } from '../lib/api';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
 import { SearchAutocomplete, Suggestion } from '../components/ui/SearchAutocomplete';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { BookingStepper } from '../components/ui/BookingStepper';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { useBoardTypes, useHotelAmenities, useHotelTypes } from '../hooks/useStaticData';
+import { HotelMap } from '../components/map';
 
 
 interface Hotel {
@@ -39,35 +41,24 @@ export default function HotelList() {
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Dynamic Filter Options
-  const [filterOptions, setFilterOptions] = useState({
-    facilities: [] as string[],
-    types: [] as string[],
-    chains: [] as string[]
-  });
+  // Use DB-backed hooks for filter options via React Query
+  const amenitiesQuery = useHotelAmenities();
+  const hotelTypesQuery = useHotelTypes();
+  const boardTypesQuery = useBoardTypes();
+
+  // Build filter options from DB-backed data with loading states
+  const filterOptions = useMemo(() => ({
+    facilities: (amenitiesQuery.data || []).map(a => a.name),
+    types: (hotelTypesQuery.data || []).map(t => t.name),
+    boardTypes: (boardTypesQuery.data || []).map(b => b.name),
+    starRatings: ['1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars']
+  }), [amenitiesQuery.data, hotelTypesQuery.data, boardTypesQuery.data]);
+
+  // Determine if filters are loading
+  const isLoadingFilters = amenitiesQuery.isLoading || hotelTypesQuery.isLoading || boardTypesQuery.isLoading;
 
   // Destination Search State (managed via SearchAutocomplete)
   const [destination, setDestination] = useState(searchParams.get('location') || '');
-
-  useEffect(() => {
-    const loadFilters = async () => {
-      try {
-        const [facs, types, chains] = await Promise.all([
-          import('../lib/api').then(m => m.fetchFacilities()),
-          import('../lib/api').then(m => m.fetchHotelTypes()),
-          import('../lib/api').then(m => m.fetchHotelChains())
-        ]);
-        setFilterOptions({
-          facilities: facs.map((f: any) => f.name),
-          types: types.map((t: any) => t.name),
-          chains: chains.map((c: any) => c.name)
-        });
-      } catch (err) {
-        console.warn('Failed to load filter options', err);
-      }
-    };
-    loadFilters();
-  }, []);
 
   // Fetch hotel data
   useEffect(() => {
@@ -306,7 +297,7 @@ export default function HotelList() {
                 id: 'board',
                 label: 'Board Basis',
                 placeholder: 'Any Basis',
-                options: ['Any', 'Room Only', 'Bed & Breakfast', 'Half Board', 'Full Board', 'All Inclusive']
+                options: ['Any', ...((boardTypesQuery.data || []).map(b => b.name))]
               },
               {
                 id: 'type',
@@ -345,22 +336,31 @@ export default function HotelList() {
                   {activeFilter === i && (
                     <div className="absolute top-full left-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 p-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="max-h-60 overflow-y-auto no-scrollbar space-y-1">
-                        {f.options.map((opt, idx) => {
-                          const isSelected = filters[f.id as keyof typeof filters].includes(opt);
-                          return (
-                            <div
-                              key={idx}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFilter(f.id as keyof typeof filters, opt);
-                              }}
-                              className={`px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center justify-between group cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50' : ''}`}
-                            >
-                              <span className={`text-xs font-bold ${isSelected ? 'text-[#6366F1]' : 'text-gray-700'}`}>{opt}</span>
-                              {isSelected && <Check size={12} className="text-[#6366F1]" />}
+                        {isLoadingFilters && (f.id === 'facilities' || f.id === 'type') ? (
+                          // Loading skeleton for amenities and types filters
+                          Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={idx} className="px-4 py-2.5 rounded-xl">
+                              <div className="h-4 bg-gray-200 rounded animate-pulse" />
                             </div>
-                          );
-                        })}
+                          ))
+                        ) : (
+                          f.options.map((opt, idx) => {
+                            const isSelected = filters[f.id as keyof typeof filters].includes(opt);
+                            return (
+                              <div
+                                key={idx}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFilter(f.id as keyof typeof filters, opt);
+                                }}
+                                className={`px-4 py-2.5 rounded-xl hover:bg-gray-50 flex items-center justify-between group cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50' : ''}`}
+                              >
+                                <span className={`text-xs font-bold ${isSelected ? 'text-[#6366F1]' : 'text-gray-700'}`}>{opt}</span>
+                                {isSelected && <Check size={12} className="text-[#6366F1]" />}
+                              </div>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   )}
@@ -449,29 +449,44 @@ export default function HotelList() {
               </div>
             </div>
 
-            {/* Right Column: Sticky Map (Refined Sidebar) */}
-            <div className="hidden lg:block lg:w-[42%] sticky top-24 h-[calc(100vh-120px)] rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white">
+            {/* Right Column: Sticky Mapbox Map */}
+            <div className="hidden lg:block lg:w-[42%] sticky top-24 h-[calc(100vh-120px)] rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white relative">
+              {/* Refresh button overlay */}
               <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
-                <Button className="bg-white/90 backdrop-blur-xl text-black hover:bg-white shadow-2xl h-12 px-8 font-black border-none rounded-2xl transition-all scale-95 hover:scale-100">
-                  <RotateCcw size={18} className="mr-3 text-[#6366F1]" /> Refresh Prices
+                <Button
+                  onClick={() => window.location.reload()}
+                  className="bg-white/90 backdrop-blur-xl text-black hover:bg-white shadow-2xl h-12 px-8 font-black border-none rounded-2xl transition-all scale-95 hover:scale-100"
+                >
+                  <RotateCcw size={18} className="mr-3 text-[#6366F1]" /> Refresh Map
                 </Button>
               </div>
-              <img
-                src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80"
-                className="w-full h-full object-cover"
-                alt="Map"
-              />
 
-              {/* Custom Map Pointers */}
-              <div className="absolute top-[20%] left-[30%] bg-white px-3 py-1.5 rounded-xl shadow-2xl border-2 border-[#6366F1] animate-bounce">
-                <span className="text-[11px] font-black text-gray-900 tracking-tighter">SAR 2,500</span>
-              </div>
-              <div className="absolute top-[45%] left-[65%] bg-[#6366F1] px-3 py-1.5 rounded-xl shadow-2xl border-2 border-white">
-                <span className="text-[11px] font-black text-white tracking-tighter">SAR 1,800</span>
-              </div>
-              <div className="absolute bottom-[30%] left-[45%] bg-white px-3 py-1.5 rounded-xl shadow-2xl border-2 border-white">
-                <span className="text-[11px] font-black text-gray-900 tracking-tighter">SAR 3,200</span>
-              </div>
+              {/* Real Mapbox map showing hotel locations */}
+              <HotelMap
+                hotels={filteredHotels
+                  .filter(h => h.latitude != null && h.longitude != null)
+                  .map(h => ({
+                    id: String(h.id),
+                    name: h.name || 'Hotel',
+                    address: h.location,
+                    latitude: h.latitude,
+                    longitude: h.longitude,
+                    rating: h.rating,
+                    price: h.price?.amount,
+                    currency: h.price?.currency,
+                  }))
+                }
+                height="100%"
+                className="w-full h-full"
+                onHotelClick={(hotelId) => navigate(`/hotels/${hotelId}`, {
+                  state: {
+                    checkin: searchParams.get('checkin'),
+                    checkout: searchParams.get('checkout'),
+                    adults: parseInt(searchParams.get('adults') || '2'),
+                  }
+                })}
+                showLocationCard={false}
+              />
             </div>
           </div>
         </div>

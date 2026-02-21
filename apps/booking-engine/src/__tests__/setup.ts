@@ -2,6 +2,15 @@ import { expect, afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
+// Mock Prisma client
+vi.mock('@prisma/client', () => ({
+  PrismaClient: vi.fn().mockImplementation(() => ({
+    // Mock any Prisma methods that might be used in tests
+    $connect: vi.fn(),
+    $disconnect: vi.fn(),
+  })),
+}));
+
 // Cleanup components after each test
 afterEach(() => {
   cleanup();

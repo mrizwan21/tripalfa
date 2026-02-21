@@ -1,1 +1,0 @@
-export { usePermissions } from './useAuth';

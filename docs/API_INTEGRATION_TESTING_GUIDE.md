@@ -6,7 +6,7 @@ This guide provides comprehensive information about testing all API integrations
 
 The comprehensive API testing suite (`scripts/comprehensive-api-testing.ts`) tests all major API integrations including:
 
-- **Hotel APIs**: Hotelston, Innstant Travel
+- **Hotel APIs**: Innstant Travel
 - **Flight APIs**: Duffel, Amadeus
 - **Payment Gateways**: Stripe, PayPal
 - **Notification Services**: Email, SMS
@@ -24,11 +24,6 @@ npm run test:api
 ### Run Specific API Tests
 
 ```bash
-# Hotelston API tests
-npm run test:api:hotelston
-
-# Innstant Travel API tests
-npm run test:api:innstant
 
 # Duffel API tests
 npm run test:api:duffel
@@ -46,13 +41,6 @@ npm run test:api:amadeus
 
 ### 2. Hotel API Tests
 
-#### Hotelston API
-- **Static Data Tests**: Countries, Cities, Hotels
-- **Search Tests**: Hotel availability and pricing
-- **SOAP Protocol**: Tests SOAP envelope creation and parsing
-- **Expected Duration**: 30 seconds
-
-#### Innstant Travel API
 - **Search Tests**: Hotel search with various parameters
 - **Details Tests**: Hotel information retrieval
 - **REST Protocol**: Standard REST API testing
@@ -119,9 +107,6 @@ npm run test:api:amadeus
 Create a `.env` file in the root directory with the following variables:
 
 ```bash
-# Hotelston API
-HOTELSTON_USERNAME=your_hotelston_username
-HOTELSTON_PASSWORD=your_hotelston_password
 
 # Innstant Travel API
 INNSTANT_API_KEY=your_innstant_api_key
@@ -157,15 +142,9 @@ Starting Comprehensive API Integration Tests
 ============================================================
 
 Testing Authentication...
-  ✅ Authentication: Hotelston API Authentication (120ms)
   ✅ Authentication: Duffel API Authentication (245ms)
   ✅ Authentication: Amadeus API Authentication (389ms)
 
-🏨 Testing Hotelston API...
-  ✅ Hotelston: Static Data - Countries (1500ms)
-  ✅ Hotelston: Static Data - Cities (1200ms)
-  ✅ Hotelston: Static Data - Hotels (2100ms)
-  ✅ Hotelston: Hotel Search (3500ms)
 
 ...
 
@@ -181,7 +160,6 @@ Testing Authentication...
 
 📋 By Category:
    Authentication: 3/3 passed
-   Hotelston: 4/4 passed
    Innstant: 2/2 passed
    Duffel: 3/3 passed
    Amadeus: 2/2 passed
@@ -207,22 +185,12 @@ Detailed test results are saved to a JSON file with the following structure:
 ```json
 [
   {
-    "test": "Authentication: Hotelston API Authentication",
-    "category": "Authentication",
-    "success": true,
-    "duration": 120,
-    "message": "Authentication successful for Hotelston API Authentication",
     "data": {
       "status": 200,
       "headers": {...}
     }
   },
   {
-    "test": "Hotelston: Hotel Search",
-    "category": "Hotelston",
-    "success": true,
-    "duration": 3500,
-    "message": "Hotelston Hotel Search successful",
     "data": {
       "status": 200,
       "responseSize": 15420
@@ -309,8 +277,8 @@ jobs:
       - run: npm install
       - run: npm run test:api
         env:
-          HOTELSTON_USERNAME: ${{ secrets.HOTELSTON_USERNAME }}
-          HOTELSTON_PASSWORD: ${{ secrets.HOTELSTON_PASSWORD }}
+          
+          
           # Add other API keys as needed
 ```
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Utensils, Check, Plus, Info } from 'lucide-react';
-import { Button } from './ui/Button';
-import { formatCurrency } from '../lib/utils';
+import { Button } from './ui/button';
+import { formatCurrency } from '@tripalfa/ui-components';
 
 interface MealSelectionPopupProps {
     isOpen: boolean;
@@ -9,9 +9,11 @@ interface MealSelectionPopupProps {
     onConfirm: (meals: any[]) => void;
     isLCC?: boolean;
     availableServices?: any[];
+    /** Number of passengers – drives the passenger selector. Defaults to 1. */
+    passengerCount?: number;
 }
 
-export const MealSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, availableServices }: MealSelectionPopupProps) => {
+export const MealSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, availableServices, passengerCount = 1 }: MealSelectionPopupProps) => {
     const [selectedPassenger, setSelectedPassenger] = useState(1);
 
     // Mock meals based on carrier type
@@ -45,10 +47,11 @@ export const MealSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
 
     if (!isOpen) return null;
 
-    const passengers = [
-        { id: 1, name: 'Arun Kumar', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arun' },
-        { id: 2, name: 'Enbeae Mohamed', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Enbeae' }
-    ];
+    // Generate passenger list from count – no hardcoded names
+    const passengers = Array.from({ length: Math.max(1, passengerCount) }, (_, i) => ({
+        id: i + 1,
+        label: `Passenger ${i + 1}`,
+    }));
 
     const handleSelectMeal = (mealId: string) => {
         setSelections(prev => ({
@@ -80,19 +83,28 @@ export const MealSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-10 space-y-10">
-                    {/* Passenger Selection */}
-                    <div className="flex justify-center gap-4">
+                    {/* Passenger Selection – generic "Passenger N" labels */}
+                    <div className="flex justify-center gap-3 flex-wrap">
                         {passengers.map((p) => (
                             <button
                                 key={p.id}
                                 onClick={() => setSelectedPassenger(p.id)}
                                 className={`px-6 h-12 rounded-[2rem] flex items-center gap-3 border transition-all ${selectedPassenger === p.id
-                                    ? 'bg-[#FFD700] border-[#FFD700] shadow-lg'
-                                    : 'bg-white border-gray-100 text-gray-400'
+                                    ? 'bg-[#FFD700] border-[#FFD700] shadow-lg text-gray-900'
+                                    : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
                                     }`}
                             >
-                                <img src={p.avatar} className="w-6 h-6 rounded-full" alt="" />
-                                <span className="text-[10px] font-black uppercase tracking-widest">{p.name}</span>
+                                {/* Numbered avatar circle */}
+                                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black ${selectedPassenger === p.id ? 'bg-gray-900 text-white' : 'bg-purple-100 text-purple-600'}`}>
+                                    {p.id}
+                                </div>
+                                <span className="text-[10px] font-black uppercase tracking-widest">{p.label}</span>
+                                {/* Tick if a meal was selected for this passenger */}
+                                {selections[p.id] && (
+                                    <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                                        <Check size={10} className="text-white stroke-[3px]" />
+                                    </div>
+                                )}
                             </button>
                         ))}
                     </div>

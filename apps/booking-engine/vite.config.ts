@@ -5,14 +5,20 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: {
-      // Resolve local monorepo packages for Vite to avoid prebundling errors
-      '@tripalfa/shared-utils': path.resolve(__dirname, '../../packages/shared-utils'),
-      '@tripalfa/static-data': path.resolve(__dirname, '../../packages/static-data/src'),
-    },
+    alias: [
+      // More specific aliases must come first before general '@' alias
+      { find: '@/components/ui', replacement: path.resolve(__dirname, '../../packages/ui-components/ui') },
+      // General aliases
+      { find: '@tripalfa/shared-utils', replacement: path.resolve(__dirname, '../../packages/shared-utils') },
+      { find: '@tripalfa/static-data', replacement: path.resolve(__dirname, '../../packages/static-data/src') },
+      { find: '@tripalfa/ui-components', replacement: path.resolve(__dirname, '../../packages/ui-components') },
+      { find: '@tripalfa/shared-types', replacement: path.resolve(__dirname, '../../packages/shared-types') },
+      { find: '@', replacement: path.resolve(__dirname, './src') },
+    ],
   },
   build: { outDir: "dist" },
   server: {
+    host: '0.0.0.0',
     port: 5174,
     proxy: {
       '/duffel-api': {
@@ -20,17 +26,54 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/duffel-api/, ''),
       },
+      // ── Kiwi Tequila / Nomad — multi-city only ──────────────────────────────
+      '/kiwi': {
+        target: 'https://api.tequila.kiwi.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (p) => p.replace(/^\/kiwi/, ''),
+      },
       '/search': {
-        target: 'http://localhost:8000',
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        // Booking-service mounts liteApiRoutes at /api — rewrite /search/... → /api/search/...
+        rewrite: (p) => `/api${p}`,
+      },
+      '/route': {
+        target: 'http://localhost:3003',
         changeOrigin: true,
       },
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
       },
-      '/static': {
-        target: 'http://localhost:3002', // Direct to inventory-service for performance
+      // LiteAPI: hotel rates & hotel search endpoints
+      // Booking-service mounts liteApiRoutes at /api, so /hotels/rates → /api/hotels/rates
+      '/hotels': {
+        target: 'http://localhost:3003',
         changeOrigin: true,
+        rewrite: (p) => `/api${p}`,
+      },
+      // LiteAPI: prebook & book endpoints (/rates/prebook → /api/rates/prebook)
+      '/rates': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        rewrite: (p) => `/api${p}`,
+      },
+      '/bookings': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        rewrite: (p) => `/api${p}`,
+      },
+      '/duffel': {
+        target: 'http://localhost:3003',
+        changeOrigin: true,
+        rewrite: (p) => `/api${p}`,
+      },
+      '/static': {
+        target: 'http://localhost:3001', // Direct to booking-service (PostgreSQL-backed)
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/static/, ''),
       },
       '/inventory': {
         target: 'http://localhost:3002',

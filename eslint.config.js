@@ -125,7 +125,7 @@ export default [
   },
   // Infrastructure scripts configuration (CommonJS)
   {
-    files: ['infrastructure/scripts/**/*.js'],
+    files: ['scripts/infra/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: {
@@ -181,7 +181,6 @@ export default [
       'services/*/dist/**',
       'apps/*/dist/**',
       'packages/*/dist/**',
-      'automapper/dist/**',
       '**/.vscode/extensions/**/typescript/lib/lib.dom.d.ts',
       '.vscode/extensions/**/typescript/lib/lib.dom.d.ts',
       '/Users/*/.vscode/extensions/**/typescript/lib/lib.dom.d.ts',

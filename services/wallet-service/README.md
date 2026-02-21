@@ -6,17 +6,24 @@ This service is designed to run on Neon (serverless Postgres). To migrate your d
 
 1. Export your Docker database as described in the implementation guide.
 2. Use the provided migration script:
+
   ```bash
   ./scripts/migrate_to_neon.sh <NEON_DATABASE_URL> wallet_db.dump
   ```
-  - Replace `<NEON_DATABASE_URL>` with your Neon connection string (see .env.example).
-3. Update your `.env` file:
-  - Set `DATABASE_URL` to your Neon connection string (with `sslmode=require`).
-4. Run migrations if needed:
+
+- Replace `<NEON_DATABASE_URL>` with your Neon connection string (see .env.example).
+
+1. Update your `.env` file:
+
+- Set `DATABASE_URL` to your Neon connection string (with `sslmode=require`).
+
+1. Run migrations if needed:
+
   ```bash
   npm run migrations
   ```
-5. Start the service and verify all endpoints and jobs.
+
+1. Start the service and verify all endpoints and jobs.
 
 See `IMPLEMENTATION_GUIDE.md` for full migration and troubleshooting details.
 
@@ -52,7 +59,8 @@ Multi-currency wallet service supporting customers, agencies, and travel supplie
 ## User Types & Transaction Flows
 
 ### Customer Purchase Flow (CUSTOMER_TO_SUPPLIER)
-```
+
+```text
 Customer Purchase → Customer Wallet (debit) → Agency Wallet (credit)
                   ↓
             Commission Calculated (deductedCommission)
@@ -61,6 +69,7 @@ Customer Purchase → Customer Wallet (debit) → Agency Wallet (credit)
 ```
 
 **Flow Steps**:
+
 1. `POST /api/wallet/purchase` creates three transactions:
    - `customer_purchase`: Customer debits amount
    - `agency_purchase`: Agency credits amount (holds for supplier settlement)
@@ -70,6 +79,7 @@ Customer Purchase → Customer Wallet (debit) → Agency Wallet (credit)
 4. Commission is deducted from agency balance during settlement
 
 **Example**:
+
 - Customer purchases $100 airline ticket through Agency
 - Commission rate: 10%
 - Transactions:
@@ -80,13 +90,15 @@ Customer Purchase → Customer Wallet (debit) → Agency Wallet (credit)
   - Agency net: $100 (holds) → $10 (after settlement)
 
 ### Supplier Settlement Flow (SUPPLIER_TO_AGENCY)
-```
+
+```text
 Agency Settlement → Agency Wallet (debit) → Supplier Wallet (credit)
                   ↓
             Commission Deducted
 ```
 
 **Flow Steps**:
+
 1. `POST /api/wallet/settlement` with:
    - `settlementAmount`: Net amount to supplier ($90 in example)
    - `deductedCommission`: Agency commission ($10 in example)
@@ -97,9 +109,11 @@ Agency Settlement → Agency Wallet (debit) → Supplier Wallet (credit)
 ## API Endpoints
 
 ### 1. POST /api/wallet/transfer
+
 Transfer between currencies with FX conversion
 
 **Request**:
+
 ```json
 {
   "userId": "uuid",
@@ -111,6 +125,7 @@ Transfer between currencies with FX conversion
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -129,9 +144,11 @@ Transfer between currencies with FX conversion
 ```
 
 ### 2. POST /api/wallet/purchase
+
 Customer purchase with agency intermediary
 
 **Request**:
+
 ```json
 {
   "amount": 100,
@@ -145,6 +162,7 @@ Customer purchase with agency intermediary
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -178,9 +196,11 @@ Customer purchase with agency intermediary
 ```
 
 ### 3. POST /api/wallet/settlement
+
 Agency settlement with supplier
 
 **Request**:
+
 ```json
 {
   "supplierId": "uuid",
@@ -193,6 +213,7 @@ Agency settlement with supplier
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -216,6 +237,7 @@ Agency settlement with supplier
 ## Database Schema (Key Tables)
 
 ### users
+
 ```sql
 CREATE TABLE users (
   id UUID PRIMARY KEY,
@@ -229,6 +251,7 @@ CREATE TABLE users (
 ```
 
 ### wallets
+
 ```sql
 CREATE TABLE wallets (
   id UUID PRIMARY KEY,
@@ -243,6 +266,7 @@ CREATE TABLE wallets (
 ```
 
 ### transactions
+
 ```sql
 CREATE TABLE transactions (
   id UUID PRIMARY KEY,
@@ -273,6 +297,7 @@ CREATE TABLE transactions (
 ```
 
 ### ledger_entries
+
 ```sql
 CREATE TABLE ledger_entries (
   id UUID PRIMARY KEY,
@@ -287,6 +312,7 @@ CREATE TABLE ledger_entries (
 ```
 
 ### exchange_rate_snapshots
+
 ```sql
 CREATE TABLE exchange_rate_snapshots (
   id UUID PRIMARY KEY,
@@ -302,6 +328,7 @@ CREATE TABLE exchange_rate_snapshots (
 ## Transaction Safety
 
 ### Atomicity
+
 All operations use `SERIALIZABLE` isolation level to prevent dirty reads and phantom reads.
 
 ```typescript
@@ -316,6 +343,7 @@ await client.query('COMMIT');
 ```
 
 ### Idempotency
+
 All payment operations check idempotency key before processing to prevent duplicates.
 
 ```typescript
@@ -327,6 +355,7 @@ if (existing.rows.length) return existing.rows[0];
 ```
 
 ### Double-Entry Ledger
+
 Every transaction creates two ledger entries (debit and credit) for audit trail.
 
 ```typescript
@@ -345,7 +374,7 @@ Every transaction creates two ledger entries (debit and credit) for audit trail.
 ## Error Handling
 
 | Error | HTTP Code | Description |
-|-------|-----------|-------------|
+| ------ | -------- | ----------- |
 | Insufficient funds | 402 | Wallet balance < requested amount |
 | FX unavailable | 503 | No active FX snapshot for conversion |
 | Wallet not found | 404 | User wallet doesn't exist |
@@ -356,6 +385,7 @@ Every transaction creates two ledger entries (debit and credit) for audit trail.
 ## Development
 
 ### Setup
+
 ```bash
 npm install
 npm run build
@@ -363,34 +393,40 @@ npm run migrations  # Run database migrations
 ```
 
 ### Development Mode
+
 ```bash
 npm run dev  # Watches .ts files with nodemon
 ```
 
 ### Build TypeScript
+
 ```bash
 npm run build  # Outputs to ./dist
 ```
 
 ### Run Tests
+
 ```bash
 npm test
 npm run test:watch
 ```
 
 ### Linting
+
 ```bash
 npm run lint
 npm run lint:fix
 ```
 
 ### Run FX Fetcher (Scheduled)
+
 ```bash
 npm run fx:fetch --now  # Fetch immediately
 npm run fx:schedule     # Start hourly schedule
 ```
 
 ### Run Reconciliation (Scheduled)
+
 ```bash
 npm run reconcile --now  # Run immediately
 ```
@@ -398,12 +434,14 @@ npm run reconcile --now  # Run immediately
 ## Deployment
 
 ### Docker
+
 ```bash
 npm run docker:build
 npm run docker:run
 ```
 
 ### Environment Variables
+
 ```bash
 DATABASE_URL=postgres://user:password@host:5432/wallet_db
 JWT_SECRET=your_secret_key

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, parseISO } from 'date-fns';
 import { X, Plane, Clock, Shield, Briefcase, Info, ChevronRight, Check, Luggage } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { Flight } from '../lib/srs-types';
 import { fetchAircrafts } from '../lib/api';
 

@@ -3,7 +3,7 @@
 
 import fetch from 'node-fetch';
 import cron from 'node-cron';
-import { pool } from '../config/db.js';
+import { prisma } from '../config/db.js';
 import { saveSnapshot } from '../services/fxService.js';
 import { logger } from '../utils/logger.js';
 
@@ -132,12 +132,15 @@ async function emitMetric(
  */
 async function alertOnFailure(err: Error): Promise<void> {
   try {
-    const result = await pool.query(
-      `SELECT COUNT(*) as fail_count FROM exchange_rate_snapshots
-       WHERE status = 'error' AND created_at > now() - INTERVAL '3 hours'`
-    );
-
-    const failCount = parseInt(result.rows[0].fail_count);
+    const threeHoursAgo = new Date();
+    threeHoursAgo.setHours(threeHoursAgo.getHours() - 3);
+    
+    const failCount = await prisma.exchangeRate.count({
+      where: {
+        source: SOURCE,
+        fetchedAt: { lt: threeHoursAgo },
+      },
+    });
 
     if (failCount >= 3) {
       logger.warn(

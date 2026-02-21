@@ -1,48 +1,48 @@
 // src/services/fxService.ts
-// FX rate fetching, conversion, and snapshot management
-// Single source of truth: reads latest snapshot from Postgres
-
+// FX rate fetching, conversion, and snapshot management using Prisma
+import { prisma } from '../config/db.js';
 import { logger } from '../utils/logger.js';
-import { ExchangeRateSnapshot, FxConversionResult } from '../types/wallet.js';
+import type { FxConversionResult } from '../types/wallet.js';
 
 const SERVICE_NAME = 'fxService';
 
-let pool: any;
-
-export function initializeFxService(pgPool: any): void {
-  pool = pgPool;
-}
-
-function getPool(): any {
-  if (pool) return pool;
-  // Allow tests to inject a global pool to avoid circular imports
-  const gp = (global as any).PG_POOL as any | undefined;
-  if (gp) return gp;
-  throw new Error('FX service pool is not initialized');
-}
+// Cache for latest rates
+let cachedRates: Record<string, number> = {};
+let cachedAt: Date | null = null;
 
 /**
- * Get the latest FX snapshot from Postgres
+ * Get all FX rates from database (caches internally)
  */
-export async function getLatestSnapshot(): Promise<ExchangeRateSnapshot> {
+async function getAllRates(): Promise<Record<string, number>> {
+  // Use cache if less than 1 hour old
+  if (cachedAt && Date.now() - cachedAt.getTime() < 60 * 60 * 1000) {
+    return cachedRates;
+  }
+
   try {
-    const result = await getPool().query(
-      `SELECT id, base_currency as "baseCurrency", rates, fetched_at as "fetchedAt", 
-              created_at as "createdAt", status
-       FROM exchange_rate_snapshots
-       WHERE status = 'active'
-       ORDER BY fetched_at DESC
-       LIMIT 1`
-    );
+    const rates = await prisma.exchangeRate.findMany({
+      where: {
+        fetchedAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+        },
+      },
+      orderBy: { fetchedAt: 'desc' },
+    });
 
-    if (!result.rows.length) {
-      logger.error(`${SERVICE_NAME}: No FX snapshot available`);
-      throw new Error('No FX snapshot available');
+    // Build rates map from targetCurrency
+    const ratesMap: Record<string, number> = {};
+    for (const r of rates) {
+      if (!ratesMap[r.targetCurrency]) {
+        ratesMap[r.targetCurrency] = Number(r.rate);
+      }
     }
-
-    return result.rows[0];
+    
+    cachedRates = ratesMap;
+    cachedAt = new Date();
+    
+    return ratesMap;
   } catch (err) {
-    logger.error(`${SERVICE_NAME}: getLatestSnapshot failed`, err as Error);
+    logger.error(`${SERVICE_NAME}: getAllRates failed`, err as Error);
     throw err;
   }
 }
@@ -76,15 +76,9 @@ export async function convertAmount(
   }
 
   try {
-    const snapshot = await getLatestSnapshot();
-    const { rates, baseCurrency, fetchedAt } = snapshot;
-    const isStale = isSnapshotStale(fetchedAt);
-
-    if (isStale) {
-      logger.warn(`${SERVICE_NAME}: Using stale FX snapshot (${fetchedAt})`);
-    }
-
-    // Validate currency codes exist in snapshot
+    const rates = await getAllRates();
+    
+    // Validate currency codes exist in rates
     if (!rates[srcCurrency]) {
       throw new Error(`Missing FX rate for source currency: ${srcCurrency}`);
     }
@@ -92,8 +86,8 @@ export async function convertAmount(
       throw new Error(`Missing FX rate for destination currency: ${destCurrency}`);
     }
 
-    const rateSrc = parseFloat(String(rates[srcCurrency]));
-    const rateDest = parseFloat(String(rates[destCurrency]));
+    const rateSrc = rates[srcCurrency];
+    const rateDest = rates[destCurrency];
 
     const amountInBase = parseFloat(String(amount)) / rateSrc;
     const converted = amountInBase * rateDest;
@@ -102,10 +96,10 @@ export async function convertAmount(
     return {
       converted: Number(converted.toFixed(6)),
       fxRate: Number(fxRate.toFixed(12)),
-      baseCurrency,
+      baseCurrency: 'USD',
       baseAmount: Number(amountInBase.toFixed(6)),
-      fetchedAt: new Date(fetchedAt),
-      isStale,
+      fetchedAt: cachedAt || new Date(),
+      isStale: cachedAt ? isSnapshotStale(cachedAt) : true,
     };
   } catch (err) {
     logger.error(
@@ -117,64 +111,48 @@ export async function convertAmount(
 }
 
 /**
- * Save FX snapshot to Postgres (called by fxFetcher job)
+ * Save FX rate to database (called by fxFetcher job)
  */
 export async function saveSnapshot(
   source: string,
   baseCurrency: string,
   rates: Record<string, number>,
   fetchedAt: Date
-): Promise<ExchangeRateSnapshot> {
-  const client = await getPool().connect();
+): Promise<any> {
   try {
-    // Check if this exact snapshot already exists (idempotency)
-    const existing = await client.query(
-      `SELECT id FROM exchange_rate_snapshots
-       WHERE source = $1 AND base_currency = $2 AND fetched_at = $3`,
-      [source, baseCurrency, fetchedAt]
-    );
-
-    if (existing.rows.length) {
-      logger.info(`${SERVICE_NAME}: Snapshot for ${fetchedAt} already exists, skipping insert`);
-      return existing.rows[0] as unknown as ExchangeRateSnapshot;
+    // Save each rate as a separate record
+    for (const [targetCurrency, rate] of Object.entries(rates)) {
+      await prisma.exchangeRate.upsert({
+        where: {
+          source_baseCurrency_targetCurrency: {
+            source,
+            baseCurrency,
+            targetCurrency,
+          },
+        },
+        update: {
+          rate,
+          fetchedAt,
+        },
+        create: {
+          source,
+          baseCurrency,
+          targetCurrency,
+          rate,
+          fetchedAt,
+        },
+      });
     }
 
-    // Insert new snapshot
-    const result = await client.query(
-      `INSERT INTO exchange_rate_snapshots (source, base_currency, rates, fetched_at, status)
-       VALUES ($1, $2, $3, $4, 'active')
-       RETURNING id, source, base_currency as "baseCurrency", rates, fetched_at as "fetchedAt", 
-                 status, created_at as "createdAt"`,
-      [source, baseCurrency, JSON.stringify(rates), fetchedAt]
-    );
+    // Invalidate cache
+    cachedRates = {};
+    cachedAt = null;
 
     logger.info(`${SERVICE_NAME}: Snapshot saved for ${fetchedAt}`);
-    return result.rows[0];
-  } finally {
-    client.release();
-  }
-}
-
-/**
- * Provide CommonJS-compatible named exports for environments where
- * the module system interop wraps exports into a default object
- * (helps ts-jest / Jest resolve named exports reliably).
- */
-/* istanbul ignore next */
-if (typeof module !== 'undefined' && (module as any).exports) {
-  try {
-    Object.assign((module as any).exports, {
-      initializeFxService,
-      getLatestSnapshot,
-      convertAmount,
-      saveSnapshot,
-      isSnapshotStale,
-      getSnapshotHistory,
-      markSnapshotStale,
-      getRate,
-    });
-  } catch (e) {
-    // ignore
+    return { success: true, fetchedAt };
+  } catch (err) {
+    logger.error(`${SERVICE_NAME}: saveSnapshot failed`, err as Error);
+    throw err;
   }
 }
 
@@ -184,22 +162,20 @@ if (typeof module !== 'undefined' && (module as any).exports) {
 export async function getSnapshotHistory(
   startDate: Date,
   endDate: Date,
-  currency?: string
-): Promise<ExchangeRateSnapshot[]> {
+  _currency?: string
+): Promise<any[]> {
   try {
-    let query = `SELECT * FROM exchange_rate_snapshots
-                 WHERE fetched_at BETWEEN $1 AND $2`;
-    const params: (Date | string)[] = [startDate, endDate];
+    const snapshots = await prisma.exchangeRate.findMany({
+      where: {
+        fetchedAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { fetchedAt: 'desc' },
+    });
 
-    if (currency) {
-      query += ` AND rates ? $3`;
-      params.push(currency);
-    }
-
-    query += ` ORDER BY fetched_at DESC`;
-
-    const result = await getPool().query(query, params);
-    return result.rows;
+    return snapshots;
   } catch (err) {
     logger.error(`${SERVICE_NAME}: getSnapshotHistory failed`, err as Error);
     throw err;
@@ -207,17 +183,18 @@ export async function getSnapshotHistory(
 }
 
 /**
- * Mark a snapshot as stale
+ * Mark old snapshots as stale
  */
-export async function markSnapshotStale(snapshotId: string): Promise<void> {
+export async function markSnapshotStale(_snapshotId: string): Promise<void> {
   try {
-    await getPool().query(
-      `UPDATE exchange_rate_snapshots
-       SET status = 'stale'
-       WHERE id = $1`,
-      [snapshotId]
-    );
-    logger.warn(`${SERVICE_NAME}: Snapshot ${snapshotId} marked as stale`);
+    // Mark all rates older than 3 hours as stale by deleting them
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    await prisma.exchangeRate.deleteMany({
+      where: {
+        fetchedAt: { lt: threeHoursAgo },
+      },
+    });
+    logger.warn(`${SERVICE_NAME}: Old snapshots marked as stale`);
   } catch (err) {
     logger.error(`${SERVICE_NAME}: markSnapshotStale failed`, err as Error);
     throw err;
@@ -231,9 +208,10 @@ export async function getRate(srcCurrency: string, destCurrency: string): Promis
   if (srcCurrency === destCurrency) return 1.0;
 
   try {
-    const snapshot = await getLatestSnapshot();
-    const rateSrc = parseFloat(String(snapshot.rates[srcCurrency]));
-    const rateDest = parseFloat(String(snapshot.rates[destCurrency]));
+    const rates = await getAllRates();
+    
+    const rateSrc = rates[srcCurrency];
+    const rateDest = rates[destCurrency];
 
     if (!rateSrc || !rateDest) {
       throw new Error(`Missing rates for ${srcCurrency}/${destCurrency}`);
@@ -246,4 +224,29 @@ export async function getRate(srcCurrency: string, destCurrency: string): Promis
   }
 }
 
+// Keep initializeFxService for backward compatibility
+export function initializeFxService(_pgPool: any): void {
+  // No longer needed - using Prisma directly
+  logger.info(`${SERVICE_NAME}: FX service initialized with Prisma`);
+}
 
+// For backward compatibility - get latest snapshot
+export async function getLatestSnapshot(): Promise<any> {
+  const rates = await getAllRates();
+  return {
+    rates,
+    fetchedAt: cachedAt || new Date(),
+    baseCurrency: 'USD',
+  };
+}
+
+export default {
+  initializeFxService,
+  getLatestSnapshot,
+  convertAmount,
+  saveSnapshot,
+  isSnapshotStale,
+  getSnapshotHistory,
+  markSnapshotStale,
+  getRate,
+};

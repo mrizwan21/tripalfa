@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Globe, HelpCircle, Bell, User, Check, ChevronDown, LogOut, Settings, LayoutDashboard } from 'lucide-react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Button } from '../ui/Button';
-import { cn } from '../../lib/utils';
+import { Button } from '../ui/button';
+import { cn } from '@tripalfa/ui-components';
 
 export function TripLogerHeader() {
     const navigate = useNavigate();

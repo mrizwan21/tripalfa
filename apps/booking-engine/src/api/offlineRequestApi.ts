@@ -35,7 +35,7 @@ interface PaymentRecordResponse {
 
 class OfflineRequestApi {
   private api: AxiosInstance;
-  private baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
   constructor() {
     this.api = axios.create({
@@ -183,14 +183,20 @@ class OfflineRequestApi {
   }
 
   /**
-   * Approve pricing (Customer)
+   * Approve or reject pricing (Customer)
    * PUT /api/offline-requests/:id/approve
+   * Payload: { approved: true } for approval
+   * Payload: { approved: false, rejectionReason } for rejection
    */
-  async approveRequest(requestId: string): Promise<OfflineChangeRequest> {
+  async approveRequest(requestId: string, approved: boolean = true, rejectionReason?: string): Promise<OfflineChangeRequest> {
     try {
+      const payload: any = { approved };
+      if (!approved && rejectionReason) {
+        payload.rejectionReason = rejectionReason;
+      }
       const response = await this.api.put<{ success: boolean; data: OfflineChangeRequest }>(
         `/${requestId}/approve`,
-        {}
+        payload
       );
       return response.data.data;
     } catch (error: any) {
@@ -204,22 +210,11 @@ class OfflineRequestApi {
 
   /**
    * Reject pricing (Customer)
-   * PUT /api/offline-requests/:id/reject
+   * PUT /api/offline-requests/:id/approve with { approved: false, rejectionReason }
+   * @deprecated Use approveRequest(requestId, false, rejectionReason) instead
    */
   async rejectRequest(requestId: string, rejectionReason: string): Promise<OfflineChangeRequest> {
-    try {
-      const response = await this.api.put<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}/reject`,
-        { rejectionReason }
-      );
-      return response.data.data;
-    } catch (error: any) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to reject request'
-      );
-    }
+    return this.approveRequest(requestId, false, rejectionReason);
   }
 
   /**
@@ -229,9 +224,10 @@ class OfflineRequestApi {
   async recordPayment(
     requestId: string,
     paymentData: {
-      paymentMethod: string;
+      paymentId: string;
       amount: number;
-      currency: string;
+      method: string;
+      transactionRef?: string;
     }
   ): Promise<PaymentRecordResponse['data']> {
     try {

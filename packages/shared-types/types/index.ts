@@ -11,19 +11,15 @@ export * from './company';
 export * from './user';
 export * from './rbac';
 export * from './booking';
-export * from './offline-request';
+export * from './loyalty';
+// Note: hotel-deals is in src/ directory, import directly using:
+// import type { AdvanceBookingTier, ... } from '@tripalfa/shared-types'
+// export * from './hotel-deals';
+// Note: offline-request types are not re-exported here due to naming conflicts.
+// Import directly from './offline-request' if needed.
 export * from './supplier';
 export * from './payment';
 export * from './finance';
 export * from './pricing';
 export * from './reference';
 export * from './system';
-
-// API Types
-export * from './api';
-
-// Utility Types
-export * from './utils';
-
-// Super Admin types
-export * from './superadmin';

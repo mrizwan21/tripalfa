@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import Notifications from '../../../pages/Notifications';
-import * as api from '../../../lib/api';
+import Notifications from '../../pages/Notifications';
+import * as api from '../../lib/api';
 
-vi.mock('../../../lib/api');
+vi.mock('../../lib/api');
 
 describe('Notifications Performance Tests', () => {
   const generateNotifications = (count: number) => {

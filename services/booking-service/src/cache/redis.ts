@@ -1,204 +1,232 @@
-import Redis from 'ioredis';
-import logger from '../utils/logger';
+/**
+ * Redis Cache Service for LITEAPI Data
+ * 
+ * Implements caching strategy for real-time hotel data:
+ * - Hotel search results (TTL: 15 min)
+ * - Room rates (TTL: 30 min)
+ * - Prebook sessions (TTL: 60 min)
+ * - Static data (TTL: 24 hours)
+ */
 
-// Redis configuration
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379', 10),
-  password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0', 10),
-  retryDelayOnFailover: 100,
-  maxRetriesPerRequest: 3,
-  lazyConnect: true,
-  keepAlive: 30000,
-  family: 4, // Use IPv4
+import { createClient } from 'redis';
+
+// Cache TTL constants (in seconds)
+export const CACHE_TTL = {
+  HOTEL_SEARCH: 900,      // 15 minutes
+  HOTEL_RATES: 1800,     // 30 minutes
+  PREBOOK_SESSION: 3600, // 60 minutes
+  RATE_LOCK: 600,         // 10 minutes
+  GUEST_DATA: 300,        // 5 minutes
+  MEDIUM: 3600,          // 1 hour (reviews)
+  LONG: 86400,           // 24 hours (static data like languages)
+} as const;
+
+// Cache key generators
+export const CacheKeys = {
+  hotelSearch: (params: Record<string, any>) => {
+    const hash = Buffer.from(JSON.stringify(params)).toString('base64');
+    return `hotel:search:${hash}`;
+  },
+  hotelRates: (hotelId: string, checkin: string, checkout: string) => 
+    `hotel:rates:${hotelId}:${checkin}:${checkout}`,
+  prebookSession: (sessionId: string) => 
+    `prebook:${sessionId}`,
+  rateLock: (offerId: string) => 
+    `rate:lock:${offerId}`,
+  guestData: (guestId: string) => 
+    `guest:${guestId}`,
 };
 
-// Initialize Redis client
-const redis = new Redis(redisConfig);
+// Redis client singleton
+let redisClient: ReturnType<typeof createClient> | null = null;
 
-// Event listeners for Redis connection
-redis.on('connect', () => {
-  logger.info('Redis connected successfully');
-});
+export async function getRedisClient() {
+  if (!redisClient) {
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+    
+    redisClient = createClient({
+      url: redisUrl,
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 10) {
+            console.error('[Redis] Max reconnection attempts reached');
+            return new Error('Max reconnection attempts reached');
+          }
+          console.log(`[Redis] Reconnecting... attempt ${retries}`);
+          return Math.min(retries * 100, 3000);
+        },
+      },
+    });
 
-redis.on('error', (error) => {
-  logger.error('Redis connection error:', { error });
-});
+    redisClient.on('error', (err) => {
+      console.error('[Redis] Client error:', err);
+    });
 
-redis.on('close', () => {
-  logger.warn('Redis connection closed');
-});
+    redisClient.on('connect', () => {
+      console.log('[Redis] Connected to Redis');
+    });
 
-redis.on('reconnecting', () => {
-  logger.info('Redis reconnecting...');
-});
-
-redis.on('ready', () => {
-  logger.info('Redis ready for operations');
-});
-
-// Cache key prefixes
-const CACHE_PREFIXES = {
-  BOOKING: 'booking:',
-  CUSTOMER: 'customer:',
-  COMPANY: 'company:',
-  BRANCH: 'branch:',
-  SUPPLIER: 'supplier:',
-  SEARCH: 'search:',
-  STATS: 'stats:',
-};
-
-// Cache TTL configurations (in seconds)
-const CACHE_TTL = {
-  BOOKING: 300,      // 5 minutes
-  CUSTOMER: 600,     // 10 minutes
-  COMPANY: 1800,     // 30 minutes
-  BRANCH: 1800,      // 30 minutes
-  SUPPLIER: 3600,    // 1 hour
-  SEARCH: 120,       // 2 minutes
-  STATS: 300,        // 5 minutes
-};
-
-// Cache operations
-export class CacheService {
-  private redis: Redis;
-
-  constructor() {
-    this.redis = redis;
+    await redisClient.connect();
   }
 
-  // Get cached data
+  return redisClient;
+}
+
+/**
+ * Cache Service
+ * Provides high-level caching operations for LITEAPI data
+ */
+export const CacheService = {
+  /**
+   * Get cached data by key
+   */
   async get<T>(key: string): Promise<T | null> {
     try {
-      const data = await this.redis.get(key);
+      const client = await getRedisClient();
+      const data = await client.get(key);
       if (!data) return null;
-      
-      return JSON.parse(data);
+      return JSON.parse(data) as T;
     } catch (error) {
-      logger.error('Cache get error:', { key, error });
+      console.error(`[Cache] Error getting key ${key}:`, error);
       return null;
     }
-  }
+  },
 
-  // Set cached data
-  async set(key: string, data: any, ttl?: number): Promise<void> {
+  /**
+   * Set cache with TTL
+   */
+  async set(key: string, data: any, ttlSeconds: number): Promise<boolean> {
     try {
-      const serializedData = JSON.stringify(data);
-      const expiration = ttl || CACHE_TTL.BOOKING;
-      
-      await this.redis.setex(key, expiration, serializedData);
+      const client = await getRedisClient();
+      await client.setEx(key, ttlSeconds, JSON.stringify(data));
+      return true;
     } catch (error) {
-      logger.error('Cache set error:', { key, error });
-    }
-  }
-
-  // Delete cached data
-  async del(key: string): Promise<void> {
-    try {
-      await this.redis.del(key);
-    } catch (error) {
-      logger.error('Cache delete error:', { key, error });
-    }
-  }
-
-  // Delete multiple keys by pattern
-  async delPattern(pattern: string): Promise<void> {
-    try {
-      const keys = await this.redis.keys(pattern);
-      if (keys.length > 0) {
-        await this.redis.del(...keys);
-      }
-    } catch (error) {
-      logger.error('Cache delete pattern error:', { pattern, error });
-    }
-  }
-
-  // Check if key exists
-  async exists(key: string): Promise<boolean> {
-    try {
-      const result = await this.redis.exists(key);
-      return result === 1;
-    } catch (error) {
-      logger.error('Cache exists error:', { key, error });
+      console.error(`[Cache] Error setting key ${key}:`, error);
       return false;
     }
-  }
+  },
 
-  // Increment a counter
-  async incr(key: string, ttl?: number): Promise<number> {
+  /**
+   * Delete cache by key
+   */
+  async delete(key: string): Promise<boolean> {
     try {
-      const result = await this.redis.incr(key);
-      if (ttl) {
-        await this.redis.expire(key, ttl);
+      const client = await getRedisClient();
+      await client.del(key);
+      return true;
+    } catch (error) {
+      console.error(`[Cache] Error deleting key ${key}:`, error);
+      return false;
+    }
+  },
+
+  /**
+   * Delete all keys matching pattern
+   */
+  async deletePattern(pattern: string): Promise<number> {
+    try {
+      const client = await getRedisClient();
+      const keys = await client.keys(pattern);
+      if (keys.length === 0) return 0;
+      await client.del(keys);
+      return keys.length;
+    } catch (error) {
+      console.error(`[Cache] Error deleting pattern ${pattern}:`, error);
+      return 0;
+    }
+  },
+
+  /**
+   * Check if key exists
+   */
+  async exists(key: string): Promise<boolean> {
+    try {
+      const client = await getRedisClient();
+      const result = await client.exists(key);
+      return result === 1;
+    } catch (error) {
+      console.error(`[Cache] Error checking key ${key}:`, error);
+      return false;
+    }
+  },
+
+  /**
+   * Get or set pattern - fetches from cache or executes fetcher and caches result
+   */
+  async getOrSet<T>(
+    key: string,
+    fetcher: () => Promise<T>,
+    ttlSeconds: number
+  ): Promise<T> {
+    // Try to get from cache first
+    const cached = await this.get(key);
+    if (cached !== null) {
+      console.log(`[Cache] HIT: ${key}`);
+      return cached;
+    }
+
+    // Fetch fresh data
+    console.log(`[Cache] MISS: ${key}`);
+    const data = await fetcher();
+    
+    // Cache the result (don't await, fire and forget)
+    this.set(key, data, ttlSeconds).catch(err => 
+      console.error(`[Cache] Failed to cache ${key}:`, err)
+    );
+
+    return data;
+  },
+
+  /**
+   * Lock a rate for booking session
+   */
+  async lockRate(offerId: string, userId: string): Promise<boolean> {
+    try {
+      const client = await getRedisClient();
+      const key = CacheKeys.rateLock(offerId);
+      const result = await client.setNX(key, JSON.stringify({ userId, lockedAt: new Date() }));
+      if (result) {
+        await client.expire(key, CACHE_TTL.RATE_LOCK);
       }
       return result;
     } catch (error) {
-      logger.error('Cache increment error:', { key, error });
-      return 0;
+      console.error(`[Cache] Error locking rate ${offerId}:`, error);
+      return false;
     }
-  }
+  },
 
-  // Set expiration for a key
-  async expire(key: string, ttl: number): Promise<void> {
-    try {
-      await this.redis.expire(key, ttl);
-    } catch (error) {
-      logger.error('Cache expire error:', { key, error });
-    }
-  }
+  /**
+   * Unlock a rate
+   */
+  async unlockRate(offerId: string): Promise<boolean> {
+    return this.delete(CacheKeys.rateLock(offerId));
+  },
 
-  // Get cache statistics
-  async getStats(): Promise<any> {
+  /**
+   * Check if rate is locked
+   */
+  async isRateLocked(offerId: string): Promise<{ locked: boolean; userId?: string }> {
     try {
-      const info = await this.redis.info('memory');
-      const keyspace = await this.redis.info('keyspace');
-      
-      return {
-        memory: info,
-        keyspace: keyspace,
-        connected: this.redis.status === 'ready'
-      };
+      const client = await getRedisClient();
+      const key = CacheKeys.rateLock(offerId);
+      const data = await client.get(key);
+      if (!data) return { locked: false };
+      const parsed = JSON.parse(data);
+      return { locked: true, userId: parsed.userId };
     } catch (error) {
-      logger.error('Cache stats error:', { error });
-      return null;
+      console.error(`[Cache] Error checking rate lock ${offerId}:`, error);
+      return { locked: false };
     }
-  }
+  },
+};
 
-  // Ping Redis to check connectivity
-  async ping(): Promise<void> {
-    try {
-      await this.redis.ping();
-    } catch (error) {
-      logger.error('Cache ping error:', { error });
-    }
+// Graceful shutdown
+export async function closeRedis() {
+  if (redisClient) {
+    await redisClient.quit();
+    redisClient = null;
+    console.log('[Redis] Connection closed');
   }
 }
 
-// Cache key generators
-export const cacheKeys = {
-  booking: (id: string) => `${CACHE_PREFIXES.BOOKING}${id}`,
-  customer: (id: string) => `${CACHE_PREFIXES.CUSTOMER}${id}`,
-  company: (id: string) => `${CACHE_PREFIXES.COMPANY}${id}`,
-  branch: (id: string) => `${CACHE_PREFIXES.BRANCH}${id}`,
-  supplier: (id: string) => `${CACHE_PREFIXES.SUPPLIER}${id}`,
-  inventory: (id: string) => `inventory:${id}`,
-  search: (query: string) => `${CACHE_PREFIXES.SEARCH}${Buffer.from(query).toString('base64')}`,
-  stats: (type: string) => `${CACHE_PREFIXES.STATS}${type}`,
-};
-
-// Cache service instance
-export const cacheService = new CacheService();
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Received SIGINT, closing Redis connection...');
-  await redis.quit();
-});
-
-process.on('SIGTERM', async () => {
-  logger.info('Received SIGTERM, closing Redis connection...');
-  await redis.quit();
-});
-
-export default redis;
+export default CacheService;

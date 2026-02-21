@@ -1,0 +1,26 @@
+{
+    "name": "@tripalfa/wallet",
+    "version": "1.0.0",
+    "description": "Wallet-related types and logic for TripAlfa",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "require": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "npx tsc",
+        "dev": "npx tsc --watch",
+        "type-check": "npx tsc --noEmit"
+    },
+    "dependencies": {
+        "@prisma/client": "^7.4.0",
+        "@tripalfa/shared-types": "workspace:*"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.3"
+    }
+}

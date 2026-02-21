@@ -1,4 +1,0 @@
-exclude:
-  - "**/.vscode/extensions/**/typescript/lib/lib.dom.d.ts"
-  - ".vscode/extensions/**/typescript/lib/lib.dom.d.ts"
-  - "/Users/*/.vscode/extensions/**/typescript/lib/lib.dom.d.ts"

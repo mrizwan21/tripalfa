@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Ticket, Wallet, FileText, CheckCircle2, AlertCircle } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 
 interface IssueTicketModalProps {
     isOpen: boolean;

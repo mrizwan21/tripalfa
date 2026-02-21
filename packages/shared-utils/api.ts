@@ -1,4 +1,4 @@
-// Super Admin Panel - API Client
+// Admin Panel - API Client
 import axios from 'axios';
 // Stubbing types due to persistent module resolution issues
 type AxiosError = any;

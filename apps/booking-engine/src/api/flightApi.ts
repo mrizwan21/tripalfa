@@ -41,7 +41,7 @@ interface FlightSearchResponse {
 
 class FlightApi {
   private api: AxiosInstance;
-  private baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
   constructor() {
     this.api = axios.create({

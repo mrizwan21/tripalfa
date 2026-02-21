@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plane, ChevronLeft, ChevronRight, Shield, Briefcase, Info, BadgeCheck, Star, ArrowLeft, Check, Ticket, Gift, CreditCard, ChevronDown, Armchair, Utensils, Luggage, User } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Plane, ChevronLeft, ChevronRight, Shield, Briefcase, Info, BadgeCheck, Star, ArrowLeft, Check, Ticket, Gift, CreditCard, ChevronDown, Armchair, Utensils, Luggage, User, TrendingUp } from 'lucide-react';
+import { Button } from '../components/ui/button';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { FlightSegment } from '../lib/srs-types';
 import { fetchLoyaltyPrograms } from '../lib/api';
-import { 
-    SeatSelectionPopup, 
-    BaggageSelectionPopup, 
-    MealSelectionPopup, 
-    SpecialServicesPopup 
+import { useLoyaltyBalance } from '../hooks/useLoyaltyBalance';
+import { TierProgressBar } from '../components/loyalty/TierProgressBar';
+import {
+    SeatSelectionPopup,
+    BaggageSelectionPopup,
+    MealSelectionPopup,
+    SpecialServicesPopup
 } from '../components/ancillary';
-import { 
-    Passenger, 
-    FlightSegmentInfo, 
-    SelectedSeat, 
-    SelectedBaggage, 
-    SelectedMeal, 
+import {
+    Passenger,
+    FlightSegmentInfo,
+    SelectedSeat,
+    SelectedBaggage,
+    SelectedMeal,
     SelectedSpecialService,
     AncillarySelections,
     calculateAncillarySummary,
@@ -37,6 +39,11 @@ export default function AddOns() {
 
     // Extract dynamic data from navigation state
     const { flight, selectedFare, passengers } = location.state || {};
+
+    // Loyalty hook for tier and points calculations
+    const { balance: loyaltyStatus } = useLoyaltyBalance();
+    const balance = loyaltyStatus?.currentPoints || 0;
+    const tier = loyaltyStatus?.tier?.name;
 
     const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
     const [couponApplied, setCouponApplied] = useState(false);
@@ -75,7 +82,7 @@ export default function AddOns() {
     const formattedPassengers: Passenger[] = useMemo(() => {
         const passengerList: Passenger[] = [];
         let id = 1;
-        
+
         // Add adults
         for (let i = 0; i < (passengers?.adults || 1); i++) {
             passengerList.push({
@@ -87,7 +94,7 @@ export default function AddOns() {
             });
             id++;
         }
-        
+
         // Add children
         for (let i = 0; i < (passengers?.children || 0); i++) {
             passengerList.push({
@@ -99,7 +106,7 @@ export default function AddOns() {
             });
             id++;
         }
-        
+
         // Add infants (only for meals and special services, not seats)
         for (let i = 0; i < (passengers?.infants || 0); i++) {
             passengerList.push({
@@ -111,14 +118,14 @@ export default function AddOns() {
             });
             id++;
         }
-        
+
         return passengerList;
     }, [passengers]);
 
     // Format segments for ancillary components
     const formattedSegments: FlightSegmentInfo[] = useMemo(() => {
         if (!flight?.segments) return [];
-        
+
         return flight.segments.map((seg: FlightSegment, idx: number) => ({
             id: `segment-${idx + 1}`,
             flightNumber: seg.flightNumber || `${seg.airline || 'XX'}${100 + idx}`,
@@ -171,6 +178,16 @@ export default function AddOns() {
     const subTotal = baseFare + addonTotal + ancillaryTotal;
     const discount = couponApplied ? 129 : 0;
     const finalTotal = subTotal - discount;
+
+    // Calculate points earning (1 point per 1 currency unit, with tier multiplier)
+    const tierMultipliers: Record<string, number> = {
+        'Bronze': 1, 'Silver': 1.25, 'Gold': 1.5, 'Platinum': 1.75, 'Diamond': 2
+    };
+    const pointsMultiplier = tierMultipliers[tier || 'Bronze'] || 1;
+    const pointsEarned = Math.round(finalTotal * pointsMultiplier);
+    const nextTierPoints = 50000; // Example target for next tier
+    const pointsNeeded = Math.max(0, nextTierPoints - (balance || 0));
+    const progressToNextTier = ((balance || 0) / nextTierPoints) * 100;
 
     if (!flight) {
         return (
@@ -393,7 +410,7 @@ export default function AddOns() {
                                             {seatEligiblePassengers.length} passenger{seatEligiblePassengers.length !== 1 ? 's' : ''} - {formattedSegments.length} flight{formattedSegments.length !== 1 ? 's' : ''}
                                         </span>
                                     </div>
-                                    
+
                                     {selectedSeats.length > 0 && (
                                         <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
                                             <p className="text-sm font-bold text-green-700">
@@ -401,7 +418,7 @@ export default function AddOns() {
                                             </p>
                                         </div>
                                     )}
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <button
                                             onClick={() => setShowSeatPopup(true)}
@@ -439,7 +456,7 @@ export default function AddOns() {
                                             {formattedPassengers.length} passenger{formattedPassengers.length !== 1 ? 's' : ''} - {formattedSegments.length} flight{formattedSegments.length !== 1 ? 's' : ''}
                                         </span>
                                     </div>
-                                    
+
                                     {selectedMeals.length > 0 && (
                                         <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
                                             <p className="text-sm font-bold text-green-700">
@@ -447,7 +464,7 @@ export default function AddOns() {
                                             </p>
                                         </div>
                                     )}
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <button
                                             onClick={() => setShowMealPopup(true)}
@@ -485,7 +502,7 @@ export default function AddOns() {
                                             {isLCC ? 'No baggage included' : '23kg per passenger included'}
                                         </span>
                                     </div>
-                                    
+
                                     {selectedBaggage.length > 0 && (
                                         <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
                                             <p className="text-sm font-bold text-green-700">
@@ -493,7 +510,7 @@ export default function AddOns() {
                                             </p>
                                         </div>
                                     )}
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <button
                                             onClick={() => setShowBaggagePopup(true)}
@@ -531,7 +548,7 @@ export default function AddOns() {
                                             Subject to availability
                                         </span>
                                     </div>
-                                    
+
                                     {selectedSpecialServices.length > 0 && (
                                         <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
                                             <p className="text-sm font-bold text-green-700">
@@ -539,7 +556,7 @@ export default function AddOns() {
                                             </p>
                                         </div>
                                     )}
-                                    
+
                                     <div className="flex items-center justify-between">
                                         <button
                                             onClick={() => setShowSpecialServicesPopup(true)}
@@ -667,6 +684,79 @@ export default function AddOns() {
                                 </div>
                             </div>
 
+                            {/* Tier Benefits & Points Earning */}
+                            <div className="bg-white rounded-[2rem] border border-gray-100 shadow-lg p-8 space-y-6">
+                                {/* Current Tier */}
+                                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        <Gift className="text-[#8B5CF6]" size={20} />
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Current Tier</p>
+                                            <p className="text-sm font-black text-gray-900">{tier || 'Bronze'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Balance</p>
+                                        <p className="text-sm font-black text-gray-900">{(balance || 0).toLocaleString()} pts</p>
+                                    </div>
+                                </div>
+
+                                {/* Tier Progress */}
+                                <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Progress to Next Tier</p>
+                                    <div className="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden">
+                                        <div
+                                            className="bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full transition-all"
+                                            style={{ width: `${Math.min(progressToNextTier, 100)}%` }}
+                                        />
+                                    </div>
+                                    <p className="text-[9px] text-gray-500">{pointsNeeded.toLocaleString()} points needed</p>
+                                </div>
+
+                                {/* Points Earning */}
+                                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-4 border border-purple-100">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <TrendingUp className="text-green-600" size={16} />
+                                            <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Points you'll earn</span>
+                                        </div>
+                                        <span className="text-sm font-black text-green-600">+{pointsEarned.toLocaleString()}</span>
+                                    </div>
+                                    <p className="text-[9px] text-gray-500">With {(pointsMultiplier).toFixed(2)}x multiplier ({tier || 'Bronze'} tier)</p>
+                                </div>
+
+                                {/* Tier Benefits */}
+                                <div>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Your Tier Benefits</p>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-[9px]">
+                                            <Check size={14} className="text-green-500 shrink-0" />
+                                            <span className="text-gray-600">{(tierMultipliers[tier || 'Bronze'] || 1).toFixed(2)}x points multiplier</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[9px]">
+                                            <Check size={14} className="text-green-500 shrink-0" />
+                                            <span className="text-gray-600">Priority customer support</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[9px]">
+                                            <Check size={14} className="text-green-500 shrink-0" />
+                                            <span className="text-gray-600">Exclusive flight deals & offers</span>
+                                        </div>
+                                        {tier === 'Diamond' && (
+                                            <>
+                                                <div className="flex items-center gap-2 text-[9px]">
+                                                    <Check size={14} className="text-purple-500 shrink-0" />
+                                                    <span className="text-gray-600 font-bold">Diamond concierge service</span>
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[9px]">
+                                                    <Check size={14} className="text-purple-500 shrink-0" />
+                                                    <span className="text-gray-600 font-bold">Free annual seat upgrades</span>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Coupon Section */}
                             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-lg p-8">
                                 <div className="flex items-center gap-3 mb-6">
@@ -710,8 +800,8 @@ export default function AddOns() {
                                             className="w-full flex items-center justify-between h-12 px-4 rounded-xl border border-gray-100 text-sm font-bold text-gray-700 hover:border-[#8B5CF6] transition-colors"
                                         >
                                             <span className={selectedProgram ? 'text-gray-900' : 'text-gray-400'}>
-                                                {selectedProgram 
-                                                    ? loyaltyPrograms.find(p => p.id === selectedProgram)?.programName 
+                                                {selectedProgram
+                                                    ? loyaltyPrograms.find(p => p.id === selectedProgram)?.programName
                                                     : 'Select Loyalty Program'}
                                             </span>
                                             <ChevronDown size={18} className={`transition-transform ${loyaltyDropdownOpen ? 'rotate-180' : ''}`} />
@@ -728,9 +818,8 @@ export default function AddOns() {
                                                                 setSelectedProgram(program.id);
                                                                 setLoyaltyDropdownOpen(false);
                                                             }}
-                                                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${
-                                                                selectedProgram === program.id ? 'bg-purple-50' : ''
-                                                            }`}
+                                                            className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors ${selectedProgram === program.id ? 'bg-purple-50' : ''
+                                                                }`}
                                                         >
                                                             <div className="text-sm font-bold text-gray-900">{program.programName}</div>
                                                             <div className="text-xs text-gray-400">{program.airlineName} ({program.airlineCode})</div>
@@ -741,16 +830,16 @@ export default function AddOns() {
                                         )}
                                     </div>
                                     <div className="flex gap-2">
-                                        <input 
-                                            id="frequent-flyer-number" 
-                                            name="frequent-flyer-number" 
-                                            type="text" 
+                                        <input
+                                            id="frequent-flyer-number"
+                                            name="frequent-flyer-number"
+                                            type="text"
                                             value={frequentFlyerNumber}
                                             onChange={(e) => setFrequentFlyerNumber(e.target.value)}
-                                            placeholder="Frequent Flyer Number" 
-                                            className="flex-1 h-12 rounded-xl border border-gray-100 px-4 text-sm font-bold outline-none focus:border-[#8B5CF6]" 
+                                            placeholder="Frequent Flyer Number"
+                                            className="flex-1 h-12 rounded-xl border border-gray-100 px-4 text-sm font-bold outline-none focus:border-[#8B5CF6]"
                                         />
-                                        <Button 
+                                        <Button
                                             onClick={() => {
                                                 if (selectedProgram && frequentFlyerNumber) {
                                                     console.log('Loyalty saved:', { program: selectedProgram, number: frequentFlyerNumber });

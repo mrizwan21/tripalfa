@@ -75,6 +75,7 @@ export interface FlightSegment {
   departureTerminal?: string;
   arrivalTerminal?: string;
   aircraft?: string;
+  airlineLogo?: string;
 }
 
 export interface FlightFare {

@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Plus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { RequestChangeModal } from '@/components/OfflineRequests';
-import { OfflineChangeRequest } from '@tripalfa/shared-types';
+import { OfflineChangeRequest, OfflineRequestStatus } from '@tripalfa/shared-types';
 
 interface BookingDetailsRequestButtonProps {
   bookingId: string;
@@ -27,18 +27,22 @@ export const BookingDetailsRequestButton = ({
   const [showModal, setShowModal] = useState(false);
 
   const pendingRequests = linkedRequests.filter(
-    (r) => r.status !== 'completed' && r.status !== 'rejected'
+    (r) => r.status !== OfflineRequestStatus.COMPLETED && r.status !== OfflineRequestStatus.REJECTED
   );
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pending':
-      case 'submitted':
+      case OfflineRequestStatus.PENDING_STAFF:
+      case OfflineRequestStatus.PRICING_SUBMITTED:
         return <Clock className="w-4 h-4 text-blue-600" />;
-      case 'under_review':
+      case OfflineRequestStatus.PENDING_CUSTOMER_APPROVAL:
         return <AlertCircle className="w-4 h-4 text-orange-600" />;
-      case 'approved':
+      case OfflineRequestStatus.APPROVED:
         return <CheckCircle className="w-4 h-4 text-yellow-600" />;
+      case OfflineRequestStatus.PAYMENT_PENDING:
+        return <Clock className="w-4 h-4 text-purple-600" />;
+      case OfflineRequestStatus.CANCELLED:
+        return <AlertCircle className="w-4 h-4 text-gray-600" />;
       default:
         return <Clock className="w-4 h-4 text-gray-600" />;
     }
@@ -46,13 +50,18 @@ export const BookingDetailsRequestButton = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-      case 'submitted':
+      case OfflineRequestStatus.PENDING_STAFF:
         return 'bg-blue-100 text-blue-800';
-      case 'under_review':
+      case OfflineRequestStatus.PRICING_SUBMITTED:
         return 'bg-orange-100 text-orange-800';
-      case 'approved':
+      case OfflineRequestStatus.PENDING_CUSTOMER_APPROVAL:
         return 'bg-yellow-100 text-yellow-800';
+      case OfflineRequestStatus.APPROVED:
+        return 'bg-green-100 text-green-800';
+      case OfflineRequestStatus.PAYMENT_PENDING:
+        return 'bg-purple-100 text-purple-800';
+      case OfflineRequestStatus.CANCELLED:
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -144,10 +153,11 @@ export const BookingDetailsRequestButton = ({
 
       {/* Modal */}
       <RequestChangeModal
-        open={showModal}
-        onOpenChange={setShowModal}
-        initialBookingId={bookingId}
-        onSubmit={() => {
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={async (changeRequest) => {
+          // TODO: Implement the API call to create the offline request
+          console.log('Change request:', changeRequest);
           setShowModal(false);
           onRequestCreated?.();
         }}

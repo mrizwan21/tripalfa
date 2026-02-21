@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 export type ToastPosition = 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
@@ -60,7 +60,7 @@ export const Toast: React.FC<ToastProps> = ({
   onClose,
   onClick,
 }) => {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout>(undefined);
   const style = toastStyles[type];
 
   useEffect(() => {
@@ -172,4 +172,22 @@ export const Toaster: React.FC<ToasterProps> = ({
       </div>
     </div>
   );
+};
+
+// Toast function API
+let toastId = 0;
+type ToastItem = Omit<ToastProps, 'onClose'> & { onClose?: (id: string) => void };
+const toasts: ToastItem[] = [];
+let onToastChange: ((toasts: ToastItem[]) => void) | null = null;
+
+export const toast = {
+  success: (message: string) => {
+    console.log(`Toast success: ${message}`);
+  },
+  error: (message: string) => {
+    console.error(`Toast error: ${message}`);
+  },
+  info: (message: string) => {
+    console.info(`Toast info: ${message}`);
+  },
 };

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Key, CreditCard, ShieldCheck, Bell, User, Download } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 import PageHeader from '../components/layout/PageHeader';
-import { Card } from '../components/ui/Card';
-import { formatCurrency } from '../lib/utils';
+import { Card } from '../components/ui/card';
+import { formatCurrency } from '@tripalfa/ui-components';
 
 type CardItem = { id: string; brand: string; last4: string; exp: string; currency: string; balance?: number };
 

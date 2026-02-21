@@ -27,16 +27,21 @@ const WalletTopUp = lazy(() => import("./pages/WalletTopUp"));
 const WalletTransfer = lazy(() => import("./pages/WalletTransfer"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
+const Loyalty = lazy(() => import("./pages/Loyalty"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Notifications = lazy(() => import("./pages/Notifications"));
 const NotificationPreferencesPage = lazy(() => import("./pages/NotificationPreferencesPage"));
+const Alerts = lazy(() => import("./pages/Alerts"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const Home = lazy(() => import("./pages/Home"));
 const TranslationTest = lazy(() => import("./pages/TranslationTest"));
 const AdminTranslations = lazy(() => import("./pages/AdminTranslations"));
+const AdminBookingCards = lazy(() => import("./pages/AdminBookingCards"));
+const FlightSearchLoadingDemo = lazy(() => import("./pages/FlightSearchLoadingDemo"));
+const HotelSearchLoadingDemo = lazy(() => import("./pages/HotelSearchLoadingDemo"));
 
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -60,6 +65,9 @@ function App() {
             {/* Dashboard */}
             <Route path="dashboard" element={<Dashboard />} />
 
+            {/* Loyalty */}
+            <Route path="loyalty" element={<Loyalty />} />
+
             {/* Profile & Account */}
             <Route path="profile" element={<Profile />} />
             <Route path="account-settings" element={<AccountSettings />} />
@@ -67,6 +75,7 @@ function App() {
             {/* Notifications */}
             <Route path="notifications" element={<Notifications />} />
             <Route path="settings/notifications" element={<NotificationPreferencesPage />} />
+            <Route path="alerts" element={<Alerts />} />
 
             {/* Bookings */}
             <Route path="bookings" element={<BookingManagement />} />
@@ -85,6 +94,9 @@ function App() {
 
             {/* Admin Translations */}
             <Route path="admin-translations" element={<AdminTranslations />} />
+
+            {/* Admin Booking Cards */}
+            <Route path="admin/bookings" element={<AdminBookingCards />} />
 
             {/* Catch-all for layout routes */}
             <Route path="*" element={<NotFound />} />
@@ -118,6 +130,10 @@ function App() {
             <Route path=":id" element={<HotelDetail />} />
             <Route path="addons" element={<HotelAddons />} />
           </Route>
+
+          {/* Demo Routes */}
+          <Route path="/demo/flight-search-loading" element={<FlightSearchLoadingDemo />} />
+          <Route path="/demo/hotel-search-loading" element={<HotelSearchLoadingDemo />} />
 
           {/* Global Catch-all */}
           <Route path="*" element={<NotFound />} />

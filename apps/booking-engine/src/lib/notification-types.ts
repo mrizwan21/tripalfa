@@ -1,6 +1,7 @@
-export type NotificationType = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR' | 'SSR' | 'ITINERARY_CHANGE' | 'AMENDMENT' | 'SYSTEM';
 
-export type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED' | 'CONFIRMATION';
+// UI-specific Notification Types
+export type NotificationType = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'SSR' | 'ITINERARY_CHANGE' | 'AMENDMENT' | 'SYSTEM';
+export type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'CANCELLED' | 'CONFIRMATION' | 'INFO';
 
 export interface NotificationItem {
     id: string;

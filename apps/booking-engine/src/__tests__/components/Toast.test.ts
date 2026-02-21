@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { toast } from '../../components/ui/Toast';
+import { toast } from '../../components/ui/toast';
 
 describe('Toast Component', () => {
   beforeEach(() => {

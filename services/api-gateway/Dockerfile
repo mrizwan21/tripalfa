@@ -1,52 +1,75 @@
-FROM node:18-alpine
+# Dockerfile for api-gateway - NEON Database Support
+# This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
+# Parameters: SERVICE_NAME=api-gateway, WORKSPACE_NAME=@tripalfa/api-gateway, PORT=3000, HEALTH_PATH=health
+
+FROM node:20-alpine AS builder
+
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy monorepo root files
-COPY package*.json ./
+# Copy lockfile and workspace config first for layer caching
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 
-# Copy packages for workspace dependencies
-COPY packages ./packages
+# Copy all project files
+COPY services ./services/
+COPY packages ./packages/
+COPY database ./database/
+COPY scripts ./scripts/
+COPY tsconfig.json tsconfig.base.json ./
 
-# Copy api-gateway service
-COPY services/api-gateway ./services/api-gateway
+# Install dependencies using pnpm with cache mount
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+      --frozen-lockfile \
+      --ignore-scripts \
+      --fetch-timeout=300000
 
-# Install dependencies with workspace support
-RUN npm install --legacy-peer-deps
+# Generate Prisma client
+RUN pnpm --filter @tripalfa/shared-database generate
 
-# Build TypeScript to JavaScript
+# Clean up build info files from the host
+RUN find . -name "*.tsbuildinfo" -delete
+
+# Build the service
+RUN pnpm --filter @tripalfa/api-gateway... build
+
+# Production stage
+FROM node:20-alpine
+
+# Install dumb-init and curl for health checks, enable corepack and pnpm for production stage
+RUN apk add --no-cache dumb-init curl && \
+    corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy essential files for pnpm production install
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY services/api-gateway/package.json ./services/api-gateway/
+COPY packages ./packages/
+COPY database ./database/
+COPY scripts ./scripts/
+
+# Install production dependencies only with cache mount (skip husky hooks)
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+      --frozen-lockfile \
+      --prod \
+      --ignore-scripts \
+      --fetch-timeout=300000
+
+# Copy built dist from builder
+COPY --from=builder /app/services/api-gateway/dist ./services/api-gateway/dist
+
 WORKDIR /app/services/api-gateway
-RUN npm run build
-
-# Final stage
-FROM node:18-alpine
-
-RUN apk add --no-cache dumb-init tini
-
-WORKDIR /app
-
-# Copy monorepo files
-COPY package*.json ./
-COPY packages ./packages
-
-# Copy built app and node_modules from builder
-COPY --from=0 /app/node_modules ./node_modules
-COPY --from=0 /app/services/api-gateway/dist ./services/api-gateway/dist
-COPY --from=0 /app/services/api-gateway/package*.json ./services/api-gateway/
-
-# Set environment
-ENV NODE_ENV=production
-ENV PORT=3000
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
-USER nodejs
 
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
 
-# Start the app
-CMD ["node", "services/api-gateway/dist/services/api-gateway/src/index.js"]
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "--enable-source-maps", "dist/index.js"]

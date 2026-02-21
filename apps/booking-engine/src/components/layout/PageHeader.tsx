@@ -98,14 +98,14 @@ export default function PageHeader({ title, subtitle, actions }: Props) {
   }
 
   return (
-    <header className="mb-6 rounded-xl bg-gradient-to-r from-indigo-600 via-violet-600 to-pink-600 text-white p-6 shadow-lg">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <header className="mb-4 rounded-lg bg-white border border-slate-200 p-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-semibold leading-tight">{title}</h1>
-          {subtitle && <p className="text-indigo-100 mt-1">{subtitle}</p>}
+          <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+          {subtitle && <p className="text-slate-500 text-sm mt-0.5">{subtitle}</p>}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {actions}
         </div>
       </div>

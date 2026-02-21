@@ -1,0 +1,19 @@
+{
+    "api": {
+        "upstream_url": "http://host.docker.internal:3007",
+        "request_path": "/booking",
+        "strip_uri": true,
+        "preserve_host": false
+    },
+    "plugins": [
+        {
+            "config": {
+                "key_names": [
+                    "apikey"
+                ],
+                "hide_credentials": true
+            },
+            "name": "key-auth"
+        }
+    ]
+}

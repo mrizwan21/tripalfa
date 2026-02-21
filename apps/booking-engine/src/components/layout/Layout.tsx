@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { TripLogerHeader } from './TripLogerHeader';
 import TripLogerFooter from './TripLogerFooter';
 import Sidebar from './Sidebar';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 export function Layout() {
   const location = useLocation();

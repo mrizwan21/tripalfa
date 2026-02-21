@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import React from 'react';
-import { Toast, type ToastType } from '../../components/ui/Toast';
+import { Toast, type ToastType } from '../../components/ui/toast';
 
 /**
  * Test suite for Toast Notification component

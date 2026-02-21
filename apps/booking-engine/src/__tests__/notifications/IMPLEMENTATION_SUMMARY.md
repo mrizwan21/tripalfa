@@ -184,7 +184,7 @@ apps/booking-engine/
 │   │           └── handlers.ts
 │   ├── components/
 │   │   ├── NotificationDetailsPopup.tsx (existing)
-│   │   └── ui/Toast.tsx (existing)
+│   │   └── ui/toast.tsx (existing)
 │   └── pages/
 │       └── Notifications.tsx (existing)
 ├── package.json (updated with msw)

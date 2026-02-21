@@ -22,7 +22,6 @@ export type {
   Country,
   Nationality,
   HotelChain,
-  HotelFacility,
   HotelType,
   Location,
   StaticDataResponse,
@@ -35,14 +34,13 @@ export type {
 } from './types';
 
 // Re-export data types
+
+// Re-export types from data/index
 export type {
-  NotificationType,
-  NotificationStatus,
-  NotificationItem,
   Supplier,
   ApiVendor,
   Contract
-} from './data';
+} from './data/index';
 
 export { StaticDataError } from './types';
 
@@ -59,11 +57,8 @@ export {
   FALLBACK_CITIES,
   FALLBACK_CURRENCIES,
   FALLBACK_HOTEL_CHAINS,
-  FALLBACK_HOTEL_FACILITIES,
   FALLBACK_HOTEL_TYPES,
-  FALLBACK_LOCATIONS,
-  getFallbackData,
-  shouldUseFallback
+  FALLBACK_LOCATIONS
 } from './fallbacks';
 
 export {
@@ -90,19 +85,16 @@ export {
   getCities,
   getCurrencies,
   getHotelChains,
-  getHotelFacilities,
   getHotelTypes,
   getLocations
 } from './client';
 
 // Re-export data functions
 export {
-  MOCK_NOTIFICATIONS,
-  getMockNotifications,
   MOCK_SUPPLIERS,
   getMockSuppliers,
   MOCK_VENDORS,
   getMockVendors,
   MOCK_CONTRACTS,
   getMockContracts
-} from './data';
+} from './data/index';

@@ -1,6 +1,6 @@
 'use client';
 
-// Super Admin Panel - Providers
+// Admin Panel - Providers
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
 import { type ReactNode } from 'react';
@@ -27,7 +27,7 @@ function makeQueryClient() {
 
 let browserQueryClient: QueryClient | undefined;
 
-function getQueryClient() {
+export function getQueryClient() {
   if (typeof window === 'undefined') {
     // Server: always create a new query client
     return makeQueryClient();
@@ -47,7 +47,7 @@ interface ProvidersProps {
   children: ReactNode;
 }
 
-export function Providers({ children }: ProvidersProps) {
+export function Providers({ children }: ProvidersProps): React.ReactElement {
   const queryClient = getQueryClient();
 
   return (

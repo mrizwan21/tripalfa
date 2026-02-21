@@ -154,6 +154,7 @@ export function SingleMonthCalendar({
 
     return (
         <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
+            {/* @ts-ignore - Radix UI / React 19 type mismatch */}
             <Popover.Trigger asChild>
                 <div className="relative group/field cursor-pointer space-y-1.5" data-testid={label.toLowerCase().replace(/\s+/g, '-')}>
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">{label}*</label>

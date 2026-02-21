@@ -13,7 +13,6 @@ import {
   Country,
   Nationality,
   HotelChain,
-  HotelFacility,
   HotelType,
   Location,
   StaticDataResponse,
@@ -24,7 +23,6 @@ import {
 } from './types';
 import { cacheManager, DEFAULT_CACHE_CONFIG } from './cache';
 import { generateCacheKey, sanitizeSearchParams, retryWithBackoff, shouldUseFallback } from './utils';
-import { getFallbackData } from './fallbacks';
 
 export class StaticDataClient {
   private config: StaticDataConfig;
@@ -98,7 +96,7 @@ export class StaticDataClient {
       };
     } catch (error) {
       if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'airports')) {
-        const fallbackData = getFallbackData<Airport>('airports');
+        const fallbackData: Airport[] = [];
         cache.set(cacheKey, fallbackData, 'fallback');
 
         return {
@@ -141,7 +139,7 @@ export class StaticDataClient {
       };
     } catch (error) {
       if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'airlines')) {
-        const fallbackData = getFallbackData<Airline>('airlines');
+        const fallbackData: Airline[] = [];
         cache.set(cacheKey, fallbackData, 'fallback');
 
         return {
@@ -184,7 +182,7 @@ export class StaticDataClient {
       };
     } catch (error) {
       if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'cities')) {
-        const fallbackData = getFallbackData<City>('cities');
+        const fallbackData: City[] = [];
         cache.set(cacheKey, fallbackData, 'fallback');
 
         return {
@@ -227,7 +225,7 @@ export class StaticDataClient {
       };
     } catch (error) {
       if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'currencies')) {
-        const fallbackData = getFallbackData<Currency>('currencies');
+        const fallbackData: Currency[] = [];
         cache.set(cacheKey, fallbackData, 'fallback');
 
         return {
@@ -270,7 +268,7 @@ export class StaticDataClient {
       };
     } catch (error) {
       if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'hotelChains')) {
-        const fallbackData = getFallbackData<HotelChain>('hotelChains');
+        const fallbackData: HotelChain[] = [];
         cache.set(cacheKey, fallbackData, 'fallback');
 
         return {
@@ -281,49 +279,6 @@ export class StaticDataClient {
         };
       }
       throw new StaticDataError('Failed to fetch hotel chains', 'client', error as Error);
-    }
-  }
-
-  /**
-   * Get hotel facilities with caching and fallback
-   */
-  async getHotelFacilities(params?: SearchParams): Promise<StaticDataResponse<HotelFacility>> {
-    const cacheKey = generateCacheKey('hotelFacilities', params);
-    const cache = cacheManager.getCache<HotelFacility[]>('hotelFacilities', this.config.cache);
-
-    const cached = cache.get(cacheKey);
-    if (cached) {
-      return {
-        data: cached.data,
-        total: cached.data.length,
-        cached: true,
-        source: cached.source
-      };
-    }
-
-    try {
-      const data = await this.fetchFromSources<HotelFacility[]>('hotelFacilities', params);
-      cache.set(cacheKey, data, 'api');
-
-      return {
-        data,
-        total: data.length,
-        cached: false,
-        source: 'api'
-      };
-    } catch (error) {
-      if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'hotelFacilities')) {
-        const fallbackData = getFallbackData<HotelFacility>('hotelFacilities');
-        cache.set(cacheKey, fallbackData, 'fallback');
-
-        return {
-          data: fallbackData,
-          total: fallbackData.length,
-          cached: false,
-          source: 'fallback'
-        };
-      }
-      throw new StaticDataError('Failed to fetch hotel facilities', 'client', error as Error);
     }
   }
 
@@ -356,7 +311,7 @@ export class StaticDataClient {
       };
     } catch (error) {
       if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'hotelTypes')) {
-        const fallbackData = getFallbackData<HotelType>('hotelTypes');
+        const fallbackData: HotelType[] = [];
         cache.set(cacheKey, fallbackData, 'fallback');
 
         return {
@@ -367,6 +322,49 @@ export class StaticDataClient {
         };
       }
       throw new StaticDataError('Failed to fetch hotel types', 'client', error as Error);
+    }
+  }
+
+  /**
+   * Get hotel amenities with caching and fallback
+   */
+  async getHotelAmenities(params?: SearchParams): Promise<StaticDataResponse<any>> {
+    const cacheKey = generateCacheKey('hotelAmenities', params);
+    const cache = cacheManager.getCache<any[]>('hotelAmenities', this.config.cache);
+
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      return {
+        data: cached.data,
+        total: cached.data.length,
+        cached: true,
+        source: cached.source
+      };
+    }
+
+    try {
+      const data = await this.fetchFromSources<any[]>('hotels/amenities', params);
+      cache.set(cacheKey, data, 'api');
+
+      return {
+        data,
+        total: data.length,
+        cached: false,
+        source: 'api'
+      };
+    } catch (error) {
+      if (this.config.fallbackEnabled && shouldUseFallback(error as Error, 'hotelAmenities')) {
+        const fallbackData: any[] = [];
+        cache.set(cacheKey, fallbackData, 'fallback');
+
+        return {
+          data: fallbackData,
+          total: fallbackData.length,
+          cached: false,
+          source: 'fallback'
+        };
+      }
+      throw new StaticDataError('Failed to fetch hotel amenities', 'client', error as Error);
     }
   }
 
@@ -415,9 +413,9 @@ export class StaticDataClient {
       }
 
       // If empty but succeeded, maybe no results in DB, try local filter as fallback
-      const fallbackLocations = getFallbackData<Location>('locations');
+      const fallbackLocations: Location[] = [];
       return fallbackLocations
-        .filter(l =>
+        .filter((l: Location) =>
           l.name.toLowerCase().includes(normalizedQuery) ||
           (l.iata_code && l.iata_code.toLowerCase().includes(normalizedQuery))
         )
@@ -427,9 +425,9 @@ export class StaticDataClient {
       console.warn('[StaticDataClient] Remote suggestions failed, using local fallback:', error);
 
       // Fallback to static locations with local filtering
-      const fallbackLocations = getFallbackData<Location>('locations');
+      const fallbackLocations: Location[] = [];
       return fallbackLocations
-        .filter(l =>
+        .filter((l: Location) =>
           l.name.toLowerCase().includes(normalizedQuery) ||
           (l.iata_code && l.iata_code.toLowerCase().includes(normalizedQuery))
         )
@@ -489,7 +487,7 @@ export class StaticDataClient {
               'Content-Type': 'application/json',
             },
             signal: AbortSignal.timeout(timeout)
-          });
+          }) as Response;
 
           if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -518,6 +516,6 @@ export const getAirlines = (params?: SearchParams) => staticDataClient.getAirlin
 export const getCities = (params?: SearchParams) => staticDataClient.getCities(params);
 export const getCurrencies = (params?: SearchParams) => staticDataClient.getCurrencies(params);
 export const getHotelChains = (params?: SearchParams) => staticDataClient.getHotelChains(params);
-export const getHotelFacilities = (params?: SearchParams) => staticDataClient.getHotelFacilities(params);
+export const getHotelAmenities = (params?: SearchParams) => staticDataClient.getHotelAmenities(params);
 export const getHotelTypes = (params?: SearchParams) => staticDataClient.getHotelTypes(params);
 export const getLocations = (query?: string) => staticDataClient.getLocations(query);

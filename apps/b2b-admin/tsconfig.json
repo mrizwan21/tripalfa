@@ -1,35 +1,39 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "useDefineForClassFields": true,
     "lib": [
       "DOM",
       "DOM.Iterable",
       "ESNext"
     ],
-    "allowJs": false,
-    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "skipLibCheck": true,
+    "strict": true,
     "noEmit": true,
-    "jsx": "react",
-
-    "typeRoots": [
-      "./node_modules/@types",
-      "../node_modules/@types"
-    ],
+    "types": ["node"],
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/components/ui/*": [
+        "../../packages/ui-components/ui/*"
+      ],
+      "@/components/dashboard/*": [
+        "./src/features/dashboard/components/*"
+      ],
+      "@/lib/*": [
+        "./src/shared/lib/*"
+      ],
+      "@tripalfa/rules": [
+        "../../packages/rules"
+      ],
+      "@tripalfa/rules/*": [
+        "../../packages/rules/*"
       ],
       "@tripalfa/shared-utils": [
         "../../packages/shared-utils"
@@ -49,25 +53,18 @@
       "@tripalfa/shared-types/*": [
         "../../packages/shared-types/*"
       ],
-      "@tripalfa/shared": [
-        "../../packages/shared-utils"
+      "@tripalfa/api-clients": [
+        "../../packages/api-clients"
       ],
-      "@tripalfa/shared/*": [
-        "../../packages/shared-utils/*"
-      ],
-      "@tripalfa/ui": [
-        "../../packages/ui-components"
-      ],
-      "@tripalfa/ui/*": [
-        "../../packages/ui-components/*"
+      "@tripalfa/api-clients/*": [
+        "../../packages/api-clients/*"
       ]
-    }
+    },
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
     "src",
-    "../../packages/ui-components/**/*",
-    "../../packages/shared-utils/**/*",
-    "../../packages/shared-types/**/*"
+    "vite.config.ts"
   ],
   "exclude": [
     "node_modules",

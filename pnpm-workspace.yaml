@@ -1,0 +1,17 @@
+packages:
+  - apps/*
+  - apps/b2b-admin/server
+  - services/*
+  - packages/*
+
+ignoredBuiltDependencies:
+  - '@nestjs/core'
+
+onlyBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - '@scarf/scarf'
+  - esbuild
+  - msw
+  - prisma
+  - puppeteer

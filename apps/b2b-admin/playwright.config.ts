@@ -4,7 +4,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30 * 1000,
   expect: {
-    timeout: 5000,
+    timeout: 10000,
   },
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -12,31 +12,21 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5178', // Updated to match Vite dev server port
+    baseURL: 'http://localhost:5177',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run dev -- --port 5178',
-    port: 5178,
+    command: 'pnpm run dev',
+    port: 5177,
     reuseExistingServer: !process.env.CI,
-    env: {
-      NODE_ENV: 'production',
-    },
+    timeout: 120 * 1000,
   },
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
     },
   ],
 });

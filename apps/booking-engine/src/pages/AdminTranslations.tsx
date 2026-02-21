@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../lib/translation';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
 
 export default function AdminTranslations() {

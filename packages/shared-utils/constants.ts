@@ -1,4 +1,4 @@
-// Super Admin Panel - Constants
+// Admin Panel - Constants
 // Navigation, permissions, and configuration constants
 
 import type { MenuItem, FilterOption } from './types';
@@ -83,6 +83,13 @@ export const MAIN_MENU: MenuItem[] = [
     icon: 'Award',
     href: '/promotions',
     permissions: ['marketing.read'],
+  },
+  {
+    id: 'hotel-deals',
+    label: 'Hotel Deals',
+    icon: 'Building2',
+    href: '/rules/hotel-deals',
+    permissions: ['rules.read'],
   },
   {
     id: 'inventory',
@@ -205,7 +212,7 @@ export const API_ENDPOINTS = {
     refresh: '/v1/auth/refresh',
     me: '/v1/auth/me',
   },
-  // Admin (Super Admin Panel endpoints)
+  // Admin endpoints
   ADMIN: {
     COMPANIES: '/v1/admin/companies',
     USERS: '/v1/admin/users',
@@ -268,7 +275,7 @@ export const API_ENDPOINTS = {
   airlines: '/v1/partner/reference/airlines',
   airports: '/v1/partner/reference/airports',
   cities: '/v1/partner/reference/cities',
-  // Audit Logs (Super Admin)
+  // Audit Logs
   auditLogs: {
     list: '/v1/admin/audit-logs',
     byId: (id: string) => `/v1/admin/audit-logs/${id}`,

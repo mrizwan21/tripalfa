@@ -6,3 +6,10 @@ declare module 'express-serve-static-core' {
     userId?: string;
   }
 }
+
+declare module 'express' {
+  interface Request {
+    user?: AuthPayload;
+    userId?: string;
+  }
+}

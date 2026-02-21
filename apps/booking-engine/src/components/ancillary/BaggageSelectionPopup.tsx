@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Luggage, Briefcase, Plane, Plus, Trash2 } from 'lucide-react';
-import { Button } from '../ui/Button';
-import { formatCurrency } from '../../lib/utils';
+import { Button } from '../ui/button';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { 
     Passenger, 
     FlightSegmentInfo, 

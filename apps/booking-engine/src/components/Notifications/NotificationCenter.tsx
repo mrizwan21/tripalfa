@@ -1,19 +1,30 @@
 import { useState, useMemo } from 'react';
-import { Search, Filter, Trash2, Eye, EyeOff, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Search, Filter, Trash2, Eye, Settings, Loader2 } from 'lucide-react';
+import { Button } from '@tripalfa/ui-components/ui/button';
+import { Input } from '@tripalfa/ui-components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@tripalfa/ui-components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@tripalfa/ui-components/ui/select';
 import { useNotifications } from '@/hooks/useNotifications';
-import { Loader2 } from 'lucide-react';
+
+// Simple Badge component inline
+const Badge = ({ children, className = '', variant = 'default' }: { children: React.ReactNode; className?: string; variant?: string }) => {
+  const variantClasses: Record<string, string> = {
+    default: 'bg-gray-100 text-gray-800',
+    outline: 'border border-gray-300 bg-transparent text-gray-700',
+    secondary: 'bg-gray-200 text-gray-900',
+  };
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant] || variantClasses.default} ${className}`}>
+      {children}
+    </span>
+  );
+};
 
 export const NotificationCenter = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -322,11 +333,11 @@ export const NotificationCenter = () => {
                     )}
 
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
                       onClick={() => deleteNotification(notification.id)}
                       title="Delete"
-                      className="w-full"
+                      className="w-full text-red-600 border-red-300 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

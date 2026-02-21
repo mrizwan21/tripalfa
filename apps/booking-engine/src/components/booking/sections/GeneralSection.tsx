@@ -1,6 +1,6 @@
 import React from 'react';
 import { Booking, Flight, Hotel } from '../../../lib/srs-types';
-import { Card, CardContent, CardHeader, CardTitle } from '../../ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../ui/card';
 import { StatusBadge } from '../../ui/StatusBadge';
 import { MapPin, Calendar, Users, Plane, Bed } from 'lucide-react';
 import { format } from 'date-fns';

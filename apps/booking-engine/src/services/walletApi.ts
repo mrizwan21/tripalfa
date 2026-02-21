@@ -1,13 +1,12 @@
-// frontend/services/walletApi.ts
-// React API client for wallet service
+// React API client for wallet service (routed through API Gateway)
 
-const API_BASE = import.meta.env.VITE_WALLET_API || 'http://localhost:3007/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 /**
  * Get user's wallets with balances
  */
 export async function getUserWallets(token: string): Promise<any> {
-  const response = await fetch(`${API_BASE}/wallet`, {
+  const response = await fetch(`${API_BASE}/api/wallet`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error(`Failed to fetch wallets: ${response.statusText}`);
@@ -24,8 +23,8 @@ export async function transferBetweenWallets(token: string, params: {
   idempotencyKey: string;
 }): Promise<any> {
   const { fromCurrency, toCurrency, amount, idempotencyKey } = params;
-  
-  const response = await fetch(`${API_BASE}/wallet/transfer`, {
+
+  const response = await fetch(`${API_BASE}/api/wallet/transfer`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -56,7 +55,7 @@ export async function getTransferHistory(token: string, options: {
 } = {}): Promise<any> {
   const { limit = 20, offset = 0 } = options;
   const query = new URLSearchParams({ limit: limit.toString(), offset: offset.toString() });
-  const response = await fetch(`${API_BASE}/wallet/transfer/history?${query}`, {
+  const response = await fetch(`${API_BASE}/api/wallet/history?${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -73,8 +72,8 @@ export async function getFxPreview(token: string, fromCurrency: string, toCurren
     toCurrency,
     amount: amount.toString(),
   });
-  
-  const response = await fetch(`${API_BASE}/wallet/fx-preview?${query}`, {
+
+  const response = await fetch(`${API_BASE}/api/wallet/fx-preview?${query}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

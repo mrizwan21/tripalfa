@@ -13,17 +13,8 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,
-    "noEmit": true,
-    "baseUrl": ".",
-    "paths": {
-      "@tripalfa/static-data": [
-        "packages/static-data/src"
-      ],
-      "@tripalfa/shared-types": [
-        "packages/shared-types/src"
-      ]
-    },
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": []
   },
   "include": [
     "./types/**/*.d.ts"
@@ -36,5 +27,52 @@
     "**/*.test.tsx",
     "**/*.spec.ts",
     "**/*.spec.tsx"
+  ],
+  "references": [
+    {
+      "path": "packages/shared-utils"
+    },
+    {
+      "path": "packages/wallet"
+    },
+    {
+      "path": "packages/rules"
+    },
+    {
+      "path": "packages/notifications"
+    },
+    {
+      "path": "packages/static-data"
+    },
+    {
+      "path": "packages/api-clients"
+    },
+    {
+      "path": "packages/shared-database"
+    },
+    {
+      "path": "services/booking-service"
+    },
+    {
+      "path": "services/payment-service"
+    },
+    {
+      "path": "services/user-service"
+    },
+    {
+      "path": "services/notification-service"
+    },
+    {
+      "path": "services/organization-service"
+    },
+    {
+      "path": "services/rule-engine-service"
+    },
+    {
+      "path": "services/kyc-service"
+    },
+    {
+      "path": "services/marketing-service"
+    }
   ]
 }

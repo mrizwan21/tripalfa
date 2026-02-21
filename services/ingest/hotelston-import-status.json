@@ -1,6 +1,0 @@
-{
-  "lastCheck": "2026-02-02T05:49:55.229Z",
-  "status": "MONITORING",
-  "endpoint": "https://dev.hotelston.com/ws/StaticDataServiceV2/StaticDataServiceHttpSoap11Endpoint/",
-  "attempts": 104
-}

@@ -98,11 +98,6 @@ export interface HotelAmenity {
   updated_at: string;
 }
 
-/**
- * @deprecated Use HotelAmenity instead. This alias is kept for backward compatibility.
- */
-export type HotelFacility = HotelAmenity;
-
 export interface HotelType {
   code?: string;
   name: string;

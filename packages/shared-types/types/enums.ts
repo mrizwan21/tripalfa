@@ -596,3 +596,33 @@ export enum TextDirection {
   LTR = 'LTR',
   RTL = 'RTL',
 }
+
+// ============================================================================
+// Deal Domain Enums
+// ============================================================================
+
+export enum DealType {
+  PRIVATE_FARE = 'PRIVATE_FARE',
+  NDC_SPECIAL = 'NDC_SPECIAL',
+  CORPORATE = 'CORPORATE',
+  GROUP = 'GROUP',
+}
+
+export enum DealStatus {
+  ACTIVE = 'ACTIVE',
+  PAUSED = 'PAUSED',
+  EXPIRED = 'EXPIRED',
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+}
+
+export enum JourneyType {
+  DOMESTIC = 'DOMESTIC',
+  INTERNATIONAL = 'INTERNATIONAL',
+  REGIONAL = 'REGIONAL',
+  ALL = 'ALL',
+}
+
+export enum ProductType {
+  FLIGHT = 'FLIGHT',
+  HOTEL = 'HOTEL',
+}

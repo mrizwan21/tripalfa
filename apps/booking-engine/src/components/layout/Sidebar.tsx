@@ -10,17 +10,25 @@ import {
   Bell,
   ChevronRight,
   ShieldCheck,
-  Zap
+  Zap,
+  Star,
+  Shield
 } from "lucide-react";
-import { cn } from "../../lib/utils";
+import { cn } from "@tripalfa/ui-components";
 
 const SIDEBAR_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart },
   { href: "/bookings", label: "My Bookings", icon: Calendar },
   { href: "/profile", label: "Personal Info", icon: User },
   { href: "/wallet", label: "Wallet & Funds", icon: CreditCard },
-  { href: "/notifications", label: "Alerts", icon: Bell },
+  { href: "/loyalty", label: "Loyalty Hub", icon: Star },
+  { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/account-settings", label: "Security", icon: Settings },
+];
+
+// Admin links - shown only for admin users
+const ADMIN_LINKS = [
+  { href: "/admin/bookings", label: "Admin Bookings", icon: Shield },
 ];
 
 export default function Sidebar() {
@@ -71,6 +79,41 @@ export default function Sidebar() {
                     <span className="text-xs font-bold tracking-tight">{ln.label}</span>
                   </div>
                   {active && <ChevronRight size={14} className="text-slate-400" />}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Admin Section */}
+        <div className="bg-purple-50 rounded-[2rem] border border-purple-100/50 p-3">
+          <p className="text-[10px] font-bold text-purple-600 uppercase tracking-widest mb-2 px-3">Admin Tools</p>
+          <nav className="space-y-1">
+            {ADMIN_LINKS.map((ln) => {
+              const Icon = ln.icon;
+              const active = pathname.startsWith(ln.href);
+
+              return (
+                <Link
+                  key={ln.href}
+                  to={ln.href}
+                  className={cn(
+                    "group flex items-center justify-between p-3 rounded-2xl transition-all duration-200",
+                    active
+                      ? "bg-white text-purple-900 shadow-sm"
+                      : "text-purple-600 hover:bg-white/50"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "flex items-center justify-center w-8 h-8 rounded-xl transition-colors",
+                      active ? "bg-purple-100 text-purple-600" : "bg-purple-100/50 group-hover:bg-purple-100 text-purple-500"
+                    )}>
+                      <Icon size={16} />
+                    </div>
+                    <span className="text-xs font-bold tracking-tight">{ln.label}</span>
+                  </div>
+                  {active && <ChevronRight size={14} className="text-purple-400" />}
                 </Link>
               );
             })}

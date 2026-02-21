@@ -67,10 +67,10 @@ export default function BookingManagement() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 max-w-7xl mt-10 space-y-10">
+        <div className="container mx-auto px-4 max-w-7xl mt-6 space-y-6">
           {/* Filters Section */}
-          <section className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-gray-50/50 relative overflow-hidden group">
-            <div className="absolute top-0 left-0 w-1 h-full bg-[#8B5CF6] opacity-20 group-hover:opacity-100 transition-opacity" />
+          <section className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 relative overflow-hidden group">
+            <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-20 group-hover:opacity-100 transition-opacity" />
             <div className="space-y-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400">

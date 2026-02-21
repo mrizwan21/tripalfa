@@ -36,16 +36,19 @@ export const PricingApprovalView: React.FC<PricingApprovalViewProps> = ({
 
   // Approve pricing mutation
   const approveMutation = useMutation({
-    mutationFn: () => offlineRequestApi.approveRequest(request.id),
+    mutationFn: () => offlineRequestApi.approveRequest(request.id, true),
     onSuccess: () => {
-      onApproved?.();
-      onPaymentRequired?.();
+      if (priceDifference > 0) {
+        onPaymentRequired?.();
+      } else {
+        onApproved?.();
+      }
     },
   });
 
   // Reject pricing mutation
   const rejectMutation = useMutation({
-    mutationFn: () => offlineRequestApi.rejectRequest(request.id, rejectionReason),
+    mutationFn: () => offlineRequestApi.approveRequest(request.id, false, rejectionReason),
     onSuccess: () => {
       onRejected?.();
     },
@@ -325,7 +328,7 @@ export const PricingApprovalView: React.FC<PricingApprovalViewProps> = ({
                   className="flex-1 bg-green-600 hover:bg-green-700"
                 >
                   {approveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Approve & Proceed to Payment
+                  {priceDifference > 0 ? 'Approve & Proceed to Payment' : 'Approve Changes'}
                 </Button>
               </div>
             ) : (

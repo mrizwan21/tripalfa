@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, MapPin, Star, Wifi, Coffee, Waves, Calendar, User, ChevronDown, ChevronRight, Check, Filter, ArrowUpDown, RotateCcw, Building2 } from 'lucide-react';
-import { searchHotels } from '../lib/api';
-import { formatCurrency } from '../lib/utils';
+import { Search, MapPin, Star, Wifi, Coffee, Waves, Calendar, User, ChevronDown, ChevronRight, Check, Filter, ArrowUpDown, RotateCcw, Building2, Zap, Clock, Server } from 'lucide-react';
+import hotelApi from '../api/hotelApi';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
+import { usePopularDestinations } from '../hooks/useHotelStaticData';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { HOTEL_STATIC_DATA } from '@tripalfa/static-data/frontend-index';
+// AMENITY_ICONS is accessed via HOTEL_STATIC_DATA.AMENITY_ICONS
+const AMENITY_ICONS: Record<string, string> = (HOTEL_STATIC_DATA as any).AMENITY_ICONS ?? {};
 
 export default function HotelSearch() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const popularDestinations = usePopularDestinations(5);
 
   // Form State
   const [location, setLocation] = useState(searchParams.get('location') || 'Dubai');
@@ -23,25 +28,122 @@ export default function HotelSearch() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [isCached, setIsCached] = useState(false);
 
   // Filter State
   const [activeFilter, setActiveFilter] = useState<number | null>(null);
   const [starFilter, setStarFilter] = useState<number | null>(null);
+  const [selectedProviders, setSelectedProviders] = useState<Set<string>>(new Set());
+  const [selectedAmenities, setSelectedAmenities] = useState<Set<string>>(new Set());
+  
+  // HYBRID FILTER: Extract unique providers from real-time results (Redis cached)
+  const realtimeProviders = useMemo(() => {
+    const providerMap = new Map<string, { name: string; count: number }>();
+    hotels.forEach(hotel => {
+      const provider = hotel.provider || 'Unknown';
+      if (!providerMap.has(provider)) {
+        providerMap.set(provider, { name: provider, count: 1 });
+      } else {
+        providerMap.get(provider)!.count++;
+      }
+    });
+    return Array.from(providerMap.values()).sort((a, b) => b.count - a.count);
+  }, [hotels]);
+  
+  // HYBRID FILTER: Extract unique amenities from real-time results
+  const realtimeAmenities = useMemo(() => {
+    const amenityMap = new Map<string, { code: string; name: string; count: number }>();
+    hotels.forEach(hotel => {
+      (hotel.amenities || []).forEach((amenity: string) => {
+        const code = amenity.toLowerCase().replace(/\s+/g, '_');
+        if (!amenityMap.has(code)) {
+          // Get name from static data
+          const staticAmenity = HOTEL_STATIC_DATA.AMENITIES.all.find(a => 
+            a.code.toLowerCase() === code || a.name.toLowerCase() === amenity.toLowerCase()
+          );
+          amenityMap.set(code, {
+            code,
+            name: staticAmenity?.name || amenity,
+            count: 1
+          });
+        } else {
+          amenityMap.get(code)!.count++;
+        }
+      });
+    });
+    return Array.from(amenityMap.values()).sort((a, b) => b.count - a.count);
+  }, [hotels]);
+  
+  // Filtered hotels based on all filters
+  const filteredHotels = useMemo(() => {
+    return hotels.filter(hotel => {
+      // Star filter
+      if (starFilter && hotel.rating < starFilter) return false;
+      
+      // Provider filter
+      if (selectedProviders.size > 0 && !selectedProviders.has(hotel.provider)) return false;
+      
+      // Amenities filter
+      if (selectedAmenities.size > 0) {
+        const hotelAmenityCodes = (hotel.amenities || []).map((a: string) => 
+          a.toLowerCase().replace(/\s+/g, '_')
+        );
+        const hasAllAmenities = Array.from(selectedAmenities).every(amenity => 
+          hotelAmenityCodes.includes(amenity)
+        );
+        if (!hasAllAmenities) return false;
+      }
+      
+      return true;
+    });
+  }, [hotels, starFilter, selectedProviders, selectedAmenities]);
+  
+  // Filter toggle handlers
+  const toggleProviderFilter = (provider: string) => {
+    setSelectedProviders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(provider)) {
+        newSet.delete(provider);
+      } else {
+        newSet.add(provider);
+      }
+      return newSet;
+    });
+  };
+  
+  const toggleAmenityFilter = (amenity: string) => {
+    setSelectedAmenities(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(amenity)) {
+        newSet.delete(amenity);
+      } else {
+        newSet.add(amenity);
+      }
+      return newSet;
+    });
+  };
+  
+  const resetFilters = () => {
+    setStarFilter(null);
+    setSelectedProviders(new Set());
+    setSelectedAmenities(new Set());
+  };
 
-  // Perform search
+  // Perform search using LITEAPI with Redis caching
   const handleSearch = async () => {
     setIsLoading(true);
     setHasSearched(true);
     try {
-      const result = await searchHotels({
+      const result = await hotelApi.search({
         location,
         checkin,
         checkout,
         adults,
-        children,
+        children: children > 0 ? [children] : undefined,
         rooms
       });
       setHotels(result.hotels || []);
+      setIsCached(result.cached || false);
       // Update URL params
       setSearchParams({ location, checkin, checkout, adults: String(adults), children: String(children), rooms: String(rooms) });
     } catch (error) {
@@ -65,11 +167,6 @@ export default function HotelSearch() {
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
   }, []);
-
-  // Filter hotels by star rating
-  const filteredHotels = starFilter
-    ? hotels.filter(h => h.rating >= starFilter)
-    : hotels;
 
   return (
     <TripLogerLayout>
@@ -191,23 +288,18 @@ export default function HotelSearch() {
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.3em] mt-2">Explore trending hotels worldwide</p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {[
-                  { name: 'Dubai', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80', hotels: '2,450+' },
-                  { name: 'London', image: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&q=80', hotels: '3,120+' },
-                  { name: 'Paris', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80', hotels: '2,890+' },
-                  { name: 'New York', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80', hotels: '4,200+' }
-                ].map((dest, i) => (
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                {(popularDestinations || []).slice(0, 5).map((dest, i) => (
                   <div
                     key={i}
-                    onClick={() => { setLocation(dest.name); handleSearch(); }}
+                    onClick={() => { setLocation(dest.city); handleSearch(); }}
                     className="group relative h-64 rounded-[2rem] overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
                   >
-                    <img src={dest.image} alt={dest.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                    <img src={dest.imageUrl || '/images/placeholder-hotel.jpg'} alt={dest.city} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                     <div className="absolute bottom-6 left-6">
-                      <h3 className="text-2xl font-black text-white tracking-tight">{dest.name}</h3>
-                      <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-1">{dest.hotels} Hotels</p>
+                      <h3 className="text-2xl font-black text-white tracking-tight">{dest.city}</h3>
+                      <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mt-1">{dest.hotelCount ? `${dest.hotelCount}+ Hotels` : ''}</p>
                     </div>
                   </div>
                 ))}
@@ -232,7 +324,15 @@ export default function HotelSearch() {
               {/* Filter Bar */}
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-black text-gray-900">{filteredHotels.length} Hotels Found</h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-black text-gray-900">{filteredHotels.length} Hotels Found</h2>
+                    {isCached && (
+                      <span className="flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase tracking-wider">
+                        <Zap size={12} className="text-green-600" />
+                        Cached
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">In {location}</p>
                 </div>
 

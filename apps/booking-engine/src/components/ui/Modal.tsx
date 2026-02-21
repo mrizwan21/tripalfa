@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 interface ModalProps {
     isOpen: boolean;

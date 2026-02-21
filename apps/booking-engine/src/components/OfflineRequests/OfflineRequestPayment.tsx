@@ -49,10 +49,12 @@ export const OfflineRequestPayment: React.FC<OfflineRequestPaymentProps> = ({
   // Process payment mutation
   const processPaymentMutation = useMutation({
     mutationFn: async () => {
+      // Generate a unique payment ID
+      const paymentId = `${request.id}-payment-${Date.now()}`;
       const response = await offlineRequestApi.recordPayment(request.id, {
-        paymentMethod: selectedPaymentMethod,
+        paymentId,
         amount,
-        currency,
+        method: selectedPaymentMethod,
       });
       return response;
     },

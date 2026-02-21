@@ -71,5 +71,10 @@ export const passwordChecklist = [
 export * from './constants';
 export * from './types';
 export * from './utils';
-export * from './api';
-export * from './hooks';
+// Logger exports
+export { createLogger, createChildLogger, type LogLevel, type LoggerConfig } from './logger';
+// Note: hooks and api are excluded from the main index to avoid pulling in frontend dependencies (react-query, etc.) during server-side tsc builds.
+// import { ... } from '@tripalfa/shared-utils/hooks'
+// import { ... } from '@tripalfa/shared-utils/api'
+// export * from './api';
+// export * from './hooks';

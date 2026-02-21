@@ -1,7 +1,72 @@
-// Super Admin Panel - Type Definitions
-// Re-exports from shared types + admin-specific types
+// @ts-ignore
+import * as React from 'react';
 
-export * from '../shared-types/types';
+export * from '@tripalfa/shared-types';
+
+// Export types from the types directory
+// export * from '@tripalfa/shared-types/types/company'; // Covered by main export
+
+// Payment types - define locally to avoid dependency issues
+// These can be moved to @tripalfa/shared-types when that package is properly set up
+export interface Transaction {
+  id: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  type: 'payment' | 'refund' | 'credit' | 'debit';
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  walletId: string;
+  bookingId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TransactionCreate {
+  amount: number;
+  currency: string;
+  type: 'payment' | 'refund' | 'credit' | 'debit';
+  description?: string;
+  walletId: string;
+  bookingId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TransactionUpdate {
+  status?: 'pending' | 'completed' | 'failed' | 'refunded';
+  description?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface TransactionListParams {
+  walletId?: string;
+  status?: 'pending' | 'completed' | 'failed' | 'refunded';
+  type?: 'payment' | 'refund' | 'credit' | 'debit';
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface TransactionListResponse {
+  transactions: Transaction[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface TransactionWithRelations extends Transaction {
+  wallet?: {
+    id: string;
+    balance: number;
+    currency: string;
+  };
+  booking?: {
+    id: string;
+    type: string;
+    status: string;
+  };
+}
 
 export interface ApiResponse<T = unknown> {
   success: boolean;

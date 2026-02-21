@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Car, Utensils, Star, Info, ArrowRight, ArrowLeft, Clock, PartyPopper, ShieldCheck, Heart, User, Calendar, CreditCard, Check, ChevronRight, Calculator, Diamond, Tag, Sparkles } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { api } from '../lib/api';
-import { formatCurrency } from '../lib/utils';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { api, fetchAddonPrices } from '../lib/api';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { BookingStepper } from '../components/ui/BookingStepper';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 
@@ -18,6 +18,7 @@ export default function HotelAddons() {
     const children = searchParams.get('children') || '0';
     const [hotel, setHotel] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [addonPrices, setAddonPrices] = useState<Record<string, number>>({});
 
     const [addons, setAddons] = useState({
         refundProtect: false,
@@ -41,6 +42,20 @@ export default function HotelAddons() {
         }).catch(() => setLoading(false));
     }, [id, stateHotel]);
 
+    // Fetch addon prices from backend
+    useEffect(() => {
+        const loadAddonPrices = async () => {
+            try {
+                const prices = await fetchAddonPrices();
+                setAddonPrices(prices);
+            } catch (error) {
+                console.warn('Failed to load addon prices:', error);
+                setAddonPrices({});
+            }
+        };
+        loadAddonPrices();
+    }, []);
+
     if (loading) return (
         <TripLogerLayout>
             <div className="container mx-auto px-4 py-40 flex flex-col items-center">
@@ -48,6 +63,20 @@ export default function HotelAddons() {
             </div>
         </TripLogerLayout>
     );
+
+    const hasAllRoomPrices = () => {
+        if (!hotel || !hotel.rooms) return true;
+        
+        for (const [key, quantity] of Object.entries(selectedUnits)) {
+            if (Number(quantity) <= 0) continue;
+            const [roomId] = key.split('_');
+            const room = hotel.rooms.find((r: any) => r.id === roomId);
+            if (!room?.originalPrice?.amount) {
+                return false;
+            }
+        }
+        return true;
+    };
 
     const calculateTotal = () => {
         if (!hotel || !hotel.rooms) return 0;
@@ -59,15 +88,14 @@ export default function HotelAddons() {
             // key is format room.id_rate
             const [roomId] = key.split('_');
             const room = hotel.rooms.find((r: any) => r.id === roomId);
-            if (room) {
-                // Mock logic: ridx + 1 * 1500 used in HotelDetail for price fallback
-                const price = room.originalPrice?.amount || 1500;
+            if (room && room.originalPrice?.amount) {
+                const price = room.originalPrice.amount;
                 baseTotal += price * Number(quantity);
             }
         });
 
-        if (addons.refundProtect) baseTotal += 240;
-        if (addons.travelInsurance) baseTotal += 240;
+        if (addons.refundProtect) baseTotal += addonPrices['refundProtect'] ?? 0;
+        if (addons.travelInsurance) baseTotal += addonPrices['travelInsurance'] ?? 0;
         return baseTotal;
     };
 
@@ -102,7 +130,8 @@ export default function HotelAddons() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
                         <div className="lg:col-span-8 space-y-10">
-                            {/* Refund Protect Card */}
+                            {/* Refund Protect Card - Only render if price is available */}
+                            {addonPrices['refundProtect'] !== undefined && (
                             <Card className="overflow-hidden border-none shadow-xl rounded-[2.5rem] bg-white group hover:shadow-2xl transition-all duration-500">
                                 <div className="relative h-56">
                                     <img src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt="Refund Protect" />
@@ -164,14 +193,19 @@ export default function HotelAddons() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Additional Cost</p>
-                                            {/* Reduced Font Size as requested */}
-                                            <p className="text-xl font-black text-[#6366F1] tracking-tighter">SAR 240</p>
+                                            {addonPrices['refundProtect'] !== undefined ? (
+                                                <p className="text-xl font-black text-[#6366F1] tracking-tighter">{formatCurrency(addonPrices['refundProtect'], 'SAR')}</p>
+                                            ) : (
+                                                <p className="text-xs text-gray-400">Price unavailable</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </Card>
+                            )}
 
-                            {/* Travel Insurance Card */}
+                            {/* Travel Insurance Card - Only render if price is available */}
+                            {addonPrices['travelInsurance'] !== undefined && (
                             <Card className="overflow-hidden border-none shadow-xl rounded-[2.5rem] bg-white group hover:shadow-2xl transition-all duration-500">
                                 <div className="relative h-56">
                                     <img src="https://images.unsplash.com/photo-1544006659-f0b21f04cb1d?auto=format&fit=crop&q=80" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt="Travel Insurance" />
@@ -214,12 +248,16 @@ export default function HotelAddons() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">Additional Cost</p>
-                                            {/* Reduced Font Size as requested */}
-                                            <p className="text-xl font-black text-[#6366F1] tracking-tighter">SAR 240</p>
+                                            {addonPrices['travelInsurance'] !== undefined ? (
+                                                <p className="text-xl font-black text-[#6366F1] tracking-tighter">{formatCurrency(addonPrices['travelInsurance'], 'SAR')}</p>
+                                            ) : (
+                                                <p className="text-xs text-gray-400">Price unavailable</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
                             </Card>
+                            )}
                         </div>
 
                         <div className="lg:col-span-4 space-y-8 sticky top-32">
@@ -246,16 +284,24 @@ export default function HotelAddons() {
                                                             if (Number(qty) <= 0) return null;
                                                             const [roomId] = key.split('_');
                                                             const room = hotel?.rooms?.find((r: any) => r.id === roomId);
+                                                            const hasPrice = room?.originalPrice?.amount;
                                                             return (
-                                                                <p key={key} className="text-sm font-bold text-gray-900 leading-tight mb-1 last:mb-0">
-                                                                    {qty} × {room?.name || 'Room'}
+                                                                <p key={key} className="text-sm font-bold text-gray-900 leading-tight mb-1 last:mb-0 flex items-center justify-between">
+                                                                    <span>{qty} × {room?.name || 'Room'}</span>
+                                                                    {!hasPrice && <span className="text-[10px] font-medium text-orange-600 ml-2">Price on request</span>}
                                                                 </p>
                                                             );
                                                         })}
                                                     </div>
-                                                    <p className="text-sm font-black text-gray-900">
-                                                        {formatCurrency(calculateTotal() - (addons.refundProtect ? 240 : 0) - (addons.travelInsurance ? 240 : 0))}
-                                                    </p>
+                                                    {!hasAllRoomPrices() ? (
+                                                        <p className="text-sm font-black text-orange-600">
+                                                            Price on Request
+                                                        </p>
+                                                    ) : (
+                                                        <p className="text-sm font-black text-gray-900">
+                                                            {formatCurrency(calculateTotal() - (addons.refundProtect ? (addonPrices['refundProtect'] ?? 0) : 0) - (addons.travelInsurance ? (addonPrices['travelInsurance'] ?? 0) : 0))}
+                                                        </p>
+                                                    )}
                                                 </div>
                                                 <span className="inline-block mt-2 px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-black rounded uppercase tracking-wider">Taxes Included</span>
                                             </div>
@@ -275,13 +321,13 @@ export default function HotelAddons() {
                                                         {addons.refundProtect && (
                                                             <div className="flex justify-between text-xs font-bold text-gray-700">
                                                                 <span>Refund Protect</span>
-                                                                <span>SAR 240</span>
+                                                                <span>{addonPrices['refundProtect'] !== undefined ? formatCurrency(addonPrices['refundProtect'], 'SAR') : 'Price pending'}</span>
                                                             </div>
                                                         )}
                                                         {addons.travelInsurance && (
                                                             <div className="flex justify-between text-xs font-bold text-gray-700">
                                                                 <span>Travel Insurance</span>
-                                                                <span>SAR 240</span>
+                                                                <span>{addonPrices['travelInsurance'] !== undefined ? formatCurrency(addonPrices['travelInsurance'], 'SAR') : 'Price pending'}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -298,7 +344,11 @@ export default function HotelAddons() {
                                     {/* Total */}
                                     <div className="flex justify-between items-end">
                                         <span className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Payable</span>
-                                        <span className="text-3xl font-black text-[#6366F1] tracking-tighter">{formatCurrency(calculateTotal())}</span>
+                                        {!hasAllRoomPrices() ? (
+                                            <span className="text-lg font-black text-orange-600 tracking-tighter">Price on Request</span>
+                                        ) : (
+                                            <span className="text-3xl font-black text-[#6366F1] tracking-tighter">{formatCurrency(calculateTotal())}</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -338,26 +388,30 @@ export default function HotelAddons() {
                             </div>
 
                             <button
-                                className="w-full h-16 bg-[#6366F1] hover:bg-[#5558E3] font-black text-xs text-white shadow-[0_20px_40px_-10px_rgba(99,102,241,0.5)] rounded-[2rem] uppercase tracking-widest flex items-center justify-center gap-3 transition-all scale-95 hover:scale-100 active:scale-90"
+                                disabled={!hasAllRoomPrices()}
+                                className="w-full h-16 bg-[#6366F1] hover:bg-[#5558E3] disabled:bg-gray-300 disabled:cursor-not-allowed font-black text-xs text-white shadow-[0_20px_40px_-10px_rgba(99,102,241,0.5)] rounded-[2rem] uppercase tracking-widest flex items-center justify-center gap-3 transition-all scale-95 hover:scale-100 active:scale-90"
                                 onClick={() => {
                                     const total = calculateTotal();
+                                    const accommodationPrice = total - (addons.refundProtect ? (addonPrices['refundProtect'] ?? 0) : 0) - (addons.travelInsurance ? (addonPrices['travelInsurance'] ?? 0) : 0);
                                     const bookingState = {
                                         type: 'hotel',
                                         summary: {
                                             hotel: hotel,
                                             accommodation: {
                                                 selectedUnits,
-                                                price: total - (addons.refundProtect ? 240 : 0) - (addons.travelInsurance ? 240 : 0)
+                                                price: accommodationPrice
                                             },
                                             totals: {
                                                 final: total
                                             }
-                                        }
+                                        },
+                                        addOns: addons,
+                                        addonPrices: addonPrices
                                     };
                                     navigate(`/passenger-details?type=hotel&id=${id}`, { state: bookingState });
                                 }}
                             >
-                                Continue to Guests <ArrowRight size={20} />
+                                {!hasAllRoomPrices() ? 'Request Pricing' : 'Continue to Guests'} <ArrowRight size={20} />
                             </button>
                         </div>
                     </div>

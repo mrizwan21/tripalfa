@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, CreditCard, LogOut, Plane, Upload, Trash2, Download } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
-import { formatCurrency } from '../lib/utils';
+import { User, Mail, Phone, MapPin, Calendar, CreditCard, LogOut, Plane, Upload, Trash2, Download, TrendingUp, Gift } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { useNavigate } from 'react-router-dom';
 import { api, setAccessToken, listDocuments, uploadDocument, deleteDocument } from '../lib/api';
 import PageHeader from '../components/layout/PageHeader';
+import { useLoyaltyBalance } from '../hooks/useLoyaltyBalance';
+import { LoyaltyTierBadge } from '../components/loyalty/LoyaltyTierBadge';
+import { TierProgressBar } from '../components/loyalty/TierProgressBar';
+import type { TierBenefits } from '@/types/loyalty';
 
 type Booking = {
   id: string;
@@ -27,11 +31,29 @@ const HOTEL_CATEGORIES = ['Any', '1 star', '2 star', '3 star', '4 star', '5 star
 const LANGUAGES = ['English', 'Arabic', 'French', 'Spanish', 'German'];
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'AED'];
 
+// Default tier for fallback
+const defaultTier: TierBenefits = {
+  id: 'bronze',
+  name: 'Bronze',
+  level: 1,
+  minPoints: 0,
+  maxPoints: 999,
+  discountPercentage: 5,
+  pointsMultiplier: 1,
+  benefits: ['5% discount'],
+};
+
 export default function Profile(): React.JSX.Element {
   const navigate = useNavigate();
 
   // Tabs
   const [tab, setTab] = useState<'personal' | 'preferences' | 'documents'>('personal');
+
+  // Loyalty hook for real-time balance and tier updates
+  const { balance, isLoading: loyaltyLoading } = useLoyaltyBalance();
+
+  // Extract tier from balance or use default
+  const currentTier = balance?.tier || defaultTier;
 
   // Profile state
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -51,7 +73,6 @@ export default function Profile(): React.JSX.Element {
   const [gender, setGender] = useState('');
   const [memberSince, setMemberSince] = useState('');
   const [points, setPoints] = useState(0);
-  const [tier, setTier] = useState('Bronze');
 
   // Passport & Residency
   const [passportNo, setPassportNo] = useState('');
@@ -113,8 +134,7 @@ export default function Profile(): React.JSX.Element {
           setDob(user.dob || '');
           setGender(user.gender || '');
           setMemberSince(user.memberSince || 'Jan 2024');
-          setPoints(user.points || 0);
-          setTier(user.tier || 'Bronze');
+          setPoints(user.points || balance?.currentPoints || 0);
 
           setPassportNo(user.passportNo || '');
           setPassportExpiry(user.passportExpiry || '');
@@ -138,10 +158,10 @@ export default function Profile(): React.JSX.Element {
           setLoyaltyNumber(user.loyaltyNumber || '');
           if (user.avatar) setAvatarPreview(user.avatar);
         } else {
-          setFirstName('John'); setLastName('Doe'); setEmail('john.doe@example.com'); setMemberSince('Jan 2023'); setPoints(12500); setTier('Silver');
+          setFirstName('John'); setLastName('Doe'); setEmail('john.doe@example.com'); setMemberSince('Jan 2023'); setPoints(balance?.currentPoints || 12500);
         }
       } catch {
-        setFirstName('John'); setLastName('Doe'); setEmail('john.doe@example.com'); setMemberSince('Jan 2023'); setPoints(12500); setTier('Silver');
+        setFirstName('John'); setLastName('Doe'); setEmail('john.doe@example.com'); setMemberSince('Jan 2023'); setPoints(balance?.currentPoints || 12500);
       }
 
       try {
@@ -168,7 +188,7 @@ export default function Profile(): React.JSX.Element {
         // ignore
       }
     })();
-  }, []);
+  }, [balance]);
 
   function handleAvatarChange(file?: File | null) {
     if (!file) return;
@@ -287,6 +307,10 @@ export default function Profile(): React.JSX.Element {
     }
   }
 
+  // Get current points from balance or fallback to state
+  const currentPoints = balance?.currentPoints ?? points;
+  const nextTierThreshold = balance?.nextTierThreshold ?? 1000;
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <PageHeader title="My Account" subtitle="Manage profile, bookings, security, preferences and documents." actions={
@@ -311,10 +335,26 @@ export default function Profile(): React.JSX.Element {
               <div className="w-full mt-3 text-center">
                 <div className="text-sm font-semibold">{firstName} {lastName}</div>
                 <div className="text-xs text-slate-500">Member since {memberSince}</div>
-                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded bg-gradient-to-r from-white/80 to-white/60 border">
-                  <div className="text-sm">Points: <span className="font-medium">{points.toLocaleString()}</span></div>
+
+                {/* Loyalty Tier Badge */}
+                <div className="mt-3 flex justify-center">
+                  <LoyaltyTierBadge tier={currentTier} />
                 </div>
-                <div className="mt-2 text-sm text-slate-600">Tier: <strong>{tier}</strong></div>
+
+                {/* Points Display */}
+                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 rounded bg-gradient-to-r from-white/80 to-white/60 border">
+                  <Gift className="h-3 w-3" />
+                  <div className="text-sm">Points: <span className="font-medium">{currentPoints.toLocaleString()}</span></div>
+                </div>
+
+                {/* Tier Progress */}
+                <div className="mt-4">
+                  <TierProgressBar
+                    currentPoints={currentPoints}
+                    nextTierThreshold={nextTierThreshold}
+                    tierName={currentTier.name}
+                  />
+                </div>
               </div>
             </div>
           </Card>
@@ -322,11 +362,26 @@ export default function Profile(): React.JSX.Element {
         </aside>
 
         <div className="lg:col-span-3 space-y-6">
-          {/* local tabs */}
-          <div className="flex gap-2 mb-2">
-            <button className={`px-3 py-2 rounded ${tab === 'personal' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`} onClick={() => setTab('personal')}>Personal Information</button>
-            <button className={`px-3 py-2 rounded ${tab === 'preferences' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`} onClick={() => setTab('preferences')}>Preferences & Loyalty</button>
-            <button className={`px-3 py-2 rounded ${tab === 'documents' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`} onClick={() => setTab('documents')}>Documents</button>
+          {/* local tabs - Attractive Style */}
+          <div className="flex gap-1 mb-4 p-1 bg-slate-100 rounded-lg">
+            <button
+              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${tab === 'personal' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
+              onClick={() => setTab('personal')}
+            >
+              Personal Information
+            </button>
+            <button
+              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${tab === 'preferences' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
+              onClick={() => setTab('preferences')}
+            >
+              Preferences & Loyalty
+            </button>
+            <button
+              className={`flex-1 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${tab === 'documents' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'}`}
+              onClick={() => setTab('documents')}
+            >
+              Documents
+            </button>
           </div>
 
           {tab === 'personal' && (

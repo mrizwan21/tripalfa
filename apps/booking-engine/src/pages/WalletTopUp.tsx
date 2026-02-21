@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { postTopUp } from '../lib/api';
 import { CreditCard, Wallet, ArrowRight, CheckCircle2, AlertCircle, ChevronDown, DollarSign } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 
 export default function WalletTopUp() {
   const navigate = useNavigate();

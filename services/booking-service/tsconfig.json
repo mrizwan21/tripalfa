@@ -1,46 +1,27 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "composite": true,
     "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "target": "ES2020",
+    "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "src",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "strictNullChecks": true,
-    "noImplicitAny": true,
-    "strictBindCallApply": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "allowImportingTsExtensions": true,
-    "rewriteRelativeImportExtensions": true,
+    "rootDir": "./src",
     "baseUrl": ".",
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "jest"
-    ]
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    }
   },
   "include": [
-    "src/**/*",
-    "src/**/__tests__/**/*.ts"
+    "src"
   ],
   "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "prisma/**",
-    "src/notifications/tests/**",
-    "src/notifications/scripts/**",
-    "src/**/tests/**"
+    "node_modules",
+    "dist",
+    "src/routes/bookingsV2.ts"
   ]
 }

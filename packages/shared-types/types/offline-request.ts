@@ -331,6 +331,7 @@ export interface SubmitPricingPayload {
   newBaseFare: number;
   newTaxes: number;
   newMarkup: number;
+  newTotalPrice: number;
   currency: string;
   supplierReference?: string;
   supplierPNR?: string;

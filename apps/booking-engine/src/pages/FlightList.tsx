@@ -1,20 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   X, Plane, Clock, Shield, Briefcase, Info,
   ChevronRight, Check, Luggage, Filter,
   SlidersHorizontal, ArrowRightLeft, Search,
-  Calendar, User, ChevronDown, Map, RefreshCw,
+  Calendar, User, ChevronDown, Map as MapIcon, RefreshCw,
   Star, ShieldCheck, Heart, Share2, ArrowRight, Loader2
 } from 'lucide-react';
-import { Button } from '../components/ui/Button';
-import { formatCurrency } from '../lib/utils';
+import { Button } from '../components/ui/button';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { FLIGHT_STATIC_DATA } from '@tripalfa/static-data/frontend-index';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { FlightDetailPopup } from '../components/FlightDetailPopup';
 import { FareUpsellPopup } from '../components/FareUpsellPopup';
 import { AncillaryPopup } from '../components/AncillaryPopup';
-import { searchFlights } from '../lib/api';
+import { searchFlights, fetchAirlines } from '../lib/api';
 import { BookingFilters } from '../components/booking/BookingFilters';
 import { ModifySearchPanel } from '../components/booking/ModifySearchPanel';
 import { Flight } from '../lib/srs-types';
@@ -35,11 +36,28 @@ export default function FlightList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [airlines, setAirlines] = useState<any[]>([]);
+  const [dbAirlinesMap, setDbAirlinesMap] = useState<Map<string, { name: string; logo_url: string }>>(new Map());
 
-  // Load airlines for filter
+  // Load airlines from PostgreSQL (with logos) for filter + logo lookup
   useEffect(() => {
-    import('../lib/api').then(m => m.fetchAirlines()).then(setAirlines).catch(console.error);
+    fetchAirlines().then((airlinesData) => {
+      setAirlines([...(airlinesData || [])] as any[]);
+      const map = new Map<string, { name: string; logo_url: string }>();
+      (airlinesData || []).forEach((a: any) => {
+        map.set(a.iata_code, { name: a.name, logo_url: a.logo_url });
+      });
+      setDbAirlinesMap(map);
+    }).catch(console.error);
   }, []);
+
+  // Get airline logo from DB (primary) or fallback
+  const getAirlineLogo = (flight: Flight) => {
+    const code = flight.flightNumber?.slice(0, 2) || flight.airline?.slice(0, 2).toUpperCase();
+    const dbAirline = dbAirlinesMap.get(code);
+    if (dbAirline?.logo_url) return dbAirline.logo_url;
+    // Fallback to local logos folder
+    return `/airline-logos/${code}.png`;
+  };
 
   // Filter State
   const [filters, setFilters] = useState({
@@ -277,26 +295,30 @@ export default function FlightList() {
             <div className="mb-8">
               <h5 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Preferred Airlines</h5>
               <div className="space-y-3">
-                {(airlines.length > 0 ? airlines : ['Emirates', 'Qatar Airways', 'Lufthansa', 'British Airways']).map((airline: any) => {
-                  const airlineName = typeof airline === 'string' ? airline : airline.name;
-                  return (
-                    <label key={airlineName} className="flex items-center justify-between cursor-pointer group">
-                      <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{airlineName}</span>
-                      <input id={`flight-airline-${airlineName.toLowerCase().replace(' ', '-')}`} name="flight-airlines" type="checkbox" value={airlineName.toLowerCase().replace(' ', '-')} className="w-4 h-4 rounded border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]" />
-                    </label>
-                  );
-                })}
+                {airlines.length > 0 ? (
+                  airlines.map((airline: any) => {
+                    const airlineName = typeof airline === 'string' ? airline : airline.name;
+                    return (
+                      <label key={airlineName} className="flex items-center justify-between cursor-pointer group">
+                        <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{airlineName}</span>
+                        <input id={`flight-airline-${airlineName.toLowerCase().replace(' ', '-')}`} name="flight-airlines" type="checkbox" value={airlineName.toLowerCase().replace(' ', '-')} className="w-4 h-4 rounded border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]" />
+                      </label>
+                    );
+                  })
+                ) : (
+                  <p className="text-xs text-gray-400">Search for flights to see airline filters</p>
+                )}
               </div>
             </div>
 
-            {/* Cabin Class */}
+            {/* Cabin Class - from static IATA enumeration */}
             <div>
               <h5 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Cabin Class</h5>
               <div className="space-y-3">
-                {['Economy', 'Premium Economy', 'Business', 'First Class'].map((cabin) => (
-                  <label key={cabin} className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{cabin}</span>
-                    <input id={`flight-cabin-${cabin.toLowerCase()}`} name="flight-cabin" type="radio" value={cabin.toLowerCase()} className="w-4 h-4 border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]" />
+                {FLIGHT_STATIC_DATA.CABINS.all.map((cabin) => (
+                  <label key={cabin.value} className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{cabin.label}</span>
+                    <input id={`flight-cabin-${cabin.value.toLowerCase()}`} name="flight-cabin" type="radio" value={cabin.value.toLowerCase()} className="w-4 h-4 border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]" />
                   </label>
                 ))}
               </div>
@@ -437,7 +459,7 @@ export default function FlightList() {
                     {/* Airline Logo & Info */}
                     <div className="flex flex-col items-center md:items-start gap-4 min-w-[140px]">
                       <img
-                        src={flight.airlineLogo || `https://logo.clearbit.com/${flight.airline.toLowerCase().replace(/\s/g, '')}.com`}
+                        src={getAirlineLogo(flight)}
                         alt={flight.airline}
                         className="h-16 w-16 object-contain rounded-2xl bg-white p-2 shadow-sm border border-gray-50"
                         onError={(e) => {
@@ -613,22 +635,6 @@ export default function FlightList() {
           isOpen={isUpsellOpen}
           onClose={() => setIsUpsellOpen(false)}
           flight={selectedFlight}
-          // Dynamic mapping of upsells from API
-          fares={selectedFlight.upsells?.map(u => ({
-            id: u.id,
-            name: 'Alternative Fare',
-            price: u.amount,
-            originalPrice: selectedFlight.amount,
-            cabin: u.cabin || 'Economy',
-            benefits: [
-              { label: 'Standard Baggage', included: true },
-              { label: 'Seat Selection', included: u.amount > selectedFlight.amount },
-              { label: 'Cabin Class', included: true, price: u.cabin || 'Economy' }
-            ],
-            flexibility: [
-              { label: u.refundable ? 'Fully Refundable' : 'Standard Terms', included: u.refundable || false, type: u.refundable ? 'change' : 'cancel' },
-            ]
-          }))}
           onSelect={(fare) => {
             setIsUpsellOpen(false);
             // Business Logic: Only show ancillary if available

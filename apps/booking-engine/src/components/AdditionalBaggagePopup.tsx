@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Info, Plus, Luggage, Briefcase } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 
 interface AdditionalBaggagePopupProps {
     isOpen: boolean;
@@ -8,9 +8,11 @@ interface AdditionalBaggagePopupProps {
     onConfirm: (baggage: any[]) => void;
     isLCC?: boolean;
     availableServices?: any[];
+    /** Number of passengers – drives the passenger selector. Defaults to 1. */
+    passengerCount?: number;
 }
 
-export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = false, availableServices }: AdditionalBaggagePopupProps) => {
+export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = false, availableServices, passengerCount = 1 }: AdditionalBaggagePopupProps) => {
     const [selectedPassenger, setSelectedPassenger] = useState(1);
     const [isConfirming, setIsConfirming] = useState(false);
 
@@ -30,11 +32,11 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
 
     if (!isOpen) return null;
 
-    const passengers = [
-        { id: 1, name: 'Arun Kumar', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arun' },
-        { id: 2, name: 'Varun Kumar', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Varun' },
-        { id: 3, name: 'Anil Kumar', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anil' }
-    ];
+    // Generate passenger list from count – no hardcoded names
+    const passengers = Array.from({ length: Math.max(1, passengerCount) }, (_, i) => ({
+        id: i + 1,
+        label: `Passenger ${i + 1}`,
+    }));
 
     if (isConfirming) {
         return (
@@ -74,20 +76,21 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                         <button className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all">
                             <ChevronLeft size={20} />
                         </button>
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap justify-center">
                             {passengers.map((p) => (
                                 <button
                                     key={p.id}
                                     onClick={() => setSelectedPassenger(p.id)}
-                                    className={`px-8 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${selectedPassenger === p.id
-                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100'
-                                        : 'border-yellow-200 text-gray-400 bg-white'
+                                    className={`px-8 h-14 rounded-[2rem] flex items-center gap-3 border transition-all ${selectedPassenger === p.id
+                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100 text-gray-900'
+                                        : 'border-yellow-200 text-gray-400 bg-white hover:border-yellow-300'
                                         }`}
                                 >
-                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-blue-100 border-2 border-white">
-                                        <img src={p.avatar} className="w-full h-full object-cover" alt="" />
+                                    {/* Generic avatar circle with passenger number */}
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black border-2 border-white ${selectedPassenger === p.id ? 'bg-gray-900 text-white' : 'bg-purple-100 text-purple-600'}`}>
+                                        {p.id}
                                     </div>
-                                    <span className="text-[11px] font-black uppercase tracking-widest">{p.name}</span>
+                                    <span className="text-[11px] font-black uppercase tracking-widest">{p.label}</span>
                                 </button>
                             ))}
                         </div>

@@ -1,12 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import '@tripalfa/ui-components/design-tokens.css';
-
-/* Ensure Tailwind CSS directives are recognized */
-/* stylelint-disable at-rule-no-unknown */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-/* stylelint-enable at-rule-no-unknown */
+@import "@tripalfa/ui-components/design-tokens.css";
+@import "tailwindcss";
 
 /* Additional custom styles */
 @layer base {
@@ -181,28 +175,28 @@
   background-color: hsl(0 84% 52%);
 }
 
-/* Button Sizes - Standardized (48px base) */
+/* Button Sizes - Standardized (compact) */
 .btn-sm {
-  padding: 0.5rem 0.875rem;
+  padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
   line-height: 1.25rem;
-  height: 2.5rem;
+  height: 2rem;
   border-radius: calc(var(--radius) - 2px);
 }
 
 .btn-md {
-  padding: 0.625rem 1.25rem;
+  padding: 0.5rem 1rem;
   font-size: 0.875rem;
-  line-height: 1.5rem;
-  height: 3rem;
+  line-height: 1.25rem;
+  height: 2.5rem;
   border-radius: var(--radius);
 }
 
 .btn-lg {
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   font-size: 0.9375rem;
-  line-height: 1.5rem;
-  height: 3.5rem;
+  line-height: 1.25rem;
+  height: 3rem;
   border-radius: calc(var(--radius) + 2px);
 }
 
@@ -272,7 +266,7 @@
 
 .card-header {
   display: flex;
-  flex-col: column;
+  flex-direction: column;
   gap: 0.375rem;
   padding: 1.5rem;
 }

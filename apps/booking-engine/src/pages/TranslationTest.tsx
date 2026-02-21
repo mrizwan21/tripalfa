@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from '../lib/translation';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 
 export default function TranslationTest() {
   const { t, currentLang, changeLanguage, isLoading } = useTranslation();

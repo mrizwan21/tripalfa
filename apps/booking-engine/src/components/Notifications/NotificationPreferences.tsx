@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useNotificationPreferences } from '@/hooks/useNotifications';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface PreferencesForm {
   emailEnabled: boolean;
@@ -137,26 +136,26 @@ export const NotificationPreferences = () => {
 
       {/* Error Alert */}
       {error && (
-        <Alert variant="destructive">
+        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+          <span>{error}</span>
+        </div>
       )}
 
       {/* Success Alert */}
       {saveStatus === 'success' && (
-        <Alert className="border-green-200 bg-green-50">
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">{saveMessage}</AlertDescription>
-        </Alert>
+        <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>{saveMessage}</span>
+        </div>
       )}
 
       {/* Error Alert */}
       {saveStatus === 'error' && (
-        <Alert variant="destructive">
+        <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{saveMessage}</AlertDescription>
-        </Alert>
+          <span>{saveMessage}</span>
+        </div>
       )}
 
       {/* Notification Channels */}

@@ -21,15 +21,16 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-
-    "baseUrl": ".",
-    "typeRoots": [
-      "./node_modules/@types",
-      "../../node_modules/@types"
-    ],
+    // "baseUrl": ".", // deprecated, removed for TS 7
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@/components/ui/*": [
+        "../../packages/ui-components/ui/*"
+      ],
+      "@/components/ui": [
+        "../../packages/ui-components/ui"
       ],
       "@tripalfa/ui-components": [
         "../../packages/ui-components"
@@ -37,14 +38,36 @@
       "@tripalfa/ui-components/*": [
         "../../packages/ui-components/*"
       ],
+      "@tripalfa/shared-utils": [
+        "../../packages/shared-utils"
+      ],
+      "@tripalfa/shared-utils/*": [
+        "../../packages/shared-utils/*"
+      ],
+      "@tripalfa/shared-types": [
+        "../../packages/shared-types/src"
+      ],
+      "@tripalfa/shared-types/*": [
+        "../../packages/shared-types/src/*"
+      ],
       "@tripalfa/static-data": [
         "../../packages/static-data/src"
       ],
       "@tripalfa/static-data/*": [
         "../../packages/static-data/src/*"
+      ],
+      "@tripalfa/notifications": [
+        "../../packages/notifications/dist"
+      ],
+      "@tripalfa/notifications/*": [
+        "../../packages/notifications/dist/*"
       ]
     },
-    "types": ["node", "react", "react-dom", "jest"]
+    "types": [
+      "node",
+      "react",
+      "react-dom"
+    ]
   },
   "include": [
     "src",
@@ -54,6 +77,23 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "src/components/*Controller.ts",
+    "src/components/*Service.ts",
+    "src/components/booking.ts",
+    "src/components/bookingManagement.ts",
+    "src/components/enhancedBooking.ts",
+    "src/components/bookingConfirmationEmailTemplate.ts",
+    "src/components/bookingConfirmationTemplateVariations.ts",
+    "src/components/bookingManagementSchemas.ts",
+    "src/components/documentDeliveryEmailTemplate.ts",
+    "src/components/emailTemplateManager.ts",
+    "src/components/offlineRequestErrors.ts",
+    "src/components/adminBookingCard.ts",
+    "src/components/OfflineRequests",
+    "src/__tests__",
+    "src/api/loyaltyApi.ts",
+    "src/api/pricingApi.ts",
+    "src/components/TransferForm.tsx"
   ]
 }

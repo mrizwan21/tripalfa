@@ -160,24 +160,24 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
+        <div className="flex h-14 items-center justify-between">
+          <div className="flex items-center gap-6">
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <span className="text-lg font-bold text-slate-900">
                 {APP_NAME}
               </span>
             </Link>
 
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-5">
               {NAV_LINKS.map(({ href, icon: Icon, label }) => (
                 <Link
                   key={href}
                   to={href}
-                  className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5" />
                   {label}
                 </Link>
               ))}

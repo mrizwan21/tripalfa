@@ -5,10 +5,6 @@ export const duffelSandbox = {
   apiKey: process.env.DUFFEL_SANDBOX_KEY || 'duffel_test_key',
   endpoint: 'https://api.duffel.com/test',
 };
-export const hotelstonSandbox = {
-  apiKey: process.env.HOTELSTON_SANDBOX_KEY || 'hotelston_test_key',
-  endpoint: 'https://api.hotelston.com/sandbox',
-};
 export const liteApiSandbox = {
   apiKey: process.env.LITEAPI_SANDBOX_KEY || 'liteapi_test_key',
   endpoint: 'https://sandbox.liteapi.com',

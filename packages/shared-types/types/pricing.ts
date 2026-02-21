@@ -498,36 +498,307 @@ export interface PricingCalculationResponse {
 }
 
 // ============================================================================
-// Pricing Rule List Types
+// Loyalty System Types
 // ============================================================================
-export interface MarkupRuleListParams {
+export interface LoyaltyTier {
+  id: string;
+  name: string;
+  tierLevel: number;
+  minPoints: number;
+  maxPoints?: number;
+  discountPercentage: number;
+  pointsMultiplier: number;
+  freeCancellation: boolean;
+  prioritySupport: boolean;
+  freeUpgrades: boolean;
+  loungeAccess: boolean;
+  benefits?: Record<string, unknown>;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CustomerLoyalty {
+  id: string;
+  userId: string;
+  currentTierId?: string;
+  currentTier?: LoyaltyTier;
+  totalPoints: number;
+  availablePoints: number;
+  lifetimePoints: number;
+  tierQualifiedAt?: string;
+  nextTierPointsNeeded?: number;
+  pointsExpiringSoon: number;
+  pointsExpiryDate?: string;
+  lastActivityAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoyaltyTransaction {
+  id: string;
+  userId: string;
+  bookingId?: string;
+  transactionType: 'earn' | 'redeem' | 'expire' | 'bonus' | 'adjustment';
+  points: number;
+  description: string;
+  balanceAfter: number;
+  expiresAt?: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface LoyaltyTransactionCreate {
+  userId: string;
+  bookingId?: string;
+  transactionType: 'earn' | 'redeem' | 'expire' | 'bonus' | 'adjustment';
+  points: number;
+  description: string;
+  expiresAt?: string;
+  metadata?: Record<string, unknown>;
+}
+
+// ============================================================================
+// Corporate Contract Types
+// ============================================================================
+export interface CorporateContract {
+  id: string;
+  companyId: string;
+  contractNumber: string;
+  name: string;
+  contractType: 'volume' | 'preferred' | 'enterprise';
+  status: 'draft' | 'active' | 'expired' | 'cancelled';
+  baseDiscountPercentage: number;
+  serviceDiscounts?: Record<string, unknown>;
+  volumeTiers?: Record<string, unknown>;
+  creditLimit?: number;
+  paymentTerms?: string;
+  monthlyMinimum?: number;
+  validFrom: string;
+  validTo?: string;
+  autoRenew: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+  approvalNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface CorporateContractCreate {
+  companyId: string;
+  contractNumber: string;
+  name: string;
+  contractType: 'volume' | 'preferred' | 'enterprise';
+  baseDiscountPercentage?: number;
+  serviceDiscounts?: Record<string, unknown>;
+  volumeTiers?: Record<string, unknown>;
+  creditLimit?: number;
+  paymentTerms?: string;
+  monthlyMinimum?: number;
+  validFrom: string;
+  validTo?: string;
+  autoRenew?: boolean;
+  approvalNotes?: string;
+}
+
+export interface CorporateContractUpdate {
+  name?: string;
+  contractType?: 'volume' | 'preferred' | 'enterprise';
+  status?: 'draft' | 'active' | 'expired' | 'cancelled';
+  baseDiscountPercentage?: number;
+  serviceDiscounts?: Record<string, unknown>;
+  volumeTiers?: Record<string, unknown>;
+  creditLimit?: number;
+  paymentTerms?: string;
+  monthlyMinimum?: number;
+  validFrom?: string;
+  validTo?: string;
+  autoRenew?: boolean;
+  approvalNotes?: string;
+}
+
+// ============================================================================
+// Pricing Audit Log Types
+// ============================================================================
+export interface PricingAuditLog {
+  id: string;
+  bookingId?: string;
+  baseAmount: number;
+  markupAmount: number;
+  discountAmount: number;
+  commissionAmount: number;
+  loyaltyDiscount: number;
+  finalAmount: number;
+  currency: string;
+  markupRulesApplied?: unknown[];
+  discountRulesApplied?: unknown[];
+  commissionRulesApplied?: unknown[];
+  corporateContractApplied?: Record<string, unknown>;
+  loyaltyTierApplied?: Record<string, unknown>;
+  priceBreakdown?: Record<string, unknown>;
+  createdAt: string;
+}
+
+export interface PricingAuditLogCreate {
+  bookingId?: string;
+  baseAmount: number;
+  markupAmount: number;
+  discountAmount: number;
+  commissionAmount: number;
+  loyaltyDiscount: number;
+  finalAmount: number;
+  currency: string;
+  markupRulesApplied?: unknown[];
+  discountRulesApplied?: unknown[];
+  commissionRulesApplied?: unknown[];
+  corporateContractApplied?: Record<string, unknown>;
+  loyaltyTierApplied?: Record<string, unknown>;
+  priceBreakdown?: Record<string, unknown>;
+}
+
+// ============================================================================
+// Supplier Deals Types
+// ============================================================================
+
+export interface SupplierDeal {
+  id: string;
+  name: string;
+  code: string;
+  productType: 'flight' | 'hotel';
+  supplierCodes: string[];
+  dealType: 'private_fare' | 'ndc_special' | 'corporate' | 'group';
+  discountType: 'percentage' | 'fixed' | 'tiered';
+  discountValue: number;
+  maxDiscount?: number;
+  minOrderAmount?: number;
+  status: 'active' | 'paused' | 'expired' | 'pending_approval';
+  priority: number;
+  isCombinableWithCoupons: boolean;
+  validFrom: string;
+  validTo: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SupplierDealCreate {
+  name: string;
+  code: string;
+  productType: 'flight' | 'hotel';
+  supplierCodes: string[];
+  dealType: 'private_fare' | 'ndc_special' | 'corporate' | 'group';
+  discountType: 'percentage' | 'fixed' | 'tiered';
+  discountValue: number;
+  maxDiscount?: number;
+  minOrderAmount?: number;
+  priority?: number;
+  isCombinableWithCoupons?: boolean;
+  validFrom: string;
+  validTo: string;
+  metadata?: Record<string, unknown>;
+  mappingRules: DealMappingRules[];
+}
+
+export interface SupplierDealUpdate {
+  name?: string;
+  code?: string;
+  supplierCodes?: string[];
+  dealType?: 'private_fare' | 'ndc_special' | 'corporate' | 'group';
+  discountType?: 'percentage' | 'fixed' | 'tiered';
+  discountValue?: number;
+  maxDiscount?: number;
+  minOrderAmount?: number;
+  status?: 'active' | 'paused' | 'expired' | 'pending_approval';
+  priority?: number;
+  isCombinableWithCoupons?: boolean;
+  validFrom?: string;
+  validTo?: string;
+  metadata?: Record<string, unknown>;
+  mappingRules?: DealMappingRules[];
+}
+
+export interface DealMappingRules {
+  journeyType?: 'domestic' | 'international' | 'regional' | 'all';
+  bookingClasses?: string[];
+  rbds?: string[];
+  cabinClasses?: string[];
+  originCities?: string[];
+  destinationCities?: string[];
+  originCountries?: string[];
+  destinationCountries?: string[];
+  regions?: string[];
+  routes?: string[];
+  channels?: string[];
+  b2bCompanyIds?: string[];
+  hotelCategories?: string[];
+  hotelStarRatings?: number[];
+  conditions?: Record<string, unknown>;
+}
+
+export interface DealApplication {
+  id: string;
+  dealId: string;
+  bookingId?: string;
+  bookingReference?: string;
+  appliedAmount: number;
+  originalAmount: number;
+  discountAmount: number;
+  currency: string;
+  customerType: 'b2c' | 'b2b';
+  customerId?: string;
+  companyId?: string;
+  appliedAt: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DealFilters {
+  status?: string[];
+  productType?: string[];
+  supplierCodes?: string[];
+  dealType?: string[];
+  validFrom?: string;
+  validTo?: string;
+  priority?: { min?: number; max?: number };
   page?: number;
   limit?: number;
-  companyId?: string;
-  applicableTo?: string;
-  isActive?: boolean;
-  sortBy?: 'name' | 'priority' | 'createdAt';
+  sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface CommissionRuleListParams {
-  page?: number;
-  limit?: number;
-  companyId?: string;
-  applicableTo?: string;
-  targetType?: CommissionTargetType;
-  isActive?: boolean;
-  sortBy?: 'name' | 'priority' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+export interface SearchCriteria {
+  productType: 'flight' | 'hotel';
+  origin?: string;
+  destination?: string;
+  departureDate?: string;
+  returnDate?: string;
+  cabinClass?: string;
+  bookingClass?: string;
+  rbd?: string;
+  supplierCodes?: string[];
+  hotelCategory?: string;
+  hotelStarRating?: number;
+  route?: string;
 }
 
-export interface DiscountCouponListParams {
-  page?: number;
-  limit?: number;
+export interface CustomerContext {
+  type: 'b2c' | 'b2b';
+  customerId?: string;
   companyId?: string;
-  search?: string;
-  applicableTo?: string;
-  isActive?: boolean;
-  sortBy?: 'name' | 'code' | 'validFrom' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+  tier?: string;
+  channel: string;
+  loyaltyTier?: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings?: string[];
+}
+
+export interface ConflictReport {
+  conflictingDeals: SupplierDeal[];
+  conflictReasons: string[];
+  recommendations: string[];
 }

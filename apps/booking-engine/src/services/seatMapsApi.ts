@@ -12,8 +12,6 @@
 import { API_BASE_URL } from '../lib/constants';
 import { SeatMap, SelectedSeat } from './duffelBookingApi';
 
-const API_KEY = import.meta.env.VITE_API_KEY || '';
-
 // ============================================================================
 // SEAT MAP TYPES & INTERFACES
 // ============================================================================
@@ -101,25 +99,9 @@ export async function getSeatMaps(
   try {
     console.log('[SeatMaps] Fetching seat maps for offer (BOOKING FLOW):', offerId);
 
-    // Route through centralized API Manager
-    const response = await fetch(
-      `${API_BASE_URL}/api/bookings/flight/seat-maps`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-          'X-Seat-Context': 'booking',  // Header to indicate booking flow
-        },
-        body: JSON.stringify({
-          offerId,
-          provider,
-          environment,
-          context: 'booking'
-        }),
-        credentials: 'include'
-      }
-    );
+    // Use GET with query params (no body) or switch to POST if backend requires
+    const url = `${API_BASE_URL}/api/bookings/flight/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`;
+    const response = await fetch(url, { method: 'GET', credentials: 'include' });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch seat maps: ${response.statusText}`);
@@ -154,26 +136,13 @@ export async function selectSeats(
   try {
     console.log('[SeatMaps] Selecting seats (BOOKING FLOW):', selectedSeats);
 
-    // Route through centralized API Manager
-    const response = await fetch(
-      `${API_BASE_URL}/api/bookings/flight/seat-maps/select`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-          'X-Seat-Context': 'booking'
-        },
-        body: JSON.stringify({
-          offerId,
-          selectedSeats,
-          provider,
-          environment,
-          context: 'booking'
-        }),
-        credentials: 'include'
-      }
-    );
+    // Route through centralized API Manager (POST with body)
+    const response = await fetch(`${API_BASE_URL}/api/bookings/flight/seat-maps/select`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offerId, selectedSeats, provider, environment, context: 'booking' }),
+      credentials: 'include'
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to select seats: ${response.statusText}`);
@@ -216,25 +185,8 @@ export async function getSeatMapsForBooking(
   try {
     console.log('[SeatMaps] Fetching seat maps for booking (POST-BOOKING FLOW):', orderId);
 
-    // Route through centralized API Manager
-    const response = await fetch(
-      `${API_BASE_URL}/api/bookings/flight/seat-maps/booking/${orderId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-          'X-Seat-Context': 'post-booking'
-        },
-        body: JSON.stringify({
-          orderId,
-          provider,
-          environment,
-          context: 'post-booking'
-        }),
-        credentials: 'include'
-      }
-    );
+    const url = `${API_BASE_URL}/api/bookings/flight/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`;
+    const response = await fetch(url, { method: 'GET', credentials: 'include' });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch seat maps for booking: ${response.statusText}`);
@@ -275,26 +227,12 @@ export async function updateBookingSeats(
   try {
     console.log('[SeatMaps] Updating seats for booking (POST-BOOKING):', orderId, selectedSeats);
 
-    // Route through centralized API Manager
-    const response = await fetch(
-      `${API_BASE_URL}/api/bookings/flight/update-seats/${orderId}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-          'X-Seat-Context': 'post-booking'
-        },
-        body: JSON.stringify({
-          orderId,
-          selectedSeats,
-          provider,
-          environment,
-          context: 'post-booking'
-        }),
-        credentials: 'include'
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/bookings/flight/update-seats/${encodeURIComponent(orderId)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, selectedSeats, provider, environment, context: 'post-booking' }),
+      credentials: 'include'
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to update booking seats: ${response.statusText}`);
@@ -322,18 +260,7 @@ export async function getBookingSeatHistory(
   try {
     console.log('[SeatMaps] Fetching seat history for booking (POST-BOOKING):', orderId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/bookings/flight/seat-history/${orderId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-          'X-Seat-Context': 'post-booking'
-        },
-        credentials: 'include'
-      }
-    );
+    const response = await fetch(`${API_BASE_URL}/api/bookings/flight/seat-history/${encodeURIComponent(orderId)}`, { method: 'GET', credentials: 'include' });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch seat history: ${response.statusText}`);

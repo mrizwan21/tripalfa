@@ -1,0 +1,38 @@
+{
+  "name": "@tripalfa/shared-database",
+  "version": "1.0.0",
+  "description": "Shared database models and types for TripAlfa microservices",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "dev": "tsc --watch",
+    "generate": "prisma generate --schema ../../database/prisma/schema.prisma",
+    "migrate": "prisma migrate dev --schema ../../database/prisma/schema.prisma",
+    "studio": "prisma studio --schema ../../database/prisma/schema.prisma",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.4.0",
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "^7.4.0",
+    "@tripalfa/shared-types": "workspace:*",
+    "@types/pg": "^8.16.0",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "prisma": "^7.4.0",
+    "typescript": "^5.9.3"
+  }
+}

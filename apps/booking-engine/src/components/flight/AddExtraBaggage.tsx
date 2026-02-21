@@ -1,6 +1,6 @@
 import React from 'react';
 import { Luggage, Minus, Plus } from 'lucide-react';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 
 interface AddExtraBaggageProps {
   count: number;

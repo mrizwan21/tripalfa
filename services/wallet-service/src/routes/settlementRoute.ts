@@ -3,13 +3,14 @@
 // Supplier settlement flow: Agency settles with Supplier after customer purchase
 
 import { Router, Request, Response, NextFunction } from 'express';
+import type { Router as ExpressRouter } from 'express';
 import Joi from 'joi';
 import walletService from '../services/walletService.js';
 import * as fxService from '../services/fxService.js';
 import { authMiddleware } from '../middlewares/auth.js';
 import { logger } from '../utils/logger.js';
 
-const router = Router();
+const router: ExpressRouter = Router();
 const SERVICE_NAME = 'settlementRoute';
 
 // Validation schema

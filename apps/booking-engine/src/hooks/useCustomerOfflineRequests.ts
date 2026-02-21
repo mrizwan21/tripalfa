@@ -3,7 +3,6 @@ import axios from 'axios';
 import {
   OfflineChangeRequest,
   CreateOfflineRequestPayload,
-  RejectChangePayload,
   OfflineRequestPriority,
   OfflineRequestType,
 } from '@tripalfa/shared-types';
@@ -29,7 +28,7 @@ export const useCustomerOfflineRequests = () => {
   const [error, setError] = useState<string | null>(null);
 
   const getAuthToken = (): string | null => {
-    return localStorage.getItem('auth_token');
+    return localStorage.getItem('authToken');
   };
 
   const apiClient = useCallback(
@@ -47,7 +46,7 @@ export const useCustomerOfflineRequests = () => {
           },
         };
 
-        const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
         const fullURL = `${baseURL}${url}`;
 
         const response = await axios({
@@ -125,13 +124,17 @@ export const useCustomerOfflineRequests = () => {
     [apiClient]
   );
 
-  // Approve/accept the request pricing
+  // Approve or reject the request pricing
   const approveRequest = useCallback(
-    async (id: string) => {
+    async (id: string, approved: boolean = true, rejectionReason?: string) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiClient('PUT', `/api/offline-requests/${id}/approve`, {});
+        const payload: any = { approved };
+        if (!approved && rejectionReason) {
+          payload.rejectionReason = rejectionReason;
+        }
+        const response = await apiClient('PUT', `/api/offline-requests/${id}/approve`, payload);
         setCurrentRequest(response.data);
         return response.data;
       } catch (err: any) {
@@ -144,26 +147,12 @@ export const useCustomerOfflineRequests = () => {
     [apiClient]
   );
 
-  // Reject the request pricing
+  // Reject the request pricing (convenience wrapper)
   const rejectRequest = useCallback(
     async (id: string, reason: string) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const payload: RejectChangePayload = {
-          rejectionReason: reason,
-        };
-        const response = await apiClient('PUT', `/api/offline-requests/${id}/reject`, payload);
-        setCurrentRequest(response.data);
-        return response.data;
-      } catch (err: any) {
-        setError(err.message);
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+      return approveRequest(id, false, reason);
     },
-    [apiClient]
+    [approveRequest]
   );
 
   // Cancel the request

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Heart, Info, Check, Clock, Plus } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 
 interface SpecialRequestPopupProps {
     isOpen: boolean;

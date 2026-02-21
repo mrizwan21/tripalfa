@@ -1,18 +1,16 @@
 // src/services/walletService.ts
 // Complete wallet operations supporting multi-user flows:
 // Customers, Agencies, Travel Suppliers with selling, purchasing, settlement, and refund scenarios
+// Now using Prisma with Neon Database
 
-import { v4 as uuidv4 } from 'uuid';
-import { pool } from '../config/db.js';
+import { prisma } from '@tripalfa/shared-database';
 import { getLatestSnapshot } from './fxService.js';
 import { logger } from '../utils/logger.js';
-import { checkIdempotency, processCustomerDebit, processAgencyCredit, ensureWalletExists, lockWallet } from './walletOps.js';
-import { insertTransactionRecord } from './transactions.js';
-import { insertLedgerEntries, reserveCommissionAndLedger, createTransferLedger } from './ledgerOps.js';
 
 import type {
   Wallet,
-  Transaction,
+  WalletTransaction,
+  WalletLedger,
   TransactionType,
   TransactionStatus,
   UserType,
@@ -24,8 +22,11 @@ interface WalletService {
   createWallet(userId: string, currency: string): Promise<Wallet>;
   getWalletBalance(userId: string, currency: string): Promise<number | null>;
   getUserWallets(userId: string): Promise<Wallet[]>;
-  customerPurchaseFlow(flow: CustomerPurchaseFlow): Promise<Transaction>;
-  supplierSettlementFlow(flow: SupplierSettlementFlow): Promise<Transaction>;
+  creditWallet(userId: string, currency: string, amount: number, description: string, idempotencyKey: string): Promise<WalletTransaction>;
+  debitWallet(userId: string, currency: string, amount: number, description: string, idempotencyKey: string): Promise<WalletTransaction>;
+  getTransactionHistory(userId: string, limit?: number, offset?: number): Promise<WalletTransaction[]>;
+  customerPurchaseFlow(flow: CustomerPurchaseFlow): Promise<WalletTransaction>;
+  supplierSettlementFlow(flow: SupplierSettlementFlow): Promise<WalletTransaction>;
 }
 
 interface CustomerPurchaseFlow {
@@ -51,184 +52,457 @@ interface SupplierSettlementFlow {
 
 const walletService: WalletService = {} as WalletService;
 
-// Helpers are split into `walletOps`, `transactions`, and `ledgerOps` for reuse and testability
-
-
 /**
  * Create a wallet for a user in a specific currency
  */
 walletService.createWallet = async function(userId: string, currency: string): Promise<Wallet> {
   // Use upsert to avoid unique constraint failure if wallet already exists
-  const client = await pool.connect();
-  try {
-    await client.query(`BEGIN`);
+  const wallet = await prisma.wallet.upsert({
+    where: {
+      userId_currency: { userId, currency },
+    },
+    update: {},
+    create: {
+      userId,
+      currency,
+      balance: 0,
+      reservedBalance: 0,
+      status: 'active',
+    },
+  });
 
-    await client.query(
-      `INSERT INTO wallets (user_id, currency, balance, status)
-       VALUES ($1, $2, 0.00, 'active')
-       ON CONFLICT (user_id, currency) DO NOTHING`,
-      [userId, currency]
-    );
-
-    const result = await client.query(
-      `SELECT id, user_id as "userId", currency, balance, status, created_at as "createdAt", updated_at as "updatedAt"
-       FROM wallets
-       WHERE user_id = $1 AND currency = $2`,
-      [userId, currency]
-    );
-
-    await client.query(`COMMIT`);
-
-    if (result.rows.length === 0) {
-      throw new Error('Failed to create or fetch wallet');
-    }
-
-    return result.rows[0];
-  } catch (err) {
-    await client.query(`ROLLBACK`);
-    throw err;
-  } finally {
-    client.release();
-  }
+  return wallet;
 };
 
 /**
  * Get wallet balance for a user in a specific currency
  */
 walletService.getWalletBalance = async function(userId: string, currency: string): Promise<number | null> {
-  const result = await pool.query(
-    'SELECT balance FROM wallets WHERE user_id = $1 AND currency = $2 AND status = \'active\'',
-    [userId, currency]
-  );
+  const wallet = await prisma.wallet.findUnique({
+    where: {
+      userId_currency: { userId, currency },
+    },
+    select: {
+      balance: true,
+    },
+  });
 
-  return result.rows.length > 0 ? result.rows[0].balance : null;
+  return wallet ? Number(wallet.balance) : null;
 };
 
 /**
  * Get all wallets for a user
  */
 walletService.getUserWallets = async function(userId: string): Promise<Wallet[]> {
-  const result = await pool.query(
-    `SELECT id, user_id as "userId", currency, balance, status, created_at as "createdAt", updated_at as "updatedAt"
-     FROM wallets
-     WHERE user_id = $1
-     ORDER BY created_at DESC`,
-    [userId]
-  );
+  const wallets = await prisma.wallet.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  });
 
-  return result.rows;
+  return wallets;
+};
+
+/**
+ * Credit a wallet (top-up/deposit)
+ */
+walletService.creditWallet = async function(
+  userId: string,
+  currency: string,
+  amount: number,
+  description: string,
+  idempotencyKey: string
+): Promise<WalletTransaction> {
+  // Check for existing transaction (idempotency)
+  const existing = await prisma.walletTransaction.findFirst({
+    where: { idempotencyKey },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    // Get or create wallet
+    let wallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId, currency } },
+    });
+
+    if (!wallet) {
+      wallet = await tx.wallet.create({
+        data: {
+          userId,
+          currency,
+          balance: 0,
+          reservedBalance: 0,
+          status: 'active',
+        },
+      });
+    }
+
+    // Update balance
+    const newBalance = Number(wallet.balance) + amount;
+    await tx.wallet.update({
+      where: { id: wallet.id },
+      data: { balance: newBalance },
+    });
+
+    // Create transaction record
+    const transaction = await tx.walletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: 'deposit',
+        flow: 'credit',
+        amount,
+        currency,
+        idempotencyKey,
+        description,
+        status: 'completed',
+      },
+    });
+
+    // Create ledger entry
+    await tx.walletLedger.create({
+      data: {
+        transactionId: transaction.id,
+        account: `wallet:${wallet.id}`,
+        credit: amount,
+        currency,
+        description,
+      },
+    });
+
+    return transaction;
+  });
+};
+
+/**
+ * Debit a wallet (withdrawal/payment)
+ */
+walletService.debitWallet = async function(
+  userId: string,
+  currency: string,
+  amount: number,
+  description: string,
+  idempotencyKey: string
+): Promise<WalletTransaction> {
+  // Check for existing transaction (idempotency)
+  const existing = await prisma.walletTransaction.findFirst({
+    where: { idempotencyKey },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  return await prisma.$transaction(async (tx) => {
+    const wallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId, currency } },
+    });
+
+    if (!wallet || Number(wallet.balance) < amount) {
+      throw new Error('Insufficient balance');
+    }
+
+    const newBalance = Number(wallet.balance) - amount;
+    await tx.wallet.update({
+      where: { id: wallet.id },
+      data: { balance: newBalance },
+    });
+
+    const transaction = await tx.walletTransaction.create({
+      data: {
+        walletId: wallet.id,
+        type: 'withdrawal',
+        flow: 'debit',
+        amount,
+        currency,
+        idempotencyKey,
+        description,
+        status: 'completed',
+      },
+    });
+
+    await tx.walletLedger.create({
+      data: {
+        transactionId: transaction.id,
+        account: `wallet:${wallet.id}`,
+        debit: amount,
+        currency,
+        description,
+      },
+    });
+
+    return transaction;
+  });
+};
+
+/**
+ * Get transaction history for a user
+ */
+walletService.getTransactionHistory = async function(
+  userId: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<WalletTransaction[]> {
+  const wallets = await prisma.wallet.findMany({
+    where: { userId },
+    select: { id: true },
+  });
+
+  const walletIds = wallets.map(w => w.id);
+
+  if (walletIds.length === 0) {
+    return [];
+  }
+
+  return await prisma.walletTransaction.findMany({
+    where: {
+      walletId: { in: walletIds },
+    },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+    skip: offset,
+  });
 };
 
 /**
  * Customer purchase flow: customer -> agency -> supplier with commission deduction
  */
-walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow): Promise<Transaction> {
-  const { customerId, agencyId, supplierId, amount, currency, bookingId, commissionRate, idempotencyKey } =
-    flow;
+walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow): Promise<WalletTransaction> {
+  const { customerId, agencyId, supplierId, amount, currency, bookingId, commissionRate, idempotencyKey } = flow;
 
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    await checkIdempotency(client, idempotencyKey);
+  // Check for existing transaction (idempotency)
+  const existing = await prisma.walletTransaction.findFirst({
+    where: { idempotencyKey },
+  });
 
-    const { customerTx, customerWallet } = await processCustomerDebit(
-      client,
-      customerId,
-      currency,
-      amount,
-      agencyId,
-      bookingId,
-      idempotencyKey
-    );
-
-    const { agencyTx, agencyWallet } = await processAgencyCredit(client, agencyId, currency, amount, customerId, bookingId);
-
-    const commission = Number((Number(amount) * (Number(commissionRate) / 100)).toFixed(6));
-    await reserveCommissionAndLedger(client, agencyWallet.id, commission, currency, customerId, agencyId, bookingId);
-
-    await createTransferLedger(
-      client,
-      customerTx.id,
-      currency,
-      `wallet:${currency}:${customerWallet.id}`,
-      `wallet:${currency}:${agencyWallet.id}`,
-      amount
-    );
-
-    await client.query('COMMIT');
-    return customerTx;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    logger.error(`${SERVICE_NAME}: customerPurchaseFlow failed`, err as Error);
-    throw err;
-  } finally {
-    client.release();
+  if (existing) {
+    return existing;
   }
+
+  return await prisma.$transaction(async (tx) => {
+    // Ensure customer wallet exists
+    let customerWallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: customerId, currency } },
+    });
+
+    if (!customerWallet) {
+      customerWallet = await tx.wallet.create({
+        data: { userId: customerId, currency, balance: 0, reservedBalance: 0, status: 'active' },
+      });
+    }
+
+    // Ensure agency wallet exists
+    let agencyWallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: agencyId, currency } },
+    });
+
+    if (!agencyWallet) {
+      agencyWallet = await tx.wallet.create({
+        data: { userId: agencyId, currency, balance: 0, reservedBalance: 0, status: 'active' },
+      });
+    }
+
+    // Validate and debit customer
+    if (Number(customerWallet.balance) < amount) {
+      throw new Error('Insufficient funds');
+    }
+
+    const customerNewBalance = Number(customerWallet.balance) - amount;
+    await tx.wallet.update({
+      where: { id: customerWallet.id },
+      data: { balance: customerNewBalance },
+    });
+
+    // Create customer debit transaction
+    const customerTx = await tx.walletTransaction.create({
+      data: {
+        walletId: customerWallet.id,
+        type: 'purchase',
+        flow: 'debit',
+        amount,
+        currency,
+        payerId: customerId,
+        payeeId: agencyId,
+        bookingId,
+        idempotencyKey,
+        status: 'completed',
+        description: 'Customer purchase',
+      },
+    });
+
+    // Credit agency wallet
+    const agencyNewBalance = Number(agencyWallet.balance) + amount;
+    await tx.wallet.update({
+      where: { id: agencyWallet.id },
+      data: { balance: agencyNewBalance },
+    });
+
+    // Create agency credit transaction
+    const agencyTx = await tx.walletTransaction.create({
+      data: {
+        walletId: agencyWallet.id,
+        type: 'purchase',
+        flow: 'credit',
+        amount,
+        currency,
+        payerId: customerId,
+        payeeId: agencyId,
+        bookingId,
+        idempotencyKey: `${idempotencyKey}_agency`,
+        status: 'completed',
+        description: 'Agency purchase credit',
+      },
+    });
+
+    // Calculate and reserve commission
+    const commission = Number((Number(amount) * (Number(commissionRate) / 100)).toFixed(6));
+    const reservedBalance = Number(agencyWallet.reservedBalance) + commission;
+    await tx.wallet.update({
+      where: { id: agencyWallet.id },
+      data: { reservedBalance },
+    });
+
+    // Create ledger entries
+    await tx.walletLedger.create({
+      data: {
+        transactionId: customerTx.id,
+        account: `wallet:${customerWallet.id}`,
+        debit: amount,
+        currency,
+        description: 'Customer purchase debit',
+      },
+    });
+
+    await tx.walletLedger.create({
+      data: {
+        transactionId: agencyTx.id,
+        account: `wallet:${agencyWallet.id}`,
+        credit: amount,
+        currency,
+        description: 'Agency purchase credit',
+      },
+    });
+
+    return customerTx;
+  });
 };
 
 /**
  * Supplier settlement flow
  */
-walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFlow): Promise<Transaction> {
+walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFlow): Promise<WalletTransaction> {
   const { supplierId, agencyId, settlementAmount, currency, invoiceId, deductedCommission, idempotencyKey } = flow;
 
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    await checkIdempotency(client, idempotencyKey);
+  // Check for existing transaction (idempotency)
+  const existing = await prisma.walletTransaction.findFirst({
+    where: { idempotencyKey },
+  });
 
-    // Ensure wallets exist
-    await ensureWalletExists(client, supplierId, currency);
-    await ensureWalletExists(client, agencyId, currency);
+  if (existing) {
+    return existing;
+  }
 
-    // Lock agency wallet and validate funds
-    const agencyWallet = await lockWallet(client, agencyId, currency);
-    const totalDebit = Number(settlementAmount) + Number(deductedCommission || 0);
-    if (Number(agencyWallet.balance) < totalDebit) throw new Error('Insufficient funds');
-
-    // Debit agency
-    await client.query(`UPDATE wallets SET balance = balance - $1 WHERE id = $2`, [totalDebit, agencyWallet.id]);
-
-    // Credit supplier
-    const supplierWallet = await lockWallet(client, supplierId, currency);
-    await client.query(`UPDATE wallets SET balance = balance + $1 WHERE id = $2`, [settlementAmount, supplierWallet.id]);
-
-    // Create settlement transaction recorded on supplier wallet
-    const settlementTx = await insertTransactionRecord(client, {
-      walletId: supplierWallet.id,
-      type: 'supplier_settlement',
-      flow: 'supplier_to_agency',
-      amount: settlementAmount,
-      currency,
-      payerId: agencyId,
-      payeeId: supplierId,
-      invoiceId,
-      idempotencyKey,
-      status: 'completed',
+  return await prisma.$transaction(async (tx) => {
+    // Ensure supplier wallet exists
+    let supplierWallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: supplierId, currency } },
     });
 
-    // Ledger entries: debit agency total, credit supplier amount, credit commission
-    await insertLedgerEntries(client, settlementTx.id, [
-      { account: `wallet:${currency}:${agencyWallet.id}`, debit: totalDebit, credit: 0, currency, description: 'Agency settlement debit' },
-      { account: `wallet:${currency}:${supplierWallet.id}`, debit: 0, credit: settlementAmount, currency, description: 'Supplier settlement credit' },
-      { account: `commission:deducted:${currency}`, debit: 0, credit: deductedCommission || 0, currency, description: 'Commission deducted' },
-    ]);
+    if (!supplierWallet) {
+      supplierWallet = await tx.wallet.create({
+        data: { userId: supplierId, currency, balance: 0, reservedBalance: 0, status: 'active' },
+      });
+    }
 
-    await client.query('COMMIT');
+    // Ensure agency wallet exists
+    let agencyWallet = await tx.wallet.findUnique({
+      where: { userId_currency: { userId: agencyId, currency } },
+    });
+
+    if (!agencyWallet) {
+      throw new Error('Agency wallet not found');
+    }
+
+    const totalDebit = Number(settlementAmount) + Number(deductedCommission || 0);
+    
+    // Validate agency has sufficient funds (including reserved)
+    const availableBalance = Number(agencyWallet.balance) - Number(agencyWallet.reservedBalance);
+    if (availableBalance < totalDebit) {
+      throw new Error('Insufficient funds');
+    }
+
+    // Debit agency
+    const agencyNewBalance = Number(agencyWallet.balance) - totalDebit;
+    const agencyReservedBalance = Number(agencyWallet.reservedBalance) - Number(deductedCommission || 0);
+    await tx.wallet.update({
+      where: { id: agencyWallet.id },
+      data: { 
+        balance: agencyNewBalance,
+        reservedBalance: agencyReservedBalance < 0 ? 0 : agencyReservedBalance,
+      },
+    });
+
+    // Credit supplier
+    const supplierNewBalance = Number(supplierWallet.balance) + Number(settlementAmount);
+    await tx.wallet.update({
+      where: { id: supplierWallet.id },
+      data: { balance: supplierNewBalance },
+    });
+
+    // Create settlement transaction
+    const settlementTx = await tx.walletTransaction.create({
+      data: {
+        walletId: supplierWallet.id,
+        type: 'settlement',
+        flow: 'credit',
+        amount: Number(settlementAmount),
+        currency,
+        payerId: agencyId,
+        payeeId: supplierId,
+        invoiceId,
+        idempotencyKey,
+        status: 'completed',
+        description: 'Supplier settlement',
+      },
+    });
+
+    // Create ledger entries
+    await tx.walletLedger.create({
+      data: {
+        transactionId: settlementTx.id,
+        account: `wallet:${agencyWallet.id}`,
+        debit: totalDebit,
+        currency,
+        description: 'Agency settlement debit',
+      },
+    });
+
+    await tx.walletLedger.create({
+      data: {
+        transactionId: settlementTx.id,
+        account: `wallet:${supplierWallet.id}`,
+        credit: Number(settlementAmount),
+        currency,
+        description: 'Supplier settlement credit',
+      },
+    });
+
+    if (deductedCommission && deductedCommission > 0) {
+      await tx.walletLedger.create({
+        data: {
+          transactionId: settlementTx.id,
+          account: `commission:deducted:${currency}`,
+          credit: deductedCommission,
+          currency,
+          description: 'Commission deducted',
+        },
+      });
+    }
+
     return settlementTx;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    logger.error(`${SERVICE_NAME}: supplierSettlementFlow failed`, err as Error);
-    throw err;
-  } finally {
-    client.release();
-  }
+  });
 };
-
-// CommonJS compatibility for test runners that load compiled modules differently
-if (typeof module !== "undefined" && module.exports) {
-  module.exports = walletService;
-}
 
 // ES module export
 export default walletService;

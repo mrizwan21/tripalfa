@@ -1,0 +1,23 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "paths": {
+      "@/*": ["./src/*"],
+      "@tripalfa/shared-database": ["../../packages/shared-database"],
+      "@tripalfa/shared-database/*": ["../../packages/shared-database/*"],
+      "@tripalfa/shared-types": ["../../packages/shared-types"],
+      "@tripalfa/shared-types/*": ["../../packages/shared-types/*"],
+      "@tripalfa/shared-utils": ["../../packages/shared-utils"],
+      "@tripalfa/shared-utils/*": ["../../packages/shared-utils/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

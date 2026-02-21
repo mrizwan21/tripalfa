@@ -1,75 +1,95 @@
-# pylint: skip-file
-# noqa
-# type: ignore
-# pyright: ignore[all]
-# nosemgrep: dockerfile.security.missing-user.missing-user
-# Multi-stage Dockerfile for Booking Service
-FROM node:18-alpine AS base
+# Dockerfile for booking-service
+# This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
+# Parameters: SERVICE_NAME=booking-service, WORKSPACE_NAME=@tripalfa/booking-service, PORT=3001, HEALTH_PATH=health
 
-# Install security updates
-RUN apk update && apk upgrade && apk add --no-cache dumb-init
+FROM node:20-alpine AS builder
 
-# Set working directory
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app
 
-# Copy monorepo root files
-COPY package*.json ./
-COPY packages ./packages
-COPY services/booking-service ./services/booking-service
+# Copy lockfile and workspace config first for layer caching
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.json tsconfig.base.json ./
 
-# Development stage
-FROM base AS development
-RUN npm install --legacy-peer-deps
-WORKDIR /app/services/booking-service
-EXPOSE 3001
-# Use tsx watch for live TypeScript reloading in development
-CMD ["dumb-init", "npx", "tsx", "watch", "src/main.ts"]
+# Copy all project files
+COPY services ./services/
+COPY packages ./packages/
+COPY database ./database/
 
-# Build stage
-FROM base AS build
-RUN npm ci --legacy-peer-deps
-WORKDIR /app/services/booking-service
-RUN npm run build
+# Install dependencies using pnpm with cache mount
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts --fetch-timeout=300000
+
+# Generate Prisma client
+RUN pnpm --filter @tripalfa/shared-database generate
+
+# Clean up build info files from the host
+RUN find . -name "*.tsbuildinfo" -delete
+
+# Build all packages first (they are dependencies of booking-service)
+# IMPORTANT: Build shared-types first as it's a dependency of shared-utils
+RUN pnpm --filter @tripalfa/shared-types build
+RUN pnpm --filter @tripalfa/shared-utils build
+RUN pnpm --filter @tripalfa/shared-database build
+RUN pnpm --filter @tripalfa/api-clients build
+RUN pnpm --filter @tripalfa/static-data build
+RUN pnpm --filter @tripalfa/rules build
+RUN pnpm --filter @tripalfa/wallet build
+RUN pnpm --filter @tripalfa/notifications build
+# Note: ui-components is a frontend package not needed by booking-service
+
+# Build the service
+RUN pnpm --filter @tripalfa/booking-service build
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine
 
-# Create non-root user early
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+# Install dumb-init, curl for health checks, and enable corepack/pnpm for production stage
+RUN apk add --no-cache dumb-init curl \
+    && corepack enable && corepack prepare pnpm@latest --activate
 
-# Install security updates and required packages
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-    dumb-init \
-    tini wget && \
-    rm -rf /var/cache/apk/*
-
-# Set working directory
 WORKDIR /app
 
-# Copy everything from build stage (node_modules, dist, and all configs)
-COPY --from=build --chown=nodejs:nodejs /app ./
+# Copy essential files for pnpm production install
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY services/booking-service/package.json ./services/booking-service/
+COPY packages ./packages/
+COPY database ./database/
+COPY scripts ./scripts/
 
-# Security: Remove unnecessary files
-RUN rm -rf .git .gitignore README.md
+# Install ALL dependencies (including dev deps like prisma CLI for generate)
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts --fetch-timeout=300000
 
-# Set environment variables using a single ENV to reduce layers
-ENV NODE_ENV="production" \
-    PORT="3001"
+# Generate Prisma client in production stage (needed at runtime)
+RUN pnpm --filter @tripalfa/shared-database generate
 
-# Switch to non-root user before health check
-USER nodejs
+# Copy built dist from builder
+COPY --from=builder /app/services/booking-service/dist ./services/booking-service/dist
+COPY --from=builder /app/packages/shared-database/dist ./packages/shared-database/dist
+COPY --from=builder /app/packages/shared-utils/dist ./packages/shared-utils/dist
+COPY --from=builder /app/packages/static-data/dist ./packages/static-data/dist
+COPY --from=builder /app/packages/api-clients/dist ./packages/api-clients/dist
+COPY --from=builder /app/packages/shared-types/dist ./packages/shared-types/dist
+COPY --from=builder /app/packages/rules/dist ./packages/rules/dist
+COPY --from=builder /app/packages/wallet/dist ./packages/wallet/dist
+COPY --from=builder /app/packages/notifications/dist ./packages/notifications/dist
+# Note: ui-components is a frontend package not needed by booking-service
 
-# Health check - runs as non-root user (using wget with --spider to check endpoint)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget -q --spider http://localhost:3001/health
+# Remove source files to prevent Node from resolving to TypeScript files
+RUN find /app/packages -type d -name "src" -exec rm -rf {} + 2>/dev/null || true && \
+    find /app/services -type d -name "src" -exec rm -rf {} + 2>/dev/null || true
 
-# Expose port
+WORKDIR /app/services/booking-service
+
 EXPOSE 3001
 
-# Use tini as init system
-ENTRYPOINT ["/sbin/tini", "--"]
-# Start application - use WORKDIR instead of cd in CMD
-WORKDIR /app/services/booking-service
-CMD ["node", "dist/main.js"]
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "--enable-source-maps", "dist/index.js"]

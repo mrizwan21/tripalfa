@@ -17,10 +17,6 @@ export const API_CONFIG = {
     apiKey: process.env.STRIPE_TEST_KEY || 'sk_test_...',
     publishableKey: process.env.STRIPE_TEST_PUBLISHABLE_KEY || 'pk_test_...',
   },
-  hotelston: {
-    baseURL: process.env.HOTELSTON_SANDBOX_URL || 'https://api.test.hotelston.com',
-    apiKey: process.env.HOTELSTON_SANDBOX_KEY || '',
-  },
   duffel: {
     baseURL: process.env.DUFFEL_SANDBOX_URL || 'https://api.duffel.com',
     apiKey: process.env.DUFFEL_SANDBOX_KEY || '',

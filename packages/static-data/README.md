@@ -15,32 +15,46 @@ This package provides a unified interface for accessing static data across the e
 The package organizes static data into the following modules:
 
 ### Core Data Types (`src/types.ts`)
+
+
 - `Airport`, `Airline`, `Aircraft`, `Currency`
 - `City`, `Country`, `Nationality`
-- `HotelChain`, `HotelFacility`, `HotelType`
+- `HotelChain`, `HotelType`
 - `Location` for autocomplete functionality
 
+
 ### Data Modules (`src/data/`)
+
 - `notification-types.ts` - Notification types and mock data
 - `supplier-data.ts` - Supplier, vendor, and contract data for B2B admin
 
+
 ### Client (`src/client.ts`)
+
 - `StaticDataClient` class for data access
 - Convenience functions: `getAirports()`, `getAirlines()`, etc.
+
+
 - Automatic caching and fallback handling
 
 ### Cache (`src/cache.ts`)
+
+
 - `StaticDataCache` class for cache management
 - Configurable cache settings
 - Cache statistics and management functions
 
 ### Fallbacks (`src/fallbacks.ts`)
+
+
 - Predefined fallback data for all data types
 - Automatic fallback selection based on error types
 - Configurable fallback behavior
 
 ### Utilities (`src/utils.ts`)
+
 - Helper functions for data manipulation
+
 - Cache key generation
 - Data validation and sanitization
 - Retry mechanisms with exponential backoff
@@ -48,8 +62,10 @@ The package organizes static data into the following modules:
 ## Usage
 
 ### Basic Usage
+
 ```typescript
 import { getAirports, getCurrencies } from '@tripalfa/static-data';
+
 
 // Get airports with optional search parameters
 const airports = await getAirports({ query: 'London', limit: 10 });
@@ -59,6 +75,7 @@ const currencies = await getCurrencies();
 ```
 
 ### Advanced Usage with Client
+
 ```typescript
 import { StaticDataClient } from '@tripalfa/static-data';
 
@@ -67,6 +84,7 @@ const client = new StaticDataClient({
   cache: { ttl: 3600000, maxSize: 1000 },
   sources: [
     { name: 'local-db', priority: 1, endpoint: 'http://localhost:3000', enabled: true, timeout: 5000 },
+
     { name: 'wicked-gateway', priority: 2, endpoint: 'http://localhost:8000', enabled: true, timeout: 10000 }
   ],
   fallbackEnabled: true
@@ -76,6 +94,7 @@ const airports = await client.getAirports({ query: 'New York' });
 ```
 
 ### B2B Admin Data
+
 ```typescript
 import { 
   MOCK_NOTIFICATIONS, 
@@ -100,6 +119,7 @@ const suppliers = getMockSuppliers();
 ### Migrating from Old Static Data
 
 1. **Replace direct imports**:
+
    ```typescript
    // Old
    import { MOCK_NOTIFICATIONS } from '../lib/notification-types';
@@ -109,7 +129,9 @@ const suppliers = getMockSuppliers();
    ```
 
 2. **Update constants**:
+
    ```typescript
+
    // Old
    import { FLIGHT_CLASSES } from '../lib/constants';
    
@@ -122,6 +144,7 @@ const suppliers = getMockSuppliers();
 ## Configuration
 
 ### Client Configuration
+
 ```typescript
 interface StaticDataConfig {
   apiBase: string;           // Base URL for API calls
@@ -148,34 +171,42 @@ interface DataSourceConfig {
 
 The client automatically handles errors and falls back to local data when appropriate:
 
+
 ```typescript
 try {
   const data = await getAirports({ query: 'London' });
   // Use data
 } catch (error) {
+
   console.error('Failed to fetch airports:', error);
   // Fallback data will be used automatically if enabled
 }
 ```
 
+
 ## Development
 
 ### Building
+
 ```bash
+
 npm run build
 ```
 
 ### Development
+
 ```bash
 npm run dev
 ```
 
 ### Testing
+
 ```bash
 npm test
 ```
 
 ### Linting
+
 ```bash
 npm run lint
 ```

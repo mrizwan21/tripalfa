@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { X, CheckCircle2, Clock, XCircle, AlertCircle, Info, Calendar, Shield } from 'lucide-react';
 import { format } from 'date-fns';
 import { NotificationItem } from '../lib/notification-types';
-import { cn } from '../lib/utils';
+import { cn } from '@tripalfa/ui-components';
 
 interface NotificationDetailsPopupProps {
     isOpen: boolean;

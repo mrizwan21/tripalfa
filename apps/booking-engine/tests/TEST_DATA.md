@@ -16,7 +16,7 @@
 - Use `4000 0000 0000 0002` for declined payments
 
 ## External Service Sandboxes
-- Stripe, Duffel, Hotelston, LiteAPI are configured in `tests/helpers/external-services.ts`
+- Stripe, Duffel, LiteAPI are configured in `tests/helpers/external-services.ts`
 - Use test/sandbox credentials only
 
 ## Fixture Files

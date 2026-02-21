@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "useDefineForClassFields": true,
         "lib": [
             "DOM",
             "DOM.Iterable",
@@ -14,16 +13,20 @@
         "strict": false,
         "forceConsistentCasingInFileNames": true,
         "module": "ESNext",
-        "moduleResolution": "Bundler",
+        "moduleResolution": "bundler",
         "resolveJsonModule": true,
         "isolatedModules": true,
         "noEmit": true,
         "jsx": "react-jsx",
+        "ignoreDeprecations": "5.0",
         "baseUrl": ".",
-        "typeRoots": [
-            "../../node_modules/@types"
-        ],
         "paths": {
+            "@/*": [
+                "./*"
+            ],
+            "@/components/ui/*": [
+                "./ui/*"
+            ],
             "@tripalfa/shared-utils": [
                 "../shared-utils"
             ],

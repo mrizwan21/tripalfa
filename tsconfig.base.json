@@ -1,0 +1,56 @@
+{
+  "compilerOptions": {
+    "ignoreDeprecations": "5.0",
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@tripalfa/shared-types": [
+        "packages/shared-types"
+      ],
+      "@tripalfa/shared-types/*": [
+        "packages/shared-types/*"
+      ],
+      "@tripalfa/shared-utils": [
+        "packages/shared-utils"
+      ],
+      "@tripalfa/shared-utils/*": [
+        "packages/shared-utils/*"
+      ],
+      "@tripalfa/shared-database": [
+        "packages/shared-database"
+      ],
+      "@tripalfa/shared-database/*": [
+        "packages/shared-database/*"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}

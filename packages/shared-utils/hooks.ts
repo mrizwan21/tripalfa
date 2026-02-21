@@ -1,4 +1,5 @@
-// Super Admin Panel - React Query Hooks
+// Admin Panel - React Query Hooks
+// @ts-ignore
 import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from 'react-query';
 import { api, queryKeys } from './api';
 import { API_ENDPOINTS } from './constants';
@@ -69,7 +70,7 @@ export function useLogin() {
         API_ENDPOINTS.auth.login,
         credentials
       ),
-    onSuccess: (data) => {
+    onSuccess: (data: { accessToken: string; refreshToken: string; user: User }) => {
       api.setAccessToken(data.accessToken);
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
@@ -125,7 +126,7 @@ export function useUpdateCompany() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: CompanyUpdate }) =>
       api.patch<Company>(`${API_ENDPOINTS.companies}/${id}`, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Company, variables: { id: string; data: CompanyUpdate }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
     },
@@ -176,7 +177,7 @@ export function useUpdateUser() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UserUpdate }) =>
       api.patch<User>(`${API_ENDPOINTS.users}/${id}`, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (_: User, variables: { id: string; data: UserUpdate }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },
@@ -235,7 +236,7 @@ export function useUpdateRole() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: RoleUpdate }) =>
       api.patch<Role>(`${API_ENDPOINTS.roles}/${id}`, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Role, variables: { id: string; data: RoleUpdate }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
     },
@@ -268,7 +269,7 @@ export function useUpdateBookingStatus() {
   return useMutation({
     mutationFn: ({ id, status, remarks }: { id: string; status: string; remarks?: string }) =>
       api.patch<Booking>(`${API_ENDPOINTS.bookings}/${id}/status`, { status, remarks }),
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Booking, variables: { id: string; status: string; remarks?: string }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.bookings.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
     },
@@ -308,7 +309,7 @@ export function useUpdateSupplier() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SupplierUpdate }) =>
       api.patch<Supplier>(`${API_ENDPOINTS.suppliers}/${id}`, data),
-    onSuccess: (_, variables) => {
+    onSuccess: (_: Supplier, variables: { id: string; data: SupplierUpdate }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.detail(variables.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
     },

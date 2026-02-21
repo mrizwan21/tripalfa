@@ -4,18 +4,33 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+    ".": "./dist/src/index.js",
+    "./types/enums": "./dist/types/enums.js",
+    "./types/hotel-deals": "./dist/types/hotel-deals.js",
+    "./types/loyalty": "./dist/types/loyalty.js",
+    "./types/pricing": "./dist/types/pricing.js",
+    "./types/booking": "./dist/types/booking.js",
+    "./types/user": "./dist/types/user.js"
+  },
+  "typesVersions": {
+    "*": {
+      "types/enums": ["./dist/types/enums.d.ts"],
+      "types/hotel-deals": ["./dist/types/hotel-deals.d.ts"],
+      "types/loyalty": ["./dist/types/loyalty.d.ts"],
+      "types/pricing": ["./dist/types/pricing.d.ts"],
+      "types/booking": ["./dist/types/booking.d.ts"],
+      "types/user": ["./dist/types/user.d.ts"]
     }
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "tsc -p tsconfig.json",
+    "dev": "npx tsc -p tsconfig.build.json --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "type-check": "npx tsc -p tsconfig.build.json --noEmit",
+    "clean": "rm -rf dist"
   },
   "files": [
     "dist"
@@ -24,6 +39,6 @@
     "packages/shared-types/package.json"
   ],
   "devDependencies": {
-    "typescript": "^4.9.0"
+    "typescript": "^5.9.3"
   }
 }

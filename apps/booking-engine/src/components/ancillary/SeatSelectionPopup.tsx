@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight, Info, Loader2, Plane } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeatMaps } from '../../lib/api';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency } from '@tripalfa/ui-components';
 import { 
     Passenger, 
     FlightSegmentInfo, 

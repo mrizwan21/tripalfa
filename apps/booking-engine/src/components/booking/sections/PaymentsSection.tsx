@@ -5,7 +5,7 @@ import { CreditCard, Calendar, Wallet, Plus } from 'lucide-react';
 import { format } from 'date-fns';
 import { getWalletBalance } from '../../../lib/api';
 import { ReceivePaymentModal } from '../../modals/ReceivePaymentModal'; // Now acts as TopUpModal
-import { Button } from '../../ui/Button'; // Assuming Button component exists
+import { Button } from '../../ui/button'; // Assuming Button component exists
 
 interface PaymentsSectionProps {
     booking: Booking;

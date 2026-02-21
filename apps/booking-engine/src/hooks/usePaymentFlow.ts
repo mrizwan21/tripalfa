@@ -75,7 +75,7 @@ export function usePaymentFlow({
     transactionId: null,
   });
 
-  const retryTimeoutRef = useRef<NodeJS.Timeout>();
+  const retryTimeoutRef = useRef<NodeJS.Timeout>(undefined);
   const lastPaymentRequestRef = useRef<PaymentRequest | null>(null);
 
   // Utility to update state

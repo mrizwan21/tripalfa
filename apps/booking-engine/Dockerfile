@@ -1,21 +1,40 @@
-# pylint: skip-file
-# Use official Node.js runtime as base image
-FROM node:18-alpine AS builder
+# Dockerfile for booking-engine - Frontend App
+# This Dockerfile follows the shared template at infrastructure/templates/app.Dockerfile.template
+# Parameters: APP_NAME=booking-engine, PORT=3000
+
+# Build stage
+FROM node:20-alpine AS builder
+
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Set the working directory
 WORKDIR /app
 
 # Copy monorepo root files
-COPY package*.json ./
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.json tsconfig.base.json ./
 COPY packages ./packages
+COPY scripts ./scripts
 COPY apps/booking-engine ./apps/booking-engine
 
-# Install dependencies
-RUN npm install --legacy-peer-deps
+# Clean up build info files from the host
+RUN find . -name "*.tsbuildinfo" -delete
 
-# Build the application - skip tsc, let Vite handle TypeScript transpilation
+# Install dependencies using pnpm with cache mount
+# Using --fetch-timeout for better handling of slow connections
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --fetch-timeout=300000
+
+# Build workspace dependencies
+RUN pnpm --filter @tripalfa/shared-types build
+RUN pnpm --filter @tripalfa/shared-utils build
+RUN pnpm --filter @tripalfa/api-clients build
+RUN pnpm --filter @tripalfa/static-data build
+RUN pnpm --filter @tripalfa/ui-components build
+
+# Build the application
 WORKDIR /app/apps/booking-engine
-RUN npx vite build
+RUN pnpm build
 
 # Use nginx to serve the built application
 FROM nginx:alpine

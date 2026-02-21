@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Info, Loader2 } from 'lucide-react';
-import { Button } from './ui/Button';
+import { Button } from './ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeatMaps } from '../lib/api';
 

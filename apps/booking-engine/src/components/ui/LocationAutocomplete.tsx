@@ -42,7 +42,7 @@ export function LocationAutocomplete({
                 // Get a list of popular locations by fetching with common characters
                 const popularCodes = ['LHR', 'JFK', 'DXB', 'SIN', 'HKG'];
                 const locations: Location[] = [];
-                
+
                 // Manually add popular airports - fallback data
                 const defaults: Location[] = [
                     { code: 'LHR', name: 'London Heathrow', city: 'London', country: 'United Kingdom', type: 'airport' },
@@ -54,13 +54,13 @@ export function LocationAutocomplete({
                     { code: '', name: 'New York', city: 'New York', country: 'United States', type: 'city' },
                     { code: '', name: 'Dubai', city: 'Dubai', country: 'UAE', type: 'city' },
                 ];
-                
+
                 setStaticLocations(defaults);
             } catch (error) {
                 console.error('Failed to load static locations:', error);
-      }
+            }
         };
-        
+
         loadStaticLocations();
     }, []);
 
@@ -90,7 +90,7 @@ export function LocationAutocomplete({
             try {
                 const response = await getAirports({ query: search });
                 const airports = response.data;
-                
+
                 // Map to our Location interface
                 const mappedLocations: Location[] = airports.map((airport: any) => ({
                     code: airport.iata_code || 'XXX',
@@ -117,6 +117,7 @@ export function LocationAutocomplete({
 
     return (
         <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
+            {/* @ts-ignore - Radix UI / React 19 type mismatch */}
             <Popover.Anchor asChild>
                 <div className="w-full h-full relative group cursor-pointer">
                     {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">{icon}</div>}

@@ -3,24 +3,31 @@ version: '3.8'
 services:
   postgres:
     image: postgres:15
+    container_name: tripalfa-postgres
     environment:
       POSTGRES_DB: staticdatabase
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tripalfa
 
   redis:
     image: redis:7-alpine
+    container_name: tripalfa-redis
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    networks:
+      - tripalfa
 
   pgbouncer:
     image: edoburu/pgbouncer:latest
+    container_name: tripalfa-pgbouncer
     ports:
       - "6432:6432"
     volumes:
@@ -29,7 +36,47 @@ services:
       - LOGFILE=/dev/stdout
     restart: unless-stopped
     networks:
-      - default
+      - tripalfa
+
+  # Backend Services
+  api-gateway:
+    build:
+      context: ../../
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: tripalfa-api-gateway
+    depends_on:
+      - redis
+    networks:
+      - tripalfa
+
+  booking-service:
+    build:
+      context: ../../
+      dockerfile: services/booking-service/Dockerfile
+    container_name: tripalfa-booking-service
+    depends_on:
+      - pgbouncer
+    networks:
+      - tripalfa
+
+  user-service:
+    build:
+      context: ../../
+      dockerfile: services/user-service/Dockerfile
+    container_name: tripalfa-user-service
+    depends_on:
+      - pgbouncer
+    networks:
+      - tripalfa
+
+  organization-service:
+    build:
+      context: ../../
+      dockerfile: services/organization-service/Dockerfile
+    container_name: tripalfa-organization-service
+    depends_on:
+      - pgbouncer
+    networks:
       - tripalfa
 
 volumes:
@@ -38,5 +85,4 @@ volumes:
 
 networks:
   tripalfa:
-    external: true
-    name: tripalfa-node_default
+    driver: bridge
