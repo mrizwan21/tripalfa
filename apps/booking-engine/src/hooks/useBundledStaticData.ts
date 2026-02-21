@@ -15,7 +15,7 @@ import {
   useCurrencies,
   useHotelAmenities,
   useBoardTypes,
-  useDestinations,
+  usePopularDestinations,
   useLoyaltyPrograms,
 } from './useStaticData';
 
@@ -26,62 +26,70 @@ import {
  */
 export function useBundledStaticData() {
   // Flight & Travel data - delegate to React Query hooks
-  const airports = useAirports();
-  const airlines = useAirlines();
-  const cities = useCities();
-  const countries = useCountries();
-  const currencies = useCurrencies();
+  const airportsQuery = useAirports();
+  const airlinesQuery = useAirlines();
+  const citiesQuery = useCities();
+  const countriesQuery = useCountries();
+  const currenciesQuery = useCurrencies();
   
   // Nationalities are embedded in countries; extract them
   const nationalities = useMemo(() => {
-    return countries.data || [];
-  }, [countries.data]);
+    return countriesQuery.data || [];
+  }, [countriesQuery.data]);
   
   // Hotel data
-  const hotelAmenities = useHotelAmenities();
-  const boardTypes = useBoardTypes();
-  const destinations = useDestinations();
-  const loyaltyPrograms = useLoyaltyPrograms();
+  const hotelAmenitiesQuery = useHotelAmenities();
+  const boardTypesQuery = useBoardTypes();
+  const destinationsQuery = usePopularDestinations();
+  const loyaltyProgramsQuery = useLoyaltyPrograms();
 
   // Calculate overall loading and error state
   const loading = useMemo(() => 
-    airports.isLoading || airlines.isLoading || cities.isLoading || countries.isLoading || 
-    currencies.isLoading || hotelAmenities.isLoading || boardTypes.isLoading || 
-    destinations.isLoading || loyaltyPrograms.isLoading,
-    [airports.isLoading, airlines.isLoading, cities.isLoading, countries.isLoading, 
-     currencies.isLoading, hotelAmenities.isLoading, boardTypes.isLoading, 
-     destinations.isLoading, loyaltyPrograms.isLoading]
+    airportsQuery.isLoading || airlinesQuery.isLoading || citiesQuery.isLoading || countriesQuery.isLoading || 
+    currenciesQuery.isLoading || hotelAmenitiesQuery.isLoading || boardTypesQuery.isLoading || 
+    destinationsQuery.isLoading || loyaltyProgramsQuery.isLoading,
+    [airportsQuery.isLoading, airlinesQuery.isLoading, citiesQuery.isLoading, countriesQuery.isLoading, 
+     currenciesQuery.isLoading, hotelAmenitiesQuery.isLoading, boardTypesQuery.isLoading, 
+     destinationsQuery.isLoading, loyaltyProgramsQuery.isLoading]
   );
 
   const error = useMemo(() => 
-    airports.error || airlines.error || cities.error || countries.error || 
-    currencies.error || hotelAmenities.error || boardTypes.error || 
-    destinations.error || loyaltyPrograms.error,
-    [airports.error, airlines.error, cities.error, countries.error, 
-     currencies.error, hotelAmenities.error, boardTypes.error, 
-     destinations.error, loyaltyPrograms.error]
+    airportsQuery.error || airlinesQuery.error || citiesQuery.error || countriesQuery.error || 
+    currenciesQuery.error || hotelAmenitiesQuery.error || boardTypesQuery.error || 
+    destinationsQuery.error || loyaltyProgramsQuery.error,
+    [airportsQuery.error, airlinesQuery.error, citiesQuery.error, countriesQuery.error, 
+     currenciesQuery.error, hotelAmenitiesQuery.error, boardTypesQuery.error, 
+     destinationsQuery.error, loyaltyProgramsQuery.error]
   );
 
   return useMemo(() => ({
-    // Flight & Travel - return the React Query result objects
-    airports,
-    airlines,
-    cities,
-    countries,
-    currencies,
-    nationalities: { data: nationalities, isLoading: countries.isLoading, error: countries.error },
+    // Flight & Travel - return normalized arrays with metadata
+    airports: { data: airportsQuery.data || [], isLoading: airportsQuery.isLoading, error: airportsQuery.error },
+    airlines: { data: airlinesQuery.data || [], isLoading: airlinesQuery.isLoading, error: airlinesQuery.error },
+    cities: { data: citiesQuery.data || [], isLoading: citiesQuery.isLoading, error: citiesQuery.error },
+    countries: { data: countriesQuery.data || [], isLoading: countriesQuery.isLoading, error: countriesQuery.error },
+    currencies: { data: currenciesQuery.data || [], isLoading: currenciesQuery.isLoading, error: currenciesQuery.error },
+    nationalities: { data: nationalities, isLoading: countriesQuery.isLoading, error: countriesQuery.error },
     
     // Hotel
-    hotelAmenities,
-    boardTypes,
-    destinations,
-    loyaltyPrograms,
+    hotelAmenities: { data: hotelAmenitiesQuery.data || [], isLoading: hotelAmenitiesQuery.isLoading, error: hotelAmenitiesQuery.error },
+    boardTypes: { data: boardTypesQuery.data || [], isLoading: boardTypesQuery.isLoading, error: boardTypesQuery.error },
+    destinations: { data: destinationsQuery.data || [], isLoading: destinationsQuery.isLoading, error: destinationsQuery.error },
+    loyaltyPrograms: { data: loyaltyProgramsQuery.data || [], isLoading: loyaltyProgramsQuery.isLoading, error: loyaltyProgramsQuery.error },
     
     // Overall state
     loading,
     error,
-  }), [airports, airlines, cities, countries, currencies, nationalities,
-       hotelAmenities, boardTypes, destinations, loyaltyPrograms, loading, error]);
+  }), [airportsQuery.data, airportsQuery.isLoading, airportsQuery.error,
+       airlinesQuery.data, airlinesQuery.isLoading, airlinesQuery.error,
+       citiesQuery.data, citiesQuery.isLoading, citiesQuery.error,
+       countriesQuery.data, countriesQuery.isLoading, countriesQuery.error,
+       currenciesQuery.data, currenciesQuery.isLoading, currenciesQuery.error,
+       hotelAmenitiesQuery.data, hotelAmenitiesQuery.isLoading, hotelAmenitiesQuery.error,
+       boardTypesQuery.data, boardTypesQuery.isLoading, boardTypesQuery.error,
+       destinationsQuery.data, destinationsQuery.isLoading, destinationsQuery.error,
+       loyaltyProgramsQuery.data, loyaltyProgramsQuery.isLoading, loyaltyProgramsQuery.error,
+       nationalities, loading, error]);
 }
 
 // =====================================================================
@@ -175,7 +183,7 @@ export function useStaticBoardTypes() {
 }
 
 export function useStaticDestinations() {
-  const query = useDestinations();
+  const query = usePopularDestinations();
   return useMemo(() => ({
     destinations: query.data || [],
     loading: query.isLoading,
