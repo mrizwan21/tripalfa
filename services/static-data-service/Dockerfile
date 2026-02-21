@@ -1,0 +1,62 @@
+FROM node:20-alpine AS builder
+
+# Enable corepack and pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy lockfile and workspace config first for layer caching
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY tsconfig.json tsconfig.base.json ./
+
+# Copy all project files
+COPY services ./services/
+COPY packages ./packages/
+COPY database ./database/
+
+# Install dependencies using pnpm with cache mount
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --frozen-lockfile \
+    --ignore-scripts \
+    --fetch-timeout=300000
+
+# Build the service
+RUN find . -name "*.tsbuildinfo" -delete
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/static-data-service... build
+
+# Production stage
+FROM node:20-alpine
+
+# Install dumb-init, curl for health checks, and enable corepack/pnpm for production stage
+RUN apk add --no-cache dumb-init curl \
+    && corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app
+
+# Copy essential files for pnpm production install
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY services/static-data-service/package.json ./services/static-data-service/
+COPY packages ./packages/
+COPY database ./database/
+
+# Install production dependencies only with cache mount
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --frozen-lockfile \
+    --prod \
+    --ignore-scripts \
+    --fetch-timeout=300000
+
+# Copy built dist from builder
+COPY --from=builder /app/services/static-data-service/dist ./services/static-data-service/dist
+
+WORKDIR /app/services/static-data-service
+
+EXPOSE 3002
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3002/health || exit 1
+
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["node", "--enable-source-maps", "dist/index.js"]

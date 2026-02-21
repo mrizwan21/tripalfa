@@ -124,6 +124,28 @@ services:
       timeout: 10s
       retries: 3
 
+  static-data-service:
+    build:
+      context: .
+      dockerfile: services/static-data-service/Dockerfile
+    container_name: tripalfa-static-data-service-local
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres-static:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      STATIC_DATABASE_URL: "postgresql://postgres:postgres@postgres-static:5432/staticdatabase?sslmode=disable"
+    networks:
+      - tripalfa-local
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   payment-service:
     build:
       context: .
