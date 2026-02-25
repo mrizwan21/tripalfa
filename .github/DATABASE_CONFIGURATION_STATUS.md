@@ -14,7 +14,7 @@ All backend services have been configured to use **NEON** for application data a
 ## Backend Services Configuration Matrix
 
 | Service | Database | Type | Environment Variable | Status |
-|---------|----------|------|---------------------|--------|
+ |---------|----------|------|---------------------|--------|
 | **API Gateway** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
 | **Booking Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
 | **Payment Service** | In-Memory/Redis | Application | - | ✅ No direct DB |
