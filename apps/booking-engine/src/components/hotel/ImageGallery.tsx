@@ -49,13 +49,13 @@ export function ImageGallery({ images, hotelName }: ImageGalleryProps): React.JS
         <div className="absolute inset-y-0 flex items-center justify-between w-full px-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
           <button
             onClick={handlePrev}
-            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#8B5CF6] transition-all border border-white/20 pointer-events-auto"
+            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#152467] transition-all border border-white/20 pointer-events-auto"
           >
             <ChevronLeft size={24} />
           </button>
           <button
             onClick={handleNext}
-            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#8B5CF6] transition-all border border-white/20 pointer-events-auto"
+            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-[#152467] transition-all border border-white/20 pointer-events-auto"
           >
             <ChevronRight size={24} />
           </button>
@@ -66,13 +66,13 @@ export function ImageGallery({ images, hotelName }: ImageGalleryProps): React.JS
       <div className="flex items-center gap-4">
         <button
           onClick={() => setCurrentIndex(0)}
-          className="w-10 h-10 rounded-2xl bg-[#8B5CF6] text-white flex items-center justify-center hover:bg-[#7C3AED] transition-all shadow-lg active:scale-95"
+          className="w-10 h-10 rounded-2xl bg-[#152467] text-white flex items-center justify-center hover:bg-[#0A1C50] transition-all shadow-lg active:scale-95"
         >
           <ChevronLeft size={16} className="-mr-1" /><ChevronLeft size={16} />
         </button>
         <button
           onClick={handlePrev}
-          className="w-10 h-10 rounded-2xl bg-[#8B5CF6] text-white flex items-center justify-center hover:bg-[#7C3AED] transition-all shadow-lg active:scale-95"
+          className="w-10 h-10 rounded-2xl bg-[#152467] text-white flex items-center justify-center hover:bg-[#0A1C50] transition-all shadow-lg active:scale-95"
         >
           <ChevronLeft size={20} />
         </button>
@@ -85,13 +85,13 @@ export function ImageGallery({ images, hotelName }: ImageGalleryProps): React.JS
 
         <button
           onClick={handleNext}
-          className="w-10 h-10 rounded-2xl bg-[#8B5CF6] text-white flex items-center justify-center hover:bg-[#7C3AED] transition-all shadow-lg active:scale-95"
+          className="w-10 h-10 rounded-2xl bg-[#152467] text-white flex items-center justify-center hover:bg-[#0A1C50] transition-all shadow-lg active:scale-95"
         >
           <ChevronRight size={20} />
         </button>
         <button
           onClick={() => setCurrentIndex(images.length - 1)}
-          className="w-10 h-10 rounded-2xl bg-[#8B5CF6] text-white flex items-center justify-center hover:bg-[#7C3AED] transition-all shadow-lg active:scale-95"
+          className="w-10 h-10 rounded-2xl bg-[#152467] text-white flex items-center justify-center hover:bg-[#0A1C50] transition-all shadow-lg active:scale-95"
         >
           <ChevronRight size={16} className="-ml-1" /><ChevronRight size={16} />
         </button>

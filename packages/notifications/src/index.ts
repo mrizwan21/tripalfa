@@ -22,6 +22,7 @@
 
 // Export types
 export * from './types';
+export { BrevoEmailConfig, SMTPEmailConfig, isBrevoConfig, isSMTPConfig } from './types';
 
 // Export services
 export { NotificationManager, BaseNotificationService } from './services';

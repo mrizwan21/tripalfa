@@ -36,7 +36,7 @@ export function BookingStepper({ currentStep }: BookingStepperProps) {
                                     <div
                                         className={`
                                             px-4 py-2 rounded-full border-2 font-black text-[9px] uppercase tracking-[0.15em] transition-all duration-300 shadow-sm whitespace-nowrap bg-white
-                                            ${isActive ? 'bg-[#FFD700] border-[#FFD700] text-black scale-110 shadow-lg ring-4 ring-yellow-50' :
+                                            ${isActive ? 'bg-[#EC5C4C] border-[#EC5C4C] text-black scale-110 shadow-lg ring-4 ring-yellow-50' :
                                                 isCompleted ? 'bg-[#6366F1] border-[#6366F1] text-white' :
                                                     'bg-white border-gray-200 text-gray-300'}
                                         `}
@@ -49,7 +49,7 @@ export function BookingStepper({ currentStep }: BookingStepperProps) {
 
                                     {isActive && (
                                         <div className="absolute -bottom-6 flex flex-col items-center">
-                                            <div className="w-1.5 h-1.5 bg-[#FFD700] rounded-full animate-bounce" />
+                                            <div className="w-1.5 h-1.5 bg-[#EC5C4C] rounded-full animate-bounce" />
                                         </div>
                                     )}
                                 </div>

@@ -2,7 +2,7 @@
  * Simplified Bundled Static Data Hooks
  * ====================================
  * Delegates all data fetching to React Query hooks from useStaticData.ts.
- * No custom caching, no fallbacks to hardcoded data —just delegate.
+ * No custom caching, no fallbacks to hardcoded data — just delegate.
  * When DB is unavailable, each hook returns empty arrays.
  */
 
@@ -18,6 +18,62 @@ import {
   usePopularDestinations,
   useLoyaltyPrograms,
 } from './useStaticData';
+
+// =====================================================================
+// Type Definitions for Static Data
+// =====================================================================
+
+/** Common interface for items with IATA/code */
+interface CodeItem {
+  code: string;
+  name?: string;
+  iata_code?: string;
+  [key: string]: unknown;
+}
+
+/** Airport item - can have either code or iata_code */
+interface AirportItem {
+  code: string;
+  iata_code?: string;
+  name?: string;
+  city?: string;
+  country?: string;
+  [key: string]: unknown;
+}
+
+/** Airline item - uses iata_code */
+interface AirlineItem {
+  iata_code: string;
+  name?: string;
+  logo_url?: string;
+  country?: string;
+  [key: string]: unknown;
+}
+
+/** Country with code */
+interface CountryItem {
+  code: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+/** Currency with code */
+interface CurrencyItem {
+  code: string;
+  name?: string;
+  symbol?: string;
+  [key: string]: unknown;
+}
+
+/** Nationality item */
+interface NationalityItem {
+  code: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+/** Lookup map type */
+type LookupMap<T> = Record<string, T>;
 
 /**
  * Master hook that provides all static data.
@@ -100,68 +156,118 @@ export function useBundledStaticData() {
 
 export function useStaticAirports() {
   const query = useAirports();
-  return useMemo(() => ({
-    airports: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    byIataCode: (query.data || []).reduce((acc, a) => ({ ...acc, [a.iata_code]: a }), {}),
-    get: (code: string) => (query.data || []).find(a => a.iata_code === code),
-  }), [query.data, query.isLoading, query.error]);
+  return useMemo(() => {
+    const data = (query.data || []) as AirportItem[];
+    // Airports use 'code' as the primary IATA code
+    const byIataCode: LookupMap<AirportItem> = data.reduce((acc, a) => ({ 
+      ...acc, 
+      [a.code]: a 
+    }), {});
+    const get = (code: string) => data.find((a) => a.code === code);
+    return {
+      airports: data,
+      loading: query.isLoading,
+      error: query.error,
+      byIataCode,
+      get,
+    };
+  }, [query.data, query.isLoading, query.error]);
 }
 
 export function useStaticAirlines() {
   const query = useAirlines();
-  return useMemo(() => ({
-    airlines: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    byIataCode: (query.data || []).reduce((acc, a) => ({ ...acc, [a.iata_code]: a }), {}),
-    get: (code: string) => (query.data || []).find(a => a.iata_code === code),
-  }), [query.data, query.isLoading, query.error]);
+  return useMemo(() => {
+    const data = (query.data || []) as AirlineItem[];
+    // Airlines use 'iata_code' as the primary code
+    const byIataCode: LookupMap<AirlineItem> = data.reduce((acc, a) => ({ 
+      ...acc, 
+      [a.iata_code]: a 
+    }), {});
+    const get = (code: string) => data.find((a) => a.iata_code === code);
+    return {
+      airlines: data,
+      loading: query.isLoading,
+      error: query.error,
+      byIataCode,
+      get,
+    };
+  }, [query.data, query.isLoading, query.error]);
 }
 
 export function useStaticCities() {
   const query = useCities();
-  return useMemo(() => ({
-    cities: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    byIataCode: (query.data || []).reduce((acc, c) => ({ ...acc, [c.iata_code]: c }), {}),
-    get: (code: string) => (query.data || []).find(c => c.iata_code === code),
-  }), [query.data, query.isLoading, query.error]);
+  return useMemo(() => {
+    const data = query.data || [];
+    const byIataCode: LookupMap<CodeItem> = data.reduce((acc, c) => ({ 
+      ...acc, 
+      [c.iata_code || c.code]: c 
+    }), {});
+    const get = (code: string) => data.find((c) => c.iata_code === code || c.code === code);
+    return {
+      cities: data,
+      loading: query.isLoading,
+      error: query.error,
+      byIataCode,
+      get,
+    };
+  }, [query.data, query.isLoading, query.error]);
 }
 
 export function useStaticCountries() {
   const query = useCountries();
-  return useMemo(() => ({
-    countries: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    byCode: (query.data || []).reduce((acc, c) => ({ ...acc, [c.code]: c }), {}),
-    get: (code: string) => (query.data || []).find(c => c.code === code),
-  }), [query.data, query.isLoading, query.error]);
+  return useMemo(() => {
+    const data = query.data || [];
+    const byCode: LookupMap<CountryItem> = data.reduce((acc, c) => ({ 
+      ...acc, 
+      [c.code]: c 
+    }), {});
+    const get = (code: string) => data.find((c) => c.code === code);
+    return {
+      countries: data,
+      loading: query.isLoading,
+      error: query.error,
+      byCode,
+      get,
+    };
+  }, [query.data, query.isLoading, query.error]);
 }
 
 export function useStaticCurrencies() {
   const query = useCurrencies();
-  return useMemo(() => ({
-    currencies: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    byCode: (query.data || []).reduce((acc, c) => ({ ...acc, [c.code]: c }), {}),
-    get: (code: string) => (query.data || []).find(c => c.code === code),
-  }), [query.data, query.isLoading, query.error]);
+  return useMemo(() => {
+    const data = query.data || [];
+    const byCode: LookupMap<CurrencyItem> = data.reduce((acc, c) => ({ 
+      ...acc, 
+      [c.code]: c 
+    }), {});
+    const get = (code: string) => data.find((c) => c.code === code);
+    return {
+      currencies: data,
+      loading: query.isLoading,
+      error: query.error,
+      byCode,
+      get,
+    };
+  }, [query.data, query.isLoading, query.error]);
 }
 
 export function useStaticNationalities() {
   const query = useCountries(); // Nationalities are embedded in countries
-  return useMemo(() => ({
-    nationalities: query.data || [],
-    loading: query.isLoading,
-    error: query.error,
-    byCode: (query.data || []).reduce((acc, n) => ({ ...acc, [n.code]: n }), {}),
-    get: (code: string) => (query.data || []).find(n => n.code === code),
-  }), [query.data, query.isLoading, query.error]);
+  return useMemo(() => {
+    const data = query.data || [];
+    const byCode: LookupMap<NationalityItem> = data.reduce((acc, n) => ({ 
+      ...acc, 
+      [n.code]: n 
+    }), {});
+    const get = (code: string) => data.find((n) => n.code === code);
+    return {
+      nationalities: data,
+      loading: query.isLoading,
+      error: query.error,
+      byCode,
+      get,
+    };
+  }, [query.data, query.isLoading, query.error]);
 }
 
 export function useStaticHotelAmenities() {

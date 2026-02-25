@@ -4,6 +4,7 @@ import { fetchWallets, listWalletTransactions } from '../lib/api';
 import { WalletAccount } from '../lib/srs-types';
 import { formatCurrency } from '@tripalfa/ui-components';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { DEMO_CONFIG } from '../lib/constants/theme';
 import { Wallet as WalletIcon, ArrowUpRight, ArrowLeftRight, History, CreditCard, TrendingUp, Download, MoreHorizontal, Plus } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
@@ -30,11 +31,43 @@ export default function Wallet(): React.JSX.Element {
       listWalletTransactions()
     ])
       .then(([accountsRes, txsRes]) => {
-        setAccounts(accountsRes || []);
+        // Use fetched accounts or fallback to default USD wallet for demo/testing
+        const fetchedAccounts = accountsRes || [];
+        
+        // Only show fallback wallet in demo mode
+        if (fetchedAccounts.length === 0 && DEMO_CONFIG.enabled) {
+          setAccounts([{
+            id: 'default-usd-wallet',
+            currency: DEMO_CONFIG.defaultCurrency,
+            currentBalance: DEMO_CONFIG.defaultWalletBalance,
+            pendingBalance: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }]);
+        } else if (fetchedAccounts.length > 0) {
+          setAccounts(fetchedAccounts);
+        } else {
+          // No accounts and not in demo mode - show empty state
+          setAccounts([]);
+        }
         setTxs(txsRes || []);
       })
       .catch(() => {
-        setAccounts([]);
+        // Only show fallback wallet on error in demo mode
+        if (DEMO_CONFIG.enabled) {
+          setAccounts([{
+            id: 'default-usd-wallet',
+            currency: DEMO_CONFIG.defaultCurrency,
+            currentBalance: DEMO_CONFIG.defaultWalletBalance,
+            pendingBalance: 0,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }]);
+        } else {
+          setAccounts([]);
+        }
         setTxs([]);
       })
       .finally(() => setLoading(false));
@@ -66,7 +99,7 @@ export default function Wallet(): React.JSX.Element {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="space-y-1">
                 <p className="text-xs text-slate-500">Total Balance (Est. USD)</p>
-                <h2 className="text-3xl font-semibold">{formatCurrency(totalBalanceUSD, 'USD')}</h2>
+                <h2 className="text-3xl font-semibold" data-testid="wallet-balance">{formatCurrency(totalBalanceUSD, 'USD')}</h2>
                 <div className="flex items-center gap-2 text-green-600 text-xs font-medium mt-1">
                   <TrendingUp size={14} />
                   <span>+12.5% this month</span>
@@ -76,12 +109,14 @@ export default function Wallet(): React.JSX.Element {
               <div className="flex items-center gap-3 justify-start lg:justify-end">
                 <Button
                   onClick={() => navigate('/wallet/topup')}
-                  className="h-10 px-6 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium shadow-sm transition-all"
+                  data-testid="topup-btn"
+                  className={`h-10 px-6 ${DEMO_CONFIG.enabled ? 'bg-[#152467]' : 'bg-purple-600'} hover:bg-purple-700 text-white rounded-lg text-sm font-medium shadow-sm transition-all`}
                 >
                   <Plus size={16} /> Top Up
                 </Button>
                 <Button
                   onClick={() => navigate('/wallet/transfer')}
+                  data-testid="transfer-btn"
                   className="h-10 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium border border-slate-200 transition-all"
                 >
                   <ArrowLeftRight size={16} /> Transfer
@@ -126,10 +161,10 @@ export default function Wallet(): React.JSX.Element {
           </div>
 
           {/* Recent Transactions */}
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden" data-testid="transaction-list">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
               <h3 className="text-base font-medium text-slate-900">Recent Transactions</h3>
-              <button className="text-xs font-medium text-purple-600 hover:text-purple-700 transition-colors">View All</button>
+              <button className="text-xs font-medium text-purple-600 hover:text-purple-700 transition-colors" data-testid="wallet-transactions">View All</button>
             </div>
 
             <div className="overflow-x-auto">

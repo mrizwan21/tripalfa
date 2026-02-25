@@ -142,7 +142,7 @@ export const SpecialServicesPopup = ({
                                         <p className="text-[10px] font-black text-gray-900">{service.passengerName}</p>
                                         <p className="text-[8px] font-bold text-gray-400">{service.flightNumber} - {service.serviceName}</p>
                                     </div>
-                                    <span className="text-sm font-black text-[#8B5CF6]">
+                                    <span className="text-sm font-black text-[#152467]">
                                         {service.price === 0 ? 'Free' : formatCurrency(service.price)}
                                     </span>
                                 </div>
@@ -155,12 +155,12 @@ export const SpecialServicesPopup = ({
 
                     <div className="flex justify-between items-center w-full pt-4 border-t border-gray-100">
                         <span className="text-sm font-black text-gray-900">Total</span>
-                        <span className="text-xl font-black text-[#8B5CF6]">{formatCurrency(totalAmount)}</span>
+                        <span className="text-xl font-black text-[#152467]">{formatCurrency(totalAmount)}</span>
                     </div>
 
                     <div className="flex gap-4 w-full">
-                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#8B5CF6] text-[#8B5CF6] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">Go Back</button>
-                        <button onClick={() => onConfirm(selectedServices)} className="flex-1 h-12 rounded-xl bg-[#8B5CF6] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Confirm</button>
+                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#152467] text-[#152467] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">Go Back</button>
+                        <button onClick={() => onConfirm(selectedServices)} className="flex-1 h-12 rounded-xl bg-[#152467] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -188,7 +188,7 @@ export const SpecialServicesPopup = ({
                         <button 
                             onClick={() => setSelectedPassengerIdx(prev => Math.max(0, prev - 1))}
                             disabled={selectedPassengerIdx === 0}
-                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all disabled:opacity-30"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -198,7 +198,7 @@ export const SpecialServicesPopup = ({
                                     key={p.id}
                                     onClick={() => setSelectedPassengerIdx(idx)}
                                     className={`px-6 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${selectedPassengerIdx === idx
-                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100'
+                                        ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-xl shadow-yellow-100'
                                         : 'border-yellow-200 text-gray-400 bg-white'
                                         }`}
                                 >
@@ -215,7 +215,7 @@ export const SpecialServicesPopup = ({
                         <button 
                             onClick={() => setSelectedPassengerIdx(prev => Math.min(passengers.length - 1, prev + 1))}
                             disabled={selectedPassengerIdx === passengers.length - 1}
-                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all disabled:opacity-30"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -232,8 +232,8 @@ export const SpecialServicesPopup = ({
                                         onClick={() => setSelectedSegmentIdx(idx)}
                                         className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all ${
                                             selectedSegmentIdx === idx 
-                                                ? 'bg-[#8B5CF6] text-white shadow-lg' 
-                                                : 'border border-[#8B5CF6] text-[#8B5CF6]'
+                                                ? 'bg-[#152467] text-white shadow-lg' 
+                                                : 'border border-[#152467] text-[#152467]'
                                         }`}
                                     >
                                         {seg.origin}
@@ -264,8 +264,8 @@ export const SpecialServicesPopup = ({
                                         key={service.id}
                                         className={`p-6 rounded-2xl border-2 transition-all ${
                                             isSelected 
-                                                ? 'border-[#8B5CF6] bg-purple-50/50 shadow-lg' 
-                                                : 'border-gray-100 bg-white hover:border-[#8B5CF6]/30'
+                                                ? 'border-[#152467] bg-purple-50/50 shadow-lg' 
+                                                : 'border-gray-100 bg-white hover:border-[#152467]/30'
                                         }`}
                                     >
                                         <div className="flex items-start gap-4">
@@ -273,8 +273,8 @@ export const SpecialServicesPopup = ({
                                                 onClick={() => handleServiceToggle(service)}
                                                 className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
                                                     isSelected 
-                                                        ? 'bg-[#8B5CF6] text-white' 
-                                                        : 'bg-gray-100 text-gray-400 hover:bg-purple-100 hover:text-[#8B5CF6]'
+                                                        ? 'bg-[#152467] text-white' 
+                                                        : 'bg-gray-100 text-gray-400 hover:bg-purple-100 hover:text-[#152467]'
                                                 }`}
                                             >
                                                 {isSelected ? <Check size={20} /> : <Icon size={20} />}
@@ -293,7 +293,7 @@ export const SpecialServicesPopup = ({
                                                             <p className="text-[9px] font-medium text-gray-400 mt-1">{service.description}</p>
                                                         )}
                                                     </div>
-                                                    <span className={`text-sm font-black ${service.price === 0 ? 'text-green-600' : 'text-[#8B5CF6]'}`}>
+                                                    <span className={`text-sm font-black ${service.price === 0 ? 'text-green-600' : 'text-[#152467]'}`}>
                                                         {service.price === 0 ? 'Free' : formatCurrency(service.price)}
                                                     </span>
                                                 </div>
@@ -306,7 +306,7 @@ export const SpecialServicesPopup = ({
                                                             placeholder="Additional notes (optional)"
                                                             value={notes[noteKey] || ''}
                                                             onChange={(e) => handleNotesChange(service.id, e.target.value)}
-                                                            className="w-full h-10 px-4 bg-white border border-gray-200 rounded-lg text-[10px] font-medium text-gray-700 placeholder:text-gray-400 outline-none focus:border-[#8B5CF6] transition-colors"
+                                                            className="w-full h-10 px-4 bg-white border border-gray-200 rounded-lg text-[10px] font-medium text-gray-700 placeholder:text-gray-400 outline-none focus:border-[#152467] transition-colors"
                                                         />
                                                     </div>
                                                 )}
@@ -323,7 +323,7 @@ export const SpecialServicesPopup = ({
                                 <span className="text-sm font-black text-gray-900 uppercase tracking-[2px]">Total Services</span>
                                 <p className="text-[9px] font-bold text-gray-400 mt-1">{selectedServices.length} service(s) selected</p>
                             </div>
-                            <span className="text-xl font-black text-[#8B5CF6]">{formatCurrency(totalAmount)}</span>
+                            <span className="text-xl font-black text-[#152467]">{formatCurrency(totalAmount)}</span>
                         </div>
                     </div>
 
@@ -339,7 +339,7 @@ export const SpecialServicesPopup = ({
                                                 <p className="text-[9px] font-black text-gray-700">{service.passengerName}</p>
                                                 <p className="text-[8px] font-bold text-gray-400">{service.flightNumber} - {service.serviceName}</p>
                                             </div>
-                                            <span className="text-[10px] font-black text-[#8B5CF6]">
+                                            <span className="text-[10px] font-black text-[#152467]">
                                                 {service.price === 0 ? 'Free' : formatCurrency(service.price)}
                                             </span>
                                         </div>
@@ -357,7 +357,7 @@ export const SpecialServicesPopup = ({
                         <Button
                             onClick={() => selectedServices.length > 0 && setIsConfirming(true)}
                             disabled={selectedServices.length === 0}
-                            className="w-full max-w-xl h-14 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+                            className="w-full max-w-xl h-14 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                         >
                             Request Services {totalAmount > 0 && ` - ${formatCurrency(totalAmount)}`}
                         </Button>

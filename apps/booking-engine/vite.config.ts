@@ -10,16 +10,32 @@ export default defineConfig({
       { find: '@/components/ui', replacement: path.resolve(__dirname, '../../packages/ui-components/ui') },
       // General aliases
       { find: '@tripalfa/shared-utils', replacement: path.resolve(__dirname, '../../packages/shared-utils') },
-      { find: '@tripalfa/static-data', replacement: path.resolve(__dirname, '../../packages/static-data/src') },
+      // @tripalfa/static-data removed - static data now comes from LiteAPI
       { find: '@tripalfa/ui-components', replacement: path.resolve(__dirname, '../../packages/ui-components') },
       { find: '@tripalfa/shared-types', replacement: path.resolve(__dirname, '../../packages/shared-types') },
       { find: '@', replacement: path.resolve(__dirname, './src') },
     ],
   },
-  build: { outDir: "dist" },
+  build: {
+    outDir: "dist",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split mapbox-gl into its own chunk for better caching
+          'mapbox-gl': ['mapbox-gl'],
+          // Split React ecosystem
+          'react-vendor': ['react', 'react-dom', 'react-router', 'react-router-dom'],
+          // Split TanStack Query
+          'tanstack-query': ['@tanstack/react-query'],
+        },
+      },
+    },
+    // Increase chunk warning limit since mapbox-gl is inherently large
+    chunkSizeWarningLimit: 1700,
+  },
   server: {
     host: '0.0.0.0',
-    port: 5174,
+    port: 5176,
     proxy: {
       '/duffel-api': {
         target: 'https://api.duffel.com/air',
@@ -34,13 +50,13 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/kiwi/, ''),
       },
       '/search': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         // Booking-service mounts liteApiRoutes at /api — rewrite /search/... → /api/search/...
         rewrite: (p) => `/api${p}`,
       },
       '/route': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
       '/api': {
@@ -50,36 +66,29 @@ export default defineConfig({
       // LiteAPI: hotel rates & hotel search endpoints
       // Booking-service mounts liteApiRoutes at /api, so /hotels/rates → /api/hotels/rates
       '/hotels': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
       // LiteAPI: prebook & book endpoints (/rates/prebook → /api/rates/prebook)
       '/rates': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
       '/bookings': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
       '/duffel': {
-        target: 'http://localhost:3003',
+        target: 'http://localhost:3001',
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
-      '/static': {
-        target: 'http://localhost:3002', // Direct to static-data-service (PostgreSQL-backed)
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/static/, ''),
-      },
-      '/inventory': {
-        target: 'http://localhost:3002',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/inventory/, ''),
-      },
+      // Note: /static and /inventory proxies removed - static-data-service deleted
+      // Static data now comes from packages/static-data via in-memory fallbacks
+      // When /static/* calls fail, api.ts falls back to HOTEL_STATIC_DATA constants
     },
   },
 });

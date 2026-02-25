@@ -23,7 +23,7 @@ export function SeatSelection() {
     <div className="bg-white rounded-[3rem] border border-gray-100 shadow-xl shadow-gray-200/40 overflow-hidden">
       <div className="p-10 border-b border-gray-50 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-[#8B5CF6]">
+          <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-[#152467]">
             <Armchair size={28} strokeWidth={1.5} />
           </div>
           <div>
@@ -72,7 +72,7 @@ export function SeatSelection() {
                         disabled={isOccupied}
                         onClick={() => setSelectedSeat(isSelected ? null : seat.id)}
                         className={`w-8 h-9 rounded-lg flex items-center justify-center transition-all relative ${isOccupied ? 'bg-gray-100 text-gray-300 cursor-not-allowed' :
-                            isSelected ? 'bg-[#8B5CF6] text-white shadow-lg shadow-purple-200 scale-110 z-10' :
+                            isSelected ? 'bg-[#152467] text-white shadow-lg shadow-purple-200 scale-110 z-10' :
                               seat.type === 'extra' ? 'bg-purple-50 text-purple-400 hover:bg-purple-100' :
                                 'bg-gray-50 text-gray-400 hover:bg-gray-100'
                           }`}
@@ -103,9 +103,9 @@ export function SeatSelection() {
           <div className="flex items-center gap-6">
             <div className="text-right">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Selected Seat</p>
-              <p className="text-xl font-black text-[#8B5CF6] tracking-tighter">{selectedSeat}</p>
+              <p className="text-xl font-black text-[#152467] tracking-tighter">{selectedSeat}</p>
             </div>
-            <button className="h-14 px-8 bg-[#8B5CF6] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#7C3AED] transition-all active:scale-95 shadow-lg shadow-purple-100">
+            <button className="h-14 px-8 bg-[#152467] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#0A1C50] transition-all active:scale-95 shadow-lg shadow-purple-100">
               Confirm Seat
             </button>
           </div>

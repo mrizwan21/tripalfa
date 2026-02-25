@@ -7,87 +7,38 @@
  * - Campaign scheduling and execution
  * - Delivery tracking and analytics
  * - Multi-channel coordination
+ * 
+ * This service now uses the centralized APIManager for all API calls,
+ * providing consistent error handling, caching, and request/response interceptors.
+ * 
+ * Types are now aligned with @tripalfa/api-clients package.
  */
 
+import { APIManager } from '../api-manager/APIManager'
 import type {
   NotificationTemplate,
   NotificationCampaign,
   NotificationChannel,
-  ChannelConfig as NotificationChannelConfig,
-  UserNotificationPreferences as NotificationPreferences,
-  DeliveryStatus,
-  FrequencyConfig as ScheduleConfig,
-} from '@/features/notifications/types-notification'
+  ChannelConfig,
+  DeliveryStatusResponse,
+  FrequencyConfig,
+  CreateNotificationRequest,
+  SendNotificationResponse,
+  CreateTemplateRequest,
+  CreateCampaignRequest,
+  CampaignExecutionResponse,
+  DeliveryAnalytics,
+} from '@tripalfa/api-clients'
+
+// Get the singleton APIManager instance
+const apiManager = APIManager.getInstance()
 
 // ============================================================================
-// SERVICE INTERFACES
+// TYPE ALIASES - Re-export for backward compatibility
 // ============================================================================
 
-export interface CreateNotificationRequest {
-  title: string
-  message: string
-  type: 'transactional' | 'system'
-  channels: string[]
-  recipients: string[]
-  variables?: Record<string, string>
-  priority?: 'low' | 'normal' | 'high'
-  metadata?: Record<string, any>
-}
-
-export interface SendNotificationResponse {
-  notificationId: string
-  deliveryId?: string
-  status: 'queued' | 'sent' | 'failed'
-  channels: Record<string, DeliveryStatus>
-  timestamp: Date
-  errors?: Array<{ channel: string; error: string }>
-}
-
-export interface CreateTemplateRequest {
-  name: string
-  description?: string
-  type: 'email' | 'sms' | 'push' | 'in_app'
-  subject?: string
-  body: string
-  variables: Array<{ name: string; description?: string; type: string }>
-  channels: NotificationChannelConfig[]
-}
-
-export interface CreateCampaignRequest {
-  name: string
-  description?: string
-  title: string
-  message: string
-  type: 'one_time' | 'recurring'
-  channels: string[]
-  targetSegment?: string
-  schedule?: ScheduleConfig
-  maxRecipients?: number
-}
-
-export interface CampaignExecutionResponse {
-  campaignId: string
-  executionId: string
-  totalRecipients: number
-  sentCount: number
-  failedCount: number
-  status: 'running' | 'completed' | 'failed'
-  startedAt: Date
-  completedAt?: Date
-  errors?: string[]
-}
-
-export interface DeliveryAnalytics {
-  totalSent: number
-  successCount: number
-  failureCount: number
-  deliveryRate: number
-  openCount?: number
-  clickCount?: number
-  unsubscribeCount?: number
-  bounceCount?: number
-  chartData: Array<{ timestamp: Date; count: number }>
-}
+// Alias for backward compatibility
+export type DeliveryStatus = DeliveryStatusResponse;
 
 // ============================================================================
 // SERVICE CLASS
@@ -104,29 +55,22 @@ export class NotificationService {
 
   /**
    * Create and send a notification
+   * Uses centralized APIManager for consistent error handling and caching
    */
   async sendNotification(
     request: CreateNotificationRequest
   ): Promise<SendNotificationResponse> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify(request),
-      })
+      const response = await apiManager.post<any>(
+        `${this.apiBaseUrl}/notifications/send`,
+        request
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to send notification: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to send notification')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        timestamp: new Date(data.timestamp),
-      }
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error sending notification:', error)
       throw error
@@ -135,23 +79,20 @@ export class NotificationService {
 
   /**
    * Create a notification template
+   * Uses centralized APIManager for consistent error handling
    */
   async createTemplate(request: CreateTemplateRequest): Promise<NotificationTemplate> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/notifications/templates`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify(request),
-      })
+      const response = await apiManager.post<NotificationTemplate>(
+        `${this.apiBaseUrl}/notifications/templates`,
+        request
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to create template: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to create template')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error creating template:', error)
       throw error
@@ -160,18 +101,19 @@ export class NotificationService {
 
   /**
    * Get template by ID
+   * Uses centralized APIManager with caching support
    */
   async getTemplate(templateId: string): Promise<NotificationTemplate> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/notifications/templates/${templateId}`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<NotificationTemplate>(
+        `${this.apiBaseUrl}/notifications/templates/${templateId}`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Template not found: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Template not found')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error fetching template:', error)
       throw error
@@ -180,21 +122,20 @@ export class NotificationService {
 
   /**
    * List all templates
+   * Uses centralized APIManager with caching support
    */
   async listTemplates(limit: number = 50, offset: number = 0): Promise<NotificationTemplate[]> {
     try {
-      const response = await fetch(
-        `${this.apiBaseUrl}/notifications/templates?limit=${limit}&offset=${offset}`,
-        {
-          headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-        }
+      const response = await apiManager.get<NotificationTemplate[]>(
+        `${this.apiBaseUrl}/notifications/templates`,
+        { params: { limit, offset } }
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to list templates: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to list templates')
       }
 
-      return await response.json()
+      return response.data || []
     } catch (error) {
       console.error('[NotificationService] Error listing templates:', error)
       throw error
@@ -203,26 +144,23 @@ export class NotificationService {
 
   /**
    * Update template
+   * Uses centralized APIManager
    */
   async updateTemplate(
     templateId: string,
     updates: Partial<CreateTemplateRequest>
   ): Promise<NotificationTemplate> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/notifications/templates/${templateId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify(updates),
-      })
+      const response = await apiManager.patch<NotificationTemplate>(
+        `${this.apiBaseUrl}/notifications/templates/${templateId}`,
+        updates
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to update template: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to update template')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error updating template:', error)
       throw error
@@ -231,16 +169,16 @@ export class NotificationService {
 
   /**
    * Delete template
+   * Uses centralized APIManager
    */
   async deleteTemplate(templateId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/notifications/templates/${templateId}`, {
-        method: 'DELETE',
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.delete(
+        `${this.apiBaseUrl}/notifications/templates/${templateId}`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete template: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to delete template')
       }
     } catch (error) {
       console.error('[NotificationService] Error deleting template:', error)
@@ -250,23 +188,20 @@ export class NotificationService {
 
   /**
    * Create a campaign
+   * Uses centralized APIManager
    */
   async createCampaign(request: CreateCampaignRequest): Promise<NotificationCampaign> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/notifications/campaigns`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify(request),
-      })
+      const response = await apiManager.post<NotificationCampaign>(
+        `${this.apiBaseUrl}/notifications/campaigns`,
+        request
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to create campaign: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to create campaign')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error creating campaign:', error)
       throw error
@@ -275,27 +210,20 @@ export class NotificationService {
 
   /**
    * Execute campaign immediately
+   * Uses centralized APIManager
    */
   async executeCampaign(campaignId: string): Promise<CampaignExecutionResponse> {
     try {
-      const response = await fetch(
+      const response = await apiManager.post<CampaignExecutionResponse>(
         `${this.apiBaseUrl}/notifications/campaigns/${campaignId}/execute`,
-        {
-          method: 'POST',
-          headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-        }
+        {}
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to execute campaign: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to execute campaign')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        startedAt: new Date(data.startedAt),
-        completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
-      }
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error executing campaign:', error)
       throw error
@@ -304,19 +232,17 @@ export class NotificationService {
 
   /**
    * Pause campaign
+   * Uses centralized APIManager
    */
   async pauseCampaign(campaignId: string): Promise<void> {
     try {
-      const response = await fetch(
+      const response = await apiManager.post(
         `${this.apiBaseUrl}/notifications/campaigns/${campaignId}/pause`,
-        {
-          method: 'POST',
-          headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-        }
+        {}
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to pause campaign: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to pause campaign')
       }
     } catch (error) {
       console.error('[NotificationService] Error pausing campaign:', error)
@@ -326,19 +252,17 @@ export class NotificationService {
 
   /**
    * Resume campaign
+   * Uses centralized APIManager
    */
   async resumeCampaign(campaignId: string): Promise<void> {
     try {
-      const response = await fetch(
+      const response = await apiManager.post(
         `${this.apiBaseUrl}/notifications/campaigns/${campaignId}/resume`,
-        {
-          method: 'POST',
-          headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-        }
+        {}
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to resume campaign: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to resume campaign')
       }
     } catch (error) {
       console.error('[NotificationService] Error resuming campaign:', error)
@@ -348,6 +272,7 @@ export class NotificationService {
 
   /**
    * Get delivery analytics
+   * Uses centralized APIManager with caching support
    */
   async getDeliveryAnalytics(
     startDate: Date,
@@ -355,26 +280,33 @@ export class NotificationService {
     channel?: string
   ): Promise<DeliveryAnalytics> {
     try {
-      const params = new URLSearchParams({
+      const params: Record<string, string> = {
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        ...(channel && { channel }),
-      })
+      }
+      if (channel) params.channel = channel
 
-      const response = await fetch(`${this.apiBaseUrl}/notifications/analytics?${params}`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<DeliveryAnalytics>(
+        `${this.apiBaseUrl}/notifications/analytics`,
+        { params }
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch analytics: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to fetch analytics')
       }
 
-      const data = await response.json()
       return {
-        ...data,
-        chartData: data.chartData?.map((item: any) => ({
-          ...item,
-          timestamp: new Date(item.timestamp),
+        totalSent: response.data?.totalSent || 0,
+        successCount: response.data?.successCount || 0,
+        failureCount: response.data?.failureCount || 0,
+        deliveryRate: response.data?.deliveryRate || 0,
+        openCount: response.data?.openCount,
+        clickCount: response.data?.clickCount,
+        unsubscribeCount: response.data?.unsubscribeCount,
+        bounceCount: response.data?.bounceCount,
+        chartData: response.data?.chartData?.map((item: any) => ({
+          timestamp: item.timestamp,
+          count: item.count,
         })) || [],
       }
     } catch (error) {
@@ -385,21 +317,19 @@ export class NotificationService {
 
   /**
    * Get delivery status for a notification
+   * Uses centralized APIManager
    */
   async getDeliveryStatus(notificationId: string): Promise<DeliveryStatus> {
     try {
-      const response = await fetch(
-        `${this.apiBaseUrl}/notifications/${notificationId}/status`,
-        {
-          headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-        }
+      const response = await apiManager.get<DeliveryStatus>(
+        `${this.apiBaseUrl}/notifications/${notificationId}/status`
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch delivery status: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to fetch delivery status')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error fetching delivery status:', error)
       throw error
@@ -408,26 +338,20 @@ export class NotificationService {
 
   /**
    * Retry failed deliveries
+   * Uses centralized APIManager
    */
   async retryFailedDeliveries(notificationId: string): Promise<SendNotificationResponse> {
     try {
-      const response = await fetch(
+      const response = await apiManager.post<SendNotificationResponse>(
         `${this.apiBaseUrl}/notifications/${notificationId}/retry`,
-        {
-          method: 'POST',
-          headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-        }
+        {}
       )
 
-      if (!response.ok) {
-        throw new Error(`Failed to retry deliveries: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to retry deliveries')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        timestamp: new Date(data.timestamp),
-      }
+      return response.data!
     } catch (error) {
       console.error('[NotificationService] Error retrying deliveries:', error)
       throw error

@@ -90,7 +90,7 @@ export default [
   // Disallow JS sources (use TypeScript) - DISABLED
   // {
   //   files: ['**/*.{js,jsx,mjs,cjs}'],
-  //   ignores: ['**/tests/**/*.cjs', '**/*.config.*', '**/eslint.config.*', '.codacy/**'],
+  //   ignores: ['**/tests/**/*.cjs', '**/*.config.*', '**/eslint.config.*'],
   //   rules: {
   //     'no-restricted-syntax': [
   //       'error',
@@ -169,7 +169,6 @@ export default [
       '**/*.config.ts',
       '**/*.config.mjs',
       '**/*.config.cjs',
-      '.codacy/**',
       'coverage/**',
       '**/coverage/**',
       '.vscode/**',
@@ -188,6 +187,9 @@ export default [
       '**/test-results/**',
       'apps/booking-engine/playwright-report/**',
       'apps/booking-engine/test-results/**',
+      // CommonJS scripts - skip linting
+      'scripts/*.cjs',
+      'scripts/import-hotel-details-simple.cjs',
     ],
   },
 ];

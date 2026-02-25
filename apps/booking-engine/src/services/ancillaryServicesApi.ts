@@ -1,9 +1,11 @@
 /**
  * Ancillary Services API Integration
  * Type-safe API client for ancillary services endpoints
+ * 
+ * Routes through centralized API Manager for consistency
  */
 
-import { API_BASE_URL } from '../lib/constants';
+import { api } from '../lib/api';
 
 export type ServiceType = 'baggage' | 'meal' | 'seat' | 'special_request' | 'lounge' | 'insurance';
 
@@ -64,12 +66,6 @@ interface AncillaryErrorResponse {
 }
 
 class AncillaryServicesApi {
-  private baseUrl: string;
-
-  constructor(baseUrl = API_BASE_URL) {
-    this.baseUrl = baseUrl;
-  }
-
   /**
    * Get available services during booking flow
    * @param offerId Offer ID
@@ -79,26 +75,10 @@ class AncillaryServicesApi {
     offerId: string,
     serviceType?: ServiceType
   ): Promise<AncillaryServiceResponse> {
-    const url = new URL(`${this.baseUrl}/bookings/ancillary/services`);
-    url.searchParams.append('offerId', offerId);
-    if (serviceType) {
-      url.searchParams.append('serviceType', serviceType);
-    }
-
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const error = await response.json() as AncillaryErrorResponse;
-      throw new Error(error.error?.message || 'Failed to fetch services');
-    }
-
-    return response.json();
+    const result = await api.get<any>(
+      `/bookings/ancillary/services?offerId=${offerId}${serviceType ? `&serviceType=${serviceType}` : ''}`
+    );
+    return result;
   }
 
   /**
@@ -110,26 +90,10 @@ class AncillaryServicesApi {
     orderId: string,
     serviceType?: ServiceType
   ): Promise<AncillaryServiceResponse & { currentServices: Service[] }> {
-    const url = new URL(`${this.baseUrl}/bookings/ancillary/services`);
-    url.searchParams.append('orderId', orderId);
-    if (serviceType) {
-      url.searchParams.append('serviceType', serviceType);
-    }
-
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
-
-    if (!response.ok) {
-      const error = await response.json() as AncillaryErrorResponse;
-      throw new Error(error.error?.message || 'Failed to fetch order services');
-    }
-
-    return response.json();
+    const result = await api.get<any>(
+      `/bookings/ancillary/services?orderId=${orderId}${serviceType ? `&serviceType=${serviceType}` : ''}`
+    );
+    return result;
   }
 
   /**
@@ -152,24 +116,11 @@ class AncillaryServicesApi {
     servicesCount: number;
     timestamp: string;
   }> {
-    const response = await fetch(`${this.baseUrl}/bookings/ancillary/services/select`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        offerId,
-        services
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json() as AncillaryErrorResponse;
-      throw new Error(error.error?.message || 'Failed to select services');
-    }
-
-    return response.json();
+    const result = await api.post<any>(
+      '/bookings/ancillary/services/select',
+      { offerId, services }
+    );
+    return result;
   }
 
   /**
@@ -192,24 +143,11 @@ class AncillaryServicesApi {
     servicesCount: number;
     timestamp: string;
   }> {
-    const response = await fetch(`${this.baseUrl}/bookings/ancillary/services/select`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        orderId,
-        services
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json() as AncillaryErrorResponse;
-      throw new Error(error.error?.message || 'Failed to add services');
-    }
-
-    return response.json();
+    const result = await api.post<any>(
+      '/bookings/ancillary/services/select',
+      { orderId, services }
+    );
+    return result;
   }
 
   /**
@@ -220,23 +158,8 @@ class AncillaryServicesApi {
     data: ServiceCategory[];
     timestamp: string;
   }> {
-    const response = await fetch(
-      `${this.baseUrl}/bookings/ancillary/services/categories`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json() as AncillaryErrorResponse;
-      throw new Error(error.error?.message || 'Failed to fetch service categories');
-    }
-
-    return response.json();
+    const result = await api.get<any>('/bookings/ancillary/services/categories');
+    return result;
   }
 
   /**
@@ -247,23 +170,8 @@ class AncillaryServicesApi {
     data: Service;
     timestamp: string;
   }> {
-    const response = await fetch(
-      `${this.baseUrl}/bookings/ancillary/services/details/${serviceId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      }
-    );
-
-    if (!response.ok) {
-      const error = await response.json() as AncillaryErrorResponse;
-      throw new Error(error.error?.message || 'Failed to fetch service details');
-    }
-
-    return response.json();
+    const result = await api.get<any>(`/bookings/ancillary/services/details/${serviceId}`);
+    return result;
   }
 }
 
@@ -273,8 +181,6 @@ export default ancillaryServicesApi;
 // ============================================================================
 // STANDALONE EXPORT FUNCTIONS (for API integration verification)
 // ============================================================================
-
-const API_KEY = import.meta.env.VITE_API_KEY || '';
 
 /**
  * Get details of a specific service
@@ -286,24 +192,8 @@ export async function getServiceDetails(serviceId: string): Promise<{
   data: Service;
   timestamp: string;
 }> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/bookings/ancillary/services/details`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify({ serviceId }),
-      credentials: 'include'
-    }
+  const result = await api.get<any>(
+    `/api/bookings/ancillary/services/details?serviceId=${serviceId}`
   );
-
-  if (!response.ok) {
-    const error = await response.json() as AncillaryErrorResponse;
-    throw new Error(error.error?.message || 'Failed to fetch service details');
-  }
-
-  return response.json();
+  return result;
 }

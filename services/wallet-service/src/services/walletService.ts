@@ -112,16 +112,17 @@ walletService.creditWallet = async function(
   description: string,
   idempotencyKey: string
 ): Promise<WalletTransaction> {
-  // Check for existing transaction (idempotency)
-  const existing = await prisma.walletTransaction.findFirst({
-    where: { idempotencyKey },
-  });
-
-  if (existing) {
-    return existing;
-  }
-
   return await prisma.$transaction(async (tx) => {
+    // Check for idempotency INSIDE transaction to prevent race condition
+    if (idempotencyKey) {
+      const existing = await tx.walletTransaction.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existing) {
+        return existing;
+      }
+    }
+
     // Get or create wallet
     let wallet = await tx.wallet.findUnique({
       where: { userId_currency: { userId, currency } },
@@ -185,16 +186,17 @@ walletService.debitWallet = async function(
   description: string,
   idempotencyKey: string
 ): Promise<WalletTransaction> {
-  // Check for existing transaction (idempotency)
-  const existing = await prisma.walletTransaction.findFirst({
-    where: { idempotencyKey },
-  });
-
-  if (existing) {
-    return existing;
-  }
-
   return await prisma.$transaction(async (tx) => {
+    // Check for idempotency INSIDE transaction to prevent race condition
+    if (idempotencyKey) {
+      const existing = await tx.walletTransaction.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existing) {
+        return existing;
+      }
+    }
+
     const wallet = await tx.wallet.findUnique({
       where: { userId_currency: { userId, currency } },
     });
@@ -271,16 +273,17 @@ walletService.getTransactionHistory = async function(
 walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow): Promise<WalletTransaction> {
   const { customerId, agencyId, supplierId, amount, currency, bookingId, commissionRate, idempotencyKey } = flow;
 
-  // Check for existing transaction (idempotency)
-  const existing = await prisma.walletTransaction.findFirst({
-    where: { idempotencyKey },
-  });
-
-  if (existing) {
-    return existing;
-  }
-
   return await prisma.$transaction(async (tx) => {
+    // Check for idempotency INSIDE transaction to prevent race condition
+    if (idempotencyKey) {
+      const existing = await tx.walletTransaction.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existing) {
+        return existing;
+      }
+    }
+
     // Ensure customer wallet exists
     let customerWallet = await tx.wallet.findUnique({
       where: { userId_currency: { userId: customerId, currency } },
@@ -394,16 +397,17 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
 walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFlow): Promise<WalletTransaction> {
   const { supplierId, agencyId, settlementAmount, currency, invoiceId, deductedCommission, idempotencyKey } = flow;
 
-  // Check for existing transaction (idempotency)
-  const existing = await prisma.walletTransaction.findFirst({
-    where: { idempotencyKey },
-  });
-
-  if (existing) {
-    return existing;
-  }
-
   return await prisma.$transaction(async (tx) => {
+    // Check for idempotency INSIDE transaction to prevent race condition
+    if (idempotencyKey) {
+      const existing = await tx.walletTransaction.findFirst({
+        where: { idempotencyKey },
+      });
+      if (existing) {
+        return existing;
+      }
+    }
+
     // Ensure supplier wallet exists
     let supplierWallet = await tx.wallet.findUnique({
       where: { userId_currency: { userId: supplierId, currency } },

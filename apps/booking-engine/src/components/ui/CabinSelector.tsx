@@ -33,7 +33,7 @@ export function CabinSelector() {
                                 className="flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-blue-50 group"
                                 onClick={() => { setSelected(opt); setOpen(false); }}
                             >
-                                <div className={`w-5 h-5 rounded border flex items-center justify-center border-gray-300 group-hover:border-[#FFD700] ${selected === opt ? 'bg-[#FFD700] border-[#FFD700]' : 'bg-white'}`}>
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center border-gray-300 group-hover:border-[#EC5C4C] ${selected === opt ? 'bg-[#EC5C4C] border-[#EC5C4C]' : 'bg-white'}`}>
                                     {selected === opt && <Check size={12} className="text-black" strokeWidth={3} />}
                                 </div>
                                 <span className="text-gray-700 font-medium">{opt}</span>

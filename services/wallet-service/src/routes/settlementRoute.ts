@@ -119,7 +119,8 @@ router.post('/api/wallet/settlement', authMiddleware, async (req: Request, res: 
         amount: transaction.amount,
         currency: transaction.currency,
         status: transaction.status,
-        invoiceId: transaction.invoiceId,
+        bookingId: transaction.bookingId,
+        invoiceId: transaction.bookingId, // Backwards compatibility - maps to bookingId
         createdAt: transaction.createdAt,
       },
       summary: {

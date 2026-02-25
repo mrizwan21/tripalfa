@@ -1,21 +1,44 @@
 /**
  * Lightweight API facade for the booking-engine app.
- * All API calls are routed through Wickedhaufe API Manager for dynamic data
- * and centralized static data package for static data.
+ * 
+ * Data Flow Architecture:
+ * 
+ * 1. STATIC DATA (airports, airlines, hotels, destinations, etc.):
+ *    - In-memory fallback data from packages/static-data (HOTEL_STATIC_DATA, etc.)
+ *    - Formerly from static-data-service at port 3002 (now deleted)
+ *    - Functions automatically fall back to in-memory data when service unavailable
+ * 
+ * 2. REAL-TIME SEARCH DATA (flights, hotels):
+ *    - Routed through API Manager → Backend Services
+ *    - Hybrid processing: Redis (caching/sorting) + Neon DB (filtering)
+ *    - Flight search: /search/flights → Duffel API → Redis/Neon processing
+ *    - Hotel search: /search/hotels → LiteAPI → Redis/Neon processing
+ * 
+ * 3. TRANSACTIONAL DATA (bookings, payments, wallet):
+ *    - Routed through API Manager → Backend Services
+ *    - All mutations go through api.post/put/delete methods
  */
 
-// Real API implementations only - no mock fallbacks
-
 import { API_BASE_URL, API_ENDPOINTS } from './constants';
-// Import hotel static data (valid enumerations like BOARD_TYPES, AMENITIES, etc.)
-import {
-  HOTEL_STATIC_DATA,
-  searchHotelDestinations,
-} from '@tripalfa/static-data/frontend-index';
+
+// ============================================================================
+// STATIC DATA - Direct PostgreSQL Access (Not through API Manager)
+// ============================================================================
+// Hotel static data - imported from centralized constants
+// Primary source: PostgreSQL static-data-service running in Docker container
+// Frontend fetches directly from /static/* endpoint (no API manager routing)
+import { 
+  HOTEL_STATIC_DATA, 
+  searchHotelDestinations 
+} from './constants/hotel-static-data';
 
 /**
- * Base URL for the static-data-service (PostgreSQL-backed).
- * Vite dev proxy: /static/* → http://localhost:3002/* (rewrite strips /static)
+ * Static data service endpoint (DEPRECATED - static-data-service deleted).
+ * 
+ * The /static/* calls now fail and trigger in-memory fallbacks.
+ * Static data comes from packages/static-data constants (HOTEL_STATIC_DATA, etc.)
+ * 
+ * @deprecated - kept for reference, actual data from in-memory fallbacks
  */
 const STATIC_SVC = '/static';
 
@@ -27,16 +50,59 @@ async function staticFetch<T = any>(path: string): Promise<T> {
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`static-svc ${res.status} for ${path}`);
-  return res.json() as Promise<T>;
+  const json = await res.json();
+  // Handle case where service returns 200 OK with { error: "Not found" }
+  if (json && typeof json === 'object' && 'error' in json && !('data' in json)) {
+    throw new Error(`static-svc error: ${json.error}`);
+  }
+  return json as Promise<T>;
 }
 
-// Duffel Flight Booking API (Offers, Orders, Payments)
+// Duffel Flight Booking API - New API Manager (routes through gateway)
 export {
   createOfferRequest,
+  getOfferRequest,
+  listOfferRequests,
   getOfferDetails,
   createFlightOrder,
   getFlightOrder,
+  listFlightOrders,
   updateFlightOrder,
+  getOrderAvailableServices,
+  priceFlightOrder,
+  addOrderServices,
+  getSeatMap,
+  createOrderCancellation,
+  getOrderCancellation,
+  listOrderCancellations,
+  confirmOrderCancellation,
+  createOrderChangeRequest,
+  getOrderChangeRequest,
+  listOrderChangeOffers,
+  getOrderChangeOffer,
+  createOrderChange,
+  confirmOrderChange,
+  getOrderChange,
+  listAirlineCredits,
+  getAirlineCredit,
+  createAirlineCredit,
+  updateAirlineCredit,
+  searchAirports,
+  type OfferRequestParams,
+  type PassengerData,
+  type CreateOrderParams,
+  type PaymentIntentParams,
+  type SelectedSeat,
+  type SeatElement,
+  type SeatSection,
+  type SeatRow,
+  type Cabin,
+  type SeatMap,
+  type GetSeatMapsResponse,
+} from '../services/duffelApiManager';
+
+// Legacy Duffel Flight Booking API (Offers, Orders, Payments) - for backward compatibility
+export {
   createPaymentIntent,
   confirmFlightOrder,
   completeBookingFlow,
@@ -45,18 +111,8 @@ export {
   getOrderPaymentMethods,
   confirmPayment,
   getPayment,
-  type OfferRequestParams,
-  type PassengerData,
-  type CreateOrderParams,
-  type PaymentIntentParams,
   type PaymentMethod,
   type PaymentConfirmParams,
-  type SeatElement,
-  type SeatSection,
-  type SeatRow,
-  type Cabin,
-  type SeatMap,
-  type SelectedSeat,
 } from '../services/duffelBookingApi';
 
 // Seat Maps API
@@ -1129,6 +1185,36 @@ export async function fetchSeatMaps(offerId: string) {
   }
 }
 
+// Re-export from new Duffel seat maps service
+export {
+  duffelSeatMapsService,
+  groupSeatsByRow,
+  getSeatPattern,
+  getAvailableSeats,
+  calculateTotalSeatCost,
+  isSeatElement,
+  type SeatMapServiceResponse,
+  type SeatSelectionResponse,
+} from '../services/duffelSeatMapsService';
+
+// Re-export types
+export type {
+  DuffelSeatMap,
+  DuffelSeatService,
+  DuffelSeatElement,
+  DuffelCabinRowSectionElement,
+  DuffelCabinClass,
+  DuffelCabin,
+  DuffelCabinRow,
+  DuffelCabinRowSection,
+  DuffelWingPosition,
+  DuffelGetSeatMapsResponse,
+  FlattenedSeat,
+  ProcessedSeatMap,
+  SelectedSeatForBooking,
+  SeatSelectionPayload,
+} from '../types/duffel-seat-maps';
+
 // Real Notifications
 export async function listNotifications() {
   try {
@@ -1563,10 +1649,11 @@ export async function fetchLoyaltyPrograms(query?: string) {
   ];
 }
 
-// Real Booking Endpoints
+// Real Booking Endpoints - Using the new orchestrator routes with isRefundable validation
 export async function holdFlightBooking(bookingData: any) {
   try {
-    const res = await api.post('/bookings/flight/hold', bookingData);
+    // Use the new flight-booking orchestrator with isRefundable validation
+    const res = await api.post('/api/flight-booking/hold', bookingData);
     return res;
   } catch (error) {
     console.error('Failed to hold flight booking:', error);
@@ -1576,7 +1663,8 @@ export async function holdFlightBooking(bookingData: any) {
 
 export async function holdHotelBooking(bookingData: any) {
   try {
-    const res = await api.post('/bookings/hotel/hold', bookingData);
+    // Use the new hotel-booking orchestrator with isRefundable validation
+    const res = await api.post('/api/hotel-booking/hold', bookingData);
     return res;
   } catch (error) {
     console.error('Failed to hold hotel booking:', error);
@@ -1810,7 +1898,8 @@ export async function fetchHotelRates(params: {
   occupancies: Array<{ adults: number; children?: number[] }>;
 }) {
   try {
-    return await api.post('/hotels/rates', params);
+    // LITEAPI routes are mounted at /api in booking-service
+    return await api.post('/api/hotels/rates', params);
   } catch (error) {
     console.error('fetchHotelRates failed:', error);
     throw error;
@@ -1823,7 +1912,8 @@ export async function prebookHotel(params: {
   currency: string;
 }) {
   try {
-    return await api.post('/rates/prebook', params);
+    // LITEAPI routes are mounted at /api in booking-service
+    return await api.post('/api/rates/prebook', params);
   } catch (error) {
     console.error('prebookHotel failed:', error);
     throw error;
@@ -1836,7 +1926,8 @@ export async function bookHotel(params: {
   paymentDetails?: any;
 }) {
   try {
-    return await api.post('/rates/book', params);
+    // LITEAPI routes are mounted at /api in booking-service
+    return await api.post('/api/rates/book', params);
   } catch (error) {
     console.error('bookHotel failed:', error);
     throw error;

@@ -56,7 +56,24 @@ export interface NotificationPayload {
 }
 
 // Channel Configuration
-export interface EmailConfig {
+
+/**
+ * Brevo (formerly Sendinblue) Email Configuration
+ * Primary email provider for TripAlfa
+ */
+export interface BrevoEmailConfig {
+  apiKey: string;
+  from: string;
+  fromName?: string;
+  replyTo?: string;
+  replyToName?: string;
+}
+
+/**
+ * Legacy SMTP Email Configuration
+ * Kept for backward compatibility
+ */
+export interface SMTPEmailConfig {
   from: string;
   host: string;
   port: number;
@@ -65,6 +82,25 @@ export interface EmailConfig {
     user: string;
     pass: string;
   };
+}
+
+/**
+ * Email Configuration - supports both Brevo and SMTP
+ */
+export type EmailConfig = BrevoEmailConfig | SMTPEmailConfig;
+
+/**
+ * Type guard to check if config is Brevo config
+ */
+export function isBrevoConfig(config: EmailConfig): config is BrevoEmailConfig {
+  return 'apiKey' in config;
+}
+
+/**
+ * Type guard to check if config is SMTP config
+ */
+export function isSMTPConfig(config: EmailConfig): config is SMTPEmailConfig {
+  return 'host' in config && 'port' in config;
 }
 
 export interface SMSConfig {

@@ -7,134 +7,40 @@
  * - Performance analysis and conflict detection
  * - Execution history and tracking
  * - Rule versioning and snapshots
+ * 
+ * This service now uses the centralized APIManager for all API calls,
+ * providing consistent error handling, caching, and request/response interceptors.
+ * 
+ * Types are now aligned with @tripalfa/api-clients package.
  */
 
+import { APIManager } from '../api-manager/APIManager'
 import type {
   Rule,
   RuleStatus,
   RuleExecution,
   RuleCondition,
   RuleAction,
-  RuleConflictAnalysis,
   RuleImpactAnalysis,
-} from '@/features/rules/types-rule-engine'
+  RuleConflictAnalysis,
+  CreateRuleRequest,
+  UpdateRuleRequest,
+  ExecuteRuleRequest,
+  ExecuteRuleResponse,
+  DebugRuleRequest,
+  DebugRuleResponse,
+  RuleExecutionHistory,
+  RuleConflictCheckResponse,
+  RuleAnalysisResponse,
+  RulePriority,
+  ConditionOperator,
+  ActionType,
+  RuleRetryPolicy,
+  ExecutionContext,
+} from '@tripalfa/api-clients'
 
-// ============================================================================
-// SERVICE INTERFACES
-// ============================================================================
-
-export interface CreateRuleRequest {
-  name: string
-  description?: string
-  category: string
-  triggerEvent?: string
-  condition: RuleCondition
-  actions: RuleAction[]
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  enabled?: boolean
-  maxExecutionsPerDay?: number
-  timeout?: number
-}
-
-export interface UpdateRuleRequest extends Partial<CreateRuleRequest> {
-  status?: RuleStatus
-}
-
-export interface ExecuteRuleRequest {
-  ruleId: string
-  data: Record<string, any>
-  userId?: string
-  testMode?: boolean
-}
-
-export interface ExecuteRuleResponse {
-  executionId: string
-  ruleId: string
-  status: 'success' | 'failed' | 'timeout' | 'skipped'
-  conditionMet: boolean
-  actionsExecuted: number
-  actionsFailed: number
-  duration: number
-  outputs: Array<{
-    actionId: string
-    status: 'success' | 'failed'
-    result?: any
-    error?: string
-  }>
-  timestamp: Date
-}
-
-export interface DebugRuleRequest {
-  ruleId: string
-  condition?: RuleCondition
-  sampleData: Record<string, any>
-  includeActions?: boolean
-}
-
-export interface DebugRuleResponse {
-  conditionEvals: Array<{
-    step: number
-    operator: string
-    field: string
-    value: any
-    result: boolean
-  }>
-  actionSimulations: Array<{
-    actionId: string
-    actionType: string
-    willExecute: boolean
-    simulatedOutput?: any
-  }>
-  logs: Array<{
-    level: 'info' | 'warn' | 'error'
-    timestamp: Date
-    message: string
-  }>
-}
-
-export interface RuleAnalysisRequest {
-  ruleId: string
-}
-
-export interface RuleAnalysisResponse {
-  ruleId: string
-  riskLevel: 'low' | 'medium' | 'high' | 'critical'
-  impactAnalysis: RuleImpactAnalysis
-  conflictAnalysis: RuleConflictAnalysis
-  performance: {
-    estimatedExecutionTime: number
-    averageExecutionTime: number
-    timeoutRisk: number
-  }
-  recommendations: string[]
-}
-
-export interface RuleExecutionHistory {
-  executionId: string
-  ruleId: string
-  ruleName: string
-  status: 'pending' | 'running' | 'success' | 'failed' | 'timeout' | 'skipped'
-  conditionMet: boolean
-  actionsExecuted: number
-  actionsFailed: number
-  duration: number
-  startedAt: Date
-  completedAt?: Date
-  inputs: Record<string, any>
-  outputs: any[]
-  errorMessage?: string
-}
-
-export interface RuleConflictCheckResponse {
-  hasConflicts: boolean
-  conflicts: Array<{
-    conflictingRuleId: string
-    conflictingRuleName: string
-    conflictType: 'condition' | 'action' | 'trigger'
-    severity: 'low' | 'medium' | 'high'
-    description: string
-  }>
-}
+// Get the singleton APIManager instance
+const apiManager = APIManager.getInstance()
 
 // ============================================================================
 // SERVICE CLASS
@@ -151,27 +57,20 @@ export class RuleEngineService {
 
   /**
    * Create a new rule
+   * Uses centralized APIManager for consistent error handling and caching
    */
   async createRule(request: CreateRuleRequest): Promise<Rule> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify(request),
-      })
+      const response = await apiManager.post<Rule>(
+        `${this.apiBaseUrl}/rules`,
+        request
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to create rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to create rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        createdAt: new Date(data.createdAt),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error creating rule:', error)
       throw error
@@ -180,22 +79,19 @@ export class RuleEngineService {
 
   /**
    * Get rule by ID
+   * Uses centralized APIManager with caching support
    */
   async getRule(ruleId: string): Promise<Rule> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<Rule>(
+        `${this.apiBaseUrl}/rules/${ruleId}`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Rule not found: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Rule not found')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        createdAt: new Date(data.createdAt),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error fetching rule:', error)
       throw error
@@ -204,6 +100,7 @@ export class RuleEngineService {
 
   /**
    * List all rules with filtering
+   * Uses centralized APIManager with caching support
    */
   async listRules(
     status?: RuleStatus,
@@ -212,28 +109,23 @@ export class RuleEngineService {
     offset: number = 0
   ): Promise<Rule[]> {
     try {
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        offset: offset.toString(),
-        ...(status && { status }),
-        ...(category && { category }),
-      })
+      const params: Record<string, string | number> = {
+        limit,
+        offset,
+      }
+      if (status) params.status = status
+      if (category) params.category = category
 
-      const response = await fetch(`${this.apiBaseUrl}/rules?${params}`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<Rule[]>(
+        `${this.apiBaseUrl}/rules`,
+        { params }
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to list rules: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to list rules')
       }
 
-      const data = await response.json()
-      return Array.isArray(data)
-        ? data.map((rule: any) => ({
-            ...rule,
-            createdAt: new Date(rule.createdAt),
-          }))
-        : data.rules
+      return response.data || []
     } catch (error) {
       console.error('[RuleEngineService] Error listing rules:', error)
       throw error
@@ -242,27 +134,20 @@ export class RuleEngineService {
 
   /**
    * Update a rule
+   * Uses centralized APIManager
    */
   async updateRule(ruleId: string, updates: UpdateRuleRequest): Promise<Rule> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify(updates),
-      })
+      const response = await apiManager.patch<Rule>(
+        `${this.apiBaseUrl}/rules/${ruleId}`,
+        updates
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to update rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to update rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        createdAt: new Date(data.createdAt),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error updating rule:', error)
       throw error
@@ -271,16 +156,16 @@ export class RuleEngineService {
 
   /**
    * Delete a rule
+   * Uses centralized APIManager
    */
   async deleteRule(ruleId: string): Promise<void> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}`, {
-        method: 'DELETE',
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.delete(
+        `${this.apiBaseUrl}/rules/${ruleId}`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to delete rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to delete rule')
       }
     } catch (error) {
       console.error('[RuleEngineService] Error deleting rule:', error)
@@ -290,31 +175,24 @@ export class RuleEngineService {
 
   /**
    * Execute a rule with test data
+   * Uses centralized APIManager
    */
   async executeRule(request: ExecuteRuleRequest): Promise<ExecuteRuleResponse> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${request.ruleId}/execute`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify({
+      const response = await apiManager.post<ExecuteRuleResponse>(
+        `${this.apiBaseUrl}/rules/${request.ruleId}/execute`,
+        {
           data: request.data,
           userId: request.userId,
           testMode: request.testMode,
-        }),
-      })
+        }
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to execute rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to execute rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        timestamp: new Date(data.timestamp),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error executing rule:', error)
       throw error
@@ -323,34 +201,24 @@ export class RuleEngineService {
 
   /**
    * Debug a rule with sample data
+   * Uses centralized APIManager
    */
   async debugRule(request: DebugRuleRequest): Promise<DebugRuleResponse> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${request.ruleId}/debug`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify({
+      const response = await apiManager.post<DebugRuleResponse>(
+        `${this.apiBaseUrl}/rules/${request.ruleId}/debug`,
+        {
           condition: request.condition,
           sampleData: request.sampleData,
           includeActions: request.includeActions,
-        }),
-      })
+        }
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to debug rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to debug rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        logs: data.logs?.map((log: any) => ({
-          ...log,
-          timestamp: new Date(log.timestamp),
-        })) || [],
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error debugging rule:', error)
       throw error
@@ -359,18 +227,19 @@ export class RuleEngineService {
 
   /**
    * Analyze rule for conflicts and impact
+   * Uses centralized APIManager with caching support
    */
   async analyzeRule(ruleId: string): Promise<RuleAnalysisResponse> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/analyze`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<RuleAnalysisResponse>(
+        `${this.apiBaseUrl}/rules/${ruleId}/analyze`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to analyze rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to analyze rule')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error analyzing rule:', error)
       throw error
@@ -379,18 +248,19 @@ export class RuleEngineService {
 
   /**
    * Check for conflicts with other rules
+   * Uses centralized APIManager
    */
   async checkConflicts(ruleId: string): Promise<RuleConflictCheckResponse> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/conflicts`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<RuleConflictCheckResponse>(
+        `${this.apiBaseUrl}/rules/${ruleId}/conflicts`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to check conflicts: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to check conflicts')
       }
 
-      return await response.json()
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error checking conflicts:', error)
       throw error
@@ -399,6 +269,7 @@ export class RuleEngineService {
 
   /**
    * Get execution history for a rule
+   * Uses centralized APIManager
    */
   async getExecutionHistory(
     ruleId: string,
@@ -406,27 +277,16 @@ export class RuleEngineService {
     offset: number = 0
   ): Promise<RuleExecutionHistory[]> {
     try {
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-        offset: offset.toString(),
-      })
+      const response = await apiManager.get<RuleExecutionHistory[]>(
+        `${this.apiBaseUrl}/rules/${ruleId}/executions`,
+        { params: { limit, offset } }
+      )
 
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/executions?${params}`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch execution history: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to fetch execution history')
       }
 
-      const data = await response.json()
-      return Array.isArray(data)
-        ? data.map((exec: any) => ({
-            ...exec,
-            startedAt: new Date(exec.startedAt),
-            completedAt: exec.completedAt ? new Date(exec.completedAt) : undefined,
-          }))
-        : data.executions
+      return response.data || []
     } catch (error) {
       console.error('[RuleEngineService] Error fetching execution history:', error)
       throw error
@@ -435,23 +295,19 @@ export class RuleEngineService {
 
   /**
    * Get a specific execution
+   * Uses centralized APIManager
    */
   async getExecution(executionId: string): Promise<RuleExecutionHistory> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/executions/${executionId}`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<RuleExecutionHistory>(
+        `${this.apiBaseUrl}/executions/${executionId}`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch execution: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to fetch execution')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        startedAt: new Date(data.startedAt),
-        completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error fetching execution:', error)
       throw error
@@ -460,32 +316,23 @@ export class RuleEngineService {
 
   /**
    * Duplicate a rule
+   * Uses centralized APIManager
    */
   async duplicateRule(
     ruleId: string,
     newName?: string
   ): Promise<Rule> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/duplicate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'X-API-Key': this.apiKey }),
-        },
-        body: JSON.stringify({
-          newName,
-        }),
-      })
+      const response = await apiManager.post<Rule>(
+        `${this.apiBaseUrl}/rules/${ruleId}/duplicate`,
+        { newName }
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to duplicate rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to duplicate rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        createdAt: new Date(data.createdAt),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error duplicating rule:', error)
       throw error
@@ -494,23 +341,20 @@ export class RuleEngineService {
 
   /**
    * Enable a rule
+   * Uses centralized APIManager
    */
   async enableRule(ruleId: string): Promise<Rule> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/enable`, {
-        method: 'POST',
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.post<Rule>(
+        `${this.apiBaseUrl}/rules/${ruleId}/enable`,
+        {}
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to enable rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to enable rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        createdAt: new Date(data.createdAt),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error enabling rule:', error)
       throw error
@@ -519,23 +363,20 @@ export class RuleEngineService {
 
   /**
    * Disable a rule
+   * Uses centralized APIManager
    */
   async disableRule(ruleId: string): Promise<Rule> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/disable`, {
-        method: 'POST',
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.post<Rule>(
+        `${this.apiBaseUrl}/rules/${ruleId}/disable`,
+        {}
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to disable rule: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to disable rule')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        createdAt: new Date(data.createdAt),
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error disabling rule:', error)
       throw error
@@ -544,6 +385,7 @@ export class RuleEngineService {
 
   /**
    * Get rule execution statistics
+   * Uses centralized APIManager
    */
   async getRuleStats(ruleId: string): Promise<{
     totalExecutions: number
@@ -551,22 +393,18 @@ export class RuleEngineService {
     failureCount: number
     successRate: number
     averageDuration: number
-    lastExecution?: Date
+    lastExecution?: string
   }> {
     try {
-      const response = await fetch(`${this.apiBaseUrl}/rules/${ruleId}/stats`, {
-        headers: this.apiKey ? { 'X-API-Key': this.apiKey } : {},
-      })
+      const response = await apiManager.get<any>(
+        `${this.apiBaseUrl}/rules/${ruleId}/stats`
+      )
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch stats: ${response.statusText}`)
+      if (!response.success) {
+        throw new Error(response.error?.message || 'Failed to fetch stats')
       }
 
-      const data = await response.json()
-      return {
-        ...data,
-        lastExecution: data.lastExecution ? new Date(data.lastExecution) : undefined,
-      }
+      return response.data!
     } catch (error) {
       console.error('[RuleEngineService] Error fetching stats:', error)
       throw error

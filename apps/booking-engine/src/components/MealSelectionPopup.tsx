@@ -90,7 +90,7 @@ export const MealSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                                 key={p.id}
                                 onClick={() => setSelectedPassenger(p.id)}
                                 className={`px-6 h-12 rounded-[2rem] flex items-center gap-3 border transition-all ${selectedPassenger === p.id
-                                    ? 'bg-[#FFD700] border-[#FFD700] shadow-lg text-gray-900'
+                                    ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-lg text-gray-900'
                                     : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
                                     }`}
                             >
@@ -117,11 +117,11 @@ export const MealSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                                     key={meal.id}
                                     onClick={() => handleSelectMeal(meal.id)}
                                     className={`p-6 rounded-[2.5rem] border-2 cursor-pointer transition-all flex items-center gap-6 group ${isSelected
-                                        ? 'border-[#8B5CF6] bg-purple-50/50'
+                                        ? 'border-[#152467] bg-purple-50/50'
                                         : 'border-gray-50 hover:border-gray-200 bg-white'
                                         }`}
                                 >
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? 'bg-[#8B5CF6] text-white shadow-lg' : 'bg-gray-50 text-gray-300'}`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? 'bg-[#152467] text-white shadow-lg' : 'bg-gray-50 text-gray-300'}`}>
                                         <Utensils size={20} />
                                     </div>
                                     <div className="flex-1">

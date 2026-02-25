@@ -71,10 +71,22 @@ export default function FlightDetail() {
 
   // Helper function to map Duffel offer to flight details format
   const mapDuffelOfferToFlight = (offer: any) => {
-    const firstSlice = offer.slices?.[0];
-    const segments = firstSlice?.segments || [];
-    const firstSeg = segments[0];
-    const lastSeg  = segments[segments.length - 1];
+    // Get all slices (supports multi-city with multiple legs)
+    const slices = offer.slices || [];
+    
+    // Determine trip type based on number of slices
+    const tripType = slices.length === 1 ? 'one-way' : slices.length === 2 ? 'round-trip' : 'multi-city';
+    
+    // For the header, use the first segment of the first slice
+    const firstSlice = slices[0];
+    const firstSegments = firstSlice?.segments || [];
+    const firstSeg = firstSegments[0];
+    const lastSegOfFirstSlice = firstSegments[firstSegments.length - 1];
+
+    // For destination, use the last segment of the last slice
+    const lastSlice = slices[slices.length - 1];
+    const lastSegments = lastSlice?.segments || [];
+    const lastSegOfLastSlice = lastSegments[lastSegments.length - 1];
 
     // Derive refund/change conditions from Duffel conditions object
     const conditions = offer.conditions ?? {};
@@ -85,7 +97,7 @@ export default function FlightDetail() {
     // Build human-readable fare rules from API data
     const fareRules: string[] = [];
     if (refundCond.allowed === true) {
-      fareRules.push(`Refundable — ${refundCond.penalty_amount ? `cancellation penalty ${refundCond.penalty_currency} ${refundCond.penalty_amount}` : 'no penalty'}`);
+      fareRules.push(`Refundable — ${refundCond.penalty_amount ? `cancellation penalty: ${refundCond.penalty_currency} ${refundCond.penalty_amount}` : 'no penalty'}`);
     } else {
       fareRules.push('Non-refundable — ticket cannot be cancelled for a refund.');
     }
@@ -94,16 +106,64 @@ export default function FlightDetail() {
     } else if (changeCond.allowed === false) {
       fareRules.push('Date changes are not permitted on this fare.');
     } else {
-      fareRules.push('Date change policy: contact support at least 24 h before departure.');
+      fareRules.push('Date change policy: contact support at least 24h before departure.');
     }
     fareRules.push('Name changes are not permitted after ticket issuance.');
     fareRules.push('No-show: ticket value is forfeited. Please cancel before departure if plans change.');
     fareRules.push('Partially used tickets are non-refundable.');
 
+    // Add changeable flag to flight object
+    const isChangeable = changeCond.allowed === true;
+
+    // Build all slices with their segments for multi-city display
+    const allSlices = slices.map((slice: any, sliceIdx: number) => {
+      const segs = slice?.segments || [];
+      return {
+        sliceIndex: sliceIdx,
+        sliceLabel: sliceIdx === 0 ? 'Outbound' : `Leg ${sliceIdx + 1}`,
+        departureDate: slice?.departure_date || segs[0]?.departing_at?.split('T')[0],
+        segments: segs.map((seg: any, idx: number) => {
+          const nextSeg = segs[idx + 1];
+          const depAt  = seg.departing_at  || seg.departure_time;
+          const arrAt  = seg.arriving_at   || seg.arrival_time;
+          const layover = nextSeg
+            ? (() => {
+                const diff = new Date(nextSeg.departing_at || nextSeg.departure_time).getTime()
+                           - new Date(arrAt).getTime();
+                const h = Math.floor(diff / 3_600_000);
+                const m = Math.floor((diff % 3_600_000) / 60_000);
+                return `${h}h ${m}m`;
+              })()
+            : null;
+          return {
+            from:     seg.origin?.iata_code      || seg.origin_iata,
+            to:       seg.destination?.iata_code || seg.destination_iata,
+            originCity:      seg.origin?.city_name      || seg.origin?.name,
+            destinationCity: seg.destination?.city_name || seg.destination?.name,
+            depart:   depAt,
+            arrive:   arrAt,
+            airline:  seg.operating_carrier?.name || seg.marketing_carrier?.name,
+            number:   `${seg.marketing_carrier?.iata_code ?? ''}${seg.marketing_carrier_flight_number ?? ''}`,
+            aircraft: seg.aircraft?.name || seg.aircraft?.iata_code || null,
+            duration: fmtDuration(seg.duration),
+            layover,
+            departureTerminal: seg.origin_terminal   ?? null,
+            arrivalTerminal:   seg.destination_terminal ?? null,
+          };
+        }),
+        // Calculate total duration for this slice
+        totalDuration: fmtDuration(slice?.duration),
+      };
+    });
+
+    // Flatten all segments for backward compatibility (single segment list)
+    const allSegments = allSlices.flatMap((s: any) => s.segments);
+
     return {
       id: offer.id,
+      tripType,
       origin: firstSeg?.origin?.iata_code || firstSeg?.origin_iata || 'N/A',
-      destination: lastSeg?.destination?.iata_code || lastSeg?.destination_iata || 'N/A',
+      destination: lastSegOfLastSlice?.destination?.iata_code || lastSegOfLastSlice?.destination_iata || 'N/A',
       airline: firstSeg?.operating_carrier?.name || firstSeg?.marketing_carrier?.name || 'Unknown',
       flightNumber: `${firstSeg?.marketing_carrier?.iata_code ?? ''}${firstSeg?.marketing_carrier_flight_number ?? ''}`,
       cabin: offer.passengers?.[0]?.fare_brand_name || offer.passengers?.[0]?.cabin_class || 'Economy',
@@ -112,6 +172,7 @@ export default function FlightDetail() {
       taxAmount: parseFloat(offer.tax_amount ?? '0'),
       currency: offer.total_currency || 'USD',
       refundable: isRefundable,
+      changeable: isChangeable,
       fareRules,
       includedBags: offer.passengers?.[0]?.baggages?.map((b: any) => ({
         quantity: b.quantity ?? 1,
@@ -119,35 +180,10 @@ export default function FlightDetail() {
         unit: 'kg',
         type: b.type, // 'checked' | 'carry_on'
       })) ?? [],
-      segments: segments.map((seg: any, idx: number) => {
-        const nextSeg = segments[idx + 1];
-        const depAt  = seg.departing_at  || seg.departure_time;
-        const arrAt  = seg.arriving_at   || seg.arrival_time;
-        const layover = nextSeg
-          ? (() => {
-              const diff = new Date(nextSeg.departing_at || nextSeg.departure_time).getTime()
-                         - new Date(arrAt).getTime();
-              const h = Math.floor(diff / 3_600_000);
-              const m = Math.floor((diff % 3_600_000) / 60_000);
-              return `${h}h ${m}m`;
-            })()
-          : null;
-        return {
-          from:     seg.origin?.iata_code      || seg.origin_iata,
-          to:       seg.destination?.iata_code || seg.destination_iata,
-          originCity:      seg.origin?.city_name      || seg.origin?.name,
-          destinationCity: seg.destination?.city_name || seg.destination?.name,
-          depart:   depAt,
-          arrive:   arrAt,
-          airline:  seg.operating_carrier?.name || seg.marketing_carrier?.name,
-          number:   `${seg.marketing_carrier?.iata_code ?? ''}${seg.marketing_carrier_flight_number ?? ''}`,
-          aircraft: seg.aircraft?.name || seg.aircraft?.iata_code || null,
-          duration: fmtDuration(seg.duration),
-          layover,
-          departureTerminal: seg.origin_terminal   ?? null,
-          arrivalTerminal:   seg.destination_terminal ?? null,
-        };
-      }),
+      // All slices for multi-city display
+      slices: allSlices,
+      // Flattened segments for backward compatibility
+      segments: allSegments,
       rawOffer: offer,
     };
   };
@@ -156,7 +192,7 @@ export default function FlightDetail() {
     return (
       <TripLogerLayout>
         <div className="flex flex-col items-center justify-center min-h-screen pb-32">
-          <Loader2 size={48} className="text-[#8B5CF6] animate-spin mb-4" />
+          <Loader2 size={48} className="text-[#152467] animate-spin mb-4" />
           <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Loading Flight Details...</p>
         </div>
       </TripLogerLayout>
@@ -169,7 +205,7 @@ export default function FlightDetail() {
         <div className="flex flex-col items-center justify-center min-h-screen pb-32">
           <h2 className="text-2xl font-black text-gray-900 mb-2">Flight Not Found</h2>
           <p className="text-gray-500 mb-6">We couldn't find the flight details you requested.</p>
-          <Button onClick={() => navigate('/flights')} className="bg-[#8B5CF6] text-white rounded-xl px-6 py-3 font-bold uppercase tracking-widest text-xs shadow-lg shadow-purple-100 hover:bg-[#7C3AED]">
+          <Button onClick={() => navigate('/flights')} className="bg-[#152467] text-white rounded-xl px-6 py-3 font-bold uppercase tracking-widest text-xs shadow-lg shadow-purple-100 hover:bg-[#0A1C50]">
             Back to Search
           </Button>
         </div>
@@ -186,20 +222,29 @@ export default function FlightDetail() {
             <div className="flex items-center gap-6">
               <button
                 onClick={() => navigate(-1)}
-                className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#8B5CF6] hover:border-[#8B5CF6] transition-all"
+                className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#152467] hover:border-[#152467] transition-all"
               >
                 <ArrowLeft size={20} />
               </button>
               <div>
-                <h1 className="text-sm font-black text-gray-900 uppercase tracking-widest">{flight.origin} to {flight.destination}</h1>
+                <h1 className="text-sm font-black text-gray-900 uppercase tracking-widest">
+                  {flight.tripType === 'multi-city' 
+                    ? `${flight.origin} → ... → ${flight.destination}`
+                    : `${flight.origin} to ${flight.destination}`
+                  }
+                </h1>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                  {flight.tripType === 'multi-city' && flight.slices?.length > 0 
+                    ? `${flight.slices.length} legs • `
+                    : ''
+                  }
                   {flight.airline} • {flight.flightNumber} • {flight.cabin}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#8B5CF6] transition-all">
+              <button className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-[#152467] transition-all">
                 <Share2 size={18} />
               </button>
               <button className="w-12 h-12 rounded-2xl border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-500 transition-all">
@@ -219,12 +264,12 @@ export default function FlightDetail() {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`pb-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab ? 'text-[#8B5CF6]' : 'text-gray-400 hover:text-gray-600'
+                    className={`pb-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab ? 'text-[#152467]' : 'text-gray-400 hover:text-gray-600'
                       }`}
                   >
                     {tab}
                     {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#8B5CF6]" />
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#152467]" />
                     )}
                   </button>
                 ))}
@@ -234,68 +279,96 @@ export default function FlightDetail() {
               <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/50 p-10">
                 {activeTab === 'segments' && (
                   <div className="space-y-12">
-                    {flight.segments?.map((segment: any, idx: number) => (
-                      <div key={idx} className="relative">
-                        {idx > 0 && (
-                          <div className="absolute -top-10 left-6 h-8 border-l-2 border-dashed border-gray-200" />
-                        )}
-                        <div className="flex gap-10">
-                          <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0">
-                            <Plane className={idx % 2 === 0 ? '-rotate-45' : 'rotate-45'} size={20} />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-6">
+                    {/* Show slices for multi-city, or just segments for one-way/round-trip */}
+                    {flight.slices?.map((slice: any, sliceIdx: number) => (
+                      <div key={sliceIdx} className="relative">
+                        {/* Slice Header - Show for multi-city */}
+                        {flight.tripType === 'multi-city' && (
+                          <div className="mb-6 pb-4 border-b border-dashed border-gray-200">
+                            <div className="flex items-center justify-between">
                               <div>
-                                <h3 className="text-xl font-black text-gray-900 tracking-tight">{segment.from} → {segment.to}</h3>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Flight Leg {idx + 1}</p>
+                                <h3 className="text-lg font-black text-[#152467] tracking-tight">{slice.sliceLabel}</h3>
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                  {slice.departureDate} • {slice.segments?.length} flight(s) • Total: {slice.totalDuration}
+                                </p>
                               </div>
-                              <div className="text-right">
-                                <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest px-3 py-1 bg-purple-50 rounded-full">Confirmed</p>
-                              </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-10">
-                              <div className="space-y-4">
-                                <div className="flex gap-4">
-                                  <Clock className="text-gray-300" size={16} />
-                                  <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Departure</p>
-                                    <p className="text-sm font-bold text-gray-900">{new Date(segment.depart).toLocaleString()}</p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-4">
-                                  <MapPin className="text-gray-300" size={16} />
-                                  <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Arrival</p>
-                                    <p className="text-sm font-bold text-gray-900">{new Date(segment.arrive).toLocaleString()}</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="space-y-4">
-                                <div className="flex gap-4">
-                                  <Users className="text-gray-300" size={16} />
-                                  <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Aircraft</p>
-                                    <p className="text-sm font-bold text-gray-900">{segment.aircraft || 'Information unavailable'}</p>
-                                  </div>
-                                </div>
-                                <div className="flex gap-4">
-                                  <ShieldCheck className="text-gray-300" size={16} />
-                                  <div>
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Operator</p>
-                                    <p className="text-sm font-bold text-gray-900">{segment.airline || flight.airline}</p>
-                                  </div>
-                                </div>
-                                {segment.layover && (
-                                  <div className="mt-6 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
-                                    <Clock size={12} className="text-amber-500 shrink-0" />
-                                    <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider">Layover: {segment.layover}</span>
-                                  </div>
-                                )}
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Route:</span>
+                                <span className="text-sm font-bold text-gray-900">
+                                  {slice.segments?.[0]?.from} → {slice.segments?.[slice.segments?.length - 1]?.to}
+                                </span>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        )}
+                        
+                        {/* Segments in this slice */}
+                        {slice.segments?.map((segment: any, idx: number) => (
+                          <div key={`${sliceIdx}-${idx}`} className="relative mb-8 last:mb-0">
+                            {idx > 0 && (
+                              <div className="absolute -top-6 left-6 h-6 border-l-2 border-dashed border-gray-200" />
+                            )}
+                            <div className="flex gap-10">
+                              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center shrink-0">
+                                <Plane className={idx % 2 === 0 ? '-rotate-45' : 'rotate-45'} size={20} />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-6">
+                                  <div>
+                                    <h3 className="text-xl font-black text-gray-900 tracking-tight">{segment.from} → {segment.to}</h3>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                      {segment.number} • {segment.airline}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-[10px] font-black text-[#152467] uppercase tracking-widest px-3 py-1 bg-purple-50 rounded-full">Confirmed</p>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-10">
+                                  <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                      <Clock className="text-gray-300" size={16} />
+                                      <div>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Departure</p>
+                                        <p className="text-sm font-bold text-gray-900">{new Date(segment.depart).toLocaleString()}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                      <MapPin className="text-gray-300" size={16} />
+                                      <div>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Arrival</p>
+                                        <p className="text-sm font-bold text-gray-900">{new Date(segment.arrive).toLocaleString()}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="space-y-4">
+                                    <div className="flex gap-4">
+                                      <Users className="text-gray-300" size={16} />
+                                      <div>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Aircraft</p>
+                                        <p className="text-sm font-bold text-gray-900">{segment.aircraft || 'Information unavailable'}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                      <ShieldCheck className="text-gray-300" size={16} />
+                                      <div>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Duration</p>
+                                        <p className="text-sm font-bold text-gray-900">{segment.duration}</p>
+                                      </div>
+                                    </div>
+                                    {segment.layover && (
+                                      <div className="mt-4 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
+                                        <Clock size={12} className="text-amber-500 shrink-0" />
+                                        <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider">Layover: {segment.layover}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     ))}
                   </div>
@@ -304,7 +377,7 @@ export default function FlightDetail() {
                 {activeTab === 'route' && (
                   <div className="space-y-8">
                     <div className="flex items-center gap-3 mb-6">
-                      <Map className="text-[#8B5CF6]" size={24} />
+                      <Map className="text-[#152467]" size={24} />
                       <div>
                         <h3 className="text-lg font-black text-gray-900">Flight Route</h3>
                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Interactive route map</p>
@@ -359,7 +432,7 @@ export default function FlightDetail() {
                   <div className="space-y-8">
                     <div className="flex items-start gap-6 p-8 bg-gray-50 rounded-3xl border border-gray-100">
                       <div className="p-4 bg-white rounded-2xl shadow-sm">
-                        <Luggage className="text-[#8B5CF6]" size={32} />
+                        <Luggage className="text-[#152467]" size={32} />
                       </div>
                       <div>
                         <h4 className="text-lg font-black text-gray-900 mb-2">Check-in Baggage</h4>
@@ -392,6 +465,11 @@ export default function FlightDetail() {
                           {flight.refundable ? 'Refundable' : 'Non-Refundable'}
                         </span>
                       )}
+                      {flight.changeable !== undefined && (
+                        <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${flight.changeable ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-50 text-gray-500 border-gray-100'}`}>
+                          {flight.changeable ? 'Changes Allowed' : 'No Changes'}
+                        </span>
+                      )}
                     </div>
                     <div className="space-y-4">
                       {(flight.fareRules && flight.fareRules.length > 0
@@ -407,7 +485,7 @@ export default function FlightDetail() {
                           ]
                       ).map((rule: string, i: number) => (
                         <div key={i} className="flex gap-4 items-start p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                          <AlertCircle size={15} className="text-[#8B5CF6] mt-0.5 shrink-0" />
+                          <AlertCircle size={15} className="text-[#152467] mt-0.5 shrink-0" />
                           <p className="text-sm font-bold text-gray-600 leading-relaxed">{rule}</p>
                         </div>
                       ))}

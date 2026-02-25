@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Avatar, AvatarFallback, AvatarImage } from "@tripalfa/ui-components/ui/avatar";
 import { Button } from "@tripalfa/ui-components/ui/button";
 import {

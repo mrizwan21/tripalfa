@@ -235,17 +235,17 @@ export function DualMonthCalendar({
       />
       <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
           <Popover.Trigger asChild>
-        <div className="flex gap-2 cursor-pointer h-12">
+        <div className="flex gap-4 cursor-pointer h-12">
           {/* Departure/Check-in Input */}
           <div 
             className={`flex items-center gap-2 bg-white px-4 h-12 rounded-xl border-2 transition-all ${
               selectionMode === 'departure' && isOpen 
-                ? 'border-[#8B5CF6] ring-2 ring-purple-100' 
+                ? 'border-[#152467] ring-2 ring-purple-100' 
                 : 'border-gray-100 hover:border-gray-200'
             }`}
             onClick={() => { setSelectionMode('departure'); setIsOpen(true); }}
           >
-            <Calendar size={18} className="text-[#8B5CF6]" />
+            <Calendar size={18} className="text-[#152467]" />
             <span className="text-sm font-bold text-gray-900">
               {formatDisplayDate(internalDeparture) || (mode === 'hotel' ? 'Check-in' : 'Departure')}
             </span>

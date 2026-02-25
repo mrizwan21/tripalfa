@@ -7,8 +7,7 @@
  * - Currency exchange rates
  */
 
-import React, { useState, useEffect } from 'react';
-import { AnimatedHotelMap } from '../components/map/AnimatedHotelMap';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useWeatherData } from '../hooks/useWeatherData';
 import { useExchangeRate } from '../hooks/useExchangeRate';
 import {
@@ -17,6 +16,29 @@ import {
   CURRENCY_NAMES,
 } from '../api/exchangeRateApi';
 import { MapCoordinates } from '../lib/mapbox-config';
+
+// ── Code-split the heavy map component (mapbox-gl ~1.7MB) ────────────────────
+const AnimatedHotelMap = lazy(() => 
+  import('../components/map/AnimatedHotelMap').then(module => ({ 
+    default: module.AnimatedHotelMap 
+  }))
+);
+
+// ── Map Loading Fallback ─────────────────────────────────────────────────────
+function MapFallback({ height = '500px' }: { height?: string }): React.JSX.Element {
+  return (
+    <div 
+      className="flex items-center justify-center bg-gray-900 rounded-2xl"
+      style={{ height }}
+    >
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-gray-400 font-bold">Loading map...</p>
+        <p className="text-gray-500 text-xs mt-1">Initializing Mapbox</p>
+      </div>
+    </div>
+  );
+}
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -355,14 +377,16 @@ export function HotelSearchLoading({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Animated Map - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
-            <AnimatedHotelMap
-              destination={destination}
-              animationDuration={5000}
-              showSearchRadius={true}
-              searchRadiusKm={5}
-              height="500px"
-              className="shadow-2xl"
-            />
+            <Suspense fallback={<MapFallback height="500px" />}>
+              <AnimatedHotelMap
+                destination={destination}
+                animationDuration={5000}
+                showSearchRadius={true}
+                searchRadiusKm={5}
+                height="500px"
+                className="shadow-2xl"
+              />
+            </Suspense>
           </div>
 
           {/* Side panel */}

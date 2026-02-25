@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MapPin, Star, Filter, ArrowUpDown, ChevronRight, Wifi, Coffee, Waves, Search, RotateCcw, ChevronDown, Calendar, User, Check } from 'lucide-react';
-import { searchHotels } from '../lib/api';
+import { useLiteApiHotels } from '../hooks/useLiteApiHotels';
+import type { HotelSearchParams } from '../services/liteApiManager';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { SearchAutocomplete, Suggestion } from '../components/ui/SearchAutocomplete';
@@ -38,8 +39,12 @@ interface FilterState {
 export default function HotelList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Use LiteAPI Hotels hook for search with Redis caching
+  const { hotels, loading, error, search, isCached, total } = useLiteApiHotels({
+    enableCache: true,
+    cacheTTL: 15 * 60 * 1000, // 15 min cache
+  });
 
   // Use DB-backed hooks for filter options via React Query
   const amenitiesQuery = useHotelAmenities();
@@ -60,33 +65,37 @@ export default function HotelList() {
   // Destination Search State (managed via SearchAutocomplete)
   const [destination, setDestination] = useState(searchParams.get('location') || '');
 
-  // Fetch hotel data
+  // Fetch hotel data using LiteAPI hook
   useEffect(() => {
-    const fetchHotels = async () => {
-      const location = searchParams.get('location') || 'Dubai';
-      const checkin = searchParams.get('checkin') || '2024-10-25';
-      const checkout = searchParams.get('checkout') || '2024-10-26';
-      const adults = parseInt(searchParams.get('adults') || '2');
+    const location = searchParams.get('location') || 'Dubai';
+    const checkin = searchParams.get('checkin') || '2024-10-25';
+    const checkout = searchParams.get('checkout') || '2024-10-26';
+    const adults = parseInt(searchParams.get('adults') || '2');
 
-      setIsLoading(true);
-      try {
-        const result = await searchHotels({
-          location,
-          checkin,
-          checkout,
-          adults,
-          rooms: 1
-        });
-        setHotels(result.hotels || []);
-      } catch (err) {
-        console.error('Failed to fetch hotels:', err);
-      } finally {
-        setIsLoading(false);
-      }
+    const searchParamsLite: HotelSearchParams = {
+      location,
+      checkin,
+      checkout,
+      adults,
+      rooms: 1,
     };
 
-    fetchHotels();
+    search(searchParamsLite);
   }, [searchParams]);
+
+  // Map LiteAPI results to Hotel interface
+  const mappedHotels: Hotel[] = useMemo(() => {
+    return hotels.map(h => ({
+      id: h.id,
+      name: h.name,
+      location: h.location,
+      image: h.image,
+      price: h.price,
+      stars: h.rating,
+      rating: h.rating,
+      facilities: h.amenities,
+    }));
+  }, [hotels]);
 
   // Update destination state when URL changes
   useEffect(() => {
@@ -119,7 +128,7 @@ export default function HotelList() {
   };
 
   const filteredHotels = React.useMemo(() => {
-    return hotels.filter(h => {
+    return mappedHotels.filter(h => {
       // Price Filter
       if (filters.price.length > 0) {
         const price = h.price?.amount || 0;
@@ -185,7 +194,7 @@ export default function HotelList() {
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <TripLogerLayout>
         <div className="container mx-auto px-4 py-40 flex flex-col items-center">
@@ -421,7 +430,7 @@ export default function HotelList() {
 
                     <div className="mt-auto flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div className="bg-[#FFD700] text-black w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-sm">{h.rating}</div>
+                        <div className="bg-[#EC5C4C] text-black w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-sm">{h.rating}</div>
                         <div>
                           <p className="text-[10px] font-black uppercase tracking-tighter text-gray-900 leading-none">Excellent</p>
                           <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mt-1">420 Reviews</p>

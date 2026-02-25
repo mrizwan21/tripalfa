@@ -114,7 +114,7 @@ function HotelLocationCard({
             {starRating && (
               <div className="flex items-center gap-1">
                 {Array.from({ length: Math.round(starRating) }).map((_, i) => (
-                  <Star key={i} size={10} className="text-[#FFD700] fill-[#FFD700]" />
+                  <Star key={i} size={10} className="text-[#EC5C4C] fill-[#EC5C4C]" />
                 ))}
               </div>
             )}

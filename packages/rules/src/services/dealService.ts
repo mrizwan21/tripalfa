@@ -158,9 +158,9 @@ export class DealService {
    */
   async getDeal(id: string): Promise<SupplierDeal | null> {
     try {
-      const deal = await this.prisma.supplierDeals.findUnique({
+      const deal = await this.prisma.supplierDeal.findUnique({
         where: { id },
-        include: { mappingRules: true }
+        include: { dealMappingRules: true }
       });
 
       return deal ? this.mapPrismaToDeal(deal) : null;
@@ -181,9 +181,9 @@ export class DealService {
       if (filters?.status) where.status = filters.status;
       if (filters?.supplierCode) where.supplierCodes = { hasSome: [filters.supplierCode] };
 
-      const deals = await this.prisma.supplierDeals.findMany({
+      const deals = await this.prisma.supplierDeal.findMany({
         where,
-        include: { mappingRules: true },
+        include: { dealMappingRules: true },
         orderBy: { priority: 'desc' },
         skip,
         take
@@ -200,7 +200,7 @@ export class DealService {
    */
   async deleteDeal(id: string): Promise<void> {
     try {
-      await this.prisma.supplierDeals.update({
+      await this.prisma.supplierDeal.update({
         where: { id },
         data: { status: 'archived', updatedAt: new Date() }
       });
@@ -214,7 +214,7 @@ export class DealService {
    */
   async activateDeal(id: string): Promise<SupplierDeal> {
     try {
-      const deal = await this.prisma.supplierDeals.update({
+      const deal = await this.prisma.supplierDeal.update({
         where: { id },
         data: { status: 'active', updatedAt: new Date() }
       });
@@ -230,7 +230,7 @@ export class DealService {
    */
   async pauseDeal(id: string): Promise<SupplierDeal> {
     try {
-      const deal = await this.prisma.supplierDeals.update({
+      const deal = await this.prisma.supplierDeal.update({
         where: { id },
         data: { status: 'paused', updatedAt: new Date() }
       });

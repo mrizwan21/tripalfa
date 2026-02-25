@@ -9,6 +9,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
+# Copy npm configuration for network retry settings
+COPY .npmrc ./
+
 # Copy lockfile and workspace config first for layer caching
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY tsconfig.json tsconfig.base.json ./
@@ -61,6 +64,9 @@ RUN apk add --no-cache dumb-init curl && \
     corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
+
+# Copy npm configuration for network retry settings
+COPY .npmrc ./
 
 # Copy essential files for pnpm production install
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./

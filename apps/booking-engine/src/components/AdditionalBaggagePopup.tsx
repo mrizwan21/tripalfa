@@ -48,8 +48,8 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                     </div>
                     <h2 className="text-xl font-black text-gray-900 text-center leading-relaxed">Are you sure you want to add extra baggage to the booking</h2>
                     <div className="flex gap-4 w-full">
-                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#8B5CF6] text-[#8B5CF6] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">No Need</button>
-                        <button onClick={() => onConfirm(bags)} className="flex-1 h-12 rounded-xl bg-[#8B5CF6] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Yes, Sure</button>
+                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#152467] text-[#152467] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">No Need</button>
+                        <button onClick={() => onConfirm(bags)} className="flex-1 h-12 rounded-xl bg-[#152467] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Yes, Sure</button>
                     </div>
                 </div>
             </div>
@@ -73,7 +73,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                 <div className="flex-1 overflow-y-auto p-12 space-y-12">
                     {/* Passenger Selection */}
                     <div className="flex items-center justify-center gap-6 border-b border-gray-100 pb-10">
-                        <button className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all">
+                        <button className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all">
                             <ChevronLeft size={20} />
                         </button>
                         <div className="flex gap-4 flex-wrap justify-center">
@@ -82,7 +82,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                                     key={p.id}
                                     onClick={() => setSelectedPassenger(p.id)}
                                     className={`px-8 h-14 rounded-[2rem] flex items-center gap-3 border transition-all ${selectedPassenger === p.id
-                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100 text-gray-900'
+                                        ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-xl shadow-yellow-100 text-gray-900'
                                         : 'border-yellow-200 text-gray-400 bg-white hover:border-yellow-300'
                                         }`}
                                 >
@@ -94,7 +94,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                                 </button>
                             ))}
                         </div>
-                        <button className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all">
+                        <button className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all">
                             <ChevronRight size={20} />
                         </button>
                     </div>
@@ -104,21 +104,21 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                         {/* Flight Tabs */}
                         <div className="flex justify-center">
                             <div className="bg-white p-2 rounded-2xl flex gap-4">
-                                <button className="px-10 py-3 bg-[#8B5CF6] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg flex items-center gap-3">FIG4312 <img src="/airplane-white.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
-                                <button className="px-10 py-3 border border-[#8B5CF6] text-[#8B5CF6] rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3">FIG4312 <img src="/airplane-purple.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
+                                <button className="px-10 py-3 bg-[#152467] text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg flex items-center gap-3">FIG4312 <img src="/airplane-white.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
+                                <button className="px-10 py-3 border border-[#152467] text-[#152467] rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3">FIG4312 <img src="/airplane-purple.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
                             </div>
                         </div>
 
                         {/* Current Allowance Info */}
                         <div className="flex justify-center gap-4">
                             <div className="bg-white px-6 py-3 rounded-full flex items-center gap-3 border border-gray-50">
-                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#8B5CF6]"><Luggage className="w-4 h-4" /></div>
+                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#152467]"><Luggage className="w-4 h-4" /></div>
                                 <span className="text-[10px] font-bold text-gray-500">
                                     {isLCC ? "0 x 15 Kgs Included (Buy Below)" : "2 x 23 Kgs Checked-in Bags Included"}
                                 </span>
                             </div>
                             <div className="bg-white px-6 py-3 rounded-full flex items-center gap-3 border border-gray-100">
-                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#8B5CF6]"><Briefcase className="w-4 h-4" /></div>
+                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#152467]"><Briefcase className="w-4 h-4" /></div>
                                 <span className="text-[10px] font-bold text-gray-500">
                                     {isLCC ? "1x7 kg cabin bag only" : "1x10 kg cabin bag included"}
                                 </span>
@@ -131,7 +131,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                                     <select
                                         value={selectedBagId}
                                         onChange={(e) => setSelectedBagId(e.target.value)}
-                                        className="w-full h-12 px-6 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold text-gray-500 appearance-none outline-none focus:border-[#8B5CF6]/20 transition-all font-sans"
+                                        className="w-full h-12 px-6 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold text-gray-500 appearance-none outline-none focus:border-[#152467]/20 transition-all font-sans"
                                     >
                                         <option value="">Select Extra Weight</option>
                                         {baggageOptions.length > 0 ? (
@@ -148,7 +148,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                                     </select>
                                     <ChevronRight className="absolute right-6 top-1/2 -translate-y-1/2 rotate-90 text-gray-400" size={14} />
                                 </div>
-                                <input id="baggage-note" name="baggage-note" type="text" placeholder="Add Note" className="flex-1 h-12 px-6 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold outline-none focus:border-[#8B5CF6]/20 transition-all" />
+                                <input id="baggage-note" name="baggage-note" type="text" placeholder="Add Note" className="flex-1 h-12 px-6 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold outline-none focus:border-[#152467]/20 transition-all" />
                                 <button
                                     onClick={() => {
                                         if (!selectedBagId) return;
@@ -160,7 +160,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                                         setBags(p => [...p, opt]);
                                         setSelectedBagId('');
                                     }}
-                                    className="h-12 px-12 bg-[#FFD700] hover:bg-[#F4CE14] text-black rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-yellow-50 transition-all active:scale-95"
+                                    className="h-12 px-12 bg-[#EC5C4C] hover:bg-[#F4CE14] text-black rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-yellow-50 transition-all active:scale-95"
                                 >
                                     Add
                                 </button>
@@ -196,7 +196,7 @@ export const AdditionalBaggagePopup = ({ isOpen, onClose, onConfirm, isLCC = fal
                     <div className="flex justify-center pt-4">
                         <Button
                             onClick={() => setIsConfirming(true)}
-                            className="w-full max-w-xl h-14 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95"
+                            className="w-full max-w-xl h-14 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95"
                         >
                             Add Extra Baggage
                         </Button>

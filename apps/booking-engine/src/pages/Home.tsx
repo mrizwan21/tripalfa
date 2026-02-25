@@ -107,7 +107,7 @@ export default function Home() {
         <button className="relative bg-white/90 backdrop-blur-lg border border-slate-200 rounded-full p-3 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
           <ShoppingCart className="h-6 w-6 text-slate-700" />
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-[#8B5CF6] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+            <span className="absolute -top-1 -right-1 bg-[#152467] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
               {cartCount}
             </span>
           )}
@@ -122,7 +122,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#8B5CF6] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#152467] rounded-lg flex items-center justify-center">
                 <Plane className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold text-slate-900">
@@ -130,10 +130,10 @@ export default function Home() {
               </span>
             </div>
             <div className="hidden md:flex items-center gap-8">
-              <a href="#flights" className="text-slate-600 hover:text-[#8B5CF6] transition-colors font-medium">Flights</a>
-              <a href="#hotels" className="text-slate-600 hover:text-[#8B5CF6] transition-colors font-medium">Hotels</a>
-              <a href="#packages" className="text-slate-600 hover:text-[#8B5CF6] transition-colors font-medium">Packages</a>
-              <a href="#cars" className="text-slate-600 hover:text-[#8B5CF6] transition-colors font-medium">Cars</a>
+              <a href="#flights" className="text-slate-600 hover:text-[#152467] transition-colors font-medium">Flights</a>
+              <a href="#hotels" className="text-slate-600 hover:text-[#152467] transition-colors font-medium">Hotels</a>
+              <a href="#packages" className="text-slate-600 hover:text-[#152467] transition-colors font-medium">Packages</a>
+              <a href="#cars" className="text-slate-600 hover:text-[#152467] transition-colors font-medium">Cars</a>
             </div>
             <div className="flex items-center gap-4">
               <Button variant="primary" size="sm" className="hidden md:flex items-center gap-2">
@@ -147,14 +147,14 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#8B5CF6]/10 via-purple-50/10 to-blue-50/20" />
-        
+        <div className="absolute inset-0 bg-gradient-to-br from-[#152467]/10 via-purple-50/10 to-blue-50/20" />
+
         <div className="container relative z-10 px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* Hero Content */}
             <div className="text-center mb-8">
               <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-2 mb-4 justify-center shadow-sm">
-                <Sparkles className="h-4 w-4 text-[#8B5CF6]" />
+                <Sparkles className="h-4 w-4 text-[#152467]" />
                 <span className="text-slate-700 text-sm font-medium">AI-Powered Travel Search</span>
               </div>
               <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
@@ -180,8 +180,8 @@ export default function Home() {
                     className={cn(
                       "flex-1 flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-all duration-200",
                       activeTab === id
-                        ? "text-white bg-[#8B5CF6]"
-                        : "text-slate-600 hover:text-[#8B5CF6] hover:bg-slate-50"
+                        ? "text-white bg-[#152467]"
+                        : "text-slate-600 hover:text-[#152467] hover:bg-slate-50"
                     )}
                     onClick={() => setActiveTab(id)}
                   >
@@ -202,7 +202,7 @@ export default function Home() {
                         <Input
                           type="text"
                           placeholder="Origin"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                         />
@@ -229,7 +229,7 @@ export default function Home() {
                         <Input
                           type="text"
                           placeholder="Destination"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                         />
                       </div>
                     </div>
@@ -241,7 +241,7 @@ export default function Home() {
                         <Input
                           type="date"
                           placeholder="Departure"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                         />
                       </div>
                     </div>
@@ -253,13 +253,13 @@ export default function Home() {
                         <Input
                           type="date"
                           placeholder="Return"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                         />
                       </div>
                     </div>
 
                     <div className="lg:col-span-1">
-                      <Button className="w-full h-[2.75rem]">
+                      <Button className="w-full h-14 rounded-xl bg-[#152467] hover:bg-[#0A1C50] text-white">
                         <Search className="h-4 w-4 mr-2" />
                         Search
                       </Button>
@@ -276,7 +276,7 @@ export default function Home() {
                         <Input
                           type="text"
                           placeholder="Where are you going?"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                         />
                       </div>
                     </div>
@@ -288,7 +288,7 @@ export default function Home() {
                         <Input
                           type="date"
                           placeholder="Check-in"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                         />
                       </div>
                     </div>
@@ -300,13 +300,13 @@ export default function Home() {
                         <Input
                           type="date"
                           placeholder="Check-out"
-                          className="pl-10"
+                          className="pl-10 h-14 rounded-xl"
                         />
                       </div>
                     </div>
 
                     <div className="lg:col-span-1">
-                      <Button className="w-full h-[2.75rem]">
+                      <Button className="w-full h-14 rounded-xl bg-[#152467] hover:bg-[#0A1C50] text-white">
                         <Search className="h-4 w-4 mr-2" />
                         Search
                       </Button>
@@ -316,19 +316,19 @@ export default function Home() {
 
                 {activeTab === 'packages' && (
                   <div className="text-center py-8">
-                    <Sparkles className="h-12 w-12 text-[#8B5CF6] mx-auto mb-4" />
+                    <Sparkles className="h-12 w-12 text-[#152467] mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-slate-900 mb-2">AI-Powered Package Deals</h3>
                     <p className="text-slate-600 mb-6">Let our AI find the perfect combination for your trip.</p>
-                    <Button>Discover Packages</Button>
+                    <Button className="h-12 px-8 rounded-xl bg-[#152467] hover:bg-[#0A1C50] text-white">Discover Packages</Button>
                   </div>
                 )}
 
                 {activeTab === 'cars' && (
                   <div className="text-center py-8">
-                    <Car className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <Car className="h-12 w-12 text-[#EC5C4C] mx-auto mb-4" />
                     <h3 className="text-lg font-bold text-slate-900 mb-2">Rent a Car</h3>
                     <p className="text-slate-600 mb-6">Find the perfect vehicle for your journey.</p>
-                    <Button variant="outline">Search Cars</Button>
+                    <Button variant="outline" className="h-12 px-8 rounded-xl border-[#152467] text-[#152467] hover:bg-[#152467] hover:text-white">Search Cars</Button>
                   </div>
                 )}
               </div>
@@ -390,7 +390,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-[#8B5CF6]">{formatCurrency(flight.price, flight.currency)}</p>
+                    <p className="text-2xl font-bold text-[#152467]">{formatCurrency(flight.price, flight.currency)}</p>
                     <p className="text-xs text-slate-500">per person</p>
                   </div>
                 </div>

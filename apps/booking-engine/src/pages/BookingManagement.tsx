@@ -40,10 +40,10 @@ export default function BookingManagement() {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#8B5CF6] flex items-center justify-center text-white shadow-lg shadow-purple-100">
+                  <div className="w-8 h-8 rounded-xl bg-[#152467] flex items-center justify-center text-white shadow-lg shadow-purple-100">
                     <ListFilter size={16} />
                   </div>
-                  <h1 className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.3em]">Reservations Portfolio</h1>
+                  <h1 className="text-[10px] font-black text-[#152467] uppercase tracking-[0.3em]">Reservations Portfolio</h1>
                 </div>
                 <h2 className="text-3xl font-black text-gray-900 tracking-tighter">My Bookings</h2>
                 <p className="text-[11px] font-bold text-gray-400 max-w-md">Manage your luxury travel itinerary, track status updates, and execute post-booking operations.</p>
@@ -52,13 +52,13 @@ export default function BookingManagement() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => load()}
-                  className="h-11 px-8 rounded-xl bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm hover:border-[#8B5CF6] transition-all flex items-center gap-2 active:scale-95"
+                  className="h-11 px-8 rounded-xl bg-white border border-gray-100 text-[10px] font-black uppercase tracking-widest text-gray-900 shadow-sm hover:border-[#152467] transition-all flex items-center gap-2 active:scale-95"
                 >
                   Refresh Data
                 </button>
                 <Link
                   to="/hotels"
-                  className="h-11 px-8 rounded-xl bg-[#8B5CF6] text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-purple-100 flex items-center gap-2 hover:bg-[#7C3AED] transition-all hover:-translate-y-0.5"
+                  className="h-11 px-8 rounded-xl bg-[#152467] text-white text-[10px] font-black uppercase tracking-widest shadow-xl shadow-purple-100 flex items-center gap-2 hover:bg-[#0A1C50] transition-all hover:-translate-y-0.5"
                 >
                   <Plus size={14} strokeWidth={3} /> New Booking
                 </Link>
@@ -67,7 +67,7 @@ export default function BookingManagement() {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 max-w-7xl mt-6 space-y-6">
+        <div className="container mx-auto px-4 max-w-7xl mt-12 space-y-6">
           {/* Filters Section */}
           <section className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 relative overflow-hidden group">
             <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-20 group-hover:opacity-100 transition-opacity" />
@@ -89,7 +89,7 @@ export default function BookingManagement() {
           <section>
             {loading ? (
               <div className="py-32 flex flex-col items-center justify-center space-y-4">
-                <div className="w-12 h-12 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin shadow-lg" />
+                <div className="w-12 h-12 border-4 border-[#152467] border-t-transparent rounded-full animate-spin shadow-lg" />
                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] animate-pulse">Syncing Portfolio...</p>
               </div>
             ) : (

@@ -8,9 +8,7 @@
  * Routes through centralized API Manager for consistency
  */
 
-import { API_BASE_URL } from '../lib/constants';
-
-const API_KEY = import.meta.env.VITE_API_KEY || '';
+import { api } from '../lib/api';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -59,30 +57,12 @@ export async function cancelOrder(
   try {
     console.log('[OrderManagement] Cancelling order:', duffelOrderId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/cancel`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          duffelOrderId,
-          reason
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/orders/cancel',
+      { duffelOrderId, reason }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to cancel order: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderManagement] Order cancelled successfully:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderManagement] Cancel order error:', error);
@@ -104,25 +84,11 @@ export async function getCancellationStatus(
   try {
     console.log('[OrderManagement] Fetching cancellation status:', duffelOrderId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/cancellation-status?duffelOrderId=${duffelOrderId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        credentials: 'include'
-      }
+    const result = await api.get<any>(
+      `/api/admin/orders/cancellation-status?duffelOrderId=${duffelOrderId}`
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to get cancellation status: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderManagement] Cancellation status retrieved:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderManagement] Get cancellation status error:', error);

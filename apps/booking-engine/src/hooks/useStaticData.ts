@@ -1,192 +1,209 @@
 /**
- * useStaticData — React hooks for DB-backed static reference data
- * ===============================================================
- * All data is fetched from the PostgreSQL static-data-service via /static/*.
- * Each hook falls back to in-memory static data when the service is unavailable,
- * so the UI always has something to display even during local dev without the DB.
- *
- * Usage:
- *   const { data: airports, isLoading } = useAirports();
- *   const { data: suggestions } = useSuggestions('dubai', 'flight');
- *   const { data: currencies } = useCurrencies();
- *   const { data: destinations } = usePopularDestinations(12);
+ * Static Data Hooks - All data fetched through centralized API manager
+ * These hooks provide access to reference data (airports, airlines, countries, etc.)
+ * All API calls are routed through the centralized api.ts facade.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import {
+  fetchPopularDestinations,
   fetchAirports,
   fetchAirlines,
   fetchCities,
-  fetchCurrencies,
   fetchCountries,
-  fetchSuggestions,
-  fetchHotelAmenities,
-  fetchBoardTypesDB,
-  fetchHotelTypesDB,
-  fetchDestinationsDB,
-  fetchPopularDestinationsDB,
-  fetchPopularHotels,
+  fetchCurrencies,
+  fetchNationalities,
+  fetchPhoneCodes,
   fetchLoyaltyPrograms,
-  fetchHotelById,
-} from '@/lib/api';
+  fetchLoyaltyProgramsAll,
+  fetchHotelAmenities,
+  fetchHotelTypes,
+  fetchBoardTypes,
+  fetchRoomTypesDB,
+  fetchSuggestions,
+  queryKeys,
+} from '../lib/api';
 
-// ─── Stale times ──────────────────────────────────────────────────────────────
-// Static reference data rarely changes — cache aggressively.
-const STALE_HOUR = 60 * 60 * 1000;   // 1 hour
-const STALE_DAY  = 24 * STALE_HOUR;  // 24 hours
+/**
+ * Hook to fetch popular destinations for homepage
+ */
+export function usePopularDestinations(limit = 20) {
+  return useQuery({
+    queryKey: ['popularDestinations', limit],
+    queryFn: () => fetchPopularDestinations(limit),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
 
-// ─── Airports ─────────────────────────────────────────────────────────────────
+/**
+ * Hook to fetch popular hotels for homepage
+ * Alias for usePopularDestinations with hotel-specific context
+ */
+export function usePopularHotels(limit = 20) {
+  return useQuery({
+    queryKey: ['popularHotels', limit],
+    queryFn: () => fetchPopularDestinations(limit),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Hook to fetch airports with optional search query
+ */
 export function useAirports(query?: string) {
   return useQuery({
-    queryKey: ['static', 'airports', query ?? ''],
+    queryKey: ['airports', query],
     queryFn: () => fetchAirports(query),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
+    enabled: !query || query.length >= 2,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
-// ─── Airlines ─────────────────────────────────────────────────────────────────
+/**
+ * Hook to fetch airlines with optional search query
+ */
 export function useAirlines(query?: string) {
   return useQuery({
-    queryKey: ['static', 'airlines', query ?? ''],
+    queryKey: ['airlines', query],
     queryFn: () => fetchAirlines(query),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
-// ─── Cities ───────────────────────────────────────────────────────────────────
+/**
+ * Hook to fetch cities with optional search query
+ */
 export function useCities(query?: string) {
   return useQuery({
-    queryKey: ['static', 'cities', query ?? ''],
+    queryKey: ['cities', query],
     queryFn: () => fetchCities(query),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
+    enabled: !query || query.length >= 2,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 }
 
-// ─── Currencies ───────────────────────────────────────────────────────────────
-export function useCurrencies() {
-  return useQuery({
-    queryKey: ['static', 'currencies'],
-    queryFn: fetchCurrencies,
-    staleTime: STALE_DAY,
-    gcTime: STALE_DAY,
-    retry: 1,
-  });
-}
-
-// ─── Countries ────────────────────────────────────────────────────────────────
+/**
+ * Hook to fetch countries for dropdowns
+ */
 export function useCountries(query?: string) {
   return useQuery({
-    queryKey: ['static', 'countries', query ?? ''],
+    queryKey: ['countries', query],
     queryFn: () => fetchCountries(query),
-    staleTime: STALE_DAY,
-    gcTime: STALE_DAY,
-    retry: 1,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 }
 
-// ─── Unified Suggestions (Autocomplete) ──────────────────────────────────────
-export function useSuggestions(query: string, type: 'flight' | 'hotel' = 'flight') {
+/**
+ * Hook to fetch currencies
+ */
+export function useCurrencies() {
   return useQuery({
-    queryKey: ['static', 'suggestions', type, query],
-    queryFn: () => fetchSuggestions(query, type),
-    enabled: typeof query === 'string' && query.length >= 2,
-    staleTime: 30_000, // 30s — user may type same query soon
-    gcTime: 5 * 60_000,
-    retry: 0, // Don't retry suggestions — speed matters more
+    queryKey: ['currencies'],
+    queryFn: fetchCurrencies,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 }
 
-// ─── Hotel Amenities ──────────────────────────────────────────────────────────
-export function useHotelAmenities(params?: { category?: string; popular?: boolean }) {
+/**
+ * Hook to fetch nationalities
+ */
+export function useNationalities(query?: string) {
   return useQuery({
-    queryKey: ['static', 'hotel-amenities', params?.category ?? '', params?.popular ?? false],
-    queryFn: () => fetchHotelAmenities(params),
-    staleTime: STALE_DAY,
-    gcTime: STALE_DAY,
-    retry: 1,
+    queryKey: ['nationalities', query],
+    queryFn: () => fetchNationalities(query),
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 }
 
-// ─── Board Types (Meal Plans) ─────────────────────────────────────────────────
-export function useBoardTypes() {
+/**
+ * Hook to fetch phone country codes
+ */
+export function usePhoneCodes() {
   return useQuery({
-    queryKey: ['static', 'board-types'],
-    queryFn: fetchBoardTypesDB,
-    staleTime: STALE_DAY,
-    gcTime: STALE_DAY,
-    retry: 1,
+    queryKey: ['phoneCodes'],
+    queryFn: fetchPhoneCodes,
+    staleTime: 60 * 60 * 1000, // 1 hour
   });
 }
 
-// ─── Hotel Types ──────────────────────────────────────────────────────────────
-export function useHotelTypes() {
-  return useQuery({
-    queryKey: ['static', 'hotel-types'],
-    queryFn: fetchHotelTypesDB,
-    staleTime: STALE_DAY,
-    gcTime: STALE_DAY,
-    retry: 1,
-  });
-}
-
-// ─── Destinations ─────────────────────────────────────────────────────────────
-export function useDestinations(params?: { type?: string; countryCode?: string; search?: string }) {
-  return useQuery({
-    queryKey: ['static', 'destinations', params?.type ?? '', params?.countryCode ?? '', params?.search ?? ''],
-    queryFn: () => fetchDestinationsDB(params),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
-  });
-}
-
-// ─── Popular Destinations (Homepage) ─────────────────────────────────────────
-export function usePopularDestinations(limit = 12) {
-  return useQuery({
-    queryKey: ['static', 'popular-destinations', limit],
-    queryFn: () => fetchPopularDestinationsDB(limit),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
-  });
-}
-
-// ─── Popular Hotels (Homepage) ────────────────────────────────────────────────
-export function usePopularHotels(limit = 12) {
-  return useQuery({
-    queryKey: ['static', 'popular-hotels', limit],
-    queryFn: () => fetchPopularHotels(limit),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
-  });
-}
-
-// ─── Loyalty Programs ─────────────────────────────────────────────────────────
+/**
+ * Hook to fetch loyalty programs
+ */
 export function useLoyaltyPrograms(query?: string) {
   return useQuery({
-    queryKey: ['static', 'loyalty-programs', query ?? ''],
+    queryKey: ['loyaltyPrograms', query],
     queryFn: () => fetchLoyaltyPrograms(query),
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 }
 
-// ─── Single Hotel ─────────────────────────────────────────────────────────────
-export function useHotel(id: string | undefined) {
+/**
+ * Hook to fetch all loyalty programs (airline + hotel)
+ */
+export function useLoyaltyProgramsAll(type?: 'airline' | 'hotel') {
   return useQuery({
-    queryKey: ['static', 'hotel', id],
-    queryFn: () => fetchHotelById(id!),
-    enabled: !!id,
-    staleTime: STALE_HOUR,
-    gcTime: STALE_DAY,
-    retry: 1,
+    queryKey: ['loyaltyProgramsAll', type],
+    queryFn: () => fetchLoyaltyProgramsAll(type),
+    staleTime: 30 * 60 * 1000, // 30 minutes
   });
 }
+
+/**
+ * Hook to fetch hotel amenities
+ */
+export function useHotelAmenities(params?: { category?: string; popular?: boolean }) {
+  return useQuery({
+    queryKey: ['hotelAmenities', params],
+    queryFn: () => fetchHotelAmenities(params),
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+}
+
+/**
+ * Hook to fetch hotel types
+ */
+export function useHotelTypes() {
+  return useQuery({
+    queryKey: ['hotelTypes'],
+    queryFn: fetchHotelTypes,
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+}
+
+/**
+ * Hook to fetch board types (meal plans)
+ */
+export function useBoardTypes() {
+  return useQuery({
+    queryKey: ['boardTypes'],
+    queryFn: fetchBoardTypes,
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+}
+
+/**
+ * Hook to fetch room types
+ */
+export function useRoomTypes(hotelId?: string) {
+  return useQuery({
+    queryKey: ['roomTypes', hotelId],
+    queryFn: () => fetchRoomTypesDB(hotelId),
+    enabled: !!hotelId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+}
+
+/**
+ * Hook for autocomplete suggestions (airports, cities)
+ */
+export function useSuggestions(query: string, type: 'flight' | 'hotel' = 'flight') {
+  return useQuery({
+    queryKey: ['suggestions', query, type],
+    queryFn: () => fetchSuggestions(query, type),
+    enabled: query.length >= 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// Re-export query keys for convenience
+export { queryKeys };

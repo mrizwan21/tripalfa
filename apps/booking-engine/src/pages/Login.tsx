@@ -43,7 +43,7 @@ const Login = () => {
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           Or{' '}
-          <Link to="/register" className="font-medium text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">
+          <Link to="/register" className="font-medium text-[#152467] hover:text-[#0A1C50] transition-colors">
             create a new account
           </Link>
         </p>
@@ -102,7 +102,7 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-slate-300 text-[#8B5CF6] focus:ring-[#8B5CF6]"
+                  className="h-4 w-4 rounded border-slate-300 text-[#152467] focus:ring-[#152467]"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-slate-700">
                   Remember me
@@ -110,7 +110,7 @@ const Login = () => {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">
+                <a href="#" className="font-medium text-[#152467] hover:text-[#0A1C50] transition-colors">
                   Forgot password?
                 </a>
               </div>

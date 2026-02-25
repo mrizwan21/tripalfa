@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
 import {
     User, Mail, Phone, Calendar, Globe, ArrowRight, ArrowLeft,
     MapPin, Edit3, ShieldCheck, Heart, ChevronRight, CreditCard,
@@ -15,7 +14,7 @@ import { format } from 'date-fns';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { formatCurrency } from '@tripalfa/ui-components';
-import { api, fetchCountries } from '../lib/api';
+import { api } from '../lib/api';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { FareRulesPopup } from '../components/FareRulesPopup';
 import { SeatSelectionPopup } from '../components/SeatSelectionPopup';
@@ -25,6 +24,7 @@ import { SpecialRequestPopup } from '../components/SpecialRequestPopup';
 import { PassengerForm, activePassengerSchema } from '../components/booking/PassengerForm';
 import { useCouponValidation } from '../hooks/useCouponValidation';
 import { useLoyaltyBalance } from '../hooks/useLoyaltyBalance';
+import { useBundledStaticData } from '../hooks/useBundledStaticData';
 import { FlightSummary, HotelSummary, Ancillaries, PaymentMode, FormValues } from '../types/booking';
 
 // Determine parent schema
@@ -118,12 +118,11 @@ export default function PassengerDetails() {
         name: "passengers"
     });
 
-    // Fetch countries for billing address dropdown
-    const { data: countries = [] } = useQuery({
-        queryKey: ['countries'],
-        queryFn: fetchCountries,
-        staleTime: 600000
-    } as any);
+    // Get countries for billing address dropdown from bundled static data
+    const staticData = useBundledStaticData();
+    const countries = useMemo(() => {
+        return staticData.countries.data || [];
+    }, [staticData.countries.data]);
 
     const onSubmit = async (data: FormValues) => {
         // Handle valid submission
@@ -132,36 +131,12 @@ export default function PassengerDetails() {
         try {
             let bookingId = '';
 
-            // For real integration, we MUST hold the booking first to get a reference
-            if (paymentModeState === 'wallet' || paymentModeState === 'hold') {
-                const holdPayload = {
-                    ...data,
-                    flight: passedFlight,
-                    hotel: hotelSummary,
-                    ancillaries: {
-                        seats: seatsTotal,
-                        baggage: baggageTotal,
-                        meals: mealsTotal,
-                        ssr: ssrRequests
-                    }
-                };
-
-                if (isHotel) {
-                    const res = await api.post('/bookings/hotel/hold', holdPayload);
-                    if (res) bookingId = res.bookingId || res.id;
-                } else {
-                    const res = await api.post('/bookings/flight/hold', holdPayload);
-                    if (res) bookingId = res.bookingId || res.id;
-                }
-
-                if (!bookingId) {
-                    throw new Error("Unable to create booking reference. Please try again.");
-                }
-            }
-
+            // Initialize booking state object (will be updated with response data)
             const bookingState = {
                 bookingData: data,
-                bookingId: bookingId,
+                bookingId: '',
+                workflowId: null as string | null,
+                documents: null as any,
                 summary: {
                     type: isHotel ? 'hotel' : 'flight',
                     hotel: hotelSummary,
@@ -179,6 +154,59 @@ export default function PassengerDetails() {
                     }
                 }
             };
+
+            // For real integration, we MUST hold the booking first to get a reference
+            if (paymentModeState === 'wallet' || paymentModeState === 'hold') {
+                // Get refundable status from flight/hotel data
+                const isFlightRefundable = passedFlight?.refundable === true;
+                const isHotelRefundable = summary?.hotel?.refundable === true;
+                const isRefundable = isHotel ? isHotelRefundable : isFlightRefundable;
+                
+                const holdPayload = {
+                    ...data,
+                    flight: passedFlight,
+                    hotel: hotelSummary,
+                    ancillaries: {
+                        seats: seatsTotal,
+                        baggage: baggageTotal,
+                        meals: mealsTotal,
+                        ssr: ssrRequests
+                    },
+                    isRefundable: isRefundable
+                };
+
+                if (isHotel) {
+                    const res = await api.post('/bookings/hotel/hold', holdPayload);
+                    if (res) {
+                        bookingId = res.bookingReference || res.bookingId || res.id;
+                        bookingState.bookingId = bookingId;
+                        // Store workflowId and documents for confirmation page
+                        if (res.workflowId) {
+                            bookingState.workflowId = res.workflowId;
+                        }
+                        if (res.documents) {
+                            bookingState.documents = res.documents;
+                        }
+                    }
+                } else {
+                    const res = await api.post('/bookings/flight/hold', holdPayload);
+                    if (res) {
+                        bookingId = res.bookingReference || res.orderId || res.bookingId || res.id;
+                        bookingState.bookingId = bookingId;
+                        // Store workflowId and documents for confirmation page
+                        if (res.workflowId) {
+                            bookingState.workflowId = res.workflowId;
+                        }
+                        if (res.documents) {
+                            bookingState.documents = res.documents;
+                        }
+                    }
+                }
+
+                if (!bookingId) {
+                    throw new Error("Unable to create booking reference. Please try again.");
+                }
+            }
 
             if (paymentModeState === 'wallet') {
                 navigate('/checkout', { state: bookingState });
@@ -304,7 +332,7 @@ export default function PassengerDetails() {
                 <div className="container mx-auto px-4 max-w-7xl pt-12">
                     <button
                         onClick={() => navigate(-1)}
-                        className="flex items-center gap-2 text-gray-400 hover:text-[#8B5CF6] font-black text-[10px] uppercase tracking-[0.2em] mb-10 transition-colors group"
+                        className="flex items-center gap-2 text-gray-400 hover:text-[#152467] font-black text-[10px] uppercase tracking-[0.2em] mb-10 transition-colors group"
                     >
                         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> {summary?.type === 'hotel' ? 'Back to Add-ons' : 'Back to Itinerary'}
                     </button>
@@ -320,7 +348,7 @@ export default function PassengerDetails() {
                                     <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                                         <div className="space-y-4 text-center md:text-left">
                                             <div className="flex items-center justify-center md:justify-start gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-[#FFD700] flex items-center justify-center text-[#111827] shadow-xl">
+                                                <div className="w-12 h-12 rounded-2xl bg-[#EC5C4C] flex items-center justify-center text-[#111827] shadow-xl">
                                                     <UserCheck size={24} />
                                                 </div>
                                                 <h3 className="text-xl font-black text-white tracking-tight">Elite Member Rewards</h3>
@@ -328,7 +356,7 @@ export default function PassengerDetails() {
                                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed max-w-md">Sign in now to sync your personal details, earn reward points, and access member-only flight deals.</p>
                                         </div>
                                         <div className="flex gap-4">
-                                            <button className="px-10 h-12 rounded-xl bg-[#FFD700] hover:bg-[#F4CE14] text-black font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-1 shadow-xl shadow-yellow-500/10">Log In</button>
+                                            <button className="px-10 h-12 rounded-xl bg-[#EC5C4C] hover:bg-[#F4CE14] text-black font-black text-[10px] uppercase tracking-widest transition-all hover:-translate-y-1 shadow-xl shadow-yellow-500/10">Log In</button>
                                             <button className="px-10 h-12 rounded-xl border border-white/20 text-white font-black text-[10px] uppercase tracking-widest transition-all hover:bg-white/5">Register</button>
                                         </div>
                                     </div>
@@ -353,9 +381,9 @@ export default function PassengerDetails() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 <button
                                     onClick={() => setIsSeatSelectionOpen(true)}
-                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
+                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#152467] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#8B5CF6] flex items-center justify-center group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#152467] flex items-center justify-center group-hover:bg-[#152467] group-hover:text-white transition-all">
                                         <Map size={20} />
                                     </div>
                                     <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Select Seats</span>
@@ -364,9 +392,9 @@ export default function PassengerDetails() {
 
                                 <button
                                     onClick={() => setIsBaggageOpen(true)}
-                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
+                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#152467] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#8B5CF6] flex items-center justify-center group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#152467] flex items-center justify-center group-hover:bg-[#152467] group-hover:text-white transition-all">
                                         <Luggage size={20} />
                                     </div>
                                     <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Add Baggage</span>
@@ -375,9 +403,9 @@ export default function PassengerDetails() {
 
                                 <button
                                     onClick={() => setIsMealSelectionOpen(true)}
-                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
+                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#152467] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#8B5CF6] flex items-center justify-center group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#152467] flex items-center justify-center group-hover:bg-[#152467] group-hover:text-white transition-all">
                                         <Utensils size={20} />
                                     </div>
                                     <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Meals</span>
@@ -386,9 +414,9 @@ export default function PassengerDetails() {
 
                                 <button
                                     onClick={() => setIsSpecialRequestOpen(true)}
-                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
+                                    className="p-6 bg-white border-2 border-gray-100 hover:border-[#152467] rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#8B5CF6] flex items-center justify-center group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-[#152467] flex items-center justify-center group-hover:bg-[#152467] group-hover:text-white transition-all">
                                         <Heart size={20} />
                                     </div>
                                     <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Special RR</span>
@@ -414,7 +442,7 @@ export default function PassengerDetails() {
                                         <input
                                             {...methods.register('billingAddress.street')}
                                             placeholder="Building, Street Name, District"
-                                            className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.street ? 'border-red-500/50' : 'border-transparent'}`}
+                                            className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.street ? 'border-red-500/50' : 'border-transparent'}`}
                                         />
                                         {methods.formState.errors.billingAddress?.street && (
                                             <div className="flex items-center gap-1 text-red-500 pl-1">
@@ -428,7 +456,7 @@ export default function PassengerDetails() {
                                         <input
                                             {...methods.register('billingAddress.city')}
                                             placeholder="City"
-                                            className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.city ? 'border-red-500/50' : 'border-transparent'}`}
+                                            className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.city ? 'border-red-500/50' : 'border-transparent'}`}
                                         />
                                         {methods.formState.errors.billingAddress?.city && (
                                             <div className="flex items-center gap-1 text-red-500 pl-1">
@@ -443,7 +471,7 @@ export default function PassengerDetails() {
                                             <input
                                                 {...methods.register('billingAddress.zipCode')}
                                                 placeholder="Zip"
-                                                className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.zipCode ? 'border-red-500/50' : 'border-transparent'}`}
+                                                className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${methods.formState.errors.billingAddress?.zipCode ? 'border-red-500/50' : 'border-transparent'}`}
                                             />
                                             {methods.formState.errors.billingAddress?.zipCode && (
                                                 <div className="flex items-center gap-1 text-red-500 pl-1">
@@ -457,7 +485,7 @@ export default function PassengerDetails() {
                                             <div className="relative">
                                                 <select
                                                     {...methods.register('billingAddress.country')}
-                                                    className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-red-500/50' : 'border-transparent'}`}
+                                                    className={`w-full h-14 px-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-red-500/50' : 'border-transparent'}`}
                                                 >
                                                     <option value="">Select</option>
                                                     {((countries as any[]) || []).map((c: any) => (
@@ -495,7 +523,7 @@ export default function PassengerDetails() {
                             <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden p-8 sticky top-32">
                                 <div className="space-y-8">
                                     <div className="space-y-2">
-                                        <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.3em]">{isHotel ? 'Hotel Summary' : 'Trip Summary'}</p>
+                                        <p className="text-[10px] font-black text-[#152467] uppercase tracking-[0.3em]">{isHotel ? 'Hotel Summary' : 'Trip Summary'}</p>
                                         <h3 className="text-xl font-black text-gray-900 tracking-tight leading-tight">{isHotel ? hotelSummary?.name : flightSummary.route}</h3>
                                     </div>
 
@@ -503,7 +531,7 @@ export default function PassengerDetails() {
                                         <div className="bg-gray-50 rounded-[2rem] p-4 overflow-hidden shadow-inner group">
                                             <img src={hotelSummary?.image} alt="Hotel" className="w-full h-32 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform" />
                                             <div className="flex items-center gap-2">
-                                                <MapPin size={12} className="text-[#8B5CF6]" />
+                                                <MapPin size={12} className="text-[#152467]" />
                                                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{hotelSummary?.location}</p>
                                             </div>
                                         </div>
@@ -513,7 +541,7 @@ export default function PassengerDetails() {
                                                 <div key={i} className="space-y-4">
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm"><Plane size={16} className="text-[#8B5CF6]" /></div>
+                                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm"><Plane size={16} className="text-[#152467]" /></div>
                                                             <div>
                                                                 <p className="text-[11px] font-black text-gray-900">{seg.carrier}</p>
                                                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{seg.code}</p>
@@ -541,7 +569,7 @@ export default function PassengerDetails() {
                                             </div>
                                         )}
                                         {(seatsTotal > 0 || baggageTotal > 0 || mealsTotal > 0) && (
-                                            <div className="flex justify-between items-center text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest px-2 group">
+                                            <div className="flex justify-between items-center text-[10px] font-black text-[#152467] uppercase tracking-widest px-2 group">
                                                 <div className="flex items-center gap-1">
                                                     <span>Ancillary Fees</span>
                                                     <Info size={10} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -573,7 +601,7 @@ export default function PassengerDetails() {
                                         <div className="h-px bg-gray-100" />
                                         <div className="flex justify-between items-center px-2">
                                             <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Total</span>
-                                            <span className="text-2xl font-black text-[#8B5CF6] tracking-tighter">{formatCurrency(finalTotal)}</span>
+                                            <span className="text-2xl font-black text-[#152467] tracking-tighter">{formatCurrency(finalTotal)}</span>
                                         </div>
                                     </div>
 
@@ -583,7 +611,7 @@ export default function PassengerDetails() {
                                             <input
                                                 {...methods.register('discountCoupon')}
                                                 placeholder="ENTER COUPON CODE"
-                                                className={`w-full h-14 px-6 pr-16 bg-gray-50 border-2 focus:border-[#8B5CF6]/30 focus:bg-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all placeholder:text-gray-300 ${couponError ? 'border-red-500/50' : couponDiscount > 0 ? 'border-green-500/50' : 'border-transparent'}`}
+                                                className={`w-full h-14 px-6 pr-16 bg-gray-50 border-2 focus:border-[#152467]/30 focus:bg-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all placeholder:text-gray-300 ${couponError ? 'border-red-500/50' : couponDiscount > 0 ? 'border-green-500/50' : 'border-transparent'}`}
                                             />
                                             <button
                                                 type="button"
@@ -601,7 +629,7 @@ export default function PassengerDetails() {
                                     <div className="flex flex-col gap-4 pt-4">
                                         <button
                                             onClick={() => handleFormSubmit('wallet')}
-                                            className="h-14 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group"
+                                            className="h-14 bg-[#152467] hover:bg-[#0A1C50] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 group"
                                         >
                                             Pay with Wallet <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                                         </button>
@@ -609,7 +637,7 @@ export default function PassengerDetails() {
                                         {(isHotel ? summary?.hotel?.refundable : passedFlight?.refundable) ? (
                                             <button
                                                 onClick={() => handleFormSubmit('hold')}
-                                                className="h-14 bg-white border-2 border-gray-100 hover:border-[#8B5CF6] hover:text-[#8B5CF6] text-gray-500 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all"
+                                                className="h-14 bg-white border-2 border-gray-100 hover:border-[#152467] hover:text-[#152467] text-gray-500 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all"
                                             >
                                                 Hold Booking
                                             </button>

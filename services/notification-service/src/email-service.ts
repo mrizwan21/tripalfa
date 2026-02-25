@@ -1,5 +1,7 @@
 /**
  * Email Service for Flight Amendment Notifications
+ * Powered by Brevo (formerly Sendinblue)
+ * 
  * Handles:
  * - Amendment approval email sending
  * - Approval reminders
@@ -9,6 +11,19 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo';
+
+// Brevo API configuration
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL || 'noreply@tripalfa.com';
+const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || 'TripAlfa';
+const BREVO_REPLY_TO = process.env.BREVO_REPLY_TO || 'support@tripalfa.com';
+
+// Initialize Brevo API
+const brevoApi = new TransactionalEmailsApi();
+if (BREVO_API_KEY) {
+  brevoApi.setApiKey(TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
+}
 
 // Get directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -138,8 +153,80 @@ export function generateAmendmentApprovalEmail(data: AmendmentNotificationData):
 }
 
 /**
- * Send amendment approval email (mock implementation)
- * In production, integrate with SendGrid, SES, or another email provider
+ * Send email via Brevo API with retry logic
+ */
+async function sendEmailViaBrevo(
+  to: string,
+  subject: string,
+  htmlContent: string,
+  textContent?: string,
+  tags?: string[],
+  maxRetries: number = 3
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  if (!BREVO_API_KEY) {
+    console.error('[EMAIL_SERVICE] BREVO_API_KEY not configured');
+    return {
+      success: false,
+      error: 'Email service not configured. Set BREVO_API_KEY environment variable.'
+    };
+  }
+
+  // Retry configuration
+  const baseDelay = 1000; // 1 second
+  let lastError: string = 'Unknown error';
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const sendSmtpEmail: SendSmtpEmail = {
+        sender: {
+          email: BREVO_FROM_EMAIL,
+          name: BREVO_FROM_NAME,
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent,
+        textContent: textContent || htmlContent.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim(),
+        replyTo: {
+          email: BREVO_REPLY_TO,
+          name: 'TripAlfa Support',
+        },
+        tags: tags || [],
+      };
+
+      const response = await brevoApi.sendTransacEmail(sendSmtpEmail);
+      
+      return {
+        success: true,
+        messageId: response.body?.messageId?.toString(),
+      };
+    } catch (error: any) {
+      lastError = error.message || 'Failed to send email via Brevo';
+      console.error(`[EMAIL_SERVICE] Brevo API error (attempt ${attempt}/${maxRetries}):`, lastError);
+
+      // Don't retry on configuration errors
+      if (lastError.includes('not configured') || lastError.includes('unauthorized')) {
+        break;
+      }
+
+      // Wait before retry with exponential backoff
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt - 1);
+        console.log(`[EMAIL_SERVICE] Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  // All retries exhausted
+  console.error(`[EMAIL_SERVICE] Failed to send email after ${maxRetries} attempts:`, lastError);
+  return {
+    success: false,
+    error: `Failed to send email after ${maxRetries} attempts: ${lastError}`,
+  };
+}
+
+/**
+ * Send amendment approval email via Brevo
  */
 export async function sendAmendmentApprovalEmail(data: AmendmentNotificationData): Promise<{
   success: boolean;
@@ -154,25 +241,23 @@ export async function sendAmendmentApprovalEmail(data: AmendmentNotificationData
     console.log(`  Financial Impact: ${data.financialImpact.adjustmentType} ${data.financialImpact.currency}${data.financialImpact.adjustmentAmount}`);
 
     const emailHtml = generateAmendmentApprovalEmail(data);
+    const subject = `Confirm Your Flight Amendment for ${data.bookingReference}`;
 
-    // Mock implementation - in production, use actual email service
-    const messageId = `msg_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const result = await sendEmailViaBrevo(
+      data.travelerEmail,
+      subject,
+      emailHtml,
+      undefined,
+      ['amendment', 'approval', data.bookingReference]
+    );
 
-    console.log(`[EMAIL_SERVICE] Email queued successfully (Message ID: ${messageId})`);
+    if (result.success) {
+      console.log(`[EMAIL_SERVICE] Email sent successfully via Brevo (Message ID: ${result.messageId})`);
+    } else {
+      console.error(`[EMAIL_SERVICE] Failed to send email: ${result.error}`);
+    }
 
-    // TODO: Replace with actual email service
-    // const response = await sendGridOrSES({
-    //   to: data.travelerEmail,
-    //   subject: `Confirm Your Flight Amendment for ${data.bookingReference}`,
-    //   html: emailHtml,
-    //   from: process.env.EMAIL_FROM || 'noreply@tripalfa.com',
-    //   replyTo: process.env.EMAIL_SUPPORT || 'support@tripalfa.com'
-    // });
-
-    return {
-      success: true,
-      messageId
-    };
+    return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[EMAIL_SERVICE] Failed to send amendment approval email`, error);
@@ -184,7 +269,7 @@ export async function sendAmendmentApprovalEmail(data: AmendmentNotificationData
 }
 
 /**
- * Send amendment reminder email (24 hours before expiry)
+ * Send amendment reminder email via Brevo (24 hours before expiry)
  */
 export async function sendAmendmentReminderEmail(data: AmendmentNotificationData): Promise<{
   success: boolean;
@@ -202,21 +287,27 @@ export async function sendAmendmentReminderEmail(data: AmendmentNotificationData
     // Add reminder banner to email
     const reminderBanner = `
       <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center; font-weight: bold; color: #856404;">
-        ⏰ REMINDER: Your approval link expires in 24 hours. Please approve your amendment before {{expiresAt | formatDateTime: 'MMM DD, YYYY HH:mm'}}
+        ⏰ REMINDER: Your approval link expires in 24 hours. Please approve your amendment before ${formatDateTime(data.expiresAt)}
       </div>
     `;
 
     const modifiedHtml = emailHtml.replace('<p>Hi {{travelerName}},</p>', `<p>Hi {{travelerName}},</p>\n${reminderBanner}`);
 
-    // TODO: Replace with actual email service
-    const messageId = `msg_reminder_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const result = await sendEmailViaBrevo(
+      data.travelerEmail,
+      subject,
+      modifiedHtml,
+      undefined,
+      ['amendment', 'reminder', data.bookingReference]
+    );
 
-    console.log(`[EMAIL_SERVICE] Reminder email queued (Message ID: ${messageId})`);
+    if (result.success) {
+      console.log(`[EMAIL_SERVICE] Reminder email sent via Brevo (Message ID: ${result.messageId})`);
+    } else {
+      console.error(`[EMAIL_SERVICE] Failed to send reminder email: ${result.error}`);
+    }
 
-    return {
-      success: true,
-      messageId
-    };
+    return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[EMAIL_SERVICE] Failed to send reminder email`, error);
@@ -228,41 +319,83 @@ export async function sendAmendmentReminderEmail(data: AmendmentNotificationData
 }
 
 /**
- * Send amendment confirmation email (after finalization)
+ * Send amendment confirmation email via Brevo (after finalization)
  */
 export async function sendAmendmentConfirmationEmail(
   travelerEmail: string,
   bookingReference: string,
-  newFlightDetails: any
+  newFlightDetails: {
+    airline: string;
+    departure: string;
+    arrival: string;
+    departureTime: string;
+    arrivalTime: string;
+    flightNumber?: string;
+  }
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     console.log(`[EMAIL_SERVICE] Sending amendment confirmation email to ${travelerEmail}`);
     console.log(`  Booking: ${bookingReference}`);
     console.log(`  New Flight: ${newFlightDetails.airline} ${newFlightDetails.departure} → ${newFlightDetails.arrival}`);
 
-    // TODO: Create confirmation email template
     const confirmationHtml = `
+      <!DOCTYPE html>
       <html>
-        <body>
-          <h1>✓ Flight Amendment Confirmed</h1>
-          <p>Your flight amendment has been successfully processed.</p>
-          <p><strong>Booking Reference:</strong> ${bookingReference}</p>
-          <p><strong>New Flight:</strong> ${newFlightDetails.airline}</p>
-          <p><strong>Departure:</strong> ${newFlightDetails.departureTime}</p>
-          <p><strong>Arrival:</strong> ${newFlightDetails.arrivalTime}</p>
-          <p>Check your email for updated itinerary and receipt.</p>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Flight Amendment Confirmed</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">✓ Flight Amendment Confirmed</h1>
+          </div>
+          <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd; border-top: none;">
+            <p style="font-size: 16px;">Your flight amendment has been successfully processed.</p>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
+              <h3 style="margin-top: 0; color: #667eea;">Booking Details</h3>
+              <p><strong>Booking Reference:</strong> ${bookingReference}</p>
+              <p><strong>Airline:</strong> ${newFlightDetails.airline}</p>
+              ${newFlightDetails.flightNumber ? `<p><strong>Flight Number:</strong> ${newFlightDetails.flightNumber}</p>` : ''}
+            </div>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
+              <h3 style="margin-top: 0; color: #667eea;">Flight Details</h3>
+              <p><strong>Departure:</strong> ${newFlightDetails.departure} at ${formatDateTime(newFlightDetails.departureTime)}</p>
+              <p><strong>Arrival:</strong> ${newFlightDetails.arrival} at ${formatDateTime(newFlightDetails.arrivalTime)}</p>
+            </div>
+            
+            <p style="text-align: center; color: #666; margin-top: 30px;">
+              You will receive your updated itinerary and receipt shortly.<br>
+              Thank you for choosing TripAlfa!
+            </p>
+          </div>
+          <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+            <p>TripAlfa - Your Travel Partner</p>
+            <p>Need help? Contact <a href="mailto:${BREVO_REPLY_TO}" style="color: #667eea;">${BREVO_REPLY_TO}</a></p>
+          </div>
         </body>
       </html>
     `;
 
-    const messageId = `msg_conf_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    const subject = `✓ Flight Amendment Confirmed - ${bookingReference}`;
 
-    console.log(`[EMAIL_SERVICE] Confirmation email queued (Message ID: ${messageId})`);
+    const result = await sendEmailViaBrevo(
+      travelerEmail,
+      subject,
+      confirmationHtml,
+      undefined,
+      ['amendment', 'confirmation', bookingReference]
+    );
 
-    return {
-      success: true,
-      messageId
-    };
+    if (result.success) {
+      console.log(`[EMAIL_SERVICE] Confirmation email sent via Brevo (Message ID: ${result.messageId})`);
+    } else {
+      console.error(`[EMAIL_SERVICE] Failed to send confirmation email: ${result.error}`);
+    }
+
+    return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[EMAIL_SERVICE] Failed to send confirmation email`, error);
@@ -310,8 +443,126 @@ export const emailTemplates = {
       'newFlightDetails',
       'financialImpact'
     ]
+  },
+  'wallet-deposit-receipt': {
+    subject: 'Deposit Receipt - {{receiptNumber}}',
+    description: 'Email receipt sent to customer after wallet deposit/topup',
+    requiredVariables: [
+      'customerName',
+      'receiptNumber',
+      'transactionDate',
+      'depositAmount',
+      'previousBalance',
+      'newBalance',
+      'currency',
+      'paymentMethod',
+      'referenceId'
+    ]
   }
 };
+
+// ============================================
+// WALLET DEPOSIT RECEIPT EMAIL
+// ============================================
+
+interface WalletDepositReceiptData {
+  customerName: string;
+  customerEmail: string;
+  receiptNumber: string;
+  transactionDate: string;
+  depositAmount: number;
+  previousBalance: number;
+  newBalance: number;
+  currency: string;
+  paymentMethod: string;
+  referenceId: string;
+  description?: string;
+}
+
+/**
+ * Generate wallet deposit receipt email HTML
+ */
+export function generateWalletDepositReceiptEmail(data: WalletDepositReceiptData): string {
+  try {
+    const template = loadEmailTemplate('wallet-deposit-receipt');
+    return replaceWalletDepositVariables(template, data);
+  } catch (error) {
+    console.error('Failed to generate wallet deposit receipt email', error);
+    throw error;
+  }
+}
+
+/**
+ * Replace template variables in wallet deposit receipt HTML
+ */
+function replaceWalletDepositVariables(html: string, data: WalletDepositReceiptData): string {
+  let result = html;
+
+  // Customer info
+  result = result.replace(/\{\{customerName\}\}/g, data.customerName || 'Valued Customer');
+  result = result.replace(/\{\{receiptNumber\}\}/g, data.receiptNumber);
+  result = result.replace(/\{\{transactionDate\}\}/g, data.transactionDate);
+  result = result.replace(/\{\{depositAmount\}\}/g, data.depositAmount.toFixed(2));
+  result = result.replace(/\{\{previousBalance\}\}/g, data.previousBalance.toFixed(2));
+  result = result.replace(/\{\{newBalance\}\}/g, data.newBalance.toFixed(2));
+  result = result.replace(/\{\{currency\}\}/g, data.currency);
+  result = result.replace(/\{\{paymentMethod\}\}/g, data.paymentMethod || 'Card Payment');
+  result = result.replace(/\{\{referenceId\}\}/g, data.referenceId || 'N/A');
+  
+  // Handle description conditionally
+  if (data.description) {
+    result = result.replace(/\{\{#if description\}\}[\s\S]*?\{\{\/if\}\}/g, 
+      `<div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
+        <h3 style="margin-top: 0; color: #667eea;">Description</h3>
+        <p style="margin: 0;">${data.description}</p>
+      </div>`);
+  } else {
+    result = result.replace(/\{\{#if description\}\}[\s\S]*?\{\{\/if\}\}/g, '');
+  }
+
+  return result;
+}
+
+/**
+ * Send wallet deposit receipt email via Brevo
+ */
+export async function sendWalletDepositReceiptEmail(data: WalletDepositReceiptData): Promise<{
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}> {
+  try {
+    console.log(`[EMAIL_SERVICE] Sending wallet deposit receipt email to ${data.customerEmail}`);
+    console.log(`  Receipt: ${data.receiptNumber}`);
+    console.log(`  Amount: ${data.currency}${data.depositAmount}`);
+
+    const emailHtml = generateWalletDepositReceiptEmail(data);
+    const subject = `💰 Deposit Receipt - ${data.receiptNumber}`;
+
+    const result = await sendEmailViaBrevo(
+      data.customerEmail,
+      subject,
+      emailHtml,
+      undefined,
+      ['wallet', 'deposit', 'receipt', data.receiptNumber]
+    );
+
+    if (result.success) {
+      console.log(`[EMAIL_SERVICE] Wallet deposit receipt sent successfully via Brevo (Message ID: ${result.messageId})`);
+    } else {
+      console.error(`[EMAIL_SERVICE] Failed to send wallet deposit receipt: ${result.error}`);
+    }
+
+    return result;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`[EMAIL_SERVICE] Failed to send wallet deposit receipt email`, error);
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+}
 
 export default {
   loadEmailTemplate,
@@ -319,5 +570,7 @@ export default {
   sendAmendmentApprovalEmail,
   sendAmendmentReminderEmail,
   sendAmendmentConfirmationEmail,
+  generateWalletDepositReceiptEmail,
+  sendWalletDepositReceiptEmail,
   emailTemplates
 };

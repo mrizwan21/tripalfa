@@ -47,5 +47,28 @@ declare global {
   var module: any;
 }
 
+/* ImportMeta type augmentation for ESM and Vite */
+interface ImportMetaEnv {
+  [key: string]: string | undefined;
+  VITE_API_URL?: string;
+  VITE_API_BASE_URL?: string;
+  VITE_API_GATEWAY_URL?: string;
+  VITE_API_KEY?: string;
+  VITE_WS_URL?: string;
+  VITE_VAPID_PUBLIC_KEY?: string;
+  VITE_OPENWEATHERMAP_API_KEY?: string;
+  VITE_OPENEXCHANGE_API_KEY?: string;
+  VITE_DUFFEL_ENV?: string;
+  MODE?: string;
+  DEV?: boolean;
+  PROD?: boolean;
+}
+
+interface ImportMeta {
+  url: string;
+  env: ImportMetaEnv;
+}
+
+
 /* Allow unknown modules to be imported without TS errors (last-resort fallback) */
 declare module '*';

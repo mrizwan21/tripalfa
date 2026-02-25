@@ -14,7 +14,7 @@ interface ItemProps {
 function FacilityItem({ name }: ItemProps) {
   return (
     <li className="flex items-center gap-3 text-[13px] font-bold text-gray-600 group">
-      <div className="w-1.5 h-1.5 rounded-full bg-indigo-100 group-hover:bg-[#8B5CF6] transition-colors" />
+      <div className="w-1.5 h-1.5 rounded-full bg-indigo-100 group-hover:bg-[#152467] transition-colors" />
       {name}
     </li>
   );
@@ -29,7 +29,7 @@ interface CategoryProps {
 function FacilityCategory({ title, icon, items }: CategoryProps) {
   return (
     <div className="space-y-6">
-      <h4 className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.2em] flex items-center gap-2.5">
+      <h4 className="text-[10px] font-black text-[#152467] uppercase tracking-[0.2em] flex items-center gap-2.5">
         {icon}
         {title}
       </h4>

@@ -16,13 +16,7 @@ import { PrismaClient } from '@prisma/client';
 import CacheService, { CacheKeys, CACHE_TTL } from '../cache/redis.js';
 
 // Initialize NEON Prisma client
-const neon = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.NEON_DATABASE_URL || process.env.DATABASE_URL,
-    },
-  },
-});
+const neon = new PrismaClient();
 
 export type { PrismaClient };
 
@@ -38,8 +32,8 @@ export const BookingDataService = {
     // Try Redis cache first
     const cacheKey = CacheKeys.prebookSession(bookingId);
     const cached = await CacheService.get(cacheKey);
-    if (cached) {
-      return { ...cached, source: 'cache' };
+    if (cached && typeof cached === 'object') {
+      return { ...(cached as object), source: 'cache' };
     }
 
     // Fetch from NEON
@@ -64,12 +58,19 @@ export const BookingDataService = {
     status: string;
     bookingRef?: string;
     baseAmount: number;
+    totalAmount: number;
     currency: string;
     metadata?: any;
   }) {
     const booking = await neon.booking.create({
       data: {
-        ...data,
+        userId: data.userId,
+        serviceType: data.serviceType,
+        status: data.status,
+        bookingRef: data.bookingRef,
+        baseAmount: data.baseAmount,
+        totalAmount: data.totalAmount,
+        currency: data.currency,
         metadata: data.metadata || {},
       },
     });
@@ -139,8 +140,8 @@ export const GuestDataService = {
   async getGuest(guestId: string) {
     const cacheKey = CacheKeys.guestData(guestId);
     const cached = await CacheService.get(cacheKey);
-    if (cached) {
-      return { ...cached, source: 'cache' };
+    if (cached && typeof cached === 'object') {
+      return { ...(cached as object), source: 'cache' };
     }
 
     const guest = await neon.user.findUnique({
@@ -271,15 +272,18 @@ export const TransactionDataService = {
       orderBy: { createdAt: 'desc' },
     });
 
-    return bookings.map(b => ({
-      id: b.id,
-      bookingRef: b.bookingRef,
-      amount: b.baseAmount,
-      currency: b.currency,
-      status: b.status,
-      createdAt: b.createdAt,
-      transactions: b.metadata?.transactions || [],
-    }));
+    return bookings.map(b => {
+      const metadata = b.metadata as Record<string, any> | null;
+      return {
+        id: b.id,
+        bookingRef: b.bookingRef,
+        amount: b.baseAmount,
+        currency: b.currency,
+        status: b.status,
+        createdAt: b.createdAt,
+        transactions: metadata?.transactions || [],
+      };
+    });
   },
 };
 
@@ -374,7 +378,8 @@ export const VoucherDataService = {
       },
     });
 
-    return booking.metadata?.voucher;
+    const metadata = booking?.metadata as Record<string, any> | null;
+    return metadata?.voucher || null;
   },
 
   /**
@@ -393,7 +398,8 @@ export const VoucherDataService = {
       take: 1,
     });
 
-    return bookings[0]?.metadata?.voucher || null;
+    const metadata = bookings[0]?.metadata as Record<string, any> | null;
+    return metadata?.voucher || null;
   },
 
   /**
@@ -404,7 +410,8 @@ export const VoucherDataService = {
       where: { id: bookingId },
     });
 
-    if (!booking?.metadata?.voucher) {
+    const metadata = booking?.metadata as Record<string, any> | null;
+    if (!metadata?.voucher) {
       throw new Error('Voucher not found');
     }
 
@@ -412,9 +419,9 @@ export const VoucherDataService = {
       where: { id: bookingId },
       data: {
         metadata: {
-          ...booking.metadata,
+          ...metadata,
           voucher: {
-            ...booking.metadata.voucher,
+            ...metadata.voucher,
             status,
             updatedAt: new Date().toISOString(),
           },

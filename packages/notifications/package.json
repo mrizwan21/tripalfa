@@ -6,10 +6,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "npx tsc",
-    "dev": "tsc --watch",
-    "lint": "eslint src --ext .ts",
-    "test": "jest"
+    "build": "pnpm exec tsc",
+    "dev": "pnpm exec tsc --watch",
+    "lint": "pnpm exec eslint src --ext .ts",
+    "test": "pnpm exec jest"
   },
   "keywords": [
     "notifications",
@@ -22,6 +22,7 @@
   "author": "TripAlfa Dev Team",
   "license": "MIT",
   "dependencies": {
+    "@getbrevo/brevo": "^2.2.0",
     "@prisma/client": "^7.4.0",
     "@tripalfa/shared-utils": "workspace:*",
     "nodemailer": "^6.9.0",

@@ -1,51 +1,29 @@
 {
   "name": "@tripalfa/static-data",
   "version": "1.0.0",
-  "description": "Centralized static data management system for TripAlfa",
-  "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Static data and reference data for TripAlfa",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     },
     "./frontend-index": {
-      "import": "./dist/frontend-index.js",
-      "require": "./dist/frontend-index.js",
-      "types": "./dist/frontend-index.d.ts"
+      "types": "./dist/frontend-index.d.ts",
+      "import": "./dist/frontend-index.mjs",
+      "require": "./dist/frontend-index.js"
     }
   },
   "scripts": {
-    "build": "npx tsc",
-    "dev": "tsc --watch",
-    "test": "jest",
-    "lint": "eslint src/**/*.ts",
-    "clean": "rm -rf dist"
+    "build": "tsup src/index.ts src/frontend-index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/frontend-index.ts --format cjs,esm --dts --watch"
   },
-  "keywords": [
-    "static-data",
-    "cache",
-    "fallback",
-    "travel",
-    "booking"
-  ],
-  "author": "TripAlfa Team",
-  "license": "MIT",
+  "dependencies": {},
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "typescript": "^5.9.3"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mrizwan21/tripalfa.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mrizwan21/tripalfa/issues"
-  },
-  "homepage": "https://github.com/mrizwan21/tripalfa#readme"
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
 }

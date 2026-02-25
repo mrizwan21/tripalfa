@@ -109,7 +109,7 @@ export const FareUpsellPopup = ({
             <div>
               <h2 className="text-xl font-black text-gray-900 uppercase tracking-[0.15em]">
                 Choose Your Fare —{' '}
-                <span className="text-[#8B5CF6]">{flight.origin} → {flight.destination}</span>
+                <span className="text-[#152467]">{flight.origin} → {flight.destination}</span>
               </h2>
               <p className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-widest">
                 {flight.airline} · {flight.flightNumber} · {fares.length} fare {fares.length === 1 ? 'option' : 'options'} available
@@ -120,8 +120,8 @@ export const FareUpsellPopup = ({
           {/* Currently selected badge */}
           {selectedFare && (
             <div className="hidden md:flex items-center gap-2 px-5 py-2.5 bg-purple-50 rounded-2xl border border-purple-100">
-              <Zap size={12} className="text-[#8B5CF6]" />
-              <span className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">
+              <Zap size={12} className="text-[#152467]" />
+              <span className="text-[10px] font-black text-[#152467] uppercase tracking-widest">
                 {selectedFare.name} · {flight.currency} {selectedFare.price.toLocaleString()}
               </span>
             </div>
@@ -165,7 +165,7 @@ export const FareUpsellPopup = ({
             </div>
             <Button
               onClick={onClose}
-              className="bg-[#FFD700] hover:bg-[#FACC15] text-[#1E1B4B] font-black text-xs px-10 py-4 rounded-2xl shadow-xl shadow-yellow-100 transition-all uppercase tracking-[0.2em] hover:-translate-y-0.5 active:scale-95"
+              className="bg-[#EC5C4C] hover:bg-[#FACC15] text-[#1E1B4B] font-black text-xs px-10 py-4 rounded-2xl shadow-xl shadow-yellow-100 transition-all uppercase tracking-[0.2em] hover:-translate-y-0.5 active:scale-95"
             >
               Keep Current Fare
             </Button>
@@ -178,7 +178,7 @@ export const FareUpsellPopup = ({
             {canPrev && (
               <button
                 onClick={() => setOffset(o => Math.max(0, o - 1))}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white border border-gray-100 text-[#8B5CF6] flex items-center justify-center shadow-2xl z-20 hover:scale-110 hover:border-[#8B5CF6] transition-all"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white border border-gray-100 text-[#152467] flex items-center justify-center shadow-2xl z-20 hover:scale-110 hover:border-[#152467] transition-all"
               >
                 <ChevronLeft size={26} />
               </button>
@@ -186,7 +186,7 @@ export const FareUpsellPopup = ({
             {canNext && (
               <button
                 onClick={() => setOffset(o => Math.min(fares.length - visibleCount, o + 1))}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white border border-gray-100 text-[#8B5CF6] flex items-center justify-center shadow-2xl z-20 hover:scale-110 hover:border-[#8B5CF6] transition-all"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white border border-gray-100 text-[#152467] flex items-center justify-center shadow-2xl z-20 hover:scale-110 hover:border-[#152467] transition-all"
               >
                 <ChevronRight size={26} />
               </button>
@@ -200,21 +200,21 @@ export const FareUpsellPopup = ({
                     key={fare.id}
                     className={`p-8 rounded-[2.5rem] border transition-all duration-500 flex flex-col relative overflow-hidden cursor-pointer group
                       ${isActive
-                        ? 'border-[#8B5CF6] bg-white ring-4 ring-[#8B5CF6]/10 shadow-2xl shadow-purple-100/50 scale-[1.03] z-10'
-                        : 'border-gray-100 hover:border-[#8B5CF6]/30 bg-white hover:-translate-y-1 hover:shadow-xl'
+                        ? 'border-[#152467] bg-white ring-4 ring-[#152467]/10 shadow-2xl shadow-purple-100/50 scale-[1.03] z-10'
+                        : 'border-gray-100 hover:border-[#152467]/30 bg-white hover:-translate-y-1 hover:shadow-xl'
                       }`}
                     onClick={() => setActiveFareId(fare.id)}
                   >
                     {/* Active accent bar */}
                     {isActive && (
-                      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#8B5CF6] to-purple-400 rounded-t-full" />
+                      <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-[#152467] to-purple-400 rounded-t-full" />
                     )}
 
                     {/* Keyword badges */}
                     {fare.keywords && fare.keywords.length > 0 && (
                       <div className="absolute top-4 right-4 flex flex-col gap-1.5 items-end">
                         {fare.keywords.map(kw => (
-                          <span key={kw} className="flex items-center gap-1 px-2.5 py-1 bg-[#8B5CF6] text-white rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm">
+                          <span key={kw} className="flex items-center gap-1 px-2.5 py-1 bg-[#152467] text-white rounded-full text-[8px] font-black uppercase tracking-wider shadow-sm">
                             {kw === 'Best Value' ? <Tag size={8} /> : <Star size={8} />}
                             {kw}
                           </span>
@@ -237,7 +237,7 @@ export const FareUpsellPopup = ({
 
                     {/* Cabin label */}
                     <div className="mb-7 text-center bg-gray-50/60 py-3.5 rounded-2xl border border-gray-50">
-                      <p className="text-sm font-black text-[#8B5CF6] uppercase tracking-[0.2em]">{fare.name}</p>
+                      <p className="text-sm font-black text-[#152467] uppercase tracking-[0.2em]">{fare.name}</p>
                       <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{fare.cabin}</p>
                     </div>
 
@@ -247,9 +247,9 @@ export const FareUpsellPopup = ({
                         <p className="text-[9px] font-black text-gray-300 uppercase tracking-[3px] text-center">Included</p>
                         {fare.benefits.map((b, i) => (
                           <div key={i} className="flex items-start gap-3">
-                            <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${b.included ? 'bg-[#8B5CF6]/10' : 'bg-gray-50'}`}>
+                            <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${b.included ? 'bg-[#152467]/10' : 'bg-gray-50'}`}>
                               {b.included
-                                ? <Check size={10} className="text-[#8B5CF6] stroke-[3px]" />
+                                ? <Check size={10} className="text-[#152467] stroke-[3px]" />
                                 : <DollarSign size={10} className="text-gray-300" />
                               }
                             </div>
@@ -258,7 +258,7 @@ export const FareUpsellPopup = ({
                                 {b.label}
                               </span>
                               {b.price && (
-                                <span className="text-[9px] font-black text-[#8B5CF6] whitespace-nowrap">{b.price}</span>
+                                <span className="text-[9px] font-black text-[#152467] whitespace-nowrap">{b.price}</span>
                               )}
                             </div>
                           </div>
@@ -282,7 +282,7 @@ export const FareUpsellPopup = ({
                                   {item.label}
                                 </span>
                                 {item.price && (
-                                  <span className={`text-[9px] font-black ${item.included ? 'text-green-500' : 'text-[#8B5CF6]'}`}>
+                                  <span className={`text-[9px] font-black ${item.included ? 'text-green-500' : 'text-[#152467]'}`}>
                                     {item.price}
                                   </span>
                                 )}
@@ -307,8 +307,8 @@ export const FareUpsellPopup = ({
                       onClick={(e) => { e.stopPropagation(); handleSelect(fare); }}
                       className={`w-full py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] shadow-lg transition-all active:scale-95 hover:-translate-y-0.5
                         ${isActive
-                          ? 'bg-[#8B5CF6] text-white shadow-purple-200 hover:bg-[#7C3AED]'
-                          : 'bg-white border border-gray-200 text-[#111827] hover:bg-gray-50 hover:border-[#8B5CF6]'
+                          ? 'bg-[#152467] text-white shadow-purple-200 hover:bg-[#0A1C50]'
+                          : 'bg-white border border-gray-200 text-[#111827] hover:bg-gray-50 hover:border-[#152467]'
                         }`}
                     >
                       {isActive ? '✓ Selected' : 'Select Fare'}
@@ -325,7 +325,7 @@ export const FareUpsellPopup = ({
                   <button
                     key={i}
                     onClick={() => setOffset(i)}
-                    className={`w-2 h-2 rounded-full transition-all ${i === offset ? 'bg-[#8B5CF6] w-6' : 'bg-gray-200'}`}
+                    className={`w-2 h-2 rounded-full transition-all ${i === offset ? 'bg-[#152467] w-6' : 'bg-gray-200'}`}
                   />
                 ))}
               </div>
@@ -348,7 +348,7 @@ export const FareUpsellPopup = ({
           </div>
           <Button
             onClick={() => selectedFare && handleSelect(selectedFare)}
-            className="px-12 py-5 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-xs uppercase tracking-[3px] shadow-2xl shadow-purple-200 transition-all hover:-translate-y-1 active:scale-95"
+            className="px-12 py-5 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-xs uppercase tracking-[3px] shadow-2xl shadow-purple-200 transition-all hover:-translate-y-1 active:scale-95"
           >
             Confirm & Continue
           </Button>

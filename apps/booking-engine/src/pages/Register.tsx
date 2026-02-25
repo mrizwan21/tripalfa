@@ -28,7 +28,7 @@ const Register = () => {
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           Already have an account?{' '}
-          <Link to="/login" className="font-medium text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">
+          <Link to="/login" className="font-medium text-[#152467] hover:text-[#0A1C50] transition-colors">
             Sign in
           </Link>
         </p>
@@ -113,15 +113,15 @@ const Register = () => {
                 name="terms"
                 type="checkbox"
                 required
-                className="h-4 w-4 rounded border-slate-300 text-[#8B5CF6] focus:ring-[#8B5CF6]"
+                className="h-4 w-4 rounded border-slate-300 text-[#152467] focus:ring-[#152467]"
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-slate-700">
                 I agree to the{' '}
-                <a href="#" className="text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">
+                <a href="#" className="text-[#152467] hover:text-[#0A1C50] transition-colors">
                   Terms
                 </a>{' '}
                 and{' '}
-                <a href="#" className="text-[#8B5CF6] hover:text-[#7C3AED] transition-colors">
+                <a href="#" className="text-[#152467] hover:text-[#0A1C50] transition-colors">
                   Privacy Policy
                 </a>
               </label>

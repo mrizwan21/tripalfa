@@ -27,7 +27,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@tripalfa/shared-utils': path.resolve(__dirname, '../../packages/shared-utils'),
-      '@tripalfa/static-data': path.resolve(__dirname, '../../packages/static-data/src'),
+      // @tripalfa/static-data removed - static data now comes from LiteAPI
       'lucide-react': path.resolve(__dirname, './src/__tests__/mocks/lucide-react.ts'),
     },
   },

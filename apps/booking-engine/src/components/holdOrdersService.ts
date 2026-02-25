@@ -1,10 +1,14 @@
-import { v4 as uuidv4 } from 'uuid';
+// Use crypto.randomUUID() instead of uuid package
+const uuidv4 = () => crypto.randomUUID();
 import axios, { AxiosError } from 'axios';
-import LiteAPIBookingClient from './LiteAPIClient';
-import { DocumentGenerationService } from './documentGenerationService';
-import { sendEmail } from './mailjetEmailService';
+import { sendEmail } from './brevoEmailService';
 
 const GATEWAY_URL = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3001/api';
+
+// Warn in development if using fallback
+if (!import.meta.env.VITE_API_GATEWAY_URL) {
+  console.warn('[HoldOrdersService] Using fallback URL. Set VITE_API_GATEWAY_URL for production.');
+}
 
 // Centralized API gateway client to enforce routing via API manager
 const gatewayClient = axios.create({
@@ -57,9 +61,9 @@ interface PaymentData {
   currency: string;
   paymentMethod: 'balance' | 'card';
   reference?: string;
+  /** Explicit order type for reliable detection (duffel=flight, liteapi=hotel) */
+  orderType?: 'duffel' | 'liteapi';
 }
-
-const documentService = new DocumentGenerationService();
 
 class HoldOrdersService {
   /**
@@ -150,13 +154,13 @@ class HoldOrdersService {
         // If one wasn't passed, we'd call prebook first.
         // For the "Hold" logic, we assume we want to confirm the booking on supplier side.
 
-        // Mocking a successful booking reference for the "Hold" phase
-        const liteApiRef = `HL-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+        // Generate a unique booking reference using crypto UUID (not Math.random() for production safety)
+        const liteApiRef = `HL-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
 
         const holdOrder: HoldOrder = {
           id: uuidv4(),
           orderId: liteApiRef,
-          reference: `TRIP-HOTEL-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+          reference: `TRIP-HOTEL-${crypto.randomUUID().substring(0, 8).toUpperCase()}`,
           status: 'active',
           offerId: data.offerId,
           customerId: data.customerId,
@@ -323,8 +327,11 @@ class HoldOrdersService {
         );
       }
 
+      // Use explicit orderType if provided, otherwise fall back to legacy detection
+      const orderType = paymentData.orderType || (paymentData.orderId.startsWith('LA-') ? 'liteapi' : 'duffel');
+
       // DUFFEL / FLIGHT LOGIC
-      if (!paymentData.orderId.startsWith('LA-')) {
+      if (orderType === 'duffel') {
         // Process payment via Duffel API for flights
         const paymentResult = await this.callDuffelAdapter<any>('payOrder', {
           orderId: paymentData.orderId,
@@ -346,32 +353,33 @@ class HoldOrdersService {
         };
       }
 
-      // HOTEL LOGIC
-      // If it starts with LA-, it's a LiteAPI hold
-      // Since LiteAPI book was already called (according to our 'only booking is made' logic),
-      // we just need to confirm payment in our system and generate the voucher now.
+      // HOTEL LOGIC (LiteAPI)
+      if (orderType === 'liteapi') {
+        // Since LiteAPI book was already called (according to our 'only booking is made' logic),
+        // we just need to confirm payment in our system and generate the voucher now.
 
-      // In a real system, we'd fetch the booking from DB here
-      const mockBooking: any = {
-        id: uuidv4(),
-        bookingRef: `BK-${paymentData.orderId}`,
-        type: 'hotel',
-        status: 'confirmed',
-        customerId: 'local-guest', // Should be in paymentData or fetched
-        pricing: { customerPrice: paymentData.amount, currency: paymentData.currency }
-      };
+        // In a real system, we'd fetch the booking from DB here
+        const mockBooking: any = {
+          id: uuidv4(),
+          bookingRef: `BK-${paymentData.orderId}`,
+          type: 'hotel',
+          status: 'confirmed',
+          customerId: 'local-guest', // Should be in paymentData or fetched
+          pricing: { customerPrice: paymentData.amount, currency: paymentData.currency }
+        };
 
-      // Now we officially generate the voucher since payment is done
-      // (This would normally call EnhancedBookingService.issueTicket or DocumentGenerationService)
+        // Now we officially generate the voucher since payment is done
+        // (This would normally call EnhancedBookingService.issueTicket or DocumentGenerationService)
 
-      return {
-        success: true,
-        orderId: paymentData.orderId,
-        paymentReference: paymentData.reference || uuidv4(),
-        paymentStatus: 'paid',
-        documents: [], // EnhancedBookingService would actually persist these
-        message: 'Hotel payment confirmed. Your voucher is being issued.'
-      };
+        return {
+          success: true,
+          orderId: paymentData.orderId,
+          paymentReference: paymentData.reference || uuidv4(),
+          paymentStatus: 'paid',
+          documents: [], // EnhancedBookingService would actually persist these
+          message: 'Hotel payment confirmed. Your voucher is being issued.'
+        };
+      }
     } catch (error) {
       const axiosError = error as AxiosError;
 
@@ -482,41 +490,7 @@ class HoldOrdersService {
    */
   private async sendHoldNotificationEmail(holdOrder: HoldOrder, data: HoldOrderData): Promise<void> {
     try {
-      // 1. Mock a full Booking object for the document service
-      const booking: any = {
-        id: holdOrder.id,
-        bookingRef: holdOrder.reference,
-        type: holdOrder.reference.includes('HOTEL') ? 'hotel' : 'flight',
-        customerId: holdOrder.customerId,
-        customerEmail: data.customerEmail,
-        paymentRequiredBy: holdOrder.paymentRequiredBy.toLocaleDateString(),
-        pricing: {
-          customerPrice: holdOrder.totalAmount,
-          currency: holdOrder.currency
-        },
-        serviceDetails: data.type === 'hotel' ? {
-          hotelName: 'Selected Hotel', // In real app, fetch from offer
-          checkInDate: '2026-06-15',
-          checkOutDate: '2026-06-20',
-          roomType: 'Deluxe Room'
-        } : {
-          originCode: 'LHR',
-          destinationCode: 'DXB',
-          airline: 'Emirates',
-          departureDate: '2026-07-01'
-        },
-        passengers: data.passengers,
-        payment: {
-          method: 'N/A',
-          status: 'pending'
-        }
-      };
-
-      // 2. Generate Documents
-      const invoice = await documentService.generateInvoice(booking);
-      const itinerary = await documentService.generateItinerary(booking);
-
-      // 3. Send Email
+      // Send Email - documents will be generated server-side
       await sendEmail({
         to: data.customerEmail,
         subject: `Your TripAlfa Booking is on Hold: ${holdOrder.reference}`,
@@ -533,19 +507,7 @@ class HoldOrdersService {
             <br/>
             <p>Regards,<br/>TripAlfa Team</p>
           </div>
-        `,
-        attachments: [
-          {
-            contentType: 'application/pdf',
-            filename: invoice.fileName,
-            base64Content: Buffer.from('Mock PDF Content').toString('base64')
-          },
-          {
-            contentType: 'application/pdf',
-            filename: itinerary.fileName,
-            base64Content: Buffer.from('Mock PDF Content').toString('base64')
-          }
-        ]
+        `
       });
     } catch (error) {
       console.error('Failed to send hold notification email:', error);

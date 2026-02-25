@@ -88,7 +88,7 @@ export const AncillaryPopup = ({
                                 <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-wide">Select additional services for your flight</p>
                             </div>
                             <div className="px-5 py-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
-                                <span className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">Premium Offers</span>
+                                <span className="text-[10px] font-black text-[#152467] uppercase tracking-widest">Premium Offers</span>
                             </div>
                         </div>
                     </div>
@@ -102,15 +102,15 @@ export const AncillaryPopup = ({
                                     key={service.id}
                                     onClick={() => handleToggle(service.id)}
                                     className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-300 flex items-center justify-between group ${isSelected
-                                        ? 'border-[#8B5CF6] bg-purple-50/50 shadow-xl shadow-purple-100'
+                                        ? 'border-[#152467] bg-purple-50/50 shadow-xl shadow-purple-100'
                                         : 'border-gray-50 hover:border-gray-200 bg-white hover:bg-gray-50'}`}
                                 >
                                     <div className="flex items-center gap-6">
-                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isSelected ? 'bg-[#8B5CF6] text-white shadow-lg shadow-purple-200' : 'bg-gray-50 text-gray-300 group-hover:text-gray-400'}`}>
+                                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${isSelected ? 'bg-[#152467] text-white shadow-lg shadow-purple-200' : 'bg-gray-50 text-gray-300 group-hover:text-gray-400'}`}>
                                             {isSelected ? <Check size={24} className="stroke-[3px]" /> : <Plus size={24} />}
                                         </div>
                                         <div>
-                                            <h4 className={`text-base font-black transition-colors ${isSelected ? 'text-[#8B5CF6]' : 'text-gray-900'}`}>{service.name}</h4>
+                                            <h4 className={`text-base font-black transition-colors ${isSelected ? 'text-[#152467]' : 'text-gray-900'}`}>{service.name}</h4>
                                             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">{service.type}</p>
                                         </div>
                                     </div>

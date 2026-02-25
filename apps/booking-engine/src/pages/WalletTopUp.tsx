@@ -44,14 +44,14 @@ export default function WalletTopUp() {
     <TripLogerLayout>
       <div className="min-h-screen bg-[#F8F9FA] relative overflow-hidden font-sans">
         {/* Background Gradients */}
-        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-br from-[#8B5CF6]/20 via-purple-100/30 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-br from-[#152467]/20 via-purple-100/30 to-transparent pointer-events-none" />
         <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
 
         <div className="container mx-auto px-4 py-12 relative z-10 flex flex-col items-center justify-center min-h-[80vh]">
 
           <div className="mb-8 text-center">
             <div className="w-16 h-16 bg-white rounded-2xl shadow-xl shadow-purple-100 flex items-center justify-center mx-auto mb-6 transform -rotate-3 border border-gray-100">
-              <Wallet className="text-[#8B5CF6]" size={32} />
+              <Wallet className="text-[#152467]" size={32} />
             </div>
             <h1 className="text-4xl font-black text-gray-900 tracking-tighter mb-2">Top Up Wallet</h1>
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">Securely add funds to your account</p>
@@ -68,7 +68,7 @@ export default function WalletTopUp() {
                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest pl-2">Amount to Add</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
-                    <DollarSign className="text-gray-400 group-focus-within:text-[#8B5CF6] transition-colors" size={20} />
+                    <DollarSign className="text-gray-400 group-focus-within:text-[#152467] transition-colors" size={20} />
                   </div>
                   <input
                     id="topup-amount"
@@ -77,7 +77,7 @@ export default function WalletTopUp() {
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full h-16 pl-14 pr-6 bg-gray-50/50 border-2 border-transparent hover:bg-white focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-2xl font-black text-gray-900 placeholder:text-gray-300 outline-none transition-all shadow-inner"
+                    className="w-full h-16 pl-14 pr-6 bg-gray-50/50 border-2 border-transparent hover:bg-white focus:bg-white focus:border-[#152467]/30 rounded-2xl text-2xl font-black text-gray-900 placeholder:text-gray-300 outline-none transition-all shadow-inner"
                     required
                   />
                 </div>

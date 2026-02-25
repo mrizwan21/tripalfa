@@ -24,9 +24,9 @@ console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
 // MIDDLEWARE
 // ============================================================================
 
-// app.use(helmet());
-// app.use(cors());
-// app.use(morgan('combined'));
+app.use(helmet());
+app.use(cors());
+app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -53,12 +53,14 @@ app.get('/ready', async (req, res) => {
 
 import walletRoutes from './routes/walletRoutes.js';
 import kiwiRoutes from './routes/kiwiRoutes.js';
+import transactionHistoryRoute from './routes/transactionHistoryRoute.js';
 
 app.use(transferRoute);
 app.use(customerPurchaseRoute);
 app.use(settlementRoute);
 app.use('/api/v1/ledger', walletRoutes);
 app.use('/api/kiwi', kiwiRoutes);
+app.use('/api/wallet', transactionHistoryRoute);
 
 // ============================================================================
 // ERROR HANDLING

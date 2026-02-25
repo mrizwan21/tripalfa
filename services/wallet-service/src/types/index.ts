@@ -1,6 +1,8 @@
 // src/types/index.ts
 // Type definitions for wallet service
 
+import type { MonetaryValue } from './wallet.js';
+
 export interface User {
   id: string;
   name: string;
@@ -14,7 +16,8 @@ export interface Wallet {
   id: string;
   userId: string;
   currency: string;
-  balance: number;
+  balance: MonetaryValue; // Decimal from Prisma - use toNumber() helper for calculations
+  reservedBalance: MonetaryValue; // Decimal from Prisma - required in schema
   status: 'active' | 'frozen' | 'closed';
   createdAt: Date;
   updatedAt: Date;

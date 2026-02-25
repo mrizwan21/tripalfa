@@ -1,9 +1,11 @@
 /**
  * Duffel Flight Booking API Service
  * Complete integration for Offer Requests, Offers, Orders, and Payments
+ * 
+ * All requests go through the centralized API layer
  */
 
-import { API_BASE_URL } from '../lib/constants';
+import { api } from '../lib/api';
 
 // Do not use provider secrets in frontend; all calls must go via backend
 const API_ENV = import.meta.env.VITE_DUFFEL_ENV || 'test';
@@ -111,30 +113,17 @@ export interface SelectedSeat {
  */
 export async function createOfferRequest(params: OfferRequestParams): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/route`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        provider: 'duffel',
-        env: API_ENV,
-        data: {
-          slices: params.slices,
-          passengers: params.passengers,
-          cabin_class: params.cabin_class || 'economy',
-          return_available_services: true,
-        },
-      }),
-      credentials: 'include'
+    const result = await api.post<any>('/route', {
+      provider: 'duffel',
+      env: API_ENV,
+      data: {
+        slices: params.slices,
+        passengers: params.passengers,
+        cabin_class: params.cabin_class || 'economy',
+        return_available_services: true,
+      },
     });
-
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text;
-      try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to create offer request');
-    }
-
-    return await response.json();
+    return result;
   } catch (error) {
     console.error('[Duffel] Offer request error:', (error as any)?.message);
     throw error;
@@ -146,14 +135,8 @@ export async function createOfferRequest(params: OfferRequestParams): Promise<an
  */
 export async function getOfferDetails(offerId: string): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/offers/${offerId}`, { credentials: 'include' });
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text;
-      try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to fetch offer');
-    }
-    return await response.json();
+    const result = await api.get<any>(`/offers/${offerId}`);
+    return result;
   } catch (error) {
     console.error('[Duffel] Offer details error:', (error as any)?.message);
     throw error;
@@ -192,28 +175,16 @@ export async function createFlightOrder(params: CreateOrderParams): Promise<any>
   try {
     console.log('[Duffel] Creating flight order:', params);
 
-    const response = await fetch(`${API_BASE_URL}/bookings/flight/order`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        provider: 'duffel',
-        selectedOffers: params.selectedOffers,
-        passengers: params.passengers,
-        orderType: params.orderType || 'hold',
-        paymentMethod: params.paymentMethod || { type: 'balance' },
-        env: API_ENV,
-      }),
-      credentials: 'include'
+    const result = await api.post<any>('/bookings/flight/order', {
+      provider: 'duffel',
+      selectedOffers: params.selectedOffers,
+      passengers: params.passengers,
+      orderType: params.orderType || 'hold',
+      paymentMethod: params.paymentMethod || { type: 'balance' },
+      env: API_ENV,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text; try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to create order');
-    }
-
-    const data = await response.json();
-    return data;
+    return result;
   } catch (error) {
     console.error('[Duffel] Create order error:', error);
     throw error;
@@ -227,20 +198,12 @@ export async function getFlightOrder(orderId: string): Promise<any> {
   try {
     console.log('[Duffel] Fetching order:', orderId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/bookings/flight/order/${orderId}?provider=duffel&env=${API_ENV}`,
-      { credentials: 'include' }
+    const result = await api.get<any>(
+      `/bookings/flight/order/${orderId}?provider=duffel&env=${API_ENV}`
     );
 
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text; try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to fetch order');
-    }
-
-    const data = await response.json();
-    console.log('[Duffel] Order details:', data);
-    return data;
+    console.log('[Duffel] Order details:', result);
+    return result;
   } catch (error) {
     console.error('[Duffel] Get order error:', error);
     throw error;
@@ -254,22 +217,14 @@ export async function updateFlightOrder(orderId: string, updateData: any): Promi
   try {
     console.log('[Duffel] Updating order:', orderId, updateData);
 
-    const response = await fetch(`${API_BASE_URL}/bookings/flight/order/${orderId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: 'duffel', env: API_ENV, data: updateData }),
-      credentials: 'include'
+    const result = await api.patch<any>(`/bookings/flight/order/${orderId}`, {
+      provider: 'duffel',
+      env: API_ENV,
+      data: updateData,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text; try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to update order');
-    }
-
-    const data = await response.json();
-    console.log('[Duffel] Order updated:', data);
-    return data;
+    console.log('[Duffel] Order updated:', result);
+    return result;
   } catch (error) {
     console.error('[Duffel] Update order error:', error);
     throw error;
@@ -287,22 +242,15 @@ export async function createPaymentIntent(params: PaymentIntentParams): Promise<
   try {
     console.log('[Duffel] Creating payment intent:', params);
 
-    const response = await fetch(`${API_BASE_URL}/bookings/flight/payment-intent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: 'duffel', order_id: params.order_id, amount: params.amount, env: API_ENV }),
-      credentials: 'include'
+    const result = await api.post<any>('/bookings/flight/payment-intent', {
+      provider: 'duffel',
+      order_id: params.order_id,
+      amount: params.amount,
+      env: API_ENV,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text; try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to create payment intent');
-    }
-
-    const data = await response.json();
-    console.log('[Duffel] Payment intent created:', data);
-    return data;
+    console.log('[Duffel] Payment intent created:', result);
+    return result;
   } catch (error) {
     console.error('[Duffel] Payment intent error:', error);
     throw error;
@@ -320,22 +268,13 @@ export async function confirmFlightOrder(orderId: string): Promise<any> {
   try {
     console.log('[Duffel] Confirming order:', orderId);
 
-    const response = await fetch(`${API_BASE_URL}/bookings/flight/order/${orderId}/confirm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: 'duffel', env: API_ENV }),
-      credentials: 'include'
+    const result = await api.post<any>(`/bookings/flight/order/${orderId}/confirm`, {
+      provider: 'duffel',
+      env: API_ENV,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      let msg = text; try { const j = JSON.parse(text); msg = j.message || j.error || text; } catch {}
-      throw new Error(msg || 'Failed to confirm order');
-    }
-
-    const data = await response.json();
-    console.log('[Duffel] Order confirmed:', data);
-    return data;
+    console.log('[Duffel] Order confirmed:', result);
+    return result;
   } catch (error) {
     console.error('[Duffel] Confirm order error:', error);
     throw error;
@@ -456,9 +395,7 @@ export async function handlePaymentCallback(orderId: string): Promise<any> {
  */
 export async function getPaymentMethods(provider: string = 'duffel', environment: string = 'test'): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/bookings/flight/payment-methods`, { method: 'GET', credentials: 'include' });
-    if (!response.ok) throw new Error(`Failed to fetch payment methods: ${response.statusText}`);
-    const result = await response.json();
+    const result = await api.get<any>('/bookings/flight/payment-methods');
     return result.paymentMethods || result.data?.payment_methods || [];
   } catch (error) {
     console.error('[Duffel] Get payment methods error:', (error as any)?.message);
@@ -478,19 +415,11 @@ export async function getOrderPaymentMethods(
   try {
     console.log(`[Duffel] Fetching payment methods for order ${orderId}...`);
 
-    const response = await fetch(
-      `${API_BASE_URL}/bookings/flight/order/${orderId}/payment-methods?provider=${provider}&env=${environment}`,
-      { method: 'GET', credentials: 'include' }
+    const result = await api.get<any>(
+      `/bookings/flight/order/${orderId}/payment-methods?provider=${provider}&env=${environment}`
     );
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to fetch order payment methods: ${response.statusText} ${text || ''}`);
-    }
-
-    const result = await response.json();
     console.log(`[Duffel] Order payment methods retrieved for ${orderId}:`, result);
-
     return result.paymentMethods || result.data?.available_payment_methods || [];
   } catch (error) {
     console.error('[Duffel] Get order payment methods error:', error);
@@ -514,21 +443,17 @@ export async function confirmPayment(params: {
   try {
     const { paymentIntentId, orderId, amount, currency = 'USD', paymentMethodId, provider = 'duffel', environment = 'test' } = params;
 
-    const paymentData = { provider, env: environment, payment_intent_id: paymentIntentId, order_id: orderId, payment_method_id: paymentMethodId, ...(amount && { amount }), ...(currency && { currency }) };
+    const paymentData = { 
+      provider, 
+      env: environment, 
+      payment_intent_id: paymentIntentId, 
+      order_id: orderId, 
+      payment_method_id: paymentMethodId, 
+      ...(amount && { amount }), 
+      ...(currency && { currency }) 
+    };
 
-    const response = await fetch(`${API_BASE_URL}/bookings/flight/payment-confirm`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(paymentData),
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to confirm payment: ${response.statusText} ${text || ''}`);
-    }
-
-    const result = await response.json();
+    const result = await api.post<any>('/bookings/flight/payment-confirm', paymentData);
     return result.paymentResult || result.data;
   } catch (error) {
     console.error('[Duffel] Confirm payment error:', (error as any)?.message);
@@ -548,19 +473,11 @@ export async function getPayment(
   try {
     console.log(`[Duffel] Fetching payment details for ${paymentId}...`);
 
-    const response = await fetch(
-      `${API_BASE_URL}/bookings/flight/payment/${paymentId}?provider=${provider}&env=${environment}`,
-      { method: 'GET', credentials: 'include' }
+    const result = await api.get<any>(
+      `/bookings/flight/payment/${paymentId}?provider=${provider}&env=${environment}`
     );
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Failed to fetch payment details: ${response.statusText} ${text || ''}`);
-    }
-
-    const result = await response.json();
     console.log(`[Duffel] Payment details retrieved for ${paymentId}:`, result);
-
     return result.payment || result.data;
   } catch (error) {
     console.error('[Duffel] Get payment error:', error);

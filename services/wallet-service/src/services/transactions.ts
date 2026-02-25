@@ -9,11 +9,12 @@ export async function insertTransactionRecord(opts: TransactionInsertOptions): P
     type,
     flow = null,
     amount,
+    balance,
     currency,
     payerId,
     payeeId,
     bookingId,
-    invoiceId,
+    paymentId,
     idempotencyKey,
     status = 'completed',
   } = opts;
@@ -24,11 +25,12 @@ export async function insertTransactionRecord(opts: TransactionInsertOptions): P
       type,
       flow,
       amount,
+      balance,
       currency,
       payerId,
       payeeId,
       bookingId,
-      invoiceId,
+      paymentId,
       idempotencyKey,
       status,
     },
@@ -37,26 +39,4 @@ export async function insertTransactionRecord(opts: TransactionInsertOptions): P
   return transaction;
 }
 
-export async function insertLedgerEntries(
-  transactionId: string,
-  entries: Array<{
-    account: string;
-    debit?: number;
-    credit?: number;
-    currency: string;
-    description?: string;
-  }>
-): Promise<void> {
-  await prisma.walletLedger.createMany({
-    data: entries.map((entry) => ({
-      transactionId,
-      account: entry.account,
-      debit: entry.debit || 0,
-      credit: entry.credit || 0,
-      currency: entry.currency,
-      description: entry.description,
-    })),
-  });
-}
-
-export default { insertTransactionRecord, insertLedgerEntries };
+export default { insertTransactionRecord };

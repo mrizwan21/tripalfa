@@ -32,7 +32,7 @@ export const FareRulesPopup = ({ isOpen, onClose, flight }: FareRulesPopupProps)
                                 key={index}
                                 onClick={() => setActiveTab(index)}
                                 className={`px-5 py-2.5 rounded-t-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === index
-                                    ? 'bg-white border-x border-t border-purple-500/20 text-[#8B5CF6] shadow-[0_-4px_20px_-10px_rgba(139,92,246,0.3)]'
+                                    ? 'bg-white border-x border-t border-purple-500/20 text-[#152467] shadow-[0_-4px_20px_-10px_rgba(139,92,246,0.3)]'
                                     : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
@@ -48,7 +48,7 @@ export const FareRulesPopup = ({ isOpen, onClose, flight }: FareRulesPopupProps)
                 {/* Content */}
                 <div className="p-6 overflow-y-auto space-y-6">
                     <div className="text-center space-y-1">
-                        <h2 className="text-lg font-black text-gray-900">Fare rules for <span className="text-[#8B5CF6]">{segments[activeTab]?.originCity || segments[activeTab]?.origin}</span> to <span className="text-[#8B5CF6]">{segments[activeTab]?.destinationCity || segments[activeTab]?.destination}</span></h2>
+                        <h2 className="text-lg font-black text-gray-900">Fare rules for <span className="text-[#152467]">{segments[activeTab]?.originCity || segments[activeTab]?.origin}</span> to <span className="text-[#152467]">{segments[activeTab]?.destinationCity || segments[activeTab]?.destination}</span></h2>
                         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{flight?.airline} Leg {activeTab + 1}</p>
                     </div>
 

@@ -167,7 +167,7 @@ export default function HotelAddons() {
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="bg-[#FFD700] px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-yellow-200/50 text-black">Recommended</div>
+                                        <div className="bg-[#EC5C4C] px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-yellow-200/50 text-black">Recommended</div>
                                     </div>
 
                                     <div className="flex flex-wrap items-center justify-between gap-8 pt-6 border-t border-dashed border-gray-100">
@@ -355,9 +355,9 @@ export default function HotelAddons() {
 
                             {/* Loyalty Program Input (New Request) */}
                             <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-gray-50 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-20 h-20 bg-[#FFD700]/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-[#EC5C4C]/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
                                 <h4 className="text-xs font-black text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <Diamond size={14} className="text-[#FFD700] fill-current" />
+                                    <Diamond size={14} className="text-[#EC5C4C] fill-current" />
                                     Loyalty Program
                                 </h4>
                                 <div className="space-y-4">

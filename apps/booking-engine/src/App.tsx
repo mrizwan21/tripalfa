@@ -8,6 +8,7 @@ const FlightSearch = lazy(() => import("./pages/FlightSearch"));
 const FlightList = lazy(() => import("./pages/FlightList"));
 const FlightDetail = lazy(() => import("./pages/FlightDetail"));
 const FlightAddons = lazy(() => import("./pages/FlightAddons"));
+const DuffelFlightsPage = lazy(() => import("./pages/DuffelFlightsPage"));
 const SeatSelection = lazy(() => import("./pages/SeatSelection"));
 const PassengerDetails = lazy(() => import("./pages/PassengerDetails"));
 const AddOns = lazy(() => import("./pages/AddOns"));
@@ -37,11 +38,6 @@ const NotificationPreferencesPage = lazy(() => import("./pages/NotificationPrefe
 const Alerts = lazy(() => import("./pages/Alerts"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const Home = lazy(() => import("./pages/Home"));
-const TranslationTest = lazy(() => import("./pages/TranslationTest"));
-const AdminTranslations = lazy(() => import("./pages/AdminTranslations"));
-const AdminBookingCards = lazy(() => import("./pages/AdminBookingCards"));
-const FlightSearchLoadingDemo = lazy(() => import("./pages/FlightSearchLoadingDemo"));
-const HotelSearchLoadingDemo = lazy(() => import("./pages/HotelSearchLoadingDemo"));
 
 const LoadingFallback = () => (
   <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -89,15 +85,6 @@ function App() {
             {/* Help */}
             <Route path="help" element={<HelpCenter />} />
 
-            {/* Translation Test */}
-            <Route path="translation-test" element={<TranslationTest />} />
-
-            {/* Admin Translations */}
-            <Route path="admin-translations" element={<AdminTranslations />} />
-
-            {/* Admin Booking Cards */}
-            <Route path="admin/bookings" element={<AdminBookingCards />} />
-
             {/* Catch-all for layout routes */}
             <Route path="*" element={<NotFound />} />
           </Route>
@@ -120,6 +107,7 @@ function App() {
             <Route path="list" element={<FlightList />} />
             <Route path="detail" element={<FlightDetail />} />
             <Route path="addons" element={<FlightAddons />} />
+            <Route path="duffel" element={<DuffelFlightsPage />} />
           </Route>
 
           {/* Hotel Routes - Standalone Layout */}
@@ -131,9 +119,6 @@ function App() {
             <Route path="addons" element={<HotelAddons />} />
           </Route>
 
-          {/* Demo Routes */}
-          <Route path="/demo/flight-search-loading" element={<FlightSearchLoadingDemo />} />
-          <Route path="/demo/hotel-search-loading" element={<HotelSearchLoadingDemo />} />
 
           {/* Global Catch-all */}
           <Route path="*" element={<NotFound />} />

@@ -111,7 +111,7 @@ export function ModifySearchPanel() {
                     <select
                         value={adults}
                         onChange={(e) => setAdults(e.target.value)}
-                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#8B5CF6]"
+                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#152467]"
                     >
                         {[1, 2, 3, 4, 5, 6].map(num => (
                             <option key={num} value={num}>{num} Traveler{num > 1 ? 's' : ''}</option>
@@ -121,7 +121,7 @@ export function ModifySearchPanel() {
                     <select
                         value={cabinClass}
                         onChange={(e) => setCabinClass(e.target.value)}
-                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#8B5CF6]"
+                        className="h-12 px-4 bg-gray-50 border border-transparent rounded-xl text-sm font-medium text-gray-900 outline-none focus:border-[#152467]"
                     >
                         <option value="Economy">Economy</option>
                         <option value="Premium Economy">Premium Eco</option>
@@ -133,7 +133,7 @@ export function ModifySearchPanel() {
                 {/* Search Button */}
                 <button
                     onClick={handleSearch}
-                    className="w-full lg:w-auto h-12 px-8 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-bold text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all"
+                    className="w-full lg:w-auto h-12 px-8 bg-[#152467] hover:bg-[#0A1C50] text-white font-bold text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100 flex items-center justify-center gap-2 transition-all"
                 >
                     <Search size={16} />
                     <span>Update</span>

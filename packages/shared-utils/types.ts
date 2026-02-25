@@ -1,7 +1,8 @@
 // @ts-ignore
 import * as React from 'react';
 
-export * from '@tripalfa/shared-types';
+// Note: @tripalfa/shared-types is not available, types are defined locally below
+// export * from '@tripalfa/shared-types';
 
 // Export types from the types directory
 // export * from '@tripalfa/shared-types/types/company'; // Covered by main export

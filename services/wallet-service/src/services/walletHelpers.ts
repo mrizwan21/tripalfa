@@ -10,12 +10,20 @@ import { insertTransactionRecord } from './transactions.js';
 export { insertTransactionRecord };
 
 export const ensureWalletExists = walletOps.ensureWalletExists;
-export const checkIdempotency = walletOps.checkIdempotency;
+// checkIdempotency - REMOVED: Deprecated due to race condition.
+// Use idempotency checks inside transactions instead.
+// See walletService.creditWallet(), processCustomerDebit(), or processAgencyCredit() for examples.
 export const lockWallet = walletOps.lockWallet;
 
 // Wrapper functions that ignore the client parameter (Prisma handles transactions internally)
-export async function insertLedgerEntries(_client: any, txId: string, entries: Array<any>) {
-  return ledgerOps.insertLedgerEntries(txId, entries);
+export async function insertLedgerEntries(
+  _client: any, 
+  walletId: string, 
+  txId: string, 
+  currentBalance: any, 
+  entries: Array<any>
+) {
+  return ledgerOps.insertLedgerEntries(walletId, txId, currentBalance, entries);
 }
 
 export async function reserveCommissionAndLedger(
@@ -32,13 +40,15 @@ export async function reserveCommissionAndLedger(
 
 export async function createTransferLedger(
   _client: any, 
+  walletId: string, 
   txId: string, 
+  currentBalance: any, 
   currency: string, 
   fromAccount: string, 
   toAccount: string, 
   amount: number
 ) {
-  return ledgerOps.createTransferLedger(txId, currency, fromAccount, toAccount, amount);
+  return ledgerOps.createTransferLedger(walletId, txId, currentBalance, currency, fromAccount, toAccount, amount);
 }
 
 export const processCustomerDebit = walletOps.processCustomerDebit;

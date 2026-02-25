@@ -1,9 +1,18 @@
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+// Load environment variables from root .env file BEFORE any other imports
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const rootDir = resolve(__dirname, '../../..')
+dotenv.config({ path: resolve(rootDir, '.env') })
+
+// Now import other modules that depend on environment variables
 import express, { Express, Request, Response } from 'express'
 import cors from 'cors'
-import dotenv from 'dotenv'
 import bookingsRoutes from './routes/bookings.js'
 import documentsRoutes from './routes/documents.js'
-// import bookingsV2Routes from './routes/bookingsV2.js'
 import orderManagementRoutes from './routes/order-management.js'
 import inventoryRoutes from './routes/inventory.js'
 import auditRoutes from './routes/audit.js'
@@ -12,7 +21,9 @@ import liteApiRoutes from './routes/liteapi.js'
 import airlineCreditsRoutes from './routes/airlineCredits.js'
 import webhookRoutes from './routes/webhooks.js'
 import duffelRoutes from './routes/duffel.js'
-import staticDataRoutes from './routes/static-data.js'
+import flightBookingRoutes from './routes/flight-booking.js'
+import hotelBookingRoutes from './routes/hotel-booking.js'
+import hotelRoutes from './routes/hotels.js'
 
 // Duffel API configuration
 const DUFFEL_API_URL = process.env.DUFFEL_API_URL || 'https://api.duffel.com';
@@ -37,8 +48,6 @@ async function duffelApi<T>(endpoint: string, method: string = 'GET', body?: obj
   }
   return response.json();
 }
-
-dotenv.config()
 
 const app: Express = express()
 const PORT = process.env.BOOKING_SERVICE_PORT || 3001
@@ -121,8 +130,8 @@ app.post('/bookings/flight/order', async (req: Request, res: Response) => {
           gender: p.gender,
           type: p.type || 'adult',
         })),
-        payment: paymentMethod?.type === 'balance' 
-          ? { type: 'balance' } 
+        payment: paymentMethod?.type === 'balance'
+          ? { type: 'balance' }
           : { type: 'arc_bsp_cash' },
       },
     });
@@ -140,9 +149,24 @@ app.post('/bookings/flight/order', async (req: Request, res: Response) => {
 
 app.post('/search/flights', async (req: Request, res: Response) => {
   try {
-    const { slices, passengers, cabin_class } = req.body;
+    const { 
+      slices, 
+      passengers, 
+      cabin_class,
+      // Pagination parameters
+      limit = 20,
+      offset = 0,
+      // Filter parameters
+      maxPrice,
+      stops,
+      airlines,
+      departureTime,
+      // Sort parameters
+      sortBy,
+      sortOrder
+    } = req.body;
 
-    console.log('[Search] Flight search:', { slices, passengers, cabin_class });
+    console.log('[Search] Flight search:', { slices, passengers, cabin_class, limit, offset });
 
     const duffelResponse = await duffelApi<any>('/air/offer_requests', 'POST', {
       data: {
@@ -153,10 +177,10 @@ app.post('/search/flights', async (req: Request, res: Response) => {
       },
     });
 
-    const offers = duffelResponse.data?.offers || [];
+    let offers = duffelResponse.data?.offers || [];
 
     // Transform offers for frontend
-    const transformedOffers = offers.map((offer: any) => {
+    let transformedOffers = offers.map((offer: any) => {
       const firstSlice = offer.slices?.[0];
       const firstSegment = firstSlice?.segments?.[0];
       const lastSegment = firstSlice?.segments?.[firstSlice.segments.length - 1];
@@ -165,6 +189,7 @@ app.post('/search/flights', async (req: Request, res: Response) => {
         id: offer.id,
         offerId: offer.id,
         airline: firstSegment?.operating_carrier?.name || firstSegment?.marketing_carrier?.name || 'Unknown',
+        airlineCode: firstSegment?.marketing_carrier?.iata_code || '',
         flightNumber: firstSegment?.marketing_carrier_flight_number || '',
         carrierCode: firstSegment?.marketing_carrier?.iata_code || '',
         departureTime: firstSegment?.departing_at || '',
@@ -177,6 +202,13 @@ app.post('/search/flights', async (req: Request, res: Response) => {
         currency: offer.total_currency || 'USD',
         cabin: firstSegment?.passengers?.[0]?.cabin_class || cabin_class || 'economy',
         refundable: offer.conditions?.refund_before_departure?.allowed || false,
+        changeable: offer.conditions?.change_before_departure?.allowed || false,
+        refundPenalty: offer.conditions?.refund_before_departure?.penalty_amount 
+          ? `${offer.conditions.refund_before_departure.penalty_currency || 'USD'} ${offer.conditions.refund_before_departure.penalty_amount}`
+          : null,
+        changePenalty: offer.conditions?.change_before_departure?.penalty_amount
+          ? `${offer.conditions.change_before_departure.penalty_currency || 'USD'} ${offer.conditions.change_before_departure.penalty_amount}`
+          : null,
         segments: firstSlice?.segments?.map((seg: any) => ({
           origin: seg.origin?.iata_code,
           destination: seg.destination?.iata_code,
@@ -192,12 +224,84 @@ app.post('/search/flights', async (req: Request, res: Response) => {
       };
     });
 
-    res.json(transformedOffers);
+    // Apply filters
+    if (maxPrice !== undefined) {
+      transformedOffers = transformedOffers.filter((o: any) => o.amount <= Number(maxPrice));
+    }
+    if (stops !== undefined) {
+      const stopFilter = Number(stops);
+      transformedOffers = transformedOffers.filter((o: any) => o.stops === stopFilter);
+    }
+    if (airlines && Array.isArray(airlines) && airlines.length > 0) {
+      transformedOffers = transformedOffers.filter((o: any) => 
+        airlines.some((a: string) => 
+          o.airlineCode?.toLowerCase() === a.toLowerCase() ||
+          o.airline?.toLowerCase().includes(a.toLowerCase())
+        )
+      );
+    }
+
+    // Apply sorting
+    if (sortBy) {
+      const isAsc = sortOrder === 'asc';
+      
+      transformedOffers.sort((a: any, b: any) => {
+        let aVal: any, bVal: any;
+        
+        switch (sortBy) {
+          case 'price':
+            aVal = a.amount;
+            bVal = b.amount;
+            break;
+          case 'duration':
+            // Parse duration (e.g., "PT2H30M" -> minutes)
+            aVal = parseDuration(a.duration);
+            bVal = parseDuration(b.duration);
+            break;
+          case 'departure':
+            aVal = new Date(a.departureTime).getTime();
+            bVal = new Date(b.departureTime).getTime();
+            break;
+          case 'airline':
+            aVal = a.airline || '';
+            bVal = b.airline || '';
+            return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          default:
+            return 0;
+        }
+        
+        return isAsc ? aVal - bVal : bVal - aVal;
+      });
+    }
+
+    const total = transformedOffers.length;
+
+    // Apply pagination
+    if (offset !== undefined && limit !== undefined) {
+      transformedOffers = transformedOffers.slice(Number(offset), Number(offset) + Number(limit));
+    }
+
+    res.json({ 
+      results: transformedOffers, 
+      total,
+      offer_request_id: duffelResponse.data?.id,
+      expires_at: duffelResponse.data?.expires_at
+    });
   } catch (error: any) {
     console.error('[Search] Flight search error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
+
+// Helper function to parse ISO 8601 duration to minutes
+function parseDuration(duration: string): number {
+  if (!duration) return 0;
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+  if (!match) return 0;
+  const hours = parseInt(match[1] || '0', 10);
+  const minutes = parseInt(match[2] || '0', 10);
+  return hours * 60 + minutes;
+}
 
 // API Routes
 app.use('/api/bookings', bookingsRoutes)
@@ -226,10 +330,14 @@ app.use('/api/webhooks', webhookRoutes)
 // Duffel Flight API Routes (Offers, Orders, Cancellations, Changes)
 app.use('/api/duffel', duffelRoutes)
 
-// Static Data Routes (Hotel Amenities, Room Types, Board Types from PostgreSQL)
-// Mounted at BOTH /api/static-data AND / for frontend proxy compatibility
-app.use('/api/static-data', staticDataRoutes)
-app.use('/', staticDataRoutes)
+// Flight Booking Orchestrator Routes (E2E booking flow)
+app.use('/api/flight-booking', flightBookingRoutes)
+
+// Hotel Booking Orchestrator Routes (E2E hotel booking flow)
+app.use('/api/hotel-booking', hotelBookingRoutes)
+
+// Hotel Routes (Hybrid: Static DB + Live Rates from LiteAPI)
+app.use('/api/hotels', hotelRoutes)
 
 // 404 Handler
 app.use((req, res) => {

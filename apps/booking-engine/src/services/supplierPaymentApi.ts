@@ -2,11 +2,11 @@
  * Supplier Payment API Service
  * Handles payment processing through the booking system's internal payment API
  * Called after payment confirmation from Duffel
+ * 
+ * Routes through centralized API Manager for consistency
  */
 
-import { API_BASE_URL } from '../lib/constants';
-
-const API_KEY = import.meta.env.VITE_API_KEY || '';
+import { api } from '../lib/api';
 
 /**
  * Process payment through the supplier/booking system
@@ -29,28 +29,11 @@ export async function processSupplierPayment(
       paymentMethod
     });
 
-    const response = await fetch(
-      `${API_BASE_URL}/bookings/${bookingId}/payment`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
-        },
-        body: JSON.stringify({
-          amount,
-          paymentMethod
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      `/bookings/${bookingId}/payment`,
+      { amount, paymentMethod }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || `Failed to process supplier payment: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[Supplier] Payment processed successfully:', result);
 
     return {

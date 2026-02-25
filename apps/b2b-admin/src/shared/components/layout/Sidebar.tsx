@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@tripalfa/shared-utils/utils";
 import {
@@ -89,17 +88,17 @@ export function Sidebar() {
       items: [
         { to: "/wallet", label: "Wallet & Credits", icon: Wallet, badge: 3 },
         { to: "/finance", label: "Transactions", icon: CreditCard },
-        { 
-          to: "/finance/currencies", 
-          label: "Currency Management", 
+        {
+          to: "/finance/currencies",
+          label: "Currency Management",
           icon: DollarSign,
           children: [
             { label: "Currencies", to: "/finance/currencies" },
           ],
         },
-        { 
-          to: "/finance/reports/b2b", 
-          label: "Reports", 
+        {
+          to: "/finance/reports/b2b",
+          label: "Reports",
           icon: BarChart3,
           children: [
             { label: "B2B Reports", to: "/finance/reports/b2b" },
@@ -124,20 +123,10 @@ export function Sidebar() {
       <div className="flex h-20 items-center px-6 border-b border-cyan-500/10 relative overflow-hidden">
         {/* Animated background glow */}
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-transparent" />
-        
+
         <Link to="/" className="flex items-center gap-3 group relative z-10">
-          <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 shadow-lg relative overflow-hidden"
-          >
-            {/* Inner glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent" />
-            <Car className="h-6 w-6 text-white relative z-10" />
-          </motion.div>
+          <img src="/logo.png" alt="TripAlfa Logo" className="h-8 md:h-10 object-contain" />
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-white tracking-tight">
-              <span className="gradient-text">TripAlfa</span>
-            </span>
             <span className="text-[10px] text-cyan-400/70 uppercase tracking-widest font-medium flex items-center gap-1">
               <Zap className="h-3 w-3" />
               Admin Portal
@@ -316,32 +305,11 @@ export function Sidebar() {
 
       {/* Bottom Section */}
       <div className="p-4 border-t border-cyan-500/10 space-y-3">
-        {/* Settings Link */}
-        <Link
-          to="/settings"
-          className={cn(
-            "flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300",
-            location.pathname === "/settings"
-              ? "bg-gradient-to-r from-cyan-500/10 to-purple-500/10 text-white border border-cyan-500/20"
-              : "text-slate-400 hover:bg-cyan-500/5 hover:text-cyan-300 border border-transparent"
-          )}
-        >
-          <div className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-lg transition-all duration-300",
-            location.pathname === "/settings"
-              ? "bg-gradient-to-br from-slate-600 to-slate-700 text-white"
-              : "bg-slate-800/50 text-slate-400"
-          )}>
-            <Settings className="h-4.5 w-4.5" />
-          </div>
-          <span>Settings</span>
-        </Link>
-
         {/* User Profile Card */}
         <div className="rounded-xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-4 border border-cyan-500/10 relative overflow-hidden">
           {/* Decorative gradient */}
           <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 rounded-full blur-2xl" />
-          
+
           <div className="flex items-center gap-3 relative z-10">
             <div className="relative">
               <div className="h-11 w-11 rounded-full bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-bold shadow-lg neon-glow-cyan">

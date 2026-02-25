@@ -4,7 +4,8 @@
  */
 
 import { createLogger, Logger } from '@tripalfa/shared-utils/logger';
-import { Notification, NotificationChannel, ChannelError, EmailConfig, SMSConfig, PushConfig } from '../types';
+import { Notification, NotificationChannel, ChannelError, EmailConfig, SMSConfig, PushConfig, BrevoEmailConfig, isBrevoConfig } from '../types';
+import { TransactionalEmailsApi, SendSmtpEmail, SendSmtpEmailSender, SendSmtpEmailReplyTo } from '@getbrevo/brevo';
 
 /**
  * Abstract base class for notification channels
@@ -45,20 +46,34 @@ export abstract class BaseChannel implements NotificationChannel {
 }
 
 /**
- * Email Channel Implementation
+ * Email Channel Implementation with Brevo Integration
+ * Supports both Brevo API and legacy SMTP configurations
  */
 export class EmailChannel extends BaseChannel {
   protected name = 'email';
   private config: EmailConfig;
   private setupSuccess = false;
+  private brevoApi: TransactionalEmailsApi | null = null;
 
   constructor(config: EmailConfig, logger?: Logger) {
     super(logger);
     this.config = config;
     this.setupSuccess = this.validateConfig();
+    
+    // Initialize Brevo API if using Brevo config
+    if (isBrevoConfig(config)) {
+      this.brevoApi = new TransactionalEmailsApi();
+      this.brevoApi.setApiKey(0, config.apiKey);
+    }
   }
 
   validateConfig(): boolean {
+    // Validate Brevo config
+    if (isBrevoConfig(this.config)) {
+      return !!(this.config.apiKey && this.config.from);
+    }
+    
+    // Validate SMTP config
     return !!(
       this.config.from &&
       this.config.host &&
@@ -68,30 +83,147 @@ export class EmailChannel extends BaseChannel {
     );
   }
 
+  /**
+   * Send email using Brevo API
+   */
+  private async sendViaBrevo(notification: Notification): Promise<{ success: boolean; messageId?: string }> {
+    if (!this.brevoApi) {
+      throw new ChannelError('Brevo API not initialized', 'email');
+    }
+
+    const brevoConfig = this.config as BrevoEmailConfig;
+    
+    const sender: SendSmtpEmailSender = {
+      email: brevoConfig.from,
+      name: brevoConfig.fromName || 'TripAlfa',
+    };
+
+    const replyTo = brevoConfig.replyTo ? {
+      email: brevoConfig.replyTo,
+      name: brevoConfig.replyToName || 'TripAlfa Support',
+    } : undefined;
+
+    const sendSmtpEmail: SendSmtpEmail = {
+      sender,
+      to: [{ email: notification.userId, name: notification.data?.recipientName }],
+      subject: notification.title,
+      htmlContent: notification.message,
+      textContent: notification.data?.textContent || this.stripHtml(notification.message),
+      ...(replyTo && { replyTo }),
+      headers: {
+        'X-Notification-Id': notification.id,
+      },
+      tags: [notification.type, `priority-${notification.priority}`],
+    };
+
+    try {
+      const response = await this.brevoApi.sendTransacEmail(sendSmtpEmail);
+      
+      return {
+        success: true,
+        messageId: response.body?.messageId?.toString(),
+      };
+    } catch (error: any) {
+      this.logger.error({ error: error.message, notificationId: notification.id }, 'Brevo API error');
+      throw error;
+    }
+  }
+
+  /**
+   * Send email using SMTP (fallback/legacy)
+   */
+  private async sendViaSMTP(notification: Notification): Promise<{ success: boolean; messageId?: string }> {
+    // SMTP implementation would go here
+    // For now, we log and simulate
+    this.logger.warn(
+      { notificationId: notification.id },
+      'SMTP email sending not fully implemented. Consider migrating to Brevo.'
+    );
+    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    
+    return {
+      success: true,
+      messageId: `smtp-${Date.now()}`,
+    };
+  }
+
+  /**
+   * Strip HTML tags from content for plain text version
+   */
+  private stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  }
+
   async send(notification: Notification): Promise<boolean> {
     try {
       if (!this.setupSuccess) {
         throw new ChannelError('Email channel not properly configured', 'email');
       }
 
-      // Mock email sending - replace with actual nodemailer implementation
       this.logger.debug(
         {
           notificationId: notification.id,
           recipient: notification.userId,
           subject: notification.title,
+          provider: isBrevoConfig(this.config) ? 'brevo' : 'smtp',
         },
         'Sending email notification'
       );
 
-      // Simulate email sending
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      let result: { success: boolean; messageId?: string };
 
-      this.logSend(notification, true);
-      return true;
+      if (isBrevoConfig(this.config)) {
+        result = await this.sendViaBrevo(notification);
+      } else {
+        result = await this.sendViaSMTP(notification);
+      }
+
+      if (result.success) {
+        this.logSend(notification, true);
+        this.logger.info(
+          { notificationId: notification.id, messageId: result.messageId },
+          'Email sent successfully'
+        );
+      }
+
+      return result.success;
     } catch (error) {
       this.logSend(notification, false, error as Error);
       return false;
+    }
+  }
+
+  /**
+   * Send a templated email using Brevo templates
+   */
+  async sendTemplatedEmail(
+    to: string,
+    templateId: number,
+    params: Record<string, any>
+  ): Promise<{ success: boolean; messageId?: string }> {
+    if (!this.brevoApi) {
+      throw new ChannelError('Templated emails require Brevo configuration', 'email');
+    }
+
+    const brevoConfig = this.config as BrevoEmailConfig;
+
+    const sendSmtpEmail = {
+      sender: { email: brevoConfig.from, name: brevoConfig.fromName || 'TripAlfa' },
+      to: [{ email: to }],
+      templateId,
+      params,
+    };
+
+    try {
+      const response = await this.brevoApi.sendTransacEmail(sendSmtpEmail);
+      return {
+        success: true,
+        messageId: response.body?.messageId?.toString(),
+      };
+    } catch (error: any) {
+      this.logger.error({ error: error.message, templateId }, 'Brevo template email error');
+      return { success: false };
     }
   }
 }

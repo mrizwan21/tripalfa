@@ -4,28 +4,6 @@ version: '3.8'
 # Run with: docker-compose -f docker-compose.notification-rules.yml up
 
 services:
-  # PostgreSQL Database
-  postgres-tripalfa:
-    image: postgres:15.3-alpine
-    container_name: tripalfa-postgres-notif-rules
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tripalfa_dev
-      PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data_notif_rules:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - tripalfa-notif-rules-network
-
   # Notification Service
   notification-service:
     build:
@@ -37,12 +15,10 @@ services:
       - "3001:3001"
     environment:
       NODE_ENV: development
-      DATABASE_URL: "postgresql://postgres:postgres@postgres-tripalfa:5432/tripalfa_dev"
+      DATABASE_URL: ${NEON_DATABASE_URL}
+      DIRECT_DATABASE_URL: ${DIRECT_NEON_DATABASE_URL:-${NEON_DATABASE_URL}}
       NOTIFICATION_SERVICE_PORT: 3001
       LOG_LEVEL: debug
-    depends_on:
-      postgres-tripalfa:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
       interval: 10s
@@ -65,12 +41,10 @@ services:
       - "3002:3002"
     environment:
       NODE_ENV: development
-      DATABASE_URL: "postgresql://postgres:postgres@postgres-tripalfa:5432/tripalfa_dev"
+      DATABASE_URL: ${NEON_DATABASE_URL}
+      DIRECT_DATABASE_URL: ${DIRECT_NEON_DATABASE_URL:-${NEON_DATABASE_URL}}
       RULE_ENGINE_SERVICE_PORT: 3002
       LOG_LEVEL: debug
-    depends_on:
-      postgres-tripalfa:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
       interval: 10s
@@ -81,10 +55,6 @@ services:
     volumes:
       - ./services/rule-engine-service/src:/app/src
       - /app/node_modules
-
-volumes:
-  postgres_data_notif_rules:
-    driver: local
 
 networks:
   tripalfa-notif-rules-network:

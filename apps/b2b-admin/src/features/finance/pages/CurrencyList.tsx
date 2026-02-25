@@ -380,7 +380,6 @@ export default function CurrencyListPage() {
         columns={columns} 
         data={data} 
         searchKey="code"
-        loading={loading}
       />
 
       {/* Edit Currency Dialog */}

@@ -682,3 +682,184 @@ consumers_credentials:
     type: key-auth
     tags:
       - internal
+
+  # ============ LITEAPI PREBOOK RETRIEVAL (Hold Booking) ============
+  - name: liteapi-get-prebook
+    service: booking-service
+    paths:
+      - /api/prebooks
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - liteapi
+      - prebook
+      - hold-booking
+
+  # ============ HOTEL BOOKING ORCHESTRATOR (Hold Booking Flow) ============
+  - name: hotel-booking-hold
+    service: booking-service
+    paths:
+      - /api/hotel-booking/hold
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+      - hold-booking
+
+  - name: hotel-booking-payment
+    service: booking-service
+    paths:
+      - /api/hotel-booking/payment
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+      - hold-booking
+
+  - name: hotel-booking-voucher
+    service: booking-service
+    paths:
+      - /api/hotel-booking/voucher
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+      - voucher
+
+  - name: hotel-booking-cancel
+    service: booking-service
+    paths:
+      - /api/hotel-booking/cancel
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+      - cancellation
+
+  - name: hotel-booking-refund
+    service: booking-service
+    paths:
+      - /api/hotel-booking/refund
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+      - refund
+
+  - name: hotel-booking-detail
+    service: booking-service
+    paths:
+      - /api/hotel-booking
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+
+  - name: hotel-booking-workflow
+    service: booking-service
+    paths:
+      - /api/hotel-booking/workflow
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+
+  - name: hotel-booking-workflows
+    service: booking-service
+    paths:
+      - /api/hotel-booking/workflows
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+
+  - name: hotel-booking-full-flow
+    service: booking-service
+    paths:
+      - /api/hotel-booking/full-flow
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - hotel-booking
+
+  # ============ FLIGHT BOOKING ORCHESTRATOR (Hold Booking Flow) ============
+  - name: flight-booking-hold
+    service: booking-service
+    paths:
+      - /api/flight-booking/hold
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - flight-booking
+      - hold-booking
+
+  - name: flight-booking-payment
+    service: booking-service
+    paths:
+      - /api/flight-booking/payment
+    methods:
+      - POST
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - flight-booking
+      - hold-booking
+
+  - name: flight-booking-detail
+    service: booking-service
+    paths:
+      - /api/flight-booking
+    methods:
+      - GET
+    strip_path: false
+    protocols:
+      - http
+      - https
+    tags:
+      - flight-booking

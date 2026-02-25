@@ -49,7 +49,7 @@ export function AddExtraBaggage({ count, onChange, pricePerBag = 50 }: AddExtraB
           <button
             onClick={() => onChange(Math.min(3, count + 1))}
             disabled={count >= 3}
-            className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-[#8B5CF6] transition-all hover:bg-purple-50 disabled:opacity-30 active:scale-90"
+            className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 hover:text-[#152467] transition-all hover:bg-purple-50 disabled:opacity-30 active:scale-90"
           >
             <Plus size={18} />
           </button>
@@ -57,7 +57,7 @@ export function AddExtraBaggage({ count, onChange, pricePerBag = 50 }: AddExtraB
       </div>
 
       {count > 0 && (
-        <div className="px-10 py-4 bg-[#8B5CF6] text-white flex items-center justify-center gap-2">
+        <div className="px-10 py-4 bg-[#152467] text-white flex items-center justify-center gap-2">
           <span className="text-[9px] font-black uppercase tracking-[0.2em]">Added to Selection: {formatCurrency(count * pricePerBag)}</span>
         </div>
       )}

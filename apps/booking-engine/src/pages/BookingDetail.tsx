@@ -44,7 +44,7 @@ export default function BookingDetail() {
     <TripLogerLayout>
       <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[#152467] border-t-transparent rounded-full animate-spin" />
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Retrieving Booking Details...</p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function BookingDetail() {
       <div className="bg-[#F8F9FA] min-h-screen pb-32 font-sans" data-testid="booking-detail-page">
         {/* Header Banner */}
         <div className="bg-[#111827] pt-32 pb-48 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#8B5CF6]/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#152467]/10 to-transparent" />
           <div className="container mx-auto px-4 max-w-7xl relative z-10">
             <button
               onClick={() => navigate('/bookings')}
@@ -111,7 +111,7 @@ export default function BookingDetail() {
                   </>
                 )}
                 {!isTicketed && (
-                  <button className="h-12 px-8 rounded-xl bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#7C3AED] shadow-xl shadow-purple-900/20 transition-all">
+                  <button className="h-12 px-8 rounded-xl bg-[#152467] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#0A1C50] shadow-xl shadow-purple-900/20 transition-all">
                     Complete Payment
                   </button>
                 )}
@@ -129,7 +129,7 @@ export default function BookingDetail() {
               <div className="bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 relative overflow-hidden">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-[#8B5CF6]">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-[#152467]">
                       <Sparkles size={24} />
                     </div>
                     <div>
@@ -141,8 +141,8 @@ export default function BookingDetail() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <button onClick={() => setIsSeatSelectionOpen(true)} data-testid="seat-selection-button" className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                  <button onClick={() => setIsSeatSelectionOpen(true)} data-testid="seat-selection-button" className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#152467] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#152467] group-hover:text-white transition-all">
                       <Map size={24} />
                     </div>
                     <div>
@@ -150,8 +150,8 @@ export default function BookingDetail() {
                       <p className="text-[9px] font-bold text-gray-400 mt-1">Select / Change</p>
                     </div>
                   </button>
-                  <button onClick={() => setIsBaggageOpen(true)} data-testid="baggage-modification-button" className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                  <button onClick={() => setIsBaggageOpen(true)} data-testid="baggage-modification-button" className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#152467] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#152467] group-hover:text-white transition-all">
                       <Luggage size={24} />
                     </div>
                     <div>
@@ -159,8 +159,8 @@ export default function BookingDetail() {
                       <p className="text-[9px] font-bold text-gray-400 mt-1">Add Extra Weight</p>
                     </div>
                   </button>
-                  <button onClick={() => setIsMealSelectionOpen(true)} className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                  <button onClick={() => setIsMealSelectionOpen(true)} className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#152467] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#152467] group-hover:text-white transition-all">
                       <Utensils size={24} />
                     </div>
                     <div>
@@ -168,8 +168,8 @@ export default function BookingDetail() {
                       <p className="text-[9px] font-bold text-gray-400 mt-1">Dietary Prefs</p>
                     </div>
                   </button>
-                  <button onClick={() => setIsSpecialRequestOpen(true)} className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#8B5CF6] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#8B5CF6] group-hover:text-white transition-all">
+                  <button onClick={() => setIsSpecialRequestOpen(true)} className="group p-6 rounded-[2rem] border-2 border-gray-50 hover:border-[#152467] transition-all bg-white hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-[#152467] group-hover:text-white transition-all">
                       <Heart size={24} />
                     </div>
                     <div>
@@ -254,7 +254,7 @@ export default function BookingDetail() {
                     <div className="h-px bg-gray-100" />
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Total Paid</span>
-                      <span className="text-2xl font-black text-[#8B5CF6] tracking-tighter">{formatCurrency(booking.total?.amount || 0)}</span>
+                      <span className="text-2xl font-black text-[#152467] tracking-tighter">{formatCurrency(booking.total?.amount || 0)}</span>
                     </div>
                   </div>
 

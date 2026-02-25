@@ -1,37 +1,164 @@
+// ============================================================================
+// RULE ENGINE TYPES - Aligned with b2b-admin feature types
+// ============================================================================
+
 import axios from 'axios';
+
+export type RuleStatus = 'draft' | 'active' | 'paused' | 'archived' | 'disabled';
+export type RulePriority = 'low' | 'medium' | 'high' | 'critical';
+export type RuleTrigger = 'event' | 'schedule' | 'api' | 'webhook' | 'manual';
+export type ConditionOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'starts_with'
+  | 'ends_with'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_equal'
+  | 'less_equal'
+  | 'in'
+  | 'not_in'
+  | 'exists'
+  | 'not_exists'
+  | 'regex'
+  | 'between'
+  | 'matches'
+  | 'any_of'
+  | 'all_of';
+
+export type ActionType =
+  | 'send_notification'
+  | 'create_ticket'
+  | 'update_record'
+  | 'call_webhook'
+  | 'send_email'
+  | 'send_sms'
+  | 'assign_user'
+  | 'change_status'
+  | 'add_tag'
+  | 'trigger_workflow'
+  | 'execute_sql'
+  | 'log_event'
+  | 'create_alert'
+  | 'custom';
+
+export type DataType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'array' | 'object' | 'json';
+export type FieldPath = string;
+
+export interface RuleCondition {
+  id: string;
+  type: 'simple' | 'group' | 'complex';
+  field?: FieldPath;
+  operator?: ConditionOperator;
+  value?: any;
+  logic?: 'AND' | 'OR' | 'XOR';
+  conditions?: RuleCondition[];
+  expression?: string;
+  variables?: Record<string, any>;
+}
+
+export interface RuleActionConfig {
+  [key: string]: any;
+}
+
+export interface RuleAction {
+  id: string;
+  order: number;
+  type: ActionType;
+  config: RuleActionConfig;
+  conditions?: RuleCondition[];
+  async: boolean;
+  maxRetries: number;
+  description?: string;
+}
+
+export interface RuleSchedule {
+  frequency: 'once' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom_cron';
+  nextRun?: string;
+  lastRun?: string;
+  cronExpression?: string;
+  timeZone?: string;
+}
+
+export interface EntityScope {
+  entityType: string;
+  filter?: EntityFilter;
+  limitToCount?: number;
+}
+
+export interface EntityFilter {
+  field: string;
+  operator: ConditionOperator;
+  value: any;
+}
+
+export interface RuleRetryPolicy {
+  maxRetries: number;
+  backoffMs: number;
+  backoffMultiplier: number;
+  maxBackoffMs: number;
+}
+
+export interface ExecutionContext {
+  environment: 'production' | 'staging' | 'development';
+  timezone: string;
+  timestamp: string;
+  userId?: string;
+  sessionId?: string;
+  correlationId?: string;
+}
 
 export interface Rule {
   id: string;
   name: string;
   description?: string;
   category: string;
+  type: 'simple' | 'composite';
+  tags: string[];
+  trigger: RuleTrigger;
   triggerEvent?: string;
-  condition: any;
-  actions: any[];
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'draft' | 'active' | 'inactive' | 'archived';
+  triggerSchedule?: RuleSchedule;
+  condition: RuleCondition;
+  actions: RuleAction[];
+  priority: RulePriority;
   enabled: boolean;
+  status: RuleStatus;
   maxExecutionsPerDay?: number;
-  timeout?: number;
+  timeout: number;
+  retryPolicy?: RuleRetryPolicy;
+  appliesToEntities: EntityScope;
+  version: number;
+  previousVersion?: string;
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+  documentation?: string;
 }
 
 export interface CreateRuleRequest {
   name: string;
   description?: string;
   category: string;
+  type?: 'simple' | 'composite';
+  tags?: string[];
+  trigger: RuleTrigger;
   triggerEvent?: string;
-  condition: any;
-  actions: any[];
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  enabled?: boolean;
+  triggerSchedule?: RuleSchedule;
+  condition: RuleCondition;
+  actions: RuleAction[];
+  priority?: RulePriority;
+  appliesToEntities: EntityScope;
   maxExecutionsPerDay?: number;
   timeout?: number;
+  retryPolicy?: RuleRetryPolicy;
 }
 
 export interface UpdateRuleRequest extends Partial<CreateRuleRequest> {
-  status?: Rule['status'];
+  status?: RuleStatus;
+  enabled?: boolean;
 }
 
 export interface ExecuteRuleRequest {
@@ -125,6 +252,132 @@ export interface RuleConflictCheckResponse {
     description: string;
   }>;
 }
+
+export interface RuleStats {
+  totalExecutions: number;
+  successfulExecutions: number;
+  failedExecutions: number;
+  successRate: number;
+  averageExecutionTime: number;
+  minExecutionTime: number;
+  maxExecutionTime: number;
+  conditionMetCount: number;
+  conditionNotMetCount: number;
+  actionsTriggeredTotal: number;
+  actionsFailedTotal: number;
+  periodStart: string;
+  periodEnd: string;
+  trend: 'up' | 'down' | 'stable';
+  errorTrend: 'increasing' | 'decreasing' | 'stable';
+}
+
+export interface RuleExecution {
+  id: string;
+  ruleId: string;
+  ruleName: string;
+  trigger: RuleTrigger;
+  triggerEvent?: string;
+  startedAt: string;
+  completedAt?: string;
+  duration: number;
+  status: 'pending' | 'running' | 'success' | 'failed' | 'timeout' | 'skipped';
+  errorMessage?: string;
+  errorCode?: string;
+  conditionMet: boolean;
+  actionsExecuted: number;
+  actionsFailed: number;
+  inputs: Record<string, any>;
+  outputs: ExecutionOutput[];
+  conditionEvaluationTime: number;
+  actionExecutionTime: number;
+  entityId?: string;
+  entityType?: string;
+  userId?: string;
+  executedBy: 'system' | 'user' | 'api' | 'schedule';
+}
+
+export interface ExecutionOutput {
+  actionId: string;
+  actionType: ActionType;
+  status: 'pending' | 'success' | 'failed';
+  result?: any;
+  error?: string;
+  duration: number;
+}
+
+export interface RuleImpactAnalysis {
+  ruleId: string;
+  affectedEntities: number;
+  affectedEntityTypes: string[];
+  estimatedExecutionTime: number;
+  estimatedCPUUsage: number;
+  estimatedMemoryUsage: number;
+  dependsOnRules: string[];
+  dependedByRules: string[];
+  usedByWorkbenches: string[];
+  recommendations: string[];
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  risks: string[];
+}
+
+export interface RuleConflict {
+  ruleId1: string;
+  ruleId2: string;
+  conflictType: 'same_trigger' | 'same_action' | 'contradictory_conditions';
+  severity: 'low' | 'high';
+  description: string;
+}
+
+export interface RuleConflictAnalysis {
+  conflicts: RuleConflict[];
+  recommendations: string[];
+}
+
+export interface ConditionEvaluationResult {
+  met: boolean;
+  evaluationTime: number;
+  steps: EvaluationStep[];
+}
+
+export interface EvaluationStep {
+  conditionId: string;
+  field?: string;
+  operator?: string;
+  value?: any;
+  result: boolean;
+  actualValue?: any;
+  evaluationTime: number;
+}
+
+export interface ActionSimulation {
+  actionId: string;
+  actionType: ActionType;
+  wouldExecute: boolean;
+  configRendered: Record<string, any>;
+  estimatedTime: number;
+}
+
+export interface DebugLog {
+  timestamp: string;
+  level: 'debug' | 'info' | 'warning' | 'error';
+  message: string;
+  context?: Record<string, any>;
+}
+
+export interface RuleDebugSession {
+  id: string;
+  ruleId: string;
+  ruleName: string;
+  testData: Record<string, any>;
+  testContext?: ExecutionContext;
+  conditionEvaluation: ConditionEvaluationResult;
+  actionSimulations: ActionSimulation[];
+  logs: DebugLog[];
+  createdAt: string;
+  createdBy: string;
+}
+
+// Note: RuleStats is already exported above, RuleExecutionHistory is separate interface
 
 export class RuleEngineService {
   private static baseURL = process.env.VITE_RULE_ENGINE_SERVICE_URL || 'http://localhost:3005';

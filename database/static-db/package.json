@@ -1,0 +1,30 @@
+{
+  "name": "@tripalfa/static-db",
+  "version": "1.0.0",
+  "description": "TripAlfa static reference database — LiteAPI hotels + Duffel flights sync scripts",
+  "private": true,
+  "scripts": {
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "db:logs": "docker compose logs -f staticdb",
+    "sync": "ts-node --project tsconfig.json scripts/seed.ts",
+    "sync:liteapi": "ts-node --project tsconfig.json scripts/sync-liteapi.ts",
+    "sync:duffel": "ts-node --project tsconfig.json scripts/sync-duffel.ts",
+    "sync:rates": "ts-node --project tsconfig.json scripts/sync-exchange-rates.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
+    "pg": "^8.12.0",
+    "p-limit": "^5.0.0",
+    "p-retry": "^6.2.0"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.6",
+    "@types/node": "^20.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

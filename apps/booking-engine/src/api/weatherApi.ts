@@ -1,9 +1,12 @@
-import axios, { AxiosInstance } from 'axios';
+import { api } from '../lib/api';
 
 /**
  * Weather API Client (OpenWeatherMap One Call API 3.0)
  * 
- * Provides current weather and forecast data for hotel locations
+ * Routes all weather requests through the backend proxy to hide API keys from the frontend.
+ * The backend handles the actual OpenWeatherMap API calls.
+ * 
+ * Provides current weather and forecast data for hotel locations:
  * - Current weather conditions
  * - 48-hour hourly forecast
  * - 8-day daily forecast
@@ -80,28 +83,22 @@ export interface WeatherData {
   timezone_offset: number;
 }
 
+/**
+ * WeatherApi class - Uses centralized API manager for all requests
+ * 
+ * This class routes all weather API calls through the backend proxy (`/api/weather`)
+ * which provides:
+ * - API key security (keys are stored on the backend, not exposed in frontend)
+ * - Consistent authentication token handling
+ * - Request/response interceptors
+ * - Error handling standardization
+ * - Logging and monitoring
+ */
 class WeatherApi {
-  private api: AxiosInstance;
-  private apiKey: string;
-  private baseURL = 'https://api.openweathermap.org/data/3.0/onecall';
-
-  constructor() {
-    this.apiKey = import.meta.env.VITE_OPENWEATHERMAP_API_KEY || '';
-    
-    if (!this.apiKey) {
-      console.warn('OpenWeatherMap API key not configured. Weather features will be unavailable.');
-    }
-
-    this.api = axios.create({
-      baseURL: this.baseURL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-
   /**
    * Get weather data for a location
+   * Routes through backend proxy at GET /api/weather
+   * 
    * @param coords - Hotel coordinates (latitude, longitude)
    * @param units - Temperature units: 'metric' (Celsius) | 'imperial' (Fahrenheit) | 'standard' (Kelvin)
    * @param lang - Language for weather descriptions (e.g., 'en', 'es', 'fr')
@@ -111,23 +108,17 @@ class WeatherApi {
     units: 'metric' | 'imperial' | 'standard' = 'metric',
     lang: string = 'en'
   ): Promise<WeatherData> {
-    if (!this.apiKey) {
-      throw new Error('OpenWeatherMap API key is not configured');
-    }
-
     try {
-      const response = await this.api.get<any>('', {
-        params: {
-          lat: coords.latitude,
-          lon: coords.longitude,
-          appid: this.apiKey,
-          units,
-          lang,
-          exclude: 'minutely', // Exclude minutely data to reduce response size
-        },
+      const queryParams = new URLSearchParams({
+        lat: coords.latitude.toString(),
+        lon: coords.longitude.toString(),
+        units,
+        lang,
+        exclude: 'minutely', // Exclude minutely data to reduce response size
       });
 
-      return this.parseWeatherResponse(response.data);
+      const response = await api.get<any>(`/weather?${queryParams.toString()}`);
+      return this.parseWeatherResponse(response);
     } catch (error: any) {
       console.error('Weather API error:', error);
       throw new Error(

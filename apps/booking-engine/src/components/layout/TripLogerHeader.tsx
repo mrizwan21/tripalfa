@@ -59,11 +59,7 @@ export function TripLogerHeader() {
             <div className="container mx-auto px-6 h-full flex items-center justify-between">
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 group transition-transform hover:scale-[1.02]">
-                    <div className="flex items-center text-2xl font-black tracking-tighter">
-                        <span className="text-slate-900 group-hover:text-primary transition-colors">trip</span>
-                        <span className="text-amber-500">lo</span>
-                        <span className="text-emerald-600">ger</span>
-                    </div>
+                    <img src="/logo.png" alt="TripAlfa Logo" className="h-8 md:h-10 object-contain" />
                 </Link>
 
                 {/* Main Nav (Hidden on mobile) */}

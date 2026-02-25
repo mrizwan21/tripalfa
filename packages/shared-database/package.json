@@ -13,13 +13,13 @@
     }
   },
   "scripts": {
-    "build": "npx tsc",
-    "dev": "tsc --watch",
-    "generate": "prisma generate --schema ../../database/prisma/schema.prisma",
-    "migrate": "prisma migrate dev --schema ../../database/prisma/schema.prisma",
-    "studio": "prisma studio --schema ../../database/prisma/schema.prisma",
-    "lint": "eslint src --ext .ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "build": "pnpm exec tsc",
+    "dev": "pnpm exec tsc --watch",
+    "generate": "pnpm exec prisma generate --schema ../../database/prisma/schema.prisma",
+    "migrate": "pnpm exec prisma migrate dev --schema ../../database/prisma/schema.prisma",
+    "studio": "pnpm exec prisma studio --schema ../../database/prisma/schema.prisma",
+    "lint": "pnpm exec eslint src --ext .ts,.tsx",
+    "type-check": "pnpm exec tsc --noEmit"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",

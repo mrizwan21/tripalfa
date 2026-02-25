@@ -348,7 +348,6 @@ export default function B2BReportsPage() {
             columns={b2bColumns} 
             data={data} 
             searchKey="companyName"
-            loading={loading}
           />
         </CardContent>
       </Card>

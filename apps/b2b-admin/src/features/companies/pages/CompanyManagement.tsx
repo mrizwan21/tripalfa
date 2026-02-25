@@ -22,6 +22,7 @@ import {
 } from "@tripalfa/ui-components/ui/tabs";
 import { ArrowUpDown, Plus } from "lucide-react";
 import api from "@/shared/lib/api";
+import { CorporateLoyaltyAccounts } from "../components/CorporateLoyaltyAccounts";
 
 export type Company = {
   id: string;
@@ -274,6 +275,7 @@ export default function CompanyManagementPage() {
           <TabsTrigger value="branches">Branches</TabsTrigger>
           <TabsTrigger value="org">Designation & Departments</TabsTrigger>
           <TabsTrigger value="financials">Financials</TabsTrigger>
+          <TabsTrigger value="loyalty">Corporate Loyalty</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="access">Access & Sessions</TabsTrigger>
@@ -396,6 +398,22 @@ export default function CompanyManagementPage() {
                   <div className="text-xs text-slate-400 mt-1">Branch: {acct.branch}</div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="loyalty">
+          <Card>
+            <CardHeader>
+              <CardTitle>Corporate Loyalty Accounts</CardTitle>
+              <CardDescription>
+                Manage frequent flyer accounts for corporate bookings. 
+                These accounts are used to access corporate benefits, earn miles, 
+                and receive priority services on eligible flights.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CorporateLoyaltyAccounts companyId={selectedCompanyId ?? undefined} />
             </CardContent>
           </Card>
         </TabsContent>

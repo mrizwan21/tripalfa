@@ -13,20 +13,47 @@ export type { AuditLog, ComplianceReport } from './auditservice.js';
 export type { KYCVerification } from './kycservice.js';
 export type { Campaign } from './marketingservice.js';
 export type {
+  // Notification types - aligned with b2b-admin features
   Notification,
   NotificationTemplate,
   NotificationCampaign,
+  NotificationChannel,
+  NotificationPriority,
+  NotificationStatus,
+  NotificationType,
   DeliveryStatus,
+  DeliveryStatusResponse,
   CreateNotificationRequest,
   SendNotificationResponse,
   CreateTemplateRequest,
   CreateCampaignRequest,
   CampaignExecutionResponse,
   DeliveryAnalytics,
+  TemplateVariable,
+  ChannelConfig,
+  NotificationCondition,
+  NotificationRecipient,
+  UserNotificationPreferences,
+  FrequencyConfig,
+  RetryPolicy,
+  NotificationSequence,
+  NotificationAnalytics,
 } from './notificationservice.js';
 export type { Payment, PaymentRequest } from './paymentservice.js';
 export type {
+  // Rule Engine types - aligned with b2b-admin features
   Rule,
+  RuleStatus,
+  RulePriority,
+  RuleTrigger,
+  ConditionOperator,
+  ActionType,
+  DataType,
+  FieldPath,
+  RuleCondition,
+  RuleAction,
+  RuleActionConfig,
+  RuleExecution,
   CreateRuleRequest,
   UpdateRuleRequest,
   ExecuteRuleRequest,
@@ -36,6 +63,12 @@ export type {
   RuleAnalysisResponse,
   RuleExecutionHistory,
   RuleConflictCheckResponse,
+  RuleStats,
+  RuleRetryPolicy,
+  ExecutionContext,
+  RuleImpactAnalysis,
+  RuleConflictAnalysis,
+  RuleDebugSession,
 } from './ruleengineservice.js';
 export type { SupportTicket, SupportMessage } from './supportservice.js';
 export type { TaxCalculation, TaxBreakdown } from './taxservice.js';

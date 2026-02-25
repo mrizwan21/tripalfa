@@ -4,7 +4,7 @@ A modern microservices-based travel booking platform with B2C Booking Engine, B2
 
 ## 🏗️ Project Structure
 
-```
+```text
 TripAlfa/
 ├── apps/                    # Frontend applications
 │   ├── booking-engine/      # B2C Booking Engine (Vite + React)
@@ -45,6 +45,7 @@ TripAlfa/
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker & Docker Compose
 - npm (workspaces enabled)
@@ -100,7 +101,7 @@ npm run dev --workspace=@tripalfa/booking-service
 This project uses npm workspaces for monorepo management:
 
 | Workspace | Description | Port |
-|-----------|-------------|------|
+| -------- | ----------- | --- |
 | `@tripalfa/booking-engine` | B2C Booking Frontend | 3001 |
 | `@tripalfa/b2b-admin` | B2B Admin Frontend | 3000 |
 | `@tripalfa/super-admin` | Super Admin Frontend | 3002 |
@@ -123,13 +124,13 @@ npm run db:generate
 ## 📦 Services Overview
 
 | Service | Port | Description |
-|---------|------|-------------|
+| ----- | --- | ----------- |
 | API Gateway | 3000 | Request routing, auth, rate limiting |
 | Booking Service | 3001 | Flight/hotel bookings |
 | Inventory Service | 3002 | Real-time inventory |
 | Payment Service | 3003 | Payment processing |
 | User Service | 3004 | Authentication & profiles |
-| Notification Service | 3005 | Email/SMS notifications |
+| Notification Service | 3009 | Email/SMS notifications |
 | Analytics Service | 3006 | Business intelligence |
 
 ## 🤝 Contributing
@@ -139,23 +140,27 @@ We welcome contributions! Please follow these steps:
 ### Development Setup
 
 1. **Fork the repository**
+
    ```bash
    git clone https://github.com/your-username/tripalfa.git
    cd tripalfa
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up the database**
+
    ```bash
    npm run db:generate
    npm run db:migrate
    ```
 
 4. **Start development servers**
+
    ```bash
    npm run dev
    ```
@@ -163,6 +168,7 @@ We welcome contributions! Please follow these steps:
 ### Development Workflow
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -173,6 +179,7 @@ We welcome contributions! Please follow these steps:
    - Update documentation as needed
 
 3. **Run quality checks**
+
    ```bash
    # Type checking
    npx tsc -p tsconfig.json --noEmit
@@ -185,12 +192,14 @@ We welcome contributions! Please follow these steps:
    ```
 
 4. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: add your feature description"
    ```
 
 5. **Push and create a PR**
+
    ```bash
    git push origin feature/your-feature-name
    ```

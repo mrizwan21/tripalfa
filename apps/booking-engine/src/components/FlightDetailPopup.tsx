@@ -67,8 +67,8 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id
-                                    ? 'bg-[#8B5CF6] text-white shadow-lg shadow-purple-200 translate-y-[-2px]'
-                                    : 'bg-white border border-gray-100 text-gray-400 hover:border-[#8B5CF6] hover:text-[#8B5CF6]'
+                                    ? 'bg-[#152467] text-white shadow-lg shadow-purple-200 translate-y-[-2px]'
+                                    : 'bg-white border border-gray-100 text-gray-400 hover:border-[#152467] hover:text-[#152467]'
                                     }`}
                             >
                                 {tab.label}
@@ -125,7 +125,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                                                         <div>
                                                             <p className="text-[10px] font-black text-gray-900 uppercase">{segment.origin}</p>
                                                             <p className="text-[9px] font-bold text-gray-400">{segment.originCity || ''}</p>
-                                                            {segment.departureTerminal && <p className="text-[8px] font-black text-[#8B5CF6] mt-1">TERMINAL {segment.departureTerminal}</p>}
+                                                            {segment.departureTerminal && <p className="text-[8px] font-black text-[#152467] mt-1">TERMINAL {segment.departureTerminal}</p>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -133,13 +133,13 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                                                 {/* Visual Timeline Centered */}
                                                 <div className="flex flex-col items-center justify-center">
                                                     <div className="w-full relative h-[140px] flex items-center">
-                                                        <div className="absolute left-1/2 -translate-x-1/2 w-[1.5px] h-full bg-gradient-to-b from-[#8B5CF6] via-[#EF4444] to-[#8B5CF6] rounded-full opacity-20"></div>
+                                                        <div className="absolute left-1/2 -translate-x-1/2 w-[1.5px] h-full bg-gradient-to-b from-[#152467] via-[#EF4444] to-[#152467] rounded-full opacity-20"></div>
                                                         <div className="flex flex-col justify-between h-full w-full items-center relative py-2">
-                                                            <div className="w-3 h-3 rounded-full bg-white border-[3px] border-[#8B5CF6] shadow-sm"></div>
-                                                            <div className="bg-white px-4 py-1.5 rounded-full border border-indigo-100 shadow-lg text-[10px] font-black text-[#8B5CF6] whitespace-nowrap">
+                                                            <div className="w-3 h-3 rounded-full bg-white border-[3px] border-[#152467] shadow-sm"></div>
+                                                            <div className="bg-white px-4 py-1.5 rounded-full border border-indigo-100 shadow-lg text-[10px] font-black text-[#152467] whitespace-nowrap">
                                                                 {segment.duration || '--'}
                                                             </div>
-                                                            <div className="w-3 h-3 rounded-full bg-white border-[3px] border-[#8B5CF6] shadow-sm"></div>
+                                                            <div className="w-3 h-3 rounded-full bg-white border-[3px] border-[#152467] shadow-sm"></div>
                                                         </div>
                                                     </div>
                                                     <p className="text-[9px] font-black text-gray-400 uppercase mt-4 tracking-[1.5px]">{flight.cabin || "Economy"} Class</p>
@@ -158,7 +158,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                                                         <div>
                                                             <p className="text-[10px] font-black text-gray-900 uppercase">{segment.destination}</p>
                                                             <p className="text-[9px] font-bold text-gray-400">{segment.destinationCity || ''}</p>
-                                                            {segment.arrivalTerminal && <p className="text-[8px] font-black text-[#8B5CF6] mt-1">TERMINAL {segment.arrivalTerminal}</p>}
+                                                            {segment.arrivalTerminal && <p className="text-[8px] font-black text-[#152467] mt-1">TERMINAL {segment.arrivalTerminal}</p>}
                                                         </div>
                                                     </div>
                                                     <div>
@@ -177,7 +177,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                                                     <span className="text-[10px] font-black text-gray-900 uppercase tracking-[1.5px]">Stopover in {segment.destinationCity || segment.destination}</span>
                                                 </div>
                                                 {segment.layoverDuration && (
-                                                    <p className="text-[11px] font-black text-[#8B5CF6] mt-1 uppercase">
+                                                    <p className="text-[11px] font-black text-[#152467] mt-1 uppercase">
                                                         ({segment.layoverDuration})
                                                     </p>
                                                 )}
@@ -216,7 +216,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
 
                                     <div className="pt-6 mt-6 border-t-[2px] border-dashed border-gray-200 flex justify-between items-center">
                                         <span className="text-md font-black text-gray-900 uppercase tracking-[1px]">Total Amount</span>
-                                        <span className="text-2xl font-black text-[#8B5CF6]">{flight.amount} {flight.currency}</span>
+                                        <span className="text-2xl font-black text-[#152467]">{flight.amount} {flight.currency}</span>
                                     </div>
                                 </div>
                             </div>
@@ -228,7 +228,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                         <div className="animate-in slide-in-from-bottom-4 duration-500">
                             <div className="p-10 bg-gray-50 rounded-[2.5rem] border border-gray-100">
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#8B5CF6] shadow-sm"><Shield size={24} /></div>
+                                    <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#152467] shadow-sm"><Shield size={24} /></div>
                                     <h4 className="text-xl font-black text-gray-900">Fare Policy</h4>
                                 </div>
                                 <div className="space-y-6">
@@ -257,13 +257,13 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                             <div className="grid grid-cols-1 gap-8">
                                 <div className="p-12 rounded-[2.5rem] border border-gray-100 bg-gray-50 shadow-sm">
                                     <div className="flex items-center gap-4 mb-10">
-                                        <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#8B5CF6] shadow-sm"><Luggage size={24} /></div>
+                                        <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-[#152467] shadow-sm"><Luggage size={24} /></div>
                                         <h5 className="text-xl font-black text-gray-900">Baggage Allowance</h5>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         {flight.includedBags && flight.includedBags.map((bag, i) => (
                                             <div key={i} className="bg-white p-8 rounded-3xl border border-gray-100 flex items-center gap-6 shadow-sm hover:shadow-md transition-all">
-                                                <div className="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center text-[#8B5CF6] flex-shrink-0 animate-pulse"><Luggage size={32} /></div>
+                                                <div className="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center text-[#152467] flex-shrink-0 animate-pulse"><Luggage size={32} /></div>
                                                 <div>
                                                     <p className="text-[11px] font-black text-gray-400 uppercase tracking-[2px]">{bag.type === 'checked' ? 'Checked' : 'Hand'} Baggage</p>
                                                     <p className="text-2xl font-black text-gray-900 mt-1">{bag.quantity} x {bag.weight || (bag.type === 'checked' ? 23 : 7)} {bag.unit || 'kg'}</p>
@@ -293,7 +293,7 @@ export const FlightDetailPopup = ({ isOpen, onClose, onSelect, flight }: FlightD
                     <Button
                         data-testid="book-now-button"
                         onClick={onSelect}
-                        className="px-12 py-5 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[3px] shadow-2xl shadow-purple-200 transition-all hover:translate-y-[-4px] active:scale-95"
+                        className="px-12 py-5 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-sm uppercase tracking-[3px] shadow-2xl shadow-purple-200 transition-all hover:translate-y-[-4px] active:scale-95"
                     >
                         Confirm Booking
                     </Button>

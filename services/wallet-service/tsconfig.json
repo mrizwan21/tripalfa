@@ -6,6 +6,7 @@
       "ES2020"
     ],
     "moduleResolution": "node16",
+    "composite": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": false,

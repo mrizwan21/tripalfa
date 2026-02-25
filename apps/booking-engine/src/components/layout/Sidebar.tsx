@@ -40,7 +40,7 @@ export default function Sidebar() {
         {/* Profile Card Mini */}
         <div className="bg-slate-900 rounded-3xl p-5 shadow-xl shadow-slate-900/10 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <ShieldCheck size={48} className="text-white" />
+            <ShieldCheck size={48} className="text-emerald-500" />
           </div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Verify Status</p>
           <h4 className="text-sm font-bold text-white flex items-center gap-2">

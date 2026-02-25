@@ -129,7 +129,7 @@ export function SingleMonthCalendar({
                                     bgClass = '';
                                 }
                                 if (isSelected) {
-                                    bgClass = 'bg-[#8B5CF6]';
+                                    bgClass = 'bg-[#152467]';
                                     textClass = 'text-white font-bold';
                                 }
 
@@ -158,7 +158,7 @@ export function SingleMonthCalendar({
             <Popover.Trigger asChild>
                 <div className="relative group/field cursor-pointer space-y-1.5" data-testid={label.toLowerCase().replace(/\s+/g, '-')}>
                     <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">{label}*</label>
-                    <div className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 rounded-xl flex items-center justify-between text-[11px] font-bold group-hover/field:border-[#8B5CF6]/30 transition-all ${error ? 'border-red-500/50' : 'border-transparent'}`}>
+                    <div className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 rounded-xl flex items-center justify-between text-[11px] font-bold group-hover/field:border-[#152467]/30 transition-all ${error ? 'border-red-500/50' : 'border-transparent'}`}>
                         <span className={selectedDate ? 'text-gray-900' : 'text-gray-300'}>
                             {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'DD/MM/YYYY'}
                         </span>

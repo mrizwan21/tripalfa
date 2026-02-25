@@ -10,9 +10,7 @@
  * Routes through centralized API Manager for consistency
  */
 
-import { API_BASE_URL } from '../lib/constants';
-
-const API_KEY = import.meta.env.VITE_API_KEY || '';
+import { api } from '../lib/api';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -81,23 +79,10 @@ export async function getAirlineCredits(
       queryParams.append('email', email);
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/customers/${customerId}/airline-credits`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        credentials: 'include'
-      }
+    const result = await api.get<any>(
+      `/api/admin/customers/${customerId}/airline-credits?${queryParams.toString()}`
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve customer credits: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[AirlineCredits] Customer credits retrieved:', {
       customerId,
       creditCount: result.data?.credits?.length || 0,
@@ -137,28 +122,11 @@ export async function getBookingAirlineCredits(
   try {
     console.log('[AirlineCredits] Fetching applicable credits for booking:', bookingId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/airline-credits/booking`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          bookingId,
-          orderId,
-          customerId: customerId || undefined
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/airline-credits/booking',
+      { bookingId, orderId, customerId: customerId || undefined }
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to retrieve booking credits: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[AirlineCredits] Booking credits retrieved:', {
       bookingId,
       creditCount: result.data?.applicableCredits?.length || 0,

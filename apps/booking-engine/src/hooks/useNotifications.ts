@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { api } from '../lib/api';
 
 interface Notification {
   id: string;
@@ -58,24 +56,15 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['notifications', offset],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE}/notifications`, {
-        params: { limit, offset },
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      return response.data;
+      const response = await api.get(`/notifications?limit=${limit}&offset=${offset}`);
+      return response;
     },
     staleTime: 30000, // 30 seconds
   });
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      await axios.patch(
-        `${API_BASE}/notifications/${notificationId}/read`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+      await api.patch(`/notifications/${notificationId}/read`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -85,13 +74,7 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await axios.patch(
-        `${API_BASE}/notifications/read-all`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
+      await api.patch('/notifications/read-all', {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -101,9 +84,7 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      await axios.delete(`${API_BASE}/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await api.delete(`/notifications/${notificationId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -137,24 +118,16 @@ export const useNotificationPreferences = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['notificationPreferences'],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE}/notifications/preferences`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      return response.data.data as NotificationPreferences;
+      const response = await api.get<{ data: NotificationPreferences }>('/notifications/preferences');
+      return response.data as NotificationPreferences;
     },
     staleTime: 60000, // 1 minute
   });
 
   const updateMutation = useMutation({
     mutationFn: async (preferences: Partial<NotificationPreferences>) => {
-      const response = await axios.patch(
-        `${API_BASE}/notifications/preferences`,
-        preferences,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
-      );
-      return response.data.data;
+      const response = await api.patch<{ data: NotificationPreferences }>('/notifications/preferences', preferences);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
@@ -180,10 +153,8 @@ export const useUnreadNotificationCount = () => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['unreadCount'],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE}/notifications/count/unread`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      return response.data.data.unreadCount;
+      const response = await api.get<{ data: { unreadCount: number } }>('/notifications/count/unread');
+      return response.data.unreadCount;
     },
     staleTime: 15000, // 15 seconds
     refetchInterval: 30000, // Poll every 30 seconds
@@ -236,15 +207,12 @@ export const usePushNotifications = () => {
       });
 
       // Send subscription to server
-      const response = await axios.post(
-        `${API_BASE}/notifications/subscribe`,
-        { subscription: subscription.toJSON() },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
+      const response = await api.post<{ data: any }>(
+        '/notifications/subscribe',
+        { subscription: subscription.toJSON() }
       );
 
-      return response.data.data;
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
@@ -253,9 +221,7 @@ export const usePushNotifications = () => {
 
   const unsubscribeMutation = useMutation({
     mutationFn: async (subscriptionId: string) => {
-      await axios.delete(`${API_BASE}/notifications/subscribe/${subscriptionId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
+      await api.delete(`/notifications/subscribe/${subscriptionId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });

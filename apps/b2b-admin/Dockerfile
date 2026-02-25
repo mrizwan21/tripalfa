@@ -11,6 +11,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Set the working directory
 WORKDIR /app
 
+# Copy npm configuration for network retry settings
+COPY .npmrc ./
+
 # Copy monorepo root files
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY tsconfig.json tsconfig.base.json ./

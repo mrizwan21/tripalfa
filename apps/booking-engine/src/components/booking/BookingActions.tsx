@@ -43,7 +43,7 @@ export function BookingActions({ status, product, id }: { status: string; produc
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-8 pl-3 pr-2 rounded-lg bg-gray-50 border border-gray-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-all"
+        className="h-8 pl-3 pr-2 rounded-lg bg-gray-50 border border-gray-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:border-[#152467] hover:text-[#152467] transition-all"
       >
         Options
         <ChevronDown size={12} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />

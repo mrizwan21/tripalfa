@@ -129,8 +129,11 @@ export interface Flight extends FlightFare {
 }
 
 export interface WalletAccount {
+  id?: string;
   currency: string;
   currentBalance: number;
   pendingBalance: number;
   status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }

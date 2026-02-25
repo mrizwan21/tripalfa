@@ -44,6 +44,70 @@ TripAlfa follows a modular, microservices-based architecture with the following 
 - **UI Components** (`packages/ui-components`): Shared React components
 - **Wallet** (`packages/wallet`): Payment and billing logic
 
+## 🗄️ Database Configuration
+
+> **⚠️ CRITICAL** - Read before setting up!
+>
+> **Required Architecture:**
+>
+> - **NEON Cloud** for application data (`neondb`)
+> - **Local Docker Postgres** for static flight/hotel data (`staticdatabase`)
+
+### Database Architecture
+
+| Database | Purpose | Services | Environment |
+| --- | --- | --- | --- |
+| **NEON** `neondb` | Application Data | API Gateway, Booking, Payment, User, KYC, Wallet, Notification, Organization, Marketing | Neon Cloud |
+| **Local Docker** `staticdatabase` | Static Reference Data | Booking/static lookup flows (flight, hotel, airports, etc.) | Local PostgreSQL (`postgres-static`) |
+
+### NEON Project Details
+
+- **Project:** TripAlfa (curly-queen-75335750)
+- **Organization:** Cleen
+- **Region:** AWS US West 2
+- **PostgreSQL Version:** 17
+- **Compute:** Autoscaling (0.25 - 2 vCPU)
+- **Console:** [Neon Project Console](https://console.neon.tech/app/projects/curly-queen-75335750)
+
+> You can use Neon Cloud connection strings directly (from Neon dashboard) for local development.
+> MCP is optional and mainly useful for branch/schema/query workflows, not required for runtime DB connectivity.
+
+### Quick Start (Neon + Local Static DB)
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Configure database env for Docker compose
+# Put your Neon pooled and direct connection strings in NEON_DATABASE_URL and DIRECT_NEON_DATABASE_URL
+cp .env.docker .env.docker.local
+
+# 3. Start local stack (uses Neon for app DB + local postgres-static)
+docker compose --env-file .env.docker.local -f docker-compose.local.yml up -d
+
+# 4. Services will be running on:
+# - API Gateway: http://localhost:3000
+# - Booking Service: http://localhost:3001
+# - Local static database: localhost:5433 (postgres-static)
+# - Frontend: http://localhost:5176
+```
+
+**Required env values in `.env.docker.local`:**
+
+```dotenv
+NEON_DATABASE_URL=postgresql://<user>:<password>@<neon-pooled-host>/neondb?sslmode=require&pgbouncer=true&connection_limit=20
+DIRECT_NEON_DATABASE_URL=postgresql://<user>:<password>@<neon-direct-host>/neondb?sslmode=require
+STATIC_DATABASE_URL=postgresql://postgres:postgres@postgres-static:5432/staticdatabase
+```
+
+**For setup & troubleshooting, see:**
+
+- 📖 [NEON Setup & Verification Guide](docs/NEON_SETUP_AND_VERIFICATION.md)
+- 📊 [NEON Deployment Status](docs/NEON_DEPLOYMENT_STATUS.md)
+- ✅ [Deployment Verification Guide](docs/NEON_DEPLOYMENT_VERIFICATION.md)
+
+---
+
 ## Static Data Management
 
 ### Centralized Static Data Package

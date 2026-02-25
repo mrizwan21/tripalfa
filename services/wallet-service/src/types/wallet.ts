@@ -1,6 +1,107 @@
 // src/types/index.ts
 // Comprehensive TypeScript types for wallet service
 
+import type { Prisma } from '@prisma/client';
+
+/**
+ * Branded type for monetary values to distinguish from regular numbers
+ * This provides type safety for financial calculations
+ */
+export type MonetaryValue = Prisma.Decimal | number | string;
+
+/**
+ * Helper type for Prisma Decimal-like values
+ * Use this when accepting balance/amount values from Prisma queries
+ */
+export type DecimalLike = { toString(): string } | number | null | undefined;
+
+/**
+ * Safely convert a MonetaryValue to a number
+ * This is the recommended way to handle Prisma Decimal values in calculations
+ * 
+ * @param value - The monetary value to convert (Decimal, number, string, null, or undefined)
+ * @param defaultValue - The default value to return if the input is null/undefined (default: 0)
+ * @returns A number suitable for calculations
+ * 
+ * @example
+ * const balance = toNumber(wallet.balance); // Decimal -> number
+ * const amount = toNumber(transaction.amount, 0); // with default
+ */
+export function toNumber(value: DecimalLike, defaultValue: number = 0): number {
+  if (value === null || value === undefined) return defaultValue;
+  if (typeof value === 'number') return value;
+  const parsed = Number(value.toString());
+  return isNaN(parsed) ? defaultValue : parsed;
+}
+
+/**
+ * Prisma Wallet type from the generated client
+ * Use this type when working with Prisma query results
+ */
+export type PrismaWallet = Prisma.WalletGetPayload<{}>;
+
+/**
+ * Prisma WalletTransaction type from the generated client
+ */
+export type PrismaWalletTransaction = Prisma.WalletTransactionGetPayload<{}>;
+
+/**
+ * Prisma WalletLedger type from the generated client
+ */
+export type PrismaWalletLedger = Prisma.WalletLedgerGetPayload<{}>;
+
+/**
+ * Convert a Prisma Wallet result to our Wallet interface type
+ * This provides a type-safe mapping that handles Decimal conversions
+ * 
+ * @param prismaWallet - The wallet from a Prisma query
+ * @returns A Wallet with proper type conversions applied
+ */
+export function mapPrismaWallet(prismaWallet: PrismaWallet): Wallet {
+  return {
+    id: prismaWallet.id,
+    userId: prismaWallet.userId,
+    balance: prismaWallet.balance,
+    reservedBalance: prismaWallet.reservedBalance,
+    currency: prismaWallet.currency,
+    status: prismaWallet.status,
+    dailyLimit: prismaWallet.dailyLimit ?? undefined,
+    monthlyLimit: prismaWallet.monthlyLimit ?? undefined,
+    createdAt: prismaWallet.createdAt,
+    updatedAt: prismaWallet.updatedAt,
+  };
+}
+
+/**
+ * Convert a Prisma WalletTransaction result to our WalletTransaction interface type
+ * 
+ * @param prismaTx - The transaction from a Prisma query
+ * @returns A WalletTransaction with proper type conversions applied
+ */
+export function mapPrismaTransaction(prismaTx: PrismaWalletTransaction): WalletTransaction {
+  return {
+    id: prismaTx.id,
+    walletId: prismaTx.walletId,
+    payerId: prismaTx.payerId,
+    payeeId: prismaTx.payeeId,
+    referenceId: prismaTx.referenceId,
+    idempotencyKey: prismaTx.idempotencyKey,
+    type: prismaTx.type,
+    flow: prismaTx.flow,
+    amount: prismaTx.amount,
+    balance: prismaTx.balance ?? undefined,
+    currency: prismaTx.currency,
+    credit: prismaTx.credit ?? undefined,
+    debit: prismaTx.debit ?? undefined,
+    description: prismaTx.description,
+    bookingId: prismaTx.bookingId,
+    paymentId: prismaTx.paymentId,
+    metadata: prismaTx.metadata,
+    status: prismaTx.status,
+    createdAt: prismaTx.createdAt,
+  };
+}
+
 export enum UserType {
   CUSTOMER = 'customer',
   AGENCY = 'agency',
@@ -57,10 +158,12 @@ export interface User {
 export interface Wallet {
   id: string;
   userId: string;
+  balance: MonetaryValue; // Decimal from Prisma - use toNumber() helper for calculations
+  reservedBalance: MonetaryValue; // Decimal from Prisma - required in schema
   currency: string;
-  balance: any; // Decimal from Prisma
-  reservedBalance?: any; // Decimal from Prisma
   status: string;
+  dailyLimit?: MonetaryValue;
+  monthlyLimit?: MonetaryValue;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -69,30 +172,38 @@ export interface Wallet {
 export interface WalletTransaction {
   id: string;
   walletId: string;
-  type: string;
-  flow?: string | null;
-  amount: any; // Decimal from Prisma
-  currency: string;
   payerId?: string | null;
   payeeId?: string | null;
-  bookingId?: string | null;
-  invoiceId?: string | null;
+  referenceId?: string | null;
   idempotencyKey?: string | null;
-  status: string;
+  type: string;
+  flow?: string | null;
+  amount: MonetaryValue; // Decimal from Prisma - use toNumber() helper for calculations
+  balance?: MonetaryValue; // Optional - may not be present in all queries
+  currency: string;
+  credit?: MonetaryValue;
+  debit?: MonetaryValue;
   description?: string | null;
+  bookingId?: string | null;
+  paymentId?: string | null;
   metadata?: any;
+  status: string;
   createdAt: Date;
 }
 
 // WalletLedger (Prisma-compatible)
 export interface WalletLedger {
   id: string;
+  walletId: string;
   transactionId: string;
-  account: string;
-  debit: any; // Decimal from Prisma
-  credit: any; // Decimal from Prisma
+  entryType: string; // debit, credit
+  amount: MonetaryValue; // Decimal from Prisma - use toNumber() helper for calculations
+  balance: MonetaryValue; // Decimal from Prisma - required in schema
   currency: string;
-  description?: string | null;
+  credit?: MonetaryValue;
+  debit?: MonetaryValue;
+  accountType: string; // main, pending, held, reserve
+  account?: string | null; // Legacy
   createdAt: Date;
 }
 
@@ -293,11 +404,12 @@ export interface TransactionInsertOptions {
   type: string;
   flow?: string | null;
   amount: number;
+  balance?: number; // Optional - can be calculated from wallet balance
   currency: string;
   payerId?: string;
   payeeId?: string;
   bookingId?: string;
-  invoiceId?: string;
+  paymentId?: string;
   idempotencyKey?: string;
   status?: string;
 }

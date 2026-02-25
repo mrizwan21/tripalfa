@@ -26,7 +26,7 @@ const SupplierRemittancePopup = ({ isOpen, onClose }: { isOpen: boolean; onClose
                         Remittance details not available for this booking.
                     </div>
                     <div className="flex justify-start pt-4 border-t border-gray-50">
-                        <button onClick={onClose} className="px-10 h-10 bg-[#FFD700] text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-yellow-100 transition-all active:scale-95 hover:bg-[#F4CE14]">Close</button>
+                        <button onClick={onClose} className="px-10 h-10 bg-[#EC5C4C] text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-yellow-100 transition-all active:scale-95 hover:bg-[#F4CE14]">Close</button>
                     </div>
                 </div>
             </div>
@@ -69,7 +69,7 @@ export default function HotelBookingCard() {
         <TripLogerLayout>
             <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-12 h-12 border-4 border-[#152467] border-t-transparent rounded-full animate-spin" />
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Loading Hotel Booking...</p>
                 </div>
             </div>
@@ -86,7 +86,7 @@ export default function HotelBookingCard() {
             <div className="bg-[#F8FAFC] min-h-screen pt-20">
 
                 {/* Purple Header */}
-                <div className="bg-[#8B5CF6] h-20 flex items-center justify-between px-10 shadow-lg relative z-20">
+                <div className="bg-[#152467] h-20 flex items-center justify-between px-10 shadow-lg relative z-20">
                     <div className="flex items-center gap-4 text-white">
                         <Hotel size={24} className="fill-white" />
                         <h1 className="text-sm font-black uppercase tracking-[0.2em]">Hotel Booking Card</h1>
@@ -100,7 +100,7 @@ export default function HotelBookingCard() {
                             <button className="h-9 px-8 border border-white/30 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-2 relative">
                                 <RefreshCw size={12} /> Sync
                             </button>
-                            <button onClick={() => navigate(-1)} className="h-9 px-8 bg-[#FFD700] text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-yellow-500/20 hover:-translate-y-0.5 transition-all">Back</button>
+                            <button onClick={() => navigate(-1)} className="h-9 px-8 bg-[#EC5C4C] text-gray-900 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-yellow-500/20 hover:-translate-y-0.5 transition-all">Back</button>
                         </div>
                     </div>
                 </div>
@@ -112,22 +112,22 @@ export default function HotelBookingCard() {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-10 py-3 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all relative ${activeTab === tab
-                                ? 'bg-[#FFD700] text-gray-900 shadow-xl translate-y-[-2px]'
+                                ? 'bg-[#EC5C4C] text-gray-900 shadow-xl translate-y-[-2px]'
                                 : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                                 }`}
                         >
                             {tab}
-                            {activeTab === tab && <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#FFD700] rotate-45" />}
+                            {activeTab === tab && <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#EC5C4C] rotate-45" />}
                         </button>
                     ))}
                 </div>
 
                 {/* Reference Banner */}
-                <div className="bg-[#FFD700] px-10 py-4 flex items-center justify-between border-y border-yellow-600/10 shadow-sm relative z-10 transition-all">
+                <div className="bg-[#EC5C4C] px-10 py-4 flex items-center justify-between border-y border-yellow-600/10 shadow-sm relative z-10 transition-all">
                     <div className="flex items-center divide-x divide-gray-900/10 gap-10 h-5">
-                        <p className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Booking Ref: <span className="text-[#8B5CF6]">{booking.bookingId || booking.reference}</span></p>
-                        <p className="pl-10 text-[11px] font-black text-gray-900 uppercase tracking-widest">Supplier Ref: <span className="text-[#8B5CF6]">SUP-{booking.id.slice(0, 6)}</span></p>
-                        <p className="pl-10 text-[11px] font-black text-gray-900 uppercase tracking-widest">Invoice: <span className="text-[#8B5CF6]">INV-{booking.id.slice(0, 6)}</span></p>
+                        <p className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Booking Ref: <span className="text-[#152467]">{booking.bookingId || booking.reference}</span></p>
+                        <p className="pl-10 text-[11px] font-black text-gray-900 uppercase tracking-widest">Supplier Ref: <span className="text-[#152467]">SUP-{booking.id.slice(0, 6)}</span></p>
+                        <p className="pl-10 text-[11px] font-black text-gray-900 uppercase tracking-widest">Invoice: <span className="text-[#152467]">INV-{booking.id.slice(0, 6)}</span></p>
                     </div>
                     <div className="flex items-center gap-6">
                         <div className="flex items-center gap-4">
@@ -140,7 +140,7 @@ export default function HotelBookingCard() {
                         </div>
                         <div className="relative group ml-4">
                             <button className="h-10 px-6 bg-white rounded-lg border border-gray-100 text-[11px] font-black uppercase tracking-widest text-[#1E1B4B] flex items-center gap-3 shadow-sm group-hover:bg-gray-50 transition-all min-w-[120px] justify-between">
-                                Options <ChevronDown size={14} className="text-[#8B5CF6]" />
+                                Options <ChevronDown size={14} className="text-[#152467]" />
                             </button>
                             <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all origin-top-right transform scale-95 group-hover:scale-100 z-50 p-2 pointer-events-none group-hover:pointer-events-auto">
                                 {['Refund', 'Amendment', 'Cancel', 'Special Request'].map((opt) => (
@@ -166,7 +166,7 @@ export default function HotelBookingCard() {
                             <div className="lg:col-span-7 space-y-10">
                                 {/* Passenger Details */}
                                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden translate-x-0 transition-transform hover:-translate-y-1 duration-500">
-                                    <div className="bg-[#8B5CF6] px-6 py-5 flex items-center gap-4 text-white">
+                                    <div className="bg-[#152467] px-6 py-5 flex items-center gap-4 text-white">
                                         <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
                                             <User size={16} className="fill-white" />
                                         </div>
@@ -201,7 +201,7 @@ export default function HotelBookingCard() {
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-6 text-center whitespace-pre-line leading-relaxed">{hotel.name ? 'Standard Room' : 'N/A'}</td>
-                                                    <td className="px-6 py-6 text-center text-[#8B5CF6] font-black whitespace-pre-line leading-relaxed">{p.firstName} {p.lastName}</td>
+                                                    <td className="px-6 py-6 text-center text-[#152467] font-black whitespace-pre-line leading-relaxed">{p.firstName} {p.lastName}</td>
                                                     <td className="px-6 py-6 text-center text-gray-500 font-medium">{hotel.checkIn}</td>
                                                     <td className="px-6 py-6 text-center text-gray-500 font-medium">{hotel.checkOut}</td>
                                                 </tr>
@@ -214,10 +214,10 @@ export default function HotelBookingCard() {
                             {/* Right: Hotel Card Details */}
                             <div className="lg:col-span-5 space-y-10">
                                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden group">
-                                    <div className="bg-[#8B5CF6] px-6 py-5 flex items-center justify-between text-white">
+                                    <div className="bg-[#152467] px-6 py-5 flex items-center justify-between text-white">
                                         <div className="flex items-center gap-4">
                                             <Hotel size={20} className="fill-white" />
-                                            <h3 className="text-sm font-black uppercase tracking-widest underline decoration-[#FFD700] decoration-2 underline-offset-8">Hotel Details</h3>
+                                            <h3 className="text-sm font-black uppercase tracking-widest underline decoration-[#EC5C4C] decoration-2 underline-offset-8">Hotel Details</h3>
                                         </div>
                                     </div>
                                     <div className="p-0 border-b border-gray-100">
@@ -233,22 +233,22 @@ export default function HotelBookingCard() {
                                                     </div>
                                                     <h3 className="text-xl font-black text-[#1E1B4B] leading-tight">{hotel.name || 'Hotel Name'}</h3>
                                                     <div className="flex items-start gap-2 text-gray-500 text-[11px] font-medium leading-relaxed">
-                                                        <MapPin size={12} className="mt-0.5 shrink-0 text-[#8B5CF6]" />
+                                                        <MapPin size={12} className="mt-0.5 shrink-0 text-[#152467]" />
                                                         {hotel.address || 'Address not available'}
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-4 border-t border-gray-50 pt-6 font-bold text-[11px] uppercase tracking-widest text-[#1E1B4B]">
                                                     <div className="flex items-center gap-4">
-                                                        <User size={14} className="text-[#8B5CF6]" />
+                                                        <User size={14} className="text-[#152467]" />
                                                         <span>{passengers.length} Guest(s)</span>
                                                     </div>
                                                     <div className="flex items-center gap-4">
-                                                        <Calendar size={14} className="text-[#8B5CF6]" />
+                                                        <Calendar size={14} className="text-[#152467]" />
                                                         <span>check in: {hotel.checkIn}</span>
                                                     </div>
                                                     <div className="flex items-center gap-4">
-                                                        <Calendar size={14} className="text-[#8B5CF6]" />
+                                                        <Calendar size={14} className="text-[#152467]" />
                                                         <span>check out: {hotel.checkOut}</span>
                                                     </div>
                                                 </div>
@@ -258,9 +258,9 @@ export default function HotelBookingCard() {
                                 </div>
 
                                 {/* Ancillary Preview */}
-                                <div className="bg-white rounded-xl border border-gray-200 shadow-xl p-8 space-y-6 border-t-[6px] border-[#8B5CF6] group">
+                                <div className="bg-white rounded-xl border border-gray-200 shadow-xl p-8 space-y-6 border-t-[6px] border-[#152467] group">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#8B5CF6] group-hover:rotate-12 transition-transform duration-500 shadow-inner">
+                                        <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#152467] group-hover:rotate-12 transition-transform duration-500 shadow-inner">
                                             <ShoppingBag size={20} />
                                         </div>
                                         <h4 className="text-[11px] font-black uppercase tracking-widest text-gray-400">Add On Services Summary</h4>
@@ -319,13 +319,13 @@ export default function HotelBookingCard() {
                                         <tr className="bg-white hover:bg-gray-50 transition-colors divide-x divide-gray-100">
                                             <td className="px-6 py-10 font-black text-gray-900">{hotel.name}</td>
                                             <td className="px-6 py-10 text-gray-400 italic">Hotel Booking</td>
-                                            <td className="px-6 py-10 text-center text-[#8B5CF6] font-black text-xs">{((booking.total?.amount || 0) * 0.85).toFixed(2)}</td>
+                                            <td className="px-6 py-10 text-center text-[#152467] font-black text-xs">{((booking.total?.amount || 0) * 0.85).toFixed(2)}</td>
                                             <td className="px-6 py-10 text-center text-gray-400 font-medium">{((booking.total?.amount || 0) * 0.15).toFixed(2)}</td>
-                                            <td className="px-6 py-10 text-center text-[#8B5CF6] font-black text-xs">{booking.total?.amount}</td>
+                                            <td className="px-6 py-10 text-center text-[#152467] font-black text-xs">{booking.total?.amount}</td>
                                         </tr>
                                         {/* Calculation Summary Row */}
                                         <tr className="bg-[#1E1B4B] text-white">
-                                            <td colSpan={4} className="px-6 py-10 text-right text-sm font-black uppercase tracking-widest text-[#FFD700]">Total Booking Amount :</td>
+                                            <td colSpan={4} className="px-6 py-10 text-right text-sm font-black uppercase tracking-widest text-[#EC5C4C]">Total Booking Amount :</td>
                                             <td className="px-6 py-10 text-center text-2xl font-black text-white">{booking.total?.currency} {booking.total?.amount}</td>
                                         </tr>
                                     </tbody>
@@ -350,8 +350,8 @@ export default function HotelBookingCard() {
                                     }}
                                     className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm group"
                                 >
-                                    <RefreshCw id="sync-btn-hotel" size={16} className="text-[#8B5CF6]" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-600 group-hover:text-[#8B5CF6]">Sync Updates</span>
+                                    <RefreshCw id="sync-btn-hotel" size={16} className="text-[#152467]" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-600 group-hover:text-[#152467]">Sync Updates</span>
                                 </button>
                             </div>
 
@@ -435,7 +435,7 @@ export default function HotelBookingCard() {
                                                         {item.status === 'REJECTED' && (
                                                             <button
                                                                 onClick={() => setSelectedNotification(item)}
-                                                                className="text-[10px] font-black uppercase tracking-widest text-[#8B5CF6] hover:underline"
+                                                                className="text-[10px] font-black uppercase tracking-widest text-[#152467] hover:underline"
                                                             >
                                                                 View Details
                                                             </button>

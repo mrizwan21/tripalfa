@@ -25,7 +25,7 @@ async function globalSetup(config: FullConfig) {
 
     // Start mock API server for external services
     console.log('📡 Starting mock API server...');
-    mockServerProcess = spawn('node', ['tests/mocks/mock-server.js'], {
+    mockServerProcess = spawn('npx', ['tsx', 'tests/mocks/mock-server.ts'], {
       cwd: path.resolve(__dirname, '../../'),
       stdio: 'inherit',
       env: { ...process.env, NODE_ENV: 'test' }

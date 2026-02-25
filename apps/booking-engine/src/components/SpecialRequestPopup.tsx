@@ -63,7 +63,7 @@ export const SpecialRequestPopup = ({ isOpen, onClose, onConfirm }: SpecialReque
                                 key={p.id}
                                 onClick={() => setSelectedPassenger(p.id)}
                                 className={`px-6 h-12 rounded-[2rem] flex items-center gap-3 border transition-all ${selectedPassenger === p.id
-                                    ? 'bg-[#FFD700] border-[#FFD700] shadow-lg'
+                                    ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-lg'
                                     : 'bg-white border-gray-100 text-gray-400'
                                     }`}
                             >
@@ -81,11 +81,11 @@ export const SpecialRequestPopup = ({ isOpen, onClose, onConfirm }: SpecialReque
                                     key={opt.id}
                                     onClick={() => toggleRequest(opt.id)}
                                     className={`p-6 rounded-[2.5rem] border-2 cursor-pointer transition-all flex items-center gap-6 group ${isSelected
-                                        ? 'border-[#8B5CF6] bg-purple-50/50'
+                                        ? 'border-[#152467] bg-purple-50/50'
                                         : 'border-gray-50 hover:border-gray-200 bg-white'
                                         }`}
                                 >
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? 'bg-[#8B5CF6] text-white shadow-lg' : 'bg-gray-50 text-gray-300'}`}>
+                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isSelected ? 'bg-[#152467] text-white shadow-lg' : 'bg-gray-50 text-gray-300'}`}>
                                         {opt.icon}
                                     </div>
                                     <div className="flex-1">
@@ -124,7 +124,7 @@ export const SpecialRequestPopup = ({ isOpen, onClose, onConfirm }: SpecialReque
                     </div>
                     <Button
                         onClick={() => onConfirm(requests as any)}
-                        className="bg-[#FFD700] hover:bg-[#F4CE14] text-black px-12 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1"
+                        className="bg-[#EC5C4C] hover:bg-[#F4CE14] text-black px-12 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl transition-all hover:-translate-y-1"
                     >
                         Send Requests
                     </Button>

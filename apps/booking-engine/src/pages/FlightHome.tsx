@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
-import { Search, MapPin, Calendar, User, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Search, MapPin, Calendar, User, ChevronRight, ChevronLeft, BookOpen, Loader2 } from 'lucide-react';
 import { SearchAutocomplete, Suggestion } from '../components/ui/SearchAutocomplete';
 import { TravelerSelector } from '../components/ui/TravelerSelector';
 import { CabinSelector } from '../components/ui/CabinSelector';
 import { DualMonthCalendar } from '../components/ui/DualMonthCalendar';
 import { format } from 'date-fns';
+import { usePopularDestinations } from '../hooks/useStaticData';
+import { useWikivoyageGuide } from '../hooks/useWikivoyage';
+import { DestinationContentCard } from '../components/DestinationContentCard';
 
 interface PopularDestination {
-  id: string;
-  name: string;
-  countryName: string;
-  countryCode: string;
-  hotelCount: number;
-  imageUrl?: string | null;
-  destinationType?: string;
+    id: string;
+    name: string;
+    countryName: string;
+    countryCode: string;
+    hotelCount: number;
+    imageUrl?: string | null;
+    destinationType?: string;
 }
 
 const PLACEHOLDER_DESTINATION_IMAGE = '/images/placeholder-destination.jpg';
@@ -23,8 +26,13 @@ const PLACEHOLDER_DESTINATION_IMAGE = '/images/placeholder-destination.jpg';
 export default function FlightHome() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('Middle East');
-    const [popularDestinations, setPopularDestinations] = useState<PopularDestination[]>([]);
+    const { data: popularDestinations = [] } = usePopularDestinations(20);
     const [carouselStart, setCarouselStart] = useState(0);
+    
+    // Featured destination for Wikivoyage content - pick from top destinations
+    const featuredDestination = popularDestinations[0]?.name || 'Paris';
+    const { data: wikivoyageContent, isLoading: isLoadingWiki } = useWikivoyageGuide(featuredDestination);
+    
     const [from, setFrom] = useState('');
     const [to, setTo] = useState('');
     const [fromCode, setFromCode] = useState('');
@@ -32,7 +40,7 @@ export default function FlightHome() {
     const [departureDate, setDepartureDate] = useState<Date | null>(null);
     const [returnDate, setReturnDate] = useState<Date | null>(null);
     const [tripType, setTripType] = useState<'roundTrip' | 'oneWay' | 'multiCity'>('roundTrip');
-    
+
     // Multi-city legs (minimum 2)
     const [multiCityLegs, setMultiCityLegs] = useState<Array<{
         from: string; fromCode: string; to: string; toCode: string; date: Date | null;
@@ -40,39 +48,25 @@ export default function FlightHome() {
         { from: '', fromCode: '', to: '', toCode: '', date: null },
         { from: '', fromCode: '', to: '', toCode: '', date: null },
     ]);
-    
+
     const addMultiCityLeg = () => {
         setMultiCityLegs(prev => [...prev, { from: '', fromCode: '', to: '', toCode: '', date: null }]);
     };
-    
+
     const removeMultiCityLeg = (idx: number) => {
         if (multiCityLegs.length > 2) {
             setMultiCityLegs(prev => prev.filter((_, i) => i !== idx));
         }
     };
-    
+
     const updateMultiCityLeg = (idx: number, field: string, value: any) => {
         setMultiCityLegs(prev => prev.map((leg, i) => i === idx ? { ...leg, [field]: value } : leg));
     };
 
-    // Fetch popular destinations from PostgreSQL via static-data-service
-    useEffect(() => {
-        fetch('/static/popular-destinations?limit=20')
-            .then(r => r.json())
-            .then(d => {
-                const data = Array.isArray(d) ? d : (d.data || []);
-                setPopularDestinations(data.slice(0, 20));
-            })
-            .catch(() => {
-                // Empty state — no hardcoded fallback destinations per spec
-                setPopularDestinations([]);
-            });
-    }, []);
-
     const handleSearch = () => {
         const params = new URLSearchParams();
         params.set('tripType', tripType);
-        
+
         // Multi-city: use leg[i][origin], leg[i][destination], leg[i][date] params
         if (tripType === 'multiCity') {
             multiCityLegs.forEach((leg, i) => {
@@ -86,7 +80,7 @@ export default function FlightHome() {
             navigate(`/flights/list?${params.toString()}`);
             return;
         }
-        
+
         // One-way / Round-trip
         if (fromCode) params.set('origin', fromCode);
         else if (from) params.set('origin', from);
@@ -103,13 +97,14 @@ export default function FlightHome() {
     return (
         <TripLogerLayout>
             {/* Hero Section */}
-            <div className="relative h-[600px] flex items-center justify-center">
+            <div className="relative h-[600px] flex items-center justify-center overflow-hidden">
                 {/* Background Image: Airplane Window/Wing view */}
                 <div
                     className="absolute inset-0 bg-cover bg-center z-0"
                     style={{ backgroundImage: "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')" }}
                 >
-                    <div className="absolute inset-0 bg-black/20"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#6366F1]/80 via-[#152467]/60 to-[#A855F7]/40"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
                 </div>
 
                 <div className="container mx-auto px-4 relative z-10 flex flex-col items-center">
@@ -128,11 +123,11 @@ export default function FlightHome() {
                             <option value="oneWay">One Way</option>
                             <option value="multiCity">Multi-City</option>
                         </select>
-                        <input 
-                            type="text" 
-                            data-testid="flight-date" 
-                            className="hidden" 
-                            value={departureDate ? format(departureDate, 'yyyy-MM-dd') : ''} 
+                        <input
+                            type="text"
+                            data-testid="flight-date"
+                            className="hidden"
+                            value={departureDate ? format(departureDate, 'yyyy-MM-dd') : ''}
                             onChange={(e) => {
                                 const date = new Date(e.target.value);
                                 if (!isNaN(date.getTime())) {
@@ -147,16 +142,16 @@ export default function FlightHome() {
                                 onClick={() => navigate('/hotels')}
                                 className="px-6 py-2 rounded-full text-white font-medium hover:bg-white/10 transition-colors flex items-center gap-2"
                             >
-                                <span>Stays</span>
+                                <span>🏨</span> Stays
                             </button>
                             <button
                                 className="px-6 py-2 rounded-full bg-white text-[#003B95] font-bold shadow-md flex items-center gap-2"
                             >
-                                <span>Flights</span>
+                                <span>✈️</span> Flights
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                             {/* Trip Type & Class (Radio/Dropdowns) can go here relative */}
                             <div className="col-span-12 flex gap-4 mb-2 text-white text-xs font-bold px-2 items-center flex-wrap uppercase tracking-wider">
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -165,7 +160,7 @@ export default function FlightHome() {
                                         name="trip"
                                         checked={tripType === 'roundTrip'}
                                         onChange={() => setTripType('roundTrip')}
-                                        className="accent-[#FFD700]"
+                                        className="accent-[#EC5C4C]"
                                     /> Round Trip
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -174,7 +169,7 @@ export default function FlightHome() {
                                         name="trip"
                                         checked={tripType === 'oneWay'}
                                         onChange={() => setTripType('oneWay')}
-                                        className="accent-[#FFD700]"
+                                        className="accent-[#EC5C4C]"
                                     /> One Way
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -183,7 +178,7 @@ export default function FlightHome() {
                                         name="trip"
                                         checked={tripType === 'multiCity'}
                                         onChange={() => setTripType('multiCity')}
-                                        className="accent-[#FFD700]"
+                                        className="accent-[#EC5C4C]"
                                     /> Multi-City
                                 </label>
                                 <div className="ml-auto flex items-center gap-4">
@@ -300,7 +295,7 @@ export default function FlightHome() {
                                                         const d = e.target.value ? new Date(e.target.value) : null;
                                                         updateMultiCityLeg(idx, 'date', d);
                                                     }}
-                                                    className="w-full h-10 px-3 rounded-lg bg-white/90 text-gray-900 text-sm font-medium border-0 focus:ring-2 focus:ring-[#FFD700]"
+                                                    className="w-full h-10 px-3 rounded-lg bg-white/90 text-gray-900 text-sm font-medium border-0 focus:ring-2 focus:ring-[#EC5C4C]"
                                                 />
                                             </div>
                                             <div className="col-span-3 flex items-center gap-2">
@@ -321,13 +316,13 @@ export default function FlightHome() {
                                     >
                                         + Add another leg
                                     </button>
-                                    
+
                                     {/* Multi-city Search Button */}
                                     <div className="pt-2">
                                         <button
                                             onClick={handleSearch}
                                             data-testid="flight-search-submit"
-                                            className="h-12 px-8 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                                            className="h-12 px-8 bg-[#EC5C4C] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
                                         >
                                             Search Multi-City
                                         </button>
@@ -353,7 +348,7 @@ export default function FlightHome() {
                                         <button
                                             onClick={handleSearch}
                                             data-testid="flight-search-submit"
-                                            className="w-full h-12 bg-[#FFD700] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                                            className="w-full h-12 bg-[#EC5C4C] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
                                         >
                                             Search
                                         </button>
@@ -421,16 +416,16 @@ export default function FlightHome() {
                                     alt={dest.name}
                                 />
                                 <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10"></div>
-                                <div className="absolute bottom-0 left-0 w-full bg-[#FFD700] py-2 text-center font-bold text-xs uppercase tracking-wider text-black">
+                                <div className="absolute bottom-0 left-0 w-full bg-[#EC5C4C] py-2 text-center font-bold text-xs uppercase tracking-wider text-black">
                                     {dest.name}
                                     {dest.countryCode && <span className="ml-1 opacity-60">· {dest.countryCode}</span>}
                                 </div>
                             </div>
-                          ))
+                        ))
                         : /* Loading skeleton */
-                          Array.from({ length: 5 }).map((_, i) => (
+                        Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="rounded-xl overflow-hidden aspect-[4/3] bg-gray-200 animate-pulse" />
-                          ))
+                        ))
                     }
                 </div>
                 <div className="flex justify-between items-center mt-4">
@@ -451,6 +446,30 @@ export default function FlightHome() {
                     </button>
                 </div>
             </div>
+
+            {/* Featured Destination Guide from Wikivoyage */}
+            {(wikivoyageContent || isLoadingWiki) && (
+                <div className="container mx-auto px-4 py-12">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">Discover Your Next Destination</h2>
+                            <p className="text-gray-500 text-sm mt-1">Travel guide from Wikivoyage</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-indigo-600">
+                            <BookOpen className="w-4 h-4" />
+                            <span>Powered by Wikivoyage</span>
+                        </div>
+                    </div>
+                    
+                    <DestinationContentCard
+                        destination={featuredDestination}
+                        content={wikivoyageContent}
+                        isLoading={isLoadingWiki}
+                        variant="featured"
+                        onExplore={() => navigate(`/hotels?destination=${encodeURIComponent(featuredDestination)}`)}
+                    />
+                </div>
+            )}
 
             {/* Trending Destinations from PostgreSQL */}
             <div className="container mx-auto px-4 py-12 bg-white rounded-3xl mb-20 shadow-sm border border-gray-100">
@@ -473,7 +492,7 @@ export default function FlightHome() {
                         <p className="text-[#6366F1] font-bold text-sm bg-indigo-50 inline-block px-2 py-1 rounded">Most Hotels</p>
                         <ul className="text-xs text-blue-500 space-y-2 font-medium">
                             {popularDestinations
-                                .filter(d => activeTab === 'All' || d.destinationType?.toLowerCase().includes(activeTab.toLowerCase().replace('ies','y').replace('s','')) )
+                                .filter(d => activeTab === 'All' || d.destinationType?.toLowerCase().includes(activeTab.toLowerCase().replace('ies', 'y').replace('s', '')))
                                 .slice(0, 5)
                                 .map(d => (
                                     <li key={d.id} className="hover:underline cursor-pointer" onClick={() => navigate(`/hotels?destination=${encodeURIComponent(d.name)}`)}>

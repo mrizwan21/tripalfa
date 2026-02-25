@@ -21,7 +21,9 @@ const router: ExpressRouter = Router();
 
 // Environment Configuration
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'development_secret';
-const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3005';
+const NOTIFICATION_SERVICE_URL = process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3009';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const ENABLE_WEBHOOK_SIGNATURE_VERIFICATION = process.env.ENABLE_WEBHOOK_SIGNATURE_VERIFICATION === 'true' || NODE_ENV === 'production';
 
 // ============================================
 // Webhook Event Types
@@ -166,12 +168,93 @@ async function sendNotification(type: string, data: any): Promise<void> {
   }
 }
 
+/**
+ * Send flight booking confirmation email
+ * Based on Duffel best practices: https://duffel.com/docs/guides/handling-flight-booking-confirmation-emails
+ */
+async function sendFlightConfirmation(data: any): Promise<void> {
+  try {
+    const {
+      order_id,
+      status,
+      passenger_name,
+      origin,
+      destination,
+      total_amount,
+      currency,
+      customer_email,
+      customer_name,
+      flights,
+      passengers
+    } = data;
+
+    // Build flight confirmation payload
+    const confirmationPayload = {
+      orderId: order_id,
+      bookingReference: order_id,
+      customerEmail: customer_email || data.email || 'customer@example.com',
+      customerName: customer_name || passenger_name || 'Valued Customer',
+      flights: flights || [{
+        departure: {
+          airportCode: origin?.code || origin || 'DEP',
+          city: origin?.city || origin || 'Departure City',
+          airport: origin?.airport || origin || 'Departure Airport',
+          time: data.departure_time || new Date().toISOString(),
+          terminal: origin?.terminal
+        },
+        arrival: {
+          airportCode: destination?.code || destination || 'ARR',
+          city: destination?.city || destination || 'Arrival City',
+          airport: destination?.airport || destination || 'Arrival Airport',
+          time: data.arrival_time || new Date().toISOString(),
+          terminal: destination?.terminal
+        },
+        airline: data.airline || 'Airline',
+        flightNumber: data.flight_number || '',
+        cabinClass: data.cabin_class || 'Economy',
+        duration: data.duration || '',
+        flightId: data.flight_id || ''
+      }],
+      passengers: passengers || [{
+        firstName: passenger_name?.first || passenger_name || 'Passenger',
+        lastName: passenger_name?.last || '',
+        passengerType: 'adult'
+      }],
+      totalAmount: total_amount || '0',
+      currency: currency || 'USD',
+      userId: data.userId
+    };
+
+    console.log(`[Webhook] Sending flight confirmation for order ${order_id}`);
+
+    // Call the flight confirmation endpoint
+    const response = await fetch(`${NOTIFICATION_SERVICE_URL}/notifications/flight/confirmation/webhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(confirmationPayload)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Webhook] Flight confirmation failed: ${response.status} - ${errorText}`);
+      return;
+    }
+
+    const result = await response.json();
+    console.log(`[Webhook] Flight confirmation sent: ${result.notificationId}`);
+  } catch (error) {
+    console.error('[Webhook] Flight confirmation error:', error instanceof Error ? error.message : 'Unknown error');
+  }
+}
+
 // ============================================
 // Duffel Webhook Handlers
 // ============================================
 
 /**
  * Handle order.created event
+ * This triggers the flight booking confirmation email flow
+ * Reference: https://duffel.com/docs/guides/handling-flight-booking-confirmation-emails
  */
 async function handleOrderCreated(data: any): Promise<void> {
   const { order_id, status, passenger_name, origin, destination, total_amount, currency } = data;
@@ -210,6 +293,10 @@ async function handleOrderCreated(data: any): Promise<void> {
 
   // Send notification
   await sendNotification('duffel_order_created', { order_id, status });
+
+  // Send flight booking confirmation email (Duffel best practice)
+  // This is triggered on order creation to send confirmation to customer
+  await sendFlightConfirmation(data);
 }
 
 /**
@@ -588,11 +675,22 @@ router.post('/duffel', async (req: Request, res: Response) => {
     const signature = req.headers['x-duffel-signature'] as string;
     const payload = JSON.stringify(req.body);
 
-    // Verify signature (in production, this should be enabled)
-    // if (!verifySignature(payload, signature)) {
-    //   console.warn('[Webhook] Invalid Duffel signature');
-    //   return res.status(401).json({ error: 'Invalid signature' });
-    // }
+    // Verify signature in production or when explicitly enabled
+    if (ENABLE_WEBHOOK_SIGNATURE_VERIFICATION) {
+      if (!signature) {
+        console.warn('[Webhook] Missing Duffel signature header');
+        return res.status(401).json({ error: 'Missing signature header' });
+      }
+      
+      if (!verifySignature(payload, signature)) {
+        console.warn('[Webhook] Invalid Duffel signature');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
+      
+      console.log('[Webhook] Duffel signature verified successfully');
+    } else {
+      console.log('[Webhook] Duffel signature verification disabled (development mode)');
+    }
 
     const { type, data } = req.body;
 
@@ -648,11 +746,22 @@ router.post('/liteapi', async (req: Request, res: Response) => {
     const signature = req.headers['x-liteapi-signature'] as string;
     const payload = JSON.stringify(req.body);
 
-    // Verify signature (in production, this should be enabled)
-    // if (!verifySignature(payload, signature)) {
-    //   console.warn('[Webhook] Invalid LITEAPI signature');
-    //   return res.status(401).json({ error: 'Invalid signature' });
-    // }
+    // Verify signature in production or when explicitly enabled
+    if (ENABLE_WEBHOOK_SIGNATURE_VERIFICATION) {
+      if (!signature) {
+        console.warn('[Webhook] Missing LITEAPI signature header');
+        return res.status(401).json({ error: 'Missing signature header' });
+      }
+      
+      if (!verifySignature(payload, signature)) {
+        console.warn('[Webhook] Invalid LITEAPI signature');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
+      
+      console.log('[Webhook] LITEAPI signature verified successfully');
+    } else {
+      console.log('[Webhook] LITEAPI signature verification disabled (development mode)');
+    }
 
     const { event_type, data } = req.body;
 

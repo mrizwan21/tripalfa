@@ -11,7 +11,7 @@ import { Button } from '../components/ui/button';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { formatCurrency } from '@tripalfa/ui-components';
 import { fetchDestinationsDB, getBookingById, api, searchFlights } from '../lib/api';
-import { usePopularDestinations } from '../hooks/useHotelStaticData';
+import { usePopularDestinations } from '../hooks/useStaticData';
 
 // Types for cross-selling
 interface HotelOffer {
@@ -49,7 +49,10 @@ export default function BookingConfirmation() {
   const totalPaid = state?.totalPaid || 0;
   const bookingState = state?.bookingState;
   const flight = bookingState?.summary?.flight;
-
+  
+  // Extract documents and workflowId from bookingState (passed from hold booking)
+  const documentsFromState = bookingState?.documents || null;
+  const workflowId = bookingState?.workflowId || null;
   const isHold = paymentMode === 'hold';
   const isHotel = bookingState?.summary?.type === 'hotel';
   const hotelSummary = bookingState?.summary?.hotel;
@@ -57,7 +60,7 @@ export default function BookingConfirmation() {
   // Dynamic booking data from API
   const [bookingData, setBookingData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [documents, setDocuments] = useState<any[]>([]);
+  const [documents, setDocuments] = useState<Record<string, any>>({});
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
@@ -97,7 +100,7 @@ export default function BookingConfirmation() {
         // Fetch available documents
         try {
           const docs = await api.get(`/bookings/${bookingId}/documents`);
-          setDocuments(docs?.data?.documents || []);
+          setDocuments(docs?.data?.documents || {});
         } catch (docError) {
           console.error('Failed to fetch documents:', docError);
         }
@@ -111,7 +114,7 @@ export default function BookingConfirmation() {
   }, [bookingId]);
 
   // Fetch popular destinations for Elite Stays section
-  const { data: recommendedDestinations = [] } = usePopularDestinations(4);
+  const { data: recommendedDestinations = [] } = (usePopularDestinations(4) as unknown) as { data: any[] };
 
   // Get destination city for cross-selling
   const getDestinationCity = () => {
@@ -201,8 +204,21 @@ export default function BookingConfirmation() {
 
   // Remove duplicate useEffect - keep only one
 
-  // Handle document download
+  // Handle document download - use documents from state if available, otherwise fetch from API
   const handleDownloadDocument = async (docType: string) => {
+    // If we have documents in state (from hold booking), use them directly
+    if (documentsFromState && documentsFromState[docType]) {
+      const docContent = documentsFromState[docType];
+      // Open document in new window
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(docContent);
+        newWindow.document.close();
+      }
+      return;
+    }
+    
+    // Otherwise, try to fetch from API
     try {
       const response = await api.get(`/bookings/${bookingId}/documents/${docType}/download?bookingType=${isHotel ? 'hotel' : 'flight'}`);
       if (response?.data?.content) {
@@ -220,9 +236,22 @@ export default function BookingConfirmation() {
 
   // Handle view invoice
   const handleViewInvoice = (invoice: any) => {
+    // If we have invoice document in state, use it directly
+    if (documents?.invoice) {
+      setSelectedInvoice({ type: 'invoice', content: documents.invoice });
+      setShowInvoiceModal(true);
+      // Also open in new window
+      const newWindow = window.open('', '_blank');
+      if (newWindow) {
+        newWindow.document.write(documents.invoice);
+        newWindow.document.close();
+      }
+      return;
+    }
+    
     setSelectedInvoice(invoice);
     setShowInvoiceModal(true);
-    handleDownloadDocument(invoice.type);
+    handleDownloadDocument('invoice');
   };
 
   // Handle pay for hold booking
@@ -261,18 +290,18 @@ export default function BookingConfirmation() {
 
         {/* Success Header Banner */}
         <div className="bg-[#111827] text-white pt-24 pb-48 relative overflow-hidden" data-testid="booking-confirmation">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#8B5CF6]/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#152467]/20 to-transparent" />
           <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#8B5CF6] rounded-full blur-[100px]" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#FFD700] rounded-full blur-[100px]" />
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#152467] rounded-full blur-[100px]" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#EC5C4C] rounded-full blur-[100px]" />
           </div>
 
           <div className="container mx-auto px-4 max-w-7xl relative z-10 text-center space-y-10">
             <div className="relative inline-block">
-              <div className="w-28 h-28 rounded-[2.5rem] bg-[#FFD700] mx-auto flex items-center justify-center text-black shadow-[0_20px_50px_rgba(255,215,0,0.3)] animate-bounce-subtle">
+              <div className="w-28 h-28 rounded-[2.5rem] bg-[#EC5C4C] mx-auto flex items-center justify-center text-black shadow-[0_20px_50px_rgba(255,215,0,0.3)] animate-bounce-subtle">
                 <CheckCircle2 size={56} strokeWidth={2.5} />
               </div>
-              <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#8B5CF6] shadow-xl">
+              <div className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#152467] shadow-xl">
                 <Shield size={16} fill="currentColor" />
               </div>
             </div>
@@ -286,41 +315,39 @@ export default function BookingConfirmation() {
                   {isHold ? 'Hold Reference Identifier' : 'Elite Booking Identifier'}
                 </p>
                 <div className="px-8 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
-                  <span className="text-2xl font-black text-[#FFD700] tracking-widest" data-testid="booking-reference">{bookingId}</span>
+                  <span className="text-2xl font-black text-[#EC5C4C] tracking-widest" data-testid="booking-reference">{bookingId}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-6 pt-4">
+            <div className="flex items-center justify-center gap-6 pt-4 flex-wrap">
               {isHold ? (
                 <button 
                   onClick={handlePayNow}
-                  className="h-14 px-10 rounded-2xl bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group animate-pulse"
+                  className="h-14 px-10 rounded-2xl bg-[#EC5C4C] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group animate-pulse"
                 >
-                  <Wallet size={18} className="group-hover:translate-y-0.5 transition-transform" /> Pay Now to Confirm
+                  <Wallet size={18} className="group-hover:translate-y-0.5 transition-transform" /> Pay for Booking
                 </button>
               ) : (
                 <button 
                   onClick={() => handleDownloadDocument('ticket')}
-                  className="h-14 px-10 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group"
+                  className="h-14 px-10 rounded-2xl bg-[#EC5C4C] text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-xl flex items-center gap-3 group"
                 >
                   <Download size={18} className="group-hover:translate-y-0.5 transition-transform" /> E-Ticket
                 </button>
               )}
               <button 
-                onClick={() => handleDownloadDocument('receipt')}
+                onClick={() => handleDownloadDocument('invoice')}
                 className="h-14 px-10 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3"
               >
-                <Printer size={18} /> {isHold ? 'Booking Summary' : 'Receipt'}
+                <FileText size={18} /> View Invoice
               </button>
-              {!isHold && (
-                <button 
-                  onClick={() => handleDownloadDocument('invoice')}
-                  className="h-14 px-10 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3"
-                >
-                  <FileText size={18} /> View Invoice
-                </button>
-              )}
+              <button 
+                onClick={() => handleDownloadDocument('itinerary')}
+                className="h-14 px-10 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3"
+              >
+                <MapPin size={18} /> View Itinerary
+              </button>
             </div>
           </div>
         </div>
@@ -336,12 +363,12 @@ export default function BookingConfirmation() {
                 <div className="absolute top-0 right-0 w-80 h-80 bg-purple-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="relative z-10 space-y-10">
                   <div className="flex items-center gap-8">
-                    <div className="w-20 h-20 rounded-[2rem] bg-purple-50 flex items-center justify-center text-[#8B5CF6] shadow-inner">
+                    <div className="w-20 h-20 rounded-[2rem] bg-purple-50 flex items-center justify-center text-[#152467] shadow-inner">
                       <Sparkles size={40} />
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-3xl font-black text-gray-900 tracking-tight">Bonjour, {passengerName}!</h2>
-                      <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.3em]">Premium Access Confirmed</p>
+                      <p className="text-[10px] font-black text-[#152467] uppercase tracking-[0.3em]">Premium Access Confirmed</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-6 border-t border-gray-100">
@@ -360,7 +387,7 @@ export default function BookingConfirmation() {
                       <p className="text-xl font-black text-gray-900 uppercase tracking-tight">{paymentMode === 'hold' ? 'Pay later' : 'TL-Wallet'}</p>
                     </div>
                   </div>
-                  <p className="text-[12px] font-bold text-gray-500 leading-relaxed max-w-2xl bg-gray-50 p-6 rounded-2xl italic border-l-4 border-[#8B5CF6]">
+                  <p className="text-[12px] font-bold text-gray-500 leading-relaxed max-w-2xl bg-gray-50 p-6 rounded-2xl italic border-l-4 border-[#152467]">
                     {isHold
                       ? "Your booking is currently on hold. Please finalize your payment within the next 24 hours to secure this fare and receive your e-tickets."
                       : "Your premium itinerary has been dispatched to your registered address. We've unlocked priority check-in and lounge access for your upcoming journey."}
@@ -380,9 +407,9 @@ export default function BookingConfirmation() {
 
                 <div className="space-y-12">
                   {isHotel && hotelSummary ? (
-                    <div className="flex flex-col lg:flex-row items-center justify-between gap-12 bg-gray-50/50 rounded-[3rem] p-12 group hover:bg-white hover:shadow-2xl transition-all duration-700 border-2 border-transparent hover:border-[#8B5CF6]/5">
+                    <div className="flex flex-col lg:flex-row items-center justify-between gap-12 bg-gray-50/50 rounded-[3rem] p-12 group hover:bg-white hover:shadow-2xl transition-all duration-700 border-2 border-transparent hover:border-[#152467]/5">
                       <div className="flex items-center gap-8">
-                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500"><Hotel size={32} className="text-[#8B5CF6]" /></div>
+                        <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500"><Hotel size={32} className="text-[#152467]" /></div>
                         <div>
                           <p className="text-2xl font-black text-gray-900 leading-none mb-2">{hotelSummary.name}</p>
                           <div className="flex items-center gap-3">
@@ -399,9 +426,9 @@ export default function BookingConfirmation() {
                   ) : (
                     itinerary.map((seg: any, i: number) => (
                       <div key={i} className="relative">
-                        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 bg-gray-50/50 rounded-[3rem] p-12 group hover:bg-white hover:shadow-2xl transition-all duration-700 border-2 border-transparent hover:border-[#8B5CF6]/5">
+                        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 bg-gray-50/50 rounded-[3rem] p-12 group hover:bg-white hover:shadow-2xl transition-all duration-700 border-2 border-transparent hover:border-[#152467]/5">
                           <div className="flex items-center gap-8">
-                            <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500"><Plane size={32} className="text-[#8B5CF6]" /></div>
+                            <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-xl group-hover:rotate-12 transition-transform duration-500"><Plane size={32} className="text-[#152467]" /></div>
                             <div>
                               <p className="text-2xl font-black text-gray-900 leading-none mb-2">{seg.airline}</p>
                               <div className="flex items-center gap-3">
@@ -409,7 +436,7 @@ export default function BookingConfirmation() {
                                 {seg.terminal && (
                                   <>
                                     <span className="w-1 h-1 rounded-full bg-gray-300" />
-                                    <span className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest">Premium Terminal {seg.terminal}</span>
+                                    <span className="text-[10px] font-black text-[#152467] uppercase tracking-widest">Premium Terminal {seg.terminal}</span>
                                   </>
                                 )}
                               </div>
@@ -422,9 +449,9 @@ export default function BookingConfirmation() {
                               <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mt-2">Source</p>
                             </div>
                             <div className="flex-1 flex flex-col items-center gap-3">
-                              <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.4em]">{seg.duration}</p>
+                              <p className="text-[10px] font-black text-[#152467] uppercase tracking-[0.4em]">{seg.duration}</p>
                               <div className="w-full h-0.5 bg-gradient-to-r from-transparent via-gray-200 to-transparent relative">
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#8B5CF6] shadow-xl" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-white border-2 border-[#152467] shadow-xl" />
                               </div>
                               <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Business</p>
                             </div>
@@ -435,7 +462,7 @@ export default function BookingConfirmation() {
                           </div>
 
                           <div className="text-right">
-                            <p className="text-2xl font-black text-[#8B5CF6] leading-none mb-2">{seg.time.split(' - ')[0]}</p>
+                            <p className="text-2xl font-black text-[#152467] leading-none mb-2">{seg.time.split(' - ')[0]}</p>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{seg.date}</p>
                           </div>
                         </div>
@@ -447,7 +474,7 @@ export default function BookingConfirmation() {
 
               {/* Intelligent Cross-Selling Banner */}
               {(!isHotel && crossSellHotels.length > 0) || (isHotel && crossSellFlights.length > 0) ? (
-                <div className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] rounded-[3.5rem] p-12 shadow-2xl space-y-8 text-white relative overflow-hidden">
+                <div className="bg-gradient-to-r from-[#152467] to-[#6D28D9] rounded-[3.5rem] p-12 shadow-2xl space-y-8 text-white relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
                   
                   <div className="relative z-10">
@@ -475,16 +502,16 @@ export default function BookingConfirmation() {
                           </div>
                           <h4 className="text-sm font-black mb-1 truncate">{hotel.name}</h4>
                           <div className="flex items-center gap-2 mb-3">
-                            <Star size={12} className="text-[#FFD700] fill-current" />
+                            <Star size={12} className="text-[#EC5C4C] fill-current" />
                             <span className="text-[10px] font-bold">{hotel.rating.toFixed(1)}</span>
                             <span className="text-[10px] text-white/60">| {hotel.location}</span>
                           </div>
                           <div className="flex items-end justify-between">
                             <div>
                               <p className="text-[10px] text-white/60">From</p>
-                              <p className="text-xl font-black text-[#FFD700]">${hotel.price}</p>
+                              <p className="text-xl font-black text-[#EC5C4C]">${hotel.price}</p>
                             </div>
-                            <button className="h-10 px-4 rounded-xl bg-white text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">
+                            <button className="h-10 px-4 rounded-xl bg-white text-[#152467] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">
                               View
                             </button>
                           </div>
@@ -522,9 +549,9 @@ export default function BookingConfirmation() {
                           <div className="flex items-end justify-between">
                             <div>
                               <p className="text-[10px] text-white/60">{flightOffer.departureDate}</p>
-                              <p className="text-xl font-black text-[#FFD700]">${flightOffer.price}</p>
+                              <p className="text-xl font-black text-[#EC5C4C]">${flightOffer.price}</p>
                             </div>
-                            <button className="h-10 px-4 rounded-xl bg-white text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">
+                            <button className="h-10 px-4 rounded-xl bg-white text-[#152467] text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform">
                               Book
                             </button>
                           </div>
@@ -541,7 +568,7 @@ export default function BookingConfirmation() {
               <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-sm space-y-8">
                 <div className="space-y-1">
                   <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">Elite Stays</h3>
-                  <p className="text-[9px] font-black text-[#8B5CF6] uppercase tracking-[0.3em]">Curated for your destination</p>
+                  <p className="text-[9px] font-black text-[#152467] uppercase tracking-[0.3em]">Curated for your destination</p>
                 </div>
 
                 <div className="space-y-10">
@@ -553,25 +580,25 @@ export default function BookingConfirmation() {
                           <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">{hotel.price}</p>
                         </div>
                       </div>
-                      <h4 className="text-sm font-black text-gray-900 tracking-tight group-hover:text-[#8B5CF6] transition-colors">{hotel.name}</h4>
+                      <h4 className="text-sm font-black text-gray-900 tracking-tight group-hover:text-[#152467] transition-colors">{hotel.name}</h4>
                       <p className="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-widest line-clamp-2">{hotel.desc}</p>
                     </div>
                   ))}
                 </div>
-                <button className="w-full h-14 rounded-2xl border-2 border-gray-50 hover:border-[#8B5CF6] hover:text-[#8B5CF6] text-[10px] font-black uppercase tracking-widest transition-all">View All Stays</button>
+                <button className="w-full h-14 rounded-2xl border-2 border-gray-50 hover:border-[#152467] hover:text-[#152467] text-[10px] font-black uppercase tracking-widest transition-all">View All Stays</button>
               </div>
 
               <div className="bg-[#111827] rounded-[3rem] p-10 shadow-2xl space-y-8 text-white relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-[#8B5CF6]/20 rounded-full blur-[60px]" />
+                <div className="absolute top-0 right-0 w-40 h-40 bg-[#152467]/20 rounded-full blur-[60px]" />
                 <div className="relative z-10 space-y-6">
-                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#FFD700]">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-[#EC5C4C]">
                     <Bell size={24} />
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-sm font-black uppercase tracking-widest leading-tight">Stay Informed</h3>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed">Push notifications for gate changes and boarding calls now active.</p>
                   </div>
-                  <button className="w-full h-12 rounded-xl bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#7C3AED] transition-colors">Manage Alerts</button>
+                  <button className="w-full h-12 rounded-xl bg-[#152467] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#0A1C50] transition-colors">Manage Alerts</button>
                 </div>
               </div>
             </div>
@@ -618,7 +645,7 @@ export default function BookingConfirmation() {
                       setShowPaymentModal(false);
                       navigate('/booking-checkout', { state: { bookingId, isHoldPayment: true } });
                     }}
-                    className="w-full h-14 rounded-2xl bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#7C3AED] transition-colors flex items-center justify-center gap-3"
+                    className="w-full h-14 rounded-2xl bg-[#152467] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#0A1C50] transition-colors flex items-center justify-center gap-3"
                   >
                     <CreditCard size={18} /> Pay with Card
                   </button>

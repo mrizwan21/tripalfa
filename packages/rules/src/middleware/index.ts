@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { PricingEngine } from '../services/pricingEngine';
 import { PricingCalculationRequest } from '../types';
-import { z } from 'zod';
 
 /**
  * Pricing calculation middleware

@@ -60,6 +60,7 @@ jspm_packages/
 .env.local
 .env.production
 .env.services
+.env.docker
 
 # Secrets folder - never commit
 secrets/
@@ -97,6 +98,30 @@ public
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# pnpm store
+.pnpm-store/
+
+
+# TypeScript source maps (generated)
+*.d.ts.map
+
+# Lock files in subdirectories (use root pnpm-lock.yaml)
+**/package-lock.json
+
+# Transpiled JavaScript from TypeScript (keep config files)
+# These .js files are generated from .ts/.tsx sources and should not be committed
+apps/**/src/**/*.js
+apps/**/src/**/*.js.map
+services/**/src/**/*.js
+services/**/src/**/*.js.map
+!**/vite.config.js
+!**/vitest.config.js
+!**/playwright.config.js
+!**/tailwind.config.js
+!**/jest.config.js
+!**/webpack.config.js
+!**/rollup.config.js
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -130,7 +155,6 @@ test-results/
 **/test-results/
 
 #Ignore vscode AI rules
-.github/instructions/codacy.instructions.md
 
 # Documentation archive - old/duplicate docs
 docs/archive/

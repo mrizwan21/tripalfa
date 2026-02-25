@@ -387,7 +387,6 @@ export default function B2CReportsPage() {
             columns={b2cColumns} 
             data={data} 
             searchKey="customerName"
-            loading={loading}
           />
         </CardContent>
       </Card>

@@ -78,7 +78,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                     <h2 className="text-xl font-black text-gray-900 text-center">Are you sure you want to add Selected Seat to the booking</h2>
 
                     <div className="w-full space-y-4">
-                        <p className="text-[10px] font-black text-center text-[#8B5CF6] uppercase tracking-widest">Seat selected summary</p>
+                        <p className="text-[10px] font-black text-center text-[#152467] uppercase tracking-widest">Seat selected summary</p>
                         <table className="w-full border-collapse">
                             <thead>
                                 <tr className="border-b border-gray-50">
@@ -109,8 +109,8 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                     </div>
 
                     <div className="flex gap-4 w-full">
-                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#8B5CF6] text-[#8B5CF6] font-black text-xs uppercase tracking-widest">No Need</button>
-                        <button onClick={() => onConfirm(selectedSeats)} className="flex-1 h-12 rounded-xl bg-[#8B5CF6] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all active:scale-95">Yes, Sure</button>
+                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#152467] text-[#152467] font-black text-xs uppercase tracking-widest">No Need</button>
+                        <button onClick={() => onConfirm(selectedSeats)} className="flex-1 h-12 rounded-xl bg-[#152467] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all active:scale-95">Yes, Sure</button>
                     </div>
                 </div>
             </div>
@@ -132,7 +132,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
 
                 <div className="flex-1 overflow-y-auto p-12 space-y-12">
                     <div className="flex items-center justify-center gap-6">
-                        <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-all">
+                        <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#152467] hover:text-[#152467] transition-all">
                             <ChevronLeft size={20} />
                         </button>
                         <div className="flex gap-4">
@@ -141,7 +141,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                                     key={p.id}
                                     onClick={() => setSelectedPassenger(p.id)}
                                     className={`px-8 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${selectedPassenger === p.id
-                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100 scale-105'
+                                        ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-xl shadow-yellow-100 scale-105'
                                         : 'border-gray-100 text-gray-400'
                                         }`}
                                 >
@@ -150,26 +150,26 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                                 </button>
                             ))}
                         </div>
-                        <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#8B5CF6] hover:text-[#8B5CF6] transition-all">
+                        <button className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:border-[#152467] hover:text-[#152467] transition-all">
                             <ChevronRight size={20} />
                         </button>
                     </div>
 
                     <div className="flex flex-col items-center gap-8 bg-gray-50/50 p-12 rounded-[3.5rem] border border-gray-100">
                         <div className="flex gap-10">
-                            <div className="flex items-center gap-2 text-[#8B5CF6] font-black text-xs uppercase tracking-widest">Select the seat</div>
+                            <div className="flex items-center gap-2 text-[#152467] font-black text-xs uppercase tracking-widest">Select the seat</div>
                             <div className="flex gap-4">
-                                <button className="px-6 py-2 bg-[#8B5CF6] text-white rounded-lg text-xs font-black flex items-center gap-2">DXB - LON <img src="/airplane-white.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
-                                <button className="px-6 py-2 border border-[#8B5CF6] text-[#8B5CF6] rounded-lg text-xs font-black flex items-center gap-2">LON - DXB <img src="/airplane-purple.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
+                                <button className="px-6 py-2 bg-[#152467] text-white rounded-lg text-xs font-black flex items-center gap-2">DXB - LON <img src="/airplane-white.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
+                                <button className="px-6 py-2 border border-[#152467] text-[#152467] rounded-lg text-xs font-black flex items-center gap-2">LON - DXB <img src="/airplane-purple.svg" className="w-4 h-4 opacity-50 rotate-90" /></button>
                             </div>
                         </div>
 
                         <div className="flex gap-8">
                             {[
                                 { label: 'Seat Unavailable', color: 'bg-gray-200' },
-                                { label: isLCC ? 'Paid Seat ($15+)' : 'Free Seat ($0)', color: 'bg-[#8B5CF6]' },
+                                { label: isLCC ? 'Paid Seat ($15+)' : 'Free Seat ($0)', color: 'bg-[#152467]' },
                                 { label: 'Premium/Exit row', color: 'bg-purple-300' },
-                                { label: 'Chosen Seat', color: 'bg-[#FFD700]' }
+                                { label: 'Chosen Seat', color: 'bg-[#EC5C4C]' }
                             ].map((item, i) => (
                                 <div key={i} className="flex items-center gap-2">
                                     <div className={`w-3 h-3 rounded-full ${item.color}`} />
@@ -188,7 +188,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                             <div className="relative w-full max-w-sm">
                                 {isLoading ? (
                                     <div className="flex flex-col items-center justify-center p-20 gap-4">
-                                        <Loader2 className="w-8 h-8 text-[#8B5CF6] animate-spin" />
+                                        <Loader2 className="w-8 h-8 text-[#152467] animate-spin" />
                                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading Live Seat Map...</p>
                                     </div>
                                 ) : (
@@ -210,9 +210,9 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                                                 }}
                                                 className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 flex flex-col items-center justify-center text-[7px] font-black ${s.status === 'unavailable' ? 'bg-gray-200 border-gray-200 text-gray-400 cursor-not-allowed' :
                                                     s.isExitRow ? 'bg-purple-300 border-purple-300 text-purple-700' :
-                                                        selectedSeats.find(st => st.seatNo === s.designator) ? 'bg-[#FFD700] border-[#FFD700] text-black shadow-lg shadow-yellow-100' :
-                                                            s.status === 'free' ? 'bg-white border-gray-100 text-[#8B5CF6]' :
-                                                                'bg-[#8B5CF6] border-[#8B5CF6] text-white shadow-lg shadow-purple-100'
+                                                        selectedSeats.find(st => st.seatNo === s.designator) ? 'bg-[#EC5C4C] border-[#EC5C4C] text-black shadow-lg shadow-yellow-100' :
+                                                            s.status === 'free' ? 'bg-white border-gray-100 text-[#152467]' :
+                                                                'bg-[#152467] border-[#152467] text-white shadow-lg shadow-purple-100'
                                                     }`}
                                             >
                                                 <span>{s.designator}</span>
@@ -242,7 +242,7 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                                         {selectedSeats.map((seat: any, i: number) => (
                                             <tr key={i} className="text-[10px] font-black text-gray-700">
                                                 <td className="px-6 py-4 flex items-center gap-3">
-                                                    <div className="w-4 h-4 rounded-full border-2 border-[#FFD700] bg-white" />
+                                                    <div className="w-4 h-4 rounded-full border-2 border-[#EC5C4C] bg-white" />
                                                     {seat.name}
                                                 </td>
                                                 <td className="px-6 py-4">{seat.flightNo}</td>
@@ -261,12 +261,12 @@ export const SeatSelectionPopup = ({ isOpen, onClose, onConfirm, isLCC = false, 
                             <Button
                                 onClick={() => setIsConfirming(true)}
                                 data-testid="confirm-seat-selection"
-                                className="w-full max-w-xl h-14 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1"
+                                className="w-full max-w-xl h-14 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1"
                             >
                                 Add Seat Pay ${selectedSeats.reduce((sum: number, s: any) => sum + s.price, 0)}
                             </Button>
                             <div className="flex items-start gap-3 max-w-lg">
-                                <Info size={16} className="text-[#FFD700] shrink-0 mt-0.5" />
+                                <Info size={16} className="text-[#EC5C4C] shrink-0 mt-0.5" />
                                 <p className="text-[9px] font-bold text-gray-500 leading-relaxed uppercase tracking-wide italic">
                                     Kindly note there is no seat assigned to an infant. Hence, if you want to book a Bascinet then please send us a request through our offline request form.
                                 </p>

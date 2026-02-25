@@ -21,13 +21,8 @@ import {
   Star, Search,
 } from 'lucide-react';
 import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
-import {
-  fetchNationalities,
-  fetchCountries,
-  fetchPhoneCodes,
-  fetchLoyaltyProgramsAll,
-} from '../../lib/api';
+import { useMemo } from 'react';
+import { useBundledStaticData } from '../../hooks/useBundledStaticData';
 import { SingleMonthCalendar } from '../ui/SingleMonthCalendar';
 
 // ── Schema ─────────────────────────────────────────────────────────────────────
@@ -83,35 +78,33 @@ export function PassengerForm({ index }: { index: number }) {
 
   const [loyaltySearch, setLoyaltySearch] = useState('');
 
-  // ── DB Queries ─────────────────────────────────────────────────────────────
+  // ── Static data lookups from bundled hook ────────────────────────────────
 
-  /** 243 nationalities from PostgreSQL Country table */
-  const { data: nationalities = [] } = useQuery({
-    queryKey: ['nationalities'],
-    queryFn:  fetchNationalities,
-    staleTime: 600_000,
-  } as any);
+  const staticData = useBundledStaticData();
+  
+  // Build O(1) lookup maps for countries and nationalities
+  const countriesByCode = useMemo(() => {
+    return (staticData.countries.data || []).reduce((acc: any, c: any) => {
+      acc[c.code] = c;
+      return acc;
+    }, {});
+  }, [staticData.countries.data]);
 
-  /** 243 countries from PostgreSQL Country table */
-  const { data: countries = [] } = useQuery({
-    queryKey: ['countries'],
-    queryFn:  fetchCountries,
-    staleTime: 600_000,
-  } as any);
+  const nationalitiesList = useMemo(() => {
+    return staticData.countries.data || [];
+  }, [staticData.countries.data]);
 
-  /** Phone prefixes: Country table (names) merged with ITU prefix table */
-  const { data: phoneCodes = [] } = useQuery({
-    queryKey: ['phone-codes'],
-    queryFn:  fetchPhoneCodes,
-    staleTime: 600_000,
-  } as any);
+  // Phone codes: use country data with phone_code field
+  const phoneCodesList = useMemo(() => {
+    return (staticData.countries.data || []).filter((c: any) => c.phone_code);
+  }, [staticData.countries.data]);
 
-  /** Airline loyalty programs from PostgreSQL LoyaltyProgram table */
-  const { data: loyaltyPrograms = [], isLoading: loyaltyLoading } = useQuery({
-    queryKey: ['loyalty-programs-all'],
-    queryFn:  () => fetchLoyaltyProgramsAll('airline'),
-    staleTime: 600_000,
-  } as any);
+  // Loyalty programs from static data
+  const loyaltyPrograms = useMemo(() => {
+    return staticData.loyaltyPrograms.data || [];
+  }, [staticData.loyaltyPrograms.data]);
+
+  const loyaltyLoading = staticData.loyaltyPrograms.isLoading;
 
   // Filter loyalty programs by search query
   const filteredLoyalty = loyaltySearch
@@ -127,12 +120,12 @@ export function PassengerForm({ index }: { index: number }) {
     : null;
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500 group hover:shadow-xl transition-all hover:border-[#8B5CF6]/30">
+    <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500 group hover:shadow-xl transition-all hover:border-[#152467]/30">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="bg-gray-50/50 px-10 py-6 border-b border-gray-50 flex items-center justify-between backdrop-blur-sm">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#8B5CF6] shadow-inner">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#152467] shadow-inner">
             <User size={18} />
           </div>
           <div>
@@ -141,9 +134,9 @@ export function PassengerForm({ index }: { index: number }) {
           </div>
         </div>
         {index === 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-[#8B5CF6]/10 rounded-full border border-[#8B5CF6]/20">
-            <CheckCircle2 size={12} className="text-[#8B5CF6]" />
-            <span className="text-[9px] font-black text-[#8B5CF6] uppercase tracking-widest">Primary Traveler</span>
+          <div className="flex items-center gap-2 px-4 py-2 bg-[#152467]/10 rounded-full border border-[#152467]/20">
+            <CheckCircle2 size={12} className="text-[#152467]" />
+            <span className="text-[9px] font-black text-[#152467] uppercase tracking-widest">Primary Traveler</span>
           </div>
         )}
       </div>
@@ -154,44 +147,44 @@ export function PassengerForm({ index }: { index: number }) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* First Name */}
           <div className="space-y-1.5 group/field">
-            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">First Name*</label>
+            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#152467] transition-colors">First Name*</label>
             <input
               {...register(`passengers.${index}.firstName`)}
               data-testid={`passenger-first-name${index > 0 ? `-${index}` : ''}`}
               placeholder="As per Passport"
-              className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.firstName ? 'border-red-500/50' : 'border-transparent'}`}
+              className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.firstName ? 'border-red-500/50' : 'border-transparent'}`}
             />
             <FieldError msg={passengerErrors?.firstName?.message} />
           </div>
 
           {/* Last Name */}
           <div className="space-y-1.5 group/field">
-            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">Last Name*</label>
+            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#152467] transition-colors">Last Name*</label>
             <input
               {...register(`passengers.${index}.lastName`)}
               data-testid={`passenger-last-name${index > 0 ? `-${index}` : ''}`}
               placeholder="As per Passport"
-              className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.lastName ? 'border-red-500/50' : 'border-transparent'}`}
+              className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.lastName ? 'border-red-500/50' : 'border-transparent'}`}
             />
             <FieldError msg={passengerErrors?.lastName?.message} />
           </div>
 
           {/* Nationality — from PostgreSQL Country table (243 records) */}
           <div className="space-y-1.5 group/field">
-            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">
+            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#152467] transition-colors">
               Nationality*
-              {(nationalities as any[]).length > 0 && (
-                <span className="ml-1 text-[7px] text-gray-300 normal-case">({(nationalities as any[]).length} from DB)</span>
+              {(nationalitiesList as any[]).length > 0 && (
+                <span className="ml-1 text-[7px] text-gray-300 normal-case">({(nationalitiesList as any[]).length} from DB)</span>
               )}
             </label>
             <div className="relative">
               <select
                 {...register(`passengers.${index}.nationality`)}
                 data-testid={`passenger-nationality${index > 0 ? `-${index}` : ''}`}
-                className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700 ${passengerErrors?.nationality ? 'border-red-500/50' : 'border-transparent'}`}
+                className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700 ${passengerErrors?.nationality ? 'border-red-500/50' : 'border-transparent'}`}
               >
                 <option value="">Select Nationality</option>
-                {(nationalities as any[]).map((n: any) => (
+                {(nationalitiesList as any[]).map((n: any) => (
                   <option key={n.code} value={n.code}>{n.name}</option>
                 ))}
               </select>
@@ -216,13 +209,13 @@ export function PassengerForm({ index }: { index: number }) {
 
           <div className="space-y-1.5 group/field">
             <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Gender*</label>
-            <div className={`flex gap-3 p-1 bg-gray-50/50 rounded-xl h-11 border-2 border-transparent group-hover/field:border-[#8B5CF6]/10 transition-all ${passengerErrors?.gender ? 'ring-1 ring-red-500' : ''}`}>
+            <div className={`flex gap-3 p-1 bg-gray-50/50 rounded-xl h-11 border-2 border-transparent group-hover/field:border-[#152467]/10 transition-all ${passengerErrors?.gender ? 'ring-1 ring-red-500' : ''}`}>
               {['Male', 'Female'].map(g => (
                 <button
                   key={g}
                   type="button"
                   onClick={() => setValue(`passengers.${index}.gender`, g)}
-                  className={`flex-1 h-9 rounded-lg border border-transparent text-[10px] font-black uppercase tracking-widest transition-all ${genderValue === g ? 'bg-white text-[#8B5CF6] shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`flex-1 h-9 rounded-lg border border-transparent text-[10px] font-black uppercase tracking-widest transition-all ${genderValue === g ? 'bg-white text-[#152467] shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   {g}
                 </button>
@@ -235,18 +228,18 @@ export function PassengerForm({ index }: { index: number }) {
         {/* ── Travel Documents ────────────────────────────────────────── */}
         <div className="pt-8 border-t border-dashed border-gray-100 space-y-6">
           <div className="flex items-center gap-2 mb-2">
-            <ShieldCheck size={14} className="text-[#8B5CF6]" />
+            <ShieldCheck size={14} className="text-[#152467]" />
             <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Travel Documents</h4>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Passport Number */}
             <div className="space-y-1.5 group/field">
-              <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">Passport Number*</label>
+              <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#152467] transition-colors">Passport Number*</label>
               <input
                 {...register(`passengers.${index}.passportNumber`)}
                 data-testid={`passenger-passport${index > 0 ? `-${index}` : ''}`}
                 placeholder="Passport Number"
-                className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.passportNumber ? 'border-red-500/50' : 'border-transparent'}`}
+                className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.passportNumber ? 'border-red-500/50' : 'border-transparent'}`}
               />
               <FieldError msg={passengerErrors?.passportNumber?.message} />
             </div>
@@ -263,20 +256,20 @@ export function PassengerForm({ index }: { index: number }) {
 
             {/* Residency Country — from PostgreSQL Country table */}
             <div className="space-y-1.5 group/field">
-              <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">
+              <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#152467] transition-colors">
                 Residency Country*
-                {(countries as any[]).length > 0 && (
-                  <span className="ml-1 text-[7px] text-gray-300 normal-case">({(countries as any[]).length} from DB)</span>
+                {(staticData.countries.data as any[]).length > 0 && (
+                  <span className="ml-1 text-[7px] text-gray-300 normal-case">({(staticData.countries.data as any[]).length} from DB)</span>
                 )}
               </label>
               <div className="relative">
                 <select
                   {...register(`passengers.${index}.residencyCountry`)}
                   data-testid={`passenger-residency${index > 0 ? `-${index}` : ''}`}
-                  className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700 ${passengerErrors?.residencyCountry ? 'border-red-500/50' : 'border-transparent'}`}
+                  className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700 ${passengerErrors?.residencyCountry ? 'border-red-500/50' : 'border-transparent'}`}
                 >
                   <option value="">Select Country</option>
-                  {(countries as any[]).map((c: any) => (
+                  {(staticData.countries.data as any[]).map((c: any) => (
                     <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
                 </select>
@@ -293,7 +286,7 @@ export function PassengerForm({ index }: { index: number }) {
         {index === 0 && (
           <div className="pt-8 border-t border-dashed border-gray-100 space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <Mail size={14} className="text-[#8B5CF6]" />
+              <Mail size={14} className="text-[#152467]" />
               <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Contact Information</h4>
               <span className="text-[8px] font-bold text-red-500 uppercase tracking-widest">(Required)</span>
             </div>
@@ -304,38 +297,38 @@ export function PassengerForm({ index }: { index: number }) {
                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Email Address*</label>
                 <div className="relative">
                   <div className="absolute left-6 top-1/2 -translate-y-1/2">
-                    <Mail size={16} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
+                    <Mail size={16} className="text-gray-300 group-focus-within/field:text-[#152467] transition-colors" />
                   </div>
                   <input
                     {...register(`passengers.${index}.email`)}
                     placeholder="Enter your email"
-                    className={`w-full h-14 pl-14 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.email ? 'border-red-500/50' : 'border-transparent'}`}
+                    className={`w-full h-14 pl-14 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.email ? 'border-red-500/50' : 'border-transparent'}`}
                   />
                 </div>
                 <FieldError msg={passengerErrors?.email?.message} />
               </div>
 
-                  {/* Phone — dial code from /static/phone-codes (Country DB + ITU prefixes + alpha3) */}
+                  {/* Phone — dial code from /static/countries (with phone_code field) */}
               <div className="relative group/field space-y-2">
                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">
                   Phone Number*
-                  {(phoneCodes as any[]).length > 0 && (
+                  {(phoneCodesList as any[]).length > 0 && (
                     <span className="ml-1 text-[7px] text-gray-300 normal-case">
-                      ({(phoneCodes as any[]).length} countries · A2/A3/NUM from DB)
+                      ({(phoneCodesList as any[]).length} countries · Code from DB)
                     </span>
                   )}
                 </label>
                 <div className="flex gap-2">
-                  {/* Phone country code — uses phonePrefix + alpha3 from Kaggle dataset in DB */}
+                  {/* Phone country code — from country phone_code field */}
                   <div className="relative w-40">
                     <select
                       {...register(`passengers.${index}.phoneCountryCode`)}
-                      className={`w-full h-14 px-3 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[10px] font-bold appearance-none outline-none transition-all cursor-pointer ${passengerErrors?.phoneCountryCode ? 'border-red-500/50' : 'border-transparent'}`}
+                      className={`w-full h-14 px-3 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[10px] font-bold appearance-none outline-none transition-all cursor-pointer ${passengerErrors?.phoneCountryCode ? 'border-red-500/50' : 'border-transparent'}`}
                     >
                       <option value="">Code</option>
-                      {(phoneCodes as any[]).map((c: any) => (
-                        <option key={c.alpha2 || c.code} value={c.phonePrefix}>
-                          {c.phonePrefix} {c.alpha3 ? `· ${c.alpha3}` : `· ${c.alpha2 || c.code}`}
+                      {(phoneCodesList as any[]).map((c: any) => (
+                        <option key={c.code} value={c.phone_code}>
+                          {c.phone_code} {c.iso_alpha_3 ? `· ${c.iso_alpha_3}` : `· ${c.code}`}
                         </option>
                       ))}
                     </select>
@@ -346,12 +339,12 @@ export function PassengerForm({ index }: { index: number }) {
                   {/* Phone number */}
                   <div className="relative flex-1">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                      <Phone size={16} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
+                      <Phone size={16} className="text-gray-300 group-focus-within/field:text-[#152467] transition-colors" />
                     </div>
                     <input
                       {...register(`passengers.${index}.phone`)}
                       placeholder="Mobile Number"
-                      className={`w-full h-14 pl-12 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.phone ? 'border-red-500/50' : 'border-transparent'}`}
+                      className={`w-full h-14 pl-12 pr-6 bg-gray-50/50 border-2 hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-2xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 ${passengerErrors?.phone ? 'border-red-500/50' : 'border-transparent'}`}
                     />
                   </div>
                 </div>
@@ -371,7 +364,7 @@ export function PassengerForm({ index }: { index: number }) {
         {/* ── Loyalty Program — from PostgreSQL LoyaltyProgram table ──── */}
         <div className="pt-8 border-t border-dashed border-gray-100 space-y-4">
           <div className="flex items-center gap-2 mb-2">
-            <Gift size={14} className="text-[#8B5CF6]" />
+            <Gift size={14} className="text-[#152467]" />
             <h4 className="text-[10px] font-black text-gray-900 uppercase tracking-widest">Frequent Flyer / Loyalty</h4>
             <span className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">(Optional)</span>
             {(loyaltyPrograms as any[]).length > 0 && (
@@ -394,7 +387,7 @@ export function PassengerForm({ index }: { index: number }) {
                   {/* Show selected name or search */}
                   <select
                     {...register(`passengers.${index}.loyaltyProgram`)}
-                    className="w-full h-11 pl-10 pr-8 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700"
+                    className="w-full h-11 pl-10 pr-8 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold appearance-none outline-none transition-all cursor-pointer text-gray-700"
                   >
                     <option value="">No loyalty program</option>
                     {loyaltyLoading && <option disabled>Loading programs…</option>}
@@ -410,7 +403,7 @@ export function PassengerForm({ index }: { index: number }) {
                 </div>
               </div>
               {selectedLoyaltyName && (
-                <p className="text-[9px] font-bold text-[#8B5CF6] pl-1 flex items-center gap-1">
+                <p className="text-[9px] font-bold text-[#152467] pl-1 flex items-center gap-1">
                   <CheckCircle2 size={9} /> {selectedLoyaltyName} selected
                 </p>
               )}
@@ -418,18 +411,18 @@ export function PassengerForm({ index }: { index: number }) {
 
             {/* Loyalty Number */}
             <div className="space-y-1.5 group/field">
-              <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#8B5CF6] transition-colors">
+              <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 group-focus-within/field:text-[#152467] transition-colors">
                 Membership Number
               </label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Star size={13} className="text-gray-300 group-focus-within/field:text-[#8B5CF6] transition-colors" />
+                  <Star size={13} className="text-gray-300 group-focus-within/field:text-[#152467] transition-colors" />
                 </div>
                 <input
                   {...register(`passengers.${index}.loyaltyNumber`)}
                   placeholder={loyaltyProgram ? 'Enter your membership number' : 'Select a program first'}
                   disabled={!loyaltyProgram}
-                  className="w-full h-11 pl-10 pr-4 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 focus:bg-white focus:border-[#8B5CF6]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full h-11 pl-10 pr-4 bg-gray-50/50 border-2 border-transparent hover:bg-gray-50 focus:bg-white focus:border-[#152467]/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
                 />
               </div>
             </div>

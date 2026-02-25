@@ -590,3 +590,48 @@ LITEAPI_PROD_API_KEY=your_production_key
 **Last Updated**: February 20, 2026
 **API Documentation**: <https://docs.liteapi.travel/reference/overview>
 **Hotel Rates API**: <https://docs.liteapi.travel/reference/post_hotels-rates>
+
+---
+
+## MCP Server Integration
+
+LiteAPI provides an MCP (Model Context Protocol) server that allows AI systems to access LiteAPI capabilities directly. This enables AI assistants to perform hotel searches, bookings, and other operations through a standardized protocol.
+
+### MCP Server Endpoint
+
+```
+https://mcp.liteapi.travel/api/mcp?apiKey=YOUR_API_KEY
+```
+
+### Configuration
+
+To use the MCP server, add the following to your environment:
+
+```bash
+LITEAPI_MCP_API_KEY=sand_e79a7012-2820-4644-874f-ea71a9295a0e
+```
+
+### AI Tool Integration
+
+**Claude Desktop**:
+
+```json
+{
+  "mcpServers": {
+    "liteapi": {
+      "url": "https://mcp.liteapi.travel/api/mcp?apiKey=sand_e79a7012-2820-4644-874f-ea71a9295a0e"
+    }
+  }
+}
+```
+
+### Supported MCP Capabilities
+
+- Hotel search
+- Price and availability lookup
+- Hotel details retrieval
+- Prebooking
+- Booking flows
+- Place search
+
+See [MCP Server Documentation](https://docs.liteapi.travel/reference/mcp-server) for more details.

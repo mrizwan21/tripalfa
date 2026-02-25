@@ -89,7 +89,7 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                 key={item.id}
                                 onClick={() => setActiveType(item.id)}
                                 className={`w-full text-left px-5 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 ${activeType === item.id
-                                    ? 'bg-white text-[#8B5CF6] shadow-md translate-x-2 border border-gray-100'
+                                    ? 'bg-white text-[#152467] shadow-md translate-x-2 border border-gray-100'
                                     : 'text-gray-500 hover:bg-white hover:text-gray-700 hover:shadow-sm'
                                     }`}
                             >
@@ -121,8 +121,8 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
 
                             {/* Passengers Section */}
                             <div className="space-y-4">
-                                <h3 className="text-xs font-black text-[#8B5CF6] uppercase tracking-widest flex items-center gap-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />
+                                <h3 className="text-xs font-black text-[#152467] uppercase tracking-widest flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#152467]" />
                                     Select {productType === 'hotel' ? 'Guests' : 'Passengers'}
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,12 +131,12 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                             key={p.id}
                                             onClick={() => togglePassenger(p.id)}
                                             className={`relative group cursor-pointer border rounded-2xl p-4 transition-all duration-200 ${selectedPassengers.includes(p.id)
-                                                ? 'border-[#8B5CF6] bg-purple-50/30'
+                                                ? 'border-[#152467] bg-purple-50/30'
                                                 : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50/50'
                                                 }`}
                                         >
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${selectedPassengers.includes(p.id) ? 'bg-[#8B5CF6] text-white' : 'bg-gray-100 text-gray-400'
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${selectedPassengers.includes(p.id) ? 'bg-[#152467] text-white' : 'bg-gray-100 text-gray-400'
                                                     }`}>
                                                     <User size={18} />
                                                 </div>
@@ -144,7 +144,7 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                                     <p className="text-sm font-black text-[#1E1B4B]">{p.firstName} {p.lastName}</p>
                                                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{p.type === 'ADT' ? 'Adult' : p.type}</p>
                                                 </div>
-                                                <div className={`ml-auto w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedPassengers.includes(p.id) ? 'border-[#8B5CF6] bg-[#8B5CF6]' : 'border-gray-200'
+                                                <div className={`ml-auto w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedPassengers.includes(p.id) ? 'border-[#152467] bg-[#152467]' : 'border-gray-200'
                                                     }`}>
                                                     {selectedPassengers.includes(p.id) && <Check size={14} className="text-white" />}
                                                 </div>
@@ -159,8 +159,8 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
 
                                 {activeType === 're_issue' && (
                                     <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-                                        <h3 className="text-xs font-black text-[#8B5CF6] uppercase tracking-widest flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />
+                                        <h3 className="text-xs font-black text-[#152467] uppercase tracking-widest flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#152467]" />
                                             {productType === 'hotel' ? 'New Date Details' : 'New Flight Details'}
                                         </h3>
                                         <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-6">
@@ -171,13 +171,13 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">New Date</label>
                                                             <div className="relative">
-                                                                <input id="amendment-departure-date" name="amendment-departure-date" type="date" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#8B5CF6] transition-colors" />
+                                                                <input id="amendment-departure-date" name="amendment-departure-date" type="date" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#152467] transition-colors" />
                                                                 <Calendar size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                                             </div>
                                                         </div>
                                                         <div className="space-y-2">
                                                             <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Preferred Class</label>
-                                                            <select id="amendment-preferred-class" name="amendment-preferred-class" className="w-full h-12 rounded-xl border border-gray-200 px-4 text-sm font-medium focus:outline-none focus:border-[#8B5CF6] bg-white transition-colors">
+                                                            <select id="amendment-preferred-class" name="amendment-preferred-class" className="w-full h-12 rounded-xl border border-gray-200 px-4 text-sm font-medium focus:outline-none focus:border-[#152467] bg-white transition-colors">
                                                                 <option value="economy">Economy</option>
                                                                 <option value="business">Business</option>
                                                                 <option value="first-class">First Class</option>
@@ -187,7 +187,7 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Route (Optional)</label>
                                                         <div className="relative">
-                                                            <input id="amendment-route" name="amendment-route" type="text" placeholder="e.g. DXB - LHR" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#8B5CF6] transition-colors" />
+                                                            <input id="amendment-route" name="amendment-route" type="text" placeholder="e.g. DXB - LHR" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#152467] transition-colors" />
                                                             <Plane size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                                         </div>
                                                     </div>
@@ -198,14 +198,14 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Check-in Date</label>
                                                         <div className="relative">
-                                                            <input id="amendment-new-departure" name="amendment-new-departure" type="date" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#8B5CF6] transition-colors" />
+                                                            <input id="amendment-new-departure" name="amendment-new-departure" type="date" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#152467] transition-colors" />
                                                             <Calendar size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                                         </div>
                                                     </div>
                                                     <div className="space-y-2">
                                                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Check-out Date</label>
                                                         <div className="relative">
-                                                            <input id="amendment-new-return" name="amendment-new-return" type="date" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#8B5CF6] transition-colors" />
+                                                            <input id="amendment-new-return" name="amendment-new-return" type="date" className="w-full h-12 rounded-xl border border-gray-200 pl-10 pr-4 text-sm font-medium focus:outline-none focus:border-[#152467] transition-colors" />
                                                             <Calendar size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                                                         </div>
                                                     </div>
@@ -218,8 +218,8 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
 
                                 {(activeType === 'add_baggage' || activeType === 'add_meals' || activeType === 'seat_request' || activeType === 'special_request') && (
                                     <div className="space-y-2 animate-in slide-in-from-right-4 duration-300">
-                                        <h3 className="text-xs font-black text-[#8B5CF6] uppercase tracking-widest flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />
+                                        <h3 className="text-xs font-black text-[#152467] uppercase tracking-widest flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-[#152467]" />
                                             {menuItems.find(i => i.id === activeType)?.label} Details
                                         </h3>
                                         <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-100 text-yellow-700 text-xs font-medium">
@@ -229,23 +229,23 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                                 )}
 
                                 <div className="space-y-2">
-                                    <label className="text-xs font-black text-[#8B5CF6] uppercase tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />
+                                    <label className="text-xs font-black text-[#152467] uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#152467]" />
                                         Message / Instructions
                                     </label>
-                                        <textarea id="amendment-message" name="amendment-message" className="w-full h-32 rounded-2xl border border-gray-200 p-4 text-sm font-medium focus:outline-none focus:border-[#8B5CF6] focus:ring-4 focus:ring-purple-50 transition-all resize-none" placeholder="Please describe your request in detail..."></textarea>
+                                        <textarea id="amendment-message" name="amendment-message" className="w-full h-32 rounded-2xl border border-gray-200 p-4 text-sm font-medium focus:outline-none focus:border-[#152467] focus:ring-4 focus:ring-purple-50 transition-all resize-none" placeholder="Please describe your request in detail..."></textarea>
                                 </div>
 
                                 {/* File Upload */}
                                 <div className="space-y-2">
-                                    <h3 className="text-xs font-black text-[#8B5CF6] uppercase tracking-widest flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#8B5CF6]" />
+                                    <h3 className="text-xs font-black text-[#152467] uppercase tracking-widest flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#152467]" />
                                         Attachments (Optional)
                                     </h3>
                                     <div className="mt-2 text-xs text-gray-500 mb-2">Upload relevant documents like medical reports or passport copies.</div>
 
                                     <div className="flex gap-4 items-center">
-                                        <label className="flex items-center gap-2 px-6 py-3 bg-[#8B5CF6] text-white rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#7C3AED] transition-all shadow-lg shadow-purple-100 active:scale-95">
+                                        <label className="flex items-center gap-2 px-6 py-3 bg-[#152467] text-white rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-[#0A1C50] transition-all shadow-lg shadow-purple-100 active:scale-95">
                                             <Upload size={14} />
                                             Choose Files
                                             <input type="file" multiple className="hidden" onChange={handleFileChange} />
@@ -282,7 +282,7 @@ export function BookingAmendmentPopup({ isOpen, onClose, bookingId, passengers =
                         >
                             Cancel
                         </button>
-                        <button className="h-12 w-48 bg-[#8B5CF6] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-200 hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0">
+                        <button className="h-12 w-48 bg-[#152467] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-200 hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0">
                             Submit Request
                         </button>
                     </div>

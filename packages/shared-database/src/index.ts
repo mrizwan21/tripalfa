@@ -1,5 +1,14 @@
+import dotenv from 'dotenv'
+import { fileURLToPath } from 'url'
+import { dirname, resolve } from 'path'
+
+// Load environment variables from root .env file BEFORE initializing Prisma
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+const rootDir = resolve(__dirname, '../../../')
+dotenv.config({ path: resolve(rootDir, '.env') })
+
 import { PrismaClient } from '@prisma/client';
-import type { Prisma } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool as NeonPool, neonConfig } from '@neondatabase/serverless';
@@ -11,7 +20,8 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 function initPrisma(): PrismaClient {
   // For Neon with transactions: prefer DIRECT_DATABASE_URL (no pgbouncer)
   // Pgbouncer connections don't support transactions properly
-  const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL || process.env.STATIC_DATABASE_URL;
+  // STATIC_DATABASE_URL is for static reference data (hotel + flight) via pg.Pool services — never used here
+  const databaseUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
   
   if (!databaseUrl) {
     console.warn('No database URL found in environment variables');
@@ -34,8 +44,7 @@ function initPrisma(): PrismaClient {
         ssl: { rejectUnauthorized: false },
         max: 10,
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const adapter = new PrismaPg(pool as any);
+      const adapter = new PrismaPg(pool);
       
       console.log('Using PrismaPg adapter for Neon (transaction support)');
       
@@ -52,8 +61,7 @@ function initPrisma(): PrismaClient {
   // For standard PostgreSQL (Docker, local, etc.)
   try {
     const pool = new Pool({ connectionString: databaseUrl });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adapter = new PrismaPg(pool as any);
+    const adapter = new PrismaPg(pool);
     
     return new PrismaClient({
       adapter,

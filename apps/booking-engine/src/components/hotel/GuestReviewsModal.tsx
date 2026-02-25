@@ -15,12 +15,12 @@ export function GuestReviewsModal({ isOpen, onClose, hotelName, rating, reviewCo
 
     const categories = [
         { name: 'Staff', score: 9.1, color: 'bg-[#6366F1]' },
-        { name: 'Facilities', score: 9.3, color: 'bg-[#FFD700]' },
-        { name: 'Cleanliness', score: 9.5, color: 'bg-[#FFD700]' },
+        { name: 'Facilities', score: 9.3, color: 'bg-[#EC5C4C]' },
+        { name: 'Cleanliness', score: 9.5, color: 'bg-[#EC5C4C]' },
         { name: 'Free WiFi', score: 9.0, color: 'bg-[#6366F1]' },
         { name: 'Value for money', score: 8.6, color: 'bg-[#6366F1]' },
         { name: 'Location', score: 9.2, color: 'bg-[#6366F1]' },
-        { name: 'Comfort', score: 9.5, color: 'bg-[#FFD700]' },
+        { name: 'Comfort', score: 9.5, color: 'bg-[#EC5C4C]' },
     ];
 
     const reviews = [
@@ -173,7 +173,7 @@ export function GuestReviewsModal({ isOpen, onClose, hotelName, rating, reviewCo
                                     <div className="flex justify-between items-start">
                                         <div>
                                             {review.badge && (
-                                                <span className="text-[10px] font-black text-[#FFD700] uppercase tracking-widest mb-1 block">👑 {review.badge}</span>
+                                                <span className="text-[10px] font-black text-[#EC5C4C] uppercase tracking-widest mb-1 block">👑 {review.badge}</span>
                                             )}
                                             <p className="text-xs text-gray-400 font-bold mb-2">{review.date}</p>
                                             <h4 className="text-lg font-black text-gray-900">{review.title}</h4>

@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    
+
     if (!email || !password) {
       toast.error("Please enter both email and password")
       return
@@ -41,14 +41,14 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      const response = await api.post("/auth/login", { 
-        email, 
+      const response = await api.post("/auth/login", {
+        email,
         password,
-        remember 
+        remember
       })
-      
+
       const { token, user } = response.data?.data || response.data
-      
+
       if (token) {
         localStorage.setItem("token", token)
         if (remember) {
@@ -72,10 +72,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-4">
       {/* Logo Section */}
       <div className="mb-8 flex flex-col items-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-700 text-white shadow-lg mb-4">
-          <Activity className="h-6 w-6" />
-        </div>
-        <h1 className="text-2xl font-semibold text-slate-800">TripAlfa B2B</h1>
+        <img src="/logo.png" alt="TripAlfa Logo" className="h-14 mb-4 object-contain" />
         <p className="text-sm text-slate-500 mt-1">Admin Portal</p>
       </div>
 
@@ -89,43 +86,43 @@ export default function LoginPage() {
             Enter your credentials to access your account
           </CardDescription>
         </CardHeader>
-        
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-slate-700">
                 Email
               </Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="name@organization.com" 
-                required 
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@organization.com"
+                required
                 className="h-11"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
               />
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-sm font-medium text-slate-700">
                   Password
                 </Label>
-                <Link 
-                  to="/auth/forgot-password" 
+                <Link
+                  to="/auth/forgot-password"
                   className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
                 >
                   Forgot password?
                 </Link>
               </div>
               <div className="relative">
-                <Input 
-                  id="password" 
+                <Input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  required 
+                  required
                   className="h-11 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -146,20 +143,20 @@ export default function LoginPage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="remember" 
+              <Checkbox
+                id="remember"
                 checked={remember}
                 onCheckedChange={(checked) => setRemember(checked as boolean)}
               />
-              <Label 
-                htmlFor="remember" 
+              <Label
+                htmlFor="remember"
                 className="text-sm font-normal text-slate-600 cursor-pointer"
               >
                 Remember me for 30 days
               </Label>
             </div>
           </CardContent>
-          
+
           <CardFooter className="flex flex-col gap-4 pt-2">
             <Button type="submit" className="w-full h-11 text-sm font-medium" disabled={isLoading}>
               {isLoading ? (
@@ -171,7 +168,7 @@ export default function LoginPage() {
                 "Sign in to your account"
               )}
             </Button>
-            
+
             <p className="text-xs text-center text-slate-500">
               By signing in, you agree to our{" "}
               <a href="#" className="text-slate-700 hover:underline">

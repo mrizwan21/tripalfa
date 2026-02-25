@@ -15,9 +15,9 @@ export function FareCard({ amount, currency, onSelect, isLoading }: FareCardProp
 
   return (
     <div className="bg-[#111827] rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden group">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6] opacity-10 rounded-full blur-3xl -translate-y-12 translate-x-12 group-hover:opacity-20 transition-opacity" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-[#152467] opacity-10 rounded-full blur-3xl -translate-y-12 translate-x-12 group-hover:opacity-20 transition-opacity" />
 
-      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#8B5CF6] mb-8 flex items-center gap-2">
+      <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#152467] mb-8 flex items-center gap-2">
         <CreditCard size={14} /> Fare Summary
       </h3>
 
@@ -35,7 +35,7 @@ export function FareCard({ amount, currency, onSelect, isLoading }: FareCardProp
         </div>
         <div className="pt-6 flex justify-between items-center border-t border-white/5">
           <span className="text-sm font-black uppercase tracking-widest">Grand Total</span>
-          <span className="text-3xl font-black text-[#8B5CF6] tabular-nums">{formatCurrency(amount, currency)}</span>
+          <span className="text-3xl font-black text-[#152467] tabular-nums">{formatCurrency(amount, currency)}</span>
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export function FareCard({ amount, currency, onSelect, isLoading }: FareCardProp
         <button
           onClick={onSelect}
           disabled={isLoading}
-          className="w-full h-16 bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-purple-900/40 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+          className="w-full h-16 bg-[#152467] hover:bg-[#0A1C50] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-[1.5rem] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-purple-900/40 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
         >
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

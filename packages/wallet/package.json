@@ -12,9 +12,9 @@
         }
     },
     "scripts": {
-        "build": "npx tsc",
-        "dev": "npx tsc --watch",
-        "type-check": "npx tsc --noEmit"
+        "build": "pnpm exec tsc",
+        "dev": "pnpm exec tsc --watch",
+        "type-check": "pnpm exec tsc --noEmit"
     },
     "dependencies": {
         "@prisma/client": "^7.4.0",

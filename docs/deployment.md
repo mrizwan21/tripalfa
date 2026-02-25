@@ -28,7 +28,7 @@ cd <repository-name>
 ## 📋 Table of Contents
 
 - [Architecture Overview](#architecture-overview)
-- [Service Components](#service-components)
+- [Service Components](#service-components-16-total)
 - [Development Environment](#development-environment)
 - [Production Environment](#production-environment)
 - [Configuration](#configuration)
@@ -38,7 +38,7 @@ cd <repository-name>
 - [Security](#security)
 - [Scaling](#scaling)
 
-## 🏗️ Architecture Overview
+## 🏗️ Architecture Overview {#architecture-overview}
 
 Travel Kingdom is built as a microservices architecture with the following key components:
 
@@ -69,27 +69,33 @@ Travel Kingdom is built as a microservices architecture with the following key c
                     └─────────────────┴───────────────────────┘
 ```
 
-## 🧩 Service Components
+## 🧩 Service Components (16 Total) {#service-components-16-total}
 
-### Core Services
+### Backend Services (14)
 
-| Service | Port | Description | Health Check |
-|---------|------|-------------|--------------|
-| **API Gateway** | 3000 | Entry point, routing, authentication | `/health` |
-| **Booking Service** | 3001 | Flight/hotel booking management | `/health` |
-| **Inventory Service** | 3002 | Flight/hotel inventory management | `/health` |
-| **Payment Service** | 3003 | Payment processing and transactions | `/health` |
-| **User Service** | 3004 | User management and authentication | `/health` |
-| **Notification Service** | 3005 | Email and SMS notifications | `/health` |
-| **Analytics Service** | 3006 | Business analytics and reporting | `/health` |
+| # | Service | Port | Database | Status | Health Check |
+| - | - | - | - | - | - |
+| 1 | **API Gateway** | 3000 | NEON neondb | ✅ NEON | `/health` |
+| 2 | **Booking Service** | 3001 | NEON neondb | ✅ NEON | `/health` |
+| 3 | **Static Data Service** | 3002 | Local PG:5433 | ✅ Local | `/health` |
+| 4 | **User Service** | 3004 | NEON neondb | ✅ NEON | `/health` |
+| 5 | **Organization Service** | 3005 | NEON neondb | ✅ NEON | `/health` |
+| 6 | **Payment Service** | 3007 | NEON neondb | ✅ NEON | `/health` |
+| 7 | **Wallet Service** | 3008 | NEON neondb | ✅ NEON | `/health` |
+| 8 | **Notification Service** | 3009 | NEON neondb | ✅ NEON | `/health` |
+| 9 | **Rule Engine Service** | 3010 | NEON neondb | ✅ NEON | `/health` |
+| 10 | **KYC Service** | 3011 | NEON neondb | ✅ NEON | `/health` |
+| 11 | **Marketing Service** | 3012 | NEON neondb | ✅ NEON | `/health` |
+| 12 | **B2B Admin Service** | 3020 | NEON neondb | ✅ NEON | `/health` |
+| 13 | **Booking Engine Service** | 3021 | NEON neondb | ✅ NEON | `/health` |
+| 14 | **Ingest Service** | 3006 | NEON neondb | ✅ NEON | `/health` |
 
-### Frontend Applications
+### Frontend Applications (2)
 
-| Application | Port | Description |
-|-------------|------|-------------|
-| **Booking Engine** | 3008 | Customer booking interface |
-| **B2B Panel** | 3009 | Partner management interface |
-| **Admin Panel** | 3010 | Super admin interface |
+| # | Application | Port | Technology | Status |
+|---|-------------|------|-----------|--------|
+| 15 | **Booking Engine** | 5176 | Vite + React | ✅ Running |
+| 16 | **B2B Admin** | 5173 | Vite + React | ✅ Running |
 
 ### Infrastructure Services
 
@@ -102,29 +108,31 @@ Travel Kingdom is built as a microservices architecture with the following key c
 | **Prometheus** | 9090 | Metrics collection |
 | **Jaeger** | 16686 | Distributed tracing |
 
-## 🛠️ Development Environment
+## 🛠️ Development Environment {#development-environment}
 
 ### Local Development Setup
 
 1. **Clone and Navigate**
+
    ```bash
    git clone <repository-url>
    cd <repository-name>
    ```
 
 2. **Start Development Environment**
+
    ```bash
    ./deploy.sh deploy development
    ```
 
 3. **Access Services**
-   - API Gateway: http://localhost:3000
-   - Booking Engine: http://localhost:3008
-   - B2B Panel: http://localhost:3009
-   - Admin Panel: http://localhost:3010
-   - Grafana: http://localhost:3007 (admin/admin123)
-   - Prometheus: http://localhost:9090
-   - Jaeger: http://localhost:16686
+   - API Gateway: <http://localhost:3000>
+   - Booking Engine: <http://localhost:3008>
+   - B2B Panel: <http://localhost:3009>
+   - Admin Panel: <http://localhost:3010>
+   - Grafana: <http://localhost:3007> (admin/admin123)
+   - Prometheus: <http://localhost:9090>
+   - Jaeger: <http://localhost:16686>
 
 ### Development Commands
 
@@ -152,7 +160,7 @@ Travel Kingdom is built as a microservices architecture with the following key c
 - **Debug Mode**: Services run in development mode with verbose logging
 - **Database**: Uses `travel_kingdom` database with sample data
 
-## 🏭 Production Environment
+## 🏭 Production Environment {#production-environment}
 
 ### Production Deployment
 
@@ -163,6 +171,7 @@ Travel Kingdom is built as a microservices architecture with the following key c
    - External secrets management (optional)
 
 2. **Configure Environment Variables**
+
    ```bash
    # Copy the example environment file
    cp .env.example .env
@@ -179,6 +188,7 @@ Travel Kingdom is built as a microservices architecture with the following key c
    ```
 
 3. **Deploy Production**
+
    ```bash
    ./deploy.sh deploy production
    ```
@@ -194,35 +204,64 @@ Travel Kingdom is built as a microservices architecture with the following key c
 
 ### Production URLs
 
-- **API Gateway**: https://api.travelkingdom.com
-- **Booking Engine**: https://booking.travelkingdom.com
-- **B2B Panel**: https://b2b.travelkingdom.com
-- **Admin Panel**: https://admin.travelkingdom.com
-- **Monitoring**: https://monitoring.travelkingdom.com
-- **Tracing**: https://tracing.travelkingdom.com
+- **API Gateway**: <https://api.travelkingdom.com>
+- **Booking Engine**: <https://booking.travelkingdom.com>
+- **B2B Panel**: <https://b2b.travelkingdom.com>
+- **Admin Panel**: <https://admin.travelkingdom.com>
+- **Monitoring**: <https://monitoring.travelkingdom.com>
+- **Tracing**: <https://tracing.travelkingdom.com>
 
-## ⚙️ Configuration
+## ⚙️ Configuration {#configuration}
 
 ### Environment Variables
 
 Each service can be configured using environment variables. Key configurations include:
 
 #### Database Configuration
+
+**Golden Rule:**
+
+```
+NEON (Production)  → ALL backend services + application data
+Local PostgreSQL   → ONLY static reference data (airports, hotels, airlines)
+```
+
+**NEON Configuration (Primary):**
+
 ```bash
-DATABASE_URL=postgresql://user:password@postgres:5432/travel_kingdom
+# Direct connection (for transaction support)
+DIRECT_DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@your-neon-host.neon.tech/neondb?sslmode=require"
+
+# Pooled connection (for standard queries)
+DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@your-neon-host-pooler.neon.tech/neondb?sslmode=require&pgbouncer=true&connection_limit=20"
+
+# Static reference data in local Docker PostgreSQL (flight + hotel)
+STATIC_DATABASE_URL="postgresql://postgres:postgres@localhost:5433/staticdatabase"
+
+# IMPORTANT: Never commit real credentials to version control!
+# Use environment variables or .env files (already in .gitignore)
+```
+
+**Local PostgreSQL (Development - Static Data Only):**
+
+```bash
+STATIC_DATABASE_URL_LOCAL="postgresql://postgres:postgres@localhost:5433/staticdatabase?sslmode=disable"
 ```
 
 #### Redis Configuration
+
 ```bash
 REDIS_URL=redis://redis:6379
 ```
 
 #### Message Queue Configuration
+
 ```bash
 RABBITMQ_URL=amqp://admin:password@rabbitmq:5672
 ```
 
 #### External API Keys
+
 ```bash
 DUFFEL_API_KEY=your-duffel-api-key
 AMADEUS_API_KEY=your-amadeus-api-key
@@ -247,11 +286,12 @@ echo "secret-value" | docker secret create new_secret -
 - **Prometheus**: `./monitoring/prometheus/prometheus.yml`
 - **Grafana**: `./monitoring/grafana/provisioning/`
 
-## 📊 Monitoring & Observability
+## 📊 Monitoring & Observability {#monitoring--observability}
 
 ### Health Checks
 
 All services provide health check endpoints:
+
 - `/health` - Basic health status
 - `/metrics` - Prometheus metrics (where available)
 - `/ready` - Readiness probe
@@ -298,6 +338,7 @@ All services provide health check endpoints:
 ### Service APIs
 
 Each microservice provides its own API documentation:
+
 - **Booking Service**: `GET /api/v1/bookings/docs`
 - **Inventory Service**: `GET /api/v1/inventory/docs`
 - **Payment Service**: `GET /api/v1/payments/docs`
@@ -311,11 +352,12 @@ Each microservice provides its own API documentation:
 - **Load Balancing**: Round-robin distribution
 - **Circuit Breaker**: Automatic failover
 
-## 🔧 Troubleshooting
+## 🔧 Troubleshooting {#troubleshooting}
 
 ### Common Issues
 
 #### 1. Services Not Starting
+
 ```bash
 # Check service status
 ./deploy.sh status
@@ -328,15 +370,37 @@ docker system df
 ```
 
 #### 2. Database Connection Issues
-```bash
-# Check PostgreSQL health
-docker-compose -f infrastructure/compose/docker-compose.yml exec postgres pg_isready -U postgres
 
-# Check connection from service
-docker-compose -f infrastructure/compose/docker-compose.yml exec booking-service ping postgres
+**For NEON connections:**
+
+```bash
+# Test direct connection to NEON (use your credentials from .env)
+psql "$DIRECT_DATABASE_URL"
+
+# List databases
+SELECT datname FROM pg_database;
+```
+
+**For local PostgreSQL (static data only):**
+
+```bash
+# Check local PostgreSQL health
+docker-compose -f docker-compose.local.yml exec postgres pg_isready -U postgres
+
+# Connect to staticdatabase
+psql -U postgres -d staticdatabase -h localhost -p 5433
+```
+
+**Verify environment variables are loaded:**
+
+```bash
+# Check if services see the DATABASE_URL
+echo $DATABASE_URL
+echo $DIRECT_DATABASE_URL
 ```
 
 #### 3. High Memory Usage
+
 ```bash
 # Check resource usage
 docker stats
@@ -346,6 +410,7 @@ docker stats
 ```
 
 #### 4. SSL Certificate Issues (Production)
+
 ```bash
 # Check certificate status
 docker-compose -f docker-compose.prod.yml logs nginx
@@ -386,7 +451,7 @@ docker events --since 1h
 ./deploy.sh logs > deployment.log
 ```
 
-## 🔒 Security
+## 🔒 Security {#security}
 
 ### Security Best Practices
 
@@ -418,7 +483,7 @@ docker events --since 1h
 - **HTTPS**: Enforced in production
 - **Database**: Password authentication required
 
-## 📈 Scaling
+## 📈 Scaling {#scaling}
 
 ### Horizontal Scaling
 
@@ -471,12 +536,14 @@ deploy:
 ### Development Workflow
 
 1. **Fork and Clone**
+
    ```bash
    git clone <your-fork>
    cd travel-kingdom
    ```
 
 2. **Create Feature Branch**
+
    ```bash
    git checkout -b feature/your-feature
    ```
@@ -487,6 +554,7 @@ deploy:
    - Update documentation
 
 4. **Test Changes**
+
    ```bash
    ./deploy.sh deploy development
    # Run tests
@@ -530,12 +598,14 @@ npm run test:integration
 ### Emergency Procedures
 
 1. **Service Outage**
+
    ```bash
    ./deploy.sh restart
    ./deploy.sh logs [affected-service]
    ```
 
 2. **Database Issues**
+
    ```bash
    ./scripts/backup.sh
    ./scripts/restore.sh [backup-file]

@@ -27,14 +27,14 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { formatCurrency } from '@tripalfa/ui-components';
-import { HOTEL_STATIC_DATA } from '@tripalfa/static-data/frontend-index';
+import { HOTEL_STATIC_DATA } from '../lib/constants/hotel-static-data';
 import { BookingStepper } from '../components/ui/BookingStepper';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { GuestReviewsModal } from '../components/hotel/GuestReviewsModal';
 import { ImageGallery } from '../components/hotel/ImageGallery';
 import { Facilities } from '../components/hotel/Facilities';
 import { HotelMap } from '../components/map';
-import { useHotelDetailData, HOTEL_AMENITY_CATEGORY_ICONS, ROOM_AMENITY_CATEGORY_ICONS } from '../hooks/useHotelDetailData';
+import { useHotelDetailData } from '../hooks/useHotelDetailData';
 import { useWeatherData } from '../hooks/useWeatherData';
 import { WeatherWidget } from '../components/hotel/WeatherWidget';
 import type { MergedRoom, RoomRate, HotelAmenity } from '../hooks/useHotelDetailData';
@@ -80,7 +80,7 @@ function getRoomAmenityCategoryIcon(category: string): React.ReactNode {
  */
 function getBoardLabel(code?: string | null): string | null {
   if (!code) return null;
-  const boardType = HOTEL_STATIC_DATA.BOARD_TYPES.byCode[code];
+  const boardType = HOTEL_STATIC_DATA.BOARD_TYPES.all.find((b) => b.code === code);
   return boardType?.name ?? code;
 }
 
@@ -150,7 +150,7 @@ function RateRow({
 
             {/* Board basis badge (realtime API) */}
             {boardLabel && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#FFD700]/20 text-[10px] font-black text-amber-700 rounded-full uppercase tracking-tighter">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-[#EC5C4C]/20 text-[10px] font-black text-amber-700 rounded-full uppercase tracking-tighter">
                 <Coffee size={10} /> {boardLabel}
               </span>
             )}
@@ -261,7 +261,7 @@ function RoomSection({
   return (
     <div className="relative mb-16 shadow-2xl rounded-[3rem] overflow-hidden bg-white border border-gray-100">
       {/* Yellow header bar — static data from DB */}
-      <div className="bg-[#FFD700] px-10 py-4 flex items-center justify-between font-black text-[11px] uppercase tracking-widest text-black">
+      <div className="bg-[#EC5C4C] px-10 py-4 flex items-center justify-between font-black text-[11px] uppercase tracking-widest text-black">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-2">
             <div className="w-2 h-2 bg-black rounded-full" />
@@ -425,7 +425,7 @@ export default function HotelDetail(): React.JSX.Element {
               {hotel.starRating && (
                 <div className="flex gap-1 mb-3">
                   {Array.from({ length: Math.round(hotel.starRating) }).map((_, i) => (
-                    <Star key={i} size={16} className="text-[#FFD700] fill-[#FFD700]" />
+                    <Star key={i} size={16} className="text-[#EC5C4C] fill-[#EC5C4C]" />
                   ))}
                 </div>
               )}
@@ -525,7 +525,7 @@ export default function HotelDetail(): React.JSX.Element {
               <button
                 key={tab.id}
                 onClick={() => document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth' })}
-                className="h-14 bg-[#FFD700] hover:bg-[#F4CE14] rounded-xl flex items-center justify-center gap-3 shadow-lg transition-transform active:scale-95 border-b-4 border-yellow-500"
+                className="h-14 bg-[#EC5C4C] hover:bg-[#F4CE14] rounded-xl flex items-center justify-center gap-3 shadow-lg transition-transform active:scale-95 border-b-4 border-yellow-500"
               >
                 <tab.icon size={18} className="text-[#1e293b]" />
                 <span className="text-[#1e293b] font-black uppercase tracking-widest text-[10px]">{tab.label}</span>
@@ -754,7 +754,7 @@ export default function HotelDetail(): React.JSX.Element {
         {totalSelected > 0 && (
           <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[95%] max-w-6xl bg-[#1e293b] backdrop-blur-2xl border border-white/10 p-6 shadow-[0_40px_80px_rgba(0,0,0,0.5)] z-50 rounded-[3rem] animate-in slide-in-from-bottom-20 duration-500 flex items-center justify-between">
             <div className="flex items-center gap-8 pl-6">
-              <div className="w-16 h-16 bg-[#FFD700] rounded-3xl flex items-center justify-center text-black shadow-2xl relative border-4 border-white/10">
+              <div className="w-16 h-16 bg-[#EC5C4C] rounded-3xl flex items-center justify-center text-black shadow-2xl relative border-4 border-white/10">
                 <ShoppingBagIcon size={32} />
                 <div className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-black border-4 border-[#1e293b]">
                   {totalSelected}

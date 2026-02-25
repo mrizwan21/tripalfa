@@ -7,33 +7,33 @@
   /* ===== Typography ===== */
   --font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  
+
   /* ===== Futuristic Color Palette ===== */
-  /* Primary: Electric Cyan */
-  --color-primary-50: rgba(0, 212, 255, 0.05);
-  --color-primary-100: rgba(0, 212, 255, 0.1);
-  --color-primary-200: rgba(0, 212, 255, 0.2);
-  --color-primary-300: rgba(0, 212, 255, 0.3);
-  --color-primary-400: #00d4ff;
-  --color-primary-500: #00b8d9;
-  --color-primary-600: #0097b2;
-  --color-primary-700: #007a8f;
-  
-  /* Secondary: Neon Purple */
-  --color-secondary-50: rgba(139, 92, 246, 0.05);
-  --color-secondary-100: rgba(139, 92, 246, 0.1);
-  --color-secondary-200: rgba(139, 92, 246, 0.2);
-  --color-secondary-300: rgba(139, 92, 246, 0.3);
-  --color-secondary-400: #8b5cf6;
-  --color-secondary-500: #7c3aed;
-  --color-secondary-600: #6d28d9;
-  
-  /* Accent: Hot Pink */
-  --color-accent-50: rgba(244, 114, 182, 0.05);
-  --color-accent-100: rgba(244, 114, 182, 0.1);
-  --color-accent-400: #f472b6;
-  --color-accent-500: #ec4899;
-  
+  /* Primary: Navy Blue */
+  --color-primary-50: rgba(21, 36, 103, 0.05);
+  --color-primary-100: rgba(21, 36, 103, 0.1);
+  --color-primary-200: rgba(21, 36, 103, 0.2);
+  --color-primary-300: rgba(21, 36, 103, 0.3);
+  --color-primary-400: #152467;
+  --color-primary-500: #0A1C50;
+  --color-primary-600: #071439;
+  --color-primary-700: #050d26;
+
+  /* Secondary: Coral */
+  --color-secondary-50: rgba(236, 92, 76, 0.05);
+  --color-secondary-100: rgba(236, 92, 76, 0.1);
+  --color-secondary-200: rgba(236, 92, 76, 0.2);
+  --color-secondary-300: rgba(236, 92, 76, 0.3);
+  --color-secondary-400: #EC5C4C;
+  --color-secondary-500: #D84B3B;
+  --color-secondary-600: #C0392B;
+
+  /* Accent: Cyan */
+  --color-accent-50: rgba(45, 213, 196, 0.05);
+  --color-accent-100: rgba(45, 213, 196, 0.1);
+  --color-accent-400: #2DD5C4;
+  --color-accent-500: #1DBFB1;
+
   /* Status Colors - Neon variants */
   --color-success: #00ff88;
   --color-success-dim: rgba(0, 255, 136, 0.1);
@@ -43,29 +43,29 @@
   --color-error-dim: rgba(255, 59, 59, 0.1);
   --color-info: #00d4ff;
   --color-info-dim: rgba(0, 212, 255, 0.1);
-  
+
   /* Background Colors - Dark Theme */
   --bg-primary: #0a0e17;
   --bg-secondary: #050810;
   --bg-tertiary: #111827;
   --bg-card: rgba(17, 24, 39, 0.8);
   --bg-elevated: rgba(17, 24, 39, 0.95);
-  
+
   /* Text Colors */
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   --text-accent: #00d4ff;
-  
+
   /* Border Colors */
   --border-default: rgba(0, 212, 255, 0.1);
   --border-hover: rgba(0, 212, 255, 0.3);
   --border-active: rgba(0, 212, 255, 0.5);
-  
+
   /* Neutrals */
   --color-neutral-50: #f8fafc;
   --color-neutral-900: #0f172a;
-  
+
   /* ===== Spacing ===== */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
@@ -73,7 +73,7 @@
   --space-lg: 1.5rem;
   --space-xl: 2rem;
   --space-2xl: 3rem;
-  
+
   /* ===== Shadows - Neon Glow ===== */
   --shadow-sm: 0 2px 4px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
@@ -82,7 +82,7 @@
   --shadow-glow-purple: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(139, 92, 246, 0.1);
   --shadow-glow-pink: 0 0 20px rgba(244, 114, 182, 0.3), 0 0 40px rgba(244, 114, 182, 0.1);
   --shadow-glow-success: 0 0 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 255, 136, 0.1);
-  
+
   /* ===== Border Radius ===== */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -90,7 +90,7 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-full: 9999px;
-  
+
   /* ===== Transitions ===== */
   --duration-fast: 150ms;
   --duration-normal: 300ms;
@@ -98,7 +98,7 @@
   --easing-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --easing-ease-in: cubic-bezier(0.4, 0, 0.6, 1);
   --easing-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
-  
+
   /* ===== Z-Index ===== */
   --z-dropdown: 1000;
   --z-sticky: 1020;
@@ -106,7 +106,7 @@
   --z-modal-backdrop: 1040;
   --z-modal: 1060;
   --z-tooltip: 1080;
-  
+
   /* ===== Gradients ===== */
   --gradient-primary: linear-gradient(135deg, #00d4ff 0%, #8b5cf6 50%, #f472b6 100%);
   --gradient-dark: linear-gradient(180deg, #0a0e17 0%, #111827 100%);
@@ -136,7 +136,7 @@ body {
   line-height: 1.6;
   color: var(--text-primary);
   background-color: var(--bg-primary);
-  background-image: 
+  background-image:
     radial-gradient(ellipse at top, rgba(0, 212, 255, 0.03) 0%, transparent 50%),
     radial-gradient(ellipse at bottom right, rgba(139, 92, 246, 0.03) 0%, transparent 50%);
   background-attachment: fixed;
@@ -145,7 +145,7 @@ body {
 /* Custom Selection */
 ::selection {
   background: rgba(0, 212, 255, 0.3);
-  color: #fff;
+  color: #0a0e17;
 }
 
 /* ===== Typography ===== */
@@ -376,7 +376,7 @@ tr:hover {
 
 .neon-text-cyan {
   color: var(--color-primary-400);
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(0, 212, 255, 0.8),
     0 0 20px rgba(0, 212, 255, 0.5),
     0 0 40px rgba(0, 212, 255, 0.3);
@@ -384,7 +384,7 @@ tr:hover {
 
 .neon-text-purple {
   color: var(--color-secondary-400);
-  text-shadow: 
+  text-shadow:
     0 0 10px rgba(139, 92, 246, 0.8),
     0 0 20px rgba(139, 92, 246, 0.5),
     0 0 40px rgba(139, 92, 246, 0.3);
@@ -419,6 +419,7 @@ tr:hover {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -429,6 +430,7 @@ tr:hover {
     opacity: 0;
     transform: translateY(1rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -440,6 +442,7 @@ tr:hover {
     opacity: 0;
     transform: translateY(-1rem);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -451,6 +454,7 @@ tr:hover {
     opacity: 0;
     transform: translateX(1rem);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -462,6 +466,7 @@ tr:hover {
     opacity: 0;
     transform: translateX(-1rem);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -473,6 +478,7 @@ tr:hover {
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -480,9 +486,12 @@ tr:hover {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
@@ -492,24 +501,31 @@ tr:hover {
   0% {
     background-position: -1000px 0;
   }
+
   100% {
     background-position: 1000px 0;
   }
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 5px rgba(0, 212, 255, 0.5), 0 0 20px rgba(0, 212, 255, 0.2);
   }
+
   50% {
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.8), 0 0 40px rgba(0, 212, 255, 0.4);
   }
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -519,6 +535,7 @@ tr:hover {
   0% {
     background-position: -100% 0;
   }
+
   100% {
     background-position: 100% 0;
   }
@@ -551,7 +568,7 @@ tr:hover {
 /* ===== Grid Background ===== */
 
 .grid-bg {
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;

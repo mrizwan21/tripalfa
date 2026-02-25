@@ -9,7 +9,7 @@
  * - Post-Booking: Seat management for existing orders
  */
 
-import { API_BASE_URL } from '../lib/constants';
+import { api } from '../lib/api';
 import { SeatMap, SelectedSeat } from './duffelBookingApi';
 
 // ============================================================================
@@ -99,17 +99,11 @@ export async function getSeatMaps(
   try {
     console.log('[SeatMaps] Fetching seat maps for offer (BOOKING FLOW):', offerId);
 
-    // Use GET with query params (no body) or switch to POST if backend requires
-    const url = `${API_BASE_URL}/api/bookings/flight/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`;
-    const response = await fetch(url, { method: 'GET', credentials: 'include' });
+    const result = await api.get<any>(
+      `/api/bookings/flight/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`
+    );
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch seat maps: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[SeatMaps] Seat maps retrieved (BOOKING):', result);
-
     return result.data || result.seatMaps || [];
   } catch (error) {
     console.error('[SeatMaps] Get seat maps error:', error);
@@ -136,21 +130,12 @@ export async function selectSeats(
   try {
     console.log('[SeatMaps] Selecting seats (BOOKING FLOW):', selectedSeats);
 
-    // Route through centralized API Manager (POST with body)
-    const response = await fetch(`${API_BASE_URL}/api/bookings/flight/seat-maps/select`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ offerId, selectedSeats, provider, environment, context: 'booking' }),
-      credentials: 'include'
-    });
+    const result = await api.post<any>(
+      '/api/bookings/flight/seat-maps/select',
+      { offerId, selectedSeats, provider, environment, context: 'booking' }
+    );
 
-    if (!response.ok) {
-      throw new Error(`Failed to select seats: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[SeatMaps] Seats selected successfully (BOOKING):', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[SeatMaps] Select seats error:', error);
@@ -185,16 +170,11 @@ export async function getSeatMapsForBooking(
   try {
     console.log('[SeatMaps] Fetching seat maps for booking (POST-BOOKING FLOW):', orderId);
 
-    const url = `${API_BASE_URL}/api/bookings/flight/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`;
-    const response = await fetch(url, { method: 'GET', credentials: 'include' });
+    const result = await api.get<any>(
+      `/api/bookings/flight/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`
+    );
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch seat maps for booking: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[SeatMaps] Seat maps retrieved (POST-BOOKING):', result);
-
     return result.data || result.seatMaps || [];
   } catch (error) {
     console.error('[SeatMaps] Get seat maps for booking error:', error);
@@ -227,20 +207,12 @@ export async function updateBookingSeats(
   try {
     console.log('[SeatMaps] Updating seats for booking (POST-BOOKING):', orderId, selectedSeats);
 
-    const response = await fetch(`${API_BASE_URL}/api/bookings/flight/update-seats/${encodeURIComponent(orderId)}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderId, selectedSeats, provider, environment, context: 'post-booking' }),
-      credentials: 'include'
-    });
+    const result = await api.patch<any>(
+      `/api/bookings/flight/update-seats/${encodeURIComponent(orderId)}`,
+      { orderId, selectedSeats, provider, environment, context: 'post-booking' }
+    );
 
-    if (!response.ok) {
-      throw new Error(`Failed to update booking seats: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[SeatMaps] Booking seats updated successfully:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[SeatMaps] Update booking seats error:', error);
@@ -260,15 +232,11 @@ export async function getBookingSeatHistory(
   try {
     console.log('[SeatMaps] Fetching seat history for booking (POST-BOOKING):', orderId);
 
-    const response = await fetch(`${API_BASE_URL}/api/bookings/flight/seat-history/${encodeURIComponent(orderId)}`, { method: 'GET', credentials: 'include' });
+    const result = await api.get<any>(
+      `/api/bookings/flight/seat-history/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}`
+    );
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch seat history: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[SeatMaps] Seat history retrieved:', result);
-
     return result.data || [];
   } catch (error) {
     console.error('[SeatMaps] Get seat history error:', error);

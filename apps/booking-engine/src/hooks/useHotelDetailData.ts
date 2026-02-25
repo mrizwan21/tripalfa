@@ -15,12 +15,6 @@
  * │                     prices, cancellation policy,  → LiteAPI         │
  * │                     board basis, refundability                       │
  * └─────────────────────────────────────────────────────────────────────┘
- *
- * Data availability in local DB (18 Feb 2026):
- *   CanonicalHotel       658K ✅   HotelImage          8M ✅
- *   HotelAmenityMapping  8.5M ✅   HotelDescription   610K ✅
- *   RoomAmenity (master)   43 ✅   HotelRoomType         0 (rooms from API)
- *   RoomAmenityMapping      0      RoomImage             0
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -31,7 +25,7 @@ import { fetchHotelFullStatic, fetchHotelRates } from '../lib/api';
 export interface HotelImage {
   url: string;
   thumbnailUrl?: string;
-  imageType: string;   // 'general' | 'exterior' | 'lobby' | 'room' | etc.
+  imageType: string;
   isPrimary: boolean;
   sizeVariant?: string;
   caption?: string;
@@ -41,23 +35,21 @@ export interface HotelImage {
 export interface HotelAmenity {
   code: string;
   name: string;
-  category: string;    // 'Dining' | 'Facilities' | 'Services' | 'Transportation' | ...
+  category: string;
   icon?: string;
   isPopular?: boolean;
   isFree?: boolean;
   operatingHours?: string;
 }
 
-/** Room amenity from the master RoomAmenity table (43 types) */
 export interface RoomAmenity {
   code: string;
   name: string;
-  category: string;   // 'Bathroom' | 'Comfort' | 'Entertainment' | 'Kitchen' | 'Views' | ...
+  category: string;
   icon?: string;
   isPopular?: boolean;
 }
 
-/** Static room structure from DB (HotelRoomType — when populated) */
 export interface StaticRoomType {
   id: string;
   roomTypeCode: string;
@@ -74,33 +66,28 @@ export interface StaticRoomType {
   hasCityView: boolean;
   images: HotelImage[];
   amenities: RoomAmenity[];
-  features: string[];   // Pre-built e.g. "1x King Bed", "35m²", "Balcony"
+  features: string[];
 }
 
-/** Realtime rate for a room type */
 export interface RoomRate {
   offerId: string;
   roomTypeCode?: string;
   roomTypeName?: string;
-  boardBasis?: string;    // 'RO' | 'BB' | 'HB' | 'FB' | 'AI'
+  boardBasis?: string;
   boardBasisName?: string;
   price: { amount: number; currency: string };
   isRefundable: boolean;
   cancellationPolicy?: string;
   cancellationDeadline?: string;
   availableRooms?: number;
-  // Room-level amenity codes hinted by supplier (optional)
   amenityCodes?: string[];
   raw?: any;
 }
 
-/** Merged room: static info + realtime rates */
 export interface MergedRoom {
-  // Identity (from DB static or realtime API)
   id: string;
   roomTypeCode: string;
   name: string;
-  // Static fields (DB)
   bedType?: string;
   bedCount: number;
   maxOccupancy: number;
@@ -111,57 +98,25 @@ export interface MergedRoom {
   hasMountainView: boolean;
   features: string[];
   images: HotelImage[];
-  amenities: RoomAmenity[];    // Room-level amenities from RoomAmenity master list
+  amenities: RoomAmenity[];
   primaryImage?: string;
-  // Realtime fields (API)
   rates: RoomRate[];
   lowestPrice?: { amount: number; currency: string };
   source: 'db' | 'api' | 'merged';
 }
 
-/** Complete hotel detail (static + dynamic) */
 export interface HotelDetailData {
-  // 95% — from PostgreSQL
-  hotel: {
-    id: string;
-    canonicalCode: string;
-    name: string;
-    description?: string;
-    address?: string;
-    city: string;
-    state?: string;
-    country: string;
-    countryCode: string;
-    latitude?: number;
-    longitude?: number;
-    starRating?: number;
-    hotelType?: string;
-    chainName?: string;
-    brandName?: string;
-    phone?: string;
-    email?: string;
-    website?: string;
-    checkInTime?: string;
-    checkOutTime?: string;
-    qualityScore?: number;
-  };
+  hotel: any;
   images: HotelImage[];
   primaryImage?: string;
-  /** Hotel-level amenities grouped by category (Dining, Facilities, Services, Transportation) */
-  hotelAmenitiesByCategory: Record<string, HotelAmenity[]>;
-  /** Flat hotel amenities list */
   hotelAmenities: HotelAmenity[];
-  /** Primary/English description */
+  hotelAmenitiesByCategory: Record<string, HotelAmenity[]>;
   description?: string;
   descriptions: any[];
   contacts: any[];
   reviews: any[];
-  stats: { reviewCount: number; ratingAvg: number | null };
-
-  // Merged rooms (static structure + realtime rates)
+  stats?: any;
   rooms: MergedRoom[];
-
-  /** Master RoomAmenity catalog (43 types) for badge rendering */
   roomAmenityMaster: RoomAmenity[];
   roomAmenitiesByCategory: Record<string, RoomAmenity[]>;
 }
@@ -169,52 +124,23 @@ export interface HotelDetailData {
 export interface UseHotelDetailDataResult {
   data: HotelDetailData | null;
   loading: boolean;
-  staticLoading: boolean;   // DB fetch in progress
-  ratesLoading: boolean;    // Realtime rates fetch in progress
+  staticLoading: boolean;
+  ratesLoading: boolean;
   error: string | null;
-  refetchRates: () => void;
+  refetchRates: () => Promise<void>;
 }
 
-// ── Category icon map (for Facilities section rendering) ────────────────────
+// ── Helper: build MergedRoom from API offer ──────────────────────────────────
 
-export const HOTEL_AMENITY_CATEGORY_ICONS: Record<string, string> = {
-  Dining: 'utensils',
-  Facilities: 'building',
-  Services: 'concierge-bell',
-  Transportation: 'car',
-  Recreation: 'waves',
-  Wellness: 'heart',
-  Business: 'briefcase',
-  Security: 'shield',
-  General: 'info',
-};
-
-export const ROOM_AMENITY_CATEGORY_ICONS: Record<string, string> = {
-  Bathroom: 'droplets',
-  Comfort: 'thermometer',
-  Entertainment: 'tv',
-  Kitchen: 'coffee',
-  Views: 'eye',
-  Security: 'lock',
-  Technology: 'wifi',
-  Other: 'more-horizontal',
-};
-
-// ── Helper: map realtime API room to MergedRoom ──────────────────────────────
-
-function mapApiRoom(apiRoom: any, roomAmenityMaster: RoomAmenity[]): MergedRoom {
+function buildRoomFromApi(apiRoom: any, roomAmenityMaster: RoomAmenity[]): MergedRoom {
   const features: string[] = [];
-  if (apiRoom.bedType || apiRoom.bed_type) {
-    const beds = apiRoom.bedCount || apiRoom.bed_count || 1;
-    features.push(`${beds}x ${apiRoom.bedType || apiRoom.bed_type}`);
-  }
-  if (apiRoom.roomSize || apiRoom.room_size) features.push(`${apiRoom.roomSize || apiRoom.room_size}m²`);
+  if (apiRoom.bedType) features.push(`${apiRoom.bedCount ?? 1}x ${apiRoom.bedType}`);
+  if (apiRoom.roomSize) features.push(`${apiRoom.roomSize}m²`);
   if (apiRoom.hasBalcony || apiRoom.has_balcony) features.push('Balcony');
   if (apiRoom.hasSeaView || apiRoom.has_sea_view) features.push('Sea View');
   if (apiRoom.hasCityView || apiRoom.has_city_view) features.push('City View');
   if (apiRoom.hasMountainView || apiRoom.has_mountain_view) features.push('Mountain View');
 
-  // Match amenity codes hinted by API against the master RoomAmenity catalog
   const amenityCodes: string[] = apiRoom.amenityCodes || apiRoom.amenity_codes || [];
   const amenities = amenityCodes.length > 0
     ? roomAmenityMaster.filter(a => amenityCodes.includes(a.code))
@@ -348,15 +274,12 @@ export function useHotelDetailData(
 
       const { hotel, images, amenities, amenitiesByCategory, descriptions, contacts, reviews, rooms, stats } = staticResult;
 
-      // Pick primary English description
       const primaryDesc = descriptions.find(
         (d: any) => d.isPrimary || d.languageCode === 'en' || d.languageCode === 'ENG'
       )?.content ?? hotel.description;
 
-      // Primary image
       const primaryImage = images.find(i => i.isPrimary)?.url ?? images[0]?.url;
 
-      // Group room amenity master by category
       const roomAmenitiesByCategory: Record<string, RoomAmenity[]> = {};
       for (const a of roomAmenityMaster) {
         const cat = a.category || 'Other';
@@ -364,7 +287,6 @@ export function useHotelDetailData(
         roomAmenitiesByCategory[cat].push(a);
       }
 
-      // Static rooms: HotelRoomType rows (0 currently, but ready for when data is ingested)
       const staticRooms: StaticRoomType[] = rooms.map((r: any) => ({
         id: r.id,
         roomTypeCode: r.roomTypeCode,
@@ -384,7 +306,6 @@ export function useHotelDetailData(
         features: r.features || [],
       }));
 
-      // Build initial data (without realtime rates)
       const mergedRooms: MergedRoom[] = staticRooms.map(sr => mergeStaticWithRates(sr, []));
 
       setData({
@@ -413,7 +334,7 @@ export function useHotelDetailData(
     return () => { cancelled = true; };
   }, [hotelId]);
 
-  // ── Phase 2: Load realtime rates (prices + room types + cancellation) ───
+  // ── Phase 2: Load realtime rates ───
   const fetchRates = useCallback(async () => {
     if (!hotelId || !rateParams?.checkin || !rateParams?.checkout) return;
 
@@ -428,23 +349,16 @@ export function useHotelDetailData(
         occupancies: rateParams.occupancies ?? [{ adults: 2 }],
       });
 
-      // ── Parse LiteAPI v3.0 response format ──────────────────────────────
-      // LiteAPI returns: { status, data: { hotels: [{ hotelId, currency, offers: [...] }] } }
-      // Booking-service adds: { ...result, cached: true }
       const liteHotels: any[] = ratesResponse?.data?.hotels ?? ratesResponse?.hotels ?? [];
       const targetHotel = liteHotels.find((h: any) =>
         h.hotelId === hotelId || h.id === hotelId
       ) ?? liteHotels[0] ?? null;
 
-      // Raw offers from LiteAPI (each offer = one room-rate combination)
       const rawOffers: any[] = targetHotel?.offers ?? [];
-
-      // Fallback: legacy formats (rooms[], offers[] at root)
       const apiRooms: any[] = rawOffers.length > 0
         ? rawOffers
         : (ratesResponse?.rooms ?? ratesResponse?.data?.rooms ?? ratesResponse?.offers ?? []);
 
-      // ── Helper: extract price from LiteAPI offer ─────────────────────────
       const extractOfferRate = (offer: any): RoomRate => {
         const retailTotal = offer.retailRate?.total?.[0];
         const priceAmount = retailTotal?.amount
@@ -462,14 +376,12 @@ export function useHotelDetailData(
           || offer.isRefundable === true
           || offer.refundable === true;
 
-        // Parse cancellation deadline from cancelPolicyInfos (first free-cancel window)
         const cancelPolicies: any[] = offer.cancellationPolicies?.cancelPolicyInfos ?? [];
         const freeCancelWindow = cancelPolicies
           .filter((p: any) => Number(p.amount ?? 1) === 0)
           .sort((a: any, b: any) => new Date(b.cancelTime ?? 0).getTime() - new Date(a.cancelTime ?? 0).getTime())[0];
         const cancellationDeadline = freeCancelWindow?.cancelTime ?? undefined;
 
-        // Human-readable policy from hotel remarks or generated
         const remarks: string[] = offer.cancellationPolicies?.hotelRemarks ?? [];
         const cancellationPolicy = remarks[0]
           ?? (isRefundable ? 'Free cancellation available' : 'Non-refundable – no changes allowed');
@@ -496,9 +408,7 @@ export function useHotelDetailData(
         let mergedRooms: MergedRoom[];
 
         if (prev.rooms.length > 0) {
-          // ── Static DB rooms exist: match LiteAPI offers to DB rooms ──────
           mergedRooms = prev.rooms.map(staticRoom => {
-            // Collect all LiteAPI offers that match this room type (by code or name)
             const matchingOffers = apiRooms.filter(offer =>
               (offer.roomTypeCode && offer.roomTypeCode === staticRoom.roomTypeCode)
               || (offer.code && offer.code === staticRoom.roomTypeCode)
@@ -529,8 +439,6 @@ export function useHotelDetailData(
             }, rates);
           });
         } else {
-          // ── No static DB rooms: build from LiteAPI offers ──────────────────
-          // Group offers by roomTypeCode so each room type becomes one MergedRoom
           const byRoomType: Record<string, any[]> = {};
           for (const offer of apiRooms) {
             const key = offer.roomTypeCode ?? offer.code ?? offer.name ?? `room-${Math.random()}`;
@@ -544,14 +452,12 @@ export function useHotelDetailData(
             const prices = rates.map(r => r.price.amount).filter(p => p > 0);
             const lowestAmount = prices.length > 0 ? Math.min(...prices) : undefined;
 
-            // Try to build feature tags from offer metadata
             const features: string[] = [];
             if (firstOffer.bedType) features.push(`${firstOffer.bedCount ?? 1}x ${firstOffer.bedType}`);
             if (firstOffer.roomSize) features.push(`${firstOffer.roomSize}m²`);
             if (firstOffer.hasBalcony) features.push('Balcony');
             if (firstOffer.hasSeaView) features.push('Sea View');
 
-            // Match amenity codes against master catalog
             const amenityCodes: string[] = firstOffer.amenityCodes ?? [];
             const amenities = amenityCodes.length > 0
               ? roomAmenityMaster.filter(a => amenityCodes.includes(a.code))
@@ -586,13 +492,11 @@ export function useHotelDetailData(
       });
     } catch (err) {
       console.warn('[useHotelDetailData] Realtime rates unavailable:', err);
-      // Keep static data, just no prices (not a fatal error)
     } finally {
       setRatesLoading(false);
     }
   }, [hotelId, rateParams?.checkin, rateParams?.checkout, rateParams?.currency, rateParams?.guestNationality]);
 
-  // Auto-fetch rates when params are available
   useEffect(() => {
     if (rateParams?.checkin && rateParams?.checkout && !staticLoading && data) {
       fetchRates();
@@ -608,3 +512,5 @@ export function useHotelDetailData(
     refetchRates: fetchRates,
   };
 }
+
+export default useHotelDetailData;

@@ -1,9 +1,9 @@
 packages:
-  - apps/*
-  - apps/b2b-admin/server
-  - services/*
-  - packages/*
+  - "apps/*"
+  - "services/*"
+  - "packages/*"
 
+# Build dependency controls for faster, more reliable installs
 ignoredBuiltDependencies:
   - '@nestjs/core'
 

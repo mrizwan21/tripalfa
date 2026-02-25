@@ -389,6 +389,41 @@ Content-Type: application/json
 | Booking Modified | `/api/webhooks/liteapi` | Hotel booking amended | ✅ Implemented |
 | Booking Pending | `/api/webhooks/liteapi` | Hotel booking pending | ✅ Implemented |
 
+## 9. Loyalty Programme Accounts API
+
+**Endpoint**: `/air/loyalty_programme_accounts`
+**Documentation**: <https://duffel.com/docs/guides/adding-loyalty-programme-accounts>
+
+> **Note**: Loyalty programme accounts allow passengers to earn frequent flyer miles/points on their bookings.
+
+| Feature | Description | Status |
+| --------- | ------------- | -------- |
+| List Loyalty Accounts | Get all loyalty programme accounts for a passenger | ✅ Implemented |
+| Create Loyalty Account | Add a loyalty programme to a passenger | ✅ Implemented |
+| Get Loyalty Account | Retrieve a specific loyalty account | ✅ Implemented |
+| Delete Loyalty Account | Remove a loyalty programme from a passenger | ✅ Implemented |
+| Add to Flight Search | Include loyalty accounts in offer requests | ✅ Implemented |
+| Add to Booking | Include loyalty accounts in orders | ✅ Implemented |
+
+### Request Format
+
+When creating an offer request or order, include `loyalty_programme_accounts`:
+
+```json
+{
+  "loyalty_programme_accounts": [
+    {
+      "airline_iata_code": "AA",
+      "account_number": "A1234567"
+    }
+  ]
+}
+```
+
+### Supported Airlines
+
+The loyalty programme accounts can be used with any airline that supports frequent flyer programmes through Duffel.
+
 ---
 
 ## Summary

@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "ESNext",
     "lib": [
-      "ES2020",
+      "ES2022",
       "DOM"
     ],
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "bundler",
+    "moduleResolution": "Node16",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,

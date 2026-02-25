@@ -75,7 +75,7 @@ function createHotelMarker(
       align-items: center;
     ">
       <div style="
-        background: ${isSelected ? '#FFD700' : MARKER_COLORS.hotel};
+        background: ${isSelected ? '#EC5C4C' : MARKER_COLORS.hotel};
         color: white;
         padding: 8px 12px;
         border-radius: 20px;
@@ -93,7 +93,7 @@ function createHotelMarker(
         height: 0;
         border-left: 8px solid transparent;
         border-right: 8px solid transparent;
-        border-top: 10px solid ${isSelected ? '#FFD700' : MARKER_COLORS.hotel};
+        border-top: 10px solid ${isSelected ? '#EC5C4C' : MARKER_COLORS.hotel};
         margin-top: -2px;
       "></div>
     </div>

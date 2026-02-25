@@ -1,23 +1,27 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "nodenext",
+    "target": "ES2022",
+    "module": "Node16",
     "lib": [
-      "ES2020",
+      "ES2022",
       "DOM"
     ],
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "Node16",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": false,
     "forceConsistentCasingInFileNames": true,
-    "types": []
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", "./types"]
   },
   "include": [
-    "./types/**/*.d.ts"
+    "./types/**/*.d.ts",
+    "services/**/*",
+    "packages/**/*",
+    "apps/**/*"
   ],
   "exclude": [
     "node_modules",
@@ -40,9 +44,6 @@
     },
     {
       "path": "packages/notifications"
-    },
-    {
-      "path": "packages/static-data"
     },
     {
       "path": "packages/api-clients"
@@ -73,6 +74,9 @@
     },
     {
       "path": "services/marketing-service"
+    },
+    {
+      "path": "services/wallet-service"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "npx tsc",
-    "dev": "tsx watch src/index.ts",
+    "build": "pnpm exec tsc",
+    "dev": "pnpm dlx tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "lint": "eslint src --ext .ts,.tsx",
-    "type-check": "npx tsc --noEmit",
+    "lint": "pnpm exec eslint src --ext .ts,.tsx",
+    "type-check": "pnpm exec tsc --noEmit",
     "clean": "rm -rf dist"
   },
   "dependencies": {
@@ -17,16 +17,20 @@
     "@tripalfa/shared-database": "workspace:*",
     "@tripalfa/shared-types": "workspace:*",
     "@types/multer": "^2.0.0",
-    "axios": "^1.6.0",
+    "axios": "^1.7.9",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^5.0.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.2",
     "multer": "2.0.2",
-    "redis": "^4.6.0"
+    "redis": "^4.7.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^25.2.1",
+    "@types/uuid": "^10.0.0",
     "prisma": "^7.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.9.3"

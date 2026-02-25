@@ -1,39 +1,17 @@
 /**
  * B2B Admin Routing & Navigation Setup
  * 
- * This file demonstrates the complete routing structure for all management pages
- * created in the B2B Admin application.
+ * This file provides navigation menu configuration and helper functions
+ * for the B2B Admin application. Routes are defined in app/App.tsx.
  * 
  * File Structure:
- * - Define route configuration
- * - Navigation menu items
- * - Sidebar navigation structure
- * - Page component imports
+ * - Navigation menu items for sidebar
+ * - Route configuration for breadcrumbs and permissions
+ * - Helper functions for navigation
  */
 
 import { ReactNode } from "react"
-import { LayoutDashboard, Users, Building2, ShoppingCart, Settings, BookOpen } from "lucide-react"
-
-// ============================================
-// PAGE COMPONENT IMPORTS
-// ============================================
-
-// User Management Pages
-import { UsersList } from "@/features/users/pages/UsersList"
-import { B2BCompaniesList } from "@/features/users/pages/B2BCompaniesList"
-
-// Organization Management Pages
-import { OrganizationsList } from "@/features/system/pages/OrganizationsList"
-
-// Supplier Management Pages
-import { SuppliersManagement } from "@/features/suppliers/pages/SuppliersManagement"
-
-// Booking Management Pages
-import BookingsList from "@/features/bookings/pages/BookingsList"
-import BookingDetails from "@/features/bookings/pages/BookingDetails"
-import BookingQueues from "@/features/bookings/pages/BookingQueues"
-import NewBookingOnline from "@/features/bookings/pages/NewBookingOnline"
-import NewBookingOffline from "@/features/bookings/pages/NewBookingOffline"
+import { LayoutDashboard, Users, Building2, ShoppingCart, Settings, BookOpen, Activity, Bell, Palette, CreditCard, Wallet } from "lucide-react"
 
 // ============================================
 // TYPE DEFINITIONS
@@ -44,7 +22,6 @@ interface NavItem {
   label: string
   icon: ReactNode
   path: string
-  component: ReactNode
   badge?: number | string
   description?: string
   children?: NavItem[]
@@ -53,7 +30,6 @@ interface NavItem {
 interface RouteConfig {
   path: string
   label: string
-  component: ReactNode
   icon?: ReactNode
   breadcrumb?: string[]
   permissions?: string[]
@@ -68,9 +44,16 @@ export const navigationMenu: NavItem[] = [
     id: "dashboard",
     label: "Dashboard",
     icon: <LayoutDashboard className="h-4 w-4" />,
-    path: "/dashboard",
-    component: <div>Dashboard Component</div>,
+    path: "/",
     description: "View system overview and analytics",
+  },
+
+  {
+    id: "analytics",
+    label: "Analytics",
+    icon: <Activity className="h-4 w-4" />,
+    path: "/analytics",
+    description: "View analytics and reports",
   },
 
   {
@@ -78,34 +61,7 @@ export const navigationMenu: NavItem[] = [
     label: "Organizations",
     icon: <Building2 className="h-4 w-4" />,
     path: "/organizations",
-    component: <OrganizationsList />,
     description: "Manage organization profiles and branches",
-    badge: "3 new",
-  },
-
-  {
-    id: "settings",
-    label: "System Settings",
-    icon: <Settings className="h-4 w-4" />,
-    path: "/settings",
-    component: <div>Settings Component</div>,
-    description: "Configure system preferences",
-    children: [
-      {
-        id: "settings-general",
-        label: "General",
-        icon: <Settings className="h-4 w-4" />,
-        path: "/settings/general",
-        component: <div>General Settings</div>,
-      },
-      {
-        id: "settings-advanced",
-        label: "Advanced",
-        icon: <Settings className="h-4 w-4" />,
-        path: "/settings/advanced",
-        component: <div>Advanced Settings</div>,
-      },
-    ],
   },
 
   {
@@ -113,16 +69,13 @@ export const navigationMenu: NavItem[] = [
     label: "User Management",
     icon: <Users className="h-4 w-4" />,
     path: "/users",
-    component: <UsersList />,
     description: "Manage staff, B2B, and B2C users",
-    badge: "Updated",
     children: [
       {
         id: "users-list",
         label: "Users",
         icon: <Users className="h-4 w-4" />,
         path: "/users",
-        component: <UsersList />,
         description: "View and manage all users",
       },
       {
@@ -130,8 +83,107 @@ export const navigationMenu: NavItem[] = [
         label: "B2B Companies",
         icon: <Building2 className="h-4 w-4" />,
         path: "/users/b2b-companies",
-        component: <B2BCompaniesList />,
         description: "Manage B2B partner companies",
+      },
+    ],
+  },
+
+  {
+    id: "bookings",
+    label: "Bookings",
+    icon: <BookOpen className="h-4 w-4" />,
+    path: "/bookings",
+    description: "Manage bookings and booking queues",
+    children: [
+      {
+        id: "bookings-list",
+        label: "All Bookings",
+        icon: <BookOpen className="h-4 w-4" />,
+        path: "/bookings",
+        description: "View and manage all bookings",
+      },
+      {
+        id: "bookings-queues",
+        label: "Booking Queues",
+        icon: <ShoppingCart className="h-4 w-4" />,
+        path: "/booking-queues",
+        description: "Manage booking action queues",
+      },
+      {
+        id: "bookings-new-online",
+        label: "New Online Booking",
+        icon: <BookOpen className="h-4 w-4" />,
+        path: "/bookings/new/online",
+        description: "Create online booking",
+      },
+      {
+        id: "bookings-new-offline",
+        label: "New Offline Booking",
+        icon: <BookOpen className="h-4 w-4" />,
+        path: "/bookings/new/offline",
+        description: "Create offline booking",
+      },
+    ],
+  },
+
+  {
+    id: "finance",
+    label: "Finance",
+    icon: <Wallet className="h-4 w-4" />,
+    path: "/finance",
+    description: "Manage finances and reports",
+    children: [
+      {
+        id: "finance-overview",
+        label: "Overview",
+        icon: <Wallet className="h-4 w-4" />,
+        path: "/finance",
+        description: "Finance overview",
+      },
+      {
+        id: "finance-currencies",
+        label: "Currencies",
+        icon: <CreditCard className="h-4 w-4" />,
+        path: "/finance/currencies",
+        description: "Manage currencies",
+      },
+      {
+        id: "finance-reports-b2b",
+        label: "B2B Reports",
+        icon: <BookOpen className="h-4 w-4" />,
+        path: "/finance/reports/b2b",
+        description: "B2B financial reports",
+      },
+      {
+        id: "finance-reports-b2c",
+        label: "B2C Reports",
+        icon: <BookOpen className="h-4 w-4" />,
+        path: "/finance/reports/b2c",
+        description: "B2C financial reports",
+      },
+    ],
+  },
+
+  {
+    id: "wallet",
+    label: "Wallet",
+    icon: <Wallet className="h-4 w-4" />,
+    path: "/wallet",
+    description: "Manage wallet and virtual cards",
+    children: [
+      {
+        id: "wallet-overview",
+        label: "Overview",
+        icon: <Wallet className="h-4 w-4" />,
+        path: "/wallet",
+        description: "Wallet overview",
+      },
+      {
+        id: "wallet-virtual-cards",
+        label: "Virtual Cards",
+        icon: <CreditCard className="h-4 w-4" />,
+        path: "/wallet/virtual-cards",
+        description: "Manage virtual cards",
       },
     ],
   },
@@ -141,49 +193,61 @@ export const navigationMenu: NavItem[] = [
     label: "Suppliers",
     icon: <ShoppingCart className="h-4 w-4" />,
     path: "/suppliers",
-    component: <SuppliersManagement />,
     description: "Manage supplier profiles and products",
+    children: [
+      {
+        id: "suppliers-list",
+        label: "All Suppliers",
+        icon: <ShoppingCart className="h-4 w-4" />,
+        path: "/suppliers",
+        description: "View and manage all suppliers",
+      },
+      {
+        id: "suppliers-management",
+        label: "Supplier Management",
+        icon: <Settings className="h-4 w-4" />,
+        path: "/suppliers/management",
+        description: "Manage supplier details",
+      },
+    ],
   },
 
   {
-    id: "bookings",
-    label: "Bookings",
-    icon: <BookOpen className="h-4 w-4" />,
-    path: "/bookings",
-    component: <BookingsList />,
-    description: "Manage bookings and booking queues",
+    id: "notifications",
+    label: "Notifications",
+    icon: <Bell className="h-4 w-4" />,
+    path: "/notifications",
+    description: "Manage notifications and alerts",
+  },
+
+  {
+    id: "branding",
+    label: "Branding",
+    icon: <Palette className="h-4 w-4" />,
+    path: "/branding",
+    description: "Customize branding and appearance",
+  },
+
+  {
+    id: "system",
+    label: "System",
+    icon: <Settings className="h-4 w-4" />,
+    path: "/system",
+    description: "System settings and monitoring",
     children: [
       {
-        id: "bookings-list",
-        label: "All Bookings",
-        icon: <BookOpen className="h-4 w-4" />,
-        path: "/bookings",
-        component: <BookingsList />,
-        description: "View and manage all bookings",
+        id: "system-health",
+        label: "System Health",
+        icon: <Activity className="h-4 w-4" />,
+        path: "/system",
+        description: "View system health status",
       },
       {
-        id: "bookings-queues",
-        label: "Booking Queues",
-        icon: <ShoppingCart className="h-4 w-4" />,
-        path: "/bookings/queues",
-        component: <BookingQueues />,
-        description: "Manage booking action queues",
-      },
-      {
-        id: "bookings-new-online",
-        label: "New Online Booking",
-        icon: <BookOpen className="h-4 w-4" />,
-        path: "/bookings/new/online",
-        component: <NewBookingOnline />,
-        description: "Create online booking",
-      },
-      {
-        id: "bookings-new-offline",
-        label: "New Offline Booking",
-        icon: <BookOpen className="h-4 w-4" />,
-        path: "/bookings/new/offline",
-        component: <NewBookingOffline />,
-        description: "Create offline booking",
+        id: "system-monitoring",
+        label: "System Monitoring",
+        icon: <Activity className="h-4 w-4" />,
+        path: "/system/monitoring",
+        description: "Real-time system monitoring",
       },
     ],
   },
@@ -195,10 +259,16 @@ export const navigationMenu: NavItem[] = [
 
 export const routeConfig: RouteConfig[] = [
   {
-    path: "/dashboard",
+    path: "/",
     label: "Dashboard",
-    breadcrumb: ["Home", "Dashboard"],
-    component: <div>Dashboard</div>,
+    breadcrumb: ["Home"],
+  },
+
+  {
+    path: "/analytics",
+    label: "Analytics",
+    breadcrumb: ["Home", "Analytics"],
+    permissions: ["analytics:view"],
   },
 
   // User Management Routes
@@ -206,7 +276,6 @@ export const routeConfig: RouteConfig[] = [
     path: "/users",
     label: "Users",
     breadcrumb: ["Home", "User Management", "Users"],
-    component: <UsersList />,
     permissions: ["users:view", "users:manage"],
   },
 
@@ -214,7 +283,6 @@ export const routeConfig: RouteConfig[] = [
     path: "/users/b2b-companies",
     label: "B2B Companies",
     breadcrumb: ["Home", "User Management", "B2B Companies"],
-    component: <B2BCompaniesList />,
     permissions: ["companies:view", "companies:manage"],
   },
 
@@ -223,17 +291,7 @@ export const routeConfig: RouteConfig[] = [
     path: "/organizations",
     label: "Organizations",
     breadcrumb: ["Home", "Organizations"],
-    component: <OrganizationsList />,
     permissions: ["organizations:view", "organizations:manage"],
-  },
-
-  // Supplier Management Routes
-  {
-    path: "/suppliers",
-    label: "Suppliers",
-    breadcrumb: ["Home", "Suppliers"],
-    component: <SuppliersManagement />,
-    permissions: ["suppliers:view", "suppliers:manage"],
   },
 
   // Booking Management Routes
@@ -241,7 +299,6 @@ export const routeConfig: RouteConfig[] = [
     path: "/bookings",
     label: "Bookings",
     breadcrumb: ["Home", "Bookings"],
-    component: <BookingsList />,
     permissions: ["bookings:view", "bookings:manage"],
   },
 
@@ -249,15 +306,13 @@ export const routeConfig: RouteConfig[] = [
     path: "/bookings/:id",
     label: "Booking Details",
     breadcrumb: ["Home", "Bookings", "Details"],
-    component: <BookingDetails />,
     permissions: ["bookings:view", "bookings:manage"],
   },
 
   {
-    path: "/bookings/queues",
+    path: "/booking-queues",
     label: "Booking Queues",
     breadcrumb: ["Home", "Bookings", "Queues"],
-    component: <BookingQueues />,
     permissions: ["bookings:view", "bookings:manage"],
   },
 
@@ -265,7 +320,6 @@ export const routeConfig: RouteConfig[] = [
     path: "/bookings/new/online",
     label: "New Online Booking",
     breadcrumb: ["Home", "Bookings", "Create", "Online"],
-    component: <NewBookingOnline />,
     permissions: ["bookings:create", "bookings:manage"],
   },
 
@@ -273,25 +327,133 @@ export const routeConfig: RouteConfig[] = [
     path: "/bookings/new/offline",
     label: "New Offline Booking",
     breadcrumb: ["Home", "Bookings", "Create", "Offline"],
-    component: <NewBookingOffline />,
     permissions: ["bookings:create", "bookings:manage"],
   },
 
-  // Settings Routes
+  // Finance Routes
   {
-    path: "/settings/general",
-    label: "General Settings",
-    breadcrumb: ["Home", "Settings", "General"],
-    component: <div>General Settings</div>,
-    permissions: ["settings:view", "settings:manage"],
+    path: "/finance",
+    label: "Finance",
+    breadcrumb: ["Home", "Finance"],
+    permissions: ["finance:view"],
   },
 
   {
-    path: "/settings/advanced",
-    label: "Advanced Settings",
-    breadcrumb: ["Home", "Settings", "Advanced"],
-    component: <div>Advanced Settings</div>,
-    permissions: ["settings:view", "settings:manage"],
+    path: "/finance/currencies",
+    label: "Currencies",
+    breadcrumb: ["Home", "Finance", "Currencies"],
+    permissions: ["finance:view"],
+  },
+
+  {
+    path: "/finance/reports/b2b",
+    label: "B2B Reports",
+    breadcrumb: ["Home", "Finance", "B2B Reports"],
+    permissions: ["finance:view"],
+  },
+
+  {
+    path: "/finance/reports/b2c",
+    label: "B2C Reports",
+    breadcrumb: ["Home", "Finance", "B2C Reports"],
+    permissions: ["finance:view"],
+  },
+
+  // Wallet Routes
+  {
+    path: "/wallet",
+    label: "Wallet",
+    breadcrumb: ["Home", "Wallet"],
+    permissions: ["wallet:view"],
+  },
+
+  {
+    path: "/wallet/virtual-cards",
+    label: "Virtual Cards",
+    breadcrumb: ["Home", "Wallet", "Virtual Cards"],
+    permissions: ["wallet:view"],
+  },
+
+  // Supplier Routes
+  {
+    path: "/suppliers",
+    label: "Suppliers",
+    breadcrumb: ["Home", "Suppliers"],
+    permissions: ["suppliers:view", "suppliers:manage"],
+  },
+
+  {
+    path: "/suppliers/management",
+    label: "Supplier Management",
+    breadcrumb: ["Home", "Suppliers", "Management"],
+    permissions: ["suppliers:view", "suppliers:manage"],
+  },
+
+  {
+    path: "/suppliers/:id/gateway",
+    label: "Supplier Gateway",
+    breadcrumb: ["Home", "Suppliers", "Gateway"],
+    permissions: ["suppliers:view", "suppliers:manage"],
+  },
+
+  // Notification Routes
+  {
+    path: "/notifications",
+    label: "Notifications",
+    breadcrumb: ["Home", "Notifications"],
+    permissions: ["notifications:view"],
+  },
+
+  // Branding Routes
+  {
+    path: "/branding",
+    label: "Branding",
+    breadcrumb: ["Home", "Branding"],
+    permissions: ["branding:view", "branding:manage"],
+  },
+
+  // System Routes
+  {
+    path: "/system",
+    label: "System Health",
+    breadcrumb: ["Home", "System"],
+    permissions: ["system:view"],
+  },
+
+  {
+    path: "/system/monitoring",
+    label: "System Monitoring",
+    breadcrumb: ["Home", "System", "Monitoring"],
+    permissions: ["monitoring:view", "monitoring:manage"],
+  },
+
+  // Other Routes
+  {
+    path: "/inventory",
+    label: "Inventory",
+    breadcrumb: ["Home", "Inventory"],
+    permissions: ["inventory:view"],
+  },
+
+  {
+    path: "/documents",
+    label: "Documents",
+    breadcrumb: ["Home", "Documents"],
+    permissions: ["documents:view"],
+  },
+
+  {
+    path: "/rules",
+    label: "Rules",
+    breadcrumb: ["Home", "Rules"],
+    permissions: ["rules:view"],
+  },
+
+  {
+    path: "/organization",
+    label: "Organization",
+    breadcrumb: ["Home", "Organization"],
+    permissions: ["organization:view"],
   },
 ]
 

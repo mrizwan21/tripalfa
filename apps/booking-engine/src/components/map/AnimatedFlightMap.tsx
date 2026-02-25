@@ -373,7 +373,7 @@ export function AnimatedFlightMap({
       {!mapLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
           <div className="text-center">
-            <div className="w-10 h-10 border-4 border-[#8B5CF6] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-10 h-10 border-4 border-[#152467] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-gray-400 font-bold text-sm">Loading map...</p>
           </div>
         </div>

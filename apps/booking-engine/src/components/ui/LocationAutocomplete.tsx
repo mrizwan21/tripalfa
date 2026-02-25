@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import * as Popover from '@radix-ui/react-popover';
 import { Plane, Building2, Loader2 } from 'lucide-react';
-import { getAirports } from '@tripalfa/static-data';
+import { fetchAirports } from '../../lib/api';
 
 interface Location {
     code: string;
@@ -88,13 +88,13 @@ export function LocationAutocomplete({
 
             setLoading(true);
             try {
-                const response = await getAirports({ query: search });
-                const airports = response.data;
+                // fetchAirports returns an array directly
+                const airports = await fetchAirports(search);
 
                 // Map to our Location interface
-                const mappedLocations: Location[] = airports.map((airport: any) => ({
-                    code: airport.iata_code || 'XXX',
-                    name: airport.name || '',
+                const mappedLocations: Location[] = (airports || []).map((airport: any) => ({
+                    code: airport.code || airport.iata_code || 'XXX',
+                    name: airport.title || airport.name || '',
                     city: airport.city || '',
                     country: airport.country || '',
                     type: 'airport' as const

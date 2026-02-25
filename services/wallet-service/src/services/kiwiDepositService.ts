@@ -14,9 +14,7 @@
 import { prisma } from '@tripalfa/shared-database';
 import { logger } from '../utils/logger.js';
 import walletService from './walletService.js';
-
-// Decimal type helper
-type DecimalLike = { toString(): string } | number | null | undefined;
+import { toNumber, DecimalLike } from '../types/wallet.js';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -83,27 +81,59 @@ const KIWI_SUPPLIER_ID = 'kiwi_noman_supplier'; // Internal supplier ID
 const DEFAULT_CURRENCY = 'EUR';
 const HOLD_DURATION_HOURS = 24; // Default hold duration before auto-release
 
-// ─── Helper Functions ─────────────────────────────────────────────────────────
-
-function toNumber(value: DecimalLike): number {
-  if (value === null || value === undefined) return 0;
-  if (typeof value === 'number') return value;
-  return Number(value.toString());
-}
-
 // ─── Service Implementation ────────────────────────────────────────────────────
 
 class KiwiDepositService {
   private config: KiwiDepositConfig;
+  private isConfigured: boolean = true;
   
   constructor() {
+    // Check for required environment variables with graceful degradation
+    const missingVars: string[] = [];
+    if (!process.env.KIWI_AFFIL_ID) {
+      missingVars.push('KIWI_AFFIL_ID');
+    }
+    if (!process.env.KIWI_API_KEY) {
+      missingVars.push('KIWI_API_KEY');
+    }
+    
+    if (missingVars.length > 0) {
+      logger.warn(
+        `[KiwiDepositService] Missing required environment variables: ${missingVars.join(', ')}. ` +
+        `Kiwi deposit functionality will be disabled. ` +
+        `Set these variables to enable Kiwi.com integration.`
+      );
+      this.isConfigured = false;
+    }
+    
     this.config = {
-      affilId:    process.env.KIWI_AFFIL_ID    || 'technocenseitsolutionstripalfanomad',
-      apiKey:     process.env.KIWI_API_KEY     || 'I84HckfkK9C__-m346nQvVzC95XqQYhw',
+      affilId:    process.env.KIWI_AFFIL_ID || '',
+      apiKey:     process.env.KIWI_API_KEY || '',
       walletId:   process.env.KIWI_WALLET_ID   || '',
       currency:   process.env.KIWI_CURRENCY    || DEFAULT_CURRENCY,
       minBalance: parseFloat(process.env.KIWI_MIN_BALANCE || '1000'),
     };
+  }
+
+  /**
+   * Check if the Kiwi service is properly configured
+   * Returns true if all required environment variables are set
+   */
+  isAvailable(): boolean {
+    return this.isConfigured;
+  }
+
+  /**
+   * Ensure the service is configured before attempting operations
+   * @throws Error if the service is not configured
+   */
+  private ensureConfigured(): void {
+    if (!this.isConfigured) {
+      throw new Error(
+        'KiwiDepositService is not configured. ' +
+        'Set KIWI_AFFIL_ID and KIWI_API_KEY environment variables to enable Kiwi integration.'
+      );
+    }
   }
 
   // ─── Wallet Management ──────────────────────────────────────────────────────
@@ -144,7 +174,7 @@ class KiwiDepositService {
     
     const wallet = await prisma.wallet.findUnique({
       where: { id: this.config.walletId },
-    });
+    }) as (Awaited<ReturnType<typeof prisma.wallet.findUnique>> & { reservedBalance: DecimalLike }) | null;
     
     if (!wallet) {
       throw new Error('Kiwi wallet not found');
@@ -222,7 +252,7 @@ class KiwiDepositService {
       // Reserve funds in wallet
       const wallet = await tx.wallet.findUnique({
         where: { id: this.config.walletId },
-      });
+      }) as (typeof wallet & { reservedBalance: ReturnType<typeof toNumber> }) | null;
       
       if (!wallet) throw new Error('Kiwi wallet not found');
       
@@ -284,7 +314,7 @@ class KiwiDepositService {
       // Debit the reserved amount from wallet
       const wallet = await tx.wallet.findUnique({
         where: { id: this.config.walletId },
-      });
+      }) as (typeof wallet & { reservedBalance: ReturnType<typeof toNumber> }) | null;
       
       if (!wallet) throw new Error('Kiwi wallet not found');
       
@@ -338,7 +368,7 @@ class KiwiDepositService {
       // Release reserved funds
       const wallet = await tx.wallet.findUnique({
         where: { id: this.config.walletId },
-      });
+      }) as (typeof wallet & { reservedBalance: ReturnType<typeof toNumber> }) | null;
       
       if (!wallet) throw new Error('Kiwi wallet not found');
       
@@ -385,16 +415,21 @@ class KiwiDepositService {
   ): Promise<KiwiSettlement> {
     const netAmount = grossAmount - commission;
     
+    // Ensure Kiwi wallet exists
+    const walletId = await this.ensureKiwiWallet();
+    
     const settlement = await prisma.kiwiSettlement.create({
       data: {
+        bookingId: kiwiBookingId,
         kiwiBookingId,
+        walletId,
         amount: grossAmount,
         currency: this.config.currency,
         commission,
         netAmount,
+        type: 'deposit',
         status: 'settled',
         settledAt: new Date(),
-        invoiceId,
       },
     });
     
@@ -420,6 +455,7 @@ class KiwiDepositService {
    * https://tequila.kiwi.com/portal/docs/user_guides/refund_api
    */
   async processRefund(request: KiwiRefundRequest): Promise<{ refundId: string; status: string }> {
+    this.ensureConfigured();
     try {
       // Call Kiwi refund API
       const response = await fetch(`${KIWI_API_BASE}/booking/refunds`, {
@@ -445,15 +481,17 @@ class KiwiDepositService {
       const result = (await response.json()) as KiwiRefundResponse;
       
       // Record refund in our system
+      const walletId = await this.ensureKiwiWallet();
       await prisma.kiwiRefund.create({
         data: {
+          bookingId: request.kiwiBookingId,
           kiwiBookingId: request.kiwiBookingId,
+          walletId,
           amount: request.amount,
           currency: request.currency,
           reason: request.reason,
-          kiwiRefundId: result.refund_id,
+          refundId: result.refund_id,
           status: result.status,
-          idempotencyKey: request.idempotencyKey,
         },
       });
       
@@ -524,18 +562,24 @@ class KiwiDepositService {
     
     // Store for review
     try {
+      const walletId = await this.ensureKiwiWallet();
       await prisma.kiwiPriceChange.create({
         data: {
+          bookingId: payload.booking_id,
           kiwiBookingId: payload.booking_id,
+          walletId,
           oldPrice: payload.data?.old_price || 0,
-          newPrice: payload.data?.new_price || 0,
+          originalAmount: payload.data?.old_price || 0,
+          newAmount: payload.data?.new_price || 0,
+          difference: (payload.data?.new_price || 0) - (payload.data?.old_price || 0),
           currency: payload.currency || this.config.currency,
           status: 'pending_review',
-          metadata: payload.data,
         },
       });
-    } catch {
-      // Table may not exist yet
+    } catch (error) {
+      // Log error but don't fail the webhook - price change records are for audit purposes
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error(`[KiwiDepositService] Failed to create price change record for booking ${payload.booking_id}: ${errorMessage}`);
     }
   }
 

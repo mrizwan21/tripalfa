@@ -11,6 +11,9 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Set the working directory
 WORKDIR /app
 
+# Copy npm configuration for network retry settings
+COPY .npmrc ./
+
 # Copy monorepo root files
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY tsconfig.json tsconfig.base.json ./
@@ -26,15 +29,15 @@ RUN find . -name "*.tsbuildinfo" -delete
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --fetch-timeout=300000
 
 # Build workspace dependencies
-RUN pnpm --filter @tripalfa/shared-types build
-RUN pnpm --filter @tripalfa/shared-utils build
-RUN pnpm --filter @tripalfa/api-clients build
-RUN pnpm --filter @tripalfa/static-data build
-RUN pnpm --filter @tripalfa/ui-components build
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/shared-types build
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/shared-utils build
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/api-clients build
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/static-data build
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm --filter @tripalfa/ui-components build
 
 # Build the application
 WORKDIR /app/apps/booking-engine
-RUN pnpm build
+RUN --mount=type=cache,target=/app/.tsbuildcache pnpm exec vite build
 
 # Use nginx to serve the built application
 FROM nginx:alpine

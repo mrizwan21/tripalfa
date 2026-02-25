@@ -195,7 +195,7 @@ function FlightInfoCard({
           <div className="w-20 h-0.5 bg-gradient-to-r from-green-500 via-purple-500 to-red-500 relative">
             <Plane 
               size={16} 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#8B5CF6] rotate-90"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#152467] rotate-90"
             />
           </div>
           <div className="w-2 h-2 rounded-full bg-red-500" />

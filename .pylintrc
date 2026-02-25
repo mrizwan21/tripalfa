@@ -1,6 +1,0 @@
-[MASTER]
-# Add files or directories to the ignore list
-ignore=Dockerfile,Dockerfile.*,docker-compose*.yml,docker-compose*.yaml,services/booking-service/Dockerfile
-
-# Add files or directories matching the regex patterns to the ignore-list
-ignore-patterns=Dockerfile.*,.*docker-compose.*\.yml,.*docker-compose.*\.yaml,.*/Dockerfile,.*/Dockerfile.*,.*\.ts,.*\.tsx,.*\.js,.*\.jsx,.*\.mjs,.*\.cjs,.*\.json,.*tsconfig.*\.json

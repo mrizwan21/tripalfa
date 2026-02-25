@@ -1,16 +1,100 @@
 import axios from 'axios';
 
+// ============================================================================
+// NOTIFICATION TYPES - Aligned with b2b-admin feature types
+// ============================================================================
+
+export type NotificationChannel = 'email' | 'sms' | 'push' | 'in_app' | 'webhook';
+export type NotificationPriority = 'low' | 'medium' | 'high' | 'critical';
+export type NotificationStatus = 'draft' | 'scheduled' | 'sent' | 'failed' | 'cancelled';
+export type NotificationType =
+  | 'booking'
+  | 'payment'
+  | 'finance'
+  | 'system'
+  | 'user'
+  | 'alert'
+  | 'promotion'
+  | 'compliance'
+  | 'custom';
+
+export type DeliveryStatus = 'pending' | 'sent' | 'failed' | 'bounced' | 'opened' | 'clicked';
+export type ScheduleFrequency = 'once' | 'daily' | 'weekly' | 'monthly' | 'custom';
+
+export interface TemplateVariable {
+  name: string;
+  description: string;
+  type: 'string' | 'number' | 'date' | 'boolean' | 'json';
+  required: boolean;
+  defaultValue?: any;
+  example?: string;
+}
+
+export interface ChannelConfig {
+  enabled: boolean;
+  fromAddress?: string;
+  fromName?: string;
+  replyTo?: string;
+  headers?: Record<string, string>;
+  signature?: string;
+  template?: string;
+}
+
+export interface NotificationCondition {
+  id: string;
+  variable: string;
+  operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
+  value: any;
+  action: 'send' | 'skip';
+}
+
+export interface NotificationRecipient {
+  id: string;
+  type: 'user' | 'company' | 'email' | 'phone' | 'webhook';
+  value: string;
+  preferences?: UserNotificationPreferences;
+}
+
+export interface UserNotificationPreferences {
+  userId: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  webhookEnabled: boolean;
+  batchDigest: 'instant' | 'hourly' | 'daily' | 'weekly' | 'never';
+  quietHours?: { start: string; end: string };
+  typePreferences: Record<NotificationType, boolean>;
+  typeChannels: Record<NotificationType, NotificationChannel[]>;
+  unsubscribedCategories: string[];
+}
+
+export interface FrequencyConfig {
+  interval: number;
+  unit: 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
+  endDate?: string;
+  maxOccurrences?: number;
+  dayOfWeek?: number[];
+  dayOfMonth?: number;
+}
+
+export interface RetryPolicy {
+  maxRetries: number;
+  backoffMs: number;
+  backoffMultiplier: number;
+}
+
 export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'transactional' | 'marketing' | 'system';
-  channels: string[];
-  recipients: string[];
+  type: NotificationType;
+  channels: NotificationChannel[];
+  recipients: NotificationRecipient[];
   variables?: Record<string, string>;
-  priority?: 'low' | 'normal' | 'high';
+  priority?: NotificationPriority;
   metadata?: Record<string, any>;
-  status: 'queued' | 'sent' | 'failed';
+  status: NotificationStatus;
   createdAt: string;
   sentAt?: string;
 }
@@ -19,33 +103,95 @@ export interface NotificationTemplate {
   id: string;
   name: string;
   description?: string;
-  type: 'email' | 'sms' | 'push' | 'in_app';
-  subject?: string;
+  type: NotificationType;
+  category: string;
+  
+  // Content
+  subject: string;
   body: string;
-  variables: Array<{ name: string; description?: string; type: string }>;
-  channels: any[];
+  htmlBody?: string;
+  
+  // Variables
+  variables: TemplateVariable[];
+  
+  // Channels
+  supportedChannels: NotificationChannel[];
+  channelConfigs: Record<NotificationChannel, ChannelConfig>;
+  
+  // Priority & rules
+  defaultPriority: NotificationPriority;
+  defaultChannels: NotificationChannel[];
+  
+  // Conditions (if/then rules)
+  conditions?: NotificationCondition[];
+  
+  // Status
+  enabled: boolean;
+  archived: boolean;
+  
+  // Metadata
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
+  tags: string[];
+  version: number;
 }
 
 export interface NotificationCampaign {
   id: string;
   name: string;
   description?: string;
-  title: string;
-  message: string;
-  type: 'one_time' | 'recurring';
-  channels: string[];
-  targetSegment?: string;
-  schedule?: any;
-  maxRecipients?: number;
-  status: 'draft' | 'scheduled' | 'running' | 'completed' | 'paused';
+  
+  // Templates
+  templateIds: string[];
+  
+  // Recipients
+  recipients: NotificationRecipient[];
+  totalRecipients?: number;
+  
+  // Schedule
+  startDate: string;
+  endDate?: string;
+  sequence?: NotificationSequence[];
+  
+  // Status
+  status: 'draft' | 'scheduled' | 'active' | 'paused' | 'completed' | 'cancelled';
+  
+  // Metrics
+  metrics?: NotificationAnalytics;
+  
+  // Metadata
   createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  tags: string[];
 }
 
-export interface DeliveryStatus {
+export interface NotificationSequence {
+  order: number;
+  templateId: string;
+  delayAfterPrevious?: number;
+  conditions?: NotificationCondition[];
+}
+
+export interface NotificationAnalytics {
+  templateId: string;
+  templateName: string;
+  totalSent: number;
+  totalFailed: number;
+  totalBounced: number;
+  deliveryRate: number;
+  totalOpened: number;
+  openRate: number;
+  totalClicked: number;
+  clickRate: number;
+  periodStart: string;
+  periodEnd: string;
+}
+
+export interface DeliveryStatusResponse {
   notificationId: string;
-  status: 'delivered' | 'failed' | 'pending';
+  status: DeliveryStatus;
   channels: Record<string, { status: string; deliveredAt?: string; error?: string }>;
   updatedAt: string;
 }
@@ -53,11 +199,11 @@ export interface DeliveryStatus {
 export interface CreateNotificationRequest {
   title: string;
   message: string;
-  type: 'transactional' | 'marketing' | 'system';
-  channels: string[];
+  type: NotificationType;
+  channels: NotificationChannel[];
   recipients: string[];
   variables?: Record<string, string>;
-  priority?: 'low' | 'normal' | 'high';
+  priority?: NotificationPriority;
   metadata?: Record<string, any>;
 }
 
@@ -65,19 +211,25 @@ export interface SendNotificationResponse {
   notificationId: string;
   deliveryId?: string;
   status: 'queued' | 'sent' | 'failed';
-  channels: Record<string, DeliveryStatus>;
-  timestamp: Date;
+  channels: Record<string, DeliveryStatusResponse>;
+  timestamp: string;
   errors?: Array<{ channel: string; error: string }>;
 }
 
 export interface CreateTemplateRequest {
   name: string;
   description?: string;
-  type: 'email' | 'sms' | 'push' | 'in_app';
+  type: NotificationType;
+  category?: string;
   subject?: string;
   body: string;
-  variables: Array<{ name: string; description?: string; type: string }>;
-  channels: any[];
+  htmlBody?: string;
+  variables: TemplateVariable[];
+  supportedChannels: NotificationChannel[];
+  channelConfigs?: Record<NotificationChannel, ChannelConfig>;
+  defaultPriority?: NotificationPriority;
+  defaultChannels?: NotificationChannel[];
+  tags?: string[];
 }
 
 export interface CreateCampaignRequest {
@@ -86,10 +238,11 @@ export interface CreateCampaignRequest {
   title: string;
   message: string;
   type: 'one_time' | 'recurring';
-  channels: string[];
+  channels: NotificationChannel[];
   targetSegment?: string;
-  schedule?: any;
+  schedule?: FrequencyConfig;
   maxRecipients?: number;
+  templateIds?: string[];
 }
 
 export interface CampaignExecutionResponse {
@@ -99,8 +252,8 @@ export interface CampaignExecutionResponse {
   sentCount: number;
   failedCount: number;
   status: 'running' | 'completed' | 'failed';
-  startedAt: Date;
-  completedAt?: Date;
+  startedAt: string;
+  completedAt?: string;
   errors?: string[];
 }
 
@@ -113,8 +266,9 @@ export interface DeliveryAnalytics {
   clickCount?: number;
   unsubscribeCount?: number;
   bounceCount?: number;
-  chartData: Array<{ timestamp: Date; count: number }>;
+  chartData: Array<{ timestamp: string; count: number }>;
 }
+// Note: DeliveryStatus is already exported as DeliveryStatusResponse above
 
 export class NotificationService {
   private static baseURL = process.env.VITE_NOTIFICATION_SERVICE_URL || 'http://localhost:3004';

@@ -108,7 +108,7 @@ export function SearchAutocomplete({ type, placeholder, defaultValue, value, onS
     return (
         <div className="relative w-full h-12 bg-white rounded-xl border-2 border-gray-100 hover:border-gray-200 transition-all group" ref={wrapperRef}>
             <div className="relative h-full flex items-center px-4">
-                <div className="mr-3 text-gray-400 flex-shrink-0">
+                <div className="mr-1 text-gray-400 flex-shrink-0">
                     {icon ? icon : <MapPin className="text-[#6366F1]" size={16} />}
                 </div>
                 <input

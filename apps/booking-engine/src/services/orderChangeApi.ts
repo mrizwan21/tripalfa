@@ -11,9 +11,7 @@
  * Routes through centralized API Manager for consistency
  */
 
-import { API_BASE_URL } from '../lib/constants';
-
-const API_KEY = import.meta.env.VITE_API_KEY || '';
+import { api } from '../lib/api';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -96,30 +94,12 @@ export async function checkOrderChangeEligibility(
   try {
     console.log('[OrderChange] Checking eligibility for:', { orderId, changeType });
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/change/eligibility`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          orderId,
-          changeType,
-          passengers: passengers || []
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/orders/change/eligibility',
+      { orderId, changeType, passengers: passengers || [] }
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to check eligibility: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderChange] Eligibility check complete:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderChange] Eligibility check error:', error);
@@ -158,32 +138,12 @@ export async function createOrderChangeRequest(
       passengers: affectedPassengers
     });
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/change/request`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          orderId,
-          changeType,
-          affectedPassengers,
-          sliceIndex
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/orders/change/request',
+      { orderId, changeType, affectedPassengers, sliceIndex }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to create change request: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderChange] Change request created:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderChange] Create request error:', error);
@@ -212,23 +172,10 @@ export async function getOrderChangeOffers(
   try {
     console.log('[OrderChange] Fetching offers for change request:', changeRequestId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/change/offers?changeRequestId=${changeRequestId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        credentials: 'include'
-      }
+    const result = await api.get<any>(
+      `/api/admin/orders/change/offers?changeRequestId=${changeRequestId}`
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to get offers: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     const offers = Array.isArray(result.data) ? result.data : result;
     
     console.log('[OrderChange] Offers retrieved:', offers.length);
@@ -265,30 +212,12 @@ export async function createPendingOrderChange(
       selectedOfferId
     });
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/change/pending`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          changeRequestId,
-          selectedOfferId
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/orders/change/pending',
+      { changeRequestId, selectedOfferId }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to create pending change: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderChange] Pending change created:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderChange] Create pending change error:', error);
@@ -327,30 +256,12 @@ export async function confirmOrderChange(
   try {
     console.log('[OrderChange] Confirming order change:', pendingChangeId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/change/confirm`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          pendingChangeId,
-          paymentMethod: paymentMethod || 'credit_card'
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/orders/change/confirm',
+      { pendingChangeId, paymentMethod: paymentMethod || 'credit_card' }
     );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || `Failed to confirm change: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderChange] Order change confirmed:', result);
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderChange] Confirm change error:', error);
@@ -371,29 +282,12 @@ export async function rejectOrderChange(
   try {
     console.log('[OrderChange] Rejecting order change:', pendingChangeId);
 
-    const response = await fetch(
-      `${API_BASE_URL}/api/admin/orders/change/reject`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`,
-        },
-        body: JSON.stringify({
-          pendingChangeId,
-          reason
-        }),
-        credentials: 'include'
-      }
+    const result = await api.post<any>(
+      '/api/admin/orders/change/reject',
+      { pendingChangeId, reason }
     );
 
-    if (!response.ok) {
-      throw new Error(`Failed to reject change: ${response.statusText}`);
-    }
-
-    const result = await response.json();
     console.log('[OrderChange] Order change rejected');
-
     return result.data || result;
   } catch (error) {
     console.error('[OrderChange] Reject change error:', error);

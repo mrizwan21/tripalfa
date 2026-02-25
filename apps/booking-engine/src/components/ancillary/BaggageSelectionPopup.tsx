@@ -124,19 +124,19 @@ export const BaggageSelectionPopup = ({
                                     <p className="text-[10px] font-black text-gray-900">{bag.passengerName}</p>
                                     <p className="text-[8px] font-bold text-gray-400">{bag.flightNumber} - {bag.weight}{bag.weightUnit}</p>
                                 </div>
-                                <span className="text-sm font-black text-[#8B5CF6]">{formatCurrency(bag.price)}</span>
+                                <span className="text-sm font-black text-[#152467]">{formatCurrency(bag.price)}</span>
                             </div>
                         ))}
                     </div>
 
                     <div className="flex justify-between items-center w-full pt-4 border-t border-gray-100">
                         <span className="text-sm font-black text-gray-900">Total</span>
-                        <span className="text-xl font-black text-[#8B5CF6]">{formatCurrency(totalAmount)}</span>
+                        <span className="text-xl font-black text-[#152467]">{formatCurrency(totalAmount)}</span>
                     </div>
 
                     <div className="flex gap-4 w-full">
-                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#8B5CF6] text-[#8B5CF6] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">Go Back</button>
-                        <button onClick={() => onConfirm(selectedBaggage)} className="flex-1 h-12 rounded-xl bg-[#8B5CF6] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Confirm</button>
+                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#152467] text-[#152467] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">Go Back</button>
+                        <button onClick={() => onConfirm(selectedBaggage)} className="flex-1 h-12 rounded-xl bg-[#152467] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -164,7 +164,7 @@ export const BaggageSelectionPopup = ({
                         <button 
                             onClick={() => setSelectedPassengerIdx(prev => Math.max(0, prev - 1))}
                             disabled={selectedPassengerIdx === 0}
-                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all disabled:opacity-30"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -174,7 +174,7 @@ export const BaggageSelectionPopup = ({
                                     key={p.id}
                                     onClick={() => setSelectedPassengerIdx(idx)}
                                     className={`px-6 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${selectedPassengerIdx === idx
-                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100'
+                                        ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-xl shadow-yellow-100'
                                         : 'border-yellow-200 text-gray-400 bg-white'
                                         }`}
                                 >
@@ -191,7 +191,7 @@ export const BaggageSelectionPopup = ({
                         <button 
                             onClick={() => setSelectedPassengerIdx(prev => Math.min(passengers.length - 1, prev + 1))}
                             disabled={selectedPassengerIdx === passengers.length - 1}
-                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all disabled:opacity-30"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -208,8 +208,8 @@ export const BaggageSelectionPopup = ({
                                         onClick={() => setSelectedSegmentIdx(idx)}
                                         className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all ${
                                             selectedSegmentIdx === idx 
-                                                ? 'bg-[#8B5CF6] text-white shadow-lg' 
-                                                : 'border border-[#8B5CF6] text-[#8B5CF6]'
+                                                ? 'bg-[#152467] text-white shadow-lg' 
+                                                : 'border border-[#152467] text-[#152467]'
                                         }`}
                                     >
                                         {seg.origin}
@@ -223,13 +223,13 @@ export const BaggageSelectionPopup = ({
                         {/* Current Allowance Info */}
                         <div className="flex justify-center gap-4 flex-wrap">
                             <div className="bg-white px-6 py-3 rounded-full flex items-center gap-3 border border-gray-50">
-                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#8B5CF6]">
+                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#152467]">
                                     <Luggage className="w-4 h-4" />
                                 </div>
                                 <span className="text-[10px] font-bold text-gray-500">{includedDisplay}</span>
                             </div>
                             <div className="bg-white px-6 py-3 rounded-full flex items-center gap-3 border border-gray-100">
-                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#8B5CF6]">
+                                <div className="w-6 h-6 rounded bg-purple-100 flex items-center justify-center text-[#152467]">
                                     <Briefcase className="w-4 h-4" />
                                 </div>
                                 <span className="text-[10px] font-bold text-gray-500">
@@ -245,7 +245,7 @@ export const BaggageSelectionPopup = ({
                                     <select
                                         value={selectedOptionId}
                                         onChange={(e) => setSelectedOptionId(e.target.value)}
-                                        className="w-full h-12 px-6 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold text-gray-600 appearance-none outline-none focus:border-[#8B5CF6]/20 transition-all"
+                                        className="w-full h-12 px-6 bg-gray-50 border border-transparent rounded-xl text-[11px] font-bold text-gray-600 appearance-none outline-none focus:border-[#152467]/20 transition-all"
                                     >
                                         <option value="">Select Baggage Option</option>
                                         {baggageOptions.map(opt => (
@@ -258,7 +258,7 @@ export const BaggageSelectionPopup = ({
                                 <button
                                     onClick={handleAddBaggage}
                                     disabled={!selectedOptionId}
-                                    className="h-12 px-10 bg-[#FFD700] hover:bg-[#F4CE14] disabled:bg-gray-200 disabled:text-gray-400 text-black rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-yellow-50 transition-all active:scale-95 flex items-center gap-2"
+                                    className="h-12 px-10 bg-[#EC5C4C] hover:bg-[#F4CE14] disabled:bg-gray-200 disabled:text-gray-400 text-black rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-yellow-50 transition-all active:scale-95 flex items-center gap-2"
                                 >
                                     <Plus size={16} /> Add
                                 </button>
@@ -273,7 +273,7 @@ export const BaggageSelectionPopup = ({
                                     {currentSelections.map((bag, i) => (
                                         <div key={i} className="flex items-center justify-between pb-4 border-b border-gray-50 last:border-0">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#8B5CF6]">
+                                                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[#152467]">
                                                     <Luggage size={20} />
                                                 </div>
                                                 <div>
@@ -298,7 +298,7 @@ export const BaggageSelectionPopup = ({
                             {/* Total Bar */}
                             <div className="pt-6 border-t border-gray-50 flex items-center justify-between">
                                 <span className="text-sm font-black text-gray-900 uppercase tracking-[2px]">Total Baggage Cost</span>
-                                <span className="text-xl font-black text-[#8B5CF6]">{formatCurrency(totalAmount)}</span>
+                                <span className="text-xl font-black text-[#152467]">{formatCurrency(totalAmount)}</span>
                             </div>
                         </div>
                     </div>
@@ -314,7 +314,7 @@ export const BaggageSelectionPopup = ({
                                             <p className="text-[9px] font-black text-gray-700">{bag.passengerName}</p>
                                             <p className="text-[8px] font-bold text-gray-400">{bag.flightNumber} - {bag.weight}{bag.weightUnit}</p>
                                         </div>
-                                        <span className="text-[10px] font-black text-[#8B5CF6]">{formatCurrency(bag.price)}</span>
+                                        <span className="text-[10px] font-black text-[#152467]">{formatCurrency(bag.price)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -326,7 +326,7 @@ export const BaggageSelectionPopup = ({
                         <Button
                             onClick={() => selectedBaggage.length > 0 && setIsConfirming(true)}
                             disabled={selectedBaggage.length === 0}
-                            className="w-full max-w-xl h-14 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+                            className="w-full max-w-xl h-14 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                         >
                             Add Baggage {totalAmount > 0 && ` - ${formatCurrency(totalAmount)}`}
                         </Button>

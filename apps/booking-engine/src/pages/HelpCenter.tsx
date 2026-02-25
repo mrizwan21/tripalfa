@@ -14,10 +14,10 @@ const FAQItem = ({ question, answer }: { question: string; answer: string }) => 
                 onClick={() => setIsOpen(!isOpen)}
                 className="w-full py-6 flex items-center justify-between text-left transition-all group-hover:px-2"
             >
-                <span className={`text-base font-bold transition-colors ${isOpen ? 'text-[#8B5CF6]' : 'text-slate-700'}`}>
+                <span className={`text-base font-bold transition-colors ${isOpen ? 'text-[#152467]' : 'text-slate-700'}`}>
                     {question}
                 </span>
-                <div className={`p-2 rounded-full transition-all duration-300 ${isOpen ? 'bg-[#8B5CF6] text-white rotate-180' : 'bg-gray-50 text-slate-400 rotate-0'}`}>
+                <div className={`p-2 rounded-full transition-all duration-300 ${isOpen ? 'bg-[#152467] text-white rotate-180' : 'bg-gray-50 text-slate-400 rotate-0'}`}>
                     <ChevronDown size={18} />
                 </div>
             </button>
@@ -53,7 +53,7 @@ export default function HelpCenter() {
             <div className="bg-[#F8FAFC] min-h-screen pt-20 overflow-hidden relative">
 
                 {/* Futuristic Background Elements */}
-                <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#8B5CF6]/10 to-transparent pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[#152467]/10 to-transparent pointer-events-none" />
                 <div className="absolute top-[10%] left-[5%] w-96 h-96 bg-purple-200/20 rounded-full blur-[120px] pointer-events-none animate-pulse" />
                 <div className="absolute top-[20%] right-[5%] w-80 h-80 bg-blue-200/20 rounded-full blur-[100px] pointer-events-none animate-pulse" style={{ animationDelay: '1s' }} />
 
@@ -65,12 +65,12 @@ export default function HelpCenter() {
                             <Sparkles size={14} /> Help Center & Support
                         </div>
                         <h1 className="text-4xl md:text-6xl font-black text-[#1E1B4B] tracking-tight leading-tight">
-                            How can we <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#8B5CF6] to-pink-500">navigate</span> <br /> your journey today?
+                            How can we <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#152467] to-pink-500">navigate</span> <br /> your journey today?
                         </h1>
 
                         {/* Futuristic Search Bar */}
                         <div className="max-w-3xl mx-auto pt-8 relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-[#8B5CF6] to-indigo-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[#152467] to-indigo-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative flex items-center bg-white rounded-2xl shadow-2xl p-2 border border-white/20">
                                 <div className="pl-6 pr-4 text-slate-400">
                                     <Search size={22} />
@@ -82,7 +82,7 @@ export default function HelpCenter() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
-                                <button className="h-14 px-10 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-purple-200 flex items-center gap-2 active:scale-95">
+                                <button className="h-14 px-10 bg-[#152467] hover:bg-[#0A1C50] text-white rounded-xl font-black text-sm uppercase tracking-widest transition-all shadow-xl shadow-purple-200 flex items-center gap-2 active:scale-95">
                                     Search
                                 </button>
                             </div>
@@ -102,7 +102,7 @@ export default function HelpCenter() {
                                         <p className="text-xs text-slate-500 leading-relaxed font-medium">{cat.desc}</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-[#8B5CF6] font-black text-[10px] uppercase tracking-widest group-hover:gap-4 transition-all">
+                                <div className="flex items-center gap-2 text-[#152467] font-black text-[10px] uppercase tracking-widest group-hover:gap-4 transition-all">
                                     Browse Topics <ArrowRight size={14} />
                                 </div>
                             </div>
@@ -133,14 +133,14 @@ export default function HelpCenter() {
                         {/* Contact Side */}
                         <div className="lg:col-span-4 space-y-8">
                             <div className="bg-[#1E1B4B] p-10 rounded-[3rem] text-white space-y-8 relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#8B5CF6]/20 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000" />
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#152467]/20 rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000" />
                                 <div className="space-y-2 relative z-10">
                                     <h3 className="text-2xl font-black">Still need help?</h3>
                                     <p className="text-blue-200/70 text-sm font-medium">Our elite support desk is available <br /> 24/7 for tailored assistance.</p>
                                 </div>
                                 <div className="space-y-4 relative z-10">
                                     <button className="w-full bg-white text-[#1E1B4B] p-4 rounded-2xl flex items-center gap-4 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 group/btn">
-                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-[#8B5CF6] group-hover/btn:bg-[#8B5CF6] group-hover/btn:text-white transition-colors">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-[#152467] group-hover/btn:bg-[#152467] group-hover/btn:text-white transition-colors">
                                             <MessageCircle size={20} />
                                         </div>
                                         <div className="text-left">
@@ -169,7 +169,7 @@ export default function HelpCenter() {
                                 </div>
                             </div>
 
-                            <div className="bg-gradient-to-br from-[#FFD700] to-yellow-500 p-8 rounded-[3rem] shadow-xl space-y-6 group cursor-pointer overflow-hidden relative">
+                            <div className="bg-gradient-to-br from-[#EC5C4C] to-yellow-500 p-8 rounded-[3rem] shadow-xl space-y-6 group cursor-pointer overflow-hidden relative">
                                 <div className="absolute top-0 left-0 w-full h-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 <div className="flex items-center justify-between">
                                     <div className="p-3 bg-white/20 rounded-2xl text-black">
@@ -191,7 +191,7 @@ export default function HelpCenter() {
                                     <h4 className="text-lg font-black text-[#1E1B4B]">Developer API</h4>
                                     <p className="text-xs font-medium text-slate-500 leading-relaxed">Build your own custom tools using our high-performance travel engine.</p>
                                 </div>
-                                <button className="text-[#8B5CF6] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group hover:gap-4 transition-all">
+                                <button className="text-[#152467] font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group hover:gap-4 transition-all">
                                     View Docs <ArrowRight size={14} />
                                 </button>
                             </div>

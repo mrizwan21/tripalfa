@@ -116,7 +116,7 @@ export const MealSelectionPopup = ({
                                     <p className="text-[10px] font-black text-gray-900">{meal.passengerName}</p>
                                     <p className="text-[8px] font-bold text-gray-400">{meal.flightNumber} - {meal.mealName}</p>
                                 </div>
-                                <span className="text-sm font-black text-[#8B5CF6]">
+                                <span className="text-sm font-black text-[#152467]">
                                     {meal.price === 0 ? 'Included' : formatCurrency(meal.price)}
                                 </span>
                             </div>
@@ -125,12 +125,12 @@ export const MealSelectionPopup = ({
 
                     <div className="flex justify-between items-center w-full pt-4 border-t border-gray-100">
                         <span className="text-sm font-black text-gray-900">Total</span>
-                        <span className="text-xl font-black text-[#8B5CF6]">{formatCurrency(totalAmount)}</span>
+                        <span className="text-xl font-black text-[#152467]">{formatCurrency(totalAmount)}</span>
                     </div>
 
                     <div className="flex gap-4 w-full">
-                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#8B5CF6] text-[#8B5CF6] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">Go Back</button>
-                        <button onClick={() => onConfirm(selectedMeals)} className="flex-1 h-12 rounded-xl bg-[#8B5CF6] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Confirm</button>
+                        <button onClick={() => setIsConfirming(false)} className="flex-1 h-12 rounded-xl border border-[#152467] text-[#152467] font-black text-xs uppercase tracking-widest transition-colors hover:bg-purple-50">Go Back</button>
+                        <button onClick={() => onConfirm(selectedMeals)} className="flex-1 h-12 rounded-xl bg-[#152467] text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-purple-100 transition-all hover:-translate-y-0.5 active:scale-95">Confirm</button>
                     </div>
                 </div>
             </div>
@@ -160,7 +160,7 @@ export const MealSelectionPopup = ({
                         <button 
                             onClick={() => setSelectedPassengerIdx(prev => Math.max(0, prev - 1))}
                             disabled={selectedPassengerIdx === 0}
-                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all disabled:opacity-30"
                         >
                             <ChevronLeft size={20} />
                         </button>
@@ -170,7 +170,7 @@ export const MealSelectionPopup = ({
                                     key={p.id}
                                     onClick={() => setSelectedPassengerIdx(idx)}
                                     className={`px-6 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${selectedPassengerIdx === idx
-                                        ? 'bg-[#FFD700] border-[#FFD700] shadow-xl shadow-yellow-100'
+                                        ? 'bg-[#EC5C4C] border-[#EC5C4C] shadow-xl shadow-yellow-100'
                                         : 'border-yellow-200 text-gray-400 bg-white'
                                         }`}
                                 >
@@ -187,7 +187,7 @@ export const MealSelectionPopup = ({
                         <button 
                             onClick={() => setSelectedPassengerIdx(prev => Math.min(passengers.length - 1, prev + 1))}
                             disabled={selectedPassengerIdx === passengers.length - 1}
-                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#8B5CF6] hover:bg-purple-50 transition-all disabled:opacity-30"
+                            className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] hover:bg-purple-50 transition-all disabled:opacity-30"
                         >
                             <ChevronRight size={20} />
                         </button>
@@ -204,8 +204,8 @@ export const MealSelectionPopup = ({
                                         onClick={() => setSelectedSegmentIdx(idx)}
                                         className={`px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all ${
                                             selectedSegmentIdx === idx 
-                                                ? 'bg-[#8B5CF6] text-white shadow-lg' 
-                                                : 'border border-[#8B5CF6] text-[#8B5CF6]'
+                                                ? 'bg-[#152467] text-white shadow-lg' 
+                                                : 'border border-[#152467] text-[#152467]'
                                         }`}
                                     >
                                         {seg.origin}
@@ -246,8 +246,8 @@ export const MealSelectionPopup = ({
                                         onClick={() => handleMealSelect(meal)}
                                         className={`p-6 rounded-2xl border-2 transition-all text-left ${
                                             isSelected 
-                                                ? 'border-[#8B5CF6] bg-purple-50/50 shadow-lg' 
-                                                : 'border-gray-100 bg-white hover:border-[#8B5CF6]/30 hover:shadow-md'
+                                                ? 'border-[#152467] bg-purple-50/50 shadow-lg' 
+                                                : 'border-gray-100 bg-white hover:border-[#152467]/30 hover:shadow-md'
                                         }`}
                                     >
                                         <div className="flex items-start justify-between mb-4">
@@ -261,7 +261,7 @@ export const MealSelectionPopup = ({
                                                 </div>
                                             )}
                                             {isSelected && (
-                                                <div className="w-6 h-6 rounded-full bg-[#8B5CF6] flex items-center justify-center">
+                                                <div className="w-6 h-6 rounded-full bg-[#152467] flex items-center justify-center">
                                                     <Check size={14} className="text-white" />
                                                 </div>
                                             )}
@@ -278,7 +278,7 @@ export const MealSelectionPopup = ({
                                                     {typeStyle.label}
                                                 </span>
                                             )}
-                                            <span className={`text-sm font-black ${meal.price === 0 ? 'text-green-600' : 'text-[#8B5CF6]'}`}>
+                                            <span className={`text-sm font-black ${meal.price === 0 ? 'text-green-600' : 'text-[#152467]'}`}>
                                                 {meal.price === 0 ? 'Included' : formatCurrency(meal.price)}
                                             </span>
                                         </div>
@@ -290,7 +290,7 @@ export const MealSelectionPopup = ({
                         {/* Total Bar */}
                         <div className="bg-white p-6 rounded-2xl border border-gray-50 flex items-center justify-between">
                             <span className="text-sm font-black text-gray-900 uppercase tracking-[2px]">Total Meal Cost</span>
-                            <span className="text-xl font-black text-[#8B5CF6]">{formatCurrency(totalAmount)}</span>
+                            <span className="text-xl font-black text-[#152467]">{formatCurrency(totalAmount)}</span>
                         </div>
                     </div>
 
@@ -305,7 +305,7 @@ export const MealSelectionPopup = ({
                                             <p className="text-[9px] font-black text-gray-700">{meal.passengerName}</p>
                                             <p className="text-[8px] font-bold text-gray-400">{meal.flightNumber} - {meal.mealName}</p>
                                         </div>
-                                        <span className="text-[10px] font-black text-[#8B5CF6]">
+                                        <span className="text-[10px] font-black text-[#152467]">
                                             {meal.price === 0 ? 'Free' : formatCurrency(meal.price)}
                                         </span>
                                     </div>
@@ -319,7 +319,7 @@ export const MealSelectionPopup = ({
                         <Button
                             onClick={() => selectedMeals.length > 0 && setIsConfirming(true)}
                             disabled={selectedMeals.length === 0}
-                            className="w-full max-w-xl h-14 rounded-2xl bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+                            className="w-full max-w-xl h-14 rounded-2xl bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-sm uppercase tracking-[4px] shadow-2xl shadow-purple-100 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                         >
                             Confirm Meals {totalAmount > 0 && ` - ${formatCurrency(totalAmount)}`}
                         </Button>

@@ -3,12 +3,22 @@
  * Centralized endpoint and service routing configuration for TripAlfa
  * 
  * This configuration manages:
- * - All API endpoints (28 total: 15 Notification + 13 Rule Engine)
+ * - All API endpoints (150+ total across all services)
  * - Service routing and load balancing
  * - Authentication and authorization
  * - Rate limiting policies
  * - Request/response transformation
  * - Error handling and retry logic
+ * 
+ * Services:
+ * - Notification Service (15 endpoints)
+ * - Rule Engine Service (13 endpoints)
+ * - Booking Service (existing endpoints)
+ * - Payment Service (wallet endpoints)
+ * - KYC Service (3 endpoints)
+ * - Marketing Service (3 endpoints)
+ * - B2B Admin Service (70+ endpoints)
+ * - Booking Engine Service (25+ endpoints)
  */
 
 export interface ServiceConfig {
@@ -53,8 +63,8 @@ export interface EndpointConfig {
 export const SERVICES: Record<string, ServiceConfig> = {
   notificationService: {
     name: 'Notification Service',
-    baseUrl: process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3005',
-    port: parseInt(process.env.NOTIFICATION_SERVICE_PORT || '3005'),
+    baseUrl: process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3009',
+    port: parseInt(process.env.NOTIFICATION_SERVICE_PORT || '3009'),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -199,6 +209,46 @@ export const SERVICES: Record<string, ServiceConfig> = {
     retryPolicy: {
       maxRetries: 3,
       backoffMs: 1000,
+      codes: [408, 429, 500, 502, 503, 504],
+    },
+    rateLimitPolicy: {
+      requestsPerMinute: 100,
+      requestsPerHour: 5000,
+    },
+    healthCheck: {
+      enabled: true,
+      interval: 30000,
+      endpoint: '/health',
+    },
+  },
+  b2bAdminService: {
+    name: 'B2B Admin Service',
+    baseUrl: process.env.B2B_ADMIN_SERVICE_URL || 'http://b2b-admin-service:3020',
+    port: parseInt(process.env.B2B_ADMIN_SERVICE_PORT || '3020'),
+    timeout: 15000,
+    retryPolicy: {
+      maxRetries: 3,
+      backoffMs: 1000,
+      codes: [408, 429, 500, 502, 503, 504],
+    },
+    rateLimitPolicy: {
+      requestsPerMinute: 100,
+      requestsPerHour: 5000,
+    },
+    healthCheck: {
+      enabled: true,
+      interval: 30000,
+      endpoint: '/health',
+    },
+  },
+  bookingEngineService: {
+    name: 'Booking Engine Service',
+    baseUrl: process.env.BOOKING_ENGINE_SERVICE_URL || 'http://booking-engine-service:3021',
+    port: parseInt(process.env.BOOKING_ENGINE_SERVICE_PORT || '3021'),
+    timeout: 30000,
+    retryPolicy: {
+      maxRetries: 3,
+      backoffMs: 2000,
       codes: [408, 429, 500, 502, 503, 504],
     },
     rateLimitPolicy: {
@@ -922,6 +972,28 @@ export const DUFFEL_ENDPOINTS: EndpointConfig[] = [
     rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
     timeout: 5000,
   },
+  // Places Suggestions - Find airports within geographic area
+  {
+    id: 'duffel_places_suggestions',
+    method: 'GET',
+    path: '/api/duffel/places/suggestions',
+    serviceId: 'bookingService',
+    description: 'Find airports within a geographic area (Duffel Places API) - https://duffel.com/docs/guides/finding-airports-within-an-area',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  // Nearby Airports - Convenience endpoint
+  {
+    id: 'duffel_nearby_airports',
+    method: 'GET',
+    path: '/api/duffel/nearby-airports',
+    serviceId: 'bookingService',
+    description: 'Find nearby airports - convenience endpoint using Duffel Places API',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
   // Offer Requests
   {
     id: 'duffel_create_offer_request',
@@ -1220,6 +1292,1168 @@ export const DUFFEL_ENDPOINTS: EndpointConfig[] = [
     rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
     timeout: 5000,
   },
+  // Booking Amend - Update guest information
+  {
+    id: 'booking_amend',
+    method: 'PUT',
+    path: '/api/bookings/:bookingId/amend',
+    serviceId: 'bookingService',
+    description: 'Update guest information for an existing booking (holder details)',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 10000,
+  },
+]
+
+// ============================================
+// B2B ADMIN ENDPOINTS - Companies
+// ============================================
+
+export const B2B_ADMIN_COMPANY_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'b2b_companies_list',
+    method: 'GET',
+    path: '/api/b2b/companies',
+    serviceId: 'b2bAdminService',
+    description: 'List all B2B companies',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_companies_create',
+    method: 'POST',
+    path: '/api/b2b/companies',
+    serviceId: 'b2bAdminService',
+    description: 'Create a new B2B company',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_companies_get',
+    method: 'GET',
+    path: '/api/b2b/companies/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get B2B company details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_companies_update',
+    method: 'PATCH',
+    path: '/api/b2b/companies/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Update B2B company',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_companies_delete',
+    method: 'DELETE',
+    path: '/api/b2b/companies/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Delete B2B company',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_companies_departments_list',
+    method: 'GET',
+    path: '/api/b2b/companies/:id/departments',
+    serviceId: 'b2bAdminService',
+    description: 'List company departments',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_companies_departments_create',
+    method: 'POST',
+    path: '/api/b2b/companies/:id/departments',
+    serviceId: 'b2bAdminService',
+    description: 'Create company department',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_companies_stats',
+    method: 'GET',
+    path: '/api/b2b/companies/:id/stats',
+    serviceId: 'b2bAdminService',
+    description: 'Get company statistics',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+]
+
+// ============================================
+// B2B ADMIN ENDPOINTS - Users
+// ============================================
+
+export const B2B_ADMIN_USER_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'b2b_users_list',
+    method: 'GET',
+    path: '/api/b2b/users',
+    serviceId: 'b2bAdminService',
+    description: 'List all B2B users',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_users_create',
+    method: 'POST',
+    path: '/api/b2b/users',
+    serviceId: 'b2bAdminService',
+    description: 'Create a new B2B user',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_users_get',
+    method: 'GET',
+    path: '/api/b2b/users/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get B2B user details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_users_update',
+    method: 'PATCH',
+    path: '/api/b2b/users/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Update B2B user',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_users_delete',
+    method: 'DELETE',
+    path: '/api/b2b/users/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Delete B2B user',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_users_roles',
+    method: 'GET',
+    path: '/api/b2b/users/:id/roles',
+    serviceId: 'b2bAdminService',
+    description: 'Get user roles',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_users_assign_role',
+    method: 'POST',
+    path: '/api/b2b/users/:id/roles',
+    serviceId: 'b2bAdminService',
+    description: 'Assign role to user',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_users_remove_role',
+    method: 'DELETE',
+    path: '/api/b2b/users/:id/roles/:roleId',
+    serviceId: 'b2bAdminService',
+    description: 'Remove role from user',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_users_notifications',
+    method: 'GET',
+    path: '/api/b2b/users/:id/notifications',
+    serviceId: 'b2bAdminService',
+    description: 'Get user notifications',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_users_bookings',
+    method: 'GET',
+    path: '/api/b2b/users/:id/bookings',
+    serviceId: 'b2bAdminService',
+    description: 'Get user bookings',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+]
+
+// ============================================
+// B2B ADMIN ENDPOINTS - Bookings Management
+// ============================================
+
+export const B2B_ADMIN_BOOKING_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'b2b_bookings_list',
+    method: 'GET',
+    path: '/api/b2b/bookings',
+    serviceId: 'b2bAdminService',
+    description: 'List all B2B bookings',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_bookings_get',
+    method: 'GET',
+    path: '/api/b2b/bookings/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get B2B booking details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_bookings_update',
+    method: 'PATCH',
+    path: '/api/b2b/bookings/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Update B2B booking',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_bookings_queues',
+    method: 'GET',
+    path: '/api/b2b/bookings/queues',
+    serviceId: 'b2bAdminService',
+    description: 'List booking queues',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_bookings_cancel',
+    method: 'POST',
+    path: '/api/b2b/bookings/:id/cancel',
+    serviceId: 'b2bAdminService',
+    description: 'Cancel B2B booking',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 10000,
+  },
+  {
+    id: 'b2b_bookings_refund',
+    method: 'POST',
+    path: '/api/b2b/bookings/:id/refund',
+    serviceId: 'b2bAdminService',
+    description: 'Process booking refund',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 15000,
+  },
+  {
+    id: 'b2b_bookings_documents',
+    method: 'GET',
+    path: '/api/b2b/bookings/:id/documents',
+    serviceId: 'b2bAdminService',
+    description: 'Get booking documents',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_bookings_payments',
+    method: 'GET',
+    path: '/api/b2b/bookings/:id/payments',
+    serviceId: 'b2bAdminService',
+    description: 'Get booking payments',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+]
+
+// ============================================
+// B2B ADMIN ENDPOINTS - Finance
+// ============================================
+
+export const B2B_ADMIN_FINANCE_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'b2b_wallets_list',
+    method: 'GET',
+    path: '/api/b2b/wallets',
+    serviceId: 'b2bAdminService',
+    description: 'List all B2B wallets',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_wallets_get',
+    method: 'GET',
+    path: '/api/b2b/wallets/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get wallet details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_wallets_balance',
+    method: 'GET',
+    path: '/api/b2b/wallets/:id/balance',
+    serviceId: 'b2bAdminService',
+    description: 'Get wallet balance',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 50, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_wallets_credit',
+    method: 'POST',
+    path: '/api/b2b/wallets/:id/credit',
+    serviceId: 'b2bAdminService',
+    description: 'Credit wallet',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 10000,
+  },
+  {
+    id: 'b2b_wallets_debit',
+    method: 'POST',
+    path: '/api/b2b/wallets/:id/debit',
+    serviceId: 'b2bAdminService',
+    description: 'Debit wallet',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 10000,
+  },
+  {
+    id: 'b2b_transactions_list',
+    method: 'GET',
+    path: '/api/b2b/transactions',
+    serviceId: 'b2bAdminService',
+    description: 'List all transactions',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_transactions_get',
+    method: 'GET',
+    path: '/api/b2b/transactions/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get transaction details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_settlements_list',
+    method: 'GET',
+    path: '/api/b2b/settlements',
+    serviceId: 'b2bAdminService',
+    description: 'List all settlements',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_settlements_create',
+    method: 'POST',
+    path: '/api/b2b/settlements',
+    serviceId: 'b2bAdminService',
+    description: 'Create settlement',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 10000,
+  },
+  {
+    id: 'b2b_settlements_process',
+    method: 'POST',
+    path: '/api/b2b/settlements/:id/process',
+    serviceId: 'b2bAdminService',
+    description: 'Process settlement',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 15000,
+  },
+  {
+    id: 'b2b_disputes_list',
+    method: 'GET',
+    path: '/api/b2b/disputes',
+    serviceId: 'b2bAdminService',
+    description: 'List all disputes',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_disputes_create',
+    method: 'POST',
+    path: '/api/b2b/disputes',
+    serviceId: 'b2bAdminService',
+    description: 'Create dispute',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_disputes_resolve',
+    method: 'POST',
+    path: '/api/b2b/disputes/:id/resolve',
+    serviceId: 'b2bAdminService',
+    description: 'Resolve dispute',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 10000,
+  },
+  {
+    id: 'b2b_exchange_rates_list',
+    method: 'GET',
+    path: '/api/b2b/exchange-rates',
+    serviceId: 'b2bAdminService',
+    description: 'List exchange rates',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 50, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_exchange_rates_update',
+    method: 'POST',
+    path: '/api/b2b/exchange-rates',
+    serviceId: 'b2bAdminService',
+    description: 'Update exchange rates',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_reports_generate',
+    method: 'POST',
+    path: '/api/b2b/reports',
+    serviceId: 'b2bAdminService',
+    description: 'Generate financial report',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 30000,
+  },
+  {
+    id: 'b2b_reports_list',
+    method: 'GET',
+    path: '/api/b2b/reports',
+    serviceId: 'b2bAdminService',
+    description: 'List generated reports',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+]
+
+// ============================================
+// B2B ADMIN ENDPOINTS - Suppliers
+// ============================================
+
+export const B2B_ADMIN_SUPPLIER_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'b2b_suppliers_list',
+    method: 'GET',
+    path: '/api/b2b/suppliers',
+    serviceId: 'b2bAdminService',
+    description: 'List all suppliers',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_suppliers_create',
+    method: 'POST',
+    path: '/api/b2b/suppliers',
+    serviceId: 'b2bAdminService',
+    description: 'Create supplier',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_suppliers_get',
+    method: 'GET',
+    path: '/api/b2b/suppliers/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get supplier details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_suppliers_update',
+    method: 'PATCH',
+    path: '/api/b2b/suppliers/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Update supplier',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_suppliers_delete',
+    method: 'DELETE',
+    path: '/api/b2b/suppliers/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Delete supplier',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_suppliers_credentials',
+    method: 'GET',
+    path: '/api/b2b/suppliers/:id/credentials',
+    serviceId: 'b2bAdminService',
+    description: 'Get supplier credentials',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_suppliers_credentials_update',
+    method: 'PUT',
+    path: '/api/b2b/suppliers/:id/credentials',
+    serviceId: 'b2bAdminService',
+    description: 'Update supplier credentials',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_suppliers_sync_logs',
+    method: 'GET',
+    path: '/api/b2b/suppliers/:id/sync-logs',
+    serviceId: 'b2bAdminService',
+    description: 'Get supplier sync logs',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_suppliers_hotel_mappings',
+    method: 'GET',
+    path: '/api/b2b/suppliers/:id/hotel-mappings',
+    serviceId: 'b2bAdminService',
+    description: 'Get supplier hotel mappings',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+]
+
+// ============================================
+// B2B ADMIN ENDPOINTS - Rules
+// ============================================
+
+export const B2B_ADMIN_RULE_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'b2b_markup_rules_list',
+    method: 'GET',
+    path: '/api/b2b/markup-rules',
+    serviceId: 'b2bAdminService',
+    description: 'List all markup rules',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_markup_rules_create',
+    method: 'POST',
+    path: '/api/b2b/markup-rules',
+    serviceId: 'b2bAdminService',
+    description: 'Create markup rule',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_markup_rules_get',
+    method: 'GET',
+    path: '/api/b2b/markup-rules/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Get markup rule details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_markup_rules_update',
+    method: 'PATCH',
+    path: '/api/b2b/markup-rules/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Update markup rule',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_markup_rules_delete',
+    method: 'DELETE',
+    path: '/api/b2b/markup-rules/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Delete markup rule',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
+  {
+    id: 'b2b_supplier_deals_list',
+    method: 'GET',
+    path: '/api/b2b/supplier-deals',
+    serviceId: 'b2bAdminService',
+    description: 'List all supplier deals',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_supplier_deals_create',
+    method: 'POST',
+    path: '/api/b2b/supplier-deals',
+    serviceId: 'b2bAdminService',
+    description: 'Create supplier deal',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_supplier_deals_update',
+    method: 'PATCH',
+    path: '/api/b2b/supplier-deals/:id',
+    serviceId: 'b2bAdminService',
+    description: 'Update supplier deal',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_commissions_list',
+    method: 'GET',
+    path: '/api/b2b/commissions',
+    serviceId: 'b2bAdminService',
+    description: 'List all commissions',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: 'b2b_commissions_create',
+    method: 'POST',
+    path: '/api/b2b/commissions',
+    serviceId: 'b2bAdminService',
+    description: 'Create commission rule',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 8000,
+  },
+]
+
+// ============================================
+// BOOKING ENGINE ENDPOINTS - Flights
+// ============================================
+
+export const BOOKING_ENGINE_FLIGHT_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'be_flight_search',
+    method: 'POST',
+    path: '/api/booking-engine/flights/search',
+    serviceId: 'bookingEngineService',
+    description: 'Search flights via Duffel API',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 30000,
+  },
+  {
+    id: 'be_flight_offer_get',
+    method: 'GET',
+    path: '/api/booking-engine/flights/offers/:id',
+    serviceId: 'bookingEngineService',
+    description: 'Get flight offer details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_flight_booking_create',
+    method: 'POST',
+    path: '/api/booking-engine/flights/bookings',
+    serviceId: 'bookingEngineService',
+    description: 'Create flight booking',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 30000,
+  },
+  {
+    id: 'be_flight_booking_get',
+    method: 'GET',
+    path: '/api/booking-engine/flights/bookings/:id',
+    serviceId: 'bookingEngineService',
+    description: 'Get flight booking details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_flight_booking_list',
+    method: 'GET',
+    path: '/api/booking-engine/flights/bookings',
+    serviceId: 'bookingEngineService',
+    description: 'List flight bookings',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_flight_booking_cancel',
+    method: 'POST',
+    path: '/api/booking-engine/flights/bookings/:id/cancel',
+    serviceId: 'bookingEngineService',
+    description: 'Cancel flight booking',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 15000,
+  },
+  {
+  },
+  {
+    id: 'be_flight_airports',
+    method: 'GET',
+    path: '/api/booking-engine/flights/airports',
+    serviceId: 'bookingEngineService',
+    description: 'Search airports and cities',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 10000,
+  },
+]
+
+// ============================================
+// BOOKING ENGINE ENDPOINTS - Hotels
+// ============================================
+
+export const BOOKING_ENGINE_HOTEL_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'be_hotel_search',
+    method: 'POST',
+    path: '/api/booking-engine/hotels/search',
+    serviceId: 'bookingEngineService',
+    description: 'Search hotels via LITEAPI',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 30000,
+  },
+  {
+    id: 'be_hotel_details',
+    method: 'GET',
+    path: '/api/booking-engine/hotels/:hotelId',
+    serviceId: 'bookingEngineService',
+    description: 'Get hotel details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 15000,
+  },
+  {
+    id: 'be_hotel_rates',
+    method: 'POST',
+    path: '/api/booking-engine/hotels/rates',
+    serviceId: 'bookingEngineService',
+    description: 'Get hotel rates',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 20000,
+  },
+  {
+    id: 'be_hotel_booking_create',
+    method: 'POST',
+    path: '/api/booking-engine/hotels/bookings',
+    serviceId: 'bookingEngineService',
+    description: 'Create hotel booking',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 30000,
+  },
+  {
+    id: 'be_hotel_booking_get',
+    method: 'GET',
+    path: '/api/booking-engine/hotels/bookings/:id',
+    serviceId: 'bookingEngineService',
+    description: 'Get hotel booking details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_hotel_booking_list',
+    method: 'GET',
+    path: '/api/booking-engine/hotels/bookings',
+    serviceId: 'bookingEngineService',
+    description: 'List hotel bookings',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_hotel_booking_cancel',
+    method: 'POST',
+    path: '/api/booking-engine/hotels/bookings/:id/cancel',
+    serviceId: 'bookingEngineService',
+    description: 'Cancel hotel booking',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 15000,
+  },
+  {
+    id: 'be_hotel_destinations',
+    method: 'GET',
+    path: '/api/booking-engine/hotels/destinations',
+    serviceId: 'bookingEngineService',
+    description: 'Search hotel destinations',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 10000,
+  },
+]
+
+// ============================================
+// LITEAPI STATIC DATA ENDPOINTS (Direct + Fallback Cache)
+// ============================================
+
+export const LITEAPI_STATIC_DATA_ENDPOINTS: EndpointConfig[] = [
+  // Places/Locations
+  {
+    id: 'liteapi_places_list',
+    method: 'GET',
+    path: '/api/liteapi/places',
+    serviceId: 'bookingService',
+    description: 'Get places list - LiteAPI /data/places with static DB cache',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 10000,
+  },
+  {
+    id: 'liteapi_places_get',
+    method: 'GET',
+    path: '/api/liteapi/places/:placeId',
+    serviceId: 'bookingService',
+    description: 'Get place details - LiteAPI /data/places/{placeId}',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 10000,
+  },
+  // Hotels Static Data
+  {
+    id: 'liteapi_hotels_list',
+    method: 'GET',
+    path: '/api/liteapi/hotels',
+    serviceId: 'bookingService',
+    description: 'Search hotels - LiteAPI /data/hotels with PostGIS geo + pg_trgm',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 15000,
+  },
+  {
+    id: 'liteapi_hotel_get',
+    method: 'POST',
+    path: '/api/liteapi/hotel',
+    serviceId: 'bookingService',
+    description: 'Get hotel details - LiteAPI /data/hotel with fallback cache',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 10000,
+  },
+  // Semantic Search (pgvector)
+  {
+    id: 'liteapi_semantic_search',
+    method: 'POST',
+    path: '/api/liteapi/hotels/semantic-search',
+    serviceId: 'bookingService',
+    description: 'Semantic hotel search - LiteAPI /data/hotels/semantic-search with pgvector',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 15000,
+  },
+  // Room Search
+  {
+    id: 'liteapi_room_search',
+    method: 'POST',
+    path: '/api/liteapi/hotels/room-search',
+    serviceId: 'bookingService',
+    description: 'Search hotel rooms - LiteAPI /data/hotels/room-search',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 15000,
+  },
+  // Natural Language Query (RAG)
+  {
+    id: 'liteapi_ask_hotel',
+    method: 'POST',
+    path: '/api/liteapi/hotel/ask',
+    serviceId: 'bookingService',
+    description: 'Ask about hotel - LiteAPI /data/hotel/ask with RAG-style search',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 300 },
+    timeout: 20000,
+  },
+  // Reference Data
+  {
+    id: 'liteapi_facilities',
+    method: 'GET',
+    path: '/api/liteapi/facilities',
+    serviceId: 'bookingService',
+    description: 'Get hotel facilities - LiteAPI /data/facilities',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'liteapi_hotel_types',
+    method: 'GET',
+    path: '/api/liteapi/hotel-types',
+    serviceId: 'bookingService',
+    description: 'Get hotel types - LiteAPI /data/hotelTypes',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'liteapi_chains',
+    method: 'GET',
+    path: '/api/liteapi/chains',
+    serviceId: 'bookingService',
+    description: 'Get hotel chains - LiteAPI /data/chains',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'liteapi_countries',
+    method: 'GET',
+    path: '/api/liteapi/countries',
+    serviceId: 'bookingService',
+    description: 'Get countries - LiteAPI /data/countries',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'liteapi_currencies',
+    method: 'GET',
+    path: '/api/liteapi/currencies',
+    serviceId: 'bookingService',
+    description: 'Get currencies - LiteAPI /data/currencies',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  {
+    id: 'liteapi_languages',
+    method: 'GET',
+    path: '/api/liteapi/languages',
+    serviceId: 'bookingService',
+    description: 'Get languages - LiteAPI /data/languages',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+  // Cache Management
+  {
+    id: 'liteapi_cache_status',
+    method: 'GET',
+    path: '/api/liteapi/cache/status',
+    serviceId: 'bookingService',
+    description: 'Get fallback cache status and statistics',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 5000,
+  },
+  {
+    id: 'liteapi_cache_clear',
+    method: 'POST',
+    path: '/api/liteapi/cache/clear',
+    serviceId: 'bookingService',
+    description: 'Clear stale cache entries',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
+    timeout: 10000,
+  },
+]
+
+// ============================================
+// HYBRID HOTEL API ENDPOINTS (Static DB + Live Rates)
+// ============================================
+
+export const HOTEL_HYBRID_ENDPOINTS: EndpointConfig[] = [
+  // Hotel Search - Hybrid (Postgres Static DB + LITEAPI Rates)
+  {
+    id: 'hotel_search_get',
+    method: 'GET',
+    path: '/api/hotels/search',
+    serviceId: 'bookingService',
+    description: 'Search hotels - Hybrid (Static DB + Live Rates from LITEAPI)',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 30000,
+  },
+  {
+    id: 'hotel_search_post',
+    method: 'POST',
+    path: '/api/hotels/search',
+    serviceId: 'bookingService',
+    description: 'Search hotels (POST) - Hybrid (Static DB + Live Rates from LITEAPI)',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 30000,
+  },
+  // Hotel Details
+  {
+    id: 'hotel_details',
+    method: 'GET',
+    path: '/api/hotels/:hotelId',
+    serviceId: 'bookingService',
+    description: 'Get hotel details - Hybrid (Static DB + Live Rates)',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 15000,
+  },
+  // Live Rates
+  {
+    id: 'hotel_rates',
+    method: 'POST',
+    path: '/api/hotels/rates',
+    serviceId: 'bookingService',
+    description: 'Get live room rates from LITEAPI',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
+    timeout: 20000,
+  },
+  // Facilities/Amenities
+  {
+    id: 'hotel_facilities',
+    method: 'GET',
+    path: '/api/hotels/facilities/list',
+    serviceId: 'bookingService',
+    description: 'Get hotel facilities/amenities - Hybrid (Static DB + LITEAPI fallback)',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 10000,
+  },
+  // Filter Options for UI
+  {
+    id: 'hotel_filter_options',
+    method: 'GET',
+    path: '/api/hotels/filters/options',
+    serviceId: 'bookingService',
+    description: 'Get filter options for hotel search UI (star ratings, facilities, etc.)',
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
+    timeout: 5000,
+  },
+]
+
+// ============================================
+// BOOKING ENGINE ENDPOINTS - Offline Requests
+// ============================================
+
+export const BOOKING_ENGINE_OFFLINE_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: 'be_offline_requests_list',
+    method: 'GET',
+    path: '/api/booking-engine/offline-requests',
+    serviceId: 'bookingEngineService',
+    description: 'List offline booking requests',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_offline_requests_create',
+    method: 'POST',
+    path: '/api/booking-engine/offline-requests',
+    serviceId: 'bookingEngineService',
+    description: 'Create offline booking request',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
+    timeout: 15000,
+  },
+  {
+    id: 'be_offline_requests_get',
+    method: 'GET',
+    path: '/api/booking-engine/offline-requests/:id',
+    serviceId: 'bookingEngineService',
+    description: 'Get offline request details',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 30, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: 'be_offline_requests_update',
+    method: 'PATCH',
+    path: '/api/booking-engine/offline-requests/:id',
+    serviceId: 'bookingEngineService',
+    description: 'Update offline request',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_offline_requests_submit_pricing',
+    method: 'POST',
+    path: '/api/booking-engine/offline-requests/:id/pricing',
+    serviceId: 'bookingEngineService',
+    description: 'Submit pricing for offline request',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 10000,
+  },
+  {
+    id: 'be_offline_requests_approve',
+    method: 'POST',
+    path: '/api/booking-engine/offline-requests/:id/approve',
+    serviceId: 'bookingEngineService',
+    description: 'Approve offline request',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 15000,
+  },
+  {
+    id: 'be_offline_requests_reject',
+    method: 'POST',
+    path: '/api/booking-engine/offline-requests/:id/reject',
+    serviceId: 'bookingEngineService',
+    description: 'Reject offline request',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
+  {
+    id: 'be_offline_requests_cancel',
+    method: 'POST',
+    path: '/api/booking-engine/offline-requests/:id/cancel',
+    serviceId: 'bookingEngineService',
+    description: 'Cancel offline request',
+    requiresAuth: true,
+    rateLimit: { requestsPerMinute: 10, requestsPerHour: 200 },
+    timeout: 5000,
+  },
 ]
 
 // ============================================
@@ -1249,6 +2483,17 @@ export class APIManager {
       ...MARKETING_ENDPOINTS,
       ...WALLET_ENDPOINTS,
       ...DUFFEL_ENDPOINTS,
+      ...B2B_ADMIN_COMPANY_ENDPOINTS,
+      ...B2B_ADMIN_USER_ENDPOINTS,
+      ...B2B_ADMIN_BOOKING_ENDPOINTS,
+      ...B2B_ADMIN_FINANCE_ENDPOINTS,
+      ...B2B_ADMIN_SUPPLIER_ENDPOINTS,
+      ...B2B_ADMIN_RULE_ENDPOINTS,
+      ...BOOKING_ENGINE_FLIGHT_ENDPOINTS,
+      ...BOOKING_ENGINE_HOTEL_ENDPOINTS,
+      ...BOOKING_ENGINE_OFFLINE_ENDPOINTS,
+      ...LITEAPI_STATIC_DATA_ENDPOINTS,  // LiteAPI static data endpoints with fallback cache
+      ...HOTEL_HYBRID_ENDPOINTS,  // Hybrid hotel endpoints (Static DB + Live Rates)
     ]
     allEndpoints.forEach((endpoint) => {
       this.endpoints.set(endpoint.id, endpoint)
@@ -1304,6 +2549,17 @@ export class APIManager {
       kycEndpoints: KYC_ENDPOINTS.length,
       marketingEndpoints: MARKETING_ENDPOINTS.length,
       duffelEndpoints: DUFFEL_ENDPOINTS.length,
+      liteapiStaticDataEndpoints: LITEAPI_STATIC_DATA_ENDPOINTS.length,
+      hotelHybridEndpoints: HOTEL_HYBRID_ENDPOINTS.length,
+      b2bAdminEndpoints: B2B_ADMIN_COMPANY_ENDPOINTS.length +
+        B2B_ADMIN_USER_ENDPOINTS.length +
+        B2B_ADMIN_BOOKING_ENDPOINTS.length +
+        B2B_ADMIN_FINANCE_ENDPOINTS.length +
+        B2B_ADMIN_SUPPLIER_ENDPOINTS.length +
+        B2B_ADMIN_RULE_ENDPOINTS.length,
+      bookingEngineEndpoints: BOOKING_ENGINE_FLIGHT_ENDPOINTS.length +
+        BOOKING_ENGINE_HOTEL_ENDPOINTS.length +
+        BOOKING_ENGINE_OFFLINE_ENDPOINTS.length,
       services: Array.from(this.services.keys()),
     }
   }

@@ -271,7 +271,7 @@ export default function BookingCheckout() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-[#111827]/80 backdrop-blur-md animate-in fade-in duration-500" onClick={() => setShowConfirmation(false)} />
             <div className="relative bg-white w-full max-w-lg rounded-[3rem] shadow-2xl p-12 flex flex-col items-center animate-in zoom-in-95 duration-300 border border-gray-100">
-              <div className="w-24 h-24 rounded-full bg-purple-50 flex items-center justify-center text-[#8B5CF6] mb-8 shadow-xl shadow-purple-50">
+              <div className="w-24 h-24 rounded-full bg-purple-50 flex items-center justify-center text-[#152467] mb-8 shadow-xl shadow-purple-50">
                 <Wallet size={40} />
               </div>
               <h2 className="text-2xl font-black text-gray-900 tracking-tight text-center mb-4">Confirm Payment</h2>
@@ -304,7 +304,7 @@ export default function BookingCheckout() {
                 {hasInsufficientBalance ? (
                   <button
                     onClick={() => navigate('/wallet/topup')}
-                    className="h-14 rounded-2xl bg-[#FFD700] text-black font-black text-[10px] uppercase tracking-widest shadow-xl shadow-yellow-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="h-14 rounded-2xl bg-[#EC5C4C] text-black font-black text-[10px] uppercase tracking-widest shadow-xl shadow-yellow-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
                     Top-up Wallet <Plus size={16} strokeWidth={3} />
                   </button>
@@ -313,7 +313,7 @@ export default function BookingCheckout() {
                     onClick={handleConfirmPayment}
                     disabled={isProcessing}
                     data-testid="confirm-pay-button"
-                    className="h-14 rounded-2xl bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-purple-100 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="h-14 rounded-2xl bg-[#152467] text-white font-black text-[10px] uppercase tracking-widest shadow-xl shadow-purple-100 transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
                     {isProcessing ? (
                       <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -374,14 +374,14 @@ export default function BookingCheckout() {
               </div>
 
               {/* Payment Banner */}
-              <div className="bg-[#FFD700] rounded-[3.5rem] p-1 shadow-2xl shadow-yellow-500/10">
+              <div className="bg-[#EC5C4C] rounded-[3.5rem] p-1 shadow-2xl shadow-yellow-500/10">
                 <div className="bg-[#111827] rounded-[3.4rem] p-12 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-[3s]" />
 
                   <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
                     <div className="flex-1 space-y-10">
                       <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-[#FFD700] flex items-center justify-center text-[#111827]">
+                        <div className="w-16 h-16 rounded-[1.5rem] bg-[#EC5C4C] flex items-center justify-center text-[#111827]">
                           <Wallet size={32} />
                         </div>
                         <div className="space-y-1">
@@ -408,7 +408,7 @@ export default function BookingCheckout() {
                       {hasInsufficientBalance ? (
                         <button
                           onClick={() => navigate('/wallet/topup')}
-                          className="w-full h-16 bg-[#FFD700] hover:bg-yellow-400 text-black rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
+                          className="w-full h-16 bg-[#EC5C4C] hover:bg-yellow-400 text-black rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
                         >
                           Top-up Wallet <Plus size={16} strokeWidth={3} />
                         </button>
@@ -416,7 +416,7 @@ export default function BookingCheckout() {
                         <button
                           onClick={() => setShowConfirmation(true)}
                           data-testid="complete-booking-button"
-                          className="w-full h-16 bg-[#FFD700] hover:bg-yellow-400 text-black rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
+                          className="w-full h-16 bg-[#EC5C4C] hover:bg-yellow-400 text-black rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
                         >
                           Complete Booking <ArrowRight size={16} strokeWidth={3} />
                         </button>
@@ -444,7 +444,7 @@ export default function BookingCheckout() {
             <div className="lg:col-span-4 space-y-8">
               <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden p-8 sticky top-32">
                 <div className="space-y-10">
-                  <p className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.3em]">Final Summary</p>
+                  <p className="text-[10px] font-black text-[#152467] uppercase tracking-[0.3em]">Final Summary</p>
                   <h3 className="text-xl font-black text-gray-900 tracking-tight leading-tight">
                     {summary?.type === 'hotel' ? summary?.hotel?.name : 'Elite Business Class'}
                   </h3>
@@ -457,7 +457,7 @@ export default function BookingCheckout() {
                     {selectedAddOns.length > 0 && (
                       <div className="space-y-3">
                         <div className="h-px bg-gray-200/50" />
-                        <p className="text-[9px] font-black text-[#8B5CF6] uppercase tracking-widest">Specialized Services</p>
+                        <p className="text-[9px] font-black text-[#152467] uppercase tracking-widest">Specialized Services</p>
                         {selectedAddOns.map(item => (
                           <div key={item.id} className="flex justify-between text-[10px] font-bold text-gray-600">
                             <span>{item.label}</span>
@@ -469,12 +469,12 @@ export default function BookingCheckout() {
                     <div className="h-px bg-gray-900/10" />
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-black text-gray-900 uppercase tracking-widest">Total Due</span>
-                      <span className="text-3xl font-black text-[#8B5CF6] tracking-tighter">{formatCurrency(totalPayable)}</span>
+                      <span className="text-3xl font-black text-[#152467] tracking-tighter">{formatCurrency(totalPayable)}</span>
                     </div>
                   </div>
 
                   <div className="p-5 bg-purple-50 rounded-2xl flex gap-3 border border-purple-100/50">
-                    <Sparkles size={16} className="text-[#8B5CF6] shrink-0" />
+                    <Sparkles size={16} className="text-[#152467] shrink-0" />
                     <p className="text-[10px] font-bold text-purple-700 leading-relaxed uppercase tracking-wider">
                       {summary?.type === 'hotel' ? 'Early check-in and breakfast included.' : 'Premium booking perks applied. Priority boarding included.'}
                     </p>

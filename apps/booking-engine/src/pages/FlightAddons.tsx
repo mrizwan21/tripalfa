@@ -141,7 +141,7 @@ export default function FlightAddons() {
                         <AlertCircle size={48} className="text-red-400 mx-auto" />
                         <h2 className="text-xl font-bold text-gray-900">No flight selected</h2>
                         <p className="text-gray-500 text-sm">Please go back and select a flight first.</p>
-                        <Button onClick={() => navigate('/flights')} className="bg-[#8B5CF6] text-white rounded-xl px-8 py-3 font-bold">
+                        <Button onClick={() => navigate('/flights')} className="bg-[#152467] text-white rounded-xl px-8 py-3 font-bold">
                             Back to Flights
                         </Button>
                     </div>
@@ -220,10 +220,10 @@ export default function FlightAddons() {
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-xl bg-[#8B5CF6] flex items-center justify-center text-white shadow-lg shadow-purple-100">
+                                    <div className="w-8 h-8 rounded-xl bg-[#152467] flex items-center justify-center text-white shadow-lg shadow-purple-100">
                                         <Plus size={16} />
                                     </div>
-                                    <h1 className="text-[10px] font-black text-[#8B5CF6] uppercase tracking-[0.3em]">Enhance Experience</h1>
+                                    <h1 className="text-[10px] font-black text-[#152467] uppercase tracking-[0.3em]">Enhance Experience</h1>
                                 </div>
                                 <h2 className="text-3xl font-black text-gray-900 tracking-tighter">Premium Add-ons</h2>
                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -288,9 +288,9 @@ export default function FlightAddons() {
                                             const max = maxQty(svc);
                                             return (
                                                 <div key={svc.id}
-                                                    className={`flex items-center justify-between p-6 rounded-[1.5rem] border transition-all duration-200 ${qty > 0 ? 'border-[#8B5CF6] bg-purple-50/30 ring-2 ring-[#8B5CF6]/10' : 'border-gray-100 hover:border-gray-200'}`}>
+                                                    className={`flex items-center justify-between p-6 rounded-[1.5rem] border transition-all duration-200 ${qty > 0 ? 'border-[#152467] bg-purple-50/30 ring-2 ring-[#152467]/10' : 'border-gray-100 hover:border-gray-200'}`}>
                                                     <div className="flex-1">
-                                                        <p className={`text-sm font-black ${qty > 0 ? 'text-[#8B5CF6]' : 'text-gray-900'}`}>
+                                                        <p className={`text-sm font-black ${qty > 0 ? 'text-[#152467]' : 'text-gray-900'}`}>
                                                             {baggageLabel(svc)}
                                                         </p>
                                                         <p className="text-[11px] font-bold text-gray-400 mt-1">
@@ -307,7 +307,7 @@ export default function FlightAddons() {
                                                         <button
                                                             onClick={() => handleBaggageQty(svc, qty + 1)}
                                                             disabled={qty >= max}
-                                                            className="w-9 h-9 rounded-full bg-[#8B5CF6] flex items-center justify-center text-white hover:bg-[#7C3AED] disabled:opacity-30 disabled:cursor-not-allowed font-bold text-lg"
+                                                            className="w-9 h-9 rounded-full bg-[#152467] flex items-center justify-center text-white hover:bg-[#0A1C50] disabled:opacity-30 disabled:cursor-not-allowed font-bold text-lg"
                                                         >+</button>
                                                     </div>
                                                 </div>
@@ -353,7 +353,7 @@ export default function FlightAddons() {
                                                 },
                                             })
                                         }
-                                        className="h-12 px-8 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-purple-200 flex items-center gap-2"
+                                        className="h-12 px-8 bg-[#152467] hover:bg-[#0A1C50] text-white rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-purple-200 flex items-center gap-2"
                                     >
                                         Choose Seat <ArrowRight size={16} />
                                     </Button>
@@ -393,17 +393,17 @@ export default function FlightAddons() {
                                                         return s;
                                                     })}
                                                     className={`flex items-center justify-between p-6 rounded-[1.5rem] border transition-all duration-200 text-left ${active
-                                                        ? 'border-[#8B5CF6] bg-purple-50/40 ring-2 ring-[#8B5CF6]/10'
+                                                        ? 'border-[#152467] bg-purple-50/40 ring-2 ring-[#152467]/10'
                                                         : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50/50'}`}
                                                 >
                                                     <div>
-                                                        <p className={`text-sm font-black transition-colors ${active ? 'text-[#8B5CF6]' : 'text-gray-900'}`}>
+                                                        <p className={`text-sm font-black transition-colors ${active ? 'text-[#152467]' : 'text-gray-900'}`}>
                                                             {meal.label}
                                                         </p>
                                                         <p className="text-[10px] text-gray-400 mt-0.5">{meal.description}</p>
                                                         <p className="text-[9px] font-mono text-gray-300 mt-0.5">SSR: {meal.code}</p>
                                                     </div>
-                                                    <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all ${active ? 'bg-[#8B5CF6] border-[#8B5CF6]' : 'border-gray-200'}`}>
+                                                    <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all ${active ? 'bg-[#152467] border-[#152467]' : 'border-gray-200'}`}>
                                                         {active && <Check size={14} className="text-white stroke-[3px]" />}
                                                     </div>
                                                 </button>
@@ -470,7 +470,7 @@ export default function FlightAddons() {
                         {/* ── Sidebar Summary ───────────────────────────────── */}
                         <div className="lg:col-span-4">
                             <div className="bg-[#111827] rounded-[2.5rem] p-10 text-white shadow-2xl sticky top-32">
-                                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#8B5CF6] mb-8">Trip Summary</h3>
+                                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[#152467] mb-8">Trip Summary</h3>
 
                                 <div className="space-y-5 mb-10 pb-10 border-b border-white/10">
 
@@ -494,7 +494,7 @@ export default function FlightAddons() {
                                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                                 {svc.name} ×{svc.quantity}
                                             </span>
-                                            <span className="text-[11px] font-black text-[#8B5CF6]">
+                                            <span className="text-[11px] font-black text-[#152467]">
                                                 +{formatMoney(svc.priceEach * svc.quantity, svc.currency)}
                                             </span>
                                         </div>
@@ -524,12 +524,12 @@ export default function FlightAddons() {
                                 <div className="space-y-8">
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-black uppercase tracking-widest">Total</span>
-                                        <span className="text-3xl font-black text-[#8B5CF6]">{formatMoney(grandTotal, currency)}</span>
+                                        <span className="text-3xl font-black text-[#152467]">{formatMoney(grandTotal, currency)}</span>
                                     </div>
 
                                     <Button
                                         onClick={handleContinue}
-                                        className="w-full h-16 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-900/40 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                                        className="w-full h-16 bg-[#152467] hover:bg-[#0A1C50] text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-900/40 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
                                     >
                                         Confirm & Continue <ArrowRight size={18} />
                                     </Button>

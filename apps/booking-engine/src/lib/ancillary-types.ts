@@ -45,6 +45,10 @@ export interface SelectedSeat {
   seatType: string;
   price: number;
   currency: string;
+  /** Duffel service ID for booking the seat */
+  serviceId?: string;
+  /** Disclosures/restrictions for this seat */
+  disclosures?: string[];
 }
 
 // Baggage Types

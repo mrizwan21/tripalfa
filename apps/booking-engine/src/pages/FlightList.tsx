@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { formatCurrency } from '@tripalfa/ui-components';
-import { FLIGHT_STATIC_DATA } from '@tripalfa/static-data/frontend-index';
+import { FLIGHT_STATIC_DATA } from '../lib/constants/flight-static-data';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { FlightDetailPopup } from '../components/FlightDetailPopup';
 import { FareUpsellPopup } from '../components/FareUpsellPopup';
@@ -213,7 +213,7 @@ export default function FlightList() {
                     type="number"
                     value={filters.minPrice}
                     onChange={(e) => updateFilter('minPrice', Number(e.target.value))}
-                    className="w-full h-11 px-4 bg-gray-50 border border-gray-100 rounded-xl flex items-center text-xs font-bold text-gray-900 outline-none focus:border-[#8B5CF6]"
+                    className="w-full h-11 px-4 bg-gray-50 border border-gray-100 rounded-xl flex items-center text-xs font-bold text-gray-900 outline-none focus:border-[#152467]"
                   />
                 </div>
                 <div className="flex-1 space-y-1">
@@ -222,11 +222,11 @@ export default function FlightList() {
                     type="number"
                     value={filters.maxPrice}
                     onChange={(e) => updateFilter('maxPrice', Number(e.target.value))}
-                    className="w-full h-11 px-4 bg-gray-50 border border-gray-100 rounded-xl flex items-center text-xs font-bold text-gray-900 outline-none focus:border-[#8B5CF6]"
+                    className="w-full h-11 px-4 bg-gray-50 border border-gray-100 rounded-xl flex items-center text-xs font-bold text-gray-900 outline-none focus:border-[#152467]"
                   />
                 </div>
               </div>
-              <Button onClick={() => setActiveFilter(null)} className="w-full h-12 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100">Apply Filter</Button>
+              <Button onClick={() => setActiveFilter(null)} className="w-full h-12 bg-[#152467] hover:bg-[#0A1C50] text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100">Apply Filter</Button>
             </div>
           </div>
         );
@@ -252,9 +252,9 @@ export default function FlightList() {
                         : [...filters.time, t.label];
                       updateFilter('time', newTimes);
                     }}
-                    className={`p-5 rounded-2xl border transition-all group text-left ${isActive ? 'border-[#8B5CF6] bg-purple-50 ring-1 ring-[#8B5CF6]' : 'border-gray-100 hover:border-[#8B5CF6] hover:bg-purple-50'}`}
+                    className={`p-5 rounded-2xl border transition-all group text-left ${isActive ? 'border-[#152467] bg-purple-50 ring-1 ring-[#152467]' : 'border-gray-100 hover:border-[#152467] hover:bg-purple-50'}`}
                   >
-                    <p className={`text-[11px] font-black mb-1 ${isActive ? 'text-[#8B5CF6]' : 'text-gray-900'}`}>{t.label}</p>
+                    <p className={`text-[11px] font-black mb-1 ${isActive ? 'text-[#152467]' : 'text-gray-900'}`}>{t.label}</p>
                     <p className="text-[10px] font-bold text-gray-400">{t.time}</p>
                   </button>
                 );
@@ -279,7 +279,7 @@ export default function FlightList() {
                         : filters.stops.filter(stop => stop !== s);
                       updateFilter('stops', newStops);
                     }}
-                    className="w-4 h-4 rounded border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]"
+                    className="w-4 h-4 rounded border-gray-200 text-[#152467] focus:ring-[#152467]"
                   />
                 </label>
               ))}
@@ -301,7 +301,7 @@ export default function FlightList() {
                     return (
                       <label key={airlineName} className="flex items-center justify-between cursor-pointer group">
                         <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{airlineName}</span>
-                        <input id={`flight-airline-${airlineName.toLowerCase().replace(' ', '-')}`} name="flight-airlines" type="checkbox" value={airlineName.toLowerCase().replace(' ', '-')} className="w-4 h-4 rounded border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]" />
+                        <input id={`flight-airline-${airlineName.toLowerCase().replace(' ', '-')}`} name="flight-airlines" type="checkbox" value={airlineName.toLowerCase().replace(' ', '-')} className="w-4 h-4 rounded border-gray-200 text-[#152467] focus:ring-[#152467]" />
                       </label>
                     );
                   })
@@ -316,9 +316,9 @@ export default function FlightList() {
               <h5 className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Cabin Class</h5>
               <div className="space-y-3">
                 {FLIGHT_STATIC_DATA.CABINS.all.map((cabin) => (
-                  <label key={cabin.value} className="flex items-center justify-between cursor-pointer group">
-                    <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{cabin.label}</span>
-                    <input id={`flight-cabin-${cabin.value.toLowerCase()}`} name="flight-cabin" type="radio" value={cabin.value.toLowerCase()} className="w-4 h-4 border-gray-200 text-[#8B5CF6] focus:ring-[#8B5CF6]" />
+                  <label key={cabin.code} className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900">{cabin.name}</span>
+                    <input id={`flight-cabin-${cabin.code.toLowerCase()}`} name="flight-cabin" type="radio" value={cabin.code.toLowerCase()} className="w-4 h-4 border-gray-200 text-[#152467] focus:ring-[#152467]" />
                   </label>
                 ))}
               </div>
@@ -326,7 +326,7 @@ export default function FlightList() {
 
             <div className="mt-8 pt-8 border-t border-gray-100 flex gap-4">
               <Button onClick={() => setActiveFilter(null)} className="flex-1 h-10 bg-gray-100 text-gray-600 font-bold text-[10px] uppercase tracking-widest rounded-xl hover:bg-gray-200">Reset</Button>
-              <Button onClick={() => setActiveFilter(null)} className="flex-[2] h-10 bg-[#8B5CF6] text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-[#7C3AED] shadow-lg shadow-purple-100">Apply Filter</Button>
+              <Button onClick={() => setActiveFilter(null)} className="flex-[2] h-10 bg-[#152467] text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-[#0A1C50] shadow-lg shadow-purple-100">Apply Filter</Button>
             </div>
           </div>
         );
@@ -425,7 +425,7 @@ export default function FlightList() {
           <div className="space-y-6" data-testid="flight-results">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                <Loader2 size={48} className="text-[#8B5CF6] animate-spin" />
+                <Loader2 size={48} className="text-[#152467] animate-spin" />
                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest animate-pulse">
                   Searching best flights...
                 </p>
@@ -508,7 +508,7 @@ export default function FlightList() {
                               <Plane size={14} className="text-gray-300 rotate-90" />
                             </div>
                           </div>
-                          <p className="text-[10px] font-bold text-[#8B5CF6] text-center mt-3 uppercase tracking-widest">
+                          <p className="text-[10px] font-bold text-[#152467] text-center mt-3 uppercase tracking-widest">
                             {flight.stops === 0 ? 'Non-stop' : `${flight.stops} Stop${flight.stops > 1 ? 's' : ''}`}
                           </p>
                         </div>
@@ -566,7 +566,7 @@ export default function FlightList() {
                         setSelectedFlight(flight);
                         setIsDetailOpen(true);
                       }}
-                      className="flex items-center gap-1 text-[10px] font-black text-[#8B5CF6] uppercase tracking-widest hover:text-[#7C3AED] transition-colors"
+                      className="flex items-center gap-1 text-[10px] font-black text-[#152467] uppercase tracking-widest hover:text-[#0A1C50] transition-colors"
                     >
                       Flight Details <ChevronRight size={12} />
                     </button>

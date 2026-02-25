@@ -67,7 +67,7 @@ PAYMENT_SERVICE_URL=http://payment-service:3007
 PAYMENT_SERVICE_PORT=3007
 RULE_ENGINE_SERVICE_URL=http://rule-engine-service:3010
 RULE_ENGINE_SERVICE_PORT=3010
-NOTIFICATION_SERVICE_URL=http://notification-service:3005
+NOTIFICATION_SERVICE_URL=http://notification-service:3009
 ```
 
 ### For Payment Service
