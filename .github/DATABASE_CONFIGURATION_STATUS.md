@@ -15,21 +15,21 @@ All backend services have been configured to use **NEON** for application data a
 
 |  Service | Database | Type | Environment Variable | Status |
  |---------|----------|------|---------------------|--------|
-| **API Gateway** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Booking Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Payment Service** | In-Memory/Redis | Application | - | ✅ No direct DB |
-| **User Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Wallet Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Organization Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **KYC Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Notification Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Marketing Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Rule Engine Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **B2B Admin Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Static Data Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Using Local Only |
-| **Ingest Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Reference Data |
-| **Booking Engine** | N/A | Frontend | - | ✅ N/A |
-| **B2B Admin** | N/A | Frontend | - | ✅ N/A |
+|  **API Gateway** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Booking Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Payment Service** | In-Memory/Redis | Application | - | ✅ No direct DB |
+|  **User Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Wallet Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Organization Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **KYC Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Notification Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Marketing Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Rule Engine Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **B2B Admin Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
+|  **Static Data Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Using Local Only |
+|  **Ingest Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Reference Data |
+|  **Booking Engine** | N/A | Frontend | - | ✅ N/A |
+|  **B2B Admin** | N/A | Frontend | - | ✅ N/A |
 
 ---
 
