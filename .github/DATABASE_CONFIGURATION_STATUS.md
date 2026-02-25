@@ -27,7 +27,7 @@ All backend services have been configured to use **NEON** for application data a
 | **Rule Engine Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
 | **B2B Admin Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
 | **Static Data Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Using Local Only |
-| **Ingest Service** | Local PG (5433) | Reference | Hardcoded fallback | ✅ Reference Data |
+| **Ingest Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Reference Data |
 | **Booking Engine** | N/A | Frontend | - | ✅ N/A |
 | **B2B Admin** | N/A | Frontend | - | ✅ N/A |
 
@@ -122,7 +122,7 @@ ENABLE_LOYALTY=true
 
 ### ✅ After (Current Correct State)
 
-- **ALL backend services** → NEON (ep-ancient-meadow-aitejh28)
+- **ALL backend services** → NEON (`DATABASE_URL` / `DIRECT_DATABASE_URL`)
 - **Static reference data (flight + hotel)** → Local PostgreSQL staticdatabase (port 5433)
 - **Environment variables** loaded consistently before Prisma
 - **Clear documentation** created for future developers
@@ -140,7 +140,7 @@ Backend:
 ✅ Booking Service - http://localhost:3001 (NEON)
 
 Database Connections:
-✅ NEON neondb (ep-ancient-meadow-aitejh28) - All application data
+✅ NEON neondb - All application data
 ✅ Local PostgreSQL:5433 - Static reference data only
 ✅ Redis:6379 - Cache layer
 ```

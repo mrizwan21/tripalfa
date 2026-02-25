@@ -28,7 +28,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${NEON_DATABASE_URL}
+      - DIRECT_DATABASE_URL=${DIRECT_NEON_DATABASE_URL:-${NEON_DATABASE_URL}}
       - STATIC_DATABASE_URL=postgresql://postgres:postgres@postgres-static:5432/staticdatabase
       - REDIS_URL=redis://redis-cache:6379
       - API_GATEWAY_PORT=3000
@@ -40,7 +41,8 @@ services:
     build:
       context: ../../services/ingest
     environment:
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${NEON_DATABASE_URL}
+      - DIRECT_DATABASE_URL=${DIRECT_NEON_DATABASE_URL:-${NEON_DATABASE_URL}}
       - REDIS_URL=redis://redis-cache:6379
       - INGEST_STREAM=ingest:stream
     depends_on:
@@ -53,7 +55,8 @@ services:
       - "3010:3010"
     environment:
       - PORT=3010
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${NEON_DATABASE_URL}
+      - DIRECT_DATABASE_URL=${DIRECT_NEON_DATABASE_URL:-${NEON_DATABASE_URL}}
     depends_on:
       - postgres-static
 

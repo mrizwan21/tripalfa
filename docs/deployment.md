@@ -101,7 +101,8 @@ Travel Kingdom is built as a microservices architecture with the following key c
 
 | Service | Port | Description |
 |---------|------|-------------|
-| **PostgreSQL** | 5432 | Primary database |
+| **Neon PostgreSQL** | Cloud | Primary application database (`neondb`) |
+| **PostgreSQL (Static)** | 5433 | Static reference data DB (flight + hotel) |
 | **Redis** | 6379 | Caching and session storage |
 | **RabbitMQ** | 5672/15672 | Message queuing |
 | **Grafana** | 3007 | Monitoring dashboards |
@@ -158,7 +159,7 @@ Travel Kingdom is built as a microservices architecture with the following key c
 - **Hot Reload**: Services support hot reloading for faster development
 - **Volume Mounts**: Source code is mounted as volumes for live updates
 - **Debug Mode**: Services run in development mode with verbose logging
-- **Database**: Uses `travel_kingdom` database with sample data
+- **Database**: Uses Neon `neondb` for application data and local `staticdatabase` on port 5433 for static reference data
 
 ## 🏭 Production Environment {#production-environment}
 
