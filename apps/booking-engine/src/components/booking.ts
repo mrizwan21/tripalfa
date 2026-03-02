@@ -1,97 +1,97 @@
 export enum BookingStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
-  EXPIRED = 'EXPIRED',
-  HOLD = 'HOLD'
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED",
+  EXPIRED = "EXPIRED",
+  HOLD = "HOLD",
 }
 
 export enum ServiceType {
-  FLIGHT = 'flight',
-  HOTEL = 'hotel',
-  PACKAGE = 'package',
-  TRANSFER = 'transfer',
-  VISA = 'visa',
-  INSURANCE = 'insurance'
+  FLIGHT = "flight",
+  HOTEL = "hotel",
+  PACKAGE = "package",
+  TRANSFER = "transfer",
+  VISA = "visa",
+  INSURANCE = "insurance",
 }
 
 export enum Priority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent'
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  URGENT = "urgent",
 }
 
 export enum PaymentMethod {
-  WALLET = 'wallet',
-  CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
-  NET_BANKING = 'net_banking',
-  UPI = 'upi'
+  WALLET = "wallet",
+  CREDIT_CARD = "credit_card",
+  DEBIT_CARD = "debit_card",
+  NET_BANKING = "net_banking",
+  UPI = "upi",
 }
 
 export enum CustomerType {
-  INDIVIDUAL = 'individual',
-  CORPORATE = 'corporate'
+  INDIVIDUAL = "individual",
+  CORPORATE = "corporate",
 }
 
 export enum SupplierType {
-  AIRLINE = 'airline',
-  HOTEL = 'hotel',
-  CAR_RENTAL = 'car_rental',
-  VISA_AGENCY = 'visa_agency',
-  INSURANCE_COMPANY = 'insurance_company'
+  AIRLINE = "airline",
+  HOTEL = "hotel",
+  CAR_RENTAL = "car_rental",
+  VISA_AGENCY = "visa_agency",
+  INSURANCE_COMPANY = "insurance_company",
 }
 
 export enum UserRole {
-  ADMIN = 'admin',
-  AGENT = 'agent',
-  SUPERVISOR = 'supervisor',
-  MANAGER = 'manager'
+  ADMIN = "admin",
+  AGENT = "agent",
+  SUPERVISOR = "supervisor",
+  MANAGER = "manager",
 }
 
 export enum Permission {
-  CREATE_BOOKING = 'create_booking',
-  SEARCH_BOOKINGS = 'search_bookings',
-  VIEW_BOOKINGS = 'view_bookings',
-  UPDATE_BOOKING = 'update_booking',
-  CANCEL_BOOKING = 'cancel_booking',
-  CONFIRM_BOOKING = 'confirm_booking',
-  ISSUE_TICKET = 'issue_ticket',
-  HOLD_INVENTORY = 'hold_inventory',
-  VIEW_CUSTOMERS = 'view_customers',
-  CREATE_CUSTOMER = 'create_customer',
-  UPDATE_CUSTOMER = 'update_customer',
-  DELETE_CUSTOMER = 'delete_customer',
-  VIEW_SUPPLIERS = 'view_suppliers',
-  CREATE_SUPPLIER = 'create_supplier',
-  UPDATE_SUPPLIER = 'update_supplier',
-  DELETE_SUPPLIER = 'delete_supplier',
-  MANAGE_WORKFLOW = 'manage_workflow',
-  ASSIGN_BOOKING = 'assign_booking',
-  UPDATE_PRIORITY = 'update_priority',
-  VIEW_INVENTORY = 'view_inventory',
-  MANAGE_INVENTORY = 'manage_inventory',
-  ADD_INVENTORY = 'add_inventory',
-  UPDATE_INVENTORY = 'update_inventory',
-  DELETE_INVENTORY = 'delete_inventory',
-  MANAGE_PRICING = 'manage_pricing',
-  VIEW_PRICING = 'view_pricing',
-  CREATE_PRICING_RULE = 'create_pricing_rule',
-  UPDATE_PRICING_RULE = 'update_pricing_rule',
-  DELETE_PRICING_RULE = 'delete_pricing_rule',
-  MANAGE_COMMISSIONS = 'manage_commissions',
-  VIEW_COMMISSIONS = 'view_commissions',
-  CREATE_COMMISSION_RULE = 'create_commission_rule',
-  UPDATE_COMMISSION_RULE = 'update_commission_rule',
-  DELETE_COMMISSION_RULE = 'delete_commission_rule',
-  MANAGE_PERMISSIONS = 'manage_permissions',
-  VIEW_PERMISSIONS = 'view_permissions',
-  VIEW_REPORTS = 'view_reports',
-  GENERATE_REPORTS = 'generate_reports',
-  VIEW_AUDIT = 'view_audit',
-  VIEW_COMPLIANCE = 'view_compliance'
+  CREATE_BOOKING = "create_booking",
+  SEARCH_BOOKINGS = "search_bookings",
+  VIEW_BOOKINGS = "view_bookings",
+  UPDATE_BOOKING = "update_booking",
+  CANCEL_BOOKING = "cancel_booking",
+  CONFIRM_BOOKING = "confirm_booking",
+  ISSUE_TICKET = "issue_ticket",
+  HOLD_INVENTORY = "hold_inventory",
+  VIEW_CUSTOMERS = "view_customers",
+  CREATE_CUSTOMER = "create_customer",
+  UPDATE_CUSTOMER = "update_customer",
+  DELETE_CUSTOMER = "delete_customer",
+  VIEW_SUPPLIERS = "view_suppliers",
+  CREATE_SUPPLIER = "create_supplier",
+  UPDATE_SUPPLIER = "update_supplier",
+  DELETE_SUPPLIER = "delete_supplier",
+  MANAGE_WORKFLOW = "manage_workflow",
+  ASSIGN_BOOKING = "assign_booking",
+  UPDATE_PRIORITY = "update_priority",
+  VIEW_INVENTORY = "view_inventory",
+  MANAGE_INVENTORY = "manage_inventory",
+  ADD_INVENTORY = "add_inventory",
+  UPDATE_INVENTORY = "update_inventory",
+  DELETE_INVENTORY = "delete_inventory",
+  MANAGE_PRICING = "manage_pricing",
+  VIEW_PRICING = "view_pricing",
+  CREATE_PRICING_RULE = "create_pricing_rule",
+  UPDATE_PRICING_RULE = "update_pricing_rule",
+  DELETE_PRICING_RULE = "delete_pricing_rule",
+  MANAGE_COMMISSIONS = "manage_commissions",
+  VIEW_COMMISSIONS = "view_commissions",
+  CREATE_COMMISSION_RULE = "create_commission_rule",
+  UPDATE_COMMISSION_RULE = "update_commission_rule",
+  DELETE_COMMISSION_RULE = "delete_commission_rule",
+  MANAGE_PERMISSIONS = "manage_permissions",
+  VIEW_PERMISSIONS = "view_permissions",
+  VIEW_REPORTS = "view_reports",
+  GENERATE_REPORTS = "generate_reports",
+  VIEW_AUDIT = "view_audit",
+  VIEW_COMPLIANCE = "view_compliance",
 }
 
 export interface BookingDetails {
@@ -108,7 +108,7 @@ export interface BookingDetails {
 export interface Passenger {
   firstName: string;
   lastName: string;
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
   dateOfBirth: Date;
   passportNumber?: string;
   nationality?: string;
@@ -187,11 +187,11 @@ export interface InventoryHold {
 export interface PricingRule {
   name: string;
   description?: string;
-  ruleType: 'markup' | 'discount' | 'fixed_price' | 'dynamic';
+  ruleType: "markup" | "discount" | "fixed_price" | "dynamic";
   conditions: {
     serviceType: ServiceType[];
     customerType?: CustomerType[];
-    bookingChannel?: ('b2b' | 'b2c' | 'call_center')[];
+    bookingChannel?: ("b2b" | "b2c" | "call_center")[];
     bookingDateRange?: {
       startDate?: Date;
       endDate?: Date;
@@ -208,7 +208,7 @@ export interface PricingRule {
     discountPercentage?: number;
     fixedPrice?: number;
     currency: string;
-    applyTo: 'base_price' | 'selling_price' | 'all';
+    applyTo: "base_price" | "selling_price" | "all";
   };
   validity: {
     startDate: Date;
@@ -221,11 +221,11 @@ export interface PricingRule {
 export interface CommissionRule {
   name: string;
   description?: string;
-  ruleType: 'percentage' | 'fixed_amount' | 'tiered';
+  ruleType: "percentage" | "fixed_amount" | "tiered";
   conditions: {
     serviceType: ServiceType[];
     customerType?: CustomerType[];
-    bookingChannel?: ('b2b' | 'b2c' | 'call_center')[];
+    bookingChannel?: ("b2b" | "b2c" | "call_center")[];
     bookingAmountRange?: {
       minAmount?: number;
       maxAmount?: number;
@@ -236,7 +236,7 @@ export interface CommissionRule {
     percentage?: number;
     fixedAmount?: number;
     currency: string;
-    calculationBasis: 'net_price' | 'selling_price' | 'profit';
+    calculationBasis: "net_price" | "selling_price" | "profit";
     tieredStructure?: Array<{
       minAmount: number;
       maxAmount?: number;
@@ -244,8 +244,8 @@ export interface CommissionRule {
     }>;
   };
   paymentTerms: {
-    paymentMethod: 'immediate' | 'monthly' | 'quarterly';
-    paymentDate: 'end_of_month' | '15th_of_month' | 'custom';
+    paymentMethod: "immediate" | "monthly" | "quarterly";
+    paymentDate: "end_of_month" | "15th_of_month" | "custom";
     customPaymentDate?: number;
   };
   validity: {
@@ -268,7 +268,7 @@ export interface AuditLog {
 }
 
 export interface ReportParams {
-  reportType: 'daily' | 'weekly' | 'monthly' | 'custom';
+  reportType: "daily" | "weekly" | "monthly" | "custom";
   dateRange: {
     startDate: Date;
     endDate: Date;
@@ -324,8 +324,8 @@ export interface Company {
   contactEmail: string;
   contactPhone: string;
   creditLimit?: number;
-  paymentTerms: 'prepaid' | 'postpaid' | 'credit';
-  status: 'active' | 'inactive' | 'suspended';
+  paymentTerms: "prepaid" | "postpaid" | "credit";
+  status: "active" | "inactive" | "suspended";
   branches: Branch[];
   createdAt: Date;
   updatedAt: Date;
@@ -340,8 +340,8 @@ export interface Supplier {
   contactPhone?: string;
   address?: string;
   commissionRate?: number;
-  paymentTerms: 'prepaid' | 'postpaid' | 'net_7' | 'net_15' | 'net_30';
-  status: 'active' | 'inactive' | 'suspended';
+  paymentTerms: "prepaid" | "postpaid" | "net_7" | "net_15" | "net_30";
+  status: "active" | "inactive" | "suspended";
   serviceTypes: ServiceType[];
   apiEndpoint?: string;
   apiKey?: string;
@@ -359,7 +359,7 @@ export interface Inventory {
   price: number;
   currency: string;
   markup: number;
-  status: 'available' | 'sold_out' | 'suspended' | 'on_hold';
+  status: "available" | "sold_out" | "suspended" | "on_hold";
   validity: {
     startDate: Date;
     endDate: Date;

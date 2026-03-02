@@ -1,9 +1,9 @@
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import { expect, afterEach, vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import "@testing-library/jest-dom";
 
 // Mock Prisma client
-vi.mock('@prisma/client', () => ({
+vi.mock("@prisma/client", () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
     // Mock any Prisma methods that might be used in tests
     $connect: vi.fn(),
@@ -17,7 +17,7 @@ afterEach(() => {
 });
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
     matches: false,
@@ -60,10 +60,10 @@ const originalWarn = console.warn;
 console.error = vi.fn((...args: any[]) => {
   // Only suppress React/testing library warnings
   if (
-    typeof args[0] === 'string' &&
-    (args[0].includes('Warning: ReactDOM.render') ||
-      args[0].includes('Not wrapped in act') ||
-      args[0].includes('inside a test was not wrapped in act'))
+    typeof args[0] === "string" &&
+    (args[0].includes("Warning: ReactDOM.render") ||
+      args[0].includes("Not wrapped in act") ||
+      args[0].includes("inside a test was not wrapped in act"))
   ) {
     return;
   }
@@ -72,7 +72,7 @@ console.error = vi.fn((...args: any[]) => {
 
 console.warn = vi.fn((...args: any[]) => {
   // Only suppress specific warnings
-  if (typeof args[0] === 'string' && args[0].includes('Warning:')) {
+  if (typeof args[0] === "string" && args[0].includes("Warning:")) {
     return;
   }
   originalWarn.call(console, ...args);

@@ -3,12 +3,12 @@
  * Handles HTTP requests for hotel deal management with Express
  */
 
-import { Request, Response } from 'express';
-import { HotelDealService } from '../services/hotelDealService';
-import { HotelAllotmentService } from '../services/hotelAllotmentService';
-import { hotelDealsScheduler } from '../services/hotelDealsScheduler';
-import { createLogger } from '@tripalfa/shared-utils/logger';
-const logger = createLogger({ serviceName: 'booking-engine' });
+import { Request, Response } from "express";
+import { HotelDealService } from "../services/hotelDealService";
+import { HotelAllotmentService } from "../services/hotelAllotmentService";
+import { hotelDealsScheduler } from "../services/hotelDealsScheduler";
+import { createLogger } from "@tripalfa/shared-utils/logger";
+const logger = createLogger({ serviceName: "booking-engine" });
 
 export class HotelDealsController {
   private hotelDealService: HotelDealService;
@@ -27,7 +27,9 @@ export class HotelDealsController {
     try {
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Creating contracted rate for deal: ${request.dealId}`);
+      logger.info(
+        `[HotelDealsController] Creating contracted rate for deal: ${request.dealId}`,
+      );
 
       const config = await this.hotelDealService.createDealConfiguration({
         dealId: request.dealId,
@@ -51,10 +53,13 @@ export class HotelDealsController {
         statusCode: 201,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error creating contracted rate:', error);
+      logger.error(
+        "[HotelDealsController] Error creating contracted rate:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to create contracted rate',
+        error: error.message || "Failed to create contracted rate",
         statusCode: 500,
       });
     }
@@ -68,7 +73,9 @@ export class HotelDealsController {
     try {
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Creating package deal for deal: ${request.dealId}`);
+      logger.info(
+        `[HotelDealsController] Creating package deal for deal: ${request.dealId}`,
+      );
 
       const config = await this.hotelDealService.createDealConfiguration({
         dealId: request.dealId,
@@ -88,10 +95,13 @@ export class HotelDealsController {
         statusCode: 201,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error creating package deal:', error);
+      logger.error(
+        "[HotelDealsController] Error creating package deal:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to create package deal',
+        error: error.message || "Failed to create package deal",
         statusCode: 500,
       });
     }
@@ -105,7 +115,9 @@ export class HotelDealsController {
     try {
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Creating early bird deal for deal: ${request.dealId}`);
+      logger.info(
+        `[HotelDealsController] Creating early bird deal for deal: ${request.dealId}`,
+      );
 
       const config = await this.hotelDealService.createDealConfiguration({
         dealId: request.dealId,
@@ -122,10 +134,13 @@ export class HotelDealsController {
         statusCode: 201,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error creating early bird deal:', error);
+      logger.error(
+        "[HotelDealsController] Error creating early bird deal:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to create early bird deal',
+        error: error.message || "Failed to create early bird deal",
         statusCode: 500,
       });
     }
@@ -139,7 +154,9 @@ export class HotelDealsController {
     try {
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Creating last-minute deal for deal: ${request.dealId}`);
+      logger.info(
+        `[HotelDealsController] Creating last-minute deal for deal: ${request.dealId}`,
+      );
 
       const config = await this.hotelDealService.createDealConfiguration({
         dealId: request.dealId,
@@ -155,10 +172,13 @@ export class HotelDealsController {
         statusCode: 201,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error creating last-minute deal:', error);
+      logger.error(
+        "[HotelDealsController] Error creating last-minute deal:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to create last-minute deal',
+        error: error.message || "Failed to create last-minute deal",
         statusCode: 500,
       });
     }
@@ -172,7 +192,9 @@ export class HotelDealsController {
     try {
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Creating free nights deal for deal: ${request.dealId}`);
+      logger.info(
+        `[HotelDealsController] Creating free nights deal for deal: ${request.dealId}`,
+      );
 
       const config = await this.hotelDealService.createDealConfiguration({
         dealId: request.dealId,
@@ -189,10 +211,13 @@ export class HotelDealsController {
         statusCode: 201,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error creating free nights deal:', error);
+      logger.error(
+        "[HotelDealsController] Error creating free nights deal:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to create free nights deal',
+        error: error.message || "Failed to create free nights deal",
         statusCode: 500,
       });
     }
@@ -206,14 +231,16 @@ export class HotelDealsController {
     try {
       const { dealId } = req.params;
 
-      logger.info(`[HotelDealsController] Fetching hotel deal configuration for: ${dealId}`);
+      logger.info(
+        `[HotelDealsController] Fetching hotel deal configuration for: ${dealId}`,
+      );
 
       const config = await this.hotelDealService.getDealConfiguration(dealId);
 
       if (!config) {
         res.status(404).json({
           success: false,
-          error: 'Deal configuration not found',
+          error: "Deal configuration not found",
           statusCode: 404,
         });
         return;
@@ -225,10 +252,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error fetching deal configuration:', error);
+      logger.error(
+        "[HotelDealsController] Error fetching deal configuration:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to fetch deal configuration',
+        error: error.message || "Failed to fetch deal configuration",
         statusCode: 500,
       });
     }
@@ -243,9 +273,14 @@ export class HotelDealsController {
       const { dealId } = req.params;
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Updating hotel deal configuration for: ${dealId}`);
+      logger.info(
+        `[HotelDealsController] Updating hotel deal configuration for: ${dealId}`,
+      );
 
-      const config = await this.hotelDealService.updateDealConfiguration(dealId, request);
+      const config = await this.hotelDealService.updateDealConfiguration(
+        dealId,
+        request,
+      );
 
       res.status(200).json({
         success: true,
@@ -253,10 +288,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error updating deal configuration:', error);
+      logger.error(
+        "[HotelDealsController] Error updating deal configuration:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to update deal configuration',
+        error: error.message || "Failed to update deal configuration",
         statusCode: 500,
       });
     }
@@ -268,15 +306,16 @@ export class HotelDealsController {
    */
   async calculatePackagePrice(req: Request, res: Response): Promise<void> {
     try {
-      const { baseRoomRate, nights, packageInclusions, discountPercentage } = req.body;
+      const { baseRoomRate, nights, packageInclusions, discountPercentage } =
+        req.body;
 
-      logger.info('[HotelDealsController] Calculating package price');
+      logger.info("[HotelDealsController] Calculating package price");
 
       const pricing = this.hotelDealService.calculatePackagePrice(
         baseRoomRate,
         nights,
         packageInclusions,
-        discountPercentage
+        discountPercentage,
       );
 
       res.status(200).json({
@@ -285,10 +324,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error calculating package price:', error);
+      logger.error(
+        "[HotelDealsController] Error calculating package price:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to calculate package price',
+        error: error.message || "Failed to calculate package price",
         statusCode: 500,
       });
     }
@@ -302,9 +344,12 @@ export class HotelDealsController {
     try {
       const { nights, freeNightStructure } = req.body;
 
-      logger.info('[HotelDealsController] Calculating free nights');
+      logger.info("[HotelDealsController] Calculating free nights");
 
-      const result = this.hotelDealService.calculateFreeNights(nights, freeNightStructure);
+      const result = this.hotelDealService.calculateFreeNights(
+        nights,
+        freeNightStructure,
+      );
 
       res.status(200).json({
         success: true,
@@ -312,10 +357,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error calculating free nights:', error);
+      logger.error(
+        "[HotelDealsController] Error calculating free nights:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to calculate free nights',
+        error: error.message || "Failed to calculate free nights",
         statusCode: 500,
       });
     }
@@ -327,15 +375,16 @@ export class HotelDealsController {
    */
   async determineTimingDiscount(req: Request, res: Response): Promise<void> {
     try {
-      const { checkInDate, bookingDate, advanceBookingTiers, lastMinuteTiers } = req.body;
+      const { checkInDate, bookingDate, advanceBookingTiers, lastMinuteTiers } =
+        req.body;
 
-      logger.info('[HotelDealsController] Determining timing discount');
+      logger.info("[HotelDealsController] Determining timing discount");
 
       const discount = this.hotelDealService.determineTimingDiscount(
         new Date(checkInDate),
         new Date(bookingDate),
         advanceBookingTiers,
-        lastMinuteTiers
+        lastMinuteTiers,
       );
 
       res.status(200).json({
@@ -344,10 +393,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error determining timing discount:', error);
+      logger.error(
+        "[HotelDealsController] Error determining timing discount:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to determine timing discount',
+        error: error.message || "Failed to determine timing discount",
         statusCode: 500,
       });
     }
@@ -360,15 +412,18 @@ export class HotelDealsController {
   async checkAllotment(req: Request, res: Response): Promise<void> {
     try {
       const { dealConfigurationId } = req.params;
-      const { hotelPropertyId, checkInDate, checkOutDate, roomsNeeded } = req.query;
+      const { hotelPropertyId, checkInDate, checkOutDate, roomsNeeded } =
+        req.query;
 
-      logger.info(`[HotelDealsController] Checking allotment for: ${dealConfigurationId}`);
+      logger.info(
+        `[HotelDealsController] Checking allotment for: ${dealConfigurationId}`,
+      );
 
       const availability = await this.hotelAllotmentService.getAvailability(
         dealConfigurationId,
         hotelPropertyId as string,
         new Date(checkInDate as string),
-        new Date(checkOutDate as string)
+        new Date(checkOutDate as string),
       );
 
       res.status(200).json({
@@ -376,15 +431,17 @@ export class HotelDealsController {
         data: {
           available: availability,
           roomsNeeded: parseInt(roomsNeeded as string),
-          canBook: availability.every((a) => a.availableRooms >= parseInt(roomsNeeded as string)),
+          canBook: availability.every(
+            (a) => a.availableRooms >= parseInt(roomsNeeded as string),
+          ),
         },
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error checking allotment:', error);
+      logger.error("[HotelDealsController] Error checking allotment:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to check allotment',
+        error: error.message || "Failed to check allotment",
         statusCode: 500,
       });
     }
@@ -398,15 +455,18 @@ export class HotelDealsController {
     try {
       const request = req.body;
 
-      logger.info(`[HotelDealsController] Reserving allotment: ${request.dealConfigurationId}`);
-
-      const reservation = await this.hotelAllotmentService.checkAndReserveAllotment(
-        request.dealConfigurationId,
-        request.hotelPropertyId,
-        new Date(request.checkInDate),
-        new Date(request.checkOutDate),
-        request.roomsNeeded
+      logger.info(
+        `[HotelDealsController] Reserving allotment: ${request.dealConfigurationId}`,
       );
+
+      const reservation =
+        await this.hotelAllotmentService.checkAndReserveAllotment(
+          request.dealConfigurationId,
+          request.hotelPropertyId,
+          new Date(request.checkInDate),
+          new Date(request.checkOutDate),
+          request.roomsNeeded,
+        );
 
       res.status(201).json({
         success: true,
@@ -414,10 +474,10 @@ export class HotelDealsController {
         statusCode: 201,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error reserving allotment:', error);
+      logger.error("[HotelDealsController] Error reserving allotment:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to reserve allotment',
+        error: error.message || "Failed to reserve allotment",
         statusCode: 500,
       });
     }
@@ -429,7 +489,7 @@ export class HotelDealsController {
    */
   async releaseExpiredAllotments(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('[HotelDealsController] Releasing expired allotments');
+      logger.info("[HotelDealsController] Releasing expired allotments");
 
       const count = await this.hotelAllotmentService.releaseExpiredAllotments();
 
@@ -441,10 +501,10 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error releasing allotments:', error);
+      logger.error("[HotelDealsController] Error releasing allotments:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to release allotments',
+        error: error.message || "Failed to release allotments",
         statusCode: 500,
       });
     }
@@ -457,14 +517,17 @@ export class HotelDealsController {
   async checkLowAvailability(req: Request, res: Response): Promise<void> {
     try {
       const { dealConfigurationId } = req.params;
-      const { threshold = '5' } = req.query;
+      const { threshold = "5" } = req.query;
 
-      logger.info(`[HotelDealsController] Checking low availability for: ${dealConfigurationId}`);
-
-      const lowAvailability = await this.hotelAllotmentService.checkLowAvailability(
-        dealConfigurationId,
-        parseInt(threshold as string)
+      logger.info(
+        `[HotelDealsController] Checking low availability for: ${dealConfigurationId}`,
       );
+
+      const lowAvailability =
+        await this.hotelAllotmentService.checkLowAvailability(
+          dealConfigurationId,
+          parseInt(threshold as string),
+        );
 
       res.status(200).json({
         success: true,
@@ -475,10 +538,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error checking low availability:', error);
+      logger.error(
+        "[HotelDealsController] Error checking low availability:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to check low availability',
+        error: error.message || "Failed to check low availability",
         statusCode: 500,
       });
     }
@@ -490,7 +556,7 @@ export class HotelDealsController {
    */
   async getSchedulerStatus(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('[HotelDealsController] Fetching scheduler status');
+      logger.info("[HotelDealsController] Fetching scheduler status");
 
       const status = hotelDealsScheduler.getTasksStatus();
 
@@ -504,10 +570,13 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error fetching scheduler status:', error);
+      logger.error(
+        "[HotelDealsController] Error fetching scheduler status:",
+        error,
+      );
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to fetch scheduler status',
+        error: error.message || "Failed to fetch scheduler status",
         statusCode: 500,
       });
     }
@@ -519,9 +588,12 @@ export class HotelDealsController {
    */
   async triggerManualRelease(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('[HotelDealsController] Manual allotment release triggered by admin');
+      logger.info(
+        "[HotelDealsController] Manual allotment release triggered by admin",
+      );
 
-      const releasedCount = await hotelDealsScheduler.manuallyReleaseAllotments();
+      const releasedCount =
+        await hotelDealsScheduler.manuallyReleaseAllotments();
 
       res.status(200).json({
         success: true,
@@ -532,10 +604,10 @@ export class HotelDealsController {
         statusCode: 200,
       });
     } catch (error: any) {
-      logger.error('[HotelDealsController] Error in manual release:', error);
+      logger.error("[HotelDealsController] Error in manual release:", error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to trigger manual release',
+        error: error.message || "Failed to trigger manual release",
         statusCode: 500,
       });
     }

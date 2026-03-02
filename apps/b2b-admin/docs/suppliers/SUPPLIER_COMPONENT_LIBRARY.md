@@ -52,19 +52,21 @@ SupplierModule
 **Purpose**: Display single supplier as a card with key metrics and actions
 
 **Props**:
+
 ```typescript
 interface SupplierCardProps {
-  supplier: SupplierProfile
-  isSelected?: boolean
-  onSelect?: (id: string) => void
-  onEdit?: (id: string) => void
-  onDelete?: (id: string) => void
-  showStats?: boolean
-  showHealth?: boolean
+  supplier: SupplierProfile;
+  isSelected?: boolean;
+  onSelect?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  showStats?: boolean;
+  showHealth?: boolean;
 }
 ```
 
 **Design**:
+
 ```
 ┌─────────────────────────────────────┐
 │ 📦 [GDS] ⋯                          │
@@ -81,23 +83,25 @@ interface SupplierCardProps {
 ```
 
 **Colors**:
+
 ```typescript
 const statusColors = {
-  active: 'bg-green-50 border-green-200',
-  inactive: 'bg-gray-50 border-gray-200',
-  suspended: 'bg-red-50 border-red-200',
-  pending: 'bg-blue-50 border-blue-200',
-}
+  active: "bg-green-50 border-green-200",
+  inactive: "bg-gray-50 border-gray-200",
+  suspended: "bg-red-50 border-red-200",
+  pending: "bg-blue-50 border-blue-200",
+};
 
 const typeColors = {
-  'GDS': 'bg-purple-100 text-purple-800',
-  'Aggregator': 'bg-blue-100 text-blue-800',
-  'Direct': 'bg-orange-100 text-orange-800',
-  'Wholesaler': 'bg-green-100 text-green-800',
-}
+  GDS: "bg-purple-100 text-purple-800",
+  Aggregator: "bg-blue-100 text-blue-800",
+  Direct: "bg-orange-100 text-orange-800",
+  Wholesaler: "bg-green-100 text-green-800",
+};
 ```
 
 **States**:
+
 - Normal: Gray text, standard spacing
 - Hover: Shadow increase, background color change
 - Selected: Blue border, checkmark icon
@@ -111,19 +115,21 @@ const typeColors = {
 **Purpose**: Display suppliers in tabular format with sorting/filtering
 
 **Props**:
+
 ```typescript
 interface SupplierTableProps {
-  suppliers: SupplierProfile[]
-  loading?: boolean
-  onSort?: (field: keyof SupplierProfile) => void
-  onRowClick?: (supplier: SupplierProfile) => void
-  selectable?: boolean
-  selectedIds?: string[]
-  onSelectionChange?: (ids: string[]) => void
+  suppliers: SupplierProfile[];
+  loading?: boolean;
+  onSort?: (field: keyof SupplierProfile) => void;
+  onRowClick?: (supplier: SupplierProfile) => void;
+  selectable?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
 }
 ```
 
 **Layout**:
+
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │ Columns: [ID] Name | Type | Status | Rating | Orders | Menu │
@@ -135,6 +141,7 @@ interface SupplierTableProps {
 ```
 
 **Features**:
+
 - Sortable columns (click header to sort)
 - Multi-select with checkbox
 - Inline actions (Edit, Delete, More)
@@ -149,16 +156,18 @@ interface SupplierTableProps {
 **Purpose**: Create or edit supplier information
 
 **Props**:
+
 ```typescript
 interface SupplierFormProps {
-  initialData?: SupplierFormData
-  onSubmit: (data: SupplierFormData) => Promise<void>
-  loading?: boolean
-  error?: string
+  initialData?: SupplierFormData;
+  onSubmit: (data: SupplierFormData) => Promise<void>;
+  loading?: boolean;
+  error?: string;
 }
 ```
 
 **Sections**:
+
 1. **Basic Information**
    - Name (required)
    - Type (dropdown)
@@ -183,6 +192,7 @@ interface SupplierFormProps {
    - Currency
 
 **Validation**:
+
 ```typescript
 - Name: min 2, max 100 chars
 - Email: valid email format
@@ -192,6 +202,7 @@ interface SupplierFormProps {
 ```
 
 **Design**:
+
 ```
 ┌─────────────────────────────────────────┐
 │ Basic Information                       │
@@ -219,15 +230,17 @@ interface SupplierFormProps {
 **Purpose**: Display supplier type with color coding
 
 **Props**:
+
 ```typescript
 interface TypeBadgeProps {
-  type: SupplierType
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'solid' | 'outline'
+  type: SupplierType;
+  size?: "sm" | "md" | "lg";
+  variant?: "solid" | "outline";
 }
 ```
 
 **Variants**:
+
 ```
 Solid (default):
 ┌─────────────┐
@@ -241,33 +254,34 @@ Outline:
 ```
 
 **Color Map**:
+
 ```typescript
 const typeColorMap = {
-  'GDS': {
-    bg: 'bg-purple-100',
-    text: 'text-purple-800',
-    border: 'border-purple-300',
-    dark: 'dark:bg-purple-900 dark:text-purple-100'
+  GDS: {
+    bg: "bg-purple-100",
+    text: "text-purple-800",
+    border: "border-purple-300",
+    dark: "dark:bg-purple-900 dark:text-purple-100",
   },
-  'Aggregator': {
-    bg: 'bg-blue-100',
-    text: 'text-blue-800',
-    border: 'border-blue-300',
-    dark: 'dark:bg-blue-900 dark:text-blue-100'
+  Aggregator: {
+    bg: "bg-blue-100",
+    text: "text-blue-800",
+    border: "border-blue-300",
+    dark: "dark:bg-blue-900 dark:text-blue-100",
   },
-  'Direct': {
-    bg: 'bg-orange-100',
-    text: 'text-orange-800',
-    border: 'border-orange-300',
-    dark: 'dark:bg-orange-900 dark:text-orange-100'
+  Direct: {
+    bg: "bg-orange-100",
+    text: "text-orange-800",
+    border: "border-orange-300",
+    dark: "dark:bg-orange-900 dark:text-orange-100",
   },
-  'Wholesaler': {
-    bg: 'bg-green-100',
-    text: 'text-green-800',
-    border: 'border-green-300',
-    dark: 'dark:bg-green-900 dark:text-green-100'
-  }
-}
+  Wholesaler: {
+    bg: "bg-green-100",
+    text: "text-green-800",
+    border: "border-green-300",
+    dark: "dark:bg-green-900 dark:text-green-100",
+  },
+};
 ```
 
 ---
@@ -277,15 +291,17 @@ const typeColorMap = {
 **Purpose**: Show supplier status (Active, Inactive, Suspended, Pending)
 
 **Props**:
+
 ```typescript
 interface StatusBadgeProps {
-  status: SupplierStatus
-  showIcon?: boolean
-  animate?: boolean
+  status: SupplierStatus;
+  showIcon?: boolean;
+  animate?: boolean;
 }
 ```
 
 **Visual States**:
+
 ```
 ✓ Active (Green)
 ┌────────────┐
@@ -315,15 +331,17 @@ interface StatusBadgeProps {
 **Purpose**: Show supplier rating and order count
 
 **Props**:
+
 ```typescript
 interface RatingDisplayProps {
-  rating: number  // 0-5
-  count: number   // Order count
-  variant?: 'compact' | 'full'
+  rating: number; // 0-5
+  count: number; // Order count
+  variant?: "compact" | "full";
 }
 ```
 
 **Variants**:
+
 ```
 Compact:
 ★★★★☆ (4.5) | 1,234 orders
@@ -342,15 +360,17 @@ Response Time: 1.2s avg
 **Purpose**: Display supplier system health
 
 **Props**:
+
 ```typescript
 interface HealthStatusProps {
-  health: SupplierHealthCheck
-  showTrend?: boolean
-  compact?: boolean
+  health: SupplierHealthCheck;
+  showTrend?: boolean;
+  compact?: boolean;
 }
 ```
 
 **States**:
+
 ```
 🟢 Healthy
   Response: 1.2s
@@ -375,17 +395,19 @@ interface HealthStatusProps {
 **Purpose**: Handle supplier document uploads with validation
 
 **Props**:
+
 ```typescript
 interface DocumentUploaderProps {
-  supplierId: string
-  documentType: DocumentType
-  onUpload?: (file: SupplierDocument) => void
-  maxSize?: number // in MB
-  acceptedTypes?: string[]
+  supplierId: string;
+  documentType: DocumentType;
+  onUpload?: (file: SupplierDocument) => void;
+  maxSize?: number; // in MB
+  acceptedTypes?: string[];
 }
 ```
 
 **Design**:
+
 ```
 Drag & Drop Area:
 ┌───────────────────────────────────┐
@@ -403,6 +425,7 @@ Upload Progress:
 ```
 
 **Features**:
+
 - Drag & drop support
 - Multiple file selection
 - Progress indication
@@ -418,18 +441,20 @@ Upload Progress:
 **Purpose**: Display and manage supplier products
 
 **Props**:
+
 ```typescript
 interface ProductTableProps {
-  products: SupplierProduct[]
-  supplierId: string
-  onAdd?: () => void
-  onEdit?: (product: SupplierProduct) => void
-  onDelete?: (productId: string) => void
-  loading?: boolean
+  products: SupplierProduct[];
+  supplierId: string;
+  onAdd?: () => void;
+  onEdit?: (product: SupplierProduct) => void;
+  onDelete?: (productId: string) => void;
+  loading?: boolean;
 }
 ```
 
 **Columns**:
+
 ```
 Product Name | Commission Type | Contact | Presence | Status | Actions
 ─────────────────────────────────────────────────────────────────────
@@ -445,16 +470,18 @@ Tours        │ API            │ Bob     │ Offline  │ ⊘ Inc  │ [Edit]
 **Purpose**: Display payment method information
 
 **Props**:
+
 ```typescript
 interface PaymentMethodCardProps {
-  payment: SupplierPayment
-  onEdit?: () => void
-  onDelete?: () => void
-  isDefault?: boolean
+  payment: SupplierPayment;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isDefault?: boolean;
 }
 ```
 
 **Design**:
+
 ```
 ┌────────────────────────────────┐
 │ 💳 Bank Transfer               │
@@ -470,6 +497,7 @@ interface PaymentMethodCardProps {
 ```
 
 **Status Indicators**:
+
 ```
 ✓ Active:    Green checkmark, full opacity
 ⚠ Expiring:  Yellow warning, 30 days left
@@ -484,22 +512,24 @@ interface PaymentMethodCardProps {
 **Purpose**: Display key supplier metrics
 
 **Props**:
+
 ```typescript
 interface StatsCardProps {
-  icon: React.ReactNode
-  title: string
-  value: string | number
+  icon: React.ReactNode;
+  title: string;
+  value: string | number;
   change?: {
-    value: number
-    type: 'increase' | 'decrease'
-    period: string
-  }
-  color?: 'blue' | 'green' | 'red' | 'purple' | 'orange'
-  loading?: boolean
+    value: number;
+    type: "increase" | "decrease";
+    period: string;
+  };
+  color?: "blue" | "green" | "red" | "purple" | "orange";
+  loading?: boolean;
 }
 ```
 
 **Design**:
+
 ```
 ┌────────────────────────┐
 │ 📊 Total Orders        │
@@ -518,14 +548,15 @@ With Chart:
 ```
 
 **Color Variants**:
+
 ```typescript
 const colorMap = {
-  'blue': 'bg-blue-50 text-blue-700 border-blue-200',
-  'green': 'bg-green-50 text-green-700 border-green-200',
-  'red': 'bg-red-50 text-red-700 border-red-200',
-  'purple': 'bg-purple-50 text-purple-700 border-purple-200',
-  'orange': 'bg-orange-50 text-orange-700 border-orange-200',
-}
+  blue: "bg-blue-50 text-blue-700 border-blue-200",
+  green: "bg-green-50 text-green-700 border-green-200",
+  red: "bg-red-50 text-red-700 border-red-200",
+  purple: "bg-purple-50 text-purple-700 border-purple-200",
+  orange: "bg-orange-50 text-orange-700 border-orange-200",
+};
 ```
 
 ---
@@ -535,14 +566,16 @@ const colorMap = {
 **Purpose**: Advanced filtering for supplier lists
 
 **Props**:
+
 ```typescript
 interface FilterPanelProps {
-  onFilterChange: (filters: SupplierListFilters) => void
-  defaultFilters?: SupplierListFilters
+  onFilterChange: (filters: SupplierListFilters) => void;
+  defaultFilters?: SupplierListFilters;
 }
 ```
 
 **Filter Options**:
+
 - Type (GDS, Aggregator, Direct, Wholesaler)
 - Status (Active, Inactive, Suspended, Pending)
 - Pricing Model (Commissionable, Net, Markup)
@@ -551,6 +584,7 @@ interface FilterPanelProps {
 - Date Range (Founded After/Before)
 
 **Design**:
+
 ```
 ┌─────────────────────────────┐
 │ Filters                  ✕  │
@@ -577,20 +611,22 @@ interface FilterPanelProps {
 **Purpose**: Confirmation before destructive actions
 
 **Props**:
+
 ```typescript
 interface ConfirmDialogProps {
-  title: string
-  message: string
-  confirmText?: string
-  cancelText?: string
-  destructive?: boolean
-  loading?: boolean
-  onConfirm: () => void
-  onCancel: () => void
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  destructive?: boolean;
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 ```
 
 **Example**:
+
 ```
 ┌─────────────────────────────────┐
 │ Delete Supplier?                │
@@ -612,17 +648,19 @@ interface ConfirmDialogProps {
 **Purpose**: Perform actions on multiple selected suppliers
 
 **Props**:
+
 ```typescript
 interface BulkActionBarProps {
-  selectedCount: number
-  onDelete?: () => void
-  onStatusChange?: (status: SupplierStatus) => void
-  onExport?: () => void
-  onCancel?: () => void
+  selectedCount: number;
+  onDelete?: () => void;
+  onStatusChange?: (status: SupplierStatus) => void;
+  onExport?: () => void;
+  onCancel?: () => void;
 }
 ```
 
 **Design**:
+
 ```
 ┌──────────────────────────────────────────────────┐
 │ ✓ 5 selected                                     │
@@ -637,6 +675,7 @@ interface BulkActionBarProps {
 **Purpose**: Show when no suppliers exist
 
 **Variants**:
+
 ```
 No Suppliers
 ┌────────────────────────────┐
@@ -670,6 +709,7 @@ No Results (Filtered)
 **Purpose**: Display during data loading
 
 **Variants**:
+
 ```
 Skeleton Card:
 ┌─────────────────────────┐
@@ -691,34 +731,34 @@ Spinner:
 
 ```typescript
 // Colors
-import { COLORS } from '@/theme/tokens'
+import { COLORS } from "@/theme/tokens";
 
 const statusColor = {
-  'Active': COLORS.success[500],
-  'Inactive': COLORS.neutral[400],
-  'Suspended': COLORS.error[500],
-  'Pending': COLORS.primary[500],
-}
+  Active: COLORS.success[500],
+  Inactive: COLORS.neutral[400],
+  Suspended: COLORS.error[500],
+  Pending: COLORS.primary[500],
+};
 
 // Typography
-import { TYPOGRAPHY } from '@/theme/tokens'
+import { TYPOGRAPHY } from "@/theme/tokens";
 
-const title = `font-${TYPOGRAPHY.fontWeight[600]} text-${TYPOGRAPHY.fontSize['lg']}`
+const title = `font-${TYPOGRAPHY.fontWeight[600]} text-${TYPOGRAPHY.fontSize["lg"]}`;
 
 // Spacing
-import { SPACING } from '@/theme/tokens'
+import { SPACING } from "@/theme/tokens";
 
-const padding = `p-${SPACING[4]}`  // 16px
+const padding = `p-${SPACING[4]}`; // 16px
 
 // Shadows
-import { SHADOWS } from '@/theme/tokens'
+import { SHADOWS } from "@/theme/tokens";
 
-const boxShadow = SHADOWS.lg  // elevation-lg shadow
+const boxShadow = SHADOWS.lg; // elevation-lg shadow
 
 // Animations
-import { ANIMATIONS } from '@/theme/tokens'
+import { ANIMATIONS } from "@/theme/tokens";
 
-const transition = 'transition-all duration-300 ease-out'
+const transition = "transition-all duration-300 ease-out";
 ```
 
 ---
@@ -726,6 +766,7 @@ const transition = 'transition-all duration-300 ease-out'
 ## 📱 Responsive Design
 
 **Breakpoints in use**:
+
 ```typescript
 xs: 320px   → Single column, full-width
 sm: 640px   → Single column, cards stacked
@@ -740,6 +781,7 @@ xl: 1280px  → 3-4 columns, all features
 ## ♿ Accessibility
 
 **Requirements for all components**:
+
 - Proper ARIA labels for icons
 - Keyboard navigation support (Tab, Enter, Space)
 - Color not as only indicator (use icons/text too)

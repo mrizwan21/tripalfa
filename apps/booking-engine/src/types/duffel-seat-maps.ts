@@ -1,9 +1,9 @@
 /**
  * Duffel Seat Maps API v2 Types
- * 
+ *
  * Based on Duffel API documentation:
  * https://duffel.com/docs/api/v2/seat-maps/get-seat-maps
- * 
+ *
  * A seat map includes the data for rendering seats in the relevant cabins,
  * along with their total cost and other information such as disclosures.
  */
@@ -33,15 +33,15 @@ export interface DuffelSeatService {
 
 /** Element type union */
 export type DuffelElementType =
-  | 'seat'
-  | 'empty'
-  | 'bassinet'
-  | 'exit_row'
-  | 'lavatory'
-  | 'galley'
-  | 'closet'
-  | 'stairs'
-  | 'restricted_seat_general';
+  | "seat"
+  | "empty"
+  | "bassinet"
+  | "exit_row"
+  | "lavatory"
+  | "galley"
+  | "closet"
+  | "stairs"
+  | "restricted_seat_general";
 
 /**
  * Base element interface
@@ -53,18 +53,18 @@ export interface DuffelBaseElement {
 /**
  * A seat for a passenger.
  * If the available_services list is empty ([]), the seat is unavailable.
- * 
+ *
  * Display: All seats should be displayed with the same static width.
  */
 export interface DuffelSeatElement extends DuffelBaseElement {
-  type: 'seat';
+  type: "seat";
   /** The designator used to uniquely identify the seat (e.g., "14B") */
   designator: string;
   /** A name describing the type of seat (e.g., "Exit row seat") */
   name: string | null;
   /** Terms, conditions or restrictions for this seat */
   disclosures: string[];
-  /** 
+  /**
    * Seats are considered a special kind of service.
    * There will be at most one service per seat per passenger.
    * A seat can only be booked for one passenger.
@@ -76,78 +76,78 @@ export interface DuffelSeatElement extends DuffelBaseElement {
 /**
  * A bassinet is a child's cradle.
  * This element will be aligned with the corresponding seat in the following row.
- * 
+ *
  * Display: Should have the same width as a seat for proper alignment.
  */
 export interface DuffelBassinetElement extends DuffelBaseElement {
-  type: 'bassinet';
+  type: "bassinet";
 }
 
 /**
  * An empty space used for padding in some non-standard seat arrangements.
- * 
+ *
  * Display: Should have the same dimensions as a seat for proper alignment.
  */
 export interface DuffelEmptyElement extends DuffelBaseElement {
-  type: 'empty';
+  type: "empty";
 }
 
 /**
  * An exit row represents the extra wide space used to reach aircraft exits,
  * and indicates the existence of an exit door.
- * 
+ *
  * Display: Should ideally fill or shrink to available space in a row section.
  * Displaying it with the same width as seat is also reasonable.
  */
 export interface DuffelExitRowElement extends DuffelBaseElement {
-  type: 'exit_row';
+  type: "exit_row";
 }
 
 /**
  * A lavatory for use by passengers.
- * 
+ *
  * Display: Should ideally fill or shrink to available space in a row section.
  */
 export interface DuffelLavatoryElement extends DuffelBaseElement {
-  type: 'lavatory';
+  type: "lavatory";
 }
 
 /**
  * A galley is the compartment where food is cooked or prepared.
  * Conventionally marked with a teacup symbol.
- * 
+ *
  * Display: Should ideally fill or shrink to available space in a row section.
  */
 export interface DuffelGalleyElement extends DuffelBaseElement {
-  type: 'galley';
+  type: "galley";
 }
 
 /**
  * A closet used for storage.
  * Conventionally marked with a clothes hanger symbol.
- * 
+ *
  * Display: Should ideally fill or shrink to available space in a row section.
  */
 export interface DuffelClosetElement extends DuffelBaseElement {
-  type: 'closet';
+  type: "closet";
 }
 
 /**
  * A set of stairs to another deck.
- * 
+ *
  * Display: Should ideally fill or shrink to available space in a row section.
  */
 export interface DuffelStairsElement extends DuffelBaseElement {
-  type: 'stairs';
+  type: "stairs";
 }
 
 /**
  * A seat with restrictions on who can book it.
- * 
+ *
  * Display: Should ideally fill or shrink to available space in a row section.
  */
 export interface DuffelRestrictedSeatElement extends DuffelBaseElement {
-  type: 'restricted_seat_general';
+  type: "restricted_seat_general";
 }
 
 /**
@@ -182,7 +182,7 @@ export interface DuffelCabinRowSection {
  * An element is something that takes up physical space such as a seat or an empty area.
  */
 export interface DuffelCabinRow {
-  /** 
+  /**
    * A list of sections.
    * Each row is divided into sections by one or more aisles.
    */
@@ -209,7 +209,11 @@ export interface DuffelWingPosition {
 // ============================================================================
 
 /** Cabin class enum */
-export type DuffelCabinClass = 'first' | 'business' | 'premium_economy' | 'economy';
+export type DuffelCabinClass =
+  | "first"
+  | "business"
+  | "premium_economy"
+  | "economy";
 
 /**
  * A cabin is a physical section of an aircraft that passengers travel in.
@@ -217,7 +221,7 @@ export type DuffelCabinClass = 'first' | 'business' | 'premium_economy' | 'econo
  * (for example an economy cabin versus a business class cabin).
  */
 export interface DuffelCabin {
-  /** 
+  /**
    * The number of aisles in this cabin.
    * If 1, each row is split into two sections.
    * If 2, each row is split into three sections.
@@ -225,18 +229,18 @@ export interface DuffelCabin {
   aisles: 1 | 2;
   /** The cabin class that the passenger will travel in on this segment */
   cabin_class: DuffelCabinClass | null;
-  /** 
+  /**
    * Level 0 is the main deck and level 1 is the upper deck above that,
    * which is found on some large aircraft.
    */
   deck: 0 | 1;
-  /** 
+  /**
    * A list of rows in this cabin.
    * Row sections are broken up by aisles.
    * Rows are ordered from front to back of the aircraft.
    */
   rows: DuffelCabinRow[];
-  /** 
+  /**
    * Where the wings of the aircraft are in relation to rows in the cabin.
    * Null when no rows of the cabin are overwing.
    */
@@ -258,7 +262,7 @@ export interface DuffelSeatMap {
   slice_id: string;
   /** Duffel's unique identifier for the segment */
   segment_id: string;
-  /** 
+  /**
    * The list of cabins in this seat map.
    * Cabins are ordered by deck from lowest to highest, and then within
    * each deck from the front to back of the aircraft.

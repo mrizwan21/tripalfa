@@ -5,24 +5,30 @@
 
 // Notification Types
 export type NotificationType =
-  | 'booking_created'
-  | 'booking_confirmed'
-  | 'booking_cancelled'
-  | 'payment_received'
-  | 'payment_reminder'
-  | 'agent_assigned'
-  | 'booking_reminder'
-  | 'price_alert'
-  | 'itinerary_change'
-  | 'amendment'
-  | 'ssr_update'
-  | 'system';
+  | "booking_created"
+  | "booking_confirmed"
+  | "booking_cancelled"
+  | "payment_received"
+  | "payment_reminder"
+  | "agent_assigned"
+  | "booking_reminder"
+  | "price_alert"
+  | "itinerary_change"
+  | "amendment"
+  | "ssr_update"
+  | "system";
 
-export type NotificationStatus = 'pending' | 'sent' | 'failed' | 'delivered' | 'read' | 'opened';
+export type NotificationStatus =
+  | "pending"
+  | "sent"
+  | "failed"
+  | "delivered"
+  | "read"
+  | "opened";
 
-export type NotificationChannelType = 'email' | 'sms' | 'push' | 'in_app';
+export type NotificationChannelType = "email" | "sms" | "push" | "in_app";
 
-export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type NotificationPriority = "low" | "medium" | "high" | "urgent";
 
 // Core Notification Interfaces
 export interface Notification {
@@ -93,14 +99,14 @@ export type EmailConfig = BrevoEmailConfig | SMTPEmailConfig;
  * Type guard to check if config is Brevo config
  */
 export function isBrevoConfig(config: EmailConfig): config is BrevoEmailConfig {
-  return 'apiKey' in config;
+  return "apiKey" in config;
 }
 
 /**
  * Type guard to check if config is SMTP config
  */
 export function isSMTPConfig(config: EmailConfig): config is SMTPEmailConfig {
-  return 'host' in config && 'port' in config;
+  return "host" in config && "port" in config;
 }
 
 export interface SMSConfig {
@@ -196,13 +202,20 @@ export interface NotificationChannel {
 // Service Interface
 export interface INotificationService {
   sendNotification(payload: NotificationPayload): Promise<string>;
-  getNotifications(userId: string, limit: number, offset: number): Promise<Notification[]>;
+  getNotifications(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Notification[]>;
   markAsRead(notificationId: string): Promise<void>;
   markAllAsRead(userId: string): Promise<void>;
   deleteNotification(notificationId: string): Promise<void>;
   getUnreadCount(userId: string): Promise<number>;
   getPreferences(userId: string): Promise<NotificationPreferences>;
-  updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<void>;
+  updatePreferences(
+    userId: string,
+    preferences: Partial<NotificationPreferences>,
+  ): Promise<void>;
 }
 
 // Logging Interface
@@ -227,7 +240,7 @@ export interface NotificationFilterOptions {
   limit?: number;
   offset?: number;
   sortBy?: keyof Notification;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 // Push Subscription
@@ -247,37 +260,40 @@ export class NotificationError extends Error {
   constructor(
     message: string,
     public code: string,
-    public statusCode: number = 500
+    public statusCode: number = 500,
   ) {
     super(message);
-    this.name = 'NotificationError';
+    this.name = "NotificationError";
   }
 }
 
 export class ChannelError extends NotificationError {
-  constructor(message: string, public channel: NotificationChannelType) {
-    super(message, 'CHANNEL_ERROR', 503);
-    this.name = 'ChannelError';
+  constructor(
+    message: string,
+    public channel: NotificationChannelType,
+  ) {
+    super(message, "CHANNEL_ERROR", 503);
+    this.name = "ChannelError";
   }
 }
 
 export class ValidationError extends NotificationError {
   constructor(message: string) {
-    super(message, 'VALIDATION_ERROR', 400);
-    this.name = 'ValidationError';
+    super(message, "VALIDATION_ERROR", 400);
+    this.name = "ValidationError";
   }
 }
 
 export class NotFoundError extends NotificationError {
   constructor(message: string) {
-    super(message, 'NOT_FOUND', 404);
-    this.name = 'NotFoundError';
+    super(message, "NOT_FOUND", 404);
+    this.name = "NotFoundError";
   }
 }
 
 export class AuthorizationError extends NotificationError {
   constructor(message: string) {
-    super(message, 'UNAUTHORIZED', 401);
-    this.name = 'AuthorizationError';
+    super(message, "UNAUTHORIZED", 401);
+    this.name = "AuthorizationError";
   }
 }

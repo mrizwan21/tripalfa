@@ -2,16 +2,23 @@
  * Destination Content Card Component
  * Displays travel guide content from Wikivoyage
  */
-import React, { useState } from 'react';
-import { MapPin, BookOpen, ChevronDown, ChevronUp, Loader2, ExternalLink } from 'lucide-react';
-import { DestinationContent } from '../api/wikivoyageApi';
+import React, { useState } from "react";
+import {
+  MapPin,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  ExternalLink,
+} from "lucide-react";
+import { DestinationContent } from "../api/wikivoyageApi";
 
 interface DestinationContentCardProps {
   destination: string;
   content: DestinationContent | null;
   isLoading?: boolean;
   error?: Error | null;
-  variant?: 'default' | 'compact' | 'featured';
+  variant?: "default" | "compact" | "featured";
   showSections?: boolean;
   onExplore?: () => void;
 }
@@ -21,7 +28,7 @@ export function DestinationContentCard({
   content,
   isLoading = false,
   error = null,
-  variant = 'default',
+  variant = "default",
   showSections = true,
   onExplore,
 }: DestinationContentCardProps) {
@@ -32,7 +39,7 @@ export function DestinationContentCard({
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-          <div className="flex-1">
+          <div className="flex-1 gap-4">
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
             <div className="h-3 bg-gray-200 rounded w-1/4"></div>
           </div>
@@ -50,18 +57,19 @@ export function DestinationContentCard({
     return null;
   }
 
-  const truncatedDescription = content.description.length > 150
-    ? content.description.slice(0, 150) + '...'
-    : content.description;
+  const truncatedDescription =
+    content.description.length > 150
+      ? content.description.slice(0, 150) + "..."
+      : content.description;
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-100">
         <div className="flex items-start gap-3">
           <div className="p-2 bg-white rounded-lg shadow-sm">
             <BookOpen className="w-4 h-4 text-indigo-600" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 gap-4">
             <h4 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
               {content.title}
               <a
@@ -73,16 +81,18 @@ export function DestinationContentCard({
                 <ExternalLink className="w-3 h-3" />
               </a>
             </h4>
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{truncatedDescription}</p>
+            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+              {truncatedDescription}
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  if (variant === 'featured') {
+  if (variant === "featured") {
     return (
-      <div className="relative bg-gradient-to-br from-[#6366F1] to-[#A855F7] rounded-2xl overflow-hidden shadow-xl">
+      <div className="relative bg-gradient-to-br from-[hsl(var(--secondary))] to-[hsl(var(--accent))] rounded-2xl overflow-hidden shadow-xl">
         {content.imageUrl && (
           <div className="absolute inset-0">
             <img
@@ -95,7 +105,9 @@ export function DestinationContentCard({
         <div className="relative p-8">
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="w-5 h-5 text-white" />
-            <h3 className="text-2xl font-bold text-white">{content.title}</h3>
+            <h3 className="text-2xl font-bold text-white text-xl font-semibold tracking-tight">
+              {content.title}
+            </h3>
             <a
               href={`https://en.wikivoyage.org/wiki/${encodeURIComponent(content.title)}`}
               target="_blank"
@@ -108,35 +120,52 @@ export function DestinationContentCard({
           <p className="text-white/90 text-sm leading-relaxed mb-6">
             {expanded ? content.extract : truncatedDescription}
           </p>
-          
-          {showSections && (content.see || content.do || content.eat || content.sleep) && (
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {content.see && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">See</h5>
-                  <p className="text-white/80 text-xs line-clamp-2">{content.see}</p>
-                </div>
-              )}
-              {content.do && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">Do</h5>
-                  <p className="text-white/80 text-xs line-clamp-2">{content.do}</p>
-                </div>
-              )}
-              {content.eat && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">Eat</h5>
-                  <p className="text-white/80 text-xs line-clamp-2">{content.eat}</p>
-                </div>
-              )}
-              {content.sleep && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                  <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">Sleep</h5>
-                  <p className="text-white/80 text-xs line-clamp-2">{content.sleep}</p>
-                </div>
-              )}
-            </div>
-          )}
+
+          {showSections &&
+            (content.see || content.do || content.eat || content.sleep) && (
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {content.see && (
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">
+                      See
+                    </h5>
+                    <p className="text-white/80 text-xs line-clamp-2">
+                      {content.see}
+                    </p>
+                  </div>
+                )}
+                {content.do && (
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">
+                      Do
+                    </h5>
+                    <p className="text-white/80 text-xs line-clamp-2">
+                      {content.do}
+                    </p>
+                  </div>
+                )}
+                {content.eat && (
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">
+                      Eat
+                    </h5>
+                    <p className="text-white/80 text-xs line-clamp-2">
+                      {content.eat}
+                    </p>
+                  </div>
+                )}
+                {content.sleep && (
+                  <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                    <h5 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">
+                      Sleep
+                    </h5>
+                    <p className="text-white/80 text-xs line-clamp-2">
+                      {content.sleep}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
           <div className="flex items-center gap-4">
             <button
@@ -156,7 +185,7 @@ export function DestinationContentCard({
             {onExplore && (
               <button
                 onClick={onExplore}
-                className="bg-white text-[#6366F1] px-4 py-2 rounded-lg font-bold text-sm hover:bg-opacity-90 transition"
+                className="bg-white text-[hsl(var(--secondary))] px-4 py-2 rounded-lg font-bold text-sm hover:bg-opacity-90 transition"
               >
                 Explore
               </button>
@@ -171,7 +200,7 @@ export function DestinationContentCard({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-2">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-50 rounded-lg">
               <BookOpen className="w-5 h-5 text-indigo-600" />
@@ -195,42 +224,44 @@ export function DestinationContentCard({
           {expanded ? content.extract : truncatedDescription}
         </p>
 
-        {showSections && expanded && (content.see || content.do || content.eat || content.sleep) && (
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            {content.see && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                  <span className="text-lg">👁️</span> See
-                </h5>
-                <p className="text-gray-600 text-xs">{content.see}</p>
-              </div>
-            )}
-            {content.do && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                  <span className="text-lg">🎯</span> Do
-                </h5>
-                <p className="text-gray-600 text-xs">{content.do}</p>
-              </div>
-            )}
-            {content.eat && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                  <span className="text-lg">🍽️</span> Eat
-                </h5>
-                <p className="text-gray-600 text-xs">{content.eat}</p>
-              </div>
-            )}
-            {content.sleep && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
-                  <span className="text-lg">🛏️</span> Sleep
-                </h5>
-                <p className="text-gray-600 text-xs">{content.sleep}</p>
-              </div>
-            )}
-          </div>
-        )}
+        {showSections &&
+          expanded &&
+          (content.see || content.do || content.eat || content.sleep) && (
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              {content.see && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
+                    <span className="text-lg">👁️</span> See
+                  </h5>
+                  <p className="text-gray-600 text-xs">{content.see}</p>
+                </div>
+              )}
+              {content.do && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
+                    <span className="text-lg">🎯</span> Do
+                  </h5>
+                  <p className="text-gray-600 text-xs">{content.do}</p>
+                </div>
+              )}
+              {content.eat && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
+                    <span className="text-lg">🍽️</span> Eat
+                  </h5>
+                  <p className="text-gray-600 text-xs">{content.eat}</p>
+                </div>
+              )}
+              {content.sleep && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h5 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-2">
+                    <span className="text-lg">🛏️</span> Sleep
+                  </h5>
+                  <p className="text-gray-600 text-xs">{content.sleep}</p>
+                </div>
+              )}
+            </div>
+          )}
 
         <button
           onClick={() => setExpanded(!expanded)}
@@ -269,10 +300,14 @@ export function DestinationContentSection({
   isLoading = false,
   onDestinationClick,
 }: DestinationContentSectionProps) {
-  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(
+    null,
+  );
 
   const guides = Array.from(destinationGuides.entries());
-  const selectedGuide = selectedDestination ? destinationGuides.get(selectedDestination) : null;
+  const selectedGuide = selectedDestination
+    ? destinationGuides.get(selectedDestination)
+    : null;
 
   if (guides.length === 0 && !isLoading) {
     return null;
@@ -280,7 +315,7 @@ export function DestinationContentSection({
 
   return (
     <section className="container mx-auto px-4 py-12">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 gap-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
           {subtitle && <p className="text-gray-500 text-sm mt-1">{subtitle}</p>}
@@ -292,9 +327,11 @@ export function DestinationContentSection({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-12 gap-2">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-          <span className="ml-3 text-gray-600">Loading destination guides...</span>
+          <span className="ml-3 text-gray-600">
+            Loading destination guides...
+          </span>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -307,15 +344,17 @@ export function DestinationContentSection({
                   onClick={() => setSelectedDestination(name)}
                   className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
                     selectedDestination === name
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'hover:bg-gray-50 text-gray-700'
+                      ? "bg-indigo-50 text-indigo-700"
+                      : "hover:bg-gray-50 text-gray-700"
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <MapPin className="w-4 h-4 text-indigo-500" />
                     <div>
                       <p className="font-medium text-sm">{guide.title}</p>
-                      <p className="text-xs text-gray-500 line-clamp-1">{guide.description}</p>
+                      <p className="text-xs text-gray-500 line-clamp-1">
+                        {guide.description}
+                      </p>
                     </div>
                   </div>
                 </button>
@@ -333,10 +372,12 @@ export function DestinationContentSection({
                 onExplore={() => onDestinationClick?.(selectedDestination!)}
               />
             ) : (
-              <div className="bg-gray-50 rounded-xl p-8 text-center h-full flex items-center justify-center">
+              <div className="bg-gray-50 rounded-xl p-8 text-center h-full flex items-center justify-center gap-2">
                 <div>
                   <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">Select a destination to explore</p>
+                  <p className="text-gray-500">
+                    Select a destination to explore
+                  </p>
                 </div>
               </div>
             )}

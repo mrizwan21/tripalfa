@@ -1,7 +1,7 @@
 /**
  * User Payment Dashboard - Main Container
  * Displays customer's payment history, wallet, credits, and bookings
- * 
+ *
  * Features:
  * - Tab-based navigation
  * - Payment history view
@@ -11,15 +11,17 @@
  * - Refund tracking
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FC } from 'react';
-import PaymentHistoryPanel from './PaymentHistoryPanel';
-import WalletManagementPanel from './WalletManagementPanel';
-import AirlineCreditsPanel from './AirlineCreditsPanel';
-import BookingPaymentStatusPanel from './BookingPaymentStatusPanel';
-import RefundStatusPanel from './RefundStatusPanel';
+import React, { useState, useEffect } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
+import PaymentHistoryPanel from "./PaymentHistoryPanel";
+import WalletManagementPanel from "./WalletManagementPanel";
+import AirlineCreditsPanel from "./AirlineCreditsPanel";
+import BookingPaymentStatusPanel from "./BookingPaymentStatusPanel";
+import RefundStatusPanel from "./RefundStatusPanel";
+import { Button } from "@/components/ui/button";
 
-type DashboardTab = 'overview' | 'payments' | 'wallet' | 'credits' | 'refunds';
+type DashboardTab = "overview" | "payments" | "wallet" | "credits" | "refunds";
 
 interface DashboardStats {
   totalSpent: number;
@@ -39,7 +41,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
   customerId,
   onNavigateToBooking,
 }) => {
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,19 +59,19 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
         `/api/customers/${customerId}/payment-dashboard`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${getStoredAuthToken()}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats');
+        throw new Error("Failed to fetch dashboard stats");
       }
 
       const data = await response.json();
       setStats(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
     } finally {
       setLoading(false);
@@ -81,14 +83,16 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
       {/* Header */}
       <div className="dashboard-header">
         <h1>Payment Dashboard</h1>
-        <button
+        <Button
+          variant="outline"
+          size="default"
           className="refresh-btn"
           onClick={fetchDashboardStats}
           disabled={loading}
           title="Refresh data"
         >
-          {loading ? '⟳' : '↻'}
-        </button>
+          {loading ? "⟳" : "↻"}
+        </Button>
       </div>
 
       {/* Global Error */}
@@ -96,7 +100,13 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
         <div className="error-banner">
           <span>⚠️</span>
           <p>{error}</p>
-          <button onClick={fetchDashboardStats}>Retry</button>
+          <Button
+            variant="outline"
+            size="default"
+            onClick={fetchDashboardStats}
+          >
+            Retry
+          </Button>
         </div>
       )}
 
@@ -155,63 +165,79 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
       {!loading && (
         <>
           <div className="dashboard-tabs">
-            <button
-              className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('overview')}
+            <Button
+              variant="outline"
+              size="default"
+              className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
+              onClick={() => setActiveTab("overview")}
             >
               Overview
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
-              onClick={() => setActiveTab('payments')}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`tab-btn ${activeTab === "payments" ? "active" : ""}`}
+              onClick={() => setActiveTab("payments")}
             >
               Payment History
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
-              onClick={() => setActiveTab('wallet')}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`tab-btn ${activeTab === "wallet" ? "active" : ""}`}
+              onClick={() => setActiveTab("wallet")}
             >
               Wallet
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'credits' ? 'active' : ''}`}
-              onClick={() => setActiveTab('credits')}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`tab-btn ${activeTab === "credits" ? "active" : ""}`}
+              onClick={() => setActiveTab("credits")}
             >
               Airline Credits
-            </button>
-            <button
-              className={`tab-btn ${activeTab === 'refunds' ? 'active' : ''}`}
-              onClick={() => setActiveTab('refunds')}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`tab-btn ${activeTab === "refunds" ? "active" : ""}`}
+              onClick={() => setActiveTab("refunds")}
             >
               Refunds
-            </button>
+            </Button>
           </div>
 
           {/* Tab Content */}
           <div className="dashboard-content">
-            {activeTab === 'overview' && (
+            {activeTab === "overview" && (
               <div className="overview-tab">
                 <div className="overview-section">
                   <h2>Quick Links</h2>
                   <div className="quick-links">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="default"
                       className="quick-link-btn"
-                      onClick={() => setActiveTab('wallet')}
+                      onClick={() => setActiveTab("wallet")}
                     >
                       💰 Add Funds to Wallet
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="default"
                       className="quick-link-btn"
-                      onClick={() => setActiveTab('payments')}
+                      onClick={() => setActiveTab("payments")}
                     >
                       📊 View Payment History
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="default"
                       className="quick-link-btn"
-                      onClick={() => setActiveTab('credits')}
+                      onClick={() => setActiveTab("credits")}
                     >
                       🎫 Manage Credits
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -222,22 +248,22 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
               </div>
             )}
 
-            {activeTab === 'payments' && (
+            {activeTab === "payments" && (
               <PaymentHistoryPanel customerId={customerId} />
             )}
 
-            {activeTab === 'wallet' && (
+            {activeTab === "wallet" && (
               <WalletManagementPanel
                 customerId={customerId}
                 onFundsAdded={fetchDashboardStats}
               />
             )}
 
-            {activeTab === 'credits' && (
+            {activeTab === "credits" && (
               <AirlineCreditsPanel customerId={customerId} />
             )}
 
-            {activeTab === 'refunds' && (
+            {activeTab === "refunds" && (
               <RefundStatusPanel customerId={customerId} />
             )}
           </div>
@@ -256,7 +282,7 @@ const styles = `
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background: #f5f5f5;
+  background: hsl(var(--muted));
   min-height: 100vh;
 }
 
@@ -272,13 +298,13 @@ const styles = `
   margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .refresh-btn {
   padding: 10px 16px;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   cursor: pointer;
   font-size: 18px;
@@ -286,7 +312,7 @@ const styles = `
 }
 
 .refresh-btn:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: hsl(var(--muted));
 }
 
 .refresh-btn:disabled {
@@ -299,24 +325,24 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #ffebee;
-  border-left: 4px solid #c62828;
+  background: hsl(var(--destructive) / 0.12);
+  border-left: 4px solid hsl(var(--destructive));
   border-radius: 6px;
   margin-bottom: 20px;
 }
 
 .error-banner p {
   margin: 0;
-  color: #c62828;
+  color: hsl(var(--destructive));
   flex: 1;
 }
 
 .error-banner button {
   padding: 6px 12px;
   background: white;
-  border: 1px solid #c62828;
+  border: 1px solid hsl(var(--destructive));
   border-radius: 4px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   cursor: pointer;
   font-size: 12px;
 }
@@ -342,13 +368,13 @@ const styles = `
 }
 
 .stat-card.warning {
-  background: #fff3cd;
-  border-left: 4px solid #ffc107;
+  background: hsl(var(--secondary) / 0.14);
+  border-left: 4px solid hsl(var(--secondary));
 }
 
 .stat-label {
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-weight: 600;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -357,13 +383,13 @@ const styles = `
 .stat-value {
   font-size: 24px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
   margin-bottom: 4px;
 }
 
 .stat-description {
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Loading Container */
@@ -380,8 +406,8 @@ const styles = `
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #f0f0f0;
-  border-top: 4px solid #007bff;
+  border: 4px solid hsl(var(--muted));
+  border-top: 4px solid hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -393,7 +419,7 @@ const styles = `
 }
 
 .loading-container p {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
 }
 
@@ -402,7 +428,7 @@ const styles = `
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid hsl(var(--border));
   overflow-x: auto;
 }
 
@@ -411,7 +437,7 @@ const styles = `
   background: transparent;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -420,12 +446,12 @@ const styles = `
 }
 
 .tab-btn:hover {
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .tab-btn.active {
-  color: #007bff;
-  border-bottom-color: #007bff;
+  color: hsl(var(--primary));
+  border-bottom-color: hsl(var(--primary));
 }
 
 /* Tab Content */
@@ -460,7 +486,7 @@ const styles = `
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .quick-links {
@@ -471,19 +497,19 @@ const styles = `
 
 .quick-link-btn {
   padding: 16px;
-  background: linear-gradient(135deg, #e3f2fd, #f5f5f5);
-  border: 1px solid #ddd;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--muted)));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  color: #007bff;
+  color: hsl(var(--primary));
   transition: all 0.2s;
 }
 
 .quick-link-btn:hover {
-  background: linear-gradient(135deg, #bbdefb, #eeeeee);
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--muted)));
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.2);
 }
 
 /* Responsive */

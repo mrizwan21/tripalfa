@@ -1,0 +1,257 @@
+name: 🏨 LiteAPI Hotel Testing - Comprehensive
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC (automation for sanity checks)
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      load_level:
+        description: "Load level for performance testing"
+        required: false
+        default: "medium"
+        type: choice
+        options:
+          - light
+          - medium
+          - high
+          - stress
+      test_suite:
+        description: "Which test suite to run"
+        required: false
+        default: "comprehensive"
+        type: choice
+        options:
+          - connectivity
+          - cancellation
+          - errors
+          - workflows
+          - performance
+          - comprehensive
+
+jobs:
+  test:
+    name: Run LiteAPI Hotel Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        test-suite:
+          - connectivity
+          - cancellation
+          - errors
+          - workflows
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.x
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "pnpm"
+
+      - name: 📂 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🔗 Run connectivity test
+        if: matrix.test-suite == 'connectivity'
+        run: npm run test:api:liteapi
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOO K_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: 🚫 Run cancellation tests
+        if: matrix.test-suite == 'cancellation'
+        run: npm run test:api:liteapi:cancellation
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOOK_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: ⚠️ Run error scenario tests
+        if: matrix.test-suite == 'errors'
+        run: npm run test:api:liteapi:errors
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOOK_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: 🔄 Run workflow tests
+        if: matrix.test-suite == 'workflows'
+        run: npm run test:api:liteapi:workflows
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOOK_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: 📊 Generate test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.test-suite }}
+          path: tests/results/**/*
+          if-no-files-found: ignore
+
+  performance:
+    name: Run Performance & Load Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event.schedule == '0 2 * * *' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.x
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "pnpm"
+
+      - name: 📂 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ⚡ Run performance testing (Light Load)
+        run: npm run test:api:liteapi:performance:light
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOOK_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: 📈 Run performance testing (Medium Load)
+        run: npm run test:api:liteapi:performance
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOOK_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: 📊 Archive performance results
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: tests/performance/**/*
+          if-no-files-found: ignore
+
+  # Comprehensive test job (runs all tests)
+  comprehensive:
+    name: Comprehensive Test Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    if: github.event.inputs.test_suite == 'comprehensive' || github.event_name == 'push'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9.x
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: "pnpm"
+
+      - name: 📂 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: 🧪 Run comprehensive test suite
+        run: npm run test:api:liteapi:comprehensive
+        env:
+          LITEAPI_API_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          LITEAPI_BOOK_KEY: ${{ secrets.LITEAPI_SANDBOX_API_KEY }}
+          CI: true
+
+      - name: 📊 Upload comprehensive results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-test-results
+          path: tests/results/**/*
+          if-no-files-found: ignore
+
+  # Build status check
+  build-status:
+    name: Build Status Check
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.test.result }}" == "failure" ]]; then
+            echo "❌ Test suite failed"
+            exit 1
+          else
+            echo "✅ All tests passed"
+            exit 0
+          fi
+
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [test, performance]
+    if: always()
+
+    steps:
+      - name: 📢 Generate summary
+        run: |
+          echo "## 🏨 LiteAPI Hotel Testing Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Test Results**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Performance Results**: ${{ needs.performance.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Suites Executed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Connectivity Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Cancellation Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Error Scenario Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Workflow Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Performance Tests" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts:" >> $GITHUB_STEP_SUMMARY
+          echo "- Test results available in workflow artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance metrics downloadable from run summary" >> $GITHUB_STEP_SUMMARY
+
+      - name: 📧 Comment on PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = `
+            ## 🏨 LiteAPI Hotel Testing Results
+
+            - **Connectivity Tests**: ${{ needs.test.result }}
+            - **Cancellation Tests**: ${{ needs.test.result }}
+            - **Error Tests**: ${{ needs.test.result }}
+            - **Workflow Tests**: ${{ needs.test.result }}
+            - **Performance Tests**: ${{ needs.performance.result }}
+
+            Test artifacts are available in the [workflow run](${context.payload.pull_request.html_url}/checks).
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

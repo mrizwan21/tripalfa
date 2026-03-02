@@ -3,9 +3,9 @@
  * Radio button group for sort options
  */
 
-import * as React from 'react';
-import { Circle } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import * as React from "react";
+import { Circle } from "lucide-react";
+import { cn } from "../../lib/utils";
 
 interface RadioGroupContextValue {
   value: string;
@@ -14,7 +14,9 @@ interface RadioGroupContextValue {
   disabled?: boolean;
 }
 
-const RadioGroupContext = React.createContext<RadioGroupContextValue | null>(null);
+const RadioGroupContext = React.createContext<RadioGroupContextValue | null>(
+  null,
+);
 
 export interface RadioGroupProps {
   value?: string;
@@ -27,9 +29,23 @@ export interface RadioGroupProps {
 }
 
 const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
-  ({ className, value: controlledValue, onValueChange, defaultValue, name, disabled, children }, ref) => {
-    const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue || '');
-    const value = controlledValue !== undefined ? controlledValue : uncontrolledValue;
+  (
+    {
+      className,
+      value: controlledValue,
+      onValueChange,
+      defaultValue,
+      name,
+      disabled,
+      children,
+    },
+    ref,
+  ) => {
+    const [uncontrolledValue, setUncontrolledValue] = React.useState(
+      defaultValue || "",
+    );
+    const value =
+      controlledValue !== undefined ? controlledValue : uncontrolledValue;
 
     const handleValueChange = React.useCallback(
       (newValue: string) => {
@@ -38,7 +54,7 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
         }
         onValueChange?.(newValue);
       },
-      [controlledValue, onValueChange]
+      [controlledValue, onValueChange],
     );
 
     const contextValue = React.useMemo(
@@ -48,20 +64,20 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
         name: name || `radio-group-${React.useId()}`,
         disabled,
       }),
-      [value, handleValueChange, name, disabled]
+      [value, handleValueChange, name, disabled],
     );
 
     return (
       <RadioGroupContext.Provider value={contextValue}>
-        <div ref={ref} className={cn('space-y-2', className)} role="radiogroup">
+        <div ref={ref} className={cn("space-y-2", className)} role="radiogroup">
           {children}
         </div>
       </RadioGroupContext.Provider>
     );
-  }
+  },
 );
 
-RadioGroup.displayName = 'RadioGroup';
+RadioGroup.displayName = "RadioGroup";
 
 export interface RadioGroupItemProps {
   value: string;
@@ -73,14 +89,15 @@ export interface RadioGroupItemProps {
 const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
   ({ className, value: itemValue, id, disabled }, ref) => {
     const context = React.useContext(RadioGroupContext);
-    if (!context) throw new Error('RadioGroupItem must be used within RadioGroup');
+    if (!context)
+      throw new Error("RadioGroupItem must be used within RadioGroup");
 
     const { value, onValueChange, name, disabled: groupDisabled } = context;
     const isChecked = value === itemValue;
     const isDisabled = disabled || groupDisabled;
 
     return (
-      <div className="relative inline-flex items-center">
+      <div className="relative inline-flex items-center gap-2">
         <input
           ref={ref}
           type="radio"
@@ -94,24 +111,26 @@ const RadioGroupItem = React.forwardRef<HTMLInputElement, RadioGroupItemProps>(
         />
         <div
           className={cn(
-            'h-4 w-4 rounded-full border border-gray-300 transition-all cursor-pointer',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#152467] focus-visible:ring-offset-2',
-            'disabled:cursor-not-allowed disabled:opacity-50',
-            isChecked ? 'border-[#152467]' : 'bg-white hover:border-gray-400',
-            isDisabled && 'cursor-not-allowed opacity-50',
-            className
+            "h-4 w-4 rounded-full border border-gray-300 transition-all cursor-pointer",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary))] focus-visible:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            isChecked
+              ? "border-[hsl(var(--primary))]"
+              : "bg-white hover:border-gray-400",
+            isDisabled && "cursor-not-allowed opacity-50",
+            className,
           )}
           onClick={() => !isDisabled && onValueChange(itemValue)}
         >
           {isChecked && (
-            <Circle className="h-2.5 w-2.5 fill-[#152467] text-[#152467]" />
+            <Circle className="h-2.5 w-2.5 fill-[hsl(var(--primary))] text-[hsl(var(--primary))]" />
           )}
         </div>
       </div>
     );
-  }
+  },
 );
 
-RadioGroupItem.displayName = 'RadioGroupItem';
+RadioGroupItem.displayName = "RadioGroupItem";
 
 export { RadioGroup, RadioGroupItem };

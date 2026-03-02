@@ -1,7 +1,7 @@
 /**
  * Booking Payment Status Panel
  * Displays upcoming bookings and their payment status
- * 
+ *
  * Features:
  * - List all upcoming bookings
  * - Show payment status indicators
@@ -9,8 +9,10 @@
  * - Payment breakdown view
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FC } from 'react';
+import React, { useState, useEffect } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
+import { Button } from "@/components/ui/button";
 
 interface BookingDetails {
   id: string;
@@ -27,7 +29,7 @@ interface BookingDetails {
   passengers: number;
   totalAmount: number;
   currency: string;
-  paymentStatus: 'paid' | 'pending' | 'failed' | 'partial';
+  paymentStatus: "paid" | "pending" | "failed" | "partial";
   paymentBreakdown?: {
     walletAmount: number;
     creditAmount: number;
@@ -51,7 +53,7 @@ interface BookingPaymentStatusPanelProps {
   onNavigateToBooking?: (bookingId: string) => void;
 }
 
-type SortField = 'date' | 'amount' | 'status';
+type SortField = "date" | "amount" | "status";
 
 const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
   customerId,
@@ -60,8 +62,8 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
   const [data, setData] = useState<BookingPaymentStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
 
   useEffect(() => {
@@ -77,19 +79,19 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
         `/api/customers/${customerId}/booking-payment-status`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${getStoredAuthToken()}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch booking status');
+        throw new Error("Failed to fetch booking status");
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
     } finally {
       setLoading(false);
@@ -98,10 +100,10 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
       setSortField(field);
-      setSortOrder('asc');
+      setSortOrder("asc");
     }
   };
 
@@ -112,45 +114,67 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
       let comparison = 0;
 
       switch (sortField) {
-        case 'date':
-          comparison = new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime();
+        case "date":
+          comparison =
+            new Date(a.departureDate).getTime() -
+            new Date(b.departureDate).getTime();
           break;
-        case 'amount':
+        case "amount":
           comparison = a.totalAmount - b.totalAmount;
           break;
-        case 'status':
+        case "status":
           comparison = a.paymentStatus.localeCompare(b.paymentStatus);
           break;
       }
 
-      return sortOrder === 'asc' ? comparison : -comparison;
+      return sortOrder === "asc" ? comparison : -comparison;
     });
 
     return sorted;
   };
 
-  const getStatusConfig = (status: BookingDetails['paymentStatus']) => {
+  const getStatusConfig = (status: BookingDetails["paymentStatus"]) => {
     const config = {
-      paid: { label: '✓ Paid', color: '#4caf50', icon: '✓', bgColor: '#e8f5e9' },
-      pending: { label: '⏳ Pending', color: '#ff9800', icon: '⏳', bgColor: '#fff3e0' },
-      failed: { label: '✕ Failed', color: '#f44336', icon: '✕', bgColor: '#ffebee' },
-      partial: { label: '◐ Partial', color: '#2196f3', icon: '◐', bgColor: '#e3f2fd' },
+      paid: {
+        label: "✓ Paid",
+        color: "hsl(var(--primary))",
+        icon: "✓",
+        bgColor: "hsl(var(--primary) / 0.15)",
+      },
+      pending: {
+        label: "⏳ Pending",
+        color: "hsl(var(--accent-foreground))",
+        icon: "⏳",
+        bgColor: "hsl(var(--accent) / 0.7)",
+      },
+      failed: {
+        label: "✕ Failed",
+        color: "hsl(var(--destructive))",
+        icon: "✕",
+        bgColor: "hsl(var(--destructive) / 0.15)",
+      },
+      partial: {
+        label: "◐ Partial",
+        color: "hsl(var(--secondary-foreground))",
+        icon: "◐",
+        bgColor: "hsl(var(--secondary) / 0.7)",
+      },
     };
     return config[status];
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
     });
   };
@@ -163,7 +187,9 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <button onClick={fetchBookingStatus}>Retry</button>
+          <Button variant="outline" size="default" onClick={fetchBookingStatus}>
+            Retry
+          </Button>
         </div>
       )}
 
@@ -178,33 +204,39 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
           <div className="booking-summary">
             <p className="summary-text">
               You have <strong>{data.totalCount}</strong> upcoming booking
-              {data.totalCount !== 1 ? 's' : ''}
+              {data.totalCount !== 1 ? "s" : ""}
             </p>
           </div>
 
           {/* Sort Controls */}
           <div className="sort-controls">
-            <button
-              className={`sort-btn ${sortField === 'date' ? 'active' : ''}`}
-              onClick={() => handleSort('date')}
+            <Button
+              variant="outline"
+              size="default"
+              className={`sort-btn ${sortField === "date" ? "active" : ""}`}
+              onClick={() => handleSort("date")}
             >
               Departure Date
-              {sortField === 'date' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
-            </button>
-            <button
-              className={`sort-btn ${sortField === 'amount' ? 'active' : ''}`}
-              onClick={() => handleSort('amount')}
+              {sortField === "date" && (sortOrder === "asc" ? " ↑" : " ↓")}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`sort-btn ${sortField === "amount" ? "active" : ""}`}
+              onClick={() => handleSort("amount")}
             >
               Amount
-              {sortField === 'amount' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
-            </button>
-            <button
-              className={`sort-btn ${sortField === 'status' ? 'active' : ''}`}
-              onClick={() => handleSort('status')}
+              {sortField === "amount" && (sortOrder === "asc" ? " ↑" : " ↓")}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`sort-btn ${sortField === "status" ? "active" : ""}`}
+              onClick={() => handleSort("status")}
             >
               Payment Status
-              {sortField === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
-            </button>
+              {sortField === "status" && (sortOrder === "asc" ? " ↑" : " ↓")}
+            </Button>
           </div>
 
           {/* Bookings List */}
@@ -212,7 +244,9 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
             <div className="empty-state">
               <p>✈️</p>
               <p>No upcoming bookings</p>
-              <p className="empty-subtext">Your next adventure awaits! Book now.</p>
+              <p className="empty-subtext">
+                Your next adventure awaits! Book now.
+              </p>
             </div>
           ) : (
             <div className="bookings-list">
@@ -235,18 +269,27 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
 
                         <div className="booking-route">
                           <div className="route-segment">
-                            <span className="airport-code">{mainRoute.departure}</span>
+                            <span className="airport-code">
+                              {mainRoute.departure}
+                            </span>
                             <span className="route-arrow">→</span>
-                            <span className="airport-code">{mainRoute.arrival}</span>
+                            <span className="airport-code">
+                              {mainRoute.arrival}
+                            </span>
                           </div>
-                          <span className="route-airline">{booking.airline}</span>
+                          <span className="route-airline">
+                            {booking.airline}
+                          </span>
                         </div>
 
                         <div className="booking-date">
                           <span className="date-icon">📅</span>
-                          <span className="date-value">{formatDate(booking.departureDate)}</span>
+                          <span className="date-value">
+                            {formatDate(booking.departureDate)}
+                          </span>
                           <span className="days-until">
-                            ({booking.daysUntilDeparture} day{booking.daysUntilDeparture !== 1 ? 's' : ''})
+                            ({booking.daysUntilDeparture} day
+                            {booking.daysUntilDeparture !== 1 ? "s" : ""})
                           </span>
                         </div>
                       </div>
@@ -266,7 +309,9 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                     <div className="booking-details">
                       <div className="detail-item">
                         <span className="detail-label">Passengers</span>
-                        <span className="detail-value">{booking.passengers}</span>
+                        <span className="detail-value">
+                          {booking.passengers}
+                        </span>
                       </div>
 
                       <div className="detail-item">
@@ -279,77 +324,112 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                       {booking.returnDate && (
                         <div className="detail-item">
                           <span className="detail-label">Return</span>
-                          <span className="detail-value">{formatDate(booking.returnDate)}</span>
+                          <span className="detail-value">
+                            {formatDate(booking.returnDate)}
+                          </span>
                         </div>
                       )}
 
                       <div className="detail-item">
                         <span className="detail-label">Confirmation</span>
-                        <span className="detail-value">{booking.confirmation}</span>
+                        <span className="detail-value">
+                          {booking.confirmation}
+                        </span>
                       </div>
                     </div>
 
                     {/* Payment Breakdown (if payment status is pending or partial) */}
-                    {booking.paymentBreakdown && ['pending', 'partial'].includes(booking.paymentStatus) && (
-                      <div className="payment-breakdown">
-                        <p className="breakdown-label">Payment Breakdown:</p>
-                        <div className="breakdown-items">
-                          {booking.paymentBreakdown.walletAmount > 0 && (
-                            <div className="breakdown-item">
-                              <span className="breakdown-method">💰 Wallet</span>
-                              <span className="breakdown-amount">
-                                {data.currency} {booking.paymentBreakdown.walletAmount.toFixed(2)}
-                              </span>
-                            </div>
-                          )}
-                          {booking.paymentBreakdown.creditAmount > 0 && (
-                            <div className="breakdown-item">
-                              <span className="breakdown-method">🎫 Airline Credit</span>
-                              <span className="breakdown-amount">
-                                {data.currency} {booking.paymentBreakdown.creditAmount.toFixed(2)}
-                              </span>
-                            </div>
-                          )}
-                          {booking.paymentBreakdown.cardAmount > 0 && (
-                            <div className="breakdown-item">
-                              <span className="breakdown-method">💳 Card</span>
-                              <span className="breakdown-amount">
-                                {data.currency} {booking.paymentBreakdown.cardAmount.toFixed(2)}
-                              </span>
-                            </div>
-                          )}
+                    {booking.paymentBreakdown &&
+                      ["pending", "partial"].includes(
+                        booking.paymentStatus,
+                      ) && (
+                        <div className="payment-breakdown">
+                          <p className="breakdown-label">Payment Breakdown:</p>
+                          <div className="breakdown-items">
+                            {booking.paymentBreakdown.walletAmount > 0 && (
+                              <div className="breakdown-item">
+                                <span className="breakdown-method">
+                                  💰 Wallet
+                                </span>
+                                <span className="breakdown-amount">
+                                  {data.currency}{" "}
+                                  {booking.paymentBreakdown.walletAmount.toFixed(
+                                    2,
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {booking.paymentBreakdown.creditAmount > 0 && (
+                              <div className="breakdown-item">
+                                <span className="breakdown-method">
+                                  🎫 Airline Credit
+                                </span>
+                                <span className="breakdown-amount">
+                                  {data.currency}{" "}
+                                  {booking.paymentBreakdown.creditAmount.toFixed(
+                                    2,
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {booking.paymentBreakdown.cardAmount > 0 && (
+                              <div className="breakdown-item">
+                                <span className="breakdown-method">
+                                  💳 Card
+                                </span>
+                                <span className="breakdown-amount">
+                                  {data.currency}{" "}
+                                  {booking.paymentBreakdown.cardAmount.toFixed(
+                                    2,
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {/* Actions */}
                     <div className="booking-actions">
-                      <button
+                      <Button
+                        variant="outline"
+                        size="default"
                         className="action-btn primary"
                         onClick={() => onNavigateToBooking?.(booking.id)}
                       >
                         View Booking
-                      </button>
-                      {booking.paymentStatus === 'pending' && (
-                        <button className="action-btn">
+                      </Button>
+                      {booking.paymentStatus === "pending" && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="action-btn"
+                        >
                           Complete Payment
-                        </button>
+                        </Button>
                       )}
-                      {booking.paymentStatus === 'failed' && (
-                        <button className="action-btn warning">
+                      {booking.paymentStatus === "failed" && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="action-btn warning"
+                        >
                           Retry Payment
-                        </button>
+                        </Button>
                       )}
-                      <button
+                      <Button
+                        variant="outline"
+                        size="default"
                         className="action-btn secondary"
                         onClick={() =>
                           setExpandedBooking(
-                            expandedBooking === booking.id ? null : booking.id
+                            expandedBooking === booking.id ? null : booking.id,
                           )
                         }
                       >
-                        {expandedBooking === booking.id ? 'Hide' : 'Show'} Details
-                      </button>
+                        {expandedBooking === booking.id ? "Hide" : "Show"}{" "}
+                        Details
+                      </Button>
                     </div>
 
                     {/* Expanded Details */}
@@ -359,18 +439,22 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                         {booking.routes.map((route, idx) => (
                           <div key={idx} className="flight-route">
                             <div className="route-header">
-                              <span>{idx === 0 ? 'Outbound' : 'Return'}</span>
+                              <span>{idx === 0 ? "Outbound" : "Return"}</span>
                               <span>{route.airline}</span>
                             </div>
                             <div className="route-times">
                               <div>
                                 <p className="airport">{route.departure}</p>
-                                <p className="time">{formatTime(route.departureTime)}</p>
+                                <p className="time">
+                                  {formatTime(route.departureTime)}
+                                </p>
                               </div>
                               <div className="flight-icon">✈️</div>
                               <div>
                                 <p className="airport">{route.arrival}</p>
-                                <p className="time">{formatTime(route.arrivalTime)}</p>
+                                <p className="time">
+                                  {formatTime(route.arrivalTime)}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -394,7 +478,7 @@ export default BookingPaymentStatusPanel;
 
 const styles = `
 .booking-payment-status-panel {
-  background: white;
+  background: hsl(var(--background));
   border-radius: 12px;
   padding: 24px;
 }
@@ -404,8 +488,8 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #ffebee;
-  border-left: 4px solid #c62828;
+  background: hsl(var(--destructive) / 0.1);
+  border-left: 4px solid hsl(var(--destructive));
   border-radius: 8px;
   margin-bottom: 20px;
 }
@@ -413,15 +497,15 @@ const styles = `
 .error-alert p {
   margin: 0;
   flex: 1;
-  color: #c62828;
+  color: hsl(var(--destructive));
 }
 
 .error-alert button {
   padding: 6px 12px;
-  background: white;
-  border: 1px solid #c62828;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--destructive));
   border-radius: 4px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   cursor: pointer;
   font-size: 12px;
 }
@@ -437,8 +521,8 @@ const styles = `
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #007bff;
+  border: 3px solid hsl(var(--border));
+  border-top-color: hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -455,7 +539,7 @@ const styles = `
 .summary-text {
   margin: 0;
   font-size: 14px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Sort Controls */
@@ -469,8 +553,8 @@ const styles = `
 
 .sort-btn {
   padding: 8px 14px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
@@ -480,13 +564,13 @@ const styles = `
 }
 
 .sort-btn:hover {
-  background: #e0e0e0;
+  background: hsl(var(--accent));
 }
 
 .sort-btn.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
 }
 
 /* Empty State */
@@ -502,13 +586,13 @@ const styles = `
 
 .empty-state p {
   margin: 0;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
 }
 
 .empty-subtext {
   font-size: 12px !important;
-  color: #bbb !important;
+  color: hsl(var(--muted-foreground)) !important;
   margin-top: 8px !important;
 }
 
@@ -519,31 +603,31 @@ const styles = `
 }
 
 .booking-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s;
 }
 
 .booking-card:hover {
-  border-color: #bbb;
+  border-color: hsl(var(--accent-foreground) / 0.35);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .booking-card.paid {
-  border-left: 4px solid #4caf50;
+  border-left: 4px solid hsl(var(--primary));
 }
 
 .booking-card.pending {
-  border-left: 4px solid #ff9800;
+  border-left: 4px solid hsl(var(--accent-foreground));
 }
 
 .booking-card.failed {
-  border-left: 4px solid #f44336;
+  border-left: 4px solid hsl(var(--destructive));
 }
 
 .booking-card.partial {
-  border-left: 4px solid #2196f3;
+  border-left: 4px solid hsl(var(--secondary-foreground));
 }
 
 /* Booking Header */
@@ -573,7 +657,7 @@ const styles = `
 
 .ref-label {
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -581,7 +665,7 @@ const styles = `
 .ref-value {
   font-size: 16px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .booking-route {
@@ -599,16 +683,16 @@ const styles = `
 
 .airport-code {
   font-size: 14px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .route-arrow {
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .route-airline {
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .booking-date {
@@ -616,7 +700,7 @@ const styles = `
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 .date-icon {
@@ -629,7 +713,7 @@ const styles = `
 
 .days-until {
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .status-badge {
@@ -646,7 +730,7 @@ const styles = `
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
   margin-bottom: 12px;
 }
@@ -659,7 +743,7 @@ const styles = `
 
 .detail-label {
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -667,13 +751,13 @@ const styles = `
 .detail-value {
   font-size: 13px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 /* Payment Breakdown */
 .payment-breakdown {
   padding: 12px;
-  background: #f3e5f5;
+  background: hsl(var(--accent));
   border-radius: 8px;
   margin-bottom: 12px;
 }
@@ -682,7 +766,7 @@ const styles = `
   margin: 0 0 8px 0;
   font-size: 12px;
   font-weight: 700;
-  color: #6a1b9a;
+  color: hsl(var(--accent-foreground));
 }
 
 .breakdown-items {
@@ -696,7 +780,7 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 6px 8px;
-  background: white;
+  background: hsl(var(--background));
   border-radius: 4px;
   font-size: 12px;
 }
@@ -707,7 +791,7 @@ const styles = `
 
 .breakdown-amount {
   font-weight: 700;
-  color: #2196f3;
+  color: hsl(var(--primary));
 }
 
 /* Booking Actions */
@@ -716,15 +800,15 @@ const styles = `
   gap: 8px;
   flex-wrap: wrap;
   padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid hsl(var(--border));
 }
 
 .action-btn {
   padding: 8px 14px;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
-  background: white;
-  color: #666;
+  background: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
@@ -732,39 +816,39 @@ const styles = `
 }
 
 .action-btn:hover {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 .action-btn.primary {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
 }
 
 .action-btn.primary:hover {
-  background: #0056b3;
+  background: hsl(var(--primary) / 0.85);
 }
 
 .action-btn.warning {
-  background: #ff9800;
-  color: white;
-  border-color: #ff9800;
+  background: hsl(var(--accent-foreground));
+  color: hsl(var(--accent));
+  border-color: hsl(var(--accent-foreground));
 }
 
 .action-btn.warning:hover {
-  background: #e68900;
+  background: hsl(var(--accent-foreground) / 0.85);
 }
 
 .action-btn.secondary {
-  background: #f5f5f5;
-  border-color: #ddd;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
 /* Expanded Details */
 .expanded-details {
   margin-top: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
   animation: slideDown 0.2s ease-out;
 }
@@ -783,7 +867,7 @@ const styles = `
 .expanded-details h4 {
   margin: 0 0 12px 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   font-weight: 700;
 }
@@ -801,7 +885,7 @@ const styles = `
   justify-content: space-between;
   font-size: 12px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   margin-bottom: 8px;
 }
 
@@ -810,7 +894,7 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 8px;
-  background: white;
+  background: hsl(var(--background));
   border-radius: 6px;
 }
 
@@ -823,13 +907,13 @@ const styles = `
   margin: 0;
   font-size: 12px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .time {
   margin: 2px 0 0 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .flight-icon {

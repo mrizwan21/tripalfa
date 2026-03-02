@@ -1,22 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import HoldOrderForm from './HoldOrderForm';
-import HoldOrderDetails from './HoldOrderDetails';
-import './HoldOrdersCheck.css';
+import React, { useState, useEffect } from "react";
+import HoldOrderForm from "./HoldOrderForm";
+import HoldOrderDetails from "./HoldOrderDetails";
+import "./HoldOrdersCheck.css";
+import { Button } from "@/components/ui/button";
 
 interface HoldOrdersCheckProps {
   offerId: string;
   onSuccess?: (holdOrder: any) => void;
 }
 
-type ViewState = 'eligibility-check' | 'create-form' | 'hold-details' | 'complete' | 'error';
+type ViewState =
+  | "eligibility-check"
+  | "create-form"
+  | "hold-details"
+  | "complete"
+  | "error";
 
-const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess }) => {
-  const [viewState, setViewState] = useState<ViewState>('eligibility-check');
+const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({
+  offerId,
+  onSuccess,
+}) => {
+  const [viewState, setViewState] = useState<ViewState>("eligibility-check");
   const [eligibility, setEligibility] = useState<any>(null);
   const [holdOrder, setHoldOrder] = useState<any>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [completionMessage, setCompletionMessage] = useState<string>('');
+  const [error, setError] = useState<string>("");
+  const [completionMessage, setCompletionMessage] = useState<string>("");
 
   useEffect(() => {
     checkEligibility();
@@ -24,28 +33,32 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
 
   const checkEligibility = async () => {
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const response = await fetch(`/api/bookings/hold/eligibility/${offerId}`);
 
       if (!response.ok) {
-        throw new Error('Failed to check hold eligibility');
+        throw new Error("Failed to check hold eligibility");
       }
 
       const result = await response.json();
       setEligibility(result.data);
 
       if (result.data.eligible) {
-        setViewState('create-form');
+        setViewState("create-form");
       } else {
-        setError(result.data.message || 'This offer is not eligible for hold orders. Instant payment is required.');
-        setViewState('error');
+        setError(
+          result.data.message ||
+            "This offer is not eligible for hold orders. Instant payment is required.",
+        );
+        setViewState("error");
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to check eligibility';
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to check eligibility";
       setError(errorMsg);
-      setViewState('error');
+      setViewState("error");
     } finally {
       setLoading(false);
     }
@@ -53,36 +66,44 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
 
   const handleHoldOrderCreated = (order: any) => {
     setHoldOrder(order);
-    setViewState('hold-details');
-    setCompletionMessage(`✓ Hold order created successfully!\nOrder Reference: ${order.reference}\nPayment Deadline: ${new Date(order.paymentRequiredBy).toLocaleDateString()}`);
+    setViewState("hold-details");
+    setCompletionMessage(
+      `✓ Hold order created successfully!\nOrder Reference: ${order.reference}\nPayment Deadline: ${new Date(order.paymentRequiredBy).toLocaleDateString()}`,
+    );
   };
 
   const handlePriceChange = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/bookings/hold/orders/${holdOrder.orderId}/check-price`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lastKnownPrice: holdOrder.totalAmount,
-          currency: holdOrder.currency
-        })
-      });
+      const response = await fetch(
+        `/api/bookings/hold/orders/${holdOrder.orderId}/check-price`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lastKnownPrice: holdOrder.totalAmount,
+            currency: holdOrder.currency,
+          }),
+        },
+      );
 
       if (response.ok) {
         const result = await response.json();
         if (result.data.priceChanged) {
-          setError(`Price has changed from ${holdOrder.totalAmount} to ${result.data.currentPrice} ${holdOrder.currency}`);
+          setError(
+            `Price has changed from ${holdOrder.totalAmount} to ${result.data.currentPrice} ${holdOrder.currency}`,
+          );
           setHoldOrder({
             ...holdOrder,
-            totalAmount: result.data.currentPrice
+            totalAmount: result.data.currentPrice,
           });
         } else {
-          setError('');
+          setError("");
         }
       }
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to check price';
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to check price";
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -90,21 +111,25 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
   };
 
   const handleCancelHold = async () => {
-    if (window.confirm('Are you sure you want to cancel this hold order?')) {
+    if (window.confirm("Are you sure you want to cancel this hold order?")) {
       setLoading(true);
       try {
-        const response = await fetch(`/api/bookings/hold/orders/${holdOrder.orderId}/cancel`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ reason: 'User initiated cancellation' })
-        });
+        const response = await fetch(
+          `/api/bookings/hold/orders/${holdOrder.orderId}/cancel`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reason: "User initiated cancellation" }),
+          },
+        );
 
         if (response.ok) {
-          setCompletionMessage('Hold order has been cancelled.');
-          setViewState('complete');
+          setCompletionMessage("Hold order has been cancelled.");
+          setViewState("complete");
         }
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to cancel hold order';
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to cancel hold order";
         setError(errorMsg);
       } finally {
         setLoading(false);
@@ -122,13 +147,20 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
               <h3>Error</h3>
               <p>{error}</p>
             </div>
-            <button className="error-close" onClick={() => setError('')}>×</button>
+            <Button
+              variant="ghost"
+              size="default"
+              className="error-close px-4 py-2 text-sm font-medium rounded-md transition-colors hover:bg-gray-100"
+              onClick={() => setError("")}
+            >
+              ×
+            </Button>
           </div>
         </div>
       )}
 
       {/* Eligibility Check */}
-      {viewState === 'eligibility-check' && (
+      {viewState === "eligibility-check" && (
         <div className="loading-state">
           <div className="spinner-large"></div>
           <p>Checking if this offer is eligible for hold orders...</p>
@@ -136,7 +168,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
       )}
 
       {/* Create Form */}
-      {viewState === 'create-form' && eligibility && (
+      {viewState === "create-form" && eligibility && (
         <div className="create-form-container">
           <div className="eligibility-info">
             <h3>✓ This offer is eligible for hold orders</h3>
@@ -144,23 +176,28 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
               <div className="detail">
                 <span className="label">Payment Required By:</span>
                 <span className="value">
-                  {new Date(eligibility.paymentRequiredBy).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {new Date(eligibility.paymentRequiredBy).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    },
+                  )}
                 </span>
               </div>
               {eligibility.priceGuaranteeExpiresAt && (
                 <div className="detail">
                   <span className="label">Price Guaranteed Until:</span>
                   <span className="value">
-                    {new Date(eligibility.priceGuaranteeExpiresAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
+                    {new Date(
+                      eligibility.priceGuaranteeExpiresAt,
+                    ).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
                     })}
                   </span>
                 </div>
@@ -176,7 +213,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
       )}
 
       {/* Hold Order Details */}
-      {viewState === 'hold-details' && holdOrder && (
+      {viewState === "hold-details" && holdOrder && (
         <div className="hold-details-container">
           {completionMessage && (
             <div className="success-banner">
@@ -193,47 +230,55 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({ offerId, onSuccess })
       )}
 
       {/* Completion */}
-      {viewState === 'complete' && (
+      {viewState === "complete" && (
         <div className="completion-state">
           <div className="completion-icon">✓</div>
           <h2>Hold Order Confirmed</h2>
           <p>{completionMessage}</p>
           <div className="completion-actions">
-            <button
+            <Button
+              variant="outline"
+              size="default"
               className="btn-primary"
-              onClick={() => window.location.href = '/bookings'}
+              onClick={() => (window.location.href = "/bookings")}
             >
               View Your Bookings
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
               className="btn-secondary"
               onClick={() => window.location.reload()}
             >
               Start New Booking
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {/* Error */}
-      {viewState === 'error' && (
+      {viewState === "error" && (
         <div className="error-state">
-          <div className="error-icon">✗</div>
+          <div className="error-state-icon">✗</div>
           <h2>Not Eligible for Hold Orders</h2>
           <p>{error}</p>
           <div className="error-actions">
-            <button
+            <Button
+              variant="outline"
+              size="default"
               className="btn-primary"
-              onClick={() => window.location.href = '/bookings'}
+              onClick={() => (window.location.href = "/bookings")}
             >
               Back to Bookings
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
               className="btn-secondary"
               onClick={checkEligibility}
             >
               Try Again
-            </button>
+            </Button>
           </div>
         </div>
       )}

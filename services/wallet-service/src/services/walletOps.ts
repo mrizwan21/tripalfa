@@ -1,14 +1,17 @@
 // src/services/walletOps.ts
 // Prisma-based wallet operations
-import { prisma } from '@tripalfa/shared-database';
-import type { Wallet, WalletTransaction } from '../types/wallet.js';
+import { prisma } from "@tripalfa/shared-database";
+import type { Wallet, WalletTransaction } from "../types/wallet.js";
 
 // Simple logger fallback if logger is not available
 const logWarn = (message: string) => {
   console.warn(`[walletOps] WARN: ${message}`);
 };
 
-export async function ensureWalletExists(userId: string, currency: string): Promise<Wallet> {
+export async function ensureWalletExists(
+  userId: string,
+  currency: string,
+): Promise<Wallet> {
   const wallet = await prisma.wallet.upsert({
     where: {
       userId_currency: { userId, currency },
@@ -19,7 +22,7 @@ export async function ensureWalletExists(userId: string, currency: string): Prom
       currency,
       balance: 0,
       reservedBalance: 0,
-      status: 'active',
+      status: "active",
     },
   });
   return wallet as Wallet;
@@ -27,35 +30,38 @@ export async function ensureWalletExists(userId: string, currency: string): Prom
 
 /**
  * Check if an idempotency key has already been used
- * 
+ *
  * @deprecated This function has a race condition and should not be used.
  * Use idempotency checks inside transactions like in processAgencyCredit instead.
- * 
+ *
  * This function now logs a deprecation warning and returns without performing any check.
  * In a future version, this function will be removed entirely.
- * 
+ *
  * Migration guide:
  * - Replace standalone checkIdempotency() calls with idempotency checks inside transactions
  * - See processAgencyCredit(), processCustomerDebit(), or walletService.creditWallet() for examples
  */
 export async function checkIdempotency(idempotencyKey: string): Promise<void> {
   if (!idempotencyKey) return;
-  
+
   // Log deprecation warning - this function will be removed in a future version
   logWarn(
     `checkIdempotency() is deprecated and has a race condition. ` +
-    `Migrate to idempotency checks inside transactions. ` +
-    `See processAgencyCredit(), processCustomerDebit(), or walletService.creditWallet() for examples. ` +
-    `Called with key: ${idempotencyKey.substring(0, 8)}...`
+      `Migrate to idempotency checks inside transactions. ` +
+      `See processAgencyCredit(), processCustomerDebit(), or walletService.creditWallet() for examples. ` +
+      `Called with key: ${idempotencyKey.substring(0, 8)}...`,
   );
-  
+
   // NOTE: This function previously threw an error, but now returns gracefully
   // to allow existing code to continue working while migrating to the new pattern.
   // The actual idempotency check should be done inside a transaction.
   return;
 }
 
-export async function lockWallet(userId: string, currency: string): Promise<Wallet> {
+export async function lockWallet(
+  userId: string,
+  currency: string,
+): Promise<Wallet> {
   // Prisma doesn't support FOR UPDATE, but transactions provide isolation
   const wallet = await prisma.wallet.findUnique({
     where: {
@@ -63,7 +69,7 @@ export async function lockWallet(userId: string, currency: string): Promise<Wall
     },
   });
 
-  if (!wallet) throw new Error('Wallet not found');
+  if (!wallet) throw new Error("Wallet not found");
   return wallet as Wallet;
 }
 
@@ -73,7 +79,7 @@ export async function processCustomerDebit(
   amount: number,
   agencyId: string,
   bookingId: string,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<{ customerTx: WalletTransaction; customerWallet: Wallet }> {
   return await prisma.$transaction(async (tx) => {
     // Check for idempotency INSIDE transaction to prevent race condition
@@ -104,14 +110,14 @@ export async function processCustomerDebit(
           currency,
           balance: 0,
           reservedBalance: 0,
-          status: 'active',
+          status: "active",
         },
       });
     }
 
     // Check balance
     if (Number(customerWallet.balance) < amount) {
-      throw new Error('Insufficient funds');
+      throw new Error("Insufficient funds");
     }
 
     // Debit wallet
@@ -125,8 +131,8 @@ export async function processCustomerDebit(
     const customerTx = await tx.walletTransaction.create({
       data: {
         walletId: customerWallet.id,
-        type: 'debit',
-        flow: 'outbound',
+        type: "debit",
+        flow: "outbound",
         amount,
         balance: newBalance,
         currency,
@@ -134,8 +140,8 @@ export async function processCustomerDebit(
         payeeId: agencyId,
         bookingId,
         idempotencyKey,
-        status: 'completed',
-        description: 'Customer purchase debit',
+        status: "completed",
+        description: "Customer purchase debit",
       },
     });
 
@@ -149,7 +155,7 @@ export async function processAgencyCredit(
   amount: number,
   customerId: string,
   bookingId: string,
-  idempotencyKey?: string
+  idempotencyKey?: string,
 ): Promise<{ agencyTx: WalletTransaction; agencyWallet: Wallet }> {
   return await prisma.$transaction(async (tx) => {
     // Check for idempotency INSIDE transaction to prevent race condition
@@ -182,7 +188,7 @@ export async function processAgencyCredit(
           currency,
           balance: 0,
           reservedBalance: 0,
-          status: 'active',
+          status: "active",
         },
       });
     }
@@ -198,8 +204,8 @@ export async function processAgencyCredit(
     const agencyTx = await tx.walletTransaction.create({
       data: {
         walletId: agencyWallet.id,
-        type: 'credit',
-        flow: 'inbound',
+        type: "credit",
+        flow: "inbound",
         amount,
         balance: newBalance,
         currency,
@@ -207,8 +213,8 @@ export async function processAgencyCredit(
         payeeId: agencyId,
         bookingId,
         idempotencyKey,
-        status: 'completed',
-        description: 'Agency purchase credit',
+        status: "completed",
+        description: "Agency purchase credit",
       },
     });
 
@@ -221,5 +227,5 @@ export default {
   checkIdempotency, // Deprecated: logs warning, returns gracefully. Will be removed in future version.
   lockWallet,
   processCustomerDebit,
-  processAgencyCredit
+  processAgencyCredit,
 };

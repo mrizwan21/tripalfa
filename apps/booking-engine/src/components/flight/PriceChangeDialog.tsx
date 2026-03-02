@@ -1,14 +1,14 @@
 /**
  * PriceChangeDialog Component
- * 
+ *
  * Displays a warning dialog when flight price has changed before booking confirmation.
  * Allows users to accept the new price or cancel the booking.
- * 
+ *
  * Part of the "Getting An Accurate Price Before Booking" implementation.
  * Documentation: https://duffel.com/docs/guides/getting-an-accurate-price-before-booking
  */
 
-import React from 'react';
+import React from "react";
 import {
   AlertTriangle,
   TrendingUp,
@@ -17,9 +17,9 @@ import {
   RefreshCw,
   X,
   Check,
-} from 'lucide-react';
-import { Button } from '../ui/button';
-import type { PriceVerificationResult } from '../../services/priceVerificationService';
+} from "lucide-react";
+import { Button } from "../ui/button";
+import type { PriceVerificationResult } from "../../services/priceVerificationService";
 
 // ============================================================================
 // TYPES
@@ -53,26 +53,31 @@ export function PriceChangeDialog({
   onCancel,
   onRefresh,
   isRefreshing = false,
-  className = '',
+  className = "",
 }: PriceChangeDialogProps) {
   if (!isOpen || !verificationResult) return null;
 
-  const { priceChanged, priceDifference, originalPrice, newPrice, expiresAt } = verificationResult;
+  const { priceChanged, priceDifference, originalPrice, newPrice, expiresAt } =
+    verificationResult;
 
   // No price change - show confirmation dialog
   if (!priceChanged) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm gap-2">
         <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="bg-green-50 px-8 py-6 border-b border-green-100">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center gap-2">
                 <Check size={24} className="text-green-600" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-gray-900">Price Verified</h2>
-                <p className="text-sm text-gray-500">The price has been confirmed</p>
+                <h2 className="text-lg font-black text-gray-900 text-2xl font-semibold tracking-tight">
+                  Price Verified
+                </h2>
+                <p className="text-sm text-gray-500">
+                  The price has been confirmed
+                </p>
               </div>
             </div>
           </div>
@@ -80,8 +85,10 @@ export function PriceChangeDialog({
           {/* Content */}
           <div className="px-8 py-6">
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-gray-500">Total Price</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-bold text-gray-500">
+                  Total Price
+                </span>
                 <span className="text-2xl font-black text-gray-900">
                   {newPrice?.currency} {newPrice?.amount}
                 </span>
@@ -91,7 +98,9 @@ export function PriceChangeDialog({
             {expiresAt && (
               <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
                 <Clock size={14} />
-                <span>Valid until {new Date(expiresAt).toLocaleTimeString()}</span>
+                <span>
+                  Valid until {new Date(expiresAt).toLocaleTimeString()}
+                </span>
               </div>
             )}
           </div>
@@ -101,13 +110,13 @@ export function PriceChangeDialog({
             <Button
               onClick={onCancel}
               variant="outline"
-              className="flex-1 h-12 rounded-xl text-sm font-bold"
+              className="flex-1 h-12 rounded-xl text-sm font-bold gap-4"
             >
               Cancel
             </Button>
             <Button
               onClick={onAccept}
-              className="flex-1 h-12 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold"
+              className="flex-1 h-12 hover: text-white rounded-xl text-sm font-bold gap-4"
             >
               Continue Booking
             </Button>
@@ -121,13 +130,19 @@ export function PriceChangeDialog({
   const priceIncreased = priceDifference?.increased ?? false;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className={`bg-white rounded-[2rem] shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${className}`}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm gap-2">
+      <div
+        className={`bg-white rounded-[2rem] shadow-2xl max-w-md w-full mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${className}`}
+      >
         {/* Header */}
-        <div className={`${priceIncreased ? 'bg-amber-50' : 'bg-green-50'} px-8 py-6 border-b ${priceIncreased ? 'border-amber-100' : 'border-green-100'}`}>
-          <div className="flex items-center justify-between">
+        <div
+          className={`${priceIncreased ? "bg-amber-50" : "bg-green-50"} px-8 py-6 border-b ${priceIncreased ? "border-amber-100" : "border-green-100"}`}
+        >
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-full ${priceIncreased ? 'bg-amber-100' : 'bg-green-100'} flex items-center justify-center`}>
+              <div
+                className={`w-12 h-12 rounded-full ${priceIncreased ? "bg-amber-100" : "bg-green-100"} flex items-center justify-center`}
+              >
                 {priceIncreased ? (
                   <TrendingUp size={24} className="text-amber-600" />
                 ) : (
@@ -135,17 +150,19 @@ export function PriceChangeDialog({
                 )}
               </div>
               <div>
-                <h2 className="text-lg font-black text-gray-900">
-                  {priceIncreased ? 'Price Increased' : 'Price Decreased'}
+                <h2 className="text-lg font-black text-gray-900 text-2xl font-semibold tracking-tight">
+                  {priceIncreased ? "Price Increased" : "Price Decreased"}
                 </h2>
                 <p className="text-sm text-gray-500">
-                  {priceIncreased ? 'The fare has changed since you selected this flight' : 'Great news! The price has dropped'}
+                  {priceIncreased
+                    ? "The fare has changed since you selected this flight"
+                    : "Great news! The price has dropped"}
                 </p>
               </div>
             </div>
             <button
               onClick={onCancel}
-              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-colors"
+              className="w-8 h-8 rounded-full bg-white/80 hover:bg-white flex items-center justify-center transition-colors gap-2 text-sm font-medium"
             >
               <X size={16} className="text-gray-400" />
             </button>
@@ -157,29 +174,42 @@ export function PriceChangeDialog({
           {/* Price Comparison */}
           <div className="space-y-3 mb-6">
             {/* Original Price */}
-            <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <span className="text-sm font-bold text-gray-400">Original Price</span>
+            <div className="flex items-center justify-between py-2 border-b border-gray-100 gap-2">
+              <span className="text-sm font-bold text-gray-400">
+                Original Price
+              </span>
               <span className="text-lg font-bold text-gray-400 line-through">
                 {originalPrice?.currency} {originalPrice?.amount}
               </span>
             </div>
 
             {/* New Price */}
-            <div className="flex items-center justify-between py-2">
+            <div className="flex items-center justify-between py-2 gap-2">
               <span className="text-sm font-bold text-gray-900">New Price</span>
-              <span className={`text-2xl font-black ${priceIncreased ? 'text-amber-600' : 'text-green-600'}`}>
+              <span
+                className={`text-2xl font-black ${priceIncreased ? "text-amber-600" : "text-green-600"}`}
+              >
                 {newPrice?.currency} {newPrice?.amount}
               </span>
             </div>
 
             {/* Difference */}
-            <div className={`flex items-center justify-between py-3 px-4 rounded-xl ${priceIncreased ? 'bg-amber-50' : 'bg-green-50'}`}>
-              <span className="text-sm font-bold text-gray-700">Price Difference</span>
+            <div
+              className={`flex items-center justify-between py-3 px-4 rounded-xl ${priceIncreased ? "bg-amber-50" : "bg-green-50"}`}
+            >
+              <span className="text-sm font-bold text-gray-700">
+                Price Difference
+              </span>
               <div className="text-right">
-                <span className={`text-lg font-black ${priceIncreased ? 'text-amber-600' : 'text-green-600'}`}>
-                  {priceIncreased ? '+' : '-'}{newPrice?.currency} {priceDifference?.amount.toFixed(2)}
+                <span
+                  className={`text-lg font-black ${priceIncreased ? "text-amber-600" : "text-green-600"}`}
+                >
+                  {priceIncreased ? "+" : "-"}
+                  {newPrice?.currency} {priceDifference?.amount.toFixed(2)}
                 </span>
-                <span className={`ml-2 text-xs font-bold ${priceIncreased ? 'text-amber-500' : 'text-green-500'}`}>
+                <span
+                  className={`ml-2 text-xs font-bold ${priceIncreased ? "text-amber-500" : "text-green-500"}`}
+                >
                   ({priceDifference?.percentage.toFixed(1)}%)
                 </span>
               </div>
@@ -189,13 +219,17 @@ export function PriceChangeDialog({
           {/* Warning Message */}
           {priceIncreased && (
             <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-100 mb-6">
-              <AlertTriangle size={18} className="text-amber-500 shrink-0 mt-0.5" />
+              <AlertTriangle
+                size={18}
+                className="text-amber-500 shrink-0 mt-0.5"
+              />
               <div>
                 <p className="text-sm font-bold text-amber-800">
                   Flight prices change frequently
                 </p>
                 <p className="text-xs text-amber-600 mt-1">
-                  Airlines update their fares in real-time. The new price reflects the current market rate.
+                  Airlines update their fares in real-time. The new price
+                  reflects the current market rate.
                 </p>
               </div>
             </div>
@@ -205,7 +239,9 @@ export function PriceChangeDialog({
           {expiresAt && (
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <Clock size={14} />
-              <span>Offer valid until {new Date(expiresAt).toLocaleTimeString()}</span>
+              <span>
+                Offer valid until {new Date(expiresAt).toLocaleTimeString()}
+              </span>
             </div>
           )}
         </div>
@@ -215,7 +251,7 @@ export function PriceChangeDialog({
           <Button
             onClick={onCancel}
             variant="outline"
-            className="flex-1 h-12 rounded-xl text-sm font-bold"
+            className="flex-1 h-12 rounded-xl text-sm font-bold gap-4"
           >
             Cancel
           </Button>
@@ -235,9 +271,9 @@ export function PriceChangeDialog({
           )}
           <Button
             onClick={onAccept}
-            className={`flex-1 h-12 ${priceIncreased ? 'bg-amber-600 hover:bg-amber-700' : 'bg-green-600 hover:bg-green-700'} text-white rounded-xl text-sm font-bold`}
+            className={`flex-1 h-12 ${priceIncreased ? "bg-amber-600 hover:bg-amber-700" : "bg-green-600 hover:bg-green-700"} text-white rounded-xl text-sm font-bold`}
           >
-            {priceIncreased ? 'Accept New Price' : 'Continue with Savings'}
+            {priceIncreased ? "Accept New Price" : "Continue with Savings"}
           </Button>
         </div>
       </div>

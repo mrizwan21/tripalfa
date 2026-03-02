@@ -1,7 +1,7 @@
 /**
  * Payment Receipt Modal
  * Displays payment receipt with breakdown and print/download options
- * 
+ *
  * Features:
  * - Show full payment details
  * - Display payment method breakdown
@@ -10,8 +10,10 @@
  * - Email receipt option
  */
 
-import React, { useState, useRef } from 'react';
-import type { FC } from 'react';
+import React, { useState, useRef } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
+import { Button } from "@/components/ui/button";
 
 interface PaymentBreakdown {
   walletAmount: number;
@@ -52,8 +54,11 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [emailInput, setEmailInput] = useState("");
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen || !receipt) {
@@ -64,7 +69,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
     const printContent = printRef.current;
     if (!printContent) return;
 
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
     printWindow.document.write(`
@@ -91,27 +96,24 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       setIsDownloading(true);
       setMessage(null);
 
-      const response = await fetch(
-        `/api/receipts/${receipt.id}/download`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            format: 'pdf',
-          }),
-        }
-      );
+      const response = await fetch(`/api/receipts/${receipt.id}/download`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          format: "pdf",
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to download receipt');
+        throw new Error("Failed to download receipt");
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `receipt-${receipt.transactionId}.pdf`;
       document.body.appendChild(link);
@@ -119,10 +121,10 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      setMessage({ type: 'success', text: 'Receipt downloaded successfully!' });
+      setMessage({ type: "success", text: "Receipt downloaded successfully!" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setMessage({ type: 'error', text: message });
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setMessage({ type: "error", text: message });
     } finally {
       setIsDownloading(false);
     }
@@ -130,7 +132,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
 
   const handleSendEmail = async () => {
     if (!emailInput.trim()) {
-      setMessage({ type: 'error', text: 'Please enter an email address' });
+      setMessage({ type: "error", text: "Please enter an email address" });
       return;
     }
 
@@ -138,61 +140,68 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       setIsSendingEmail(true);
       setMessage(null);
 
-      const response = await fetch(
-        `/api/receipts/${receipt.id}/email`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: emailInput,
-          }),
-        }
-      );
+      const response = await fetch(`/api/receipts/${receipt.id}/email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: emailInput,
+        }),
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to send email');
+        throw new Error("Failed to send email");
       }
 
-      setMessage({ 
-        type: 'success', 
-        text: `Receipt sent to ${emailInput}!` 
+      setMessage({
+        type: "success",
+        text: `Receipt sent to ${emailInput}!`,
       });
       setShowEmailForm(false);
-      setEmailInput('');
+      setEmailInput("");
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      setMessage({ type: 'error', text: message });
+      const message = err instanceof Error ? err.message : "Unknown error";
+      setMessage({ type: "error", text: message });
     } finally {
       setIsSendingEmail(false);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   return (
     <div className="payment-receipt-modal-overlay" onClick={onClose}>
-      <div className="payment-receipt-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="payment-receipt-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="modal-header">
           <h2>Payment Receipt</h2>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <Button
+            variant="outline"
+            size="default"
+            className="close-btn"
+            onClick={onClose}
+          >
+            ✕
+          </Button>
         </div>
 
         {/* Messages */}
         {message && (
           <div className={`message-alert ${message.type}`}>
-            <span>{message.type === 'success' ? '✓' : '✕'}</span>
+            <span>{message.type === "success" ? "✓" : "✕"}</span>
             <span>{message.text}</span>
           </div>
         )}
@@ -210,7 +219,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                 <span
                   className={`status-badge ${receipt.paymentStatus.toLowerCase()}`}
                 >
-                  {receipt.paymentStatus === 'completed' ? '✓' : '⏳'} {receipt.paymentStatus}
+                  {receipt.paymentStatus === "completed" ? "✓" : "⏳"}{" "}
+                  {receipt.paymentStatus}
                 </span>
               </div>
             </div>
@@ -218,18 +228,22 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
             {/* Transaction Details */}
             <div className="receipt-details-section">
               <h4>Transaction Details</h4>
-              <div className="details-grid">
+              <div className="details-grid gap-4">
                 <div className="detail-row">
                   <span className="detail-label">Transaction ID:</span>
                   <span className="detail-value">{receipt.transactionId}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Date & Time:</span>
-                  <span className="detail-value">{formatDate(receipt.paymentDate)}</span>
+                  <span className="detail-value">
+                    {formatDate(receipt.paymentDate)}
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Booking Reference:</span>
-                  <span className="detail-value">{receipt.bookingReference}</span>
+                  <span className="detail-value">
+                    {receipt.bookingReference}
+                  </span>
                 </div>
                 {receipt.confirmation && (
                   <div className="detail-row">
@@ -244,7 +258,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
             {(receipt.route || receipt.airline || receipt.passengers) && (
               <div className="receipt-details-section">
                 <h4>Booking Information</h4>
-                <div className="details-grid">
+                <div className="details-grid gap-4">
                   {receipt.route && (
                     <div className="detail-row">
                       <span className="detail-label">Route:</span>
@@ -276,7 +290,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                     <div className="breakdown-row">
                       <span>💰 Wallet Payment</span>
                       <span>
-                        {receipt.currency} {receipt.paymentBreakdown.walletAmount.toFixed(2)}
+                        {receipt.currency}{" "}
+                        {receipt.paymentBreakdown.walletAmount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -284,7 +299,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                     <div className="breakdown-row">
                       <span>🎫 Airline Credit</span>
                       <span>
-                        {receipt.currency} {receipt.paymentBreakdown.creditAmount.toFixed(2)}
+                        {receipt.currency}{" "}
+                        {receipt.paymentBreakdown.creditAmount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -292,7 +308,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                     <div className="breakdown-row">
                       <span>💳 Card Payment</span>
                       <span>
-                        {receipt.currency} {receipt.paymentBreakdown.cardAmount.toFixed(2)}
+                        {receipt.currency}{" "}
+                        {receipt.paymentBreakdown.cardAmount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -317,17 +334,21 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
             {(receipt.customerName || receipt.customerEmail) && (
               <div className="receipt-details-section">
                 <h4>Customer Information</h4>
-                <div className="details-grid">
+                <div className="details-grid gap-4">
                   {receipt.customerName && (
                     <div className="detail-row">
                       <span className="detail-label">Name:</span>
-                      <span className="detail-value">{receipt.customerName}</span>
+                      <span className="detail-value">
+                        {receipt.customerName}
+                      </span>
                     </div>
                   )}
                   {receipt.customerEmail && (
                     <div className="detail-row">
                       <span className="detail-label">Email:</span>
-                      <span className="detail-value">{receipt.customerEmail}</span>
+                      <span className="detail-value">
+                        {receipt.customerEmail}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -350,25 +371,31 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
         {/* Actions */}
         <div className="modal-footer">
           <div className="action-group">
-            <button
+            <Button
+              variant="outline"
+              size="default"
               className="action-btn primary no-print"
               onClick={handlePrint}
             >
               🖨️ Print
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
               className="action-btn no-print"
               onClick={handleDownloadPDF}
               disabled={isDownloading}
             >
-              📥 {isDownloading ? 'Downloading...' : 'Download PDF'}
-            </button>
-            <button
+              📥 {isDownloading ? "Downloading..." : "Download PDF"}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
               className="action-btn no-print"
               onClick={() => setShowEmailForm(!showEmailForm)}
             >
               📧 Email
-            </button>
+            </Button>
           </div>
 
           {showEmailForm && (
@@ -378,24 +405,28 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                 placeholder="Enter email address"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendEmail()}
+                onKeyPress={(e) => e.key === "Enter" && handleSendEmail()}
               />
-              <button
+              <Button
+                variant="outline"
+                size="default"
                 onClick={handleSendEmail}
                 disabled={isSendingEmail}
                 className="send-btn"
               >
-                {isSendingEmail ? 'Sending...' : 'Send'}
-              </button>
+                {isSendingEmail ? "Sending..." : "Send"}
+              </Button>
             </div>
           )}
 
-          <button
+          <Button
+            variant="outline"
+            size="default"
             className="action-btn secondary no-print"
             onClick={onClose}
           >
             Close
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -410,7 +441,7 @@ const receiptStyles = `
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     line-height: 1.6;
-    color: #1a1a1a;
+    color: hsl(var(--foreground));
     margin: 0;
     padding: 0;
   }
@@ -420,7 +451,7 @@ const receiptStyles = `
     max-width: 600px;
     margin: 0 auto;
     padding: 40px;
-    background: white;
+    background: hsl(var(--card));
   }
 
   .receipt-header {
@@ -428,7 +459,7 @@ const receiptStyles = `
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid hsl(var(--border));
     padding-bottom: 20px;
   }
 
@@ -445,7 +476,7 @@ const receiptStyles = `
   .receipt-subtitle {
     margin: 4px 0 0 0;
     font-size: 12px;
-    color: #999;
+    color: hsl(var(--muted-foreground));
   }
 
   .status-badge {
@@ -456,13 +487,13 @@ const receiptStyles = `
   }
 
   .status-badge.completed {
-    background: #e8f5e9;
-    color: #4caf50;
+    background: hsl(var(--secondary));
+    color: hsl(var(--primary));
   }
 
   .status-badge.pending {
-    background: #fff3e0;
-    color: #ff9800;
+    background: hsl(var(--accent));
+    color: hsl(var(--foreground));
   }
 
   .receipt-details-section {
@@ -473,7 +504,7 @@ const receiptStyles = `
     margin: 0 0 12px 0;
     font-size: 12px;
     text-transform: uppercase;
-    color: #666;
+    color: hsl(var(--muted-foreground));
     font-weight: 700;
   }
 
@@ -490,19 +521,19 @@ const receiptStyles = `
 
   .detail-label {
     font-size: 13px;
-    color: #666;
+    color: hsl(var(--muted-foreground));
     font-weight: 600;
   }
 
   .detail-value {
     font-size: 13px;
-    color: #1a1a1a;
+    color: hsl(var(--foreground));
     font-weight: 700;
     text-align: right;
   }
 
   .payment-breakdown-table {
-    border: 1px solid #e0e0e0;
+    border: 1px solid hsl(var(--border));
     border-radius: 4px;
     overflow: hidden;
   }
@@ -511,7 +542,7 @@ const receiptStyles = `
     display: flex;
     justify-content: space-between;
     padding: 10px 12px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid hsl(var(--border));
     font-size: 13px;
   }
 
@@ -520,7 +551,7 @@ const receiptStyles = `
   }
 
   .breakdown-row.total {
-    background: #f5f5f5;
+    background: hsl(var(--muted));
     font-weight: 700;
   }
 
@@ -536,14 +567,14 @@ const receiptStyles = `
   .single-payment .amount {
     font-size: 24px;
     font-weight: 700;
-    color: #007bff;
+    color: hsl(var(--primary));
   }
 
   .receipt-footer {
     text-align: center;
     margin-top: 40px;
     padding-top: 20px;
-    border-top: 2px solid #e0e0e0;
+    border-top: 2px solid hsl(var(--border));
   }
 
   .receipt-footer p {
@@ -552,13 +583,13 @@ const receiptStyles = `
   }
 
   .receipt-note {
-    color: #666;
+    color: hsl(var(--muted-foreground));
     font-style: italic;
   }
 
   .receipt-date {
     font-size: 11px;
-    color: #999;
+    color: hsl(var(--muted-foreground));
   }
 
   @media print {
@@ -595,7 +626,7 @@ const styles = `
 }
 
 .payment-receipt-modal {
-  background: white;
+  background: hsl(var(--card));
   border-radius: 12px;
   width: 90%;
   max-width: 700px;
@@ -622,14 +653,14 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .modal-header h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .close-btn {
@@ -637,7 +668,7 @@ const styles = `
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   padding: 0;
   width: 32px;
   height: 32px;
@@ -649,8 +680,8 @@ const styles = `
 }
 
 .close-btn:hover {
-  background: #f5f5f5;
-  color: #1a1a1a;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
 }
 
 .message-alert {
@@ -665,13 +696,13 @@ const styles = `
 }
 
 .message-alert.success {
-  background: #e8f5e9;
-  color: #4caf50;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary));
 }
 
 .message-alert.error {
-  background: #ffebee;
-  color: #f44336;
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
 }
 
 .modal-content {
@@ -681,8 +712,8 @@ const styles = `
 }
 
 .receipt-container {
-  background: #f9f9f9;
-  border: 1px solid #e0e0e0;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 24px;
 }
@@ -694,20 +725,20 @@ const styles = `
   gap: 16px;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid hsl(var(--border));
 }
 
 .receipt-title h3 {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .receipt-title p {
   margin: 0;
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .receipt-status {
@@ -723,13 +754,13 @@ const styles = `
 }
 
 .status-badge.completed {
-  background: #e8f5e9;
-  color: #4caf50;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary));
 }
 
 .status-badge.pending {
-  background: #fff3e0;
-  color: #ff9800;
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
 }
 
 .receipt-details-section {
@@ -740,7 +771,7 @@ const styles = `
   margin: 0 0 12px 0;
   font-size: 11px;
   text-transform: uppercase;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 700;
   letter-spacing: 0.5px;
 }
@@ -755,7 +786,7 @@ const styles = `
   justify-content: space-between;
   gap: 16px;
   padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .detail-row:last-child {
@@ -764,19 +795,19 @@ const styles = `
 
 .detail-label {
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 600;
 }
 
 .detail-value {
   font-size: 12px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   font-weight: 700;
   text-align: right;
 }
 
 .payment-breakdown-table {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   overflow: hidden;
 }
@@ -785,7 +816,7 @@ const styles = `
   display: flex;
   justify-content: space-between;
   padding: 10px 12px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid hsl(var(--border));
   font-size: 12px;
 }
 
@@ -794,28 +825,28 @@ const styles = `
 }
 
 .breakdown-row.total {
-  background: #e3f2fd;
+  background: hsl(var(--accent));
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .single-payment {
   text-align: center;
   padding: 16px;
-  background: white;
+  background: hsl(var(--card));
   border-radius: 6px;
 }
 
 .single-payment p {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 .single-payment .amount {
   font-size: 20px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
   margin-top: 8px;
 }
 
@@ -823,18 +854,18 @@ const styles = `
   text-align: center;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid hsl(var(--border));
 }
 
 .receipt-footer p {
   margin: 4px 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .receipt-footer p:first-child {
   font-size: 12px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   font-weight: 600;
 }
 
@@ -843,7 +874,7 @@ const styles = `
   flex-direction: column;
   gap: 12px;
   padding: 20px 24px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid hsl(var(--border));
 }
 
 .action-group {
@@ -854,21 +885,21 @@ const styles = `
 
 .action-btn {
   padding: 10px 16px;
-  background: white;
-  border: 1px solid #ddd;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   transition: all 0.2s;
   flex: 1;
   min-width: 100px;
 }
 
 .action-btn:hover:not(:disabled) {
-  background: #f5f5f5;
-  border-color: #bbb;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
 }
 
 .action-btn:disabled {
@@ -877,20 +908,20 @@ const styles = `
 }
 
 .action-btn.primary {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
 }
 
 .action-btn.primary:hover:not(:disabled) {
-  background: #0056b3;
-  border-color: #0056b3;
+  background: hsl(var(--primary) / 0.9);
+  border-color: hsl(var(--primary) / 0.9);
 }
 
 .action-btn.secondary {
-  background: #f5f5f5;
-  border-color: #ddd;
-  color: #666;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--border));
+  color: hsl(var(--muted-foreground));
 }
 
 .email-form {
@@ -901,21 +932,21 @@ const styles = `
 .email-form input {
   flex: 1;
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   font-size: 13px;
 }
 
 .email-form input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: hsl(var(--primary));
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
 }
 
 .send-btn {
   padding: 10px 16px;
-  background: #4caf50;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -925,7 +956,7 @@ const styles = `
 }
 
 .send-btn:hover:not(:disabled) {
-  background: #45a049;
+  background: hsl(var(--primary) / 0.9);
 }
 
 .send-btn:disabled {
@@ -967,7 +998,7 @@ const styles = `
 
 @media print {
   .payment-receipt-modal-overlay {
-    background: white;
+    background: hsl(var(--card));
   }
 
   .payment-receipt-modal {

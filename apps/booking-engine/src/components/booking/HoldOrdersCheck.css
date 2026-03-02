@@ -7,8 +7,8 @@
 /* Error Banner */
 .error-banner {
   margin-bottom: 20px;
-  background: #ffebee;
-  border-left: 4px solid #d32f2f;
+  background: hsl(var(--destructive) / 0.12);
+  border-left: 4px solid hsl(var(--destructive));
   border-radius: 4px;
   padding: 16px;
 }
@@ -21,19 +21,19 @@
 
 .error-icon {
   font-size: 24px;
-  color: #d32f2f;
+  color: hsl(var(--destructive));
   flex-shrink: 0;
 }
 
 .error-content h3 {
   margin: 0 0 4px 0;
-  color: #b71c1c;
+  color: hsl(var(--destructive));
   font-size: 16px;
 }
 
 .error-content p {
   margin: 0;
-  color: #b71c1c;
+  color: hsl(var(--destructive));
   font-size: 14px;
   line-height: 1.5;
 }
@@ -42,7 +42,7 @@
   margin-left: auto;
   background: none;
   border: none;
-  color: #d32f2f;
+  color: hsl(var(--destructive));
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -61,15 +61,15 @@
 /* Success Banner */
 .success-banner {
   margin-bottom: 20px;
-  background: #e8f5e9;
-  border-left: 4px solid #4CAF50;
+  background: hsl(var(--primary) / 0.12);
+  border-left: 4px solid hsl(var(--primary));
   border-radius: 4px;
   padding: 16px;
 }
 
 .success-banner p {
   margin: 0;
-  color: #1b5e20;
+  color: hsl(var(--primary));
   font-size: 14px;
   line-height: 1.6;
   white-space: pre-wrap;
@@ -88,9 +88,9 @@
 .spinner-large {
   width: 48px;
   height: 48px;
-  border: 4px solid #f0f0f0;
+  border: 4px solid hsl(var(--muted));
   border-radius: 50%;
-  border-top: 4px solid #4CAF50;
+  border-top: 4px solid hsl(var(--primary));
   animation: spin 0.8s linear infinite;
 }
 
@@ -105,13 +105,13 @@
 
 .loading-state p {
   font-size: 16px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Eligibility Info */
 .eligibility-info {
-  background: #e8f5e9;
-  border: 1px solid #4CAF50;
+  background: hsl(var(--primary) / 0.12);
+  border: 1px solid hsl(var(--primary) / 0.5);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 20px;
@@ -120,7 +120,7 @@
 .eligibility-info h3 {
   margin: 0 0 16px 0;
   font-size: 18px;
-  color: #1b5e20;
+  color: hsl(var(--primary));
   display: flex;
   align-items: center;
   gap: 8px;
@@ -144,7 +144,7 @@
 .detail .label {
   font-size: 13px;
   font-weight: 600;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -152,8 +152,8 @@
 .detail .value {
   font-size: 14px;
   font-weight: 600;
-  color: #2e7d32;
-  font-family: 'Courier New', monospace;
+  color: hsl(var(--primary));
+  font-family: "Courier New", monospace;
 }
 
 /* Containers */
@@ -191,26 +191,26 @@
 .completion-icon {
   width: 80px;
   height: 80px;
-  background: #e8f5e9;
+  background: hsl(var(--primary) / 0.12);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: #4CAF50;
+  color: hsl(var(--primary));
   margin-bottom: 20px;
 }
 
-.error-icon {
+.error-state-icon {
   width: 80px;
   height: 80px;
-  background: #ffebee;
+  background: hsl(var(--destructive) / 0.12);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 48px;
-  color: #d32f2f;
+  color: hsl(var(--destructive));
   margin-bottom: 20px;
 }
 
@@ -218,14 +218,14 @@
 .error-state h2 {
   margin: 0 0 12px 0;
   font-size: 24px;
-  color: #333;
+  color: hsl(var(--foreground));
 }
 
 .completion-state p,
 .error-state p {
   margin: 0 0 24px 0;
   font-size: 16px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   max-width: 500px;
   line-height: 1.6;
 }
@@ -251,25 +251,25 @@
 }
 
 .btn-primary {
-  background: #4CAF50;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 .btn-primary:hover {
-  background: #45a049;
-  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  background: hsl(var(--primary) / 0.9);
+  box-shadow: 0 2px 8px hsl(var(--primary) / 0.3);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: white;
-  color: #333;
-  border: 1px solid #ddd;
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--input));
 }
 
 .btn-secondary:hover {
-  background: #f9f9f9;
-  border-color: #999;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--muted-foreground));
 }
 
 @media (max-width: 768px) {

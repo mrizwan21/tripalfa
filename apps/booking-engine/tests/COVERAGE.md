@@ -1,6 +1,7 @@
 # E2E Test Coverage Report
 
 ## User Flows Covered
+
 - Flight booking (happy path)
 - Hotel booking (happy path)
 - Booking management (view, filter, search)
@@ -8,11 +9,13 @@
 - Payment processing (card, wallet)
 
 ## Error Scenarios Covered
+
 - Payment errors: card decline, insufficient wallet
 - Validation errors: invalid passenger details, invalid search parameters, past date search
 - Network errors: search timeout, booking confirmation timeout
 
 ## API Endpoints Covered
+
 - POST /api/bookings/flight/hold
 - POST /api/bookings/flight/confirm
 - POST /api/bookings/hotel/hold
@@ -25,6 +28,7 @@
 - POST /api/payments/wallet
 
 ## Coverage Metrics
+
 - User flows: 5/5 (100%)
 - Error scenarios: 7/7 (100%)
 - API endpoints: 10/10 (100%)
@@ -33,4 +37,5 @@
 - Pass rate: 100% (target, 3 consecutive runs)
 
 ## Future Work
+
 - See README and plan for Phase 2/3

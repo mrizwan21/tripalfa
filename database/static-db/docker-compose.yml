@@ -17,8 +17,8 @@ services:
     container_name: tripalfa-staticdb
     restart: unless-stopped
     environment:
-      POSTGRES_DB:       ${STATICDB_NAME:-tripalfa_static}
-      POSTGRES_USER:     ${STATICDB_USER:-staticdb_admin}
+      POSTGRES_DB: ${STATICDB_NAME:-tripalfa_static}
+      POSTGRES_USER: ${STATICDB_USER:-staticdb_admin}
       POSTGRES_PASSWORD: ${STATICDB_PASSWORD:?STATICDB_PASSWORD is required}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
       TZ: UTC
@@ -41,7 +41,11 @@ services:
       # Persistent data volume
       - staticdb_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${STATICDB_USER:-staticdb_admin} -d ${STATICDB_NAME:-tripalfa_static}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${STATICDB_USER:-staticdb_admin} -d ${STATICDB_NAME:-tripalfa_static}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -61,7 +65,7 @@ services:
       staticdb:
         condition: service_healthy
     environment:
-      PGADMIN_DEFAULT_EMAIL:    ${PGADMIN_EMAIL:-admin@tripalfa.com}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@tripalfa.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"

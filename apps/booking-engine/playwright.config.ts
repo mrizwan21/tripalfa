@@ -1,13 +1,13 @@
-import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
+import { defineConfig, devices } from "@playwright/test";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load test environment variables
-dotenv.config({ path: path.resolve(__dirname, '.env.test') });
+dotenv.config({ path: path.resolve(__dirname, ".env.test") });
 
 // @ts-ignore
 declare global {
@@ -31,7 +31,7 @@ declare global {
  */
 export default defineConfig({
   // Test directory
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
 
   // Enhanced timeout settings
   timeout: 90000, // 90 seconds for complex flows
@@ -47,14 +47,20 @@ export default defineConfig({
 
   // Reporter configuration
   reporter: [
-    ['list'], // Console output
-    ['html', {
-      outputFolder: 'playwright-report',
-      open: 'never' // Don't auto-open report
-    }],
-    ['json', {
-      outputFile: 'test-results/results.json'
-    }],
+    ["list"], // Console output
+    [
+      "html",
+      {
+        outputFolder: "playwright-report",
+        open: "never", // Don't auto-open report
+      },
+    ],
+    [
+      "json",
+      {
+        outputFile: "test-results/results.json",
+      },
+    ],
     // Add JUnit reporter for CI integration (future)
     // ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
@@ -62,12 +68,12 @@ export default defineConfig({
   // Enhanced global test settings
   use: {
     // Base URL for navigation
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
+    baseURL: process.env.BASE_URL || "http://localhost:5173",
 
     // Enhanced trace settings (for debugging)
-    trace: 'retain-on-failure', // Capture trace on failure
-    screenshot: 'only-on-failure', // Screenshot on failure
-    video: 'retain-on-failure', // Video on failure
+    trace: "retain-on-failure", // Capture trace on failure
+    screenshot: "only-on-failure", // Screenshot on failure
+    video: "retain-on-failure", // Video on failure
 
     // Enhanced timeout settings
     actionTimeout: 20000, // 20 seconds for actions
@@ -78,8 +84,8 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
 
     // Enhanced storage state (for authenticated tests)
-    storageState: './tests/fixtures/storageState.json',
-    
+    storageState: "./tests/fixtures/storageState.json",
+
     // Additional reliability settings
     headless: process.env.CI ? true : false, // Headless in CI, headed locally
     launchOptions: {
@@ -92,39 +98,39 @@ export default defineConfig({
   projects: [
     // Setup project (runs before all tests)
     {
-      name: 'setup',
+      name: "setup",
       testMatch: /global\.setup\.ts/,
     },
 
     // Chromium (primary browser for Phase 1)
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         // Use storage state from setup
-        storageState: './tests/fixtures/storageState.json',
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
 
     // Firefox browser (Phase 2)
     {
-      name: 'firefox',
+      name: "firefox",
       use: {
-        ...devices['Desktop Firefox'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Firefox"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
 
     // WebKit browser (Phase 2)
     {
-      name: 'webkit',
+      name: "webkit",
       use: {
-        ...devices['Desktop Safari'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Safari"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
 
     // Mobile browsers (Phase 3)
@@ -136,22 +142,22 @@ export default defineConfig({
   ],
 
   // Global setup and teardown
-  globalSetup: path.resolve(__dirname, './tests/helpers/global.setup.ts'),
-  globalTeardown: path.resolve(__dirname, './tests/helpers/globalTeardown.ts'),
+  globalSetup: path.resolve(__dirname, "./tests/helpers/global.setup.ts"),
+  globalTeardown: path.resolve(__dirname, "./tests/helpers/globalTeardown.ts"),
 
   // Output directory for test artifacts
-  outputDir: 'test-results/',
+  outputDir: "test-results/",
 
   // Web server configuration - Playwright will start/stop the dev server automatically
   webServer: {
-    command: 'npm run dev:test',
-    url: 'http://localhost:5174',
+    command: "npm run dev:test",
+    url: "http://localhost:5174",
     reuseExistingServer: !process.env.CI,
     timeout: 120000, // 2 minutes to start
     env: {
-      NODE_ENV: 'test',
-      VITE_TEST_MODE: 'true',
-      VITE_API_BASE_URL: 'http://localhost:3003',
+      NODE_ENV: "test",
+      VITE_TEST_MODE: "true",
+      VITE_API_BASE_URL: "http://localhost:3003",
     },
   },
 });

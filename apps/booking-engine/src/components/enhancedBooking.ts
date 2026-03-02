@@ -2,10 +2,18 @@ export interface Booking {
   id: string;
   bookingRef: string;
   confirmationNumber?: string;
-  type: 'flight' | 'hotel' | 'package';
-  status: 'pending' | 'confirmed' | 'hold' | 'cancelled' | 'refunded' | 'amended' | 'imported' | 'ticketed';
-  bookingType: 'instant' | 'hold' | 'request' | 'imported';
-  customerType: 'B2B' | 'B2C';
+  type: "flight" | "hotel" | "package";
+  status:
+    | "pending"
+    | "confirmed"
+    | "hold"
+    | "cancelled"
+    | "refunded"
+    | "amended"
+    | "imported"
+    | "ticketed";
+  bookingType: "instant" | "hold" | "request" | "imported";
+  customerType: "B2B" | "B2C";
   customerId: string;
   companyId?: string;
   branchId?: string;
@@ -20,7 +28,7 @@ export interface Booking {
   createdAt: Date;
   updatedAt: Date;
   holdUntil?: Date;
-  queueStatus?: 'pending' | 'completed' | 'failed';
+  queueStatus?: "pending" | "completed" | "failed";
   importedAt?: Date;
   importedBy?: string;
   ticketDetails?: any;
@@ -37,7 +45,7 @@ export interface Passenger {
   dateOfBirth: Date;
   passportNumber?: string;
   nationality?: string;
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
   seatPreference?: string;
   mealPreference?: string;
 }
@@ -53,10 +61,16 @@ export interface Pricing {
 }
 
 export interface Payment {
-  method: 'wallet' | 'credit_card' | 'debit_card' | 'net_banking' | 'upi' | 'supplier_credit';
+  method:
+    | "wallet"
+    | "credit_card"
+    | "debit_card"
+    | "net_banking"
+    | "upi"
+    | "supplier_credit";
   amount: number;
   currency: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  status: "pending" | "completed" | "failed" | "refunded";
   supplierPayment?: {
     method: string;
     terms: string;
@@ -69,7 +83,7 @@ export interface PaymentTransaction {
   id: string;
   amount: number;
   method: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  status: "pending" | "completed" | "failed" | "refunded";
   timestamp: Date;
   transactionId?: string;
   gateway?: string;
@@ -80,8 +94,8 @@ export interface Refund {
   id: string;
   amount: number;
   reason: string;
-  type: 'full' | 'partial';
-  status: 'pending' | 'completed' | 'failed';
+  type: "full" | "partial";
+  status: "pending" | "completed" | "failed";
   timestamp: Date;
   processedBy?: string;
 }
@@ -92,7 +106,7 @@ export interface Amendment {
   changes: any;
   reason: string;
   priceDifference: number;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   createdAt: Date;
   approvedAt?: Date;
   approvedBy?: string;
@@ -101,8 +115,14 @@ export interface Amendment {
 export interface BookingQueue {
   id: string;
   bookingId: string;
-  queueType: 'hold' | 'refund' | 'amendment' | 'special_request' | 'website' | 'cancellation';
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  queueType:
+    | "hold"
+    | "refund"
+    | "amendment"
+    | "special_request"
+    | "website"
+    | "cancellation";
+  status: "pending" | "processing" | "completed" | "failed";
   priority: number;
   processedAt?: Date;
   error?: string;
@@ -128,14 +148,23 @@ export interface BookingHistory {
 export interface BookingDocument {
   id: string;
   bookingId: string;
-  type: 'invoice' | 'receipt' | 'credit_note' | 'e_ticket' | 'hotel_voucher' | 'amendment_invoice' | 'reissued_e_ticket' | 'reissued_hotel_voucher' | 'itinerary';
+  type:
+    | "invoice"
+    | "receipt"
+    | "credit_note"
+    | "e_ticket"
+    | "hotel_voucher"
+    | "amendment_invoice"
+    | "reissued_e_ticket"
+    | "reissued_hotel_voucher"
+    | "itinerary";
   fileName: string;
   fileUrl: string;
   mimeType: string;
   size: number;
   generatedAt: Date;
   generatedBy: string;
-  status: 'generated' | 'sent' | 'downloaded';
+  status: "generated" | "sent" | "downloaded";
   sentTo?: string[];
   downloadCount: number;
   content?: string | Buffer;
@@ -143,7 +172,7 @@ export interface BookingDocument {
 }
 
 export interface GDSIntegration {
-  type: 'amadeus' | 'sabre' | 'travelport';
+  type: "amadeus" | "sabre" | "travelport";
   credentials: {
     clientId: string;
     clientSecret: string;
@@ -156,7 +185,7 @@ export interface GDSIntegration {
 export interface DocumentTemplate {
   id: string;
   name: string;
-  type: 'invoice' | 'receipt' | 'credit_note' | 'e_ticket' | 'hotel_voucher';
+  type: "invoice" | "receipt" | "credit_note" | "e_ticket" | "hotel_voucher";
   template: string;
   variables: string[];
   isActive: boolean;
@@ -167,7 +196,7 @@ export interface DocumentTemplate {
 export interface SupplierIntegration {
   id: string;
   name: string;
-  type: 'GDS' | 'DIRECT_API' | 'LOCAL';
+  type: "GDS" | "DIRECT_API" | "LOCAL";
   vendorId: string;
   credentials: any;
   isActive: boolean;
@@ -180,11 +209,11 @@ export interface LedgerEntry {
   id: string;
   accountId: string;
   amount: number;
-  type: 'debit' | 'credit';
+  type: "debit" | "credit";
   description: string;
   reference: string;
   timestamp: Date;
-  status: 'pending' | 'posted' | 'reversed';
+  status: "pending" | "posted" | "reversed";
   postedBy?: string;
 }
 
@@ -201,9 +230,9 @@ export interface SearchFilters {
   status?: string[];
   type?: string[];
   queueType?: string[];
-  customerType?: 'B2B' | 'B2C' | 'ALL';
+  customerType?: "B2B" | "B2C" | "ALL";
   sortBy?: string;
-  sortOrder?: 'ASC' | 'DESC';
+  sortOrder?: "ASC" | "DESC";
   page?: number;
   limit?: number;
 }
@@ -239,8 +268,8 @@ export interface RefundRequest {
   bookingId: string;
   amount: number;
   reason: string;
-  type: 'full' | 'partial';
-  refundTo: 'original' | 'wallet';
+  type: "full" | "partial";
+  refundTo: "original" | "wallet";
 }
 
 export interface AmendmentRequest {
@@ -251,7 +280,7 @@ export interface AmendmentRequest {
 }
 
 export interface ImportRequest {
-  gdsType: 'amadeus' | 'sabre' | 'travelport';
+  gdsType: "amadeus" | "sabre" | "travelport";
   pnr: string;
   supplierRef: string;
   customerId?: string;

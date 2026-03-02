@@ -7,9 +7,9 @@ This service is designed to run on Neon (serverless Postgres). To migrate your d
 1. Export your Docker database as described in the implementation guide.
 2. Use the provided migration script:
 
-  ```bash
-  ./scripts/migrate_to_neon.sh <NEON_DATABASE_URL> wallet_db.dump
-  ```
+```bash
+./scripts/migrate_to_neon.sh <NEON_DATABASE_URL> wallet_db.dump
+```
 
 - Replace `<NEON_DATABASE_URL>` with your Neon connection string (see .env.example).
 
@@ -19,9 +19,9 @@ This service is designed to run on Neon (serverless Postgres). To migrate your d
 
 1. Run migrations if needed:
 
-  ```bash
-  npm run migrations
-  ```
+```bash
+npm run migrations
+```
 
 1. Start the service and verify all endpoints and jobs.
 
@@ -333,13 +333,13 @@ All operations use `SERIALIZABLE` isolation level to prevent dirty reads and pha
 
 ```typescript
 // Atomic transfer with locks
-await client.query('BEGIN ISOLATION LEVEL SERIALIZABLE');
+await client.query("BEGIN ISOLATION LEVEL SERIALIZABLE");
 const wallet = await client.query(
-  'SELECT id FROM wallets WHERE id = $1 FOR UPDATE',
-  [walletId]
+  "SELECT id FROM wallets WHERE id = $1 FOR UPDATE",
+  [walletId],
 );
 // ... perform operations ...
-await client.query('COMMIT');
+await client.query("COMMIT");
 ```
 
 ### Idempotency
@@ -348,8 +348,8 @@ All payment operations check idempotency key before processing to prevent duplic
 
 ```typescript
 const existing = await client.query(
-  'SELECT id FROM transactions WHERE idempotency_key = $1',
-  [idempotencyKey]
+  "SELECT id FROM transactions WHERE idempotency_key = $1",
+  [idempotencyKey],
 );
 if (existing.rows.length) return existing.rows[0];
 ```
@@ -373,14 +373,14 @@ Every transaction creates two ledger entries (debit and credit) for audit trail.
 
 ## Error Handling
 
-| Error | HTTP Code | Description |
-| ------ | -------- | ----------- |
-| Insufficient funds | 402 | Wallet balance < requested amount |
-| FX unavailable | 503 | No active FX snapshot for conversion |
-| Wallet not found | 404 | User wallet doesn't exist |
-| Duplicate transaction | 409 | Idempotency key already processed |
-| Invalid request | 400 | Schema validation failed |
-| Server error | 500 | Database or service error |
+| Error                 | HTTP Code | Description                          |
+| --------------------- | --------- | ------------------------------------ |
+| Insufficient funds    | 402       | Wallet balance < requested amount    |
+| FX unavailable        | 503       | No active FX snapshot for conversion |
+| Wallet not found      | 404       | User wallet doesn't exist            |
+| Duplicate transaction | 409       | Idempotency key already processed    |
+| Invalid request       | 400       | Schema validation failed             |
+| Server error          | 500       | Database or service error            |
 
 ## Development
 

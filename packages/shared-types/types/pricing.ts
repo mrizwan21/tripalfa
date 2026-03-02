@@ -13,7 +13,7 @@ import {
   TaxType,
   ReclaimStatus,
   ClaimStatus,
-} from './enums';
+} from "./enums";
 
 // ============================================================================
 // Markup Rule Types
@@ -24,7 +24,7 @@ export interface MarkupConditions {
   advanceBookingDays?: { min?: number; max?: number };
   travelDateRange?: { from: string; to: string };
   cabinClass?: string[];
-  routeType?: 'domestic' | 'international' | 'all';
+  routeType?: "domestic" | "international" | "all";
   [key: string]: unknown;
 }
 
@@ -34,29 +34,29 @@ export interface MarkupRule {
   name: string;
   code: string;
   priority: number;
-  
+
   // Scope
   applicableTo: string[];
   serviceTypes: string[];
-  
+
   // Markup
   markupType: MarkupType;
   markupValue: number;
   minMarkup?: number;
   maxMarkup?: number;
-  
+
   // Conditions
   conditions?: MarkupConditions;
-  
+
   // Applicability
   supplierIds: string[];
   branchIds: string[];
   userIds: string[];
-  
+
   isActive: boolean;
   validFrom: string;
   validTo?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -117,29 +117,29 @@ export interface CommissionRule {
   name: string;
   code: string;
   priority: number;
-  
+
   // Scope
   applicableTo: string[];
   serviceTypes: string[];
-  
+
   // Commission
   commissionType: CommissionType;
   commissionValue: number;
   minCommission?: number;
   maxCommission?: number;
-  
+
   // Target
   targetType: CommissionTargetType;
   targetId?: string;
-  
+
   // Conditions
   conditions?: CommissionConditions;
   supplierIds: string[];
-  
+
   isActive: boolean;
   validFrom: string;
   validTo?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -191,22 +191,22 @@ export interface CommissionSettlement {
   id: string;
   commissionRuleId: string;
   bookingId: string;
-  
+
   // Amounts
   baseAmount: number;
   commissionAmount: number;
   currency: string;
-  
+
   // Settlement
   status: SettlementStatus;
   settledAmount?: number;
   settledAt?: string;
   settlementRef?: string;
-  
+
   // Target
   targetType: CommissionTargetType;
   targetId: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -228,31 +228,31 @@ export interface DiscountCoupon {
   code: string;
   name: string;
   description?: string;
-  
+
   // Discount
   discountType: DiscountType;
   discountValue: number;
   maxDiscount?: number;
-  
+
   // Conditions
   minOrderAmount?: number;
   applicableTo: string[];
   conditions?: DiscountConditions;
-  
+
   // Usage limits
   totalUsageLimit?: number;
   perUserLimit: number;
   currentUsage: number;
-  
+
   // Validity
   isActive: boolean;
   validFrom: string;
   validTo: string;
-  
+
   // Restrictions
   allowedUserIds: string[];
   excludedUserIds: string[];
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -305,18 +305,18 @@ export interface CouponRedemption {
   couponId: string;
   userId: string;
   bookingId: string;
-  
+
   // Discount applied
   originalAmount: number;
   discountAmount: number;
   finalAmount: number;
   currency: string;
-  
+
   // Status
   status: RedemptionStatus;
   reversedAt?: string;
   reverseReason?: string;
-  
+
   createdAt: string;
 }
 
@@ -336,7 +336,12 @@ export interface CouponValidationResult {
   coupon?: DiscountCoupon;
   discountAmount?: number;
   errorMessage?: string;
-  errorCode?: 'INVALID_CODE' | 'EXPIRED' | 'USAGE_LIMIT' | 'MIN_AMOUNT' | 'NOT_APPLICABLE';
+  errorCode?:
+    | "INVALID_CODE"
+    | "EXPIRED"
+    | "USAGE_LIMIT"
+    | "MIN_AMOUNT"
+    | "NOT_APPLICABLE";
 }
 
 // ============================================================================
@@ -349,22 +354,22 @@ export interface TaxDefinition {
   description?: string;
   type: TaxType;
   category: string;
-  
+
   // Jurisdiction
   country?: string;
   region?: string;
-  
+
   // Default rate
   defaultRate: number;
-  
+
   // Reclamation
   isReclaimable: boolean;
   reclaimRate?: number;
-  
+
   isActive: boolean;
   validFrom: string;
   validTo?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -407,21 +412,21 @@ export interface TaxCalculation {
   id: string;
   bookingId: string;
   taxDefinitionId: string;
-  
+
   // Calculation
   baseAmount: number;
   rate: number;
   taxAmount: number;
   currency: string;
-  
+
   // Reclamation
   isReclaimable: boolean;
   reclaimAmount?: number;
   reclaimStatus?: ReclaimStatus;
-  
+
   // Audit
   ruleApplied?: Record<string, unknown>;
-  
+
   createdAt: string;
 }
 
@@ -433,23 +438,23 @@ export interface TaxReclamationClaim {
   taxCalculationId: string;
   claimRef: string;
   status: ClaimStatus;
-  
+
   // Amounts
   claimAmount: number;
   approvedAmount?: number;
   currency: string;
-  
+
   // Processing
   submittedAt: string;
   submittedBy: string;
   processedAt?: string;
   processedBy?: string;
-  
+
   // Documentation
   documents?: { name: string; url: string; type: string }[];
   notes?: string;
   rejectionReason?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -493,7 +498,7 @@ export interface PricingCalculationResponse {
   breakdown: {
     label: string;
     amount: number;
-    type: 'base' | 'markup' | 'tax' | 'discount' | 'fee';
+    type: "base" | "markup" | "tax" | "discount" | "fee";
   }[];
 }
 
@@ -539,7 +544,7 @@ export interface LoyaltyTransaction {
   id: string;
   userId: string;
   bookingId?: string;
-  transactionType: 'earn' | 'redeem' | 'expire' | 'bonus' | 'adjustment';
+  transactionType: "earn" | "redeem" | "expire" | "bonus" | "adjustment";
   points: number;
   description: string;
   balanceAfter: number;
@@ -551,7 +556,7 @@ export interface LoyaltyTransaction {
 export interface LoyaltyTransactionCreate {
   userId: string;
   bookingId?: string;
-  transactionType: 'earn' | 'redeem' | 'expire' | 'bonus' | 'adjustment';
+  transactionType: "earn" | "redeem" | "expire" | "bonus" | "adjustment";
   points: number;
   description: string;
   expiresAt?: string;
@@ -566,8 +571,8 @@ export interface CorporateContract {
   companyId: string;
   contractNumber: string;
   name: string;
-  contractType: 'volume' | 'preferred' | 'enterprise';
-  status: 'draft' | 'active' | 'expired' | 'cancelled';
+  contractType: "volume" | "preferred" | "enterprise";
+  status: "draft" | "active" | "expired" | "cancelled";
   baseDiscountPercentage: number;
   serviceDiscounts?: Record<string, unknown>;
   volumeTiers?: Record<string, unknown>;
@@ -590,7 +595,7 @@ export interface CorporateContractCreate {
   companyId: string;
   contractNumber: string;
   name: string;
-  contractType: 'volume' | 'preferred' | 'enterprise';
+  contractType: "volume" | "preferred" | "enterprise";
   baseDiscountPercentage?: number;
   serviceDiscounts?: Record<string, unknown>;
   volumeTiers?: Record<string, unknown>;
@@ -605,8 +610,8 @@ export interface CorporateContractCreate {
 
 export interface CorporateContractUpdate {
   name?: string;
-  contractType?: 'volume' | 'preferred' | 'enterprise';
-  status?: 'draft' | 'active' | 'expired' | 'cancelled';
+  contractType?: "volume" | "preferred" | "enterprise";
+  status?: "draft" | "active" | "expired" | "cancelled";
   baseDiscountPercentage?: number;
   serviceDiscounts?: Record<string, unknown>;
   volumeTiers?: Record<string, unknown>;
@@ -666,14 +671,14 @@ export interface SupplierDeal {
   id: string;
   name: string;
   code: string;
-  productType: 'flight' | 'hotel';
+  productType: "flight" | "hotel";
   supplierCodes: string[];
-  dealType: 'private_fare' | 'ndc_special' | 'corporate' | 'group';
-  discountType: 'percentage' | 'fixed' | 'tiered';
+  dealType: "private_fare" | "ndc_special" | "corporate" | "group";
+  discountType: "percentage" | "fixed" | "tiered";
   discountValue: number;
   maxDiscount?: number;
   minOrderAmount?: number;
-  status: 'active' | 'paused' | 'expired' | 'pending_approval';
+  status: "active" | "paused" | "expired" | "pending_approval";
   priority: number;
   isCombinableWithCoupons: boolean;
   validFrom: string;
@@ -686,10 +691,10 @@ export interface SupplierDeal {
 export interface SupplierDealCreate {
   name: string;
   code: string;
-  productType: 'flight' | 'hotel';
+  productType: "flight" | "hotel";
   supplierCodes: string[];
-  dealType: 'private_fare' | 'ndc_special' | 'corporate' | 'group';
-  discountType: 'percentage' | 'fixed' | 'tiered';
+  dealType: "private_fare" | "ndc_special" | "corporate" | "group";
+  discountType: "percentage" | "fixed" | "tiered";
   discountValue: number;
   maxDiscount?: number;
   minOrderAmount?: number;
@@ -705,12 +710,12 @@ export interface SupplierDealUpdate {
   name?: string;
   code?: string;
   supplierCodes?: string[];
-  dealType?: 'private_fare' | 'ndc_special' | 'corporate' | 'group';
-  discountType?: 'percentage' | 'fixed' | 'tiered';
+  dealType?: "private_fare" | "ndc_special" | "corporate" | "group";
+  discountType?: "percentage" | "fixed" | "tiered";
   discountValue?: number;
   maxDiscount?: number;
   minOrderAmount?: number;
-  status?: 'active' | 'paused' | 'expired' | 'pending_approval';
+  status?: "active" | "paused" | "expired" | "pending_approval";
   priority?: number;
   isCombinableWithCoupons?: boolean;
   validFrom?: string;
@@ -720,7 +725,7 @@ export interface SupplierDealUpdate {
 }
 
 export interface DealMappingRules {
-  journeyType?: 'domestic' | 'international' | 'regional' | 'all';
+  journeyType?: "domestic" | "international" | "regional" | "all";
   bookingClasses?: string[];
   rbds?: string[];
   cabinClasses?: string[];
@@ -746,7 +751,7 @@ export interface DealApplication {
   originalAmount: number;
   discountAmount: number;
   currency: string;
-  customerType: 'b2c' | 'b2b';
+  customerType: "b2c" | "b2b";
   customerId?: string;
   companyId?: string;
   appliedAt: string;
@@ -764,11 +769,11 @@ export interface DealFilters {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface SearchCriteria {
-  productType: 'flight' | 'hotel';
+  productType: "flight" | "hotel";
   origin?: string;
   destination?: string;
   departureDate?: string;
@@ -783,7 +788,7 @@ export interface SearchCriteria {
 }
 
 export interface CustomerContext {
-  type: 'b2c' | 'b2b';
+  type: "b2c" | "b2b";
   customerId?: string;
   companyId?: string;
   tier?: string;

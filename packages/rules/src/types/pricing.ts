@@ -1,6 +1,6 @@
-import { MarkupRule, CommissionRule } from './rules';
-import { DiscountCoupon } from './coupon';
-import { LoyaltyTier } from './loyalty';
+import { MarkupRule, CommissionRule } from "./rules";
+import { DiscountCoupon } from "./coupon";
+import { LoyaltyTier } from "./loyalty";
 
 /**
  * Pricing calculation request
@@ -34,7 +34,7 @@ export interface PricingCalculationResponse {
   breakdown: {
     label: string;
     amount: number;
-    type: 'base' | 'markup' | 'tax' | 'discount' | 'fee';
+    type: "base" | "markup" | "tax" | "discount" | "fee";
   }[];
 }
 
@@ -57,8 +57,8 @@ export interface CorporateContract {
   companyId: string;
   contractNumber: string;
   name: string;
-  contractType: 'volume' | 'preferred' | 'enterprise';
-  status: 'draft' | 'active' | 'expired' | 'cancelled';
+  contractType: "volume" | "preferred" | "enterprise";
+  status: "draft" | "active" | "expired" | "cancelled";
   baseDiscountPercentage: number;
   serviceDiscounts?: Record<string, unknown>;
   volumeTiers?: Record<string, unknown>;
@@ -81,7 +81,7 @@ export interface CorporateContractCreate {
   companyId: string;
   contractNumber: string;
   name: string;
-  contractType: 'volume' | 'preferred' | 'enterprise';
+  contractType: "volume" | "preferred" | "enterprise";
   baseDiscountPercentage?: number;
   serviceDiscounts?: Record<string, unknown>;
   volumeTiers?: Record<string, unknown>;
@@ -96,8 +96,8 @@ export interface CorporateContractCreate {
 
 export interface CorporateContractUpdate {
   name?: string;
-  contractType?: 'volume' | 'preferred' | 'enterprise';
-  status?: 'draft' | 'active' | 'expired' | 'cancelled';
+  contractType?: "volume" | "preferred" | "enterprise";
+  status?: "draft" | "active" | "expired" | "cancelled";
   baseDiscountPercentage?: number;
   serviceDiscounts?: Record<string, unknown>;
   volumeTiers?: Record<string, unknown>;
@@ -152,9 +152,18 @@ export interface PricingAuditLogCreate {
 /**
  * Tax-related types
  */
-export type TaxType = 'vat' | 'gst' | 'sales_tax' | 'service_tax' | 'other';
-export type ReclaimStatus = 'pending' | 'approved' | 'rejected' | 'partially_approved';
-export type ClaimStatus = 'submitted' | 'in_review' | 'approved' | 'rejected' | 'paid';
+export type TaxType = "vat" | "gst" | "sales_tax" | "service_tax" | "other";
+export type ReclaimStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "partially_approved";
+export type ClaimStatus =
+  | "submitted"
+  | "in_review"
+  | "approved"
+  | "rejected"
+  | "paid";
 
 export interface TaxDefinition {
   id: string;

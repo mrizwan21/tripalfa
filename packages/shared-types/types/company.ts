@@ -2,7 +2,7 @@
 // TripAlfa Shared Types - Company Domain
 // ============================================================================
 
-import { CompanyType, CompanyStatus, BranchType, BranchStatus } from './enums';
+import { CompanyType, CompanyStatus, BranchType, BranchStatus } from "./enums";
 
 // ============================================================================
 // Address Type (Reusable)
@@ -215,8 +215,8 @@ export interface CompanyListParams {
   type?: CompanyType;
   status?: CompanyStatus;
   parentCompanyId?: string;
-  sortBy?: 'name' | 'code' | 'createdAt' | 'currentBalance';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "name" | "code" | "createdAt" | "currentBalance";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface CompanyListResponse {

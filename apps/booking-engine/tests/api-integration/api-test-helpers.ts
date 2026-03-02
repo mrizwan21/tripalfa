@@ -1,13 +1,13 @@
 /**
  * API Integration Test Helpers
- * 
+ *
  * Enhanced utilities for API integration testing in E2E tests.
  * Provides request/response interception, API mocking, and test scenario management.
- * 
+ *
  * @module api-integration/api-test-helpers
  */
 
-import { Page, Request, Response, Route } from '@playwright/test';
+import { Page, Request, Response, Route } from "@playwright/test";
 
 /**
  * API Endpoint Configuration
@@ -16,61 +16,61 @@ import { Page, Request, Response, Route } from '@playwright/test';
 export const API_ENDPOINTS = {
   // Authentication
   auth: {
-    login: '/api/auth/login',
-    logout: '/api/auth/logout',
-    refresh: '/api/auth/refresh',
-    register: '/api/auth/register',
-    verifyEmail: '/api/auth/verify-email',
-    forgotPassword: '/api/auth/forgot-password',
-    resetPassword: '/api/auth/reset-password',
+    login: "/api/auth/login",
+    logout: "/api/auth/logout",
+    refresh: "/api/auth/refresh",
+    register: "/api/auth/register",
+    verifyEmail: "/api/auth/verify-email",
+    forgotPassword: "/api/auth/forgot-password",
+    resetPassword: "/api/auth/reset-password",
   },
   // Bookings
   bookings: {
-    base: '/api/bookings',
-    create: '/api/bookings',
+    base: "/api/bookings",
+    create: "/api/bookings",
     get: (ref: string) => `/api/bookings/${ref}`,
     cancel: (ref: string) => `/api/bookings/${ref}/cancel`,
     confirm: (ref: string) => `/api/bookings/${ref}/confirm`,
-    list: '/api/bookings',
-    search: '/api/bookings/search',
+    list: "/api/bookings",
+    search: "/api/bookings/search",
   },
   // Flights
   flights: {
-    search: '/api/flights/search',
-    offers: '/api/flights/offers',
-    book: '/api/flights/book',
+    search: "/api/flights/search",
+    offers: "/api/flights/offers",
+    book: "/api/flights/book",
     details: (id: string) => `/api/flights/${id}`,
   },
   // Hotels
   hotels: {
-    search: '/api/hotels/search',
-    offers: '/api/hotels/offers',
-    book: '/api/hotels/book',
+    search: "/api/hotels/search",
+    offers: "/api/hotels/offers",
+    book: "/api/hotels/book",
     details: (id: string) => `/api/hotels/${id}`,
   },
   // Wallet
   wallet: {
-    balance: '/api/wallet/balance',
-    transactions: '/api/wallet/transactions',
-    topUp: '/api/wallet/top-up',
-    transfer: '/api/wallet/transfer',
+    balance: "/api/wallet/balance",
+    transactions: "/api/wallet/transactions",
+    topUp: "/api/wallet/top-up",
+    transfer: "/api/wallet/transfer",
   },
   // Payments
   payments: {
-    process: '/api/payments/process',
-    intent: '/api/payments/intent',
+    process: "/api/payments/process",
+    intent: "/api/payments/intent",
     confirm: (id: string) => `/api/payments/${id}/confirm`,
     status: (id: string) => `/api/payments/${id}`,
   },
   // User
   user: {
-    profile: '/api/user/profile',
-    update: '/api/user/profile',
-    preferences: '/api/user/preferences',
+    profile: "/api/user/profile",
+    update: "/api/user/profile",
+    preferences: "/api/user/preferences",
   },
   // Health & Status
-  health: '/api/health',
-  status: '/api/status',
+  health: "/api/health",
+  status: "/api/status",
 } as const;
 
 /**
@@ -81,7 +81,9 @@ export class ApiMockBuilder {
   private mockData: any = {};
   private statusCode: number = 200;
   private delay: number = 0;
-  private headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  private headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
 
   /**
    * Set the response data
@@ -118,7 +120,12 @@ export class ApiMockBuilder {
   /**
    * Build the mock response
    */
-  build(): { status: number; body: string; headers: Record<string, string>; delay: number } {
+  build(): {
+    status: number;
+    body: string;
+    headers: Record<string, string>;
+    delay: number;
+  } {
     return {
       status: this.statusCode,
       body: JSON.stringify(this.mockData),
@@ -143,13 +150,13 @@ export class ApiRequestInterceptor {
     this.requests = [];
     this.responses = [];
 
-    page.on('request', (request) => {
+    page.on("request", (request) => {
       if (this.isApiRequest(request)) {
         this.requests.push(request);
       }
     });
 
-    page.on('response', (response) => {
+    page.on("response", (response) => {
       if (this.isApiRequest(response.request())) {
         this.responses.push(response);
       }
@@ -160,9 +167,11 @@ export class ApiRequestInterceptor {
    * Check if request is an API call
    */
   private isApiRequest(request: Request): boolean {
-    return request.url().includes('/api/') || 
-           request.url().includes('localhost:3003') ||
-           request.url().includes('booking-service');
+    return (
+      request.url().includes("/api/") ||
+      request.url().includes("localhost:3003") ||
+      request.url().includes("booking-service")
+    );
   }
 
   /**
@@ -183,8 +192,8 @@ export class ApiRequestInterceptor {
    * Find request by URL pattern
    */
   findRequest(urlPattern: string | RegExp): Request | undefined {
-    return this.requests.find(req => {
-      if (typeof urlPattern === 'string') {
+    return this.requests.find((req) => {
+      if (typeof urlPattern === "string") {
         return req.url().includes(urlPattern);
       }
       return urlPattern.test(req.url());
@@ -195,9 +204,9 @@ export class ApiRequestInterceptor {
    * Find response by URL pattern
    */
   findResponse(urlPattern: string | RegExp): Response | undefined {
-    return this.responses.find(res => {
+    return this.responses.find((res) => {
       const url = res.request().url();
-      if (typeof urlPattern === 'string') {
+      if (typeof urlPattern === "string") {
         return url.includes(urlPattern);
       }
       return urlPattern.test(url);
@@ -222,7 +231,11 @@ export class ApiRequestInterceptor {
   /**
    * Wait for specific API request
    */
-  async waitForRequest(page: Page, urlPattern: string | RegExp, timeout = 10000): Promise<Request> {
+  async waitForRequest(
+    page: Page,
+    urlPattern: string | RegExp,
+    timeout = 10000,
+  ): Promise<Request> {
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
         reject(new Error(`Timeout waiting for request: ${urlPattern}`));
@@ -252,13 +265,20 @@ export class ApiResponseValidator {
    * Validate booking response structure
    */
   static validateBookingResponse(response: any): ValidationResult {
-    const requiredFields = ['bookingReference', 'status', 'totalAmount', 'createdAt'];
-    const missingFields = requiredFields.filter(field => !(field in response));
+    const requiredFields = [
+      "bookingReference",
+      "status",
+      "totalAmount",
+      "createdAt",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !(field in response),
+    );
 
     return {
       valid: missingFields.length === 0,
       missingFields,
-      errors: missingFields.map(f => `Missing required field: ${f}`),
+      errors: missingFields.map((f) => `Missing required field: ${f}`),
     };
   }
 
@@ -269,8 +289,8 @@ export class ApiResponseValidator {
     if (!Array.isArray(response.offers) && !Array.isArray(response.results)) {
       return {
         valid: false,
-        missingFields: ['offers or results array'],
-        errors: ['Response must contain offers or results array'],
+        missingFields: ["offers or results array"],
+        errors: ["Response must contain offers or results array"],
       };
     }
 
@@ -279,7 +299,7 @@ export class ApiResponseValidator {
       return {
         valid: false,
         missingFields: [],
-        errors: ['No flight offers found'],
+        errors: ["No flight offers found"],
       };
     }
 
@@ -293,8 +313,8 @@ export class ApiResponseValidator {
     if (!Array.isArray(response.offers) && !Array.isArray(response.results)) {
       return {
         valid: false,
-        missingFields: ['offers or results array'],
-        errors: ['Response must contain offers or results array'],
+        missingFields: ["offers or results array"],
+        errors: ["Response must contain offers or results array"],
       };
     }
 
@@ -305,13 +325,15 @@ export class ApiResponseValidator {
    * Validate wallet response
    */
   static validateWalletResponse(response: any): ValidationResult {
-    const requiredFields = ['balance', 'currency'];
-    const missingFields = requiredFields.filter(field => !(field in response));
+    const requiredFields = ["balance", "currency"];
+    const missingFields = requiredFields.filter(
+      (field) => !(field in response),
+    );
 
     return {
       valid: missingFields.length === 0,
       missingFields,
-      errors: missingFields.map(f => `Missing required field: ${f}`),
+      errors: missingFields.map((f) => `Missing required field: ${f}`),
     };
   }
 
@@ -319,13 +341,15 @@ export class ApiResponseValidator {
    * Validate payment response
    */
   static validatePaymentResponse(response: any): ValidationResult {
-    const requiredFields = ['status', 'paymentIntentId'];
-    const missingFields = requiredFields.filter(field => !(field in response));
+    const requiredFields = ["status", "paymentIntentId"];
+    const missingFields = requiredFields.filter(
+      (field) => !(field in response),
+    );
 
     return {
       valid: missingFields.length === 0,
       missingFields,
-      errors: missingFields.map(f => `Missing required field: ${f}`),
+      errors: missingFields.map((f) => `Missing required field: ${f}`),
     };
   }
 }
@@ -373,7 +397,7 @@ export class ApiTestScenario {
 export async function mockApiRoute(
   page: Page,
   urlPattern: string | RegExp,
-  mockBuilder: ApiMockBuilder | ((route: Route) => Promise<void>)
+  mockBuilder: ApiMockBuilder | ((route: Route) => Promise<void>),
 ): Promise<void> {
   await page.route(urlPattern, async (route) => {
     if (mockBuilder instanceof ApiMockBuilder) {
@@ -399,16 +423,17 @@ export async function waitForApiResponse(
     statusCode?: number;
     timeout?: number;
     predicate?: (response: Response) => boolean;
-  } = {}
+  } = {},
 ): Promise<Response> {
   const { statusCode, timeout = 10000, predicate } = options;
 
   return page.waitForResponse(
     (response) => {
       const url = response.request().url();
-      const matchesUrl = typeof urlPattern === 'string' 
-        ? url.includes(urlPattern) 
-        : urlPattern.test(url);
+      const matchesUrl =
+        typeof urlPattern === "string"
+          ? url.includes(urlPattern)
+          : urlPattern.test(url);
 
       if (!matchesUrl) return false;
       if (statusCode && response.status() !== statusCode) return false;
@@ -416,7 +441,7 @@ export async function waitForApiResponse(
 
       return true;
     },
-    { timeout }
+    { timeout },
   );
 }
 
@@ -425,7 +450,7 @@ export async function waitForApiResponse(
  */
 export async function extractResponseData<T>(response: Response): Promise<T> {
   try {
-    return await response.json() as T;
+    return (await response.json()) as T;
   } catch (error) {
     throw new Error(`Failed to parse response JSON: ${error}`);
   }
@@ -439,10 +464,12 @@ export function logApiCall(request: Request, response?: Response): void {
   console.log(`  Method: ${request.method()}`);
   console.log(`  URL: ${request.url()}`);
   console.log(`  Headers: ${JSON.stringify(request.headers(), null, 2)}`);
-  
+
   if (response) {
     console.log(`  Response Status: ${response.status()}`);
-    console.log(`  Response Headers: ${JSON.stringify(response.headers(), null, 2)}`);
+    console.log(
+      `  Response Headers: ${JSON.stringify(response.headers(), null, 2)}`,
+    );
   }
 }
 
@@ -456,7 +483,7 @@ export async function retryApiCall<T>(
     initialDelay?: number;
     maxDelay?: number;
     retryableStatuses?: number[];
-  } = {}
+  } = {},
 ): Promise<T> {
   const {
     maxRetries = 3,
@@ -473,23 +500,25 @@ export async function retryApiCall<T>(
       return await fn();
     } catch (error) {
       lastError = error as Error;
-      
+
       if (attempt === maxRetries) {
         throw lastError;
       }
 
       // Check if error is retryable
-      const isRetryable = retryableStatuses.some(status => 
-        lastError!.message.includes(status.toString())
+      const isRetryable = retryableStatuses.some((status) =>
+        lastError!.message.includes(status.toString()),
       );
 
       if (!isRetryable) {
         throw lastError;
       }
 
-      console.log(`  ⚠️  API call failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
+      console.log(
+        `  ⚠️  API call failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delay}ms...`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
       // Exponential backoff with jitter
       delay = Math.min(delay * 2 + Math.random() * 1000, maxDelay);
     }
@@ -555,19 +584,22 @@ export class ApiLogger {
   }
 
   exportToFile(filepath: string): void {
-    const fs = require('fs');
+    const fs = require("fs");
     fs.writeFileSync(filepath, JSON.stringify(this.logs, null, 2));
   }
 
   printSummary(): void {
-    console.log('\n📊 API Call Summary:');
+    console.log("\n📊 API Call Summary:");
     console.log(`  Total Requests: ${this.logs.length}`);
-    
-    const statusGroups = this.logs.reduce((acc, log) => {
-      const status = log.responseStatus || 'unknown';
-      acc[status] = (acc[status] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+
+    const statusGroups = this.logs.reduce(
+      (acc, log) => {
+        const status = log.responseStatus || "unknown";
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     Object.entries(statusGroups).forEach(([status, count]) => {
       console.log(`  Status ${status}: ${count} requests`);

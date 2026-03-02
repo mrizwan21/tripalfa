@@ -1,65 +1,42 @@
-# Import Status Update - 2026-02-25 01:53
+# Import Status Update - 2026-02-26 22:11 UTC
 
-## Problem Identified ✅
+## Current Status 🟢 ACTIVE
 
-**Issue:** Import appeared stuck at 6 countries for 4 hours, but was actually processing Argentina with database timeouts.
+**Session Restart:** 2026-02-26 22:11 UTC (After Docker Recovery)  
+**Hotels Imported:** 1,456,945  
+**Completed Countries:** 88/249  
+**In Progress:** 1 country (GR - Greece)
+**Remaining:** 160 countries
 
-**Root Causes:**
+### Progress Summary
 
-1. **Database Timeout (60 seconds)** - Too short for bulk room/image inserts
-2. **Excessive Concurrency** - 3 parallel countries + unlimited detail limit created DB lock contention
-3. **Large Country (Argentina)** - 15K+ hotels with rooms/images took > 3min per hotel detail fetch
-4. **No Rate Limiting** - 200ms delay insufficient for large data loads
+- **Completion Rate:** 35.3% of countries completed (88/249)
+- **Hotel Count Rate:** 1.46M+ hotels (avg 16.6K per completed country)
+- **Import Speed:** Optimized: 1 country sequential, 100 hotel details/country, 300ms API delay
+- **Status:** Resumed and stable ✅
+- **Database:** PostgreSQL 16, 30-minute statement timeout
 
----
+### Completed Countries (88)
 
-## Optimizations Applied ✅
+AD, AE, AF, AG, AI, AL, AM, AO, AQ, AR, AS, AT, AW, AX, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BQ, BR, BS, BT, BV, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CW, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, EH, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GF, GG, GH, GI, GL, GM, GN, GP, GQ, GR (in progress)
 
-### Configuration Changes
+**Stability Improvements:**
 
-| Setting | Before | After | Reason |
-|---------|--------|-------|--------|
-| **Statement Timeout** | 60s | 600s (10min) | Prevent bulk insert timeouts |
-| **Concurrency** | 3 countries | 2 countries | Reduce database load |
-| **Detail Limit** | Unlimited | 500/country | Prevent overwhelming DB |
-| **Page Size** | 1000 | 500 | Smaller API responses |
-| **API Delay** | 200ms | 500ms | Better API stability |
-| **Memory Clear** | Every 50 | Every 20 | More frequent cleanup |
+- Statement timeout increased to 1800000ms (30 minutes)
+- Concurrency reduced to 1 country at a time (sequential)
+- API rate limiting: 300ms between calls
+- Memory cache cleared every 10 countries
+- Database idempotent upserts (prevents duplicates on restart)
 
-### Database Optimization
-
-- Increased PostgreSQL statement timeout from 60,000ms to 600,000ms
-- Reduced concurrent detail fetches from unlimited to 500 per country
-- Better connection pooling with reduced concurrency
-
----
-
-## Current Status 🟢
-
-**Started:** 2026-02-25 01:53 UTC  
-**Hotels Already Imported:** 44,547  
-**Completed Countries:** 7/249  
-
-- AF (Afghanistan) - 2
-- AG (Antigua & Barbuda) - 359
-- AD (Andorra) - 697
-- AI (Anguilla) - 133
-- AE (United Arab Emirates) - 10,664 (was stuck, now retrying)
-- AM (Armenia) - 3,755
-- AO (Angola) - 225
-- AQ (Antarctica) - 0
-
-**Retrying:** AE, AL, AR (were stuck, now resuming with new config)
-
-**Remaining:** 242 countries to process
+**Remaining:** 160 countries to process
 
 ---
 
 ## Expected Timeline
 
-**Current Rate:** 4-8 countries completed (with optimizations)  
-**Remaining:** ~32-64 hours at conservative rate  
-**Estimated Completion:** 2026-02-26 to 2026-02-27
+**Current Rate:** ~5 countries/hour at optimized sequential pace  
+**Remaining:** ~160 countries (~32 hours at current rate)  
+**Estimated Completion:** 2026-02-28 06:00 UTC
 
 ---
 

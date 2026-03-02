@@ -3,38 +3,41 @@
  */
 
 // Currency information
-export const CURRENCY_INFO: Record<string, { symbol: string; name: string; decimalDigits: number }> = {
-  USD: { symbol: '$', name: 'US Dollar', decimalDigits: 2 },
-  EUR: { symbol: '€', name: 'Euro', decimalDigits: 2 },
-  GBP: { symbol: '£', name: 'British Pound', decimalDigits: 2 },
-  AED: { symbol: 'د.إ', name: 'UAE Dirham', decimalDigits: 2 },
-  SAR: { symbol: '﷼', name: 'Saudi Riyal', decimalDigits: 2 },
-  INR: { symbol: '₹', name: 'Indian Rupee', decimalDigits: 2 },
-  JPY: { symbol: '¥', name: 'Japanese Yen', decimalDigits: 0 },
-  AUD: { symbol: 'A$', name: 'Australian Dollar', decimalDigits: 2 },
-  CAD: { symbol: 'C$', name: 'Canadian Dollar', decimalDigits: 2 },
-  CHF: { symbol: 'CHF', name: 'Swiss Franc', decimalDigits: 2 }
+export const CURRENCY_INFO: Record<
+  string,
+  { symbol: string; name: string; decimalDigits: number }
+> = {
+  USD: { symbol: "$", name: "US Dollar", decimalDigits: 2 },
+  EUR: { symbol: "€", name: "Euro", decimalDigits: 2 },
+  GBP: { symbol: "£", name: "British Pound", decimalDigits: 2 },
+  AED: { symbol: "د.إ", name: "UAE Dirham", decimalDigits: 2 },
+  SAR: { symbol: "﷼", name: "Saudi Riyal", decimalDigits: 2 },
+  INR: { symbol: "₹", name: "Indian Rupee", decimalDigits: 2 },
+  JPY: { symbol: "¥", name: "Japanese Yen", decimalDigits: 0 },
+  AUD: { symbol: "A$", name: "Australian Dollar", decimalDigits: 2 },
+  CAD: { symbol: "C$", name: "Canadian Dollar", decimalDigits: 2 },
+  CHF: { symbol: "CHF", name: "Swiss Franc", decimalDigits: 2 },
 };
 
 // Country to currency mapping based on IP location
 const COUNTRY_CURRENCY_MAP: Record<string, string> = {
-  'US': 'USD',
-  'GB': 'GBP',
-  'DE': 'EUR',
-  'FR': 'EUR',
-  'ES': 'EUR',
-  'IT': 'EUR',
-  'AE': 'AED',
-  'SA': 'SAR',
-  'IN': 'INR',
-  'JP': 'JPY',
-  'AU': 'AUD',
-  'CA': 'CAD',
-  'CH': 'CHF'
+  US: "USD",
+  GB: "GBP",
+  DE: "EUR",
+  FR: "EUR",
+  ES: "EUR",
+  IT: "EUR",
+  AE: "AED",
+  SA: "SAR",
+  IN: "INR",
+  JP: "JPY",
+  AU: "AUD",
+  CA: "CAD",
+  CH: "CHF",
 };
 
 // Default currency
-export const DEFAULT_CURRENCY = 'USD';
+export const DEFAULT_CURRENCY = "USD";
 
 // Current state
 let currentCurrency: string = DEFAULT_CURRENCY;
@@ -46,18 +49,18 @@ let isUpdatingRates: boolean = false;
  * Get current currency
  */
 export function getCurrentCurrency(): string {
-  if (typeof window === 'undefined') return DEFAULT_CURRENCY;
+  if (typeof window === "undefined") return DEFAULT_CURRENCY;
 
-  return localStorage.getItem('currency') || DEFAULT_CURRENCY;
+  return localStorage.getItem("currency") || DEFAULT_CURRENCY;
 }
 
 /**
  * Set current currency and update localStorage
  */
 export function setCurrentCurrency(currency: string): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
-  localStorage.setItem('currency', currency);
+  localStorage.setItem("currency", currency);
   currentCurrency = currency;
 }
 
@@ -89,10 +92,10 @@ export async function detectUserCurrency(): Promise<string> {
   try {
     // Primary: Use ipapi.co (recommended service)
     try {
-      const response = await fetch('https://ipapi.co/json/', {
+      const response = await fetch("https://ipapi.co/json/", {
         headers: {
-          'Accept': 'application/json'
-        }
+          Accept: "application/json",
+        },
       });
 
       if (response.ok) {
@@ -104,26 +107,27 @@ export async function detectUserCurrency(): Promise<string> {
         }
       }
     } catch (error) {
-      console.warn('Currency detection service ipapi.co failed:', error);
+      console.warn("Currency detection service ipapi.co failed:", error);
     }
 
     // Fallback: Try additional IP detection services
     const fallbackServices = [
-      'https://freegeoip.app/json/',
-      'https://ipinfo.io/json'
+      "https://freegeoip.app/json/",
+      "https://ipinfo.io/json",
     ];
 
     for (const service of fallbackServices) {
       try {
         const response = await fetch(service, {
           headers: {
-            'Accept': 'application/json'
-          }
+            Accept: "application/json",
+          },
         });
 
         if (response.ok) {
           const data = await response.json();
-          const countryCode = data.country || data.country_code || data.country_code_iso2;
+          const countryCode =
+            data.country || data.country_code || data.country_code_iso2;
 
           if (countryCode && COUNTRY_CURRENCY_MAP[countryCode]) {
             return COUNTRY_CURRENCY_MAP[countryCode];
@@ -137,7 +141,7 @@ export async function detectUserCurrency(): Promise<string> {
     // Fallback to browser language detection
     const browserLang = navigator.language || (navigator as any).userLanguage;
     if (browserLang) {
-      const langParts = browserLang.split('-');
+      const langParts = browserLang.split("-");
       if (langParts.length > 1) {
         const country = langParts[1].toUpperCase();
         if (COUNTRY_CURRENCY_MAP[country]) {
@@ -149,7 +153,7 @@ export async function detectUserCurrency(): Promise<string> {
     // Final fallback to default
     return DEFAULT_CURRENCY;
   } catch (error) {
-    console.error('Currency detection failed:', error);
+    console.error("Currency detection failed:", error);
     return DEFAULT_CURRENCY;
   }
 }
@@ -159,17 +163,28 @@ export async function detectUserCurrency(): Promise<string> {
  */
 async function fetchExchangeRates(): Promise<Record<string, number>> {
   try {
-    const response = await fetch('/api/exchange-rates/latest');
+    const response = await fetch("/api/exchange-rates/latest");
     if (response.ok) {
       const data = await response.json();
-      return data.rates || {};
+      const rawRates =
+        data?.rates && typeof data.rates === "object" ? data.rates : {};
+      const normalizedRates: Record<string, number> = {};
+
+      for (const [code, value] of Object.entries(rawRates)) {
+        const numericRate = Number(value);
+        if (Number.isFinite(numericRate) && numericRate > 0) {
+          normalizedRates[String(code).toUpperCase()] = numericRate;
+        }
+      }
+
+      return normalizedRates;
     }
 
     // Return empty rates if API fails - no mock data
-    console.warn('Failed to fetch exchange rates, returning empty rates');
+    console.warn("Failed to fetch exchange rates, returning empty rates");
     return {};
   } catch (error) {
-    console.warn('Failed to fetch exchange rates:', error);
+    console.warn("Failed to fetch exchange rates:", error);
     return {};
   }
 }
@@ -183,8 +198,10 @@ export async function updateExchangeRates(): Promise<void> {
   isUpdatingRates = true;
   try {
     const rates = await fetchExchangeRates();
-    exchangeRates = rates;
-    ratesLastUpdated = Date.now();
+    if (Object.keys(rates).length > 0) {
+      exchangeRates = rates;
+      ratesLastUpdated = Date.now();
+    }
   } finally {
     isUpdatingRates = false;
   }
@@ -193,17 +210,32 @@ export async function updateExchangeRates(): Promise<void> {
 /**
  * Get exchange rate from base currency to target currency
  */
-export function getExchangeRate(fromCurrency: string, toCurrency: string): number {
-  if (fromCurrency === toCurrency) return 1.0;
+export function getExchangeRate(
+  fromCurrency: string,
+  toCurrency: string,
+): number {
+  const normalizedFrom = String(fromCurrency || "").toUpperCase();
+  const normalizedTo = String(toCurrency || "").toUpperCase();
+
+  if (!normalizedFrom || !normalizedTo) return 0;
+  if (normalizedFrom === normalizedTo) return 1.0;
 
   // Check if we have recent rates (less than 1 hour old)
   const now = Date.now();
-  if (now - ratesLastUpdated > 3600000) { // 1 hour
+  if (now - ratesLastUpdated > 3600000) {
+    // 1 hour
     updateExchangeRates();
   }
 
-  const fromRate = exchangeRates[fromCurrency] || 1.0;
-  const toRate = exchangeRates[toCurrency] || 1.0;
+  const fromRate = exchangeRates[normalizedFrom];
+  const toRate = exchangeRates[normalizedTo];
+
+  if (!fromRate || !toRate) {
+    console.warn(
+      `Missing exchange rates for ${normalizedFrom}/${normalizedTo}`,
+    );
+    return 0;
+  }
 
   return toRate / fromRate;
 }
@@ -211,8 +243,15 @@ export function getExchangeRate(fromCurrency: string, toCurrency: string): numbe
 /**
  * Convert amount from one currency to another
  */
-export function convertCurrency(amount: number, fromCurrency: string, toCurrency: string): number {
+export function convertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+): number {
   const rate = getExchangeRate(fromCurrency, toCurrency);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    return 0;
+  }
   const decimalDigits = getCurrencyDecimalDigits(toCurrency);
   return Number((amount * rate).toFixed(decimalDigits));
 }
@@ -226,7 +265,7 @@ export function formatCurrency(amount: number, currency: string): string {
   const formattedAmount = amount.toFixed(decimalDigits);
 
   // Handle currencies that put symbol after amount
-  const symbolAfter = ['د.إ', '€', '£']; // AED, EUR, GBP
+  const symbolAfter = ["د.إ", "€", "£"]; // AED, EUR, GBP
   if (symbolAfter.includes(symbol)) {
     return `${formattedAmount} ${symbol}`;
   } else {
@@ -237,7 +276,11 @@ export function formatCurrency(amount: number, currency: string): string {
 /**
  * Format price for display with currency conversion
  */
-export function formatPrice(amount: number, fromCurrency: string, toCurrency?: string): string {
+export function formatPrice(
+  amount: number,
+  fromCurrency: string,
+  toCurrency?: string,
+): string {
   const targetCurrency = toCurrency || getCurrentCurrency();
   const convertedAmount = convertCurrency(amount, fromCurrency, targetCurrency);
   return formatCurrency(convertedAmount, targetCurrency);
@@ -247,9 +290,11 @@ export function formatPrice(amount: number, fromCurrency: string, toCurrency?: s
  * Currency hook for React components
  */
 export function useCurrency() {
-  const [currency, setCurrencyState] = React.useState<string>(getCurrentCurrency());
+  const [currency, setCurrencyState] =
+    React.useState<string>(getCurrentCurrency());
   const [rates, setRates] = React.useState<Record<string, number>>({});
-  const [lastUpdated, setLastUpdated] = React.useState<number>(ratesLastUpdated);
+  const [lastUpdated, setLastUpdated] =
+    React.useState<number>(ratesLastUpdated);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
   React.useEffect(() => {
@@ -261,7 +306,10 @@ export function useCurrency() {
         const savedCurrency = getCurrentCurrency();
 
         // Use detected currency if different from saved and not default
-        if (detectedCurrency !== DEFAULT_CURRENCY && detectedCurrency !== savedCurrency) {
+        if (
+          detectedCurrency !== DEFAULT_CURRENCY &&
+          detectedCurrency !== savedCurrency
+        ) {
           setCurrentCurrency(detectedCurrency);
           setCurrencyState(detectedCurrency);
         } else {
@@ -273,7 +321,7 @@ export function useCurrency() {
         setRates(exchangeRates);
         setLastUpdated(ratesLastUpdated);
       } catch (error) {
-        console.error('Currency initialization failed:', error);
+        console.error("Currency initialization failed:", error);
       } finally {
         setIsLoading(false);
       }
@@ -288,25 +336,31 @@ export function useCurrency() {
 
     // Update user preferences
     try {
-      await fetch('/api/user/preferences', {
-        method: 'POST',
+      await fetch("/api/user/preferences", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ currency: newCurrency })
+        body: JSON.stringify({ currency: newCurrency }),
       });
     } catch (error) {
-      console.error('Failed to save currency preference:', error);
+      console.error("Failed to save currency preference:", error);
     }
   }, []);
 
-  const convert = React.useCallback((amount: number, fromCurrency: string, toCurrency?: string) => {
-    return convertCurrency(amount, fromCurrency, toCurrency || currency);
-  }, [currency]);
+  const convert = React.useCallback(
+    (amount: number, fromCurrency: string, toCurrency?: string) => {
+      return convertCurrency(amount, fromCurrency, toCurrency || currency);
+    },
+    [currency],
+  );
 
-  const format = React.useCallback((amount: number, fromCurrency: string, toCurrency?: string) => {
-    return formatPrice(amount, fromCurrency, toCurrency);
-  }, [currency]);
+  const format = React.useCallback(
+    (amount: number, fromCurrency: string, toCurrency?: string) => {
+      return formatPrice(amount, fromCurrency, toCurrency);
+    },
+    [currency],
+  );
 
   return {
     currency,
@@ -315,9 +369,9 @@ export function useCurrency() {
     format,
     rates,
     lastUpdated,
-    isLoading
+    isLoading,
   };
 }
 
 // Make React available for the hook
-import React from 'react';
+import React from "react";

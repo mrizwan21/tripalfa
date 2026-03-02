@@ -1,0 +1,2 @@
+exclude_paths:
+  - services/booking-service/dist/routes/duffel.js

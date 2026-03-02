@@ -1,9 +1,11 @@
 // frontend/components/TransferForm.tsx
 // Transfer funds between wallets with FX preview
 
-import React, { useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { transferBetweenWallets, getFxPreview } from '../services/walletApi.js';
+import React, { useState, useEffect } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { transferBetweenWallets, getFxPreview } from "../services/walletApi.js";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 interface Wallet {
   id: string;
@@ -30,10 +32,13 @@ interface TransferFormProps {
   wallets?: Wallet[];
 }
 
-export function TransferForm({ token, wallets = [] }: TransferFormProps): React.ReactElement {
-  const [fromCurrency, setFromCurrency] = useState<string>('');
-  const [toCurrency, setToCurrency] = useState<string>('');
-  const [amount, setAmount] = useState<string>('');
+export function TransferForm({
+  token,
+  wallets = [],
+}: TransferFormProps): React.ReactElement {
+  const [fromCurrency, setFromCurrency] = useState<string>("");
+  const [toCurrency, setToCurrency] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
   const [fxPreview, setFxPreview] = useState<FxPreview | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,10 +51,15 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
     if (fromCurrency && toCurrency && amount && fromCurrency !== toCurrency) {
       (async () => {
         try {
-          const preview = await getFxPreview(token, fromCurrency, toCurrency, parseFloat(amount));
+          const preview = await getFxPreview(
+            token,
+            fromCurrency,
+            toCurrency,
+            parseFloat(amount),
+          );
           setFxPreview(preview);
         } catch (err) {
-          console.error('Failed to fetch FX preview:', err);
+          console.error("Failed to fetch FX preview:", err);
         }
       })();
     } else {
@@ -57,16 +67,18 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
     }
   }, [fromCurrency, toCurrency, amount, token]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>,
+  ): Promise<void> => {
     e.preventDefault();
 
     if (!fromCurrency || !toCurrency || !amount) {
-      setError('All fields are required');
+      setError("All fields are required");
       return;
     }
 
     if (fromCurrency === toCurrency) {
-      setError('Cannot transfer to the same currency');
+      setError("Cannot transfer to the same currency");
       return;
     }
 
@@ -84,18 +96,18 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
 
       if (result.success) {
         setSuccess(
-          `Transfer completed: ${amount} ${fromCurrency} → ${result.transaction?.converted} ${toCurrency}`
+          `Transfer completed: ${amount} ${fromCurrency} → ${result.transaction?.converted} ${toCurrency}`,
         );
-        setFromCurrency('');
-        setToCurrency('');
-        setAmount('');
+        setFromCurrency("");
+        setToCurrency("");
+        setAmount("");
         setFxPreview(null);
       } else {
-        setError(result.error || 'Transfer failed');
+        setError(result.error || "Transfer failed");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      console.error('Transfer failed:', err);
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Transfer failed:", err);
     } finally {
       setLoading(false);
     }
@@ -107,7 +119,7 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>From Currency:</label>
+          <Label>From Currency:</Label>
           <select
             value={fromCurrency}
             onChange={(e) => setFromCurrency(e.target.value)}
@@ -123,7 +135,7 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
         </div>
 
         <div className="form-group">
-          <label>To Currency:</label>
+          <Label>To Currency:</Label>
           <select
             value={toCurrency}
             onChange={(e) => setToCurrency(e.target.value)}
@@ -139,7 +151,7 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
         </div>
 
         <div className="form-group">
-          <label>Amount:</label>
+          <Label>Amount:</Label>
           <input
             type="number"
             value={amount}
@@ -159,7 +171,8 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
               </strong>
             </p>
             <p className="fx-rate">
-              Rate: 1 {fromCurrency} = {parseFloat(fxPreview.fxRate).toFixed(4)} {toCurrency}
+              Rate: 1 {fromCurrency} = {parseFloat(fxPreview.fxRate).toFixed(4)}{" "}
+              {toCurrency}
             </p>
           </div>
         )}
@@ -167,9 +180,9 @@ export function TransferForm({ token, wallets = [] }: TransferFormProps): React.
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
 
-        <button type="submit" disabled={loading}>
+        <Button variant="outline" size="md" type="submit" disabled={loading}>
           {loading ? "Processing..." : "Transfer"}
-        </button>
+        </Button>
       </form>
     </div>
   );

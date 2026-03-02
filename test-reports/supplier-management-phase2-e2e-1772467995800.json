@@ -1,0 +1,194 @@
+{
+  "timestamp": "2026-03-02T16:13:15.800Z",
+  "summary": {
+    "total": 27,
+    "passed": 26,
+    "failed": 0,
+    "skipped": 1,
+    "duration": 22004
+  },
+  "results": [
+    {
+      "name": "Create Supplier",
+      "status": "pass",
+      "duration": 1769,
+      "details": {
+        "supplierId": "cmm9do2q30000aix3em16a21k"
+      }
+    },
+    {
+      "name": "Add Supplier Product",
+      "status": "pass",
+      "duration": 586
+    },
+    {
+      "name": "List Supplier Products",
+      "status": "pass",
+      "duration": 1623,
+      "details": {
+        "productCount": 1
+      }
+    },
+    {
+      "name": "Update Supplier Product",
+      "status": "pass",
+      "duration": 734
+    },
+    {
+      "name": "Product Validation: Missing Fields",
+      "status": "pass",
+      "duration": 4
+    },
+    {
+      "name": "Create Product Mapping (Pending)",
+      "status": "pass",
+      "duration": 1547,
+      "details": {
+        "status": "pending"
+      }
+    },
+    {
+      "name": "List Product Mappings",
+      "status": "pass",
+      "duration": 621,
+      "details": {
+        "mappingCount": 1
+      }
+    },
+    {
+      "name": "Admin Approve Product Mapping",
+      "status": "pass",
+      "duration": 1514,
+      "details": {
+        "status": "active"
+      }
+    },
+    {
+      "name": "Create Mapping with Geo Rules",
+      "status": "pass",
+      "duration": 1430
+    },
+    {
+      "name": "Add Mapping Parameter (Commission)",
+      "status": "pass",
+      "duration": 705
+    },
+    {
+      "name": "List Mapping Parameters",
+      "status": "pass",
+      "duration": 616,
+      "details": {
+        "paramCount": 1
+      }
+    },
+    {
+      "name": "Add Markup and Discount Parameters",
+      "status": "pass",
+      "duration": 1452
+    },
+    {
+      "name": "Get Financial Profile (Not Yet Created)",
+      "status": "pass",
+      "duration": 411
+    },
+    {
+      "name": "Update/Create Financial Profile",
+      "status": "pass",
+      "duration": 710
+    },
+    {
+      "name": "Financial Hold Control",
+      "status": "pass",
+      "duration": 613
+    },
+    {
+      "name": "Add Payment Term (Deposit)",
+      "status": "pass",
+      "duration": 411
+    },
+    {
+      "name": "List Payment Terms",
+      "status": "pass",
+      "duration": 408,
+      "details": {
+        "termCount": 1
+      }
+    },
+    {
+      "name": "Request Wallet Creation",
+      "status": "pass",
+      "duration": 1181,
+      "details": {
+        "status": "pending"
+      }
+    },
+    {
+      "name": "Get Supplier Wallet",
+      "status": "pass",
+      "duration": 419,
+      "details": {
+        "balance": "0",
+        "status": "pending"
+      }
+    },
+    {
+      "name": "List Wallet Approval Requests",
+      "status": "pass",
+      "duration": 425,
+      "details": {
+        "requestCount": 1
+      }
+    },
+    {
+      "name": "Admin Approve Wallet Request",
+      "status": "pass",
+      "duration": 1252
+    },
+    {
+      "name": "Verify Wallet Active",
+      "status": "pass",
+      "duration": 412,
+      "details": {
+        "walletStatus": "active"
+      }
+    },
+    {
+      "name": "Create Payment Request",
+      "status": "pass",
+      "duration": 1264,
+      "details": {
+        "paymentStatus": "pending"
+      }
+    },
+    {
+      "name": "List Payments",
+      "status": "pass",
+      "duration": 677,
+      "details": {
+        "paymentCount": 1
+      }
+    },
+    {
+      "name": "Get Payment Audit Logs",
+      "status": "pass",
+      "duration": 793,
+      "details": {
+        "logCount": 1
+      }
+    },
+    {
+      "name": "Supplier Deletion Blocked (Has Wallet)",
+      "status": "pass",
+      "duration": 427,
+      "details": {
+        "reason": "Cannot delete supplier with existing wallets. Clear all financial liabilities first."
+      }
+    },
+    {
+      "name": "Supplier Soft Delete (Deferred)",
+      "status": "skip",
+      "duration": 0,
+      "error": "Requires clearing all financial liabilities"
+    }
+  ]
+}

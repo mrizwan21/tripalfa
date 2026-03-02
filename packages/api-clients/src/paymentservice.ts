@@ -1,11 +1,11 @@
-import axios from 'axios';
+import axios from "axios";
 
 export interface Payment {
   id: string;
   bookingId: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  status: "pending" | "completed" | "failed" | "refunded";
   paymentMethod: string;
   transactionId?: string;
   createdAt: string;
@@ -20,7 +20,8 @@ export interface PaymentRequest {
 }
 
 export class PaymentService {
-  private static baseURL = process.env.VITE_PAYMENT_SERVICE_URL || 'http://localhost:3003';
+  private static baseURL =
+    process.env.VITE_PAYMENT_SERVICE_URL || "http://localhost:3003";
 
   /**
    * Process a payment
@@ -29,7 +30,7 @@ export class PaymentService {
     try {
       const response = await axios.post<Payment>(
         `${this.baseURL}/api/payments`,
-        data
+        data,
       );
 
       return response.data;
@@ -44,7 +45,7 @@ export class PaymentService {
   static async getPayment(paymentId: string): Promise<Payment> {
     try {
       const response = await axios.get<Payment>(
-        `${this.baseURL}/api/payments/${paymentId}`
+        `${this.baseURL}/api/payments/${paymentId}`,
       );
 
       return response.data;
@@ -56,11 +57,14 @@ export class PaymentService {
   /**
    * Refund a payment
    */
-  static async refundPayment(paymentId: string, amount?: number): Promise<Payment> {
+  static async refundPayment(
+    paymentId: string,
+    amount?: number,
+  ): Promise<Payment> {
     try {
       const response = await axios.post<Payment>(
         `${this.baseURL}/api/payments/${paymentId}/refund`,
-        { amount }
+        { amount },
       );
 
       return response.data;
@@ -75,7 +79,7 @@ export class PaymentService {
   static async getPaymentsByBooking(bookingId: string): Promise<Payment[]> {
     try {
       const response = await axios.get<Payment[]>(
-        `${this.baseURL}/api/payments/booking/${bookingId}`
+        `${this.baseURL}/api/payments/booking/${bookingId}`,
       );
 
       return response.data;

@@ -1,15 +1,17 @@
 // @ts-ignore
 // @ts-ignore
-import * as React from "react"
+import * as React from "react";
 // @ts-ignore
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
+import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
+import { Check } from "lucide-react";
 
-import { cn } from "@tripalfa/shared-utils"
+import { cn } from "@tripalfa/shared-utils";
 
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & { className?: string }
+  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> & {
+    className?: string;
+  }
 >(({ className, ...props }, ref) => (
   <CheckboxPrimitive.Root
     ref={ref}
@@ -19,18 +21,18 @@ const Checkbox = React.forwardRef<
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[state=checked]:bg-slate-700 data-[state=checked]:border-slate-700",
       "hover:border-slate-400 transition-colors duration-200",
-      className
+      className,
     )}
-    {...props as any}
+    {...(props as any)}
   >
     <CheckboxPrimitive.Indicator
       className={cn("flex items-center justify-center text-white")}
-      {...props as any}
+      {...(props as any)}
     >
       <Check className="h-3 w-3" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
-))
-Checkbox.displayName = CheckboxPrimitive.Root.displayName
+));
+Checkbox.displayName = CheckboxPrimitive.Root.displayName;
 
-export { Checkbox }
+export { Checkbox };

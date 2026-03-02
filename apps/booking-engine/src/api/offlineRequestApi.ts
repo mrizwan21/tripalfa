@@ -1,10 +1,10 @@
-import axios, { AxiosInstance } from 'axios';
-import {
+import axios, { AxiosInstance } from "axios";
+import type {
   OfflineChangeRequest,
   CreateOfflineRequestPayload,
   SubmitPricingPayload,
   OfflineRequestAuditLog,
-} from '@tripalfa/shared-types';
+} from "../../../../packages/shared-types/src/index.js";
 
 interface PaginatedResult<T> {
   success: boolean;
@@ -35,19 +35,19 @@ interface PaymentRecordResponse {
 
 class OfflineRequestApi {
   private api: AxiosInstance;
-  private baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  private baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
   constructor() {
     this.api = axios.create({
       baseURL: `${this.baseURL}/offline-requests`,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     // Add auth token to requests
     this.api.interceptors.request.use((config) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -59,15 +59,17 @@ class OfflineRequestApi {
    * Create a new offline change request
    * POST /api/offline-requests
    */
-  async createRequest(payload: CreateOfflineRequestPayload): Promise<OfflineChangeRequest> {
+  async createRequest(
+    payload: CreateOfflineRequestPayload,
+  ): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.post<CreateRequestResponse>('/', payload);
+      const response = await this.api.post<CreateRequestResponse>("/", payload);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to create offline request'
+          "Failed to create offline request",
       );
     }
   }
@@ -78,15 +80,16 @@ class OfflineRequestApi {
    */
   async getRequest(requestId: string): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.get<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}`
-      );
+      const response = await this.api.get<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/${requestId}`);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch offline request'
+          "Failed to fetch offline request",
       );
     }
   }
@@ -97,15 +100,16 @@ class OfflineRequestApi {
    */
   async getRequestByRef(requestRef: string): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.get<{ success: boolean; data: OfflineChangeRequest }>(
-        `/ref/${requestRef}`
-      );
+      const response = await this.api.get<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/ref/${requestRef}`);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch offline request'
+          "Failed to fetch offline request",
       );
     }
   }
@@ -117,21 +121,20 @@ class OfflineRequestApi {
   async getCustomerRequests(
     bookingId: string,
     limit = 50,
-    offset = 0
-  ): Promise<PaginatedResult<OfflineChangeRequest>['data']> {
+    offset = 0,
+  ): Promise<PaginatedResult<OfflineChangeRequest>["data"]> {
     try {
-      const response = await this.api.get<PaginatedResult<OfflineChangeRequest>>(
-        '/customer/my-requests',
-        {
-          params: { bookingId, limit, offset },
-        }
-      );
+      const response = await this.api.get<
+        PaginatedResult<OfflineChangeRequest>
+      >("/customer/my-requests", {
+        params: { bookingId, limit, offset },
+      });
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch customer requests'
+          "Failed to fetch customer requests",
       );
     }
   }
@@ -141,12 +144,14 @@ class OfflineRequestApi {
    * GET /api/offline-requests/queue
    */
   async getStaffQueue(
-    status = 'pending_staff',
+    status = "pending_staff",
     limit = 50,
-    offset = 0
-  ): Promise<PaginatedResult<OfflineChangeRequest>['data']> {
+    offset = 0,
+  ): Promise<PaginatedResult<OfflineChangeRequest>["data"]> {
     try {
-      const response = await this.api.get<PaginatedResult<OfflineChangeRequest>>('/queue', {
+      const response = await this.api.get<
+        PaginatedResult<OfflineChangeRequest>
+      >("/queue", {
         params: { status, limit, offset },
       });
       return response.data.data;
@@ -154,7 +159,7 @@ class OfflineRequestApi {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch staff queue'
+          "Failed to fetch staff queue",
       );
     }
   }
@@ -165,19 +170,19 @@ class OfflineRequestApi {
    */
   async submitPricing(
     requestId: string,
-    payload: SubmitPricingPayload
+    payload: SubmitPricingPayload,
   ): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.put<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}/pricing`,
-        payload
-      );
+      const response = await this.api.put<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/${requestId}/pricing`, payload);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to submit pricing'
+          "Failed to submit pricing",
       );
     }
   }
@@ -188,22 +193,26 @@ class OfflineRequestApi {
    * Payload: { approved: true } for approval
    * Payload: { approved: false, rejectionReason } for rejection
    */
-  async approveRequest(requestId: string, approved: boolean = true, rejectionReason?: string): Promise<OfflineChangeRequest> {
+  async approveRequest(
+    requestId: string,
+    approved: boolean = true,
+    rejectionReason?: string,
+  ): Promise<OfflineChangeRequest> {
     try {
       const payload: any = { approved };
       if (!approved && rejectionReason) {
         payload.rejectionReason = rejectionReason;
       }
-      const response = await this.api.put<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}/approve`,
-        payload
-      );
+      const response = await this.api.put<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/${requestId}/approve`, payload);
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to approve request'
+          "Failed to approve request",
       );
     }
   }
@@ -213,7 +222,10 @@ class OfflineRequestApi {
    * PUT /api/offline-requests/:id/approve with { approved: false, rejectionReason }
    * @deprecated Use approveRequest(requestId, false, rejectionReason) instead
    */
-  async rejectRequest(requestId: string, rejectionReason: string): Promise<OfflineChangeRequest> {
+  async rejectRequest(
+    requestId: string,
+    rejectionReason: string,
+  ): Promise<OfflineChangeRequest> {
     return this.approveRequest(requestId, false, rejectionReason);
   }
 
@@ -228,19 +240,19 @@ class OfflineRequestApi {
       amount: number;
       method: string;
       transactionRef?: string;
-    }
-  ): Promise<PaymentRecordResponse['data']> {
+    },
+  ): Promise<PaymentRecordResponse["data"]> {
     try {
       const response = await this.api.post<PaymentRecordResponse>(
         `/${requestId}/payment`,
-        paymentData
+        paymentData,
       );
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to process payment'
+          "Failed to process payment",
       );
     }
   }
@@ -251,19 +263,19 @@ class OfflineRequestApi {
    */
   async completeRequest(
     requestId: string,
-    documentUrls?: string[]
+    documentUrls?: string[],
   ): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.put<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}/complete`,
-        { documentUrls: documentUrls || [] }
-      );
+      const response = await this.api.put<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/${requestId}/complete`, { documentUrls: documentUrls || [] });
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to complete request'
+          "Failed to complete request",
       );
     }
   }
@@ -272,18 +284,21 @@ class OfflineRequestApi {
    * Cancel offline request (Customer)
    * PUT /api/offline-requests/:id/cancel
    */
-  async cancelRequest(requestId: string, reason: string): Promise<OfflineChangeRequest> {
+  async cancelRequest(
+    requestId: string,
+    reason: string,
+  ): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.put<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}/cancel`,
-        { reason }
-      );
+      const response = await this.api.put<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/${requestId}/cancel`, { reason });
       return response.data.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to cancel request'
+          "Failed to cancel request",
       );
     }
   }
@@ -292,18 +307,19 @@ class OfflineRequestApi {
    * Add internal note to request (Staff only)
    * POST /api/offline-requests/:id/notes
    */
-  async addInternalNote(requestId: string, note: string): Promise<OfflineChangeRequest> {
+  async addInternalNote(
+    requestId: string,
+    note: string,
+  ): Promise<OfflineChangeRequest> {
     try {
-      const response = await this.api.post<{ success: boolean; data: OfflineChangeRequest }>(
-        `/${requestId}/notes`,
-        { note }
-      );
+      const response = await this.api.post<{
+        success: boolean;
+        data: OfflineChangeRequest;
+      }>(`/${requestId}/notes`, { note });
       return response.data.data;
     } catch (error: any) {
       throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to add note'
+        error.response?.data?.message || error.message || "Failed to add note",
       );
     }
   }
@@ -315,12 +331,22 @@ class OfflineRequestApi {
   async getAuditLog(
     requestId: string,
     limit = 100,
-    offset = 0
-  ): Promise<{ items: OfflineRequestAuditLog[]; total: number; limit: number; offset: number }> {
+    offset = 0,
+  ): Promise<{
+    items: OfflineRequestAuditLog[];
+    total: number;
+    limit: number;
+    offset: number;
+  }> {
     try {
       const response = await this.api.get<{
         success: boolean;
-        data: { items: OfflineRequestAuditLog[]; total: number; limit: number; offset: number };
+        data: {
+          items: OfflineRequestAuditLog[];
+          total: number;
+          limit: number;
+          offset: number;
+        };
       }>(`/${requestId}/audit`, {
         params: { limit, offset },
       });
@@ -329,7 +355,7 @@ class OfflineRequestApi {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch audit log'
+          "Failed to fetch audit log",
       );
     }
   }

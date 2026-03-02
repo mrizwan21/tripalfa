@@ -4,9 +4,9 @@
  * Retry logic with exponential backoff for API calls.
  */
 
-import { createLogger } from './logger';
+import { createLogger } from "./logger";
 
-const log = createLogger('Retry');
+const log = createLogger("Retry");
 
 export interface RetryOptions {
   maxAttempts?: number;
@@ -39,14 +39,22 @@ export async function withRetry<T>(
       if (attempt === opts.maxAttempts) {
         break;
       }
-      const nextDelay = Math.min(delayMs * opts.backoffMultiplier, opts.maxDelayMs);
-      log.warn(`${context} — attempt ${attempt}/${opts.maxAttempts} failed: ${(err as Error).message}, retry in ${delayMs}ms`);
+      const nextDelay = Math.min(
+        delayMs * opts.backoffMultiplier,
+        opts.maxDelayMs,
+      );
+      log.warn(
+        `${context} — attempt ${attempt}/${opts.maxAttempts} failed: ${(err as Error).message}, retry in ${delayMs}ms`,
+      );
       await sleep(delayMs);
       delayMs = nextDelay;
     }
   }
 
-  throw lastError || new Error(`${context} failed after ${opts.maxAttempts} attempts`);
+  throw (
+    lastError ||
+    new Error(`${context} failed after ${opts.maxAttempts} attempts`)
+  );
 }
 
 function sleep(ms: number): Promise<void> {

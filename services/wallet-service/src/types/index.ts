@@ -1,7 +1,7 @@
 // src/types/index.ts
 // Type definitions for wallet service
 
-import type { MonetaryValue } from './wallet.js';
+import type { MonetaryValue } from "./wallet.js";
 
 export interface User {
   id: string;
@@ -18,27 +18,27 @@ export interface Wallet {
   currency: string;
   balance: MonetaryValue; // Decimal from Prisma - use toNumber() helper for calculations
   reservedBalance: MonetaryValue; // Decimal from Prisma - required in schema
-  status: 'active' | 'frozen' | 'closed';
+  status: "active" | "frozen" | "closed";
   createdAt: Date;
   updatedAt: Date;
 }
 
 export enum TransactionType {
-  Topup = 'topup',
-  Debit = 'debit',
-  Transfer = 'transfer',
-  Refund = 'refund',
-  Payout = 'payout',
-  Dispute = 'dispute',
-  Reversal = 'reversal',
-  FxAdjustment = 'fx_adjustment',
+  Topup = "topup",
+  Debit = "debit",
+  Transfer = "transfer",
+  Refund = "refund",
+  Payout = "payout",
+  Dispute = "dispute",
+  Reversal = "reversal",
+  FxAdjustment = "fx_adjustment",
 }
 
 export enum TransactionStatus {
-  Pending = 'pending',
-  Completed = 'completed',
-  Failed = 'failed',
-  Reversed = 'reversed',
+  Pending = "pending",
+  Completed = "completed",
+  Failed = "failed",
+  Reversed = "reversed",
 }
 
 export interface Transaction {
@@ -80,7 +80,7 @@ export interface ExchangeRateSnapshot {
   baseCurrency: string;
   rates: Record<string, number>;
   fetchedAt: Date;
-  status: 'active' | 'stale' | 'error';
+  status: "active" | "stale" | "error";
   errorMessage?: string;
   createdAt: Date;
 }
@@ -94,8 +94,8 @@ export interface Settlement {
   fees: number;
   netAmount?: number;
   settledAt: Date;
-  status: 'pending' | 'completed' | 'failed' | 'reversed';
-  reconciliationStatus: 'unmatched' | 'matched' | 'disputed';
+  status: "pending" | "completed" | "failed" | "reversed";
+  reconciliationStatus: "unmatched" | "matched" | "disputed";
   raw?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;

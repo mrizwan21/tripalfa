@@ -7,8 +7,12 @@
  * performance monitoring, and test management.
  */
 
-import { Page, TestInfo, expect } from '@playwright/test';
-import { TEST_CATEGORIES, TEST_PRIORITY, TestMetadata } from './test-categories';
+import { Page, TestInfo, expect } from "@playwright/test";
+import {
+  TEST_CATEGORIES,
+  TEST_PRIORITY,
+  TestMetadata,
+} from "./test-categories";
 
 /**
  * Performance metrics collector
@@ -66,7 +70,7 @@ export class EnhancedTestContext {
   }
 
   private setupNavigationMonitoring(): void {
-    this.page.on('framenavigated', async (frame) => {
+    this.page.on("framenavigated", async (frame) => {
       if (frame === this.page.mainFrame()) {
         const timing: NavigationTiming = {
           url: frame.url(),
@@ -76,7 +80,7 @@ export class EnhancedTestContext {
         };
 
         try {
-          await frame.waitForLoadState('networkidle');
+          await frame.waitForLoadState("networkidle");
           timing.endTime = Date.now();
           timing.duration = timing.endTime - timing.startTime;
           this.metrics.navigationTimings.push(timing);
@@ -93,7 +97,7 @@ export class EnhancedTestContext {
   async recordAction<T>(
     actionName: string,
     action: () => Promise<T>,
-    selector?: string
+    selector?: string,
   ): Promise<T> {
     const timing: ActionTiming = {
       action: actionName,
@@ -123,7 +127,7 @@ export class EnhancedTestContext {
   async collectMemoryUsage(): Promise<MemoryUsage | undefined> {
     try {
       const metrics = await this.page.evaluate(() => {
-        if ('memory' in performance && performance.memory) {
+        if ("memory" in performance && performance.memory) {
           return {
             usedJSHeapSize: (performance.memory as any).usedJSHeapSize,
             totalJSHeapSize: (performance.memory as any).totalJSHeapSize,
@@ -161,9 +165,9 @@ export class EnhancedTestContext {
    */
   async attachMetrics(): Promise<void> {
     const finalMetrics = this.finalize();
-    await this.testInfo.attach('performance-metrics', {
+    await this.testInfo.attach("performance-metrics", {
       body: JSON.stringify(finalMetrics, null, 2),
-      contentType: 'application/json',
+      contentType: "application/json",
     });
   }
 }
@@ -191,7 +195,7 @@ export class RetryAnalyzer {
    */
   isRetryable(error: Error): boolean {
     const errorMessage = error.message.toLowerCase();
-    return this.flakyPatterns.some(pattern => pattern.test(errorMessage));
+    return this.flakyPatterns.some((pattern) => pattern.test(errorMessage));
   }
 
   /**
@@ -231,10 +235,13 @@ export class ScreenshotComparator {
   /**
    * Take screenshot with metadata
    */
-  async takeScreenshot(name: string, options?: {
-    fullPage?: boolean;
-    clip?: { x: number; y: number; width: number; height: number };
-  }): Promise<Buffer> {
+  async takeScreenshot(
+    name: string,
+    options?: {
+      fullPage?: boolean;
+      clip?: { x: number; y: number; width: number; height: number };
+    },
+  ): Promise<Buffer> {
     const screenshot = await this.page.screenshot({
       fullPage: options?.fullPage ?? false,
       clip: options?.clip,
@@ -242,7 +249,7 @@ export class ScreenshotComparator {
 
     await this.testInfo.attach(`screenshot-${name}`, {
       body: screenshot,
-      contentType: 'image/png',
+      contentType: "image/png",
     });
 
     return screenshot;
@@ -256,7 +263,7 @@ export class ScreenshotComparator {
     options?: {
       threshold?: number;
       maxDiffPixels?: number;
-    }
+    },
   ): Promise<{ matches: boolean; diff?: Buffer }> {
     const threshold = options?.threshold ?? 0.2;
     const maxDiffPixels = options?.maxDiffPixels ?? 100;
@@ -287,7 +294,7 @@ export class NetworkMonitor {
   }
 
   private setupMonitoring(): void {
-    this.page.on('request', (request) => {
+    this.page.on("request", (request) => {
       this.requests.push({
         url: request.url(),
         method: request.method(),
@@ -296,7 +303,7 @@ export class NetworkMonitor {
       });
     });
 
-    this.page.on('response', async (response) => {
+    this.page.on("response", async (response) => {
       this.responses.push({
         url: response.url(),
         status: response.status(),
@@ -325,7 +332,7 @@ export class NetworkMonitor {
    * Get failed requests
    */
   getFailedRequests(): any[] {
-    return this.responses.filter(r => r.status >= 400);
+    return this.responses.filter((r) => r.status >= 400);
   }
 
   /**
@@ -363,7 +370,7 @@ export class ConsoleCollector {
   }
 
   private setupCollector(): void {
-    this.page.on('console', (msg) => {
+    this.page.on("console", (msg) => {
       this.logs.push({
         type: msg.type(),
         text: msg.text(),
@@ -383,14 +390,14 @@ export class ConsoleCollector {
    * Get error logs
    */
   getErrors(): Array<{ type: string; text: string; timestamp: number }> {
-    return this.logs.filter(log => log.type === 'error');
+    return this.logs.filter((log) => log.type === "error");
   }
 
   /**
    * Get warning logs
    */
   getWarnings(): Array<{ type: string; text: string; timestamp: number }> {
-    return this.logs.filter(log => log.type === 'warning');
+    return this.logs.filter((log) => log.type === "warning");
   }
 
   /**
@@ -408,7 +415,7 @@ export class TestDataGenerator {
   /**
    * Generate unique test email
    */
-  static generateEmail(prefix: string = 'test'): string {
+  static generateEmail(prefix: string = "test"): string {
     const timestamp = Date.now();
     const random = Math.floor(Math.random() * 10000);
     return `${prefix}_${timestamp}_${random}@example.com`;
@@ -419,7 +426,9 @@ export class TestDataGenerator {
    */
   static generateBookingReference(): string {
     const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.floor(Math.random() * 10000).toString(36).toUpperCase();
+    const random = Math.floor(Math.random() * 10000)
+      .toString(36)
+      .toUpperCase();
     return `BK${timestamp}${random}`;
   }
 
@@ -435,38 +444,49 @@ export class TestDataGenerator {
   /**
    * Generate random passenger data
    */
-  static generatePassenger(type: 'adult' | 'child' | 'infant' = 'adult'): object {
-    const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Emma'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia'];
+  static generatePassenger(
+    type: "adult" | "child" | "infant" = "adult",
+  ): object {
+    const firstNames = ["John", "Jane", "Michael", "Sarah", "David", "Emma"];
+    const lastNames = [
+      "Smith",
+      "Johnson",
+      "Williams",
+      "Brown",
+      "Jones",
+      "Garcia",
+    ];
 
     return {
       type,
-      title: type === 'adult' ? (Math.random() > 0.5 ? 'Mr' : 'Ms') : 'Mstr',
+      title: type === "adult" ? (Math.random() > 0.5 ? "Mr" : "Ms") : "Mstr",
       firstName: firstNames[Math.floor(Math.random() * firstNames.length)],
       lastName: lastNames[Math.floor(Math.random() * lastNames.length)],
       dateOfBirth: this.generateDateOfBirth(type),
     };
   }
 
-  private static generateDateOfBirth(type: 'adult' | 'child' | 'infant'): string {
+  private static generateDateOfBirth(
+    type: "adult" | "child" | "infant",
+  ): string {
     const now = new Date();
     let years = 0;
 
     switch (type) {
-      case 'adult':
+      case "adult":
         years = 25 + Math.floor(Math.random() * 40);
         break;
-      case 'child':
+      case "child":
         years = 5 + Math.floor(Math.random() * 10);
         break;
-      case 'infant':
+      case "infant":
         years = 0;
         now.setMonth(now.getMonth() - Math.floor(Math.random() * 12));
         break;
     }
 
     now.setFullYear(now.getFullYear() - years);
-    return now.toISOString().split('T')[0];
+    return now.toISOString().split("T")[0];
   }
 }
 
@@ -480,7 +500,7 @@ export class WaitUtils {
   static async waitForStable(
     page: Page,
     selector: string,
-    timeout: number = 5000
+    timeout: number = 5000,
   ): Promise<void> {
     await page.waitForFunction(
       (sel) => {
@@ -516,7 +536,7 @@ export class WaitUtils {
         });
       },
       selector,
-      { timeout }
+      { timeout },
     );
   }
 
@@ -526,9 +546,9 @@ export class WaitUtils {
   static async waitForNetworkIdle(
     page: Page,
     idleTime: number = 500,
-    timeout: number = 10000
+    timeout: number = 10000,
   ): Promise<void> {
-    await page.waitForLoadState('networkidle', { timeout });
+    await page.waitForLoadState("networkidle", { timeout });
   }
 }
 

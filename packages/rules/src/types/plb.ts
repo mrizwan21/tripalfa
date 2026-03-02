@@ -3,10 +3,29 @@
  * Comprehensive type definitions for airline bonus program management
  */
 
-export type PLBType = 'volume_based' | 'revenue_based' | 'growth_based' | 'mixed';
-export type PLBPeriodType = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
-export type PLBStatus = 'pending' | 'calculated' | 'approved' | 'paid' | 'disputed';
-export type BookingStatus = 'booked' | 'confirmed' | 'flown' | 'cancelled' | 'no_show';
+export type PLBType =
+  | "volume_based"
+  | "revenue_based"
+  | "growth_based"
+  | "mixed";
+export type PLBPeriodType =
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "quarterly"
+  | "yearly";
+export type PLBStatus =
+  | "pending"
+  | "calculated"
+  | "approved"
+  | "paid"
+  | "disputed";
+export type BookingStatus =
+  | "booked"
+  | "confirmed"
+  | "flown"
+  | "cancelled"
+  | "no_show";
 
 /**
  * PLB Program definition
@@ -207,6 +226,6 @@ export interface PLBPayment {
   bonusAmount: number;
   paymentReference: string;
   paymentDate: Date;
-  status: 'pending' | 'processed' | 'completed' | 'failed';
+  status: "pending" | "processed" | "completed" | "failed";
   createdAt: Date;
 }

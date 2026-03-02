@@ -2,7 +2,7 @@
 export interface DiscountCoupon {
   id: string;
   code: string;
-  discountType: 'PERCENTAGE' | 'FIXED';
+  discountType: "PERCENTAGE" | "FIXED";
   discountValue: number;
   minOrderAmount?: number;
   maxDiscountAmount?: number;
@@ -56,10 +56,10 @@ class PricingApiError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
-    this.name = 'PricingApiError';
+    this.name = "PricingApiError";
   }
 }
 
@@ -73,7 +73,7 @@ class PricingApi {
   };
 
   private constructor() {
-    this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    this.baseUrl = import.meta.env.VITE_API_URL || "http://localhost:3001";
   }
 
   static getInstance(): PricingApi {
@@ -94,20 +94,20 @@ class PricingApi {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
       try {
         const headers: HeadersInit = {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options.headers,
         };
 
-        const authToken = localStorage.getItem('authToken');
+        const authToken = localStorage.getItem("authToken");
         if (authToken) {
-          headers['Authorization'] = `Bearer ${authToken}`;
+          headers["Authorization"] = `Bearer ${authToken}`;
         }
 
         const response = await fetch(url, {
@@ -120,7 +120,7 @@ class PricingApi {
           throw new PricingApiError(
             response.status,
             errorData.message || `HTTP ${response.status}`,
-            errorData
+            errorData,
           );
         }
 
@@ -135,14 +135,14 @@ class PricingApi {
       }
     }
 
-    throw new Error('Max retries exceeded');
+    throw new Error("Max retries exceeded");
   }
 
   async calculatePrice(
-    request: PricingCalculationRequest
+    request: PricingCalculationRequest,
   ): Promise<PriceBreakdown> {
-    return this.request<PriceBreakdown>('/api/pricing/calculate', {
-      method: 'POST',
+    return this.request<PriceBreakdown>("/api/pricing/calculate", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -150,12 +150,15 @@ class PricingApi {
   async validateCoupon(
     code: string,
     amount: number,
-    serviceType?: string
+    serviceType?: string,
   ): Promise<CouponValidationResult> {
-    return this.request<CouponValidationResult>('/api/pricing/validate-coupon', {
-      method: 'POST',
-      body: JSON.stringify({ code, amount, serviceType }),
-    });
+    return this.request<CouponValidationResult>(
+      "/api/pricing/validate-coupon",
+      {
+        method: "POST",
+        body: JSON.stringify({ code, amount, serviceType }),
+      },
+    );
   }
 
   async getPriceBreakdown(bookingId: string): Promise<PriceBreakdown> {
@@ -168,5 +171,9 @@ class PricingApi {
 }
 
 export const pricingApi = PricingApi.getInstance();
-export type { PriceBreakdown, CouponValidationResult, PricingCalculationRequest };
+export type {
+  PriceBreakdown,
+  CouponValidationResult,
+  PricingCalculationRequest,
+};
 export { PricingApiError };

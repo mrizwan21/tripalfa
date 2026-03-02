@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 export class BasePage {
   protected page: Page;
@@ -22,7 +22,10 @@ export class BasePage {
   }
 
   async takeScreenshot(name: string) {
-    await this.page.screenshot({ path: `test-results/${name}.png`, fullPage: true });
+    await this.page.screenshot({
+      path: `test-results/${name}.png`,
+      fullPage: true,
+    });
   }
 
   getByTestId(testId: string): Locator {
@@ -38,9 +41,9 @@ export class BasePage {
   async setSelectValue(selector: string, value: string) {
     // First try as data-testid, if it contains dots or looks like a name attribute, use CSS selector
     let locator;
-    if (selector.includes('.') || selector.includes('[')) {
+    if (selector.includes(".") || selector.includes("[")) {
       // Assume it's a CSS selector or name attribute
-      if (selector.startsWith('[')) {
+      if (selector.startsWith("[")) {
         locator = this.page.locator(selector);
       } else {
         // Try name attribute selector
@@ -51,16 +54,12 @@ export class BasePage {
       locator = this.page.locator(`[data-testid="${selector}"]`);
     }
 
-    await locator.evaluate(
-      (element, val) => {
-        if (element instanceof HTMLSelectElement) {
-          element.value = val;
-          // Trigger change event
-          element.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      },
-      value
-    );
+    await locator.evaluate((element, val) => {
+      if (element instanceof HTMLSelectElement) {
+        element.value = val;
+        // Trigger change event
+        element.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }, value);
   }
 }
-

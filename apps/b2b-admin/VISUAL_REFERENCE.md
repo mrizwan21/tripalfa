@@ -9,6 +9,7 @@ This document provides visual references and code examples for all major compone
 ## 1. BUTTONS
 
 ### Primary Button
+
 ```
 ┌─────────────────────────────┐
 │  Button Label   [Icon]      │  ← Hover: lift effect + shadow
@@ -20,6 +21,7 @@ Hover: shadow-lg, translate-y[-2px]
 ```
 
 **Code**:
+
 ```typescript
 <Button variant="primary" size="md" iconBefore={<PlusIcon />}>
   Create New
@@ -27,6 +29,7 @@ Hover: shadow-lg, translate-y[-2px]
 ```
 
 ### Secondary Button
+
 ```
 ┌─────────────────────────────┐
 │      Button Label           │
@@ -38,6 +41,7 @@ Animate on hover: fade to darker shade
 ```
 
 ### Outline Button
+
 ```
 ┌ - - - - - - - - - - - - - - ┐
 │      Button Label           │
@@ -78,6 +82,7 @@ Disabled:    ┌──────────────┐
 ## 2. CARDS
 
 ### Default Card
+
 ```
 ╔════════════════════════════════════════╗
 ║                                        ║
@@ -95,6 +100,7 @@ Shadow: soft shadow
 ```
 
 ### Gradient Card
+
 ```
 ╔════════════════════════════════════════╗
 ║ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓   ║
@@ -110,6 +116,7 @@ Hover: shadow-lg
 ```
 
 ### Glass Card (Glassmorphism)
+
 ```
                     ✨ Frosted glass effect
 ╭────────────────────────────────────────╮
@@ -146,6 +153,7 @@ Change: ▲ Green (increase) / ▼ Red (decrease)
 ```
 
 **Code**:
+
 ```typescript
 <MetricCard
   icon={<TrendingUpIcon />}
@@ -161,6 +169,7 @@ Change: ▲ Green (increase) / ▼ Red (decrease)
 ## 4. STATUS BADGES
 
 ### Success Badge
+
 ```
 ┌─────────────────────────┐
 │ ✓ Active                │ ← Green background
@@ -172,6 +181,7 @@ Text: Green-700 (light) / Green-400 (dark)
 ```
 
 ### Warning Badge
+
 ```
 ┌─────────────────────────┐
 │ ⚠ Pending               │ ← Yellow background
@@ -183,6 +193,7 @@ Text: Yellow-700 (light) / Yellow-400 (dark)
 ```
 
 ### Error Badge
+
 ```
 ┌─────────────────────────┐
 │ ✕ Failed                │ ← Red background
@@ -198,6 +209,7 @@ Text: Red-700 (light) / Red-400 (dark)
 ## 5. INPUT FIELDS
 
 ### Default Input
+
 ```
 ┌────────────────────────────────────────┐
 │ Enter your text here...                │
@@ -211,6 +223,7 @@ Radius: 8px
 ```
 
 ### Focused Input
+
 ```
 ┌────────────────────────────────────────┐
 │ Enter your text here...                │  ← Glow effect
@@ -224,6 +237,7 @@ Border: Blue-500
 ```
 
 ### Error Input
+
 ```
 ┌────────────────────────────────────────┐
 │ ✗ Invalid input                        │
@@ -268,6 +282,7 @@ Desktop (1024px+):
 ```
 
 **Code**:
+
 ```typescript
 <div className="
   grid gap-4
@@ -319,7 +334,7 @@ Status: Color-coded badges
     │               ├──────────────────────────────┤        │
     │  [Cancel]   [Confirm]                        │        │
     └───────────────┴──────────────────────────────┴────────┘
-    
+
     Backdrop: rgba(0,0,0,0.5) blur behind
     Modal: Centered, shadow-lg
     Z-index: modal (1060)
@@ -361,6 +376,7 @@ Active: Blue highlight + icon
 ## 10. ANIMATIONS
 
 ### Fade In
+
 ```
 Time: 300ms
 Curve: ease-out
@@ -371,6 +387,7 @@ Frame 100: ████████ (opacity: 100%)
 ```
 
 ### Scale In
+
 ```
 Time: 300ms
 Curve: ease-out
@@ -381,6 +398,7 @@ Frame 100: ████ (scale: 100%, opacity: 100%)
 ```
 
 ### Slide Up
+
 ```
 Time: 500ms
 Curve: ease-out
@@ -391,6 +409,7 @@ Frame 100: ────► (translateY: 0px, opacity: 100%)
 ```
 
 ### Hover Lift (Button)
+
 ```
 Default:      [Button] (shadow: sm)
 Hover:        [Button] ↑ (shadow: lg, translateY: -2px)
@@ -405,6 +424,7 @@ Easing:       ease-out
 ### Context-Based Colors
 
 **Data Visualization**:
+
 ```
 Primary Series:   Blue (#3B82F6)
 Secondary Series: Purple (#A855F7)
@@ -413,6 +433,7 @@ Background:       Light gray (#F8FAFC)
 ```
 
 **Status Indicators**:
+
 ```
 ✓ Success:  Green (#10B981)
 ⚠ Warning: Yellow (#FBBF24)
@@ -421,6 +442,7 @@ Background:       Light gray (#F8FAFC)
 ```
 
 **Interactive Elements**:
+
 ```
 Default:  Blue (#3B82F6)
 Hover:    Dark Blue (#2563EB)
@@ -433,6 +455,7 @@ Disabled: Gray (#94A3B8)
 ## 12. DARK MODE COMPARISON
 
 ### Light Mode
+
 ```
 Background: White (#FFFFFF)
 Text:       Dark gray (#0F172A)
@@ -442,6 +465,7 @@ Icons:      Blue (#3B82F6)
 ```
 
 ### Dark Mode
+
 ```
 Background: Dark blue (#0F172A)
 Text:       Light gray (#F8FAFC)
@@ -451,6 +475,7 @@ Icons:      Light blue (#0EA5E9)
 ```
 
 **Toggle Effect**:
+
 ```
 User clicks 🌙/☀️
   ↓
@@ -497,6 +522,7 @@ Desktop (1024px+):
 ## 14. ACCESSIBILITY FOCUS STATES
 
 ### Keyboard Focus Ring
+
 ```
 ┌────────────────────────────┐
 │  [Button with focus↔]      │ ← Ring: 2px blue
@@ -509,6 +535,7 @@ color: Blue (#3B82F6)
 ```
 
 ### Tab Navigation Order
+
 ```
 1. Logo
    ↓
@@ -530,6 +557,7 @@ color: Blue (#3B82F6)
 ## 15. LOADING STATES
 
 ### Skeleton Loader
+
 ```
 ┌────────────────────────────────────┐
 │ ▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │ ← Shimmer animation
@@ -546,6 +574,7 @@ Easing: linear
 ```
 
 ### Spinner
+
 ```
         ⟳
       ⟲   ⟳
@@ -564,6 +593,7 @@ Size: Available in xs, sm, md, lg, xl
 ## Summary
 
 This visual reference provides quick lookups for:
+
 - Component layouts and dimensions
 - Color applications
 - Interactive states

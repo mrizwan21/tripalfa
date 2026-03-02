@@ -1,164 +1,201 @@
 // Custom hooks for API Gateway management
-import { useCallback, useEffect, useState } from 'react'
-import GatewayAPIService from '@/services/api-manager/GatewayAPIService'
-import {
-  SupplierAPIGateway,
-  SupplierAPIGatewayFormData,
-  Environment,
-  GatewayListResponse,
-  SupplierAPIGatewayResponse,
-  GatewayHealthCheckResult,
-  GatewayMetrics,
-  EnvironmentConfig,
-  ENVIRONMENT_CONFIGS,
-} from '@/services/api-manager/types-gateway'
-import { SupplierProduct } from '@/services/api-manager/types'
+import { useCallback, useEffect, useState } from "react";
+import GatewayAPIService from "@/services/api-manager/GatewayAPIService";
+import { ENVIRONMENT_CONFIGS } from "@/services/api-manager/types-gateway";
+
+type Environment = "development" | "staging" | "production";
+
+type SupplierProduct = {
+  name?: string;
+  [key: string]: any;
+};
+
+type GatewayHealthCheckResult = Record<string, any>;
+type GatewayMetrics = Record<string, any>;
+
+type SupplierAPIGatewayFormData = {
+  environments: any[];
+  activeEnvironment: Environment;
+  globalHeaders: any[];
+  globalQueryParameters: any[];
+  productConfigs: any[];
+  geographyRoutings: any[];
+  channelRoutings: any[];
+  allowDevelopment: boolean;
+  requireStagingApproval: boolean;
+  requireProductionApproval: boolean;
+  [key: string]: any;
+};
+
+type SupplierAPIGateway = {
+  id?: string;
+  activeEnvironment: Environment;
+  environments: Record<string, any>;
+  globalConfiguration: {
+    globalHeaders: any[];
+    globalQueryParameters: any[];
+    productConfigs: any[];
+    geographyRoutings: any[];
+    channelRoutings: any[];
+  };
+  environmentManagement: {
+    allowDevelopment: boolean;
+    requireStagingApproval: boolean;
+    requireProductionApproval: boolean;
+  };
+  [key: string]: any;
+};
 
 // ============================================================================
 // HOOK: useGateway - Fetch and manage gateway configuration
 // ============================================================================
 
 export const useGateway = (supplierId: string, gatewayId?: string) => {
-  const [gateway, setGateway] = useState<SupplierAPIGateway | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [gateway, setGateway] = useState<SupplierAPIGateway | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchGateway = useCallback(async () => {
-    if (!gatewayId) return
+    if (!gatewayId) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
-      const response = await GatewayAPIService.getGateway(supplierId, gatewayId)
+      const response = await GatewayAPIService.getGateway(
+        supplierId,
+        gatewayId,
+      );
       if (response.data) {
-        setGateway(response.data.gateway)
+        setGateway(response.data.gateway);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load gateway'
-      setError(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to load gateway";
+      setError(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [supplierId, gatewayId])
+  }, [supplierId, gatewayId]);
 
   useEffect(() => {
-    fetchGateway()
-  }, [fetchGateway])
+    fetchGateway();
+  }, [fetchGateway]);
 
   const refetch = useCallback(() => {
-    fetchGateway()
-  }, [fetchGateway])
+    fetchGateway();
+  }, [fetchGateway]);
 
-  return { gateway, loading, error, refetch, setGateway }
-}
+  return { gateway, loading, error, refetch, setGateway };
+};
 
 // ============================================================================
 // HOOK: useGatewayList - Fetch list of gateways
 // ============================================================================
 
 export const useGatewayList = (supplierId: string, page = 1, limit = 20) => {
-  const [gateways, setGateways] = useState<SupplierAPIGateway[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [gateways, setGateways] = useState<SupplierAPIGateway[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchGateways = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await GatewayAPIService.listGateways(supplierId, {
         page,
         limit,
-      })
+      });
       if (response.data) {
-        setGateways(response.data.gateways)
-        setTotal(response.data.total)
+        setGateways(response.data.gateways);
+        setTotal(response.data.total);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to load gateways'
-      setError(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to load gateways";
+      setError(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [supplierId, page, limit])
+  }, [supplierId, page, limit]);
 
   useEffect(() => {
-    fetchGateways()
-  }, [fetchGateways])
+    fetchGateways();
+  }, [fetchGateways]);
 
-  return { gateways, total, loading, error, refetch: fetchGateways }
-}
+  return { gateways, total, loading, error, refetch: fetchGateways };
+};
 
 // ============================================================================
 // HOOK: useGatewayForm - Manage form state for creating/editing gateways
 // ============================================================================
 
 interface UseGatewayFormOptions {
-  gateway?: SupplierAPIGateway
-  onSuccess?: () => void
+  gateway?: SupplierAPIGateway;
+  onSuccess?: () => void;
 }
 
 export const useGatewayForm = (
   supplierId: string,
-  options?: UseGatewayFormOptions
+  options?: UseGatewayFormOptions,
 ) => {
   const [formData, setFormData] = useState<SupplierAPIGatewayFormData>(
-    initializeFormData(options?.gateway)
-  )
-  const [isDirty, setIsDirty] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
+    initializeFormData(options?.gateway),
+  );
+  const [isDirty, setIsDirty] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
   const updateFormData = useCallback(
     (updates: Partial<SupplierAPIGatewayFormData>) => {
-      setFormData((prev) => ({ ...prev, ...updates }))
-      setIsDirty(true)
+      setFormData((prev) => ({ ...prev, ...updates }));
+      setIsDirty(true);
     },
-    []
-  )
+    [],
+  );
 
   const resetForm = useCallback(() => {
-    setFormData(initializeFormData(options?.gateway))
-    setIsDirty(false)
-    setErrors({})
-  }, [options?.gateway])
+    setFormData(initializeFormData(options?.gateway));
+    setIsDirty(false);
+    setErrors({});
+  }, [options?.gateway]);
 
   const validateForm = useCallback(() => {
     // validate form data - placeholder for Zod validation
-    return true
-  }, [])
+    return true;
+  }, []);
 
   const save = useCallback(async () => {
     if (!validateForm()) {
-      return false
+      return false;
     }
 
-    setSaving(true)
+    setSaving(true);
 
     try {
       if (options?.gateway?.id) {
         await GatewayAPIService.updateGateway(
           supplierId,
           options.gateway.id,
-          formData
-        )
+          formData,
+        );
       } else {
-        await GatewayAPIService.createGateway(supplierId, formData)
+        await GatewayAPIService.createGateway(supplierId, formData);
       }
 
-      setIsDirty(false)
-      options?.onSuccess?.()
-      return true
+      setIsDirty(false);
+      options?.onSuccess?.();
+      return true;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save'
-      setErrors({ _form: message })
-      return false
+      const message = err instanceof Error ? err.message : "Failed to save";
+      setErrors({ _form: message });
+      return false;
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }, [formData, options, supplierId, validateForm])
+  }, [formData, options, supplierId, validateForm]);
 
   return {
     formData,
@@ -168,15 +205,15 @@ export const useGatewayForm = (
     errors,
     saving,
     save,
-  }
-}
+  };
+};
 
 // ============================================================================
 // HOOK: useEnvironmentConfig - Get configuration for selected environment
 // ============================================================================
 
 export const useEnvironmentConfig = (environment: Environment) => {
-  const config = ENVIRONMENT_CONFIGS[environment]
+  const config = ENVIRONMENT_CONFIGS[environment];
 
   return {
     config,
@@ -185,85 +222,84 @@ export const useEnvironmentConfig = (environment: Environment) => {
     allowCORS: config.allowCORS,
     rateLimit: config.rateLimit,
     timeout: config.timeout,
-    requiresApproval: environment === 'production',
+    requiresApproval: environment === "production",
     requiresMonitoring: config.requiresMonitoring,
-  }
-}
+  };
+};
 
 // ============================================================================
 // HOOK: useGatewayTest - Test gateway configuration
 // ============================================================================
 
-export const useGatewayTest = (
-  supplierId: string,
-  gatewayId: string
-) => {
-  const [testing, setTesting] = useState(false)
-  const [result, setResult] = useState<any | null>(null)
-  const [error, setError] = useState<string | null>(null)
+export const useGatewayTest = (supplierId: string, gatewayId: string) => {
+  const [testing, setTesting] = useState(false);
+  const [result, setResult] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const testEndpoint = useCallback(
     async (endpointId: string, testData?: any) => {
-      setTesting(true)
-      setError(null)
+      setTesting(true);
+      setError(null);
 
       try {
         const response = await GatewayAPIService.testEndpoint(
           supplierId,
           gatewayId,
           endpointId,
-          testData
-        )
-        setResult(response.data)
-        return response.data
+          testData,
+        );
+        setResult(response.data);
+        return response.data;
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Test failed'
-        setError(message)
-        throw err
+        const message = err instanceof Error ? err.message : "Test failed";
+        setError(message);
+        throw err;
       } finally {
-        setTesting(false)
+        setTesting(false);
       }
     },
-    [supplierId, gatewayId]
-  )
+    [supplierId, gatewayId],
+  );
 
   const testCredentials = useCallback(async () => {
-    setTesting(true)
-    setError(null)
+    setTesting(true);
+    setError(null);
 
     try {
       const response = await GatewayAPIService.testCredentials(
         supplierId,
-        gatewayId
-      )
-      return response.data
+        gatewayId,
+      );
+      return response.data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Credential test failed'
-      setError(message)
-      throw err
+      const message =
+        err instanceof Error ? err.message : "Credential test failed";
+      setError(message);
+      throw err;
     } finally {
-      setTesting(false)
+      setTesting(false);
     }
-  }, [supplierId, gatewayId])
+  }, [supplierId, gatewayId]);
 
   const testGateway = useCallback(async () => {
-    setTesting(true)
-    setError(null)
+    setTesting(true);
+    setError(null);
 
     try {
       const response = await GatewayAPIService.testGateway(
         supplierId,
-        gatewayId
-      )
-      return response.data
+        gatewayId,
+      );
+      return response.data;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Health check failed'
-      setError(message)
-      throw err
+      const message =
+        err instanceof Error ? err.message : "Health check failed";
+      setError(message);
+      throw err;
     } finally {
-      setTesting(false)
+      setTesting(false);
     }
-  }, [supplierId, gatewayId])
+  }, [supplierId, gatewayId]);
 
   return {
     testing,
@@ -272,47 +308,48 @@ export const useGatewayTest = (
     testEndpoint,
     testCredentials,
     testGateway,
-  }
-}
+  };
+};
 
 // ============================================================================
 // HOOK: useGatewayHealth - Get gateway health status
 // ============================================================================
 
 export const useGatewayHealth = (supplierId: string, gatewayId: string) => {
-  const [health, setHealth] = useState<GatewayHealthCheckResult | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [health, setHealth] = useState<GatewayHealthCheckResult | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchHealth = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await GatewayAPIService.getGatewayHealth(
         supplierId,
-        gatewayId
-      )
+        gatewayId,
+      );
       if (response.data) {
-        setHealth(response.data)
+        setHealth(response.data);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch health'
-      setError(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch health";
+      setError(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [supplierId, gatewayId])
+  }, [supplierId, gatewayId]);
 
   useEffect(() => {
-    fetchHealth()
+    fetchHealth();
     // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchHealth, 30000)
-    return () => clearInterval(interval)
-  }, [fetchHealth])
+    const interval = setInterval(fetchHealth, 30000);
+    return () => clearInterval(interval);
+  }, [fetchHealth]);
 
-  return { health, loading, error, refetch: fetchHealth }
-}
+  return { health, loading, error, refetch: fetchHealth };
+};
 
 // ============================================================================
 // HOOK: useGatewayMetrics - Get gateway metrics
@@ -321,125 +358,129 @@ export const useGatewayHealth = (supplierId: string, gatewayId: string) => {
 export const useGatewayMetrics = (
   supplierId: string,
   gatewayId: string,
-  period: 'hour' | 'day' | 'week' | 'month' = 'day'
+  period: "hour" | "day" | "week" | "month" = "day",
 ) => {
-  const [metrics, setMetrics] = useState<GatewayMetrics | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [metrics, setMetrics] = useState<GatewayMetrics | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchMetrics = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await GatewayAPIService.getGatewayMetrics(
         supplierId,
         gatewayId,
-        period
-      )
+        period,
+      );
       if (response.data) {
-        setMetrics(response.data)
+        setMetrics(response.data);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch metrics'
-      setError(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch metrics";
+      setError(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [supplierId, gatewayId, period])
+  }, [supplierId, gatewayId, period]);
 
   useEffect(() => {
-    fetchMetrics()
-  }, [fetchMetrics])
+    fetchMetrics();
+  }, [fetchMetrics]);
 
-  return { metrics, loading, error, refetch: fetchMetrics }
-}
+  return { metrics, loading, error, refetch: fetchMetrics };
+};
 
 // ============================================================================
 // HOOK: useProductSchema - Get product-specific endpoint schema
 // ============================================================================
 
 export const useProductSchema = (product?: string | SupplierProduct) => {
-  const [schema, setSchema] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
+  const [schema, setSchema] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!product) {
-      setSchema(null)
-      return
+      setSchema(null);
+      return;
     }
 
     // In real implementation, fetch from backend or use registry
-    setLoading(true)
-    
+    setLoading(true);
+
     // Simulated product schema
     const productSchemas: Record<string, any> = {
       hotel: {
         endpoints: [
           {
-            method: 'GET',
-            path: '/hotels/search',
-            name: 'Search Hotels',
-            requiredParams: ['checkIn', 'checkOut', 'city'],
+            method: "GET",
+            path: "/hotels/search",
+            name: "Search Hotels",
+            requiredParams: ["checkIn", "checkOut", "city"],
           },
           {
-            method: 'GET',
-            path: '/hotels/{hotelId}',
-            name: 'Get Hotel Detail',
-            requiredParams: ['hotelId'],
+            method: "GET",
+            path: "/hotels/{hotelId}",
+            name: "Get Hotel Detail",
+            requiredParams: ["hotelId"],
           },
           {
-            method: 'POST',
-            path: '/bookings',
-            name: 'Create Booking',
-            requiredParams: ['hotelId', 'checkIn', 'checkOut'],
+            method: "POST",
+            path: "/bookings",
+            name: "Create Booking",
+            requiredParams: ["hotelId", "checkIn", "checkOut"],
           },
         ],
-        authTypes: ['api-key', 'oauth2'],
+        authTypes: ["api-key", "oauth2"],
       },
       flight: {
         endpoints: [
           {
-            method: 'GET',
-            path: '/flights/search',
-            name: 'Search Flights',
-            requiredParams: ['departure', 'destination', 'departureDate'],
+            method: "GET",
+            path: "/flights/search",
+            name: "Search Flights",
+            requiredParams: ["departure", "destination", "departureDate"],
           },
           {
-            method: 'POST',
-            path: '/bookings',
-            name: 'Book Flight',
-            requiredParams: ['flightId', 'passengers'],
+            method: "POST",
+            path: "/bookings",
+            name: "Book Flight",
+            requiredParams: ["flightId", "passengers"],
           },
         ],
-        authTypes: ['oauth2', 'jwt'],
+        authTypes: ["oauth2", "jwt"],
       },
-    }
+    };
 
-    const productKey = typeof product === 'string' ? product.toLowerCase() : product.name?.toLowerCase()
+    const productKey =
+      typeof product === "string"
+        ? product.toLowerCase()
+        : product.name?.toLowerCase() || "";
     const productSchema = productSchemas[productKey] || {
       endpoints: [],
-      authTypes: ['api-key'],
-    }
+      authTypes: ["api-key"],
+    };
 
-    setSchema(productSchema)
-    setLoading(false)
-  }, [product])
+    setSchema(productSchema);
+    setLoading(false);
+  }, [product]);
 
-  return { schema, loading }
-}
+  return { schema, loading };
+};
 
 // ============================================================================
 // UTILITY: Initialize form data from existing gateway
 // ============================================================================
 
 function initializeFormData(
-  gateway?: SupplierAPIGateway
+  gateway?: SupplierAPIGateway,
 ): SupplierAPIGatewayFormData {
   if (!gateway) {
     return {
       environments: [],
-      activeEnvironment: 'development',
+      activeEnvironment: "development",
       globalHeaders: [],
       globalQueryParameters: [],
       productConfigs: [],
@@ -448,16 +489,16 @@ function initializeFormData(
       allowDevelopment: true,
       requireStagingApproval: true,
       requireProductionApproval: true,
-    }
+    };
   }
 
   return {
     environments: Object.entries(gateway.environments).map(([env, config]) => ({
       environment: env as Environment,
       isActive: config?.isActive || false,
-      baseUrl: config?.baseUrl || '',
+      baseUrl: config?.baseUrl || "",
       apiVersion: config?.apiVersion,
-      authenticationType: config?.authentication?.type || 'api-key',
+      authenticationType: config?.authentication?.type || "api-key",
       authenticationCredentials: config?.authentication?.credentials || {},
       headers: config?.headers || [],
       queryParameters: config?.queryParameters || [],
@@ -478,8 +519,9 @@ function initializeFormData(
     geographyRoutings: gateway.globalConfiguration.geographyRoutings,
     channelRoutings: gateway.globalConfiguration.channelRoutings,
     allowDevelopment: gateway.environmentManagement.allowDevelopment,
-    requireStagingApproval: gateway.environmentManagement.requireStagingApproval,
+    requireStagingApproval:
+      gateway.environmentManagement.requireStagingApproval,
     requireProductionApproval:
       gateway.environmentManagement.requireProductionApproval,
-  }
+  };
 }

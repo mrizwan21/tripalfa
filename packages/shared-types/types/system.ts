@@ -15,9 +15,9 @@ import {
   GdsLogStatus,
   ReportCategory,
   DeliveryMethod,
-} from './enums';
-import { Address } from './company';
-import { InvoiceLineItem } from './finance';
+} from "./enums";
+import { Address } from "./company";
+import { InvoiceLineItem } from "./finance";
 
 // ============================================================================
 // Invoice Types
@@ -279,8 +279,8 @@ export interface AuditLogListParams {
   severity?: AuditSeverity;
   fromDate?: string;
   toDate?: string;
-  sortBy?: 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "createdAt";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface AuditLogListResponse {
@@ -334,8 +334,8 @@ export interface GdsLogListParams {
   correlationId?: string;
   fromDate?: string;
   toDate?: string;
-  sortBy?: 'createdAt' | 'responseTime';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "createdAt" | "responseTime";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface GdsLogListResponse {
@@ -353,7 +353,7 @@ export interface GdsLogListResponse {
 // ============================================================================
 export interface ReportParameter {
   name: string;
-  type: 'string' | 'number' | 'date' | 'boolean' | 'select';
+  type: "string" | "number" | "date" | "boolean" | "select";
   required: boolean;
   default?: unknown;
   options?: { label: string; value: unknown }[];
@@ -419,7 +419,7 @@ export interface ReportDefinitionUpdate {
 // Report Schedule Types
 // ============================================================================
 export interface ReportRecipient {
-  type: 'email' | 'sftp' | 'webhook';
+  type: "email" | "sftp" | "webhook";
   address: string;
   name?: string;
 }
@@ -487,7 +487,7 @@ export interface ReportExecutionRequest {
 
 export interface ReportExecutionResponse {
   executionId: string;
-  status: 'queued' | 'running' | 'completed' | 'failed';
+  status: "queued" | "running" | "completed" | "failed";
   downloadUrl?: string;
   errorMessage?: string;
   startedAt?: string;

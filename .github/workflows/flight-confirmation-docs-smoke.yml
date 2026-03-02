@@ -1,0 +1,69 @@
+name: Flight Confirmation Docs Smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify-flight-confirmation-docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Start booking service
+        run: |
+          pnpm --filter @tripalfa/booking-service exec tsx src/index.ts > booking-service.log 2>&1 &
+
+      - name: Wait for booking service health
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://localhost:3001/health > /dev/null; then
+              echo "booking-service is healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "booking-service did not become healthy in time"
+          tail -100 booking-service.log || true
+          exit 1
+
+      - name: Run confirmation docs smoke test
+        env:
+          JWT_SECRET: ci-smoke-secret
+          BOOKING_SERVICE_URL: http://localhost:3001
+          REDIS_URL: redis://localhost:6379
+        run: npm run test:api:flight:confirmation-docs
+
+      - name: Upload booking-service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: booking-service-log
+          path: booking-service.log
+          retention-days: 7

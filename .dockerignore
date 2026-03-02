@@ -2,8 +2,7 @@
 **/node_modules
 .pnpm-store
 
-# Build outputs
-**/dist
+# Build outputs (but keep dist files as they're needed in Docker images)
 **/.next
 **/build
 

@@ -1,10 +1,19 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { RequestChangeModal } from '@/components/OfflineRequests';
-import { OfflineChangeRequest, OfflineRequestStatus } from '@tripalfa/shared-types';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { RequestChangeModal } from "@/components/OfflineRequests";
+import {
+  OfflineChangeRequest,
+  OfflineRequestStatus,
+} from "@tripalfa/shared-types";
 
 interface BookingDetailsRequestButtonProps {
   bookingId: string;
@@ -27,7 +36,9 @@ export const BookingDetailsRequestButton = ({
   const [showModal, setShowModal] = useState(false);
 
   const pendingRequests = linkedRequests.filter(
-    (r) => r.status !== OfflineRequestStatus.COMPLETED && r.status !== OfflineRequestStatus.REJECTED
+    (r) =>
+      r.status !== OfflineRequestStatus.COMPLETED &&
+      r.status !== OfflineRequestStatus.REJECTED,
   );
 
   const getStatusIcon = (status: string) => {
@@ -42,28 +53,28 @@ export const BookingDetailsRequestButton = ({
       case OfflineRequestStatus.PAYMENT_PENDING:
         return <Clock className="w-4 h-4 text-purple-600" />;
       case OfflineRequestStatus.CANCELLED:
-        return <AlertCircle className="w-4 h-4 text-gray-600" />;
+        return <AlertCircle className="w-4 h-4 text-muted-foreground" />;
       default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
+        return <Clock className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case OfflineRequestStatus.PENDING_STAFF:
-        return 'bg-blue-100 text-blue-800';
+        return "bg-blue-100 text-blue-800";
       case OfflineRequestStatus.PRICING_SUBMITTED:
-        return 'bg-orange-100 text-orange-800';
+        return "bg-orange-100 text-orange-800";
       case OfflineRequestStatus.PENDING_CUSTOMER_APPROVAL:
-        return 'bg-yellow-100 text-yellow-800';
+        return "bg-yellow-100 text-yellow-800";
       case OfflineRequestStatus.APPROVED:
-        return 'bg-green-100 text-green-800';
+        return "bg-green-100 text-green-800";
       case OfflineRequestStatus.PAYMENT_PENDING:
-        return 'bg-purple-100 text-purple-800';
+        return "bg-purple-100 text-purple-800";
       case OfflineRequestStatus.CANCELLED:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-muted/50 text-foreground";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-muted/50 text-foreground";
     }
   };
 
@@ -76,50 +87,55 @@ export const BookingDetailsRequestButton = ({
             Request a Change
           </CardTitle>
           <CardDescription>
-            Need to modify your booking? Submit a change request and we'll review it for you.
+            Need to modify your booking? Submit a change request and we'll
+            review it for you.
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-6">
           {/* Booking Summary */}
-          <div className="bg-white rounded-lg p-3 border border-gray-200 text-sm space-y-1">
-            <p className="text-gray-600">
+          <div className="bg-card rounded-lg p-3 border border-border text-sm space-y-2">
+            <p className="text-muted-foreground">
               <span className="font-medium">Route:</span> {bookingDetails.route}
             </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Departure:</span>{' '}
+            <p className="text-muted-foreground">
+              <span className="font-medium">Departure:</span>{" "}
               {new Date(bookingDetails.departureDate).toLocaleDateString()}
             </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Passengers:</span> {bookingDetails.passengers}
+            <p className="text-muted-foreground">
+              <span className="font-medium">Passengers:</span>{" "}
+              {bookingDetails.passengers}
             </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Current Price:</span> ${bookingDetails.totalPrice.toFixed(2)}
+            <p className="text-muted-foreground">
+              <span className="font-medium">Current Price:</span> $
+              {bookingDetails.totalPrice.toFixed(2)}
             </p>
           </div>
 
           {/* Pending Requests List */}
           {pendingRequests.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-900">Active Change Requests</p>
+              <p className="text-sm font-medium text-foreground">
+                Active Change Requests
+              </p>
               <div className="space-y-2">
                 {pendingRequests.map((request) => (
                   <div
                     key={request.id}
-                    className="flex items-center justify-between p-2 bg-white rounded border border-gray-200 text-sm"
+                    className="flex items-center justify-between p-2 bg-card rounded border border-border text-sm gap-2"
                   >
                     <div className="flex items-center gap-2">
                       {getStatusIcon(request.status)}
-                      <span className="text-gray-700">
+                      <span className="text-foreground">
                         {request.requestedChanges?.newDepartureDate
                           ? `Change to ${new Date(
-                              request.requestedChanges.newDepartureDate
+                              request.requestedChanges.newDepartureDate,
                             ).toLocaleDateString()}`
-                          : 'Change request submitted'}
+                          : "Change request submitted"}
                       </span>
                     </div>
                     <Badge className={getStatusColor(request.status)}>
-                      {request.status.replace('_', ' ')}
+                      {request.status.replace("_", " ")}
                     </Badge>
                   </div>
                 ))}
@@ -128,11 +144,12 @@ export const BookingDetailsRequestButton = ({
           )}
 
           {/* CTA */}
-          <div className="bg-white rounded-lg p-3 border border-blue-200">
-            <p className="text-sm text-gray-700 mb-3">
-              ✓ Compare prices before decide<br/>
-              ✓ Track your request status in real-time<br/>
-              ✓ Get notified about approvals instantly
+          <div className="bg-card rounded-lg p-3 border border-blue-200">
+            <p className="text-sm text-foreground mb-3">
+              ✓ Compare prices before decide
+              <br />
+              ✓ Track your request status in real-time
+              <br />✓ Get notified about approvals instantly
             </p>
             <Button
               onClick={() => setShowModal(true)}
@@ -144,9 +161,10 @@ export const BookingDetailsRequestButton = ({
           </div>
 
           {/* Help Text */}
-          <p className="text-xs text-gray-600">
-            Our team typically reviews requests within 24-48 hours. You'll be notified via email when there's
-            an update or we're ready with new pricing options.
+          <p className="text-xs text-muted-foreground">
+            Our team typically reviews requests within 24-48 hours. You'll be
+            notified via email when there's an update or we're ready with new
+            pricing options.
           </p>
         </CardContent>
       </Card>
@@ -157,7 +175,7 @@ export const BookingDetailsRequestButton = ({
         onClose={() => setShowModal(false)}
         onSubmit={async (changeRequest) => {
           // TODO: Implement the API call to create the offline request
-          console.log('Change request:', changeRequest);
+          console.log("Change request:", changeRequest);
           setShowModal(false);
           onRequestCreated?.();
         }}

@@ -3,16 +3,42 @@
  * Handles all supplier-related API calls through the centralized APIManager
  */
 
-import APIManager, { APIModule, APIResponse } from '../api-manager/APIManager';
-import { SupplierListFilters, SupplierFormData, SupplierPaymentData, SupplierDocumentData } from './types';
+import APIManager from "../api-manager/APIManager";
+
+type APIResponse = {
+  success?: boolean;
+  data?: any;
+  error?: any;
+  message?: string;
+};
+
+type APIModule = {
+  name: string;
+  baseURL: string;
+  timeout?: number;
+  retryConfig?: { attempts: number; delay: number };
+  endpoints: Record<string, any>;
+};
+
+type SupplierListFilters = {
+  search?: string;
+  supplierType?: string;
+  status?: string;
+  pricingModel?: string;
+  country?: string;
+};
+
+type SupplierFormData = Record<string, any>;
+type SupplierPaymentData = Record<string, any>;
+type SupplierDocumentData = Record<string, any>;
 
 // ============================================================================
 // SUPPLIER API ENDPOINTS REGISTRY
 // ============================================================================
 
 const SUPPLIER_MODULE: APIModule = {
-  name: 'suppliers',
-  baseURL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api',
+  name: "suppliers",
+  baseURL: process.env.REACT_APP_API_BASE_URL || "http://localhost:3000/api",
   timeout: 30000,
   retryConfig: {
     attempts: 3,
@@ -21,198 +47,198 @@ const SUPPLIER_MODULE: APIModule = {
   endpoints: {
     // Supplier CRUD
     LIST_SUPPLIERS: {
-      method: 'GET',
-      path: '/suppliers',
-      description: 'Get list of suppliers with filters',
+      method: "GET",
+      path: "/suppliers",
+      description: "Get list of suppliers with filters",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
     GET_SUPPLIER: {
-      method: 'GET',
-      path: '/suppliers/:id',
-      description: 'Get supplier by ID',
+      method: "GET",
+      path: "/suppliers/:id",
+      description: "Get supplier by ID",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
     CREATE_SUPPLIER: {
-      method: 'POST',
-      path: '/suppliers',
-      description: 'Create new supplier',
+      method: "POST",
+      path: "/suppliers",
+      description: "Create new supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     UPDATE_SUPPLIER: {
-      method: 'PUT',
-      path: '/suppliers/:id',
-      description: 'Update supplier',
+      method: "PUT",
+      path: "/suppliers/:id",
+      description: "Update supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     DELETE_SUPPLIER: {
-      method: 'DELETE',
-      path: '/suppliers/:id',
-      description: 'Delete supplier',
+      method: "DELETE",
+      path: "/suppliers/:id",
+      description: "Delete supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
 
     // Supplier Products
     LIST_SUPPLIER_PRODUCTS: {
-      method: 'GET',
-      path: '/suppliers/:id/products',
-      description: 'Get supplier products',
+      method: "GET",
+      path: "/suppliers/:id/products",
+      description: "Get supplier products",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
     ADD_SUPPLIER_PRODUCT: {
-      method: 'POST',
-      path: '/suppliers/:id/products',
-      description: 'Add product to supplier',
+      method: "POST",
+      path: "/suppliers/:id/products",
+      description: "Add product to supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     UPDATE_SUPPLIER_PRODUCT: {
-      method: 'PUT',
-      path: '/suppliers/:id/products/:productId',
-      description: 'Update supplier product',
+      method: "PUT",
+      path: "/suppliers/:id/products/:productId",
+      description: "Update supplier product",
       cache: { enabled: false },
       requiresAuth: true,
     },
     DELETE_SUPPLIER_PRODUCT: {
-      method: 'DELETE',
-      path: '/suppliers/:id/products/:productId',
-      description: 'Remove product from supplier',
+      method: "DELETE",
+      path: "/suppliers/:id/products/:productId",
+      description: "Remove product from supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
 
     // Supplier Rules
     LIST_SUPPLIER_RULES: {
-      method: 'GET',
-      path: '/suppliers/:id/rules',
-      description: 'Get supplier pricing rules',
+      method: "GET",
+      path: "/suppliers/:id/rules",
+      description: "Get supplier pricing rules",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
     APPLY_SUPPLIER_RULE: {
-      method: 'POST',
-      path: '/suppliers/:id/rules',
-      description: 'Apply rule to supplier',
+      method: "POST",
+      path: "/suppliers/:id/rules",
+      description: "Apply rule to supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     UPDATE_SUPPLIER_RULE: {
-      method: 'PUT',
-      path: '/suppliers/:id/rules/:ruleId',
-      description: 'Update supplier rule',
+      method: "PUT",
+      path: "/suppliers/:id/rules/:ruleId",
+      description: "Update supplier rule",
       cache: { enabled: false },
       requiresAuth: true,
     },
 
     // Supplier Payments
     LIST_SUPPLIER_PAYMENTS: {
-      method: 'GET',
-      path: '/suppliers/:id/payments',
-      description: 'Get supplier payment methods',
+      method: "GET",
+      path: "/suppliers/:id/payments",
+      description: "Get supplier payment methods",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
     ADD_SUPPLIER_PAYMENT: {
-      method: 'POST',
-      path: '/suppliers/:id/payments',
-      description: 'Add payment method to supplier',
+      method: "POST",
+      path: "/suppliers/:id/payments",
+      description: "Add payment method to supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     UPDATE_SUPPLIER_PAYMENT: {
-      method: 'PUT',
-      path: '/suppliers/:id/payments/:paymentId',
-      description: 'Update supplier payment method',
+      method: "PUT",
+      path: "/suppliers/:id/payments/:paymentId",
+      description: "Update supplier payment method",
       cache: { enabled: false },
       requiresAuth: true,
     },
     DELETE_SUPPLIER_PAYMENT: {
-      method: 'DELETE',
-      path: '/suppliers/:id/payments/:paymentId',
-      description: 'Remove payment method from supplier',
+      method: "DELETE",
+      path: "/suppliers/:id/payments/:paymentId",
+      description: "Remove payment method from supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
 
     // Supplier Documents
     LIST_SUPPLIER_DOCUMENTS: {
-      method: 'GET',
-      path: '/suppliers/:id/documents',
-      description: 'Get supplier documents',
+      method: "GET",
+      path: "/suppliers/:id/documents",
+      description: "Get supplier documents",
       cache: { enabled: true, ttl: 600 },
       requiresAuth: true,
     },
     UPLOAD_SUPPLIER_DOCUMENT: {
-      method: 'POST',
-      path: '/suppliers/:id/documents',
-      description: 'Upload document for supplier',
+      method: "POST",
+      path: "/suppliers/:id/documents",
+      description: "Upload document for supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     DELETE_SUPPLIER_DOCUMENT: {
-      method: 'DELETE',
-      path: '/suppliers/:id/documents/:docId',
-      description: 'Delete supplier document',
+      method: "DELETE",
+      path: "/suppliers/:id/documents/:docId",
+      description: "Delete supplier document",
       cache: { enabled: false },
       requiresAuth: true,
     },
 
     // Supplier API Credentials
     LIST_SUPPLIER_API_CREDENTIALS: {
-      method: 'GET',
-      path: '/suppliers/:id/api-credentials',
-      description: 'Get supplier API credentials',
+      method: "GET",
+      path: "/suppliers/:id/api-credentials",
+      description: "Get supplier API credentials",
       cache: { enabled: false }, // Don't cache sensitive data
       requiresAuth: true,
     },
     ADD_SUPPLIER_API_CREDENTIALS: {
-      method: 'POST',
-      path: '/suppliers/:id/api-credentials',
-      description: 'Add API credentials for supplier',
+      method: "POST",
+      path: "/suppliers/:id/api-credentials",
+      description: "Add API credentials for supplier",
       cache: { enabled: false },
       requiresAuth: true,
     },
     UPDATE_SUPPLIER_API_CREDENTIALS: {
-      method: 'PUT',
-      path: '/suppliers/:id/api-credentials/:credId',
-      description: 'Update supplier API credentials',
+      method: "PUT",
+      path: "/suppliers/:id/api-credentials/:credId",
+      description: "Update supplier API credentials",
       cache: { enabled: false },
       requiresAuth: true,
     },
     DELETE_SUPPLIER_API_CREDENTIALS: {
-      method: 'DELETE',
-      path: '/suppliers/:id/api-credentials/:credId',
-      description: 'Delete supplier API credentials',
+      method: "DELETE",
+      path: "/suppliers/:id/api-credentials/:credId",
+      description: "Delete supplier API credentials",
       cache: { enabled: false },
       requiresAuth: true,
     },
 
     // Supplier Analytics & Stats
     GET_SUPPLIER_STATS: {
-      method: 'GET',
-      path: '/suppliers/:id/stats',
-      description: 'Get supplier performance statistics',
+      method: "GET",
+      path: "/suppliers/:id/stats",
+      description: "Get supplier performance statistics",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
     GET_SUPPLIER_ANALYTICS: {
-      method: 'GET',
-      path: '/suppliers/analytics',
-      description: 'Get supplier analytics dashboard data',
+      method: "GET",
+      path: "/suppliers/analytics",
+      description: "Get supplier analytics dashboard data",
       cache: { enabled: true, ttl: 300 },
       requiresAuth: true,
     },
 
     // Supplier Health Check
     CHECK_SUPPLIER_HEALTH: {
-      method: 'POST',
-      path: '/suppliers/:id/health-check',
-      description: 'Check supplier API connection health',
+      method: "POST",
+      path: "/suppliers/:id/health-check",
+      description: "Check supplier API connection health",
       cache: { enabled: false },
       requiresAuth: true,
     },
@@ -225,7 +251,7 @@ const SUPPLIER_MODULE: APIModule = {
 
 export class SupplierAPIService {
   private static instance: SupplierAPIService;
-  private apiManager: APIManager;
+  private apiManager: any;
 
   private constructor() {
     this.apiManager = APIManager.getInstance();
@@ -251,19 +277,21 @@ export class SupplierAPIService {
    */
   async listSuppliers(
     filters?: SupplierListFilters,
-    pagination?: { page: number; limit: number }
+    pagination?: { page: number; limit: number },
   ): Promise<APIResponse> {
     const params = new URLSearchParams();
 
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.supplierType) params.append('supplierType', filters.supplierType);
-    if (filters?.status) params.append('status', filters.status);
-    if (filters?.pricingModel) params.append('pricingModel', filters.pricingModel);
-    if (filters?.country) params.append('country', filters.country);
+    if (filters?.search) params.append("search", filters.search);
+    if (filters?.supplierType)
+      params.append("supplierType", filters.supplierType);
+    if (filters?.status) params.append("status", filters.status);
+    if (filters?.pricingModel)
+      params.append("pricingModel", filters.pricingModel);
+    if (filters?.country) params.append("country", filters.country);
 
     if (pagination) {
-      params.append('page', pagination.page.toString());
-      params.append('limit', pagination.limit.toString());
+      params.append("page", pagination.page.toString());
+      params.append("limit", pagination.limit.toString());
     }
 
     const url = `/suppliers?${params.toString()}`;
@@ -281,13 +309,16 @@ export class SupplierAPIService {
    * Create new supplier
    */
   async createSupplier(data: SupplierFormData): Promise<APIResponse> {
-    return this.apiManager.post('/suppliers', data);
+    return this.apiManager.post("/suppliers", data);
   }
 
   /**
    * Update supplier
    */
-  async updateSupplier(id: string, data: Partial<SupplierFormData>): Promise<APIResponse> {
+  async updateSupplier(
+    id: string,
+    data: Partial<SupplierFormData>,
+  ): Promise<APIResponse> {
     return this.apiManager.put(`/suppliers/${id}`, data);
   }
 
@@ -312,8 +343,14 @@ export class SupplierAPIService {
   /**
    * Add product to supplier
    */
-  async addSupplierProduct(supplierId: string, productData: any): Promise<APIResponse> {
-    return this.apiManager.post(`/suppliers/${supplierId}/products`, productData);
+  async addSupplierProduct(
+    supplierId: string,
+    productData: any,
+  ): Promise<APIResponse> {
+    return this.apiManager.post(
+      `/suppliers/${supplierId}/products`,
+      productData,
+    );
   }
 
   /**
@@ -322,16 +359,24 @@ export class SupplierAPIService {
   async updateSupplierProduct(
     supplierId: string,
     productId: string,
-    productData: any
+    productData: any,
   ): Promise<APIResponse> {
-    return this.apiManager.put(`/suppliers/${supplierId}/products/${productId}`, productData);
+    return this.apiManager.put(
+      `/suppliers/${supplierId}/products/${productId}`,
+      productData,
+    );
   }
 
   /**
    * Delete supplier product
    */
-  async deleteSupplierProduct(supplierId: string, productId: string): Promise<APIResponse> {
-    return this.apiManager.delete(`/suppliers/${supplierId}/products/${productId}`);
+  async deleteSupplierProduct(
+    supplierId: string,
+    productId: string,
+  ): Promise<APIResponse> {
+    return this.apiManager.delete(
+      `/suppliers/${supplierId}/products/${productId}`,
+    );
   }
 
   // =========================================================================
@@ -348,15 +393,25 @@ export class SupplierAPIService {
   /**
    * Apply rule to supplier
    */
-  async applySupplierRule(supplierId: string, ruleData: any): Promise<APIResponse> {
+  async applySupplierRule(
+    supplierId: string,
+    ruleData: any,
+  ): Promise<APIResponse> {
     return this.apiManager.post(`/suppliers/${supplierId}/rules`, ruleData);
   }
 
   /**
    * Update supplier rule
    */
-  async updateSupplierRule(supplierId: string, ruleId: string, ruleData: any): Promise<APIResponse> {
-    return this.apiManager.put(`/suppliers/${supplierId}/rules/${ruleId}`, ruleData);
+  async updateSupplierRule(
+    supplierId: string,
+    ruleId: string,
+    ruleData: any,
+  ): Promise<APIResponse> {
+    return this.apiManager.put(
+      `/suppliers/${supplierId}/rules/${ruleId}`,
+      ruleData,
+    );
   }
 
   // =========================================================================
@@ -373,8 +428,14 @@ export class SupplierAPIService {
   /**
    * Add payment method to supplier
    */
-  async addSupplierPayment(supplierId: string, paymentData: SupplierPaymentData): Promise<APIResponse> {
-    return this.apiManager.post(`/suppliers/${supplierId}/payments`, paymentData);
+  async addSupplierPayment(
+    supplierId: string,
+    paymentData: SupplierPaymentData,
+  ): Promise<APIResponse> {
+    return this.apiManager.post(
+      `/suppliers/${supplierId}/payments`,
+      paymentData,
+    );
   }
 
   /**
@@ -383,16 +444,24 @@ export class SupplierAPIService {
   async updateSupplierPayment(
     supplierId: string,
     paymentId: string,
-    paymentData: Partial<SupplierPaymentData>
+    paymentData: Partial<SupplierPaymentData>,
   ): Promise<APIResponse> {
-    return this.apiManager.put(`/suppliers/${supplierId}/payments/${paymentId}`, paymentData);
+    return this.apiManager.put(
+      `/suppliers/${supplierId}/payments/${paymentId}`,
+      paymentData,
+    );
   }
 
   /**
    * Delete supplier payment method
    */
-  async deleteSupplierPayment(supplierId: string, paymentId: string): Promise<APIResponse> {
-    return this.apiManager.delete(`/suppliers/${supplierId}/payments/${paymentId}`);
+  async deleteSupplierPayment(
+    supplierId: string,
+    paymentId: string,
+  ): Promise<APIResponse> {
+    return this.apiManager.delete(
+      `/suppliers/${supplierId}/payments/${paymentId}`,
+    );
   }
 
   // =========================================================================
@@ -411,30 +480,35 @@ export class SupplierAPIService {
    */
   async uploadSupplierDocument(
     supplierId: string,
-    documentData: SupplierDocumentData
+    documentData: SupplierDocumentData,
   ): Promise<APIResponse> {
     const formData = new FormData();
-    formData.append('name', documentData.name);
-    formData.append('type', documentData.type);
-    formData.append('file', documentData.file);
+    formData.append("name", documentData.name);
+    formData.append("type", documentData.type);
+    formData.append("file", documentData.file);
     if (documentData.expiryDate) {
-      formData.append('expiryDate', documentData.expiryDate);
+      formData.append("expiryDate", documentData.expiryDate);
     }
 
     return this.apiManager.post(
       `/suppliers/${supplierId}/documents`,
       formData,
       {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }
+        headers: { "Content-Type": "multipart/form-data" },
+      },
     );
   }
 
   /**
    * Delete supplier document
    */
-  async deleteSupplierDocument(supplierId: string, docId: string): Promise<APIResponse> {
-    return this.apiManager.delete(`/suppliers/${supplierId}/documents/${docId}`);
+  async deleteSupplierDocument(
+    supplierId: string,
+    docId: string,
+  ): Promise<APIResponse> {
+    return this.apiManager.delete(
+      `/suppliers/${supplierId}/documents/${docId}`,
+    );
   }
 
   // =========================================================================
@@ -453,8 +527,14 @@ export class SupplierAPIService {
   /**
    * Add API credentials for supplier
    */
-  async addSupplierAPICredentials(supplierId: string, credentialsData: any): Promise<APIResponse> {
-    return this.apiManager.post(`/suppliers/${supplierId}/api-credentials`, credentialsData);
+  async addSupplierAPICredentials(
+    supplierId: string,
+    credentialsData: any,
+  ): Promise<APIResponse> {
+    return this.apiManager.post(
+      `/suppliers/${supplierId}/api-credentials`,
+      credentialsData,
+    );
   }
 
   /**
@@ -463,19 +543,24 @@ export class SupplierAPIService {
   async updateSupplierAPICredentials(
     supplierId: string,
     credId: string,
-    credentialsData: any
+    credentialsData: any,
   ): Promise<APIResponse> {
     return this.apiManager.put(
       `/suppliers/${supplierId}/api-credentials/${credId}`,
-      credentialsData
+      credentialsData,
     );
   }
 
   /**
    * Delete supplier API credentials
    */
-  async deleteSupplierAPICredentials(supplierId: string, credId: string): Promise<APIResponse> {
-    return this.apiManager.delete(`/suppliers/${supplierId}/api-credentials/${credId}`);
+  async deleteSupplierAPICredentials(
+    supplierId: string,
+    credId: string,
+  ): Promise<APIResponse> {
+    return this.apiManager.delete(
+      `/suppliers/${supplierId}/api-credentials/${credId}`,
+    );
   }
 
   // =========================================================================
@@ -493,7 +578,7 @@ export class SupplierAPIService {
    * Get supplier analytics dashboard data
    */
   async getSupplierAnalytics(): Promise<APIResponse> {
-    return this.apiManager.get('/suppliers/analytics');
+    return this.apiManager.get("/suppliers/analytics");
   }
 
   /**
@@ -514,14 +599,14 @@ export class SupplierAPIService {
     if (supplierId) {
       this.apiManager.invalidateCache(`/suppliers/${supplierId}`);
     } else {
-      this.apiManager.invalidateCache('/suppliers');
+      this.apiManager.invalidateCache("/suppliers");
     }
   }
 
   /**
    * Get API manager for advanced usage
    */
-  public getAPIManager(): APIManager {
+  public getAPIManager(): any {
     return this.apiManager;
   }
 }

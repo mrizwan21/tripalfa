@@ -675,17 +675,20 @@ model BookingPassenger {
 }
 
 model BookingModification {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   bookingId        String
   modificationType String
-  status           String   @default("pending")
+  status           String    @default("pending")
   requestNote      String?
   responseNote     String?
   oldValue         Json?
   newValue         Json?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  booking          Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  modificationFee  Decimal?  @db.Decimal(12, 2)
+  penaltyFee       Decimal?  @db.Decimal(12, 2)
+  internalNote     String?
+  createdAt       DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  booking          Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([bookingId])
   @@map("booking_modifications")
@@ -1190,14 +1193,29 @@ model Supplier {
   apiVersion      String?
   supportedRoutes String[]               @default([])
   metadata        Json?
+  deletedAt       DateTime?              // Soft delete marker
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
+  
+  // Phase 1: Onboarding
   credentials     SupplierCredential[]
   syncLogs        SupplierSyncLog[]
   hotelMappings   SupplierHotelMapping[]
+  
+  // Phase 2: Product Mapping, Financial, Wallets
+  products        SupplierProduct[]
+  productMappings SupplierProductMapping[] @relation("SupplierMappings")
+  financial       SupplierFinancial?     @relation("SupplierFinancial")
+  paymentTerms    SupplierPaymentTerm[]  @relation("SupplierPaymentTerms")
+  wallet          SupplierWallet?        @relation("SupplierWallet")
+  payments        SupplierPayment[]      @relation("SupplierPayments")
+  paymentLogs     SupplierPaymentLog[]   @relation("PaymentLogs")
+  walletApprovals SupplierWalletApprovalRequest[] @relation("WalletApprovals")
+  deals           SupplierDeals[]
 
   @@index([code])
   @@index([status])
+  @@index([deletedAt])
   @@map("suppliers")
 }
 
@@ -1262,7 +1280,8 @@ model SupplierHotelMapping {
 
 model SupplierDeals {
   id               String            @id @default(cuid())
-  supplier         String
+  supplierId       String
+  supplier         Supplier          @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   dealType         String
   productType      String?
   name             String
@@ -1295,7 +1314,7 @@ model SupplierDeals {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
-  @@index([supplier])
+  @@index([supplierId])
   @@index([dealType])
   @@index([isActive])
   @@index([code])
@@ -1323,6 +1342,243 @@ model DealMappingRule {
   @@index([isActive])
   @@map("deal_mapping_rules")
 }
+
+// ============================================
+// SUPPLIER MANAGEMENT MODULE - PHASE 2
+// Product Mapping, Financial Details, Wallets
+// ============================================
+
+model SupplierProduct {
+  id                  String                     @id @default(cuid())
+  supplierId          String
+  supplier            Supplier                   @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  externalProductId   String                     // Supplier's own product ID
+  productType         String                     // 'flight', 'hotel', 'activity', 'car', 'other'
+  name                String
+  description         String?
+  category            String?
+  subCategory         String?
+  isActive            Boolean                    @default(true)
+  status              String                     @default("active")
+  metadata            Json?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  mappings            SupplierProductMapping[]
+
+  @@unique([supplierId, externalProductId])
+  @@index([supplierId])
+  @@index([productType])
+  @@map("supplier_products")
+}
+
+model SupplierProductMapping {
+  id                  String                          @id @default(cuid())
+  supplierId          String
+  supplier            Supplier                        @relation("SupplierMappings", fields: [supplierId], references: [id], onDelete: Cascade)
+  supplierProductId   String
+  supplierProduct    SupplierProduct                 @relation(fields: [supplierProductId], references: [id], onDelete: Cascade)
+  platformProductId   String?                         // Our internal product ID
+  productType         String                          // 'flight', 'hotel', 'activity', 'car'
+  marketNames         String[]                        @default([])  // ['US', 'EU', 'ASIA']
+  geographyZones      String[]                        @default([])  // ['North America', 'Western Europe']
+  seasonalApplicable  String                          @default("year-round")  // 'year-round', 'summer', 'winter', 'peak', 'off-peak'
+  businessRules       Json?                           // Custom mapping logic
+  matchConfidence     Decimal?                        @db.Decimal(5, 2)  // 0-100 confidence
+  status              String                          @default("pending")  // 'pending', 'active', 'inactive'
+  approvedBy          String?
+  approvedAt          DateTime?
+  metadata            Json?
+  createdAt           DateTime                        @default(now())
+  updatedAt           DateTime                        @updatedAt
+
+  parameters          ProductMappingParameter[]
+
+  @@index([supplierId])
+  @@index([productType])
+  @@index([status])
+  @@map("supplier_product_mappings")
+}
+
+model ProductMappingParameter {
+  id                  String                     @id @default(cuid())
+  mappingId           String
+  mapping             SupplierProductMapping     @relation(fields: [mappingId], references: [id], onDelete: Cascade)
+  parameterType       String                     // 'commission', 'markup', 'discount', 'tax', 'fee'
+  marketName          String?                    // Optional market-specific
+  parameterName       String                     // 'base_commission', 'peak_markup', etc.
+  parameterValue      Decimal                    @db.Decimal(12, 4)
+  unit                String                     @default("percentage")  // 'percentage', 'fixed', 'per_unit'
+  validFrom           DateTime?
+  validTo             DateTime?
+  metadata            Json?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  @@index([mappingId])
+  @@index([parameterType])
+  @@map("product_mapping_parameters")
+}
+
+model SupplierFinancial {
+  id                  String                     @id @default(cuid())
+  supplierId          String                     @unique
+  supplier            Supplier                   @relation("SupplierFinancial", fields: [supplierId], references: [id], onDelete: Cascade)
+  paymentTerms        String                     @default("30_days")  // '30_days', '60_days', 'monthly', 'weekly'
+  settlementCycle     String                     @default("monthly")  // 'daily', 'weekly', 'monthly'
+  commissionStructure Json?                      // { "flight": 5%, "hotel": 8%, "activity": 10% }
+  minimumPayoutAmount Decimal?                   @db.Decimal(12, 2)
+  bankAccountName     String?
+  bankAccountNumber   String?                    // Should be encrypted in production
+  bankCode            String?
+  swiftCode           String?
+  accountHolderName   String?
+  country             String?
+  currency            String                     @default("USD")
+  taxId               String?
+  paymentHolds        Boolean                    @default(false)
+  holdReason          String?
+  holdExpiresAt       DateTime?
+  totalOutstanding    Decimal                    @db.Decimal(12, 2) @default(0)
+  totalPaid           Decimal                    @db.Decimal(12, 2) @default(0)
+  totalAttributed     Decimal                    @db.Decimal(12, 2) @default(0)
+  metadata            Json?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  paymentTerms_rel    SupplierPaymentTerm[]
+
+  @@index([supplierId])
+  @@map("supplier_financials")
+}
+
+model SupplierPaymentTerm {
+  id                  String                     @id @default(cuid())
+  supplierId          String
+  supplier            Supplier                   @relation("SupplierPaymentTerms", fields: [supplierId], references: [id], onDelete: Cascade)
+  financialId         String?
+  financial           SupplierFinancial?         @relation(fields: [financialId], references: [id], onDelete: SetNull)
+  termType            String                     // 'deposit', 'partial', 'full_settlement', 'advance'
+  daysFromBooking     Int                        @default(0)
+  percentageRequired  Decimal?                   @db.Decimal(5, 2)
+  minimumAmount       Decimal?                   @db.Decimal(12, 2)
+  description         String?
+  isActive            Boolean                    @default(true)
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  @@index([supplierId])
+  @@map("supplier_payment_terms")
+}
+
+model SupplierWallet {
+  id                  String                           @id @default(cuid())
+  supplierId          String                           @unique
+  supplier            Supplier                         @relation("SupplierWallet", fields: [supplierId], references: [id], onDelete: Cascade)
+  balance             Decimal                          @db.Decimal(12, 2) @default(0)
+  reservedBalance     Decimal                          @db.Decimal(12, 2) @default(0)  // For pending bookings
+  totalEarned         Decimal                          @db.Decimal(12, 2) @default(0)
+  totalPaid           Decimal                          @db.Decimal(12, 2) @default(0)
+  currency            String                           @default("USD")
+  status              String                           @default("pending")  // 'pending', 'active', 'suspended', 'closed'
+  approvalStatus      String                           @default("pending")  // 'pending', 'approved', 'rejected'
+  dailyPayoutLimit    Decimal?                         @db.Decimal(12, 2)
+  monthlyPayoutLimit  Decimal?                         @db.Decimal(12, 2)
+  deletedAt           DateTime?                        // Soft delete marker
+  createdAt           DateTime                         @default(now())
+  updatedAt           DateTime                         @updatedAt
+
+  payments            SupplierPayment[]
+  paymentLogs         SupplierPaymentLog[]
+  approvalRequests    SupplierWalletApprovalRequest[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([approvalStatus])
+  @@map("supplier_wallets")
+}
+
+model SupplierWalletApprovalRequest {
+  id                  String                         @id @default(cuid())
+  supplierId          String
+  supplier            Supplier                       @relation("WalletApprovals", fields: [supplierId], references: [id], onDelete: Cascade)
+  walletId            String?
+  wallet              SupplierWallet?                @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  requestType         String                         // 'create', 'update', 'reactivate', 'increase_limit'
+  requestData         Json                           // Details of the request
+  approverRole        String                         @default("finance")  // 'admin', 'finance', 'legal'
+  status              String                         @default("pending")  // 'pending', 'approved', 'rejected'
+  approvedBy          String?
+  approvalNotes       String?
+  reason              String?                        // For rejection
+  expiresAt           DateTime?                      // Request expires after 30 days
+  requestedAt         DateTime                       @default(now())
+  respondedAt         DateTime?
+  createdAt           DateTime                       @default(now())
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("supplier_wallet_approval_requests")
+}
+
+model SupplierPayment {
+  id                  String                     @id @default(cuid())
+  supplierId          String
+  supplier            Supplier                   @relation("SupplierPayments", fields: [supplierId], references: [id], onDelete: Cascade)
+  walletId            String
+  wallet              SupplierWallet             @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  amount              Decimal                    @db.Decimal(12, 2)
+  currency            String                     @default("USD")
+  paymentType         String                     // 'payout', 'refund', 'adjustment', 'reversal'
+  paymentMethod       String                     @default("bank_transfer")  // 'bank_transfer', 'check', 'credit', 'cryptocurrency'
+  transactionReference String?
+  status              String                     @default("pending")  // 'pending', 'processing', 'completed', 'failed', 'cancelled'
+  scheduledFor        DateTime?
+  processedAt         DateTime?
+  failureReason       String?
+  metadata            Json?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+
+  @@index([supplierId])
+  @@index([walletId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("supplier_payments")
+}
+
+model SupplierPaymentLog {
+  id                  String                     @id @default(cuid())
+  supplierId          String
+  supplier            Supplier                   @relation("PaymentLogs", fields: [supplierId], references: [id], onDelete: Cascade)
+  walletId            String?
+  wallet              SupplierWallet?            @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  paymentId           String?
+  action              String                     // 'created', 'approved', 'processed', 'failed', 'cancelled', 'balance_update'
+  amount              Decimal?                   @db.Decimal(12, 2)
+  previousBalance     Decimal?                   @db.Decimal(12, 2)
+  newBalance          Decimal?                   @db.Decimal(12, 2)
+  actorId             String?                    // Who performed the action
+  actorType           String                     @default("system")  // 'system', 'admin', 'supplier'
+  notes               String?
+  metadata            Json?
+  createdAt           DateTime                   @default(now())
+
+  @@index([supplierId])
+  @@index([walletId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("supplier_payment_logs")
+}
+
+// Update Supplier model to include relationships to new tables
+// Note: Run migrations after schema update
+// ALTER TABLE suppliers ADD COLUMN deletedAt TIMESTAMP;
+// Changes to Supplier model:
+// - Add relationships to new tables
+// - Add deletedAt field (soft delete)
+// - Add financial status fields
 
 // ============================================
 // DUFFEL INTEGRATION MODELS

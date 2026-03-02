@@ -1,14 +1,23 @@
 /**
  * Duffel Seat Maps Service
- * 
+ *
  * Handles seat map retrieval and processing for both booking and post-booking flows.
  * Implements Duffel API v2 specification.
- * 
+ *
  * @see https://duffel.com/docs/api/v2/seat-maps/get-seat-maps
  */
 
-import { api } from '../lib/api';
-import {
+import type { api as ApiClientInstance } from "../lib/api";
+
+// Lazy import to avoid circular dependency
+type ApiClient = typeof ApiClientInstance;
+let api: ApiClient | undefined;
+function getApi() {
+  if (!api) api = require("../lib/api").api as ApiClient;
+  return api;
+}
+
+import type {
   DuffelSeatMap,
   DuffelGetSeatMapsResponse,
   DuffelSeatElement,
@@ -18,7 +27,7 @@ import {
   SelectedSeatForBooking,
   SeatSelectionPayload,
   DuffelCabinClass,
-} from '../types/duffel-seat-maps';
+} from "../types/duffel-seat-maps";
 
 // ============================================================================
 // SERVICE RESPONSE TYPES
@@ -62,36 +71,46 @@ export interface SeatSelectionResponse {
 export class DuffelSeatMapsService {
   /**
    * Get seat maps for an offer (booking flow)
-   * 
+   *
    * @param offerId - The offer ID to get seat maps for
    * @returns Processed seat maps ready for UI rendering
    */
   async getSeatMapsForOffer(offerId: string): Promise<SeatMapServiceResponse> {
     try {
-      console.log('[DuffelSeatMaps] Fetching seat maps for offer:', offerId);
+      console.log("[DuffelSeatMaps] Fetching seat maps for offer:", offerId);
 
       // Validate offer ID
-      if (!offerId || typeof offerId !== 'string' || offerId.trim().length === 0) {
+      if (
+        !offerId ||
+        typeof offerId !== "string" ||
+        offerId.trim().length === 0
+      ) {
         return {
           success: false,
           error: {
-            code: 'INVALID_OFFER_ID',
-            message: 'Invalid offer ID format',
-            details: { field: 'offerId', hint: 'Offer ID must be a non-empty string' },
+            code: "INVALID_OFFER_ID",
+            message: "Invalid offer ID format",
+            details: {
+              field: "offerId",
+              hint: "Offer ID must be a non-empty string",
+            },
           },
         };
       }
 
       // Call Duffel API through backend proxy
-      const response = await api.get<DuffelGetSeatMapsResponse>(
-        `/api/flights/seat-maps?offer_id=${encodeURIComponent(offerId)}`
+      const response = await getApi().get<DuffelGetSeatMapsResponse>(
+        `/api/flights/seat-maps?offer_id=${encodeURIComponent(offerId)}`,
       );
 
       // Handle different response formats
       const seatMaps = this.extractSeatMaps(response);
 
       if (!seatMaps || seatMaps.length === 0) {
-        console.log('[DuffelSeatMaps] No seat maps available for offer:', offerId);
+        console.log(
+          "[DuffelSeatMaps] No seat maps available for offer:",
+          offerId,
+        );
         return {
           success: true,
           data: {
@@ -105,7 +124,11 @@ export class DuffelSeatMapsService {
       // Process seat maps for UI rendering
       const processedSeatMaps = seatMaps.map((sm) => this.processSeatMap(sm));
 
-      console.log('[DuffelSeatMaps] Processed', processedSeatMaps.length, 'seat maps');
+      console.log(
+        "[DuffelSeatMaps] Processed",
+        processedSeatMaps.length,
+        "seat maps",
+      );
 
       return {
         success: true,
@@ -116,12 +139,15 @@ export class DuffelSeatMapsService {
         },
       };
     } catch (error: unknown) {
-      console.error('[DuffelSeatMaps] Error fetching seat maps:', error);
+      console.error("[DuffelSeatMaps] Error fetching seat maps:", error);
       return {
         success: false,
         error: {
-          code: 'FETCH_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to fetch seat maps',
+          code: "FETCH_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch seat maps",
         },
       };
     }
@@ -129,29 +155,36 @@ export class DuffelSeatMapsService {
 
   /**
    * Get seat maps for an order (post-booking flow)
-   * 
+   *
    * @param orderId - The order ID to get seat maps for
    * @returns Processed seat maps with current seat assignments
    */
   async getSeatMapsForOrder(orderId: string): Promise<SeatMapServiceResponse> {
     try {
-      console.log('[DuffelSeatMaps] Fetching seat maps for order:', orderId);
+      console.log("[DuffelSeatMaps] Fetching seat maps for order:", orderId);
 
       // Validate order ID
-      if (!orderId || typeof orderId !== 'string' || orderId.trim().length === 0) {
+      if (
+        !orderId ||
+        typeof orderId !== "string" ||
+        orderId.trim().length === 0
+      ) {
         return {
           success: false,
           error: {
-            code: 'INVALID_ORDER_ID',
-            message: 'Invalid order ID format',
-            details: { field: 'orderId', hint: 'Order ID must be a non-empty string' },
+            code: "INVALID_ORDER_ID",
+            message: "Invalid order ID format",
+            details: {
+              field: "orderId",
+              hint: "Order ID must be a non-empty string",
+            },
           },
         };
       }
 
       // Call Duffel API through backend proxy
-      const response = await api.get<DuffelGetSeatMapsResponse>(
-        `/api/flights/seat-maps?order_id=${encodeURIComponent(orderId)}`
+      const response = await getApi().get<DuffelGetSeatMapsResponse>(
+        `/api/flights/seat-maps?order_id=${encodeURIComponent(orderId)}`,
       );
 
       // Handle different response formats
@@ -180,12 +213,18 @@ export class DuffelSeatMapsService {
         },
       };
     } catch (error: unknown) {
-      console.error('[DuffelSeatMaps] Error fetching seat maps for order:', error);
+      console.error(
+        "[DuffelSeatMaps] Error fetching seat maps for order:",
+        error,
+      );
       return {
         success: false,
         error: {
-          code: 'FETCH_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to fetch seat maps',
+          code: "FETCH_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch seat maps",
         },
       };
     }
@@ -193,19 +232,27 @@ export class DuffelSeatMapsService {
 
   /**
    * Select seats for an order
-   * 
+   *
    * @param payload - Seat selection payload with offer ID and selected seats
    * @returns Confirmation of seat selection
    */
-  async selectSeats(payload: SeatSelectionPayload): Promise<SeatSelectionResponse> {
+  async selectSeats(
+    payload: SeatSelectionPayload,
+  ): Promise<SeatSelectionResponse> {
     try {
-      console.log('[DuffelSeatMaps] Selecting seats:', payload);
+      console.log("[DuffelSeatMaps] Selecting seats:", payload);
 
-      const response = await api.post('/api/flights/orders/select-seats', payload);
+      const response = await getApi().post(
+        "/api/flights/orders/select-seats",
+        payload,
+      );
 
       // Calculate total cost
-      const totalCost = payload.seats.reduce((sum, seat) => sum + seat.price, 0);
-      const currency = payload.seats[0]?.currency || 'USD';
+      const totalCost = payload.seats.reduce(
+        (sum, seat) => sum + seat.price,
+        0,
+      );
+      const currency = payload.seats[0]?.currency || "USD";
 
       return {
         success: true,
@@ -216,12 +263,13 @@ export class DuffelSeatMapsService {
         },
       };
     } catch (error: unknown) {
-      console.error('[DuffelSeatMaps] Error selecting seats:', error);
+      console.error("[DuffelSeatMaps] Error selecting seats:", error);
       return {
         success: false,
         error: {
-          code: 'SELECTION_ERROR',
-          message: error instanceof Error ? error.message : 'Failed to select seats',
+          code: "SELECTION_ERROR",
+          message:
+            error instanceof Error ? error.message : "Failed to select seats",
         },
       };
     }
@@ -238,7 +286,7 @@ export class DuffelSeatMapsService {
     if (!response) return [];
 
     // Handle { data: DuffelSeatMap[] } format
-    if (typeof response === 'object' && response !== null) {
+    if (typeof response === "object" && response !== null) {
       const resp = response as Record<string, unknown>;
       if (Array.isArray(resp.data)) {
         return resp.data as DuffelSeatMap[];
@@ -248,7 +296,7 @@ export class DuffelSeatMapsService {
         return resp as DuffelSeatMap[];
       }
       // Handle nested data.data format
-      if (resp.data && typeof resp.data === 'object') {
+      if (resp.data && typeof resp.data === "object") {
         const innerData = resp.data as Record<string, unknown>;
         if (Array.isArray(innerData.data)) {
           return innerData.data as DuffelSeatMap[];
@@ -283,21 +331,29 @@ export class DuffelSeatMapsService {
         const row = cabin.rows[rowIndex];
 
         // Process each section (left, middle, right)
-        for (let sectionIndex = 0; sectionIndex < row.sections.length; sectionIndex++) {
+        for (
+          let sectionIndex = 0;
+          sectionIndex < row.sections.length;
+          sectionIndex++
+        ) {
           const section = row.sections[sectionIndex];
 
           // Process each element in the section
-          for (let elementIndex = 0; elementIndex < section.elements.length; elementIndex++) {
+          for (
+            let elementIndex = 0;
+            elementIndex < section.elements.length;
+            elementIndex++
+          ) {
             const element = section.elements[elementIndex];
 
             // Only process seat elements
-            if (element.type === 'seat') {
+            if (element.type === "seat") {
               const seat = this.processSeatElement(
                 element as DuffelSeatElement,
                 rowIndex,
                 sectionIndex,
                 elementIndex,
-                cabin.wings
+                cabin.wings,
               );
               seats.push(seat);
             }
@@ -330,15 +386,16 @@ export class DuffelSeatMapsService {
     rowIndex: number,
     sectionIndex: number,
     elementIndex: number,
-    wings?: { first_row_index: number; last_row_index: number } | null
+    wings?: { first_row_index: number; last_row_index: number } | null,
   ): FlattenedSeat {
-    const available = element.available_services && element.available_services.length > 0;
+    const available =
+      element.available_services && element.available_services.length > 0;
     const firstService = element.available_services?.[0];
 
     // Parse row number and column letter from designator
     const designator = element.designator;
-    const rowNumber = parseInt(designator.match(/\d+/)?.[0] || '0', 10);
-    const columnLetter = designator.match(/[A-Z]+/)?.[0] || '';
+    const rowNumber = parseInt(designator.match(/\d+/)?.[0] || "0", 10);
+    const columnLetter = designator.match(/[A-Z]+/)?.[0] || "";
 
     // Check if seat is over wing
     const isOverWing = wings
@@ -354,7 +411,7 @@ export class DuffelSeatMapsService {
       passengerId: firstService?.passenger_id ?? null,
       name: element.name,
       disclosures: element.disclosures,
-      isExitRow: element.name?.toLowerCase().includes('exit') ?? false,
+      isExitRow: element.name?.toLowerCase().includes("exit") ?? false,
       isOverWing,
       rowNumber,
       columnLetter,
@@ -377,8 +434,10 @@ export const duffelSeatMapsService = new DuffelSeatMapsService();
 /**
  * Check if an element is a seat element
  */
-export function isSeatElement(element: DuffelCabinRowSectionElement): element is DuffelSeatElement {
-  return element.type === 'seat';
+export function isSeatElement(
+  element: DuffelCabinRowSectionElement,
+): element is DuffelSeatElement {
+  return element.type === "seat";
 }
 
 /**
@@ -391,14 +450,20 @@ export function getAvailableSeats(seatMap: ProcessedSeatMap): FlattenedSeat[] {
 /**
  * Get seats by row number
  */
-export function getSeatsByRow(seatMap: ProcessedSeatMap, rowNumber: number): FlattenedSeat[] {
+export function getSeatsByRow(
+  seatMap: ProcessedSeatMap,
+  rowNumber: number,
+): FlattenedSeat[] {
   return seatMap.seats.filter((seat) => seat.rowNumber === rowNumber);
 }
 
 /**
  * Get seats by section index
  */
-export function getSeatsBySection(seatMap: ProcessedSeatMap, sectionIndex: number): FlattenedSeat[] {
+export function getSeatsBySection(
+  seatMap: ProcessedSeatMap,
+  sectionIndex: number,
+): FlattenedSeat[] {
   return seatMap.seats.filter((seat) => seat.sectionIndex === sectionIndex);
 }
 
@@ -417,7 +482,9 @@ export function calculateTotalSeatCost(seats: FlattenedSeat[]): {
 /**
  * Group seats by row for rendering
  */
-export function groupSeatsByRow(seatMap: ProcessedSeatMap): Map<number, FlattenedSeat[]> {
+export function groupSeatsByRow(
+  seatMap: ProcessedSeatMap,
+): Map<number, FlattenedSeat[]> {
   const grouped = new Map<number, FlattenedSeat[]>();
 
   for (const seat of seatMap.seats) {
@@ -449,7 +516,7 @@ export function getSeatPattern(seatMap: ProcessedSeatMap): string {
   const groupedByRow = groupSeatsByRow(seatMap);
   const firstRow = groupedByRow.values().next().value;
 
-  if (!firstRow) return aisles === 1 ? '3-3' : '3-4-3';
+  if (!firstRow) return aisles === 1 ? "3-3" : "3-4-3";
 
   // Count seats per section
   const sectionCounts: number[] = [];
@@ -467,5 +534,5 @@ export function getSeatPattern(seatMap: ProcessedSeatMap): string {
   }
   sectionCounts.push(count);
 
-  return sectionCounts.join('-');
+  return sectionCounts.join("-");
 }

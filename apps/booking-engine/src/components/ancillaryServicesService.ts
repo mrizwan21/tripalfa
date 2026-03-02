@@ -3,9 +3,9 @@
  * Business logic for handling ancillary services (baggage, meals, special requests, etc.)
  */
 
-import { createLogger } from '@tripalfa/shared-utils/logger';
-const logger = createLogger({ serviceName: 'booking-engine' });
-import { DuffelApiClient } from '../integrations/duffelApiClient';
+import { createLogger } from "@tripalfa/shared-utils/logger";
+const logger = createLogger({ serviceName: "booking-engine" });
+import { DuffelApiClient } from "../integrations/duffelApiClient";
 
 /**
  * Service Type Categories
@@ -15,8 +15,8 @@ export interface ServiceCategory {
   name: string;
   description: string;
   icon?: string;
-  applicableSegments: 'all' | 'outbound' | 'return' | 'specific';
-  applicablePassengers: 'all' | 'specific';
+  applicableSegments: "all" | "outbound" | "return" | "specific";
+  applicablePassengers: "all" | "specific";
   maxQuantityPerPassenger: number;
 }
 
@@ -65,8 +65,8 @@ export class AncillaryServicesService {
   async getServicesForBooking(
     offerId: string,
     serviceType?: string,
-    provider: string = 'duffel',
-    env: string = 'sandbox'
+    provider: string = "duffel",
+    env: string = "sandbox",
   ): Promise<{
     offerId: string;
     services: ServiceDetail[];
@@ -75,7 +75,9 @@ export class AncillaryServicesService {
     environment: string;
   } | null> {
     try {
-      logger.info(`[AncillaryServicesService] Getting available services for booking offer: ${offerId}`);
+      logger.info(
+        `[AncillaryServicesService] Getting available services for booking offer: ${offerId}`,
+      );
 
       // Fetch offer with available_services
       const offer = await this.duffelClient.getOfferWithServices(offerId, env);
@@ -88,22 +90,27 @@ export class AncillaryServicesService {
       // Process available services
       const services = this.processAvailableServices(
         offer.available_services || [],
-        serviceType
+        serviceType,
       );
 
-      const categories = [...new Set(services.map(s => s.type))];
+      const categories = [...new Set(services.map((s) => s.type))];
 
-      logger.info(`[AncillaryServicesService] Found ${services.length} available services in ${categories.length} categories`);
+      logger.info(
+        `[AncillaryServicesService] Found ${services.length} available services in ${categories.length} categories`,
+      );
 
       return {
         offerId,
         services,
         categories,
         provider,
-        environment: env
+        environment: env,
       };
     } catch (error) {
-      logger.error('[AncillaryServicesService] Error getting services for booking:', error);
+      logger.error(
+        "[AncillaryServicesService] Error getting services for booking:",
+        error,
+      );
       throw error;
     }
   }
@@ -114,8 +121,8 @@ export class AncillaryServicesService {
   async getServicesForOrder(
     orderId: string,
     serviceType?: string,
-    provider: string = 'duffel',
-    env: string = 'sandbox'
+    provider: string = "duffel",
+    env: string = "sandbox",
   ): Promise<{
     orderId: string;
     services: ServiceDetail[];
@@ -125,29 +132,38 @@ export class AncillaryServicesService {
     environment: string;
   } | null> {
     try {
-      logger.info(`[AncillaryServicesService] Getting available services for order: ${orderId}`);
+      logger.info(
+        `[AncillaryServicesService] Getting available services for order: ${orderId}`,
+      );
 
       // Fetch available services for order
-      const availableServices = await this.duffelClient.getAvailableServicesForOrder(orderId, env);
+      const availableServices =
+        await this.duffelClient.getAvailableServicesForOrder(orderId, env);
 
       if (!availableServices) {
-        logger.error(`[AncillaryServicesService] Order or services not found: ${orderId}`);
+        logger.error(
+          `[AncillaryServicesService] Order or services not found: ${orderId}`,
+        );
         return null;
       }
 
       // Get the order to find currently booked services
       const order = await this.duffelClient.getOrder(orderId);
-      const currentServices = this.processAvailableServices(order?.services || []);
+      const currentServices = this.processAvailableServices(
+        order?.services || [],
+      );
 
       // Process available services
       const services = this.processAvailableServices(
         availableServices,
-        serviceType
+        serviceType,
       );
 
-      const categories = [...new Set(services.map(s => s.type))];
+      const categories = [...new Set(services.map((s) => s.type))];
 
-      logger.info(`[AncillaryServicesService] Found ${services.length} available services and ${currentServices.length} current services`);
+      logger.info(
+        `[AncillaryServicesService] Found ${services.length} available services and ${currentServices.length} current services`,
+      );
 
       return {
         orderId,
@@ -155,10 +171,13 @@ export class AncillaryServicesService {
         categories,
         currentServices,
         provider,
-        environment: env
+        environment: env,
       };
     } catch (error) {
-      logger.error('[AncillaryServicesService] Error getting services for order:', error);
+      logger.error(
+        "[AncillaryServicesService] Error getting services for order:",
+        error,
+      );
       throw error;
     }
   }
@@ -168,7 +187,7 @@ export class AncillaryServicesService {
    */
   async selectServicesForBooking(
     offerId: string,
-    selectedServices: ServiceSelection[]
+    selectedServices: ServiceSelection[],
   ): Promise<{
     offerId: string;
     selectedServices: ServiceSelection[];
@@ -176,26 +195,38 @@ export class AncillaryServicesService {
     currency: string;
   } | null> {
     try {
-      logger.info(`[AncillaryServicesService] Selecting ${selectedServices.length} services for booking offer: ${offerId}`);
+      logger.info(
+        `[AncillaryServicesService] Selecting ${selectedServices.length} services for booking offer: ${offerId}`,
+      );
 
       // Verify services with pricing
-      const pricingResult = await this.duffelClient.priceOfferWithServices(offerId, selectedServices);
+      const pricingResult = await this.duffelClient.priceOfferWithServices(
+        offerId,
+        selectedServices,
+      );
 
       if (!pricingResult) {
-        logger.error('[AncillaryServicesService] Failed to price offer with selected services');
+        logger.error(
+          "[AncillaryServicesService] Failed to price offer with selected services",
+        );
         return null;
       }
 
-      logger.info(`[AncillaryServicesService] Services selected successfully. New total: ${pricingResult.total_amount} ${pricingResult.total_currency}`);
+      logger.info(
+        `[AncillaryServicesService] Services selected successfully. New total: ${pricingResult.total_amount} ${pricingResult.total_currency}`,
+      );
 
       return {
         offerId,
         selectedServices,
         totalAmount: pricingResult.total_amount,
-        currency: pricingResult.total_currency
+        currency: pricingResult.total_currency,
       };
     } catch (error) {
-      logger.error('[AncillaryServicesService] Error selecting services for booking:', error);
+      logger.error(
+        "[AncillaryServicesService] Error selecting services for booking:",
+        error,
+      );
       throw error;
     }
   }
@@ -205,7 +236,7 @@ export class AncillaryServicesService {
    */
   async addServicesToOrder(
     orderId: string,
-    servicesToAdd: ServiceSelection[]
+    servicesToAdd: ServiceSelection[],
   ): Promise<{
     orderId: string;
     addedServices: ServiceSelection[];
@@ -213,26 +244,38 @@ export class AncillaryServicesService {
     currency: string;
   } | null> {
     try {
-      logger.info(`[AncillaryServicesService] Adding ${servicesToAdd.length} services to order: ${orderId}`);
+      logger.info(
+        `[AncillaryServicesService] Adding ${servicesToAdd.length} services to order: ${orderId}`,
+      );
 
       // Add services to order
-      const result = await this.duffelClient.addServicesToOrder(orderId, servicesToAdd);
+      const result = await this.duffelClient.addServicesToOrder(
+        orderId,
+        servicesToAdd,
+      );
 
       if (!result) {
-        logger.error('[AncillaryServicesService] Failed to add services to order');
+        logger.error(
+          "[AncillaryServicesService] Failed to add services to order",
+        );
         return null;
       }
 
-      logger.info(`[AncillaryServicesService] Services added successfully. New total: ${result.total_amount} ${result.total_currency}`);
+      logger.info(
+        `[AncillaryServicesService] Services added successfully. New total: ${result.total_amount} ${result.total_currency}`,
+      );
 
       return {
         orderId,
         addedServices: servicesToAdd,
         totalAmount: result.total_amount,
-        currency: result.total_currency
+        currency: result.total_currency,
       };
     } catch (error) {
-      logger.error('[AncillaryServicesService] Error adding services to order:', error);
+      logger.error(
+        "[AncillaryServicesService] Error adding services to order:",
+        error,
+      );
       throw error;
     }
   }
@@ -243,53 +286,53 @@ export class AncillaryServicesService {
   getServiceCategories(): ServiceCategory[] {
     return [
       {
-        type: 'baggage',
-        name: 'Additional Baggage',
-        description: 'Extra checked or carry-on baggage',
-        applicableSegments: 'all',
-        applicablePassengers: 'all',
-        maxQuantityPerPassenger: 5
+        type: "baggage",
+        name: "Additional Baggage",
+        description: "Extra checked or carry-on baggage",
+        applicableSegments: "all",
+        applicablePassengers: "all",
+        maxQuantityPerPassenger: 5,
       },
       {
-        type: 'meal',
-        name: 'Meal Services',
-        description: 'Pre-order meals, dietary requests, special menus',
-        applicableSegments: 'all',
-        applicablePassengers: 'all',
-        maxQuantityPerPassenger: 1
+        type: "meal",
+        name: "Meal Services",
+        description: "Pre-order meals, dietary requests, special menus",
+        applicableSegments: "all",
+        applicablePassengers: "all",
+        maxQuantityPerPassenger: 1,
       },
       {
-        type: 'seat',
-        name: 'Seat Selection',
-        description: 'Premium, extra legroom, or specific seat assignments',
-        applicableSegments: 'all',
-        applicablePassengers: 'all',
-        maxQuantityPerPassenger: 1
+        type: "seat",
+        name: "Seat Selection",
+        description: "Premium, extra legroom, or specific seat assignments",
+        applicableSegments: "all",
+        applicablePassengers: "all",
+        maxQuantityPerPassenger: 1,
       },
       {
-        type: 'special_request',
-        name: 'Special Requests',
-        description: 'Wheelchair, infant seat, unaccompanied minor, etc.',
-        applicableSegments: 'all',
-        applicablePassengers: 'all',
-        maxQuantityPerPassenger: 2
+        type: "special_request",
+        name: "Special Requests",
+        description: "Wheelchair, infant seat, unaccompanied minor, etc.",
+        applicableSegments: "all",
+        applicablePassengers: "all",
+        maxQuantityPerPassenger: 2,
       },
       {
-        type: 'lounge',
-        name: 'Lounge Access',
-        description: 'Airport lounge access',
-        applicableSegments: 'all',
-        applicablePassengers: 'all',
-        maxQuantityPerPassenger: 1
+        type: "lounge",
+        name: "Lounge Access",
+        description: "Airport lounge access",
+        applicableSegments: "all",
+        applicablePassengers: "all",
+        maxQuantityPerPassenger: 1,
       },
       {
-        type: 'insurance',
-        name: 'Travel Insurance',
-        description: 'Travel insurance and protection plans',
-        applicableSegments: 'all',
-        applicablePassengers: 'all',
-        maxQuantityPerPassenger: 1
-      }
+        type: "insurance",
+        name: "Travel Insurance",
+        description: "Travel insurance and protection plans",
+        applicableSegments: "all",
+        applicablePassengers: "all",
+        maxQuantityPerPassenger: 1,
+      },
     ];
   }
 
@@ -298,29 +341,34 @@ export class AncillaryServicesService {
    */
   async getServiceDetails(serviceId: string): Promise<ServiceDetail | null> {
     try {
-      logger.info(`[AncillaryServicesService] Getting details for service: ${serviceId}`);
+      logger.info(
+        `[AncillaryServicesService] Getting details for service: ${serviceId}`,
+      );
 
       // In a real implementation, this would fetch from a service catalog
       // For now, return a mock structure
       const service: ServiceDetail = {
         id: serviceId,
-        type: 'baggage',
-        productName: 'Additional Checked Baggage (23kg)',
-        description: 'One additional checked bag up to 23kg',
-        baseAmount: '25.00',
-        currency: 'GBP',
+        type: "baggage",
+        productName: "Additional Checked Baggage (23kg)",
+        description: "One additional checked bag up to 23kg",
+        baseAmount: "25.00",
+        currency: "GBP",
         segmentIds: [],
         passengerIds: [],
         maximumQuantity: 5,
         restrictions: {
           minQuantity: 1,
-          maxQuantity: 5
-        }
+          maxQuantity: 5,
+        },
       };
 
       return service;
     } catch (error) {
-      logger.error('[AncillaryServicesService] Error getting service details:', error);
+      logger.error(
+        "[AncillaryServicesService] Error getting service details:",
+        error,
+      );
       return null;
     }
   }
@@ -330,29 +378,33 @@ export class AncillaryServicesService {
    */
   private processAvailableServices(
     rawServices: any[] = [],
-    filterByType?: string
+    filterByType?: string,
   ): ServiceDetail[] {
     try {
-      let services: ServiceDetail[] = rawServices.map(service => ({
+      let services: ServiceDetail[] = rawServices.map((service) => ({
         id: service.id,
-        type: service.type || 'unknown',
-        productName: service.product_name || service.name || `${service.type} Service`,
+        type: service.type || "unknown",
+        productName:
+          service.product_name || service.name || `${service.type} Service`,
         description: service.description || `${service.type} service`,
-        baseAmount: service.base_amount || service.total_amount || '0.00',
-        currency: service.currency || service.total_currency || 'GBP',
+        baseAmount: service.base_amount || service.total_amount || "0.00",
+        currency: service.currency || service.total_currency || "GBP",
         segmentIds: service.segment_ids || [],
         passengerIds: service.passenger_ids || [],
-        maximumQuantity: service.maximum_quantity || 1
+        maximumQuantity: service.maximum_quantity || 1,
       }));
 
       // Filter by type if specified
       if (filterByType) {
-        services = services.filter(s => s.type === filterByType);
+        services = services.filter((s) => s.type === filterByType);
       }
 
       return services;
     } catch (error) {
-      logger.error('[AncillaryServicesService] Error processing services:', error);
+      logger.error(
+        "[AncillaryServicesService] Error processing services:",
+        error,
+      );
       return [];
     }
   }

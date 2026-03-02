@@ -1,92 +1,99 @@
 // Shared TypeScript types and adapter interfaces used across services
 export enum Intent {
-    READ_STATIC = "READ_STATIC",
-    QUERY_STATIC = "QUERY_STATIC",
-    WRITE = "WRITE",
-    READ_REALTIME = "QUERY_REALTIME",
-    QUERY_REALTIME = "READ_REALTIME",
-    ADAPTER = "ADAPTER"
+  READ_STATIC = "READ_STATIC",
+  QUERY_STATIC = "QUERY_STATIC",
+  WRITE = "WRITE",
+  READ_REALTIME = "QUERY_REALTIME",
+  QUERY_REALTIME = "READ_REALTIME",
+  ADAPTER = "ADAPTER",
 }
 
 // Adapter interface for external integrations
 export interface Adapter {
-    name: string;
-    request(payload: any): Promise<any>;
+  name: string;
+  request(payload: any): Promise<any>;
 }
 
 // Flight search result
 export interface FlightResult {
-    id: string;
-    airline: string;
-    flightNumber: string;
-    departure: {
-        airport: string;
-        time: Date;
-    };
-    arrival: {
-        airport: string;
-        time: Date;
-    };
-    price: number;
-    currency: string;
-    availableSeats: number;
+  id: string;
+  airline: string;
+  flightNumber: string;
+  departure: {
+    airport: string;
+    time: Date;
+  };
+  arrival: {
+    airport: string;
+    time: Date;
+  };
+  price: number;
+  currency: string;
+  availableSeats: number;
 }
 
 // Hotel search result
 export interface HotelResult {
-    id: string;
-    name: string;
-    location: string;
-    rating: number;
-    pricePerNight: number;
-    currency: string;
-    availableRooms: number;
-    amenities: string[];
+  id: string;
+  name: string;
+  location: string;
+  rating: number;
+  pricePerNight: number;
+  currency: string;
+  availableRooms: number;
+  amenities: string[];
 }
 
 // Realtime data for ingest
 export interface RealtimeData {
-    id: string;
-    vendor: string;
-    productId: string;
-    payload: any;
-    ts: string;
-    sequence: number;
+  id: string;
+  vendor: string;
+  productId: string;
+  payload: any;
+  ts: string;
+  sequence: number;
 }
 
 // Metric for monitoring
 export interface Metric {
-    name: string;
-    value: number;
-    ts?: string;
-    tags?: Record<string, string>;
+  name: string;
+  value: number;
+  ts?: string;
+  tags?: Record<string, string>;
 }
 
 // ============================================================================
 // HOTEL DEALS TYPES
 // ============================================================================
-export { HotelDealType, PropertyType, LocationType, MealPlan, RoomType, BedType } from './hotel-deals';
+export {
+  HotelDealType,
+  PropertyType,
+  LocationType,
+  MealPlan,
+  RoomType,
+  BedType,
+} from "./hotel-deals";
 
 // ============================================================================
 // DOMAIN TYPES FROM TYPES DIRECTORY
 // ============================================================================
 
-import { PaymentStatus } from '../types/enums';
-export { PaymentStatus } from '../types/enums';
-export * from '../types/enums';
-export * from '../types/index';
+import { PaymentStatus } from "../types/enums";
+export { PaymentStatus } from "../types/enums";
+export * from "../types/enums";
+export * from "../types/index";
 // Add individual exports for types that hooks.ts needs
-export * from '../types/company';
-export * from '../types/user';
-export * from '../types/rbac';
-export * from '../types/booking';
-export * from '../types/loyalty';
-export * from '../types/supplier';
-export * from '../types/payment';
-export * from '../types/finance';
-export * from '../types/pricing';
-export * from '../types/reference';
-export * from '../types/system';
+export * from "../types/company";
+export * from "../types/user";
+export * from "../types/rbac";
+export * from "../types/booking";
+export * from "../types/loyalty";
+export * from "../types/supplier";
+export * from "../types/payment";
+export * from "../types/finance";
+export * from "../types/pricing";
+export * from "../types/reference";
+export * from "../types/system";
 
 // ============================================================================
 // PRICING DOMAIN TYPES
@@ -97,140 +104,140 @@ export * from '../types/system';
 // ============================================================================
 
 export enum OfflineRequestStatus {
-    PENDING_STAFF = "PENDING_STAFF",
-    PRICING_SUBMITTED = "PRICING_SUBMITTED",
-    PENDING_CUSTOMER_APPROVAL = "PENDING_CUSTOMER_APPROVAL",
-    APPROVED = "APPROVED",
-    PAYMENT_PENDING = "PAYMENT_PENDING",
-    COMPLETED = "COMPLETED",
-    REJECTED = "REJECTED",
-    CANCELLED = "CANCELLED"
+  PENDING_STAFF = "PENDING_STAFF",
+  PRICING_SUBMITTED = "PRICING_SUBMITTED",
+  PENDING_CUSTOMER_APPROVAL = "PENDING_CUSTOMER_APPROVAL",
+  APPROVED = "APPROVED",
+  PAYMENT_PENDING = "PAYMENT_PENDING",
+  COMPLETED = "COMPLETED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
 }
 
 export enum OfflineRequestType {
-    SCHEDULE_CHANGE = "schedule_change",
-    PASSENGER_NAME_CHANGE = "passenger_name_change",
-    SEAT_SELECTION = "seat_selection",
-    ANCILLARY_UPDATE = "ancillary_update",
-    BOOKING_MODIFICATION = "booking_modification",
-    CANCELLATION_WITH_REBOOKING = "cancellation_with_rebooking"
+  SCHEDULE_CHANGE = "schedule_change",
+  PASSENGER_NAME_CHANGE = "passenger_name_change",
+  SEAT_SELECTION = "seat_selection",
+  ANCILLARY_UPDATE = "ancillary_update",
+  BOOKING_MODIFICATION = "booking_modification",
+  CANCELLATION_WITH_REBOOKING = "cancellation_with_rebooking",
 }
 
 export enum OfflineRequestPriority {
-    LOW = "low",
-    MEDIUM = "medium",
-    HIGH = "high",
-    CRITICAL = "critical"
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical",
 }
 
 export enum OfflineRequestAuditAction {
-    CREATED = "CREATED",
-    PRICING_SUBMITTED = "PRICING_SUBMITTED",
-    APPROVED = "APPROVED",
-    REJECTED = "REJECTED",
-    PAYMENT_RECORDED = "PAYMENT_RECORDED",
-    COMPLETED = "COMPLETED",
-    CANCELLED = "CANCELLED"
+  CREATED = "CREATED",
+  PRICING_SUBMITTED = "PRICING_SUBMITTED",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+  PAYMENT_RECORDED = "PAYMENT_RECORDED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
 }
 
 export interface Timeline {
-    requestedAt?: string;
-    requestedBy?: string;
-    staffPricedAt?: string;
-    customerNotifiedAt?: string;
-    customerApprovedAt?: string;
-    paymentDueAt?: string;
-    paymentCompletedAt?: string;
-    documentsIssuedAt?: string;
-    completedAt?: string;
-    rejectedAt?: string;
-    cancelledAt?: string;
+  requestedAt?: string;
+  requestedBy?: string;
+  staffPricedAt?: string;
+  customerNotifiedAt?: string;
+  customerApprovedAt?: string;
+  paymentDueAt?: string;
+  paymentCompletedAt?: string;
+  documentsIssuedAt?: string;
+  completedAt?: string;
+  rejectedAt?: string;
+  cancelledAt?: string;
 }
 
 export interface PriceDifference {
-    baseFareDiff?: number;
-    taxesDiff?: number;
-    markupDiff?: number;
-    totalDiff: number;
+  baseFareDiff?: number;
+  taxesDiff?: number;
+  markupDiff?: number;
+  totalDiff: number;
 }
 
 export interface StaffPricing {
-    newBaseFare?: number;
-    newTaxes?: number;
-    newMarkup?: number;
-    newTotalPrice: number;
-    currency: string;
-    staffNotes?: string;
-    supplierReference?: string;
-    supplierPNR?: string;
-    pricedAt?: string;
-    pricedBy?: string;
+  newBaseFare?: number;
+  newTaxes?: number;
+  newMarkup?: number;
+  newTotalPrice: number;
+  currency: string;
+  staffNotes?: string;
+  supplierReference?: string;
+  supplierPNR?: string;
+  pricedAt?: string;
+  pricedBy?: string;
 }
 
 export interface CustomerApproval {
-    approved: boolean;
-    approvedAt?: string;
+  approved: boolean;
+  approvedAt?: string;
 }
 
 export interface Payment {
-    paymentId: string;
-    amount: number;
-    method?: string;
-    transactionRef?: string;
-    paidAt?: string;
+  paymentId: string;
+  amount: number;
+  method?: string;
+  transactionRef?: string;
+  paidAt?: string;
 }
 
 export interface OfflineChangeRequest {
-    id: string;
-    requestRef: string;
-    bookingId: string;
-    bookingRef: string;
-    requestType: OfflineRequestType;
-    status: OfflineRequestStatus;
-    priority?: OfflineRequestPriority;
-    originalDetails?: Record<string, any>;
-    requestedChanges?: Record<string, any>;
-    staffPricing?: StaffPricing;
-    priceDifference?: PriceDifference;
-    customerApproval?: CustomerApproval;
-    payment?: Payment;
-    reissuedDocuments?: Record<string, any>;
-    timeline: Timeline;
-    tags?: string[];
-    internalNotes?: string[];
-    createdAt: string;
-    updatedAt?: string;
+  id: string;
+  requestRef: string;
+  bookingId: string;
+  bookingRef: string;
+  requestType: OfflineRequestType;
+  status: OfflineRequestStatus;
+  priority?: OfflineRequestPriority;
+  originalDetails?: Record<string, any>;
+  requestedChanges?: Record<string, any>;
+  staffPricing?: StaffPricing;
+  priceDifference?: PriceDifference;
+  customerApproval?: CustomerApproval;
+  payment?: Payment;
+  reissuedDocuments?: Record<string, any>;
+  timeline: Timeline;
+  tags?: string[];
+  internalNotes?: string[];
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface OfflineRequestAuditLog {
-    id: string;
-    offlineRequestId: string;
-    action: OfflineRequestAuditAction;
-    actorId: string;
-    actorType: 'staff' | 'customer' | 'system';
-    oldValues?: Record<string, any>;
-    newValues?: Record<string, any>;
-    details?: Record<string, any>;
-    createdAt: string;
+  id: string;
+  offlineRequestId: string;
+  action: OfflineRequestAuditAction;
+  actorId: string;
+  actorType: "staff" | "customer" | "system";
+  oldValues?: Record<string, any>;
+  newValues?: Record<string, any>;
+  details?: Record<string, any>;
+  createdAt: string;
 }
 
 export interface CreateOfflineRequestPayload {
-    bookingId: string;
-    bookingRef: string;
-    requestType: OfflineRequestType;
-    requestedChanges: Record<string, any>;
-    priority?: OfflineRequestPriority;
+  bookingId: string;
+  bookingRef: string;
+  requestType: OfflineRequestType;
+  requestedChanges: Record<string, any>;
+  priority?: OfflineRequestPriority;
 }
 
 export interface SubmitPricingPayload {
-    newBaseFare?: number;
-    newTaxes?: number;
-    newMarkup?: number;
-    newTotalPrice: number;
-    currency: string;
-    staffNotes?: string;
-    supplierReference?: string;
-    supplierPNR?: string;
+  newBaseFare?: number;
+  newTaxes?: number;
+  newMarkup?: number;
+  newTotalPrice: number;
+  currency: string;
+  staffNotes?: string;
+  supplierReference?: string;
+  supplierPNR?: string;
 }
 
 // Admin Booking Card Types
@@ -241,22 +248,22 @@ export interface AdminBookingCard {
   confirmationNumber: string;
   status: BookingStatus;
   bookingType: BookingType;
-  customerType: 'B2B' | 'B2C';
-  
+  customerType: "B2B" | "B2C";
+
   // Customer Information
   customer: {
     id: string;
     name: string;
     email: string;
     phone: string;
-    type: 'individual' | 'corporate';
+    type: "individual" | "corporate";
     companyId?: string;
     branchId?: string;
   };
-  
+
   // Service Details
   serviceDetails: {
-    type: 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
+    type: "flight" | "hotel" | "package" | "transfer" | "visa" | "insurance";
     segments: ServiceSegment[];
     supplier: {
       id: string;
@@ -265,7 +272,7 @@ export interface AdminBookingCard {
       supplierRef: string;
     };
   };
-  
+
   // Financial Information
   financials: {
     customerPrice: number;
@@ -278,7 +285,7 @@ export interface AdminBookingCard {
     paymentMethod: PaymentMethod;
     profit: number;
   };
-  
+
   // Timeline Information
   timeline: {
     bookedAt: Date;
@@ -287,22 +294,22 @@ export interface AdminBookingCard {
     holdUntil?: Date;
     lastModified: Date;
   };
-  
+
   // Admin-Specific Features
   adminFeatures: {
     assignedAgent: string;
     branch: string;
     queueStatus: QueueStatus;
-    priority: 'low' | 'medium' | 'high' | 'urgent';
+    priority: "low" | "medium" | "high" | "urgent";
     tags: string[];
     notes: AdminNote[];
     auditTrail: AuditEvent[];
   };
-  
+
   // Documents & Communications
   documents: BookingDocument[];
   communications: CommunicationLog[];
-  
+
   // Special Features
   specialFeatures: {
     specialRequests: string[];
@@ -345,11 +352,20 @@ export interface AdminSearchFilters {
 
 export interface BulkOperations {
   selectAllMatching: (filters: AdminSearchFilters) => void;
-  bulkUpdateStatus: (status: BookingStatus, bookingIds: string[]) => Promise<void>;
+  bulkUpdateStatus: (
+    status: BookingStatus,
+    bookingIds: string[],
+  ) => Promise<void>;
   bulkAssignAgent: (agentId: string, bookingIds: string[]) => Promise<void>;
   bulkAddTags: (tags: string[], bookingIds: string[]) => Promise<void>;
-  bulkSendNotifications: (message: string, bookingIds: string[]) => Promise<void>;
-  bulkExport: (format: 'pdf' | 'excel' | 'csv', bookingIds: string[]) => Promise<Blob>;
+  bulkSendNotifications: (
+    message: string,
+    bookingIds: string[],
+  ) => Promise<void>;
+  bulkExport: (
+    format: "pdf" | "excel" | "csv",
+    bookingIds: string[],
+  ) => Promise<Blob>;
 }
 
 export interface WorkflowAutomation {
@@ -366,7 +382,7 @@ export interface QueueManagement {
     enableStatusChange: boolean;
     enableAssignment: boolean;
   };
-  
+
   queueVisualization: {
     kanbanView: KanbanView;
     listView: ListView;
@@ -380,7 +396,7 @@ export interface RealTimeCollaboration {
     conflictResolution: ConflictResolutionStrategy;
     editHistory: EditHistory[];
   };
-  
+
   teamCommunication: {
     mentionUsers: (users: string[], message: string) => void;
     privateNotes: PrivateNote[];
@@ -397,14 +413,26 @@ export interface DocumentManagement {
 }
 
 // Type definitions for enums and interfaces
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'refunded' | 'ticketed' | 'imported';
-export type BookingType = 'instant' | 'hold' | 'request' | 'imported';
+export type BookingStatus =
+  | "pending"
+  | "confirmed"
+  | "cancelled"
+  | "refunded"
+  | "ticketed"
+  | "imported";
+export type BookingType = "instant" | "hold" | "request" | "imported";
 // export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'; // Removed to avoid conflict with enum
-export type PaymentMethod = 'wallet' | 'credit_card' | 'supplier_credit';
-export type QueueType = 'hold' | 'refund' | 'amendment' | 'special_request';
-export type QueueStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type Priority = 'low' | 'medium' | 'high' | 'urgent';
-export type ServiceType = 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
+export type PaymentMethod = "wallet" | "credit_card" | "supplier_credit";
+export type QueueType = "hold" | "refund" | "amendment" | "special_request";
+export type QueueStatus = "pending" | "processing" | "completed" | "failed";
+export type Priority = "low" | "medium" | "high" | "urgent";
+export type ServiceType =
+  | "flight"
+  | "hotel"
+  | "package"
+  | "transfer"
+  | "visa"
+  | "insurance";
 
 interface ServiceSegment {
   id: string;
@@ -542,7 +570,7 @@ interface CalendarEvent {
 }
 
 interface ConflictResolutionStrategy {
-  type: 'last_wins' | 'merge' | 'manual';
+  type: "last_wins" | "merge" | "manual";
   rules: any[];
 }
 
@@ -579,7 +607,7 @@ interface DocumentType {
 interface UploadProgress {
   fileName: string;
   progress: number;
-  status: 'uploading' | 'completed' | 'failed';
+  status: "uploading" | "completed" | "failed";
 }
 
 interface VersionControl {
@@ -599,7 +627,7 @@ interface ESignatureIntegration {
   provider: string;
   templateId?: string;
   signers: Signer[];
-  status: 'pending' | 'completed' | 'failed';
+  status: "pending" | "completed" | "failed";
 }
 
 interface Signer {

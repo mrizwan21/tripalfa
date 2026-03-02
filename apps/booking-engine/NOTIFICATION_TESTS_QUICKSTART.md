@@ -44,13 +44,13 @@ npm test -- --coverage src/__tests__/notifications
 
 ## Test Coverage
 
-| Component | Tests | Coverage |
-|-----------|-------|----------|
-| Notifications Page | 16+ | ~95% |
-| Details Popup | 11+ | ~90% |
-| Toast Component | 7+ | ~85% |
-| Type Validation | 16+ | ~100% |
-| **Total** | **50+** | **~94%** |
+| Component          | Tests   | Coverage |
+| ------------------ | ------- | -------- |
+| Notifications Page | 16+     | ~95%     |
+| Details Popup      | 11+     | ~90%     |
+| Toast Component    | 7+      | ~85%     |
+| Type Validation    | 16+     | ~100%    |
+| **Total**          | **50+** | **~94%** |
 
 ## Key Features
 
@@ -63,6 +63,7 @@ npm test -- --coverage src/__tests__/notifications
 ## What's Tested
 
 ### Notifications Page
+
 - ✅ Display and rendering
 - ✅ Filtering (by type, status)
 - ✅ Searching (title, description, passenger name)
@@ -73,6 +74,7 @@ npm test -- --coverage src/__tests__/notifications
 - ✅ Empty/loading/error states
 
 ### Details Popup
+
 - ✅ Open/close actions
 - ✅ Full details display
 - ✅ Status-specific content
@@ -81,6 +83,7 @@ npm test -- --coverage src/__tests__/notifications
 - ✅ Responsive design
 
 ### Toast Notifications
+
 - ✅ Display and auto-dismiss
 - ✅ Manual close
 - ✅ Multiple toasts stacking
@@ -88,6 +91,7 @@ npm test -- --coverage src/__tests__/notifications
 - ✅ Click navigation
 
 ### Type Validation
+
 - ✅ Data structure validation
 - ✅ Type guards
 - ✅ Utility functions
@@ -96,20 +100,25 @@ npm test -- --coverage src/__tests__/notifications
 ## Installation Steps
 
 ### Step 1: Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### Step 2: Verify Installation
+
 ```bash
 npm test -- notification-types.test.ts
 ```
+
 Should show all tests passing ✅
 
 ### Step 3: Run Full Suite
+
 ```bash
 npm test -- src/__tests__/notifications
 ```
+
 Should show 50+ tests passing ✅
 
 ## Project Structure
@@ -136,18 +145,23 @@ apps/booking-engine/
 
 ## Documentation Quick Links
 
-| Document | Purpose | Read Time |
-|----------|---------|-----------|
-| **QUICK_REFERENCE.md** | Quick patterns & setup | 15 min |
-| **README.md** | Comprehensive guide | 30 min |
-| **IMPLEMENTATION_SUMMARY.md** | Implementation details | 10 min |
+| Document                      | Purpose                | Read Time |
+| ----------------------------- | ---------------------- | --------- |
+| **QUICK_REFERENCE.md**        | Quick patterns & setup | 15 min    |
+| **README.md**                 | Comprehensive guide    | 30 min    |
+| **IMPLEMENTATION_SUMMARY.md** | Implementation details | 10 min    |
 
 ## Notification Types
 
 ```typescript
 // Types
-type NotificationType = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR'
-type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED'
+type NotificationType = "SUCCESS" | "INFO" | "WARNING" | "ERROR";
+type NotificationStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "REJECTED"
+  | "INFO"
+  | "CANCELLED";
 
 // Structure
 interface NotificationItem {
@@ -169,6 +183,7 @@ interface NotificationItem {
 ## Mock Data Available
 
 Pre-configured notifications for testing:
+
 - ✅ SSR (Special Service Request)
 - ✅ Itinerary Changes
 - ✅ Bookings & Confirmations
@@ -206,6 +221,7 @@ npm test -- --ui
 ## Troubleshooting
 
 ### Tests won't run
+
 ```bash
 # Check if MSW is installed
 npm list msw
@@ -214,6 +230,7 @@ npm list msw
 ```
 
 ### Import errors
+
 ```bash
 # Verify file structure
 ls -la src/__tests__/notifications/
@@ -221,6 +238,7 @@ ls -la src/__tests__/notifications/__mocks__/
 ```
 
 ### MSW not intercepting
+
 1. Check handlers are exported from `handlers.ts`
 2. Verify `initializeMSWServer()` called in test
 3. Check URL matches in handler definition
@@ -228,18 +246,21 @@ ls -la src/__tests__/notifications/__mocks__/
 ## Next Steps
 
 ### For New Developers
+
 1. Read QUICK_REFERENCE.md
 2. Run `npm test -- src/__tests__/notifications`
 3. Review passing tests
 4. Follow patterns for new features
 
 ### For Existing Tests
+
 1. Run full suite: `npm test`
 2. Check all tests pass
 3. Integrate into CI/CD
 4. Monitor coverage metrics
 
 ### For New Features
+
 1. Add mock data to `fixtures.ts`
 2. Create test file following patterns
 3. Add API handler if needed to `handlers.ts`
@@ -258,6 +279,7 @@ ls -la src/__tests__/notifications/__mocks__/
 ## Integration
 
 ### Works with existing:
+
 ✅ Vitest configuration
 ✅ React Testing Library
 ✅ TypeScript
@@ -265,6 +287,7 @@ ls -la src/__tests__/notifications/__mocks__/
 ✅ Existing components
 
 ### Adds:
+
 ✅ MSW for API mocking
 ✅ Comprehensive test coverage
 ✅ Mock data library
@@ -274,25 +297,27 @@ ls -la src/__tests__/notifications/__mocks__/
 ## Support
 
 ### Documentation
+
 - `src/__tests__/notifications/README.md` - Complete reference
 - `src/__tests__/notifications/QUICK_REFERENCE.md` - Quick patterns
 - `NOTIFICATION_TESTS_CHECKLIST.md` - Implementation checklist
 
 ### Location
+
 All test files: `apps/booking-engine/src/__tests__/notifications/`
 
 ## File Sizes Summary
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| Notifications.test.tsx | 484 | Main page tests |
-| NotificationDetailsPopup.test.tsx | 402 | Popup tests |
-| Toast.test.tsx | 345 | Toast tests |
-| notification-types.test.ts | 356 | Type validation |
-| fixtures.ts | 395 | Mock data |
-| handlers.ts | 374 | API mocking |
-| README.md | 1,800+ | Documentation |
-| QUICK_REFERENCE.md | 1,300+ | Quick guide |
+| File                              | Lines  | Purpose         |
+| --------------------------------- | ------ | --------------- |
+| Notifications.test.tsx            | 484    | Main page tests |
+| NotificationDetailsPopup.test.tsx | 402    | Popup tests     |
+| Toast.test.tsx                    | 345    | Toast tests     |
+| notification-types.test.ts        | 356    | Type validation |
+| fixtures.ts                       | 395    | Mock data       |
+| handlers.ts                       | 374    | API mocking     |
+| README.md                         | 1,800+ | Documentation   |
+| QUICK_REFERENCE.md                | 1,300+ | Quick guide     |
 
 ## Quick Validation
 
@@ -327,6 +352,7 @@ Start developing with confidence! 🚀
 ---
 
 **For detailed information, see:**
+
 - QUICK_REFERENCE.md (10-15 min read)
 - README.md (30 min read)
 - IMPLEMENTATION_SUMMARY.md (10 min read)

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 // Admin Panel - Sidebar Navigation
 // @ts-ignore
-import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { Link, useLocation } from "react-router-dom";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -23,8 +23,8 @@ import {
   Sun,
   Moon,
   Bell,
-} from 'lucide-react';
-import { cn } from '@tripalfa/shared-utils';
+} from "lucide-react";
+import { cn } from "@tripalfa/shared-utils";
 
 // Types
 export interface MenuItem {
@@ -38,17 +38,32 @@ export interface MenuItem {
 
 // Temporary Mock for Theme (since next-themes is gone)
 const useTheme = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   return { theme, setTheme };
 };
 
 // Hardcoded Menu for now to replace missing @/lib/constants
 const MAIN_MENU: MenuItem[] = [
-  { id: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
-  { id: 'staff', label: 'Staff Onboarding', href: '/staff/onboarding', icon: 'Users' },
-  { id: 'companies', label: 'Companies', href: '/companies', icon: 'Building2' },
-  { id: 'users', label: 'Users', href: '/users', icon: 'Users' },
-  { id: 'security', label: 'Security', href: '/security', icon: 'ShieldCheck' },
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: "LayoutDashboard",
+  },
+  {
+    id: "staff",
+    label: "Staff Onboarding",
+    href: "/staff/onboarding",
+    icon: "Users",
+  },
+  {
+    id: "companies",
+    label: "Companies",
+    href: "/companies",
+    icon: "Building2",
+  },
+  { id: "users", label: "Users", href: "/users", icon: "Users" },
+  { id: "security", label: "Security", href: "/security", icon: "ShieldCheck" },
 ];
 
 // Icon mapping
@@ -76,16 +91,17 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps): React.ReactElement {
   const { pathname } = useLocation();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['dashboard']);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["dashboard"]);
 
   const toggleExpanded = (id: string) => {
     setExpandedItems((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard' || pathname === '/';
+    if (href === "/dashboard")
+      return pathname === "/dashboard" || pathname === "/";
     return pathname.startsWith(href);
   };
 
@@ -102,11 +118,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps): React.ReactElement {
             <button
               onClick={() => toggleExpanded(item.id)}
               className={cn(
-                'flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                  : 'text-secondary-600 hover:bg-secondary-100 dark:text-secondary-400 dark:hover:bg-secondary-800',
-                depth > 0 && 'pl-10'
+                  ? "bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                  : "text-secondary-600 hover:bg-secondary-100 dark:text-secondary-400 dark:hover:bg-secondary-800",
+                depth > 0 && "pl-10",
               )}
             >
               <span className="flex items-center gap-3">
@@ -128,7 +144,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps): React.ReactElement {
             </button>
             {isExpanded && (
               <ul className="mt-1 space-y-1">
-                {item.children?.map((child) => renderMenuItem(child, depth + 1))}
+                {item.children?.map((child) =>
+                  renderMenuItem(child, depth + 1),
+                )}
               </ul>
             )}
           </div>
@@ -137,11 +155,11 @@ export function Sidebar({ isOpen, onClose }: SidebarProps): React.ReactElement {
             to={item.href}
             onClick={() => onClose()}
             className={cn(
-              'flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+              "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                : 'text-secondary-600 hover:bg-secondary-100 dark:text-secondary-400 dark:hover:bg-secondary-800',
-              depth > 0 && 'pl-10'
+                ? "bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+                : "text-secondary-600 hover:bg-secondary-100 dark:text-secondary-400 dark:hover:bg-secondary-800",
+              depth > 0 && "pl-10",
             )}
           >
             <span className="flex items-center gap-3">
@@ -172,8 +190,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps): React.ReactElement {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r bg-white transition-transform duration-300 dark:border-secondary-800 dark:bg-secondary-900',
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          "fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r bg-white transition-transform duration-300 dark:border-secondary-800 dark:bg-secondary-900",
+          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         {/* Logo */}
@@ -247,10 +265,10 @@ export function Header({ onMenuClick }: HeaderProps): React.ReactElement {
 
         {/* Theme toggle */}
         <button
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="rounded-lg p-2 text-secondary-500 hover:bg-secondary-100 dark:hover:bg-secondary-800"
         >
-          {theme === 'dark' ? (
+          {theme === "dark" ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />

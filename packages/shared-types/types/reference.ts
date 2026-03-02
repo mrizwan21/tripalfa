@@ -11,7 +11,7 @@ import {
   ExchangeRateSource,
   BufferType,
   BufferDirection,
-} from './enums';
+} from "./enums";
 
 // ============================================================================
 // Airline Types
@@ -23,23 +23,23 @@ export interface Airline {
   name: string;
   callsign?: string;
   country?: string;
-  
+
   // Branding
   logo?: string;
   logoSmall?: string;
   primaryColor?: string;
-  
+
   // Contact
   website?: string;
   phone?: string;
-  
+
   // Alliance
   alliance?: string;
-  
+
   // Operational
   isActive: boolean;
   isLowCost: boolean;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -86,7 +86,7 @@ export interface Airport {
   icaoCode?: string;
   name: string;
   localName?: string;
-  
+
   // Location
   cityId?: string;
   cityCode?: string;
@@ -94,22 +94,22 @@ export interface Airport {
   country: string;
   countryName?: string;
   region?: string;
-  
+
   // Coordinates
   latitude?: number;
   longitude?: number;
   elevation?: number;
-  
+
   // Timezone
   timezone?: string;
   utcOffset?: number;
-  
+
   // Type
   type: AirportType;
   size: AirportSize;
-  
+
   isActive: boolean;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -164,27 +164,27 @@ export interface City {
   iataCode?: string;
   name: string;
   localName?: string;
-  
+
   // Location
   country: string;
   countryName?: string;
   region?: string;
   state?: string;
-  
+
   // Coordinates
   latitude?: number;
   longitude?: number;
-  
+
   // Timezone
   timezone?: string;
-  
+
   // Metadata
   population?: number;
   isCapital: boolean;
   isPopular: boolean;
-  
+
   isActive: boolean;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -235,10 +235,10 @@ export interface Currency {
   decimalDigits: number;
   rounding: number;
   namePlural?: string;
-  
+
   isActive: boolean;
   isBaseCurrency: boolean;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -275,16 +275,16 @@ export interface ExchangeRate {
   id: string;
   fromCurrencyId: string;
   toCurrencyId: string;
-  
+
   rate: number;
   inverseRate: number;
-  
+
   source: ExchangeRateSource;
   sourceRef?: string;
-  
+
   validFrom: string;
   validTo?: string;
-  
+
   createdAt: string;
 }
 
@@ -302,17 +302,17 @@ export interface ExchangeRateBuffer {
   id: string;
   currencyId: string;
   companyId?: string;
-  
+
   bufferType: BufferType;
   bufferValue: number;
-  
+
   serviceTypes: string[];
   direction: BufferDirection;
-  
+
   isActive: boolean;
   validFrom: string;
   validTo?: string;
-  
+
   createdAt: string;
   updatedAt: string;
 }
@@ -359,16 +359,16 @@ export interface DocumentTypeRef {
   name: string;
   description?: string;
   category: DocCategory;
-  
+
   // Validation
   validationPattern?: string;
   requiredFields: string[];
-  
+
   // Countries
   countries: string[];
-  
+
   isActive: boolean;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -404,18 +404,18 @@ export interface Language {
   code: string;
   name: string;
   nativeName?: string;
-  
+
   // Script
   script?: string;
   direction: TextDirection;
-  
+
   // Regional
   country?: string;
   locale?: string;
-  
+
   isActive: boolean;
   isDefault: boolean;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -450,13 +450,13 @@ export interface LanguageUpdate {
 // ============================================================================
 export interface LocationSearchParams {
   query: string;
-  types?: ('airport' | 'city' | 'country')[];
+  types?: ("airport" | "city" | "country")[];
   country?: string;
   limit?: number;
 }
 
 export interface LocationSearchResult {
-  type: 'airport' | 'city' | 'country';
+  type: "airport" | "city" | "country";
   code: string;
   name: string;
   displayName: string;

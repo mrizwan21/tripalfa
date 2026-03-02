@@ -1,14 +1,22 @@
 /**
  * Duffel Flight Booking API Service
  * Complete integration for Offer Requests, Offers, Orders, and Payments
- * 
+ *
  * All requests go through the centralized API layer
  */
 
-import { api } from '../lib/api';
+import type { api as ApiClientInstance } from "../lib/api";
+
+// Lazy import to avoid circular dependency
+type ApiClient = typeof ApiClientInstance;
+let api: ApiClient | undefined;
+function getApi() {
+  if (!api) api = require("../lib/api").api as ApiClient;
+  return api;
+}
 
 // Do not use provider secrets in frontend; all calls must go via backend
-const API_ENV = import.meta.env.VITE_DUFFEL_ENV || 'test';
+const API_ENV = import.meta.env.VITE_DUFFEL_ENV || "test";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -22,13 +30,13 @@ export interface FlightSlice {
 }
 
 export interface Passenger {
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
 }
 
 export interface OfferRequestParams {
   slices: FlightSlice[];
   passengers: Passenger[];
-  cabin_class?: 'economy' | 'business' | 'first' | 'premium_economy';
+  cabin_class?: "economy" | "business" | "first" | "premium_economy";
 }
 
 export interface PaymentMethod {
@@ -64,8 +72,8 @@ export interface PaymentConfirmParams {
 // ============================================================================
 
 export interface SeatElement {
-  designator: string;     // e.g., "1A"
-  type: 'seat' | 'empty' | 'lavatory' | 'galley' | 'bassinet' | 'closet';
+  designator: string; // e.g., "1A"
+  type: "seat" | "empty" | "lavatory" | "galley" | "bassinet" | "closet";
   available_services?: Array<{
     id: string;
     passenger_id?: string;
@@ -84,17 +92,17 @@ export interface SeatRow {
 }
 
 export interface Cabin {
-  cabin_class: string;    // 'economy', 'business', etc.
+  cabin_class: string; // 'economy', 'business', etc.
   deck: number;
   aisles: number;
   rows: SeatRow[];
 }
 
 export interface SeatMap {
-  id: string;             // Seat map ID
-  segment_id: string;     // Segment ID
-  slice_id: string;       // Slice ID
-  cabins: Cabin[];        // Array of cabins
+  id: string; // Seat map ID
+  segment_id: string; // Segment ID
+  slice_id: string; // Slice ID
+  cabins: Cabin[]; // Array of cabins
 }
 
 export interface GetSeatMapsResponse {
@@ -102,30 +110,32 @@ export interface GetSeatMapsResponse {
 }
 
 export interface SelectedSeat {
-  designator: string;     // e.g., "1A"
+  designator: string; // e.g., "1A"
   passengerId: string;
   segmentId: string;
-  serviceId?: string;     // Available service ID for seat
+  serviceId?: string; // Available service ID for seat
 }
 
 /**
  * Create an offer request (search for flights)
  */
-export async function createOfferRequest(params: OfferRequestParams): Promise<any> {
+export async function createOfferRequest(
+  params: OfferRequestParams,
+): Promise<any> {
   try {
-    const result = await api.post<any>('/route', {
-      provider: 'duffel',
+    const result = await api.post<any>("/route", {
+      provider: "duffel",
       env: API_ENV,
       data: {
         slices: params.slices,
         passengers: params.passengers,
-        cabin_class: params.cabin_class || 'economy',
+        cabin_class: params.cabin_class || "economy",
         return_available_services: true,
       },
     });
     return result;
   } catch (error) {
-    console.error('[Duffel] Offer request error:', (error as any)?.message);
+    console.error("[Duffel] Offer request error:", (error as any)?.message);
     throw error;
   }
 }
@@ -138,7 +148,7 @@ export async function getOfferDetails(offerId: string): Promise<any> {
     const result = await api.get<any>(`/offers/${offerId}`);
     return result;
   } catch (error) {
-    console.error('[Duffel] Offer details error:', (error as any)?.message);
+    console.error("[Duffel] Offer details error:", (error as any)?.message);
     throw error;
   }
 }
@@ -150,20 +160,20 @@ export async function getOfferDetails(offerId: string): Promise<any> {
 export interface PassengerData {
   id: string;
   email: string;
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
   given_name: string;
   family_name: string;
   phone_number: string;
   born_at?: string;
-  gender?: 'M' | 'F';
+  gender?: "M" | "F";
 }
 
 export interface CreateOrderParams {
   selectedOffers: string[];
   passengers: PassengerData[];
-  orderType?: 'instant' | 'hold';
+  orderType?: "instant" | "hold";
   paymentMethod?: {
-    type: 'balance' | 'card';
+    type: "balance" | "card";
     id?: string;
   };
 }
@@ -171,22 +181,24 @@ export interface CreateOrderParams {
 /**
  * Create a flight order from selected offers
  */
-export async function createFlightOrder(params: CreateOrderParams): Promise<any> {
+export async function createFlightOrder(
+  params: CreateOrderParams,
+): Promise<any> {
   try {
-    console.log('[Duffel] Creating flight order:', params);
+    console.log("[Duffel] Creating flight order:", params);
 
-    const result = await api.post<any>('/bookings/flight/order', {
-      provider: 'duffel',
+    const result = await api.post<any>("/bookings/flight/order", {
+      provider: "duffel",
       selectedOffers: params.selectedOffers,
       passengers: params.passengers,
-      orderType: params.orderType || 'hold',
-      paymentMethod: params.paymentMethod || { type: 'balance' },
+      orderType: params.orderType || "hold",
+      paymentMethod: params.paymentMethod || { type: "balance" },
       env: API_ENV,
     });
 
     return result;
   } catch (error) {
-    console.error('[Duffel] Create order error:', error);
+    console.error("[Duffel] Create order error:", error);
     throw error;
   }
 }
@@ -196,16 +208,16 @@ export async function createFlightOrder(params: CreateOrderParams): Promise<any>
  */
 export async function getFlightOrder(orderId: string): Promise<any> {
   try {
-    console.log('[Duffel] Fetching order:', orderId);
+    console.log("[Duffel] Fetching order:", orderId);
 
     const result = await api.get<any>(
-      `/bookings/flight/order/${orderId}?provider=duffel&env=${API_ENV}`
+      `/bookings/flight/order/${orderId}?provider=duffel&env=${API_ENV}`,
     );
 
-    console.log('[Duffel] Order details:', result);
+    console.log("[Duffel] Order details:", result);
     return result;
   } catch (error) {
-    console.error('[Duffel] Get order error:', error);
+    console.error("[Duffel] Get order error:", error);
     throw error;
   }
 }
@@ -213,20 +225,23 @@ export async function getFlightOrder(orderId: string): Promise<any> {
 /**
  * Update order (add services, etc.)
  */
-export async function updateFlightOrder(orderId: string, updateData: any): Promise<any> {
+export async function updateFlightOrder(
+  orderId: string,
+  updateData: any,
+): Promise<any> {
   try {
-    console.log('[Duffel] Updating order:', orderId, updateData);
+    console.log("[Duffel] Updating order:", orderId, updateData);
 
     const result = await api.patch<any>(`/bookings/flight/order/${orderId}`, {
-      provider: 'duffel',
+      provider: "duffel",
       env: API_ENV,
       data: updateData,
     });
 
-    console.log('[Duffel] Order updated:', result);
+    console.log("[Duffel] Order updated:", result);
     return result;
   } catch (error) {
-    console.error('[Duffel] Update order error:', error);
+    console.error("[Duffel] Update order error:", error);
     throw error;
   }
 }
@@ -238,21 +253,23 @@ export async function updateFlightOrder(orderId: string, updateData: any): Promi
 /**
  * Create payment intent for order
  */
-export async function createPaymentIntent(params: PaymentIntentParams): Promise<any> {
+export async function createPaymentIntent(
+  params: PaymentIntentParams,
+): Promise<any> {
   try {
-    console.log('[Duffel] Creating payment intent:', params);
+    console.log("[Duffel] Creating payment intent:", params);
 
-    const result = await api.post<any>('/bookings/flight/payment-intent', {
-      provider: 'duffel',
+    const result = await api.post<any>("/bookings/flight/payment-intent", {
+      provider: "duffel",
       order_id: params.order_id,
       amount: params.amount,
       env: API_ENV,
     });
 
-    console.log('[Duffel] Payment intent created:', result);
+    console.log("[Duffel] Payment intent created:", result);
     return result;
   } catch (error) {
-    console.error('[Duffel] Payment intent error:', error);
+    console.error("[Duffel] Payment intent error:", error);
     throw error;
   }
 }
@@ -266,17 +283,20 @@ export async function createPaymentIntent(params: PaymentIntentParams): Promise<
  */
 export async function confirmFlightOrder(orderId: string): Promise<any> {
   try {
-    console.log('[Duffel] Confirming order:', orderId);
+    console.log("[Duffel] Confirming order:", orderId);
 
-    const result = await api.post<any>(`/bookings/flight/order/${orderId}/confirm`, {
-      provider: 'duffel',
-      env: API_ENV,
-    });
+    const result = await api.post<any>(
+      `/bookings/flight/order/${orderId}/confirm`,
+      {
+        provider: "duffel",
+        env: API_ENV,
+      },
+    );
 
-    console.log('[Duffel] Order confirmed:', result);
+    console.log("[Duffel] Order confirmed:", result);
     return result;
   } catch (error) {
-    console.error('[Duffel] Confirm order error:', error);
+    console.error("[Duffel] Confirm order error:", error);
     throw error;
   }
 }
@@ -300,29 +320,31 @@ export interface CompleteBookingRequest {
  * 3. Create payment intent
  * 4. Confirm order
  */
-export async function completeBookingFlow(request: CompleteBookingRequest): Promise<any> {
+export async function completeBookingFlow(
+  request: CompleteBookingRequest,
+): Promise<any> {
   try {
-    console.log('[Duffel] Starting complete booking flow');
+    console.log("[Duffel] Starting complete booking flow");
 
     // Step 1: Create offer request (validate search params)
-    console.log('[Duffel] Step 1: Creating offer request');
+    console.log("[Duffel] Step 1: Creating offer request");
     const offerResponse = await createOfferRequest(request.searchParams);
 
     if (!offerResponse.offers || offerResponse.offers.length === 0) {
-      throw new Error('No offers found for selected flights');
+      throw new Error("No offers found for selected flights");
     }
 
     // Step 2: Create order
-    console.log('[Duffel] Step 2: Creating order');
+    console.log("[Duffel] Step 2: Creating order");
     const orderResponse = await createFlightOrder({
       selectedOffers: [request.selectedOfferId],
       passengers: request.passengers,
-      orderType: 'hold',
-      paymentMethod: { type: 'balance' },
+      orderType: "hold",
+      paymentMethod: { type: "balance" },
     });
 
     if (!orderResponse.order) {
-      throw new Error('Failed to create order');
+      throw new Error("Failed to create order");
     }
 
     const orderId = orderResponse.order.id;
@@ -331,23 +353,23 @@ export async function completeBookingFlow(request: CompleteBookingRequest): Prom
 
     // Step 3: Update order if services needed
     if (request.addServices) {
-      console.log('[Duffel] Step 3a: Adding services');
+      console.log("[Duffel] Step 3a: Adding services");
       await updateFlightOrder(orderId, { services: request.addServices });
     }
 
     // Step 4: Create payment intent
-    console.log('[Duffel] Step 3: Creating payment intent');
+    console.log("[Duffel] Step 3: Creating payment intent");
     const paymentResponse = await createPaymentIntent({
       order_id: orderId,
       amount: {
         amount: Math.round(total * 100),
-        currency: currency
+        currency: currency,
       },
       return_url: request.returnUrl,
     });
 
     if (!paymentResponse.paymentIntent) {
-      throw new Error('Failed to create payment intent');
+      throw new Error("Failed to create payment intent");
     }
 
     // Return payment URL and order ID for redirect
@@ -359,7 +381,7 @@ export async function completeBookingFlow(request: CompleteBookingRequest): Prom
       payment: paymentResponse.paymentIntent,
     };
   } catch (error) {
-    console.error('[Duffel] Complete booking flow error:', error);
+    console.error("[Duffel] Complete booking flow error:", error);
     throw error;
   }
 }
@@ -369,23 +391,24 @@ export async function completeBookingFlow(request: CompleteBookingRequest): Prom
  */
 export async function handlePaymentCallback(orderId: string): Promise<any> {
   try {
-    console.log('[Duffel] Handling payment callback for order:', orderId);
+    console.log("[Duffel] Handling payment callback for order:", orderId);
 
     // Confirm the order
     const confirmResponse = await confirmFlightOrder(orderId);
 
     if (!confirmResponse.order || !confirmResponse.order.bookings) {
-      throw new Error('Failed to confirm order');
+      throw new Error("Failed to confirm order");
     }
 
     return {
       success: true,
       orderId,
-      confirmationNumber: confirmResponse.order.bookings[0]?.confirmation_number || 'N/A',
+      confirmationNumber:
+        confirmResponse.order.bookings[0]?.confirmation_number || "N/A",
       order: confirmResponse.order,
     };
   } catch (error) {
-    console.error('[Duffel] Payment callback error:', error);
+    console.error("[Duffel] Payment callback error:", error);
     throw error;
   }
 }
@@ -393,12 +416,18 @@ export async function handlePaymentCallback(orderId: string): Promise<any> {
  * Get available payment methods
  * Retrieves all available payment methods that can be used for bookings
  */
-export async function getPaymentMethods(provider: string = 'duffel', environment: string = 'test'): Promise<any> {
+export async function getPaymentMethods(
+  provider: string = "duffel",
+  environment: string = "test",
+): Promise<any> {
   try {
-    const result = await api.get<any>('/bookings/flight/payment-methods');
+    const result = await api.get<any>("/bookings/flight/payment-methods");
     return result.paymentMethods || result.data?.payment_methods || [];
   } catch (error) {
-    console.error('[Duffel] Get payment methods error:', (error as any)?.message);
+    console.error(
+      "[Duffel] Get payment methods error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -409,20 +438,25 @@ export async function getPaymentMethods(provider: string = 'duffel', environment
  */
 export async function getOrderPaymentMethods(
   orderId: string,
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<any> {
   try {
     console.log(`[Duffel] Fetching payment methods for order ${orderId}...`);
 
     const result = await api.get<any>(
-      `/bookings/flight/order/${orderId}/payment-methods?provider=${provider}&env=${environment}`
+      `/bookings/flight/order/${orderId}/payment-methods?provider=${provider}&env=${environment}`,
     );
 
-    console.log(`[Duffel] Order payment methods retrieved for ${orderId}:`, result);
-    return result.paymentMethods || result.data?.available_payment_methods || [];
+    console.log(
+      `[Duffel] Order payment methods retrieved for ${orderId}:`,
+      result,
+    );
+    return (
+      result.paymentMethods || result.data?.available_payment_methods || []
+    );
   } catch (error) {
-    console.error('[Duffel] Get order payment methods error:', error);
+    console.error("[Duffel] Get order payment methods error:", error);
     throw error;
   }
 }
@@ -441,22 +475,33 @@ export async function confirmPayment(params: {
   environment?: string;
 }): Promise<any> {
   try {
-    const { paymentIntentId, orderId, amount, currency = 'USD', paymentMethodId, provider = 'duffel', environment = 'test' } = params;
+    const {
+      paymentIntentId,
+      orderId,
+      amount,
+      currency = "USD",
+      paymentMethodId,
+      provider = "duffel",
+      environment = "test",
+    } = params;
 
-    const paymentData = { 
-      provider, 
-      env: environment, 
-      payment_intent_id: paymentIntentId, 
-      order_id: orderId, 
-      payment_method_id: paymentMethodId, 
-      ...(amount && { amount }), 
-      ...(currency && { currency }) 
+    const paymentData = {
+      provider,
+      env: environment,
+      payment_intent_id: paymentIntentId,
+      order_id: orderId,
+      payment_method_id: paymentMethodId,
+      ...(amount && { amount }),
+      ...(currency && { currency }),
     };
 
-    const result = await api.post<any>('/bookings/flight/payment-confirm', paymentData);
+    const result = await api.post<any>(
+      "/bookings/flight/payment-confirm",
+      paymentData,
+    );
     return result.paymentResult || result.data;
   } catch (error) {
-    console.error('[Duffel] Confirm payment error:', (error as any)?.message);
+    console.error("[Duffel] Confirm payment error:", (error as any)?.message);
     throw error;
   }
 }
@@ -467,20 +512,20 @@ export async function confirmPayment(params: {
  */
 export async function getPayment(
   paymentId: string,
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<any> {
   try {
     console.log(`[Duffel] Fetching payment details for ${paymentId}...`);
 
     const result = await api.get<any>(
-      `/bookings/flight/payment/${paymentId}?provider=${provider}&env=${environment}`
+      `/bookings/flight/payment/${paymentId}?provider=${provider}&env=${environment}`,
     );
 
     console.log(`[Duffel] Payment details retrieved for ${paymentId}:`, result);
     return result.payment || result.data;
   } catch (error) {
-    console.error('[Duffel] Get payment error:', error);
+    console.error("[Duffel] Get payment error:", error);
     throw error;
   }
 }

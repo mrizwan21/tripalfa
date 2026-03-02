@@ -17,8 +17,8 @@
  * └─────────────────────────────────────────────────────────────────────┘
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { fetchHotelFullStatic, fetchHotelRates } from '../lib/api';
+import { useState, useEffect, useCallback } from "react";
+import { fetchHotelFullStatic, fetchHotelRates } from "../lib/api";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,7 +102,7 @@ export interface MergedRoom {
   primaryImage?: string;
   rates: RoomRate[];
   lowestPrice?: { amount: number; currency: string };
-  source: 'db' | 'api' | 'merged';
+  source: "db" | "api" | "merged";
 }
 
 export interface HotelDetailData {
@@ -132,29 +132,40 @@ export interface UseHotelDetailDataResult {
 
 // ── Helper: build MergedRoom from API offer ──────────────────────────────────
 
-function buildRoomFromApi(apiRoom: any, roomAmenityMaster: RoomAmenity[]): MergedRoom {
+function buildRoomFromApi(
+  apiRoom: any,
+  roomAmenityMaster: RoomAmenity[],
+): MergedRoom {
   const features: string[] = [];
-  if (apiRoom.bedType) features.push(`${apiRoom.bedCount ?? 1}x ${apiRoom.bedType}`);
+  if (apiRoom.bedType)
+    features.push(`${apiRoom.bedCount ?? 1}x ${apiRoom.bedType}`);
   if (apiRoom.roomSize) features.push(`${apiRoom.roomSize}m²`);
-  if (apiRoom.hasBalcony || apiRoom.has_balcony) features.push('Balcony');
-  if (apiRoom.hasSeaView || apiRoom.has_sea_view) features.push('Sea View');
-  if (apiRoom.hasCityView || apiRoom.has_city_view) features.push('City View');
-  if (apiRoom.hasMountainView || apiRoom.has_mountain_view) features.push('Mountain View');
+  if (apiRoom.hasBalcony || apiRoom.has_balcony) features.push("Balcony");
+  if (apiRoom.hasSeaView || apiRoom.has_sea_view) features.push("Sea View");
+  if (apiRoom.hasCityView || apiRoom.has_city_view) features.push("City View");
+  if (apiRoom.hasMountainView || apiRoom.has_mountain_view)
+    features.push("Mountain View");
 
-  const amenityCodes: string[] = apiRoom.amenityCodes || apiRoom.amenity_codes || [];
-  const amenities = amenityCodes.length > 0
-    ? roomAmenityMaster.filter(a => amenityCodes.includes(a.code))
-    : [];
+  const amenityCodes: string[] =
+    apiRoom.amenityCodes || apiRoom.amenity_codes || [];
+  const amenities =
+    amenityCodes.length > 0
+      ? roomAmenityMaster.filter((a) => amenityCodes.includes(a.code))
+      : [];
 
   const rates: RoomRate[] = (apiRoom.rates || [apiRoom]).map((r: any) => ({
     offerId: r.offerId || r.offer_id || r.id || String(Math.random()),
-    roomTypeCode: r.roomTypeCode || r.room_type_code || apiRoom.roomTypeCode || apiRoom.code,
+    roomTypeCode:
+      r.roomTypeCode ||
+      r.room_type_code ||
+      apiRoom.roomTypeCode ||
+      apiRoom.code,
     roomTypeName: r.roomTypeName || r.room_type_name || apiRoom.name,
     boardBasis: r.boardBasis || r.board_basis || r.meal_plan,
     boardBasisName: r.boardBasisName || r.board_basis_name,
     price: {
       amount: r.price?.amount ?? r.amount ?? r.pricePerNight ?? 0,
-      currency: r.price?.currency ?? r.currency ?? 'USD',
+      currency: r.price?.currency ?? r.currency ?? "USD",
     },
     isRefundable: r.isRefundable ?? r.is_refundable ?? r.refundable ?? false,
     cancellationPolicy: r.cancellationPolicy || r.cancellation_policy,
@@ -164,13 +175,13 @@ function buildRoomFromApi(apiRoom: any, roomAmenityMaster: RoomAmenity[]): Merge
     raw: r,
   }));
 
-  const prices = rates.map(r => r.price.amount).filter(p => p > 0);
+  const prices = rates.map((r) => r.price.amount).filter((p) => p > 0);
   const lowestAmount = prices.length > 0 ? Math.min(...prices) : undefined;
 
   return {
     id: apiRoom.id || apiRoom.roomTypeCode || String(Math.random()),
-    roomTypeCode: apiRoom.roomTypeCode || apiRoom.code || '',
-    name: apiRoom.name || apiRoom.roomTypeName || 'Room',
+    roomTypeCode: apiRoom.roomTypeCode || apiRoom.code || "",
+    name: apiRoom.name || apiRoom.roomTypeName || "Room",
     bedType: apiRoom.bedType || apiRoom.bed_type,
     bedCount: apiRoom.bedCount || apiRoom.bed_count || 1,
     maxOccupancy: apiRoom.maxOccupancy || apiRoom.max_occupancy || 2,
@@ -178,25 +189,32 @@ function buildRoomFromApi(apiRoom: any, roomAmenityMaster: RoomAmenity[]): Merge
     hasBalcony: apiRoom.hasBalcony || apiRoom.has_balcony || false,
     hasSeaView: apiRoom.hasSeaView || apiRoom.has_sea_view || false,
     hasCityView: apiRoom.hasCityView || apiRoom.has_city_view || false,
-    hasMountainView: apiRoom.hasMountainView || apiRoom.has_mountain_view || false,
+    hasMountainView:
+      apiRoom.hasMountainView || apiRoom.has_mountain_view || false,
     features,
     images: [],
     amenities,
     primaryImage: undefined,
     rates,
-    lowestPrice: lowestAmount !== undefined
-      ? { amount: lowestAmount, currency: rates[0]?.price.currency ?? 'USD' }
-      : undefined,
-    source: 'api',
+    lowestPrice:
+      lowestAmount !== undefined
+        ? { amount: lowestAmount, currency: rates[0]?.price.currency ?? "USD" }
+        : undefined,
+    source: "api",
   };
 }
 
 // ── Helper: merge static DB room with realtime rate ───────────────────────────
 
-function mergeStaticWithRates(staticRoom: StaticRoomType, rates: RoomRate[]): MergedRoom {
-  const prices = rates.map(r => r.price.amount).filter(p => p > 0);
+function mergeStaticWithRates(
+  staticRoom: StaticRoomType,
+  rates: RoomRate[],
+): MergedRoom {
+  const prices = rates.map((r) => r.price.amount).filter((p) => p > 0);
   const lowestAmount = prices.length > 0 ? Math.min(...prices) : undefined;
-  const primaryImage = staticRoom.images.find(i => i.isPrimary)?.url ?? staticRoom.images[0]?.url;
+  const primaryImage =
+    staticRoom.images.find((i) => i.isPrimary)?.url ??
+    staticRoom.images[0]?.url;
 
   return {
     id: staticRoom.id,
@@ -215,10 +233,11 @@ function mergeStaticWithRates(staticRoom: StaticRoomType, rates: RoomRate[]): Me
     amenities: staticRoom.amenities,
     primaryImage,
     rates,
-    lowestPrice: lowestAmount !== undefined
-      ? { amount: lowestAmount, currency: rates[0]?.price.currency ?? 'USD' }
-      : undefined,
-    source: rates.length > 0 ? 'merged' : 'db',
+    lowestPrice:
+      lowestAmount !== undefined
+        ? { amount: lowestAmount, currency: rates[0]?.price.currency ?? "USD" }
+        : undefined,
+    source: rates.length > 0 ? "merged" : "db",
   };
 }
 
@@ -226,7 +245,9 @@ function mergeStaticWithRates(staticRoom: StaticRoomType, rates: RoomRate[]): Me
 
 async function fetchRoomAmenityMaster(): Promise<RoomAmenity[]> {
   try {
-    const res = await fetch('/static/room-amenities', { signal: AbortSignal.timeout(6000) });
+    const res = await fetch("/static/room-amenities", {
+      signal: AbortSignal.timeout(6000),
+    });
     if (!res.ok) throw new Error(`${res.status}`);
     const json = await res.json();
     return (json?.data ?? []) as RoomAmenity[];
@@ -245,7 +266,7 @@ export function useHotelDetailData(
     currency?: string;
     guestNationality?: string;
     occupancies?: Array<{ adults: number; children?: number[] }>;
-  }
+  },
 ): UseHotelDetailDataResult {
   const [data, setData] = useState<HotelDetailData | null>(null);
   const [staticLoading, setStaticLoading] = useState(true);
@@ -260,78 +281,96 @@ export function useHotelDetailData(
     setStaticLoading(true);
     setError(null);
 
-    Promise.all([
-      fetchHotelFullStatic(hotelId),
-      fetchRoomAmenityMaster(),
-    ]).then(([staticResult, roomAmenityMaster]) => {
-      if (cancelled) return;
+    Promise.all([fetchHotelFullStatic(hotelId), fetchRoomAmenityMaster()])
+      .then(([staticResult, roomAmenityMaster]) => {
+        if (cancelled) return;
 
-      if (!staticResult) {
-        setError('Hotel not found in database');
+        if (!staticResult) {
+          setError("Hotel not found in database");
+          setStaticLoading(false);
+          return;
+        }
+
+        const {
+          hotel,
+          images,
+          amenities,
+          amenitiesByCategory,
+          descriptions,
+          contacts,
+          reviews,
+          rooms,
+          stats,
+        } = staticResult;
+
+        const primaryDesc =
+          descriptions.find(
+            (d: any) =>
+              d.isPrimary ||
+              d.languageCode === "en" ||
+              d.languageCode === "ENG",
+          )?.content ?? hotel.description;
+
+        const primaryImage =
+          images.find((i) => i.isPrimary)?.url ?? images[0]?.url;
+
+        const roomAmenitiesByCategory: Record<string, RoomAmenity[]> = {};
+        for (const a of roomAmenityMaster) {
+          const cat = a.category || "Other";
+          if (!roomAmenitiesByCategory[cat]) roomAmenitiesByCategory[cat] = [];
+          roomAmenitiesByCategory[cat].push(a);
+        }
+
+        const staticRooms: StaticRoomType[] = rooms.map((r: any) => ({
+          id: r.id,
+          roomTypeCode: r.roomTypeCode,
+          roomTypeName: r.roomTypeName || r.name,
+          bedType: r.bedType,
+          bedCount: r.bedCount || 1,
+          maxOccupancy: r.maxOccupancy || 2,
+          maxAdults: r.maxAdults || 2,
+          maxChildren: r.maxChildren || 0,
+          roomSize: r.roomSize,
+          hasBalcony: r.hasBalcony || false,
+          hasSeaView: r.hasSeaView || false,
+          hasMountainView: r.hasMountainView || false,
+          hasCityView: r.hasCityView || false,
+          images: r.images || [],
+          amenities: r.amenities || [],
+          features: r.features || [],
+        }));
+
+        const mergedRooms: MergedRoom[] = staticRooms.map((sr) =>
+          mergeStaticWithRates(sr, []),
+        );
+
+        setData({
+          hotel,
+          images,
+          primaryImage,
+          hotelAmenities: amenities,
+          hotelAmenitiesByCategory: amenitiesByCategory,
+          description: primaryDesc,
+          descriptions,
+          contacts,
+          reviews,
+          stats,
+          rooms: mergedRooms,
+          roomAmenityMaster,
+          roomAmenitiesByCategory,
+        });
         setStaticLoading(false);
-        return;
-      }
-
-      const { hotel, images, amenities, amenitiesByCategory, descriptions, contacts, reviews, rooms, stats } = staticResult;
-
-      const primaryDesc = descriptions.find(
-        (d: any) => d.isPrimary || d.languageCode === 'en' || d.languageCode === 'ENG'
-      )?.content ?? hotel.description;
-
-      const primaryImage = images.find(i => i.isPrimary)?.url ?? images[0]?.url;
-
-      const roomAmenitiesByCategory: Record<string, RoomAmenity[]> = {};
-      for (const a of roomAmenityMaster) {
-        const cat = a.category || 'Other';
-        if (!roomAmenitiesByCategory[cat]) roomAmenitiesByCategory[cat] = [];
-        roomAmenitiesByCategory[cat].push(a);
-      }
-
-      const staticRooms: StaticRoomType[] = rooms.map((r: any) => ({
-        id: r.id,
-        roomTypeCode: r.roomTypeCode,
-        roomTypeName: r.roomTypeName || r.name,
-        bedType: r.bedType,
-        bedCount: r.bedCount || 1,
-        maxOccupancy: r.maxOccupancy || 2,
-        maxAdults: r.maxAdults || 2,
-        maxChildren: r.maxChildren || 0,
-        roomSize: r.roomSize,
-        hasBalcony: r.hasBalcony || false,
-        hasSeaView: r.hasSeaView || false,
-        hasMountainView: r.hasMountainView || false,
-        hasCityView: r.hasCityView || false,
-        images: r.images || [],
-        amenities: r.amenities || [],
-        features: r.features || [],
-      }));
-
-      const mergedRooms: MergedRoom[] = staticRooms.map(sr => mergeStaticWithRates(sr, []));
-
-      setData({
-        hotel,
-        images,
-        primaryImage,
-        hotelAmenities: amenities,
-        hotelAmenitiesByCategory: amenitiesByCategory,
-        description: primaryDesc,
-        descriptions,
-        contacts,
-        reviews,
-        stats,
-        rooms: mergedRooms,
-        roomAmenityMaster,
-        roomAmenitiesByCategory,
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err.message || "Failed to load hotel data");
+          setStaticLoading(false);
+        }
       });
-      setStaticLoading(false);
-    }).catch(err => {
-      if (!cancelled) {
-        setError(err.message || 'Failed to load hotel data');
-        setStaticLoading(false);
-      }
-    });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [hotelId]);
 
   // ── Phase 2: Load realtime rates ───
@@ -344,47 +383,67 @@ export function useHotelDetailData(
         hotelIds: [hotelId],
         checkin: rateParams.checkin,
         checkout: rateParams.checkout,
-        currency: rateParams.currency ?? 'USD',
+        currency: rateParams.currency ?? "USD",
         guestNationality: rateParams.guestNationality,
         occupancies: rateParams.occupancies ?? [{ adults: 2 }],
       });
 
-      const liteHotels: any[] = ratesResponse?.data?.hotels ?? ratesResponse?.hotels ?? [];
-      const targetHotel = liteHotels.find((h: any) =>
-        h.hotelId === hotelId || h.id === hotelId
-      ) ?? liteHotels[0] ?? null;
+      const liteHotels: any[] =
+        ratesResponse?.data?.hotels ?? ratesResponse?.hotels ?? [];
+      const targetHotel =
+        liteHotels.find(
+          (h: any) => h.hotelId === hotelId || h.id === hotelId,
+        ) ??
+        liteHotels[0] ??
+        null;
 
       const rawOffers: any[] = targetHotel?.offers ?? [];
-      const apiRooms: any[] = rawOffers.length > 0
-        ? rawOffers
-        : (ratesResponse?.rooms ?? ratesResponse?.data?.rooms ?? ratesResponse?.offers ?? []);
+      const apiRooms: any[] =
+        rawOffers.length > 0
+          ? rawOffers
+          : (ratesResponse?.rooms ??
+            ratesResponse?.data?.rooms ??
+            ratesResponse?.offers ??
+            []);
 
       const extractOfferRate = (offer: any): RoomRate => {
         const retailTotal = offer.retailRate?.total?.[0];
-        const priceAmount = retailTotal?.amount
-          ?? offer.offerRetailRate
-          ?? offer.price?.amount
-          ?? offer.amount
-          ?? 0;
-        const currency = retailTotal?.currency
-          ?? offer.currency
-          ?? targetHotel?.currency
-          ?? rateParams.currency
-          ?? 'USD';
+        const priceAmount =
+          retailTotal?.amount ??
+          offer.offerRetailRate ??
+          offer.price?.amount ??
+          offer.amount ??
+          0;
+        const currency =
+          retailTotal?.currency ??
+          offer.currency ??
+          targetHotel?.currency ??
+          rateParams.currency ??
+          "USD";
 
-        const isRefundable = offer.refundableTag === 'RFN'
-          || offer.isRefundable === true
-          || offer.refundable === true;
+        const isRefundable =
+          offer.refundableTag === "RFN" ||
+          offer.isRefundable === true ||
+          offer.refundable === true;
 
-        const cancelPolicies: any[] = offer.cancellationPolicies?.cancelPolicyInfos ?? [];
+        const cancelPolicies: any[] =
+          offer.cancellationPolicies?.cancelPolicyInfos ?? [];
         const freeCancelWindow = cancelPolicies
           .filter((p: any) => Number(p.amount ?? 1) === 0)
-          .sort((a: any, b: any) => new Date(b.cancelTime ?? 0).getTime() - new Date(a.cancelTime ?? 0).getTime())[0];
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.cancelTime ?? 0).getTime() -
+              new Date(a.cancelTime ?? 0).getTime(),
+          )[0];
         const cancellationDeadline = freeCancelWindow?.cancelTime ?? undefined;
 
-        const remarks: string[] = offer.cancellationPolicies?.hotelRemarks ?? [];
-        const cancellationPolicy = remarks[0]
-          ?? (isRefundable ? 'Free cancellation available' : 'Non-refundable – no changes allowed');
+        const remarks: string[] =
+          offer.cancellationPolicies?.hotelRemarks ?? [];
+        const cancellationPolicy =
+          remarks[0] ??
+          (isRefundable
+            ? "Free cancellation available"
+            : "Non-refundable – no changes allowed");
 
         return {
           offerId: offer.offerId ?? offer.id ?? String(Math.random()),
@@ -402,46 +461,59 @@ export function useHotelDetailData(
         };
       };
 
-      setData(prev => {
+      setData((prev) => {
         if (!prev) return prev;
         const { roomAmenityMaster } = prev;
         let mergedRooms: MergedRoom[];
 
         if (prev.rooms.length > 0) {
-          mergedRooms = prev.rooms.map(staticRoom => {
-            const matchingOffers = apiRooms.filter(offer =>
-              (offer.roomTypeCode && offer.roomTypeCode === staticRoom.roomTypeCode)
-              || (offer.code && offer.code === staticRoom.roomTypeCode)
-              || (offer.name && offer.name.toLowerCase().includes(staticRoom.name.toLowerCase()))
+          mergedRooms = prev.rooms.map((staticRoom) => {
+            const matchingOffers = apiRooms.filter(
+              (offer) =>
+                (offer.roomTypeCode &&
+                  offer.roomTypeCode === staticRoom.roomTypeCode) ||
+                (offer.code && offer.code === staticRoom.roomTypeCode) ||
+                (offer.name &&
+                  offer.name
+                    .toLowerCase()
+                    .includes(staticRoom.name.toLowerCase())),
             );
 
-            const rates: RoomRate[] = matchingOffers.length > 0
-              ? matchingOffers.map(extractOfferRate)
-              : [];
+            const rates: RoomRate[] =
+              matchingOffers.length > 0
+                ? matchingOffers.map(extractOfferRate)
+                : [];
 
-            return mergeStaticWithRates({
-              id: staticRoom.id,
-              roomTypeCode: staticRoom.roomTypeCode,
-              roomTypeName: staticRoom.name,
-              bedType: staticRoom.bedType,
-              bedCount: staticRoom.bedCount,
-              maxOccupancy: staticRoom.maxOccupancy,
-              maxAdults: staticRoom.maxOccupancy,
-              maxChildren: 0,
-              roomSize: staticRoom.roomSize,
-              hasBalcony: staticRoom.hasBalcony,
-              hasSeaView: staticRoom.hasSeaView,
-              hasMountainView: staticRoom.hasMountainView,
-              hasCityView: staticRoom.hasCityView,
-              images: staticRoom.images,
-              amenities: staticRoom.amenities,
-              features: staticRoom.features,
-            }, rates);
+            return mergeStaticWithRates(
+              {
+                id: staticRoom.id,
+                roomTypeCode: staticRoom.roomTypeCode,
+                roomTypeName: staticRoom.name,
+                bedType: staticRoom.bedType,
+                bedCount: staticRoom.bedCount,
+                maxOccupancy: staticRoom.maxOccupancy,
+                maxAdults: staticRoom.maxOccupancy,
+                maxChildren: 0,
+                roomSize: staticRoom.roomSize,
+                hasBalcony: staticRoom.hasBalcony,
+                hasSeaView: staticRoom.hasSeaView,
+                hasMountainView: staticRoom.hasMountainView,
+                hasCityView: staticRoom.hasCityView,
+                images: staticRoom.images,
+                amenities: staticRoom.amenities,
+                features: staticRoom.features,
+              },
+              rates,
+            );
           });
         } else {
           const byRoomType: Record<string, any[]> = {};
           for (const offer of apiRooms) {
-            const key = offer.roomTypeCode ?? offer.code ?? offer.name ?? `room-${Math.random()}`;
+            const key =
+              offer.roomTypeCode ??
+              offer.code ??
+              offer.name ??
+              `room-${Math.random()}`;
             if (!byRoomType[key]) byRoomType[key] = [];
             byRoomType[key].push(offer);
           }
@@ -449,24 +521,32 @@ export function useHotelDetailData(
           mergedRooms = Object.entries(byRoomType).map(([roomKey, offers]) => {
             const firstOffer = offers[0];
             const rates = offers.map(extractOfferRate);
-            const prices = rates.map(r => r.price.amount).filter(p => p > 0);
-            const lowestAmount = prices.length > 0 ? Math.min(...prices) : undefined;
+            const prices = rates
+              .map((r) => r.price.amount)
+              .filter((p) => p > 0);
+            const lowestAmount =
+              prices.length > 0 ? Math.min(...prices) : undefined;
 
             const features: string[] = [];
-            if (firstOffer.bedType) features.push(`${firstOffer.bedCount ?? 1}x ${firstOffer.bedType}`);
+            if (firstOffer.bedType)
+              features.push(
+                `${firstOffer.bedCount ?? 1}x ${firstOffer.bedType}`,
+              );
             if (firstOffer.roomSize) features.push(`${firstOffer.roomSize}m²`);
-            if (firstOffer.hasBalcony) features.push('Balcony');
-            if (firstOffer.hasSeaView) features.push('Sea View');
+            if (firstOffer.hasBalcony) features.push("Balcony");
+            if (firstOffer.hasSeaView) features.push("Sea View");
 
             const amenityCodes: string[] = firstOffer.amenityCodes ?? [];
-            const amenities = amenityCodes.length > 0
-              ? roomAmenityMaster.filter(a => amenityCodes.includes(a.code))
-              : [];
+            const amenities =
+              amenityCodes.length > 0
+                ? roomAmenityMaster.filter((a) => amenityCodes.includes(a.code))
+                : [];
 
             return {
               id: firstOffer.offerId ?? firstOffer.id ?? roomKey,
-              roomTypeCode: firstOffer.roomTypeCode ?? firstOffer.code ?? roomKey,
-              name: firstOffer.name ?? firstOffer.roomTypeName ?? 'Room',
+              roomTypeCode:
+                firstOffer.roomTypeCode ?? firstOffer.code ?? roomKey,
+              name: firstOffer.name ?? firstOffer.roomTypeName ?? "Room",
               bedType: firstOffer.bedType,
               bedCount: firstOffer.bedCount ?? 1,
               maxOccupancy: firstOffer.maxOccupancy ?? 2,
@@ -480,10 +560,14 @@ export function useHotelDetailData(
               amenities,
               primaryImage: undefined,
               rates,
-              lowestPrice: lowestAmount !== undefined
-                ? { amount: lowestAmount, currency: rates[0]?.price.currency ?? 'USD' }
-                : undefined,
-              source: 'api' as const,
+              lowestPrice:
+                lowestAmount !== undefined
+                  ? {
+                      amount: lowestAmount,
+                      currency: rates[0]?.price.currency ?? "USD",
+                    }
+                  : undefined,
+              source: "api" as const,
             };
           });
         }
@@ -491,17 +575,28 @@ export function useHotelDetailData(
         return { ...prev, rooms: mergedRooms };
       });
     } catch (err) {
-      console.warn('[useHotelDetailData] Realtime rates unavailable:', err);
+      console.warn("[useHotelDetailData] Realtime rates unavailable:", err);
     } finally {
       setRatesLoading(false);
     }
-  }, [hotelId, rateParams?.checkin, rateParams?.checkout, rateParams?.currency, rateParams?.guestNationality]);
+  }, [
+    hotelId,
+    rateParams?.checkin,
+    rateParams?.checkout,
+    rateParams?.currency,
+    rateParams?.guestNationality,
+  ]);
 
   useEffect(() => {
     if (rateParams?.checkin && rateParams?.checkout && !staticLoading && data) {
       fetchRates();
     }
-  }, [staticLoading, data?.hotel?.id, rateParams?.checkin, rateParams?.checkout]);
+  }, [
+    staticLoading,
+    data?.hotel?.id,
+    rateParams?.checkin,
+    rateParams?.checkout,
+  ]);
 
   return {
     data,

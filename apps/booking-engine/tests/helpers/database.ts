@@ -1,9 +1,10 @@
-import { PrismaClient } from '@prisma/client';
-import users from '../fixtures/users.json' assert { type: 'json' };
-import wallets from '../fixtures/wallets.json' assert { type: 'json' };
+import * as Prisma from "@prisma/client";
+import users from "../fixtures/users.json";
+import wallets from "../fixtures/wallets.json";
 
 // Initialize Prisma client for test database
-const prisma = new PrismaClient({
+const PrismaClientCtor = (Prisma as any).PrismaClient;
+const prisma = new PrismaClientCtor({
   datasources: {
     db: {
       url: process.env.DATABASE_URL || process.env.TEST_DATABASE_URL,
@@ -13,7 +14,7 @@ const prisma = new PrismaClient({
 
 /**
  * Database Seeding Utility
- * 
+ *
  * Provides functions to:
  * - Seed test data before tests
  * - Clean up test data after tests
@@ -27,48 +28,48 @@ const prisma = new PrismaClient({
  */
 export async function cleanupTestData(): Promise<void> {
   try {
-    console.log('🧹 Cleaning up test data...');
-    
+    console.log("🧹 Cleaning up test data...");
+
     // Delete in reverse order of dependencies
     await prisma.booking.deleteMany({
       where: {
         OR: [
-          { email: { contains: '@tripalfa.com' } },
-          { email: { contains: '@test.com' } },
+          { email: { contains: "@tripalfa.com" } },
+          { email: { contains: "@test.com" } },
         ],
       },
     });
-    
+
     await prisma.walletTransaction.deleteMany({
       where: {
         wallet: {
           user: {
-            email: { contains: '@tripalfa.com' },
+            email: { contains: "@tripalfa.com" },
           },
         },
       },
     });
-    
+
     await prisma.wallet.deleteMany({
       where: {
         user: {
-          email: { contains: '@tripalfa.com' },
+          email: { contains: "@tripalfa.com" },
         },
       },
     });
-    
+
     await prisma.user.deleteMany({
       where: {
         OR: [
-          { email: { contains: '@tripalfa.com' } },
-          { email: { contains: '@test.com' } },
+          { email: { contains: "@tripalfa.com" } },
+          { email: { contains: "@test.com" } },
         ],
       },
     });
-    
-    console.log('✅ Test data cleaned up successfully');
+
+    console.log("✅ Test data cleaned up successfully");
   } catch (error) {
-    console.error('❌ Error cleaning up test data:', error);
+    console.error("❌ Error cleaning up test data:", error);
     throw error;
   }
 }
@@ -79,8 +80,8 @@ export async function cleanupTestData(): Promise<void> {
  */
 export async function seedTestUsers(): Promise<void> {
   try {
-    console.log('👤 Seeding test users...');
-    
+    console.log("👤 Seeding test users...");
+
     for (const [key, userData] of Object.entries(users)) {
       await prisma.user.upsert({
         where: { email: userData.email },
@@ -89,10 +90,10 @@ export async function seedTestUsers(): Promise<void> {
       });
       console.log(`  ✓ Created user: ${userData.email}`);
     }
-    
-    console.log('✅ Test users seeded successfully');
+
+    console.log("✅ Test users seeded successfully");
   } catch (error) {
-    console.error('❌ Error seeding test users:', error);
+    console.error("❌ Error seeding test users:", error);
     throw error;
   }
 }
@@ -103,34 +104,36 @@ export async function seedTestUsers(): Promise<void> {
  */
 export async function seedTestWallets(): Promise<void> {
   try {
-    console.log('💰 Seeding test wallets...');
-    
+    console.log("💰 Seeding test wallets...");
+
     for (const [key, walletData] of Object.entries(wallets)) {
       // Find user by email
       const user = await prisma.user.findUnique({
         where: { email: walletData.userEmail },
       });
-      
+
       if (!user) {
-        console.warn(`  ⚠️  User not found for wallet: ${walletData.userEmail}`);
+        console.warn(
+          `  ⚠️  User not found for wallet: ${walletData.userEmail}`,
+        );
         continue;
       }
-      
+
       await prisma.wallet.upsert({
         where: { userId: user.id },
         update: { balance: walletData.balance },
         create: {
           userId: user.id,
           balance: walletData.balance,
-          currency: walletData.currency || 'USD',
+          currency: walletData.currency || "USD",
         },
       });
       console.log(`  ✓ Created wallet for: ${walletData.userEmail}`);
     }
-    
-    console.log('✅ Test wallets seeded successfully');
+
+    console.log("✅ Test wallets seeded successfully");
   } catch (error) {
-    console.error('❌ Error seeding test wallets:', error);
+    console.error("❌ Error seeding test wallets:", error);
     throw error;
   }
 }
@@ -141,16 +144,16 @@ export async function seedTestWallets(): Promise<void> {
  */
 export async function seedTestData(): Promise<void> {
   try {
-    console.log('🌱 Seeding all test data...');
-    
+    console.log("🌱 Seeding all test data...");
+
     // Seed in order of dependencies
     await seedTestUsers();
     await seedTestWallets();
     // Add more seeding functions as needed
-    
-    console.log('✅ All test data seeded successfully');
+
+    console.log("✅ All test data seeded successfully");
   } catch (error) {
-    console.error('❌ Error seeding test data:', error);
+    console.error("❌ Error seeding test data:", error);
     throw error;
   }
 }
@@ -161,14 +164,14 @@ export async function seedTestData(): Promise<void> {
  */
 export async function resetDatabase(): Promise<void> {
   try {
-    console.log('🔄 Resetting database...');
-    
+    console.log("🔄 Resetting database...");
+
     await cleanupTestData();
     await seedTestData();
-    
-    console.log('✅ Database reset successfully');
+
+    console.log("✅ Database reset successfully");
   } catch (error) {
-    console.error('❌ Error resetting database:', error);
+    console.error("❌ Error resetting database:", error);
     throw error;
   }
 }
@@ -201,7 +204,7 @@ export async function createTestUser(userData: {
  */
 export async function createTestBooking(bookingData: {
   userId: string;
-  type: 'FLIGHT' | 'HOTEL';
+  type: "FLIGHT" | "HOTEL";
   status: string;
   totalAmount: number;
   bookingData: any;
@@ -217,7 +220,7 @@ export async function createTestBooking(bookingData: {
     console.log(`✓ Created test booking: ${booking.bookingReference}`);
     return booking;
   } catch (error) {
-    console.error('❌ Error creating test booking', error);
+    console.error("❌ Error creating test booking", error);
     throw error;
   }
 }
@@ -226,8 +229,8 @@ export async function createTestBooking(bookingData: {
  * Generate a unique booking reference
  */
 function generateBookingReference(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let reference = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let reference = "";
   for (let i = 0; i < 6; i++) {
     reference += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -240,7 +243,7 @@ function generateBookingReference(): string {
  */
 export async function disconnectDatabase(): Promise<void> {
   await prisma.$disconnect();
-  console.log('✅ Database disconnected');
+  console.log("✅ Database disconnected");
 }
 
 // Export prisma client for direct use in tests

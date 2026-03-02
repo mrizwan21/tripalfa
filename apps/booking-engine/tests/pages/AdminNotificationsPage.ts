@@ -1,9 +1,9 @@
-import { Page } from '@playwright/test';
+import { Page } from "@playwright/test";
 
 export class AdminNotificationsPage {
   constructor(private page: Page) {}
 
-  async goto(path: string = '/admin/notifications') {
+  async goto(path: string = "/admin/notifications") {
     await this.page.goto(path);
   }
 
@@ -19,8 +19,14 @@ export class AdminNotificationsPage {
     type: string;
     channels: string[];
   }) {
-    await this.page.fill('input[placeholder="Notification Title"]', notification.title);
-    await this.page.fill('textarea[placeholder="Notification Message"]', notification.message);
+    await this.page.fill(
+      'input[placeholder="Notification Title"]',
+      notification.title,
+    );
+    await this.page.fill(
+      'textarea[placeholder="Notification Message"]',
+      notification.message,
+    );
     await this.page.selectOption('select[name="type"]', notification.type);
 
     for (const channel of notification.channels) {
@@ -33,7 +39,7 @@ export class AdminNotificationsPage {
   }
 
   async verifyNotificationSent() {
-    await this.page.waitForSelector('text=Notifications sent successfully');
+    await this.page.waitForSelector("text=Notifications sent successfully");
   }
 
   async viewNotificationHistory() {

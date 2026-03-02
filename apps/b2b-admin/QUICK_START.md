@@ -18,21 +18,24 @@ Your b2b-admin dashboard now includes a **complete modern design system** with:
 ## 📁 Key Files You Need to Know
 
 ### Documentation
-| File | Purpose |
-|------|---------|
-| `SETUP_GUIDE.md` | Complete setup and configuration instructions |
-| `MODERN_UI_GUIDE.md` | Design system specifications and patterns |
-| `COMPONENT_LIBRARY.md` | Component patterns, examples, and guidelines |
-| `src/theme/tokens.ts` | All design tokens in code (colors, spacing, etc) |
+
+| File                   | Purpose                                          |
+| ---------------------- | ------------------------------------------------ |
+| `SETUP_GUIDE.md`       | Complete setup and configuration instructions    |
+| `MODERN_UI_GUIDE.md`   | Design system specifications and patterns        |
+| `COMPONENT_LIBRARY.md` | Component patterns, examples, and guidelines     |
+| `src/theme/tokens.ts`  | All design tokens in code (colors, spacing, etc) |
 
 ### Configuration
-| File | Purpose |
-|------|---------|
-| `tailwind.config.ts` | Tailwind CSS with custom design tokens |
-| `src/styles/global.css` | Global CSS variables and base styles |
-| `postcss.config.js` | PostCSS configuration |
+
+| File                    | Purpose                                |
+| ----------------------- | -------------------------------------- |
+| `tailwind.config.ts`    | Tailwind CSS with custom design tokens |
+| `src/styles/global.css` | Global CSS variables and base styles   |
+| `postcss.config.js`     | PostCSS configuration                  |
 
 ### Components
+
 ```
 src/components/
 ├── ui/              # Reusable components (Button, Card, Badge, etc)
@@ -47,17 +50,21 @@ src/components/
 ## 🚀 Getting Started
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Import Global Styles
+
 In your `main.tsx` or `App.tsx`:
+
 ```typescript
-import './styles/global.css'
+import "./styles/global.css";
 ```
 
 ### 3. Wrap App with Theme Provider
+
 ```typescript
 import { ThemeProvider } from './contexts/ThemeContext'
 
@@ -71,6 +78,7 @@ function App() {
 ```
 
 ### 4. Start Using Components
+
 ```typescript
 import { Button } from '@/components/ui/buttons/Button'
 import { Card } from '@/components/ui/cards/Card'
@@ -97,6 +105,7 @@ export function Dashboard() {
 ## 🎨 Color System Quick Reference
 
 ### Primary Colors (Most Used)
+
 ```typescript
 primary-600:   #3B82F6  (Blue - main color)
 secondary-500: #A855F7  (Purple - accent)
@@ -106,6 +115,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Usage in Tailwind
+
 ```html
 <!-- Background -->
 <div class="bg-primary-600">Blue background</div>
@@ -125,6 +135,7 @@ error-500:     #EF4444  (Red - error)
 ## 📦 Component Usage Examples
 
 ### Button Variants
+
 ```typescript
 // Primary (default)
 <Button variant="primary">Submit</Button>
@@ -146,6 +157,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Card Variants
+
 ```typescript
 // Default
 <Card>Content</Card>
@@ -161,6 +173,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Status Badge
+
 ```typescript
 <StatusBadge status="success" label="Active" />
 <StatusBadge status="warning" label="Pending" />
@@ -169,6 +182,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Metric Card
+
 ```typescript
 <MetricCard
   icon={<ChartIcon />}
@@ -185,6 +199,7 @@ error-500:     #EF4444  (Red - error)
 ## 🎯 Common Tailwind Classes
 
 ### Spacing (Padding & Margin)
+
 ```html
 <!-- Padding: p-2, p-4, p-6, p-8 -->
 <div class="p-4">4px padding on all sides</div>
@@ -197,6 +212,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Flex & Grid
+
 ```html
 <!-- Flexbox -->
 <div class="flex items-center justify-between">
@@ -213,6 +229,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Text & Sizing
+
 ```html
 <!-- Text size: text-xs, text-sm, text-base, text-lg, text-xl, text-2xl -->
 <h1 class="text-4xl font-bold">Page Title</h1>
@@ -225,6 +242,7 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Responsive Design
+
 ```html
 <!-- Hidden on mobile, visible on md and up -->
 <div class="hidden md:block">Desktop only</div>
@@ -233,14 +251,17 @@ error-500:     #EF4444  (Red - error)
 <h1 class="text-2xl md:text-4xl">Responsive heading</h1>
 
 <!-- Grid: 1 column on mobile, 2 on tablet, 3 on desktop -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"></div>
 ```
 
 ### Shadows & Effects
+
 ```html
 <!-- Shadows -->
 <div class="shadow-md">Medium shadow</div>
-<div class="shadow-lg hover:shadow-xl transition-smooth">Interactive shadow</div>
+<div class="shadow-lg hover:shadow-xl transition-smooth">
+  Interactive shadow
+</div>
 
 <!-- Rounded corners -->
 <div class="rounded-lg">Rounded 12px</div>
@@ -255,6 +276,7 @@ error-500:     #EF4444  (Red - error)
 ## 🌗 Dark Mode
 
 ### How to Add Dark Mode Support
+
 ```typescript
 // In your component, use dark: prefix
 <div class="
@@ -266,12 +288,13 @@ error-500:     #EF4444  (Red - error)
 ```
 
 ### Theme Hook
+
 ```typescript
 import { useThemeContext } from '@/contexts/ThemeContext'
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useThemeContext()
-  
+
   return (
     <button onClick={toggleTheme}>
       {theme === 'light' ? '🌙' : '☀️'}
@@ -295,14 +318,17 @@ xl:         1280px+       // Large desktop
 ```
 
 ### Example: Responsive Grid
+
 ```html
-<div class="
+<div
+  class="
   grid gap-4
   grid-cols-1
   sm:grid-cols-2
   lg:grid-cols-3
   xl:grid-cols-4
-">
+"
+>
   <!-- 1 column on mobile, 2 on tablet, 3 on desktop, 4 on XL -->
 </div>
 ```
@@ -312,14 +338,14 @@ xl:         1280px+       // Large desktop
 ## 🎭 Special Effects
 
 ### Glassmorphism
+
 ```html
 <!-- Semi-transparent with blur effect -->
-<div class="glass dark:glass-dark">
-  Content with frosted glass effect
-</div>
+<div class="glass dark:glass-dark">Content with frosted glass effect</div>
 ```
 
 ### Gradients
+
 ```html
 <!-- Primary gradient (Blue → Purple) -->
 <div class="bg-gradient-to-r from-blue-600 to-purple-600">
@@ -327,15 +353,18 @@ xl:         1280px+       // Large desktop
 </div>
 
 <!-- Text gradient -->
-<h1 class="
+<h1
+  class="
   text-transparent bg-clip-text
   bg-gradient-to-r from-blue-600 to-purple-600
-">
+"
+>
   Gradient text
 </h1>
 ```
 
 ### Animations
+
 ```html
 <!-- Fade in animation -->
 <div class="animate-fade-in">Appears smoothly</div>
@@ -366,7 +395,7 @@ import {
   SHADOWS,
   TRANSITIONS,
   BREAKPOINTS,
-} from '@/theme/tokens'
+} from "@/theme/tokens";
 
 // Use in styles
 const buttonStyle = {
@@ -375,7 +404,7 @@ const buttonStyle = {
   borderRadius: BORDER_RADIUS.lg,
   boxShadow: SHADOWS.md,
   transition: TRANSITIONS.transition.normal,
-}
+};
 
 // Use for conditional rendering
 if (window.innerWidth >= parseInt(BREAKPOINTS.md)) {
@@ -388,6 +417,7 @@ if (window.innerWidth >= parseInt(BREAKPOINTS.md)) {
 ## 📊 Typography Scale
 
 ### Font Sizes
+
 - `text-xs`: 12px (small labels)
 - `text-sm`: 14px (helper text)
 - `text-base`: 16px (body text)
@@ -398,6 +428,7 @@ if (window.innerWidth >= parseInt(BREAKPOINTS.md)) {
 - `text-4xl`: 36px (page titles)
 
 ### Font Weights
+
 - `font-light`: 300 (subtle)
 - `font-normal`: 400 (default)
 - `font-medium`: 500 (emphasis)
@@ -409,27 +440,29 @@ if (window.innerWidth >= parseInt(BREAKPOINTS.md)) {
 ## 🔄 State Management
 
 ### Light/Dark Mode
+
 ```typescript
 // src/contexts/ThemeContext.tsx already setup
 // Use in any component:
-const { theme, toggleTheme } = useThemeContext()
+const { theme, toggleTheme } = useThemeContext();
 ```
 
 ### Global State (Recommended: Zustand)
+
 ```bash
 npm install zustand
 ```
 
 ```typescript
-import { create } from 'zustand'
+import { create } from "zustand";
 
 export const useDashboardStore = create((set) => ({
   filters: {},
   setFilters: (filters) => set({ filters }),
-}))
+}));
 
 // In component:
-const { filters, setFilters } = useDashboardStore()
+const { filters, setFilters } = useDashboardStore();
 ```
 
 ---
@@ -450,11 +483,13 @@ const { filters, setFilters } = useDashboardStore()
 ## 🚨 Common Mistakes to Avoid
 
 ❌ **DON'T**: Hardcode colors
+
 ```typescript
 style={{ backgroundColor: '#3B82F6' }}
 ```
 
 ✅ **DO**: Use Tailwind classes or tokens
+
 ```typescript
 className="bg-primary-600"
 // Or
@@ -463,13 +498,15 @@ style={{ backgroundColor: COLORS.primary[600] }}
 ```
 
 ❌ **DON'T**: Ignore dark mode
+
 ```typescript
-className="bg-white text-black"
+className = "bg-white text-black";
 ```
 
 ✅ **DO**: Support dark mode
+
 ```typescript
-className="bg-white dark:bg-slate-900 text-black dark:text-white"
+className = "bg-white dark:bg-slate-900 text-black dark:text-white";
 ```
 
 ❌ **DON'T**: Create custom components when base components exist
@@ -492,21 +529,25 @@ className="bg-white dark:bg-slate-900 text-black dark:text-white"
 ## 🆘 Quick Troubleshooting
 
 ### Styles not showing?
+
 - Delete `.next` or `dist` folder
 - Restart dev server
 - Check `global.css` is imported in `main.tsx`
 
 ### Colors look wrong?
+
 - Check dark mode class on `html` element
 - Verify Tailwind config is loaded
 - Clear browser cache
 
 ### Not responsive?
+
 - Use mobile-first approach
 - Test with DevTools device emulation
 - Check breakpoint values in `tailwind.config.ts`
 
 ### Component not rendering?
+
 - Check import paths use `@/` alias
 - Verify component exports
 - Check TypeScript errors

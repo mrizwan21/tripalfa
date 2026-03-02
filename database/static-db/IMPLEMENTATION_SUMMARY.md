@@ -72,21 +72,25 @@
 
 ## Current Import Status ✅
 
-**Started (Latest):** 2026-02-25 01:53 UTC  
-**Hotels Imported:** 44,664  
-**Completed Countries:** 7 (AF, AG, AD, AI, AO, AQ, AM)  
-**Remaining Countries:** 242  
-**Status:** 🟢 RUNNING WITH OPTIMIZATIONS  
+**Session Restart:** 2026-02-26 22:11 UTC (After Docker Recovery)  
+**Hotels Imported:** 1,456,945  
+**Completed Countries:** 88  
+**In Progress Countries:** 1  
+**Remaining Countries:** 160  
+**Status:** 🟢 ACTIVE & PROGRESSING
+**Uptime (Current Session):** ~1 hour
+**Estimated Time to Completion:** ~32 hours (2026-02-28 06:00 UTC)
 
-**Optimizations Applied:**
+**Current Configuration (Optimized):**
 
-- Database timeout: 60s → 600s (10 minutes)
-- Concurrency: 3 → 2 countries
-- Detail limit: -1 (unlimited) → 500 per country
-- API delay: 200ms → 500ms
-- Memory clearing: Every 50 → Every 20 countries
+- Database timeout: 1800s (30 minutes)
+- Concurrency: 1 country sequential processing
+- Detail limit: 100 per country
+- API delay: 300ms between calls
+- Memory clearing: Every 10 countries
+- Batch size: 100 records per insert
 
-**Process:** Currently fetching hotels and details for remaining 242 countries
+**Progress:** Currently processing remaining 181 countries with optimized settings
 
 ---
 
@@ -132,7 +136,7 @@
 ✅ **Self-Healing:** Automatic retries with exponential backoff  
 ✅ **Memory Safe:** Cache cleared periodically to prevent OOM  
 ✅ **Fully Observable:** Every step logged and tracked  
-✅ **Fault Tolerant:** Partial data is preserved even on failures  
+✅ **Fault Tolerant:** Partial data is preserved even on failures
 
 ---
 
@@ -174,7 +178,7 @@
 
 **Current rate:** ~5 countries per hour  
 **Remaining:** 244 countries  
-**Estimated time:** 48-72 hours for global import  
+**Estimated time:** 48-72 hours for global import
 
 **Important:** Import continues in background even if terminal is closed. Check status anytime with monitoring commands.
 

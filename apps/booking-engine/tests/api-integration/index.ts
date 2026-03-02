@@ -1,21 +1,21 @@
 /**
  * API Integration Test Module
- * 
+ *
  * Centralized exports for all API integration testing utilities.
  * This module provides comprehensive tools for API testing in E2E scenarios.
- * 
+ *
  * @module api-integration
- * 
+ *
  * @example
  * ```typescript
- * import { 
- *   ApiAuthManager, 
- *   ApiTestDataManager, 
+ * import {
+ *   ApiAuthManager,
+ *   ApiTestDataManager,
  *   ApiMockBuilder,
  *   authMocks,
- *   flightMocks 
+ *   flightMocks
  * } from './api-integration';
- * 
+ *
  * // Use in your tests
  * const authManager = new ApiAuthManager();
  * await authManager.authenticate('user@example.com', 'password');
@@ -43,7 +43,7 @@ export {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   type RequestLog,
-} from './api-test-helpers';
+} from "./api-test-helpers";
 
 // API Authentication
 export {
@@ -63,7 +63,7 @@ export {
   AuthenticationError,
   TokenExpiredError,
   InvalidCredentialsError,
-} from './api-auth';
+} from "./api-auth";
 
 // API Test Data Management
 export {
@@ -84,7 +84,7 @@ export {
   type TestAddressData,
   type TestFlightOffer,
   type TestHotelOffer,
-} from './api-test-data';
+} from "./api-test-data";
 
 // API Mock Fixtures
 export {
@@ -96,4 +96,4 @@ export {
   bookingMocks,
   healthMocks,
   networkErrorMocks,
-} from './fixtures/api-mocks';
+} from "./fixtures/api-mocks";

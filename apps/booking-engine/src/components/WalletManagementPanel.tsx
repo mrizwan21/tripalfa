@@ -1,7 +1,7 @@
 /**
  * Wallet Management Panel
  * Displays wallet balance and allows adding funds
- * 
+ *
  * Features:
  * - Current wallet balance
  * - Recent transactions
@@ -10,12 +10,13 @@
  * - Transaction history
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FC } from 'react';
+import React, { useState, useEffect } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
 
 interface WalletTransaction {
   id: string;
-  type: 'credit' | 'debit';
+  type: "credit" | "debit";
   amount: number;
   description: string;
   date: string;
@@ -34,7 +35,7 @@ interface WalletManagementPanelProps {
   onFundsAdded?: () => void;
 }
 
-type AddFundsTab = 'add' | 'transactions';
+type AddFundsTab = "add" | "transactions";
 
 const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
   customerId,
@@ -43,9 +44,9 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<AddFundsTab>('add');
-  const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [activeTab, setActiveTab] = useState<AddFundsTab>("add");
+  const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -58,23 +59,20 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/customers/${customerId}/wallet`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/customers/${customerId}/wallet`, {
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch wallet information');
+        throw new Error("Failed to fetch wallet information");
       }
 
       const data = await response.json();
       setWalletInfo(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
     } finally {
       setLoading(false);
@@ -85,7 +83,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
     e.preventDefault();
 
     if (!amount || parseFloat(amount) <= 0) {
-      alert('Please enter a valid amount');
+      alert("Please enter a valid amount");
       return;
     }
 
@@ -96,31 +94,31 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
       const response = await fetch(
         `/api/customers/${customerId}/wallet/add-funds`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${getStoredAuthToken()}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             amount: parseFloat(amount),
             paymentMethod,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || 'Failed to add funds');
+        throw new Error(data.message || "Failed to add funds");
       }
 
       setSuccess(true);
-      setAmount('');
+      setAmount("");
       await fetchWalletInfo();
       onFundsAdded?.();
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
     } finally {
       setIsProcessing(false);
@@ -128,12 +126,12 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -179,22 +177,25 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
           {/* Tab Navigation */}
           <div className="wallet-tabs">
             <button
-              className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
-              onClick={() => setActiveTab('add')}
+              className={`tab-btn ${activeTab === "add" ? "active" : ""}`}
+              onClick={() => setActiveTab("add")}
             >
               Add Funds
             </button>
             <button
-              className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
-              onClick={() => setActiveTab('transactions')}
+              className={`tab-btn ${activeTab === "transactions" ? "active" : ""}`}
+              onClick={() => setActiveTab("transactions")}
             >
               Transactions
             </button>
           </div>
 
           {/* Add Funds Tab */}
-          {activeTab === 'add' && (
-            <form onSubmit={handleAddFunds} className="add-funds-form">
+          {activeTab === "add" && (
+            <form
+              onSubmit={handleAddFunds}
+              className="add-funds-form space-y-6"
+            >
               <div className="form-group">
                 <label htmlFor="amount">Amount to Add</label>
                 <div className="amount-input-wrapper">
@@ -222,7 +223,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                     <button
                       key={preset}
                       type="button"
-                      className="preset-btn"
+                      className="preset-btn px-4 py-2 rounded-md text-sm font-medium"
                       onClick={() => setAmount(preset.toString())}
                       disabled={isProcessing}
                     >
@@ -263,7 +264,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
               {/* Submit Button */}
               <button
                 type="submit"
-                className="submit-btn"
+                className="submit-btn px-4 py-2 rounded-md text-sm font-medium"
                 disabled={!amount || isProcessing}
               >
                 {isProcessing ? (
@@ -272,14 +273,14 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                     Processing...
                   </>
                 ) : (
-                  `Add ${walletInfo.currency} ${amount || '0'} to Wallet`
+                  `Add ${walletInfo.currency} ${amount || "0"} to Wallet`
                 )}
               </button>
             </form>
           )}
 
           {/* Transactions Tab */}
-          {activeTab === 'transactions' && (
+          {activeTab === "transactions" && (
             <div className="transactions-list">
               {walletInfo.transactions.length === 0 ? (
                 <div className="empty-transactions">
@@ -290,7 +291,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                   {walletInfo.transactions.map((tx) => (
                     <div key={tx.id} className="transaction-item">
                       <div className="tx-icon">
-                        {tx.type === 'credit' ? '➕' : '➖'}
+                        {tx.type === "credit" ? "➕" : "➖"}
                       </div>
                       <div className="tx-details">
                         <p className="tx-description">{tx.description}</p>
@@ -298,7 +299,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                       </div>
                       <div className="tx-amount">
                         <span className={`amount ${tx.type}`}>
-                          {tx.type === 'credit' ? '+' : '-'}
+                          {tx.type === "credit" ? "+" : "-"}
                           {walletInfo.currency} {tx.amount.toFixed(2)}
                         </span>
                         <span className="balance">
@@ -316,7 +317,9 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
           <div className="wallet-info-box">
             <h4>About Your Wallet</h4>
             <ul>
-              <li>Use your wallet balance for faster checkout on future bookings</li>
+              <li>
+                Use your wallet balance for faster checkout on future bookings
+              </li>
               <li>Wallet funds don't expire</li>
               <li>Get refunds directly to your wallet</li>
               <li>Combine wallet with airline credits and card payments</li>
@@ -334,7 +337,7 @@ export default WalletManagementPanel;
 
 const styles = `
 .wallet-management-panel {
-  background: white;
+  background: hsl(var(--card));
   border-radius: 12px;
   padding: 24px;
 }
@@ -352,15 +355,15 @@ const styles = `
 }
 
 .error-alert {
-  background: #ffebee;
-  color: #c62828;
-  border-left: 4px solid #c62828;
+  background: hsl(var(--destructive) / 0.12);
+  color: hsl(var(--destructive));
+  border-left: 4px solid hsl(var(--destructive));
 }
 
 .success-alert {
-  background: #e8f5e9;
-  color: #2e7d32;
-  border-left: 4px solid #2e7d32;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary));
+  border-left: 4px solid hsl(var(--primary));
 }
 
 .loading-state {
@@ -374,8 +377,8 @@ const styles = `
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #007bff;
+  border: 3px solid hsl(var(--border));
+  border-top-color: hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -386,7 +389,7 @@ const styles = `
 }
 
 .loading-state p {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
 }
 
@@ -395,8 +398,8 @@ const styles = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #e3f2fd, #f5f5f5);
-  border: 1px solid #bbdefb;
+  background: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--muted)));
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
@@ -409,7 +412,7 @@ const styles = `
 .balance-label {
   margin: 0 0 8px 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -418,13 +421,13 @@ const styles = `
   margin: 0 0 4px 0;
   font-size: 32px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .balance-updated {
   margin: 0;
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .balance-icon {
@@ -437,7 +440,7 @@ const styles = `
   display: flex;
   gap: 8px;
   margin-bottom: 24px;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid hsl(var(--border));
 }
 
 .tab-btn {
@@ -445,7 +448,7 @@ const styles = `
   background: none;
   border: none;
   border-bottom: 3px solid transparent;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -453,12 +456,12 @@ const styles = `
 }
 
 .tab-btn:hover {
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .tab-btn.active {
-  color: #007bff;
-  border-bottom-color: #007bff;
+  color: hsl(var(--primary));
+  border-bottom-color: hsl(var(--primary));
 }
 
 /* Add Funds Form */
@@ -477,7 +480,7 @@ const styles = `
 .form-group label {
   font-size: 12px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   text-transform: uppercase;
 }
 
@@ -485,15 +488,15 @@ const styles = `
   display: flex;
   align-items: center;
   gap: 12px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 0 12px;
 }
 
 .currency {
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
   font-size: 16px;
 }
 
@@ -507,7 +510,7 @@ const styles = `
 }
 
 .amount-input-wrapper input:disabled {
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .preset-amounts {
@@ -518,19 +521,19 @@ const styles = `
 
 .preset-btn {
   padding: 10px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  color: #007bff;
+  color: hsl(var(--primary));
   transition: all 0.2s;
 }
 
 .preset-btn:hover:not(:disabled) {
-  background: #e3f2fd;
-  border-color: #007bff;
+  background: hsl(var(--accent));
+  border-color: hsl(var(--primary));
 }
 
 .preset-btn:disabled {
@@ -539,16 +542,16 @@ const styles = `
 
 .form-group select {
   padding: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   font-size: 14px;
-  background: white;
+  background: hsl(var(--card));
   cursor: pointer;
 }
 
 .form-group select:disabled {
-  background: #f5f5f5;
-  color: #999;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
 }
 
 .terms-checkbox {
@@ -565,7 +568,7 @@ const styles = `
 
 .terms-checkbox label {
   font-size: 13px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   cursor: pointer;
   margin: 0;
   text-transform: none;
@@ -574,8 +577,8 @@ const styles = `
 
 .submit-btn {
   padding: 14px;
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.9));
+  color: hsl(var(--primary-foreground));
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -602,7 +605,7 @@ const styles = `
   width: 14px;
   height: 14px;
   border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: white;
+  border-top-color: hsl(var(--primary-foreground));
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -617,7 +620,7 @@ const styles = `
 .empty-transactions {
   text-align: center;
   padding: 40px 20px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .empty-transactions p {
@@ -630,19 +633,19 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
   border-left: 3px solid transparent;
 }
 
 .transaction-item:nth-child(odd) {
-  background: white;
-  border-left-color: #4caf50;
+  background: hsl(var(--card));
+  border-left-color: hsl(var(--primary));
 }
 
 .transaction-item:nth-child(even) {
-  background: #f5f5f5;
-  border-left-color: #f44336;
+  background: hsl(var(--muted));
+  border-left-color: hsl(var(--destructive));
 }
 
 .tx-icon {
@@ -658,13 +661,13 @@ const styles = `
   margin: 0 0 4px 0;
   font-size: 13px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .tx-date {
   margin: 0;
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .tx-amount {
@@ -680,22 +683,22 @@ const styles = `
 }
 
 .amount.credit {
-  color: #4caf50;
+  color: hsl(var(--primary));
 }
 
 .amount.debit {
-  color: #f44336;
+  color: hsl(var(--destructive));
 }
 
 .balance {
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Info Box */
 .wallet-info-box {
-  background: #e3f2fd;
-  border: 1px solid #bbdefb;
+  background: hsl(var(--accent));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
   margin-top: 24px;
@@ -705,7 +708,7 @@ const styles = `
   margin: 0 0 12px 0;
   font-size: 13px;
   font-weight: 700;
-  color: #0056b3;
+  color: hsl(var(--primary));
   text-transform: uppercase;
 }
 
@@ -717,13 +720,13 @@ const styles = `
 
 .wallet-info-box li {
   font-size: 13px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   margin-bottom: 6px;
 }
 
 .wallet-info-box li:before {
   content: "✓ ";
-  color: #007bff;
+  color: hsl(var(--primary));
   font-weight: 700;
   margin-right: 8px;
 }

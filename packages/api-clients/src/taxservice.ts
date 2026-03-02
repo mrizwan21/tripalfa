@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export interface TaxCalculation {
   id: string;
@@ -21,16 +21,21 @@ export interface TaxBreakdown {
 }
 
 export class TaxService {
-  private static baseURL = process.env.VITE_TAX_SERVICE_URL || 'http://localhost:3011';
+  private static baseURL =
+    process.env.VITE_TAX_SERVICE_URL || "http://localhost:3011";
 
   /**
    * Calculate taxes for a booking
    */
-  static async calculateTaxes(bookingId: string, baseAmount: number, jurisdiction: string): Promise<TaxCalculation> {
+  static async calculateTaxes(
+    bookingId: string,
+    baseAmount: number,
+    jurisdiction: string,
+  ): Promise<TaxCalculation> {
     try {
       const response = await axios.post<TaxCalculation>(
         `${this.baseURL}/api/tax/calculate`,
-        { bookingId, baseAmount, jurisdiction }
+        { bookingId, baseAmount, jurisdiction },
       );
 
       return response.data;
@@ -42,10 +47,12 @@ export class TaxService {
   /**
    * Get tax calculation by ID
    */
-  static async getTaxCalculation(calculationId: string): Promise<TaxCalculation> {
+  static async getTaxCalculation(
+    calculationId: string,
+  ): Promise<TaxCalculation> {
     try {
       const response = await axios.get<TaxCalculation>(
-        `${this.baseURL}/api/tax/calculations/${calculationId}`
+        `${this.baseURL}/api/tax/calculations/${calculationId}`,
       );
 
       return response.data;
@@ -57,10 +64,12 @@ export class TaxService {
   /**
    * Get tax calculations for a booking
    */
-  static async getTaxCalculationsByBooking(bookingId: string): Promise<TaxCalculation[]> {
+  static async getTaxCalculationsByBooking(
+    bookingId: string,
+  ): Promise<TaxCalculation[]> {
     try {
       const response = await axios.get<TaxCalculation[]>(
-        `${this.baseURL}/api/tax/calculations/booking/${bookingId}`
+        `${this.baseURL}/api/tax/calculations/booking/${bookingId}`,
       );
 
       return response.data;
@@ -75,7 +84,7 @@ export class TaxService {
   static async getTaxRates(jurisdiction: string): Promise<TaxBreakdown[]> {
     try {
       const response = await axios.get<TaxBreakdown[]>(
-        `${this.baseURL}/api/tax/rates/${jurisdiction}`
+        `${this.baseURL}/api/tax/rates/${jurisdiction}`,
       );
 
       return response.data;

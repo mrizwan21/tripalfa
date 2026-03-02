@@ -3,4 +3,4 @@
  * Re-exports all frontend-safe static data
  */
 
-export * from './frontend-index';
+export * from "./frontend-index";

@@ -1,4 +1,4 @@
-# Dockerfile for organization-service - NEON Database Support
+# Dockerfile for organization-service - Neon Database Support
 # This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
 # Parameters: SERVICE_NAME=organization-service, WORKSPACE_NAME=@tripalfa/organization-service, PORT=3006, HEALTH_PATH=health
 

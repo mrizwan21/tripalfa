@@ -7,25 +7,25 @@ const createMockIcon = (name: string) => {
   return Component;
 };
 
-export const X = createMockIcon('X');
-export const CheckCircle2 = createMockIcon('CheckCircle2');
-export const Check = createMockIcon('Check');
-export const Clock = createMockIcon('Clock');
-export const XCircle = createMockIcon('XCircle');
-export const Info = createMockIcon('Info');
-export const Calendar = createMockIcon('Calendar');
-export const Shield = createMockIcon('Shield');
-export const Bell = createMockIcon('Bell');
-export const AlertCircle = createMockIcon('AlertCircle');
-export const Inbox = createMockIcon('Inbox');
-export const Archive = createMockIcon('Archive');
-export const Trash2 = createMockIcon('Trash2');
-export const MoreVertical = createMockIcon('MoreVertical');
-export const ChevronDown = createMockIcon('ChevronDown');
-export const ChevronUp = createMockIcon('ChevronUp');
-export const Search = createMockIcon('Search');
-export const Filter = createMockIcon('Filter');
-export const Loader2 = createMockIcon('Loader2');
+export const X = createMockIcon("X");
+export const CheckCircle2 = createMockIcon("CheckCircle2");
+export const Check = createMockIcon("Check");
+export const Clock = createMockIcon("Clock");
+export const XCircle = createMockIcon("XCircle");
+export const Info = createMockIcon("Info");
+export const Calendar = createMockIcon("Calendar");
+export const Shield = createMockIcon("Shield");
+export const Bell = createMockIcon("Bell");
+export const AlertCircle = createMockIcon("AlertCircle");
+export const Inbox = createMockIcon("Inbox");
+export const Archive = createMockIcon("Archive");
+export const Trash2 = createMockIcon("Trash2");
+export const MoreVertical = createMockIcon("MoreVertical");
+export const ChevronDown = createMockIcon("ChevronDown");
+export const ChevronUp = createMockIcon("ChevronUp");
+export const Search = createMockIcon("Search");
+export const Filter = createMockIcon("Filter");
+export const Loader2 = createMockIcon("Loader2");
 
 export default {
   X,

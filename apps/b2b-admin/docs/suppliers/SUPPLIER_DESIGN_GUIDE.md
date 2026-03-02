@@ -216,6 +216,7 @@ src/features/suppliers/
 ## 🧩 Component Library
 
 ### SupplierCard
+
 ```typescript
 <SupplierCard
   supplier={supplierData}
@@ -227,6 +228,7 @@ src/features/suppliers/
 ```
 
 Visual:
+
 ```
 ┌────────────────────────────────┐
 │ 📦 Supplier Name               │ ← Type badge (GDS)
@@ -261,6 +263,7 @@ Visual:
 ```
 
 Visual:
+
 ```
 🟢 Healthy (1.2s response)
   Last check: 2 minutes ago
@@ -280,31 +283,34 @@ Visual:
 
 ```typescript
 // Using the centralized API Manager
-import { supplierAPIService } from '@/services/api-manager'
+import { supplierAPIService } from "@/services/api-manager";
 
 // List suppliers with filters
-const { data: suppliers } = await supplierAPIService.listSuppliers({
-  supplierType: 'GDS',
-  status: 'Active',
-}, { page: 1, limit: 10 })
+const { data: suppliers } = await supplierAPIService.listSuppliers(
+  {
+    supplierType: "GDS",
+    status: "Active",
+  },
+  { page: 1, limit: 10 },
+);
 
 // Get supplier details
-const { data: detail } = await supplierAPIService.getSupplier(id)
+const { data: detail } = await supplierAPIService.getSupplier(id);
 
 // Add payment method
 const { data: payment } = await supplierAPIService.addSupplierPayment(id, {
-  accountType: 'Bank Transfer',
-  currency: 'USD',
+  accountType: "Bank Transfer",
+  currency: "USD",
   // ...
-})
+});
 
 // Upload document
 const { data: doc } = await supplierAPIService.uploadSupplierDocument(id, {
-  name: 'Contract',
-  type: 'Supplier Contract',
+  name: "Contract",
+  type: "Supplier Contract",
   file: fileObj,
-  expiryDate: '2025-12-31'
-})
+  expiryDate: "2025-12-31",
+});
 ```
 
 ---
@@ -345,8 +351,8 @@ const { data: doc } = await supplierAPIService.uploadSupplierDocument(id, {
 ```typescript
 // API Credentials - NEVER cached
 const credentials = await supplierAPIService.listSupplierAPICredentials(id, {
-  skipCache: true  // Force fresh request
-})
+  skipCache: true, // Force fresh request
+});
 
 // Password fields are never returned in full
 // Backend masks sensitive data
@@ -363,12 +369,12 @@ const credentials = await supplierAPIService.listSupplierAPICredentials(id, {
 // Uses Zod for validation
 const supplierSchema = z.object({
   supplierName: z.string().min(2).max(100),
-  supplierType: z.enum(['GDS', 'Aggregator', 'Direct', 'Wholesaler']),
+  supplierType: z.enum(["GDS", "Aggregator", "Direct", "Wholesaler"]),
   emailAddress: z.string().email().optional(),
-  country: z.string().nonempty('Country is required'),
-  pricingModel: z.enum(['Commissionable', 'Net', 'Markup']),
+  country: z.string().nonempty("Country is required"),
+  pricingModel: z.enum(["Commissionable", "Net", "Markup"]),
   isActive: z.boolean(),
-})
+});
 ```
 
 ---

@@ -1,6 +1,6 @@
 /**
  * Notification Integration Helpers
- * 
+ *
  * This module provides utilities for integrating the notification system
  * with the offline booking request workflow.
  */
@@ -9,13 +9,13 @@
  * Status change event types for offline requests
  */
 export const OFFLINE_REQUEST_STATUSES = {
-  PENDING_SUBMISSION: 'pending_submission',
-  SUBMITTED: 'submitted',
-  UNDER_REVIEW: 'under_review',
-  APPROVED: 'approved',
-  REJECTED: 'rejected',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled',
+  PENDING_SUBMISSION: "pending_submission",
+  SUBMITTED: "submitted",
+  UNDER_REVIEW: "under_review",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
 } as const;
 
 /**
@@ -29,60 +29,67 @@ export function generateNotificationForStatus(
     departureDate?: string;
     passengers?: number;
     reviewNotes?: string;
-  }
+  },
 ) {
-  const { requestId, destination = 'your trip', departureDate = 'the scheduled date', reviewNotes } = requestData;
+  const {
+    requestId,
+    destination = "your trip",
+    departureDate = "the scheduled date",
+    reviewNotes,
+  } = requestData;
 
   const notificationMap: Record<string, any> = {
     [OFFLINE_REQUEST_STATUSES.SUBMITTED]: {
-      type: 'offline_request_update',
-      title: '✅ Request Received',
+      type: "offline_request_update",
+      title: "✅ Request Received",
       message: `Your offline booking request for ${destination} (${departureDate}) has been received and is now under review.`,
-      priority: 'medium',
-      channels: ['email', 'push', 'in_app'],
-      icon: '📝',
+      priority: "medium",
+      channels: ["email", "push", "in_app"],
+      icon: "📝",
     },
     [OFFLINE_REQUEST_STATUSES.UNDER_REVIEW]: {
-      type: 'offline_request_update',
-      title: '👀 Request Under Review',
+      type: "offline_request_update",
+      title: "👀 Request Under Review",
       message: `Your offline booking request for ${destination} is currently being reviewed by our team. We'll notify you soon.`,
-      priority: 'low',
-      channels: ['email', 'in_app'],
-      icon: '⏳',
+      priority: "low",
+      channels: ["email", "in_app"],
+      icon: "⏳",
     },
     [OFFLINE_REQUEST_STATUSES.APPROVED]: {
-      type: 'offline_request_update',
-      title: '🎉 Request Approved!',
+      type: "offline_request_update",
+      title: "🎉 Request Approved!",
       message: `Great news! Your offline booking request for ${destination} (${departureDate}) has been approved. Check your email for booking details.`,
-      priority: 'high',
-      channels: ['email', 'sms', 'push', 'in_app'],
-      icon: '✅',
+      priority: "high",
+      channels: ["email", "sms", "push", "in_app"],
+      icon: "✅",
     },
     [OFFLINE_REQUEST_STATUSES.REJECTED]: {
-      type: 'offline_request_update',
-      title: '❌ Request Could Not Be Processed',
+      type: "offline_request_update",
+      title: "❌ Request Could Not Be Processed",
       message: `Unfortunately, your offline booking request for ${destination} could not be processed. ${
-        reviewNotes ? `Reason: ${reviewNotes}` : 'Please contact support for more details.'
+        reviewNotes
+          ? `Reason: ${reviewNotes}`
+          : "Please contact support for more details."
       }`,
-      priority: 'high',
-      channels: ['email', 'sms', 'push', 'in_app'],
-      icon: '❌',
+      priority: "high",
+      channels: ["email", "sms", "push", "in_app"],
+      icon: "❌",
     },
     [OFFLINE_REQUEST_STATUSES.COMPLETED]: {
-      type: 'offline_request_update',
-      title: '✈️ Booking Complete',
+      type: "offline_request_update",
+      title: "✈️ Booking Complete",
       message: `Your booking for ${destination} (${departureDate}) is now complete. Have a great trip!`,
-      priority: 'medium',
-      channels: ['email', 'in_app'],
-      icon: '✈️',
+      priority: "medium",
+      channels: ["email", "in_app"],
+      icon: "✈️",
     },
     [OFFLINE_REQUEST_STATUSES.CANCELLED]: {
-      type: 'offline_request_update',
-      title: '🚫 Request Cancelled',
+      type: "offline_request_update",
+      title: "🚫 Request Cancelled",
       message: `Your offline booking request for ${destination} has been cancelled. If this was unexpected, please contact support.`,
-      priority: 'high',
-      channels: ['email', 'sms', 'in_app'],
-      icon: '🚫',
+      priority: "high",
+      channels: ["email", "sms", "in_app"],
+      icon: "🚫",
     },
   };
 
@@ -102,7 +109,7 @@ export function createOfflineRequestWebhookPayload(
     returnDate?: string;
     passengers?: number;
   },
-  reviewNotes?: string
+  reviewNotes?: string,
 ) {
   return {
     requestId,
@@ -129,12 +136,12 @@ export async function sendNotificationAPI(
     channels: string[];
     actionUrl?: string;
     data?: any;
-  }
+  },
 ) {
   const response = await fetch(`${apiBaseUrl}/notifications/send`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(notification),
@@ -152,12 +159,12 @@ export async function sendNotificationAPI(
  */
 export async function triggerOfflineRequestWebhook(
   webhookUrl: string,
-  payload: any
+  payload: any,
 ) {
   const response = await fetch(webhookUrl, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
@@ -181,17 +188,23 @@ export async function notifyAdminNewRequest(
     destination?: string;
     departureDate?: string;
     passengers?: number;
-  }
+  },
 ) {
-  const { requestId, userId, destination = 'Unknown', departureDate = 'TBD', passengers = 0 } = requestData;
+  const {
+    requestId,
+    userId,
+    destination = "Unknown",
+    departureDate = "TBD",
+    passengers = 0,
+  } = requestData;
 
   const notification = {
-    userId: 'admin', // Would be replaced with actual admin user ID
-    type: 'approval_pending',
-    title: 'New Offline Request Submitted',
+    userId: "admin", // Would be replaced with actual admin user ID
+    type: "approval_pending",
+    title: "New Offline Request Submitted",
     message: `A new offline booking request has been submitted for ${destination} (Departure: ${departureDate}, Passengers: ${passengers}). Please review it.`,
-    priority: 'high',
-    channels: ['email', 'push'],
+    priority: "high",
+    channels: ["email", "push"],
     actionUrl: `/admin/requests/${requestId}`,
     data: {
       requestId,
@@ -213,36 +226,40 @@ export function listenForNotifications(
   token: string,
   userId: string,
   onNotification: (notification: any) => void,
-  onError?: (error: any) => void
+  onError?: (error: any) => void,
 ) {
-  const socket = new WebSocket(`${socketUrl}?token=${encodeURIComponent(token)}`);
+  const socket = new WebSocket(
+    `${socketUrl}?token=${encodeURIComponent(token)}`,
+  );
 
-  socket.addEventListener('open', () => {
-    console.log('WebSocket connected');
-    socket.send(JSON.stringify({
-      type: 'subscribe',
-      userId,
-    }));
+  socket.addEventListener("open", () => {
+    console.log("WebSocket connected");
+    socket.send(
+      JSON.stringify({
+        type: "subscribe",
+        userId,
+      }),
+    );
   });
 
-  socket.addEventListener('message', (event) => {
+  socket.addEventListener("message", (event) => {
     try {
       const data = JSON.parse(event.data);
-      if (data.type === 'notification:new') {
+      if (data.type === "notification:new") {
         onNotification(data.notification);
       }
     } catch (err) {
-      console.error('Failed to parse WebSocket message:', err);
+      console.error("Failed to parse WebSocket message:", err);
     }
   });
 
-  socket.addEventListener('error', (error) => {
-    console.error('WebSocket error:', error);
+  socket.addEventListener("error", (error) => {
+    console.error("WebSocket error:", error);
     if (onError) onError(error);
   });
 
-  socket.addEventListener('close', () => {
-    console.log('WebSocket disconnected');
+  socket.addEventListener("close", () => {
+    console.log("WebSocket disconnected");
   });
 
   return socket;
@@ -257,7 +274,7 @@ export function formatNotificationForUI(notification: any) {
     type: notification.type,
     title: notification.title,
     message: notification.message,
-    priority: notification.priority || 'medium',
+    priority: notification.priority || "medium",
     channels: notification.channels || [],
     read: !!notification.readAt,
     createdAt: notification.createdAt || new Date().toISOString(),
@@ -272,15 +289,15 @@ export function formatNotificationForUI(notification: any) {
  */
 export function getNotificationIcon(type: string): string {
   const iconMap: Record<string, string> = {
-    offline_request_update: '📝',
-    price_alert: '💰',
-    booking_reminder: '🛫',
-    approval_pending: '⏳',
-    payment_confirmation: '💳',
-    booking_confirmation: '✅',
-    error: '❌',
+    offline_request_update: "📝",
+    price_alert: "💰",
+    booking_reminder: "🛫",
+    approval_pending: "⏳",
+    payment_confirmation: "💳",
+    booking_confirmation: "✅",
+    error: "❌",
   };
-  return iconMap[type] || '📬';
+  return iconMap[type] || "📬";
 }
 
 /**
@@ -288,10 +305,10 @@ export function getNotificationIcon(type: string): string {
  */
 export function getPriorityColor(priority: string): string {
   const colorMap: Record<string, string> = {
-    low: 'bg-blue-100 text-blue-800 border-blue-300',
-    medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    high: 'bg-red-100 text-red-800 border-red-300',
-    urgent: 'bg-red-600 text-white border-red-700',
+    low: "bg-blue-100 text-blue-800 border-blue-300",
+    medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
+    high: "bg-red-100 text-red-800 border-red-300",
+    urgent: "bg-red-600 text-white border-red-700",
   };
   return colorMap[priority] || colorMap.medium;
 }
@@ -311,10 +328,10 @@ export async function sendBulkNotifications(
     channels: string[];
     actionUrl?: string;
     data?: any;
-  }
+  },
 ) {
   const promises = userIds.map((userId) =>
-    sendNotificationAPI(apiBaseUrl, token, { userId, ...notification })
+    sendNotificationAPI(apiBaseUrl, token, { userId, ...notification }),
   );
 
   return Promise.allSettled(promises);
@@ -326,18 +343,23 @@ export async function sendBulkNotifications(
 export async function markNotificationAsRead(
   apiBaseUrl: string,
   token: string,
-  notificationId: string
+  notificationId: string,
 ) {
-  const response = await fetch(`${apiBaseUrl}/notifications/${notificationId}/read`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${apiBaseUrl}/notifications/${notificationId}/read`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
-    throw new Error(`Failed to mark notification as read: ${response.statusText}`);
+    throw new Error(
+      `Failed to mark notification as read: ${response.statusText}`,
+    );
   }
 
   return response.json();
@@ -349,14 +371,17 @@ export async function markNotificationAsRead(
 export async function deleteNotification(
   apiBaseUrl: string,
   token: string,
-  notificationId: string
+  notificationId: string,
 ) {
-  const response = await fetch(`${apiBaseUrl}/notifications/${notificationId}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${apiBaseUrl}/notifications/${notificationId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to delete notification: ${response.statusText}`);

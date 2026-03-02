@@ -1,15 +1,15 @@
-import React from 'react';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import Notifications from '../../pages/Notifications';
-import { handlers, resetNotificationsStore } from '../mocks/handlers';
+import React from "react";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
+import Notifications from "../../pages/Notifications";
+import { handlers, resetNotificationsStore } from "../mocks/handlers";
 
 const server = setupServer(...handlers);
 
-describe('Notifications API Integration with MSW', () => {
+describe("Notifications API Integration with MSW", () => {
   beforeAll(() => server.listen());
   afterEach(() => {
     server.resetHandlers();
@@ -17,54 +17,54 @@ describe('Notifications API Integration with MSW', () => {
   });
   afterAll(() => server.close());
 
-  describe('Successful API responses', () => {
-    it('should fetch and display notifications', async () => {
+  describe("Successful API responses", () => {
+    it("should fetch and display notifications", async () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
-        expect(screen.getByText('Special Service Request')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
+        expect(screen.getByText("Special Service Request")).toBeInTheDocument();
       });
     });
 
-    it('should handle paginated responses', async () => {
+    it("should handle paginated responses", async () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // Response should include pagination metadata
-      const notificationsList = screen.getAllByRole('group');
+      const notificationsList = screen.getAllByRole("group");
       expect(notificationsList.length).toBeGreaterThan(0);
     });
 
-    it('should filter notifications by type', async () => {
+    it("should filter notifications by type", async () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
     });
 
-    it('should search notifications', async () => {
+    it("should search notifications", async () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
     });
   });
 
-  describe('API error handling', () => {
-    it('should handle 500 server errors gracefully', async () => {
+  describe("API error handling", () => {
+    it("should handle 500 server errors gracefully", async () => {
       server.use(
-        http.get('http://localhost:3000/api/notifications', () => {
+        http.get("http://localhost:3000/api/notifications", () => {
           return HttpResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
+            { error: "Internal server error" },
+            { status: 500 },
           );
-        })
+        }),
       );
 
       render(<Notifications />);
@@ -75,14 +75,11 @@ describe('Notifications API Integration with MSW', () => {
       });
     });
 
-    it('should handle 404 not found errors', async () => {
+    it("should handle 404 not found errors", async () => {
       server.use(
-        http.get('http://localhost:3000/api/notifications', () => {
-          return HttpResponse.json(
-            { error: 'Not found' },
-            { status: 404 }
-          );
-        })
+        http.get("http://localhost:3000/api/notifications", () => {
+          return HttpResponse.json({ error: "Not found" }, { status: 404 });
+        }),
       );
 
       render(<Notifications />);
@@ -92,11 +89,11 @@ describe('Notifications API Integration with MSW', () => {
       });
     });
 
-    it('should handle network errors', async () => {
+    it("should handle network errors", async () => {
       server.use(
-        http.get('http://localhost:3000/api/notifications', () => {
+        http.get("http://localhost:3000/api/notifications", () => {
           return HttpResponse.error();
-        })
+        }),
       );
 
       render(<Notifications />);
@@ -106,12 +103,12 @@ describe('Notifications API Integration with MSW', () => {
       });
     });
 
-    it('should handle timeout errors', async () => {
+    it("should handle timeout errors", async () => {
       server.use(
-        http.get('http://localhost:3000/api/notifications', async () => {
+        http.get("http://localhost:3000/api/notifications", async () => {
           await new Promise((resolve) => setTimeout(resolve, 10000));
           return HttpResponse.json({ data: [] });
-        })
+        }),
       );
 
       render(<Notifications />);
@@ -121,26 +118,26 @@ describe('Notifications API Integration with MSW', () => {
     });
   });
 
-  describe('Loading states', () => {
-    it('should display loading state while fetching', async () => {
+  describe("Loading states", () => {
+    it("should display loading state while fetching", async () => {
       server.use(
-        http.get('http://localhost:3000/api/notifications', async () => {
+        http.get("http://localhost:3000/api/notifications", async () => {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           return HttpResponse.json({
             data: [
               {
-                id: '1',
-                type: 'SUCCESS',
-                title: 'Delayed notification',
-                description: 'This took time to load',
+                id: "1",
+                type: "SUCCESS",
+                title: "Delayed notification",
+                description: "This took time to load",
                 when: new Date().toISOString(),
                 read: false,
-                status: 'CONFIRMED',
+                status: "CONFIRMED",
               },
             ],
             metadata: { total: 1, page: 1, pageSize: 10, totalPages: 1 },
           });
-        })
+        }),
       );
 
       render(<Notifications />);
@@ -149,17 +146,17 @@ describe('Notifications API Integration with MSW', () => {
       expect(screen.getByText(/Fetching your alerts/i)).toBeInTheDocument();
 
       await waitFor(() => {
-        expect(screen.getByText('Delayed notification')).toBeInTheDocument();
+        expect(screen.getByText("Delayed notification")).toBeInTheDocument();
       });
     });
   });
 
-  describe('Retry logic', () => {
-    it('should retry failed requests', async () => {
+  describe("Retry logic", () => {
+    it("should retry failed requests", async () => {
       let attemptCount = 0;
 
       server.use(
-        http.get('http://localhost:3000/api/notifications', () => {
+        http.get("http://localhost:3000/api/notifications", () => {
           attemptCount++;
           if (attemptCount === 1) {
             return HttpResponse.error();
@@ -167,18 +164,18 @@ describe('Notifications API Integration with MSW', () => {
           return HttpResponse.json({
             data: [
               {
-                id: '1',
-                type: 'SUCCESS',
-                title: 'Retry successful',
-                description: 'Request succeeded on retry',
+                id: "1",
+                type: "SUCCESS",
+                title: "Retry successful",
+                description: "Request succeeded on retry",
                 when: new Date().toISOString(),
                 read: false,
-                status: 'CONFIRMED',
+                status: "CONFIRMED",
               },
             ],
             metadata: { total: 1, page: 1, pageSize: 10, totalPages: 1 },
           });
-        })
+        }),
       );
 
       render(<Notifications />);
@@ -190,13 +187,13 @@ describe('Notifications API Integration with MSW', () => {
     });
   });
 
-  describe('Optimistic updates', () => {
-    it('should mark notification as read optimistically', async () => {
+  describe("Optimistic updates", () => {
+    it("should mark notification as read optimistically", async () => {
       const user = userEvent.setup();
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // Note: Would need component implementation for mark as read
@@ -209,32 +206,35 @@ describe('Notifications API Integration with MSW', () => {
       }
     });
 
-    it('should handle optimistic update failures', async () => {
+    it("should handle optimistic update failures", async () => {
       server.use(
-        http.post('http://localhost:3000/api/notifications/:id/read', () => {
-          return HttpResponse.json({ error: 'Failed to update' }, { status: 400 });
-        })
+        http.post("http://localhost:3000/api/notifications/:id/read", () => {
+          return HttpResponse.json(
+            { error: "Failed to update" },
+            { status: 400 },
+          );
+        }),
       );
 
       const user = userEvent.setup();
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // If optimistic update fails, UI should revert
     });
   });
 
-  describe('Real-time updates with polling', () => {
-    it('should fetch new notifications on interval', async () => {
+  describe("Real-time updates with polling", () => {
+    it("should fetch new notifications on interval", async () => {
       vi.useFakeTimers();
 
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // Advance time to trigger polling
@@ -242,19 +242,19 @@ describe('Notifications API Integration with MSW', () => {
 
       // Should make another API call
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       vi.restoreAllMocks();
     });
 
-    it('should not poll when tab is inactive', async () => {
+    it("should not poll when tab is inactive", async () => {
       vi.useFakeTimers();
 
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // Simulate tab becoming inactive
@@ -264,12 +264,12 @@ describe('Notifications API Integration with MSW', () => {
     });
   });
 
-  describe('Caching', () => {
-    it('should cache fetched notifications', async () => {
+  describe("Caching", () => {
+    it("should cache fetched notifications", async () => {
       const { unmount } = render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // Unmount and remount
@@ -278,51 +278,51 @@ describe('Notifications API Integration with MSW', () => {
 
       // Should use cached data if implementation includes caching
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
     });
   });
 
-  describe('Concurrent requests', () => {
-    it('should handle multiple concurrent requests', async () => {
+  describe("Concurrent requests", () => {
+    it("should handle multiple concurrent requests", async () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // All requests should succeed
-      expect(screen.getByText('Special Service Request')).toBeInTheDocument();
-      expect(screen.getByText('Schedule Change')).toBeInTheDocument();
+      expect(screen.getByText("Special Service Request")).toBeInTheDocument();
+      expect(screen.getByText("Schedule Change")).toBeInTheDocument();
     });
   });
 
-  describe('Data consistency', () => {
-    it('should maintain data consistency after updates', async () => {
+  describe("Data consistency", () => {
+    it("should maintain data consistency after updates", async () => {
       const user = userEvent.setup();
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // After marking notification as read, state should be consistent
       const markButtons = screen.queryAllByText(/Mark as read/i);
       if (markButtons.length > 0) {
         // Check UI reflects the change
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       }
     });
 
-    it('should sync with server state', async () => {
+    it("should sync with server state", async () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
       });
 
       // Notifications should match server data
-      const allNotifications = screen.getAllByRole('group');
+      const allNotifications = screen.getAllByRole("group");
       expect(allNotifications.length).toBeGreaterThan(0);
     });
   });

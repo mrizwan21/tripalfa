@@ -1,4 +1,10 @@
-import { BookingStatus, ServiceType, Priority, CustomerType, PaymentMethod } from './booking';
+import {
+  BookingStatus,
+  ServiceType,
+  Priority,
+  CustomerType,
+  PaymentMethod,
+} from "./booking";
 
 export interface CreateBookingRequest {
   type: ServiceType;
@@ -12,7 +18,7 @@ export interface CreateBookingRequest {
     passengers: Array<{
       firstName: string;
       lastName: string;
-      type: 'adult' | 'child' | 'infant';
+      type: "adult" | "child" | "infant";
       dateOfBirth: Date;
       passportNumber?: string;
       nationality?: string;
@@ -92,7 +98,7 @@ export interface CreateCustomerRequest {
   companyRegistrationNumber?: string;
   branchId?: string;
   creditLimit?: number;
-  paymentTerms?: 'prepaid' | 'postpaid' | 'credit';
+  paymentTerms?: "prepaid" | "postpaid" | "credit";
   tags?: string[];
   notes?: string;
 }
@@ -117,8 +123,8 @@ export interface CreateSupplierRequest {
   contactPhone?: string;
   address?: string;
   commissionRate?: number;
-  paymentTerms?: 'prepaid' | 'postpaid' | 'net_7' | 'net_15' | 'net_30';
-  status?: 'active' | 'inactive' | 'suspended';
+  paymentTerms?: "prepaid" | "postpaid" | "net_7" | "net_15" | "net_30";
+  status?: "active" | "inactive" | "suspended";
   serviceTypes?: ServiceType[];
   apiEndpoint?: string;
   apiKey?: string;
@@ -135,7 +141,7 @@ export interface HoldInventoryRequest {
       returnDate?: Date;
       airline?: string;
       flightNumber?: string;
-      cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
+      cabinClass?: "economy" | "premium_economy" | "business" | "first";
     };
     hotel?: {
       hotelName: string;
@@ -237,7 +243,7 @@ export interface AddInventoryRequest {
       destination: string;
       departureDate: Date;
       returnDate?: Date;
-      cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
+      cabinClass?: "economy" | "premium_economy" | "business" | "first";
       availableSeats: number;
       basePrice: number;
       currency: string;
@@ -286,7 +292,7 @@ export interface UpdateInventoryRequest {
   updates: {
     availableCount?: number;
     price?: number;
-    status?: 'available' | 'sold_out' | 'suspended';
+    status?: "available" | "sold_out" | "suspended";
     validity?: {
       startDate?: Date;
       endDate?: Date;
@@ -304,11 +310,11 @@ export interface UpdateInventoryRequest {
 export interface CreatePricingRuleRequest {
   name: string;
   description?: string;
-  ruleType: 'markup' | 'discount' | 'fixed_price' | 'dynamic';
+  ruleType: "markup" | "discount" | "fixed_price" | "dynamic";
   conditions: {
     serviceType: ServiceType[];
     customerType?: CustomerType[];
-    bookingChannel?: ('b2b' | 'b2c' | 'call_center')[];
+    bookingChannel?: ("b2b" | "b2c" | "call_center")[];
     bookingDateRange?: {
       startDate?: Date;
       endDate?: Date;
@@ -325,7 +331,7 @@ export interface CreatePricingRuleRequest {
     discountPercentage?: number;
     fixedPrice?: number;
     currency: string;
-    applyTo: 'base_price' | 'selling_price' | 'all';
+    applyTo: "base_price" | "selling_price" | "all";
   };
   validity: {
     startDate: Date;
@@ -340,11 +346,11 @@ export interface UpdatePricingRuleRequest {
   updates: {
     name?: string;
     description?: string;
-    ruleType?: 'markup' | 'discount' | 'fixed_price' | 'dynamic';
+    ruleType?: "markup" | "discount" | "fixed_price" | "dynamic";
     conditions?: {
       serviceType?: ServiceType[];
       customerType?: CustomerType[];
-      bookingChannel?: ('b2b' | 'b2c' | 'call_center')[];
+      bookingChannel?: ("b2b" | "b2c" | "call_center")[];
       bookingDateRange?: {
         startDate?: Date;
         endDate?: Date;
@@ -361,7 +367,7 @@ export interface UpdatePricingRuleRequest {
       discountPercentage?: number;
       fixedPrice?: number;
       currency?: string;
-      applyTo?: 'base_price' | 'selling_price' | 'all';
+      applyTo?: "base_price" | "selling_price" | "all";
     };
     validity?: {
       startDate?: Date;
@@ -375,11 +381,11 @@ export interface UpdatePricingRuleRequest {
 export interface CreateCommissionRuleRequest {
   name: string;
   description?: string;
-  ruleType: 'percentage' | 'fixed_amount' | 'tiered';
+  ruleType: "percentage" | "fixed_amount" | "tiered";
   conditions: {
     serviceType: ServiceType[];
     customerType?: CustomerType[];
-    bookingChannel?: ('b2b' | 'b2c' | 'call_center')[];
+    bookingChannel?: ("b2b" | "b2c" | "call_center")[];
     bookingAmountRange?: {
       minAmount?: number;
       maxAmount?: number;
@@ -390,7 +396,7 @@ export interface CreateCommissionRuleRequest {
     percentage?: number;
     fixedAmount?: number;
     currency: string;
-    calculationBasis: 'net_price' | 'selling_price' | 'profit';
+    calculationBasis: "net_price" | "selling_price" | "profit";
     tieredStructure?: Array<{
       minAmount: number;
       maxAmount?: number;
@@ -398,8 +404,8 @@ export interface CreateCommissionRuleRequest {
     }>;
   };
   paymentTerms: {
-    paymentMethod: 'immediate' | 'monthly' | 'quarterly';
-    paymentDate: 'end_of_month' | '15th_of_month' | 'custom';
+    paymentMethod: "immediate" | "monthly" | "quarterly";
+    paymentDate: "end_of_month" | "15th_of_month" | "custom";
     customPaymentDate?: number;
   };
   validity: {
@@ -414,11 +420,11 @@ export interface UpdateCommissionRuleRequest {
   updates: {
     name?: string;
     description?: string;
-    ruleType?: 'percentage' | 'fixed_amount' | 'tiered';
+    ruleType?: "percentage" | "fixed_amount" | "tiered";
     conditions?: {
       serviceType?: ServiceType[];
       customerType?: CustomerType[];
-      bookingChannel?: ('b2b' | 'b2c' | 'call_center')[];
+      bookingChannel?: ("b2b" | "b2c" | "call_center")[];
       bookingAmountRange?: {
         minAmount?: number;
         maxAmount?: number;
@@ -429,7 +435,7 @@ export interface UpdateCommissionRuleRequest {
       percentage?: number;
       fixedAmount?: number;
       currency?: string;
-      calculationBasis?: 'net_price' | 'selling_price' | 'profit';
+      calculationBasis?: "net_price" | "selling_price" | "profit";
       tieredStructure?: Array<{
         minAmount: number;
         maxAmount?: number;
@@ -437,8 +443,8 @@ export interface UpdateCommissionRuleRequest {
       }>;
     };
     paymentTerms?: {
-      paymentMethod?: 'immediate' | 'monthly' | 'quarterly';
-      paymentDate?: 'end_of_month' | '15th_of_month' | 'custom';
+      paymentMethod?: "immediate" | "monthly" | "quarterly";
+      paymentDate?: "end_of_month" | "15th_of_month" | "custom";
       customPaymentDate?: number;
     };
     validity?: {
@@ -450,7 +456,7 @@ export interface UpdateCommissionRuleRequest {
 }
 
 export interface BookingReportRequest {
-  reportType: 'daily' | 'weekly' | 'monthly' | 'custom';
+  reportType: "daily" | "weekly" | "monthly" | "custom";
   dateRange: {
     startDate: Date;
     endDate: Date;
@@ -468,7 +474,7 @@ export interface BookingReportRequest {
 }
 
 export interface CommissionReportRequest {
-  reportType: 'agent' | 'team' | 'period';
+  reportType: "agent" | "team" | "period";
   dateRange: {
     startDate: Date;
     endDate: Date;
@@ -483,7 +489,7 @@ export interface CommissionReportRequest {
 }
 
 export interface InventoryReportRequest {
-  reportType: 'availability' | 'utilization' | 'forecast';
+  reportType: "availability" | "utilization" | "forecast";
   dateRange: {
     startDate: Date;
     endDate: Date;

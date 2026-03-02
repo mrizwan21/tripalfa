@@ -1,16 +1,18 @@
 /**
  * Duffel Seat Maps API Service
- * 
+ *
  * IMPORTANT: All API calls are routed through the centralized API Manager.
  * This ensures consistency, auth, rate limiting, and monitoring across all services.
- * 
+ *
  * Routes:
  * - Booking Flow: Seat selection during offer/order creation
  * - Post-Booking: Seat management for existing orders
  */
 
-import { api } from '../lib/api';
-import { SeatMap, SelectedSeat } from './duffelBookingApi';
+import { api } from "../lib/api";
+
+type SeatMap = Record<string, any>;
+type SelectedSeat = Record<string, any>;
 
 // ============================================================================
 // SEAT MAP TYPES & INTERFACES
@@ -20,9 +22,9 @@ import { SeatMap, SelectedSeat } from './duffelBookingApi';
  * Aircraft configuration for dynamic seat layout rendering
  */
 export interface AircraftConfig {
-  aircraftType: string;        // e.g., 'Boeing 777', 'Airbus A320'
-  bodyType: 'narrow' | 'wide' | 'regional';  // Determines layout
-  aisles: number;              // Number of aisles
+  aircraftType: string; // e.g., 'Boeing 777', 'Airbus A320'
+  bodyType: "narrow" | "wide" | "regional"; // Determines layout
+  aisles: number; // Number of aisles
   cabinLayouts: CabinLayout[]; // Layout per cabin class
 }
 
@@ -30,13 +32,13 @@ export interface AircraftConfig {
  * Cabin layout configuration
  */
 export interface CabinLayout {
-  cabinClass: string;          // 'economy', 'business', etc.
-  seatsPerRow: number;         // Total seats in a row
-  rowPattern: string;          // e.g., '3-3' for narrow body, '3-4-3' for widebody
-  firstRow: number;            // First row number
-  lastRow: number;             // Last row number
-  seatPitch: number;           // Distance between rows in inches
-  seatWidth: number;           // Seat width in inches
+  cabinClass: string; // 'economy', 'business', etc.
+  seatsPerRow: number; // Total seats in a row
+  rowPattern: string; // e.g., '3-3' for narrow body, '3-4-3' for widebody
+  firstRow: number; // First row number
+  lastRow: number; // Last row number
+  seatPitch: number; // Distance between rows in inches
+  seatWidth: number; // Seat width in inches
 }
 
 /**
@@ -44,7 +46,7 @@ export interface CabinLayout {
  */
 export interface SeatMapWithAircraft extends SeatMap {
   aircraft_config?: AircraftConfig;
-  aircraft_type?: string;      // Aircraft type code
+  aircraft_type?: string; // Aircraft type code
 }
 
 /**
@@ -65,15 +67,15 @@ export interface PostBookingSeatResponse {
 /**
  * Context for seat operations - distinguishes between booking and post-booking
  */
-export type SeatOperationContext = 'booking' | 'post-booking' | 'management';
+export type SeatOperationContext = "booking" | "post-booking" | "management";
 
 /**
  * Seat operation request with context
  */
 export interface SeatOperationRequest {
   context: SeatOperationContext;
-  orderId?: string;            // For post-booking operations
-  offerId?: string;            // For booking flow
+  orderId?: string; // For post-booking operations
+  offerId?: string; // For booking flow
   provider?: string;
   environment?: string;
 }
@@ -85,7 +87,7 @@ export interface SeatOperationRequest {
 /**
  * Get seat maps for an offer during booking flow
  * Routes through: API Manager → Booking Service → Duffel API
- * 
+ *
  * @param offerId - The active offer ID
  * @param provider - API provider (default: 'duffel')
  * @param environment - Environment (default: 'test')
@@ -93,20 +95,23 @@ export interface SeatOperationRequest {
  */
 export async function getSeatMaps(
   offerId: string,
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<SeatMapWithAircraft[]> {
   try {
-    console.log('[SeatMaps] Fetching seat maps for offer (BOOKING FLOW):', offerId);
-
-    const result = await api.get<any>(
-      `/api/bookings/flight/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`
+    console.log(
+      "[SeatMaps] Fetching seat maps for offer (BOOKING FLOW):",
+      offerId,
     );
 
-    console.log('[SeatMaps] Seat maps retrieved (BOOKING):', result);
+    const result = await api.get(
+      `/api/bookings/flight/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`,
+    );
+
+    console.log("[SeatMaps] Seat maps retrieved (BOOKING):", result);
     return result.data || result.seatMaps || [];
   } catch (error) {
-    console.error('[SeatMaps] Get seat maps error:', error);
+    console.error("[SeatMaps] Get seat maps error:", error);
     throw error;
   }
 }
@@ -114,7 +119,7 @@ export async function getSeatMaps(
 /**
  * Select seats for passengers during booking flow
  * Routes through: API Manager → Booking Service → Duffel API
- * 
+ *
  * @param offerId - The active offer ID
  * @param selectedSeats - Array of seat selections
  * @param provider - API provider (default: 'duffel')
@@ -124,21 +129,24 @@ export async function getSeatMaps(
 export async function selectSeats(
   offerId: string,
   selectedSeats: SelectedSeat[],
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<any> {
   try {
-    console.log('[SeatMaps] Selecting seats (BOOKING FLOW):', selectedSeats);
+    console.log("[SeatMaps] Selecting seats (BOOKING FLOW):", selectedSeats);
 
-    const result = await api.post<any>(
-      '/api/bookings/flight/seat-maps/select',
-      { offerId, selectedSeats, provider, environment, context: 'booking' }
-    );
+    const result = await api.post("/api/bookings/flight/seat-maps/select", {
+      offerId,
+      selectedSeats,
+      provider,
+      environment,
+      context: "booking",
+    });
 
-    console.log('[SeatMaps] Seats selected successfully (BOOKING):', result);
+    console.log("[SeatMaps] Seats selected successfully (BOOKING):", result);
     return result.data || result;
   } catch (error) {
-    console.error('[SeatMaps] Select seats error:', error);
+    console.error("[SeatMaps] Select seats error:", error);
     throw error;
   }
 }
@@ -150,13 +158,13 @@ export async function selectSeats(
 /**
  * Get seat maps for an existing booking (post-booking seat selection/changes)
  * Routes through: API Manager → Booking Service → Duffel API
- * 
+ *
  * Allows users to:
  * - View available seat changes
  * - Add seats not selected during booking
  * - Modify previously selected seats
  * - Manage seats for all passengers
- * 
+ *
  * @param orderId - The confirmed order/booking ID
  * @param provider - API provider (default: 'duffel')
  * @param environment - Environment (default: 'test')
@@ -164,20 +172,23 @@ export async function selectSeats(
  */
 export async function getSeatMapsForBooking(
   orderId: string,
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<SeatMapWithAircraft[]> {
   try {
-    console.log('[SeatMaps] Fetching seat maps for booking (POST-BOOKING FLOW):', orderId);
-
-    const result = await api.get<any>(
-      `/api/bookings/flight/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`
+    console.log(
+      "[SeatMaps] Fetching seat maps for booking (POST-BOOKING FLOW):",
+      orderId,
     );
 
-    console.log('[SeatMaps] Seat maps retrieved (POST-BOOKING):', result);
+    const result = await api.get(
+      `/api/bookings/flight/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`,
+    );
+
+    console.log("[SeatMaps] Seat maps retrieved (POST-BOOKING):", result);
     return result.data || result.seatMaps || [];
   } catch (error) {
-    console.error('[SeatMaps] Get seat maps for booking error:', error);
+    console.error("[SeatMaps] Get seat maps for booking error:", error);
     throw error;
   }
 }
@@ -185,13 +196,13 @@ export async function getSeatMapsForBooking(
 /**
  * Update seat selections for an existing booking
  * Routes through: API Manager → Booking Service → Duffel API
- * 
+ *
  * Allows modifying seat selections after booking is confirmed.
  * May involve:
  * - Seat change fees
  * - Seat upgrade charges
  * - Refunds if downgrading
- * 
+ *
  * @param orderId - The confirmed order/booking ID
  * @param selectedSeats - Array of seat selections to update/add
  * @param provider - API provider (default: 'duffel')
@@ -201,21 +212,31 @@ export async function getSeatMapsForBooking(
 export async function updateBookingSeats(
   orderId: string,
   selectedSeats: SelectedSeat[],
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<PostBookingSeatResponse> {
   try {
-    console.log('[SeatMaps] Updating seats for booking (POST-BOOKING):', orderId, selectedSeats);
-
-    const result = await api.patch<any>(
-      `/api/bookings/flight/update-seats/${encodeURIComponent(orderId)}`,
-      { orderId, selectedSeats, provider, environment, context: 'post-booking' }
+    console.log(
+      "[SeatMaps] Updating seats for booking (POST-BOOKING):",
+      orderId,
+      selectedSeats,
     );
 
-    console.log('[SeatMaps] Booking seats updated successfully:', result);
+    const result = await api.patch(
+      `/api/bookings/flight/update-seats/${encodeURIComponent(orderId)}`,
+      {
+        orderId,
+        selectedSeats,
+        provider,
+        environment,
+        context: "post-booking",
+      },
+    );
+
+    console.log("[SeatMaps] Booking seats updated successfully:", result);
     return result.data || result;
   } catch (error) {
-    console.error('[SeatMaps] Update booking seats error:', error);
+    console.error("[SeatMaps] Update booking seats error:", error);
     throw error;
   }
 }
@@ -226,20 +247,23 @@ export async function updateBookingSeats(
  */
 export async function getBookingSeatHistory(
   orderId: string,
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<any[]> {
   try {
-    console.log('[SeatMaps] Fetching seat history for booking (POST-BOOKING):', orderId);
-
-    const result = await api.get<any>(
-      `/api/bookings/flight/seat-history/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}`
+    console.log(
+      "[SeatMaps] Fetching seat history for booking (POST-BOOKING):",
+      orderId,
     );
 
-    console.log('[SeatMaps] Seat history retrieved:', result);
+    const result = await api.get(
+      `/api/bookings/flight/seat-history/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}`,
+    );
+
+    console.log("[SeatMaps] Seat history retrieved:", result);
     return result.data || [];
   } catch (error) {
-    console.error('[SeatMaps] Get seat history error:', error);
+    console.error("[SeatMaps] Get seat history error:", error);
     throw error;
   }
 }
@@ -253,39 +277,58 @@ export async function getBookingSeatHistory(
  * Works with both booking and post-booking contexts
  */
 export async function getSeatMapForSegment(
-  {offerId, orderId, segmentId, context}: 
   {
+    offerId,
+    orderId,
+    segmentId,
+    context,
+  }: {
     offerId?: string;
     orderId?: string;
     segmentId: string;
     context: SeatOperationContext;
   },
-  provider: string = 'duffel',
-  environment: string = 'test'
+  provider: string = "duffel",
+  environment: string = "test",
 ): Promise<SeatMapWithAircraft | null> {
   try {
-    console.log(`[SeatMaps] Fetching seat map for segment (${context}):`, segmentId);
+    console.log(
+      `[SeatMaps] Fetching seat map for segment (${context}):`,
+      segmentId,
+    );
 
     let seatMaps: SeatMapWithAircraft[];
 
-    if (context === 'booking' && offerId) {
+    if (context === "booking" && offerId) {
       seatMaps = await getSeatMaps(offerId, provider, environment);
-    } else if ((context === 'post-booking' || context === 'management') && orderId) {
+    } else if (
+      (context === "post-booking" || context === "management") &&
+      orderId
+    ) {
       seatMaps = await getSeatMapsForBooking(orderId, provider, environment);
     } else {
-      throw new Error(`Invalid context or missing parameters for context: ${context}`);
+      throw new Error(
+        `Invalid context or missing parameters for context: ${context}`,
+      );
     }
 
-    const segmentMap = seatMaps.find(map => map.segment_id === segmentId);
+    const segmentMap = seatMaps.find(
+      (map) =>
+        (map as any).segment_id === segmentId ||
+        (map as any).segmentId === segmentId,
+    );
 
     if (!segmentMap) {
-      console.log(`[SeatMaps] No seat map available for segment (${context}):`, segmentId);
+      console.log(
+        `[SeatMaps] No seat map available for segment (${context}):`,
+        segmentId,
+      );
       return null;
     }
 
     return segmentMap;
   } catch (error) {
-    console.error('[SeatMaps] Get seat map for segment error:', error);
+    console.error("[SeatMaps] Get seat map for segment error:", error);
     throw error;
   }
 }
@@ -293,14 +336,16 @@ export async function getSeatMapForSegment(
 /**
  * Determine cabin layout based on aircraft configuration
  * Used for dynamic seat grid rendering
- * 
+ *
  * Returns layout pattern for rendering seats dynamically
  */
-export function getAircraftLayout(aircraft: AircraftConfig): CabinLayout | null {
+export function getAircraftLayout(
+  aircraft: AircraftConfig,
+): CabinLayout | null {
   if (!aircraft) return null;
 
-  const cabinClass = 'economy'; // Default to economy
-  return aircraft.cabinLayouts.find(c => c.cabinClass === cabinClass) || null;
+  const cabinClass = "economy"; // Default to economy
+  return aircraft.cabinLayouts.find((c) => c.cabinClass === cabinClass) || null;
 }
 
 /**
@@ -309,7 +354,7 @@ export function getAircraftLayout(aircraft: AircraftConfig): CabinLayout | null 
  * e.g., '3-4-3' -> [3, 4, 3]
  */
 export function parseSeatPattern(pattern: string): number[] {
-  return pattern.split('-').map(n => parseInt(n, 10));
+  return pattern.split("-").map((n) => parseInt(n, 10));
 }
 
 /**
@@ -318,12 +363,13 @@ export function parseSeatPattern(pattern: string): number[] {
  */
 export function generateSeatDesignators(
   rowNumber: number,
-  seatPattern: number[]
+  seatPattern: number[],
 ): string[] {
-  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const totalSeats = seatPattern.reduce((a, b) => a + b, 0);
-  
-  return Array.from({ length: totalSeats }, (_, i) => 
-    `${rowNumber}${letters[i]}`
+
+  return Array.from(
+    { length: totalSeats },
+    (_, i) => `${rowNumber}${letters[i]}`,
   );
 }

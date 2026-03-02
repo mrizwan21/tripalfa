@@ -1,38 +1,53 @@
 /**
  * B2B Admin Routing & Navigation Setup
- * 
+ *
  * This file provides navigation menu configuration and helper functions
  * for the B2B Admin application. Routes are defined in app/App.tsx.
- * 
+ *
  * File Structure:
  * - Navigation menu items for sidebar
  * - Route configuration for breadcrumbs and permissions
  * - Helper functions for navigation
  */
 
-import { ReactNode } from "react"
-import { LayoutDashboard, Users, Building2, ShoppingCart, Settings, BookOpen, Activity, Bell, Palette, CreditCard, Wallet } from "lucide-react"
+import { ReactNode } from "react";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  ShoppingCart,
+  Settings,
+  BookOpen,
+  Activity,
+  Bell,
+  Palette,
+  CreditCard,
+  Wallet,
+  ExternalLink,
+} from "lucide-react";
 
 // ============================================
 // TYPE DEFINITIONS
 // ============================================
 
 interface NavItem {
-  id: string
-  label: string
-  icon: ReactNode
-  path: string
-  badge?: number | string
-  description?: string
-  children?: NavItem[]
+  id: string;
+  label: string;
+  icon: ReactNode;
+  path: string;
+  badge?: number | string;
+  description?: string;
+  children?: NavItem[];
+  external?: boolean;
+  externalUrl?: string;
 }
 
 interface RouteConfig {
-  path: string
-  label: string
-  icon?: ReactNode
-  breadcrumb?: string[]
-  permissions?: string[]
+  path: string;
+  label: string;
+  icon?: ReactNode;
+  breadcrumb?: string[];
+  permissions?: string[];
 }
 
 // ============================================
@@ -46,6 +61,17 @@ export const navigationMenu: NavItem[] = [
     icon: <LayoutDashboard className="h-4 w-4" />,
     path: "/",
     description: "View system overview and analytics",
+  },
+
+  {
+    id: "b2c-booking-engine",
+    label: "B2C Booking Engine",
+    icon: <ExternalLink className="h-4 w-4" />,
+    path: "/b2c-booking-engine",
+    description: "Open B2C Booking Engine in new tab",
+    external: true,
+    // URL is read at runtime in handleNavigation to support environment variable changes
+    externalUrl: "",
   },
 
   {
@@ -249,9 +275,30 @@ export const navigationMenu: NavItem[] = [
         path: "/system/monitoring",
         description: "Real-time system monitoring",
       },
+      {
+        id: "system-runtime-settings",
+        label: "Booking Engine Runtime",
+        icon: <Settings className="h-4 w-4" />,
+        path: "/system/runtime-settings",
+        description: "Manage dynamic booking engine runtime configuration",
+      },
+      {
+        id: "system-permission-manager",
+        label: "Permission Manager",
+        icon: <Users className="h-4 w-4" />,
+        path: "/system/permission-manager",
+        description: "Assign role-based access to all modules",
+      },
+      {
+        id: "system-content-settings",
+        label: "Content Settings",
+        icon: <Palette className="h-4 w-4" />,
+        path: "/system/content-settings",
+        description: "Manage booking engine dynamic content",
+      },
     ],
   },
-]
+];
 
 // ============================================
 // ROUTE CONFIGURATION
@@ -427,6 +474,27 @@ export const routeConfig: RouteConfig[] = [
     permissions: ["monitoring:view", "monitoring:manage"],
   },
 
+  {
+    path: "/system/runtime-settings",
+    label: "Booking Engine Runtime",
+    breadcrumb: ["Home", "System", "Booking Engine Runtime"],
+    permissions: ["system:view", "system:manage"],
+  },
+
+  {
+    path: "/system/permission-manager",
+    label: "Permission Manager",
+    breadcrumb: ["Home", "System", "Permission Manager"],
+    permissions: ["system:manage"],
+  },
+
+  {
+    path: "/system/content-settings",
+    label: "Content Settings",
+    breadcrumb: ["Home", "System", "Content Settings"],
+    permissions: ["system:view", "system:manage"],
+  },
+
   // Other Routes
   {
     path: "/inventory",
@@ -455,7 +523,7 @@ export const routeConfig: RouteConfig[] = [
     breadcrumb: ["Home", "Organization"],
     permissions: ["organization:view"],
   },
-]
+];
 
 // ============================================
 // NAVIGATION HELPER FUNCTIONS
@@ -467,52 +535,59 @@ export const routeConfig: RouteConfig[] = [
 export function getNavItemById(id: string): NavItem | undefined {
   const findItem = (items: NavItem[]): NavItem | undefined => {
     for (const item of items) {
-      if (item.id === id) return item
+      if (item.id === id) return item;
       if (item.children) {
-        const found = findItem(item.children)
-        if (found) return found
+        const found = findItem(item.children);
+        if (found) return found;
       }
     }
-    return undefined
-  }
-  return findItem(navigationMenu)
+    return undefined;
+  };
+  return findItem(navigationMenu);
 }
 
 /**
  * Get all navigation items in a flattened array
  */
-export function flattenNavigation(items: NavItem[] = navigationMenu): NavItem[] {
+export function flattenNavigation(
+  items: NavItem[] = navigationMenu,
+): NavItem[] {
   return items.reduce((acc: NavItem[], item) => {
-    acc.push(item)
+    acc.push(item);
     if (item.children) {
-      acc.push(...flattenNavigation(item.children))
+      acc.push(...flattenNavigation(item.children));
     }
-    return acc
-  }, [])
+    return acc;
+  }, []);
 }
 
 /**
  * Get breadcrumb items for a route
  */
 export function getBreadcrumb(path: string): string[] {
-  const route = routeConfig.find((r) => r.path === path)
-  return route?.breadcrumb || ["Home"]
+  const route = routeConfig.find((r) => r.path === path);
+  return route?.breadcrumb || ["Home"];
 }
 
 /**
  * Check if user has permission for a route
  */
-export function hasPermission(path: string, userPermissions: string[]): boolean {
-  const route = routeConfig.find((r) => r.path === path)
-  if (!route?.permissions) return true
-  return route.permissions.some((perm) => userPermissions.includes(perm))
+export function hasPermission(
+  path: string,
+  userPermissions: string[],
+): boolean {
+  const route = routeConfig.find((r) => r.path === path);
+  if (!route?.permissions) return true;
+  return route.permissions.some((perm) => userPermissions.includes(perm));
 }
 
 /**
  * Get all accessible routes for a user
  */
 export function getAccessibleRoutes(userPermissions: string[]): RouteConfig[] {
-  return routeConfig.filter((route) => hasPermission(route.path, userPermissions))
+  return routeConfig.filter((route) =>
+    hasPermission(route.path, userPermissions),
+  );
 }
 
 // ============================================
@@ -521,10 +596,10 @@ export function getAccessibleRoutes(userPermissions: string[]): RouteConfig[] {
 
 /**
  * Example sidebar navigation component
- * 
+ *
  * Usage:
- * <SidebarNavigation 
- *   currentPath="/users" 
+ * <SidebarNavigation
+ *   currentPath="/users"
  *   onNavigate={(path) => navigate(path)}
  * />
  */
@@ -532,26 +607,44 @@ export function SidebarNavigation({
   currentPath,
   onNavigate,
 }: {
-  currentPath: string
-  onNavigate: (path: string) => void
+  currentPath: string;
+  onNavigate: (path: string) => void;
 }) {
-  const flatNav = flattenNavigation()
+  const flatNav = flattenNavigation();
+
+  const handleNavigation = (item: (typeof navigationMenu)[0]) => {
+    if (item.external) {
+      // For B2C Booking Engine, get URL from environment variable at runtime
+      const url =
+        item.id === "b2c-booking-engine"
+          ? import.meta.env.VITE_BOOKING_ENGINE_URL || "https://tripalfa.com"
+          : item.externalUrl;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    } else {
+      onNavigate(item.path);
+    }
+  };
 
   return (
     <nav className="space-y-2">
       {navigationMenu.map((item) => (
-        <div key={item.id} className="space-y-1">
+        <div key={item.id} className="space-y-2">
           {/* Parent Item */}
           <button
-            onClick={() => onNavigate(item.path)}
+            onClick={() => handleNavigation(item)}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition ${
               currentPath.startsWith(item.path)
                 ? "bg-blue-100 text-blue-900 font-medium"
-                : "text-slate-700 hover:bg-slate-100"
-            }`}
+                : "text-foreground hover:bg-muted"
+            } ${item.external ? "hover:text-blue-600" : ""}`}
           >
             {item.icon}
-            <span className="flex-1 text-left">{item.label}</span>
+            <span className="flex-1 text-left gap-4">{item.label}</span>
+            {item.external && (
+              <ExternalLink className="h-3 w-3 text-muted-foreground" />
+            )}
             {item.badge && (
               <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
                 {item.badge}
@@ -561,15 +654,15 @@ export function SidebarNavigation({
 
           {/* Child Items */}
           {item.children && (
-            <div className="pl-6 space-y-1">
+            <div className="pl-6 space-y-2">
               {item.children.map((child) => (
                 <button
                   key={child.id}
-                  onClick={() => onNavigate(child.path)}
+                  onClick={() => handleNavigation(child)}
                   className={`w-full flex items-center gap-2 px-3 py-1.5 rounded text-sm transition ${
                     currentPath === child.path
                       ? "bg-blue-50 text-blue-700 font-medium"
-                      : "text-slate-600 hover:bg-slate-50"
+                      : "text-muted-foreground hover:bg-muted"
                   }`}
                 >
                   {child.icon}
@@ -581,7 +674,7 @@ export function SidebarNavigation({
         </div>
       ))}
     </nav>
-  )
+  );
 }
 
 // ============================================
@@ -590,12 +683,12 @@ export function SidebarNavigation({
 
 /**
  * ROUTING SETUP FOR REACT ROUTER v6
- * 
+ *
  * Example in main app.tsx or router configuration:
- * 
+ *
  * import { BrowserRouter, Routes, Route } from 'react-router-dom'
  * import { routeConfig } from '@/config/routing'
- * 
+ *
  * function App() {
  *   return (
  *     <BrowserRouter>
@@ -611,9 +704,9 @@ export function SidebarNavigation({
 
 /**
  * LAYOUT STRUCTURE EXAMPLE
- * 
+ *
  * The B2B Admin app should have this structure:
- * 
+ *
  * ├── Layout
  * │   ├── Header
  * │   │   ├── Logo/Brand
@@ -629,7 +722,7 @@ export function SidebarNavigation({
 
 /**
  * BREADCRUMB COMPONENT EXAMPLE
- * 
+ *
  * Usage:
  * <Breadcrumb items={getBreadcrumb(currentPath)} />
  */
@@ -638,14 +731,20 @@ export function Breadcrumb({ items }: { items: string[] }) {
     <nav className="flex items-center gap-2 text-sm mb-4">
       {items.map((item, index) => (
         <div key={index} className="flex items-center gap-2">
-          {index > 0 && <span className="text-slate-400">/</span>}
-          <span className={index === items.length - 1 ? "text-slate-900 font-medium" : "text-slate-600"}>
+          {index > 0 && <span className="text-muted-foreground">/</span>}
+          <span
+            className={
+              index === items.length - 1
+                ? "text-foreground font-medium"
+                : "text-muted-foreground"
+            }
+          >
             {item}
           </span>
         </div>
       ))}
     </nav>
-  )
+  );
 }
 
 // ============================================
@@ -654,7 +753,7 @@ export function Breadcrumb({ items }: { items: string[] }) {
 
 /**
  * API Endpoints used by all management pages:
- * 
+ *
  * USERS:
  * - GET    /users                       (list with pagination)
  * - GET    /users/{id}                  (get user details)
@@ -668,7 +767,7 @@ export function Breadcrumb({ items }: { items: string[] }) {
  * - DELETE /users/{id}/documents/{id}   (delete document)
  * - PUT    /users/{id}/password         (change password)
  * - POST   /users/{id}/image            (upload profile image)
- * 
+ *
  * B2B COMPANIES:
  * - GET    /companies                   (list with pagination)
  * - GET    /companies/{id}              (get company details)
@@ -681,7 +780,7 @@ export function Breadcrumb({ items }: { items: string[] }) {
  * - POST   /companies/{id}/users        (create user)
  * - GET    /companies/{id}/headers      (get branding)
  * - POST   /companies/{id}/media        (upload media)
- * 
+ *
  * ORGANIZATIONS:
  * - GET    /organization                (list with pagination)
  * - GET    /organization/{id}           (get details)
@@ -692,7 +791,7 @@ export function Breadcrumb({ items }: { items: string[] }) {
  * - POST   /branches                    (create branch)
  * - GET    /branding/headers            (get headers)
  * - POST   /branding/media              (upload media)
- * 
+ *
  * SUPPLIERS:
  * - GET    /admin/suppliers             (list with pagination)
  * - GET    /admin/suppliers/{id}        (get details)
@@ -709,7 +808,7 @@ export function Breadcrumb({ items }: { items: string[] }) {
  * - POST   /admin/suppliers/{id}/documents  (upload document)
  * - GET    /admin/suppliers/{id}/credentials (get API credentials)
  * - POST   /admin/suppliers/{id}/credentials (create credentials)
- * 
+ *
  * DROPDOWN OPTIONS (SHARED):
  * - GET    /dropdown-options/countries
  * - GET    /dropdown-options/nationalities
@@ -729,4 +828,4 @@ export default {
   getAccessibleRoutes,
   SidebarNavigation,
   Breadcrumb,
-}
+};

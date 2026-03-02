@@ -2,10 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "Node16",
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -15,17 +12,30 @@
     "strict": false,
     "forceConsistentCasingInFileNames": true,
     "types": ["node"],
-    "typeRoots": ["./node_modules/@types", "./types"]
+    "typeRoots": ["./node_modules/@types", "./types"],
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@tripalfa/shared-types": ["./packages/shared-types"],
+      "@tripalfa/shared-types/*": ["./packages/shared-types/*"],
+      "@tripalfa/shared-utils": ["./packages/shared-utils"],
+      "@tripalfa/shared-utils/*": ["./packages/shared-utils/*"],
+      "@tripalfa/shared-database": ["./packages/shared-database"],
+      "@tripalfa/shared-database/*": ["./packages/shared-database/*"]
+    },
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false
   },
-  "include": [
-    "./types/**/*.d.ts",
-    "services/**/*",
-    "packages/**/*",
-    "apps/**/*"
-  ],
+  "include": ["./types/**/*.d.ts"],
   "exclude": [
     "node_modules",
     "dist",
+    "**/dist/**",
     "**/__tests__/**",
     "**/*.test.ts",
     "**/*.test.tsx",
@@ -35,6 +45,9 @@
   "references": [
     {
       "path": "packages/shared-utils"
+    },
+    {
+      "path": "packages/shared-types"
     },
     {
       "path": "packages/wallet"
@@ -50,6 +63,12 @@
     },
     {
       "path": "packages/shared-database"
+    },
+    {
+      "path": "packages/message-queue"
+    },
+    {
+      "path": "packages/ui-components"
     },
     {
       "path": "services/booking-service"
@@ -77,6 +96,15 @@
     },
     {
       "path": "services/wallet-service"
+    },
+    {
+      "path": "services/b2b-admin-service"
+    },
+    {
+      "path": "services/booking-engine-service"
+    },
+    {
+      "path": "services/api-gateway"
     }
   ]
 }

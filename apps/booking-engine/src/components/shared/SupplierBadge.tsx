@@ -3,12 +3,18 @@
  * =======================
  * Displays supplier source information for hotels and flights.
  * Shows the supplier name, match confidence, and verification status.
- * 
+ *
  * Used to indicate which supplier(s) provide data for a canonical entity.
  */
 
-import React from 'react';
-import { CheckCircle2, AlertCircle, Database, Zap, ShieldCheck } from 'lucide-react';
+import React from "react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Database,
+  Zap,
+  ShieldCheck,
+} from "lucide-react";
 
 export interface SupplierMapping {
   id: string;
@@ -18,44 +24,74 @@ export interface SupplierMapping {
   supplierType: string;
   supplierHotelId?: string;
   supplierHotelCode?: string;
-  matchType: 'auto' | 'manual' | 'giata';
+  matchType: "auto" | "manual" | "giata";
   matchConfidence: number | null;
   matchVerifiedAt: string | null;
   lastSyncedAt: string | null;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   isActive: boolean;
 }
 
 interface SupplierBadgeProps {
   suppliers: SupplierMapping[];
-  variant?: 'compact' | 'full' | 'minimal';
+  variant?: "compact" | "full" | "minimal";
   showConfidence?: boolean;
   className?: string;
 }
 
 // Supplier brand colors
-const SUPPLIER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  hotelbeds: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-  liteapi: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  innstant: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  duffel: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
-  amadeus: { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-200' },
-  giata: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  default: { bg: 'bg-gray-50', text: 'text-gray-700', border: 'border-gray-200' },
+const SUPPLIER_COLORS: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  hotelbeds: {
+    bg: "bg-orange-50",
+    text: "text-orange-700",
+    border: "border-orange-200",
+  },
+  liteapi: {
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+  },
+  innstant: {
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    border: "border-purple-200",
+  },
+  duffel: {
+    bg: "bg-indigo-50",
+    text: "text-indigo-700",
+    border: "border-indigo-200",
+  },
+  amadeus: { bg: "bg-red-50", text: "text-red-700", border: "border-red-200" },
+  giata: {
+    bg: "bg-green-50",
+    text: "text-green-700",
+    border: "border-green-200",
+  },
+  default: {
+    bg: "bg-gray-50",
+    text: "text-gray-700",
+    border: "border-gray-200",
+  },
 };
 
 // Match type labels
-const MATCH_TYPE_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
-  auto: { label: 'Auto-matched', icon: <Zap size={10} /> },
-  manual: { label: 'Verified', icon: <CheckCircle2 size={10} /> },
-  giata: { label: 'GIATA Verified', icon: <ShieldCheck size={10} /> },
+const MATCH_TYPE_LABELS: Record<
+  string,
+  { label: string; icon: React.ReactNode }
+> = {
+  auto: { label: "Auto-matched", icon: <Zap size={10} /> },
+  manual: { label: "Verified", icon: <CheckCircle2 size={10} /> },
+  giata: { label: "GIATA Verified", icon: <ShieldCheck size={10} /> },
 };
 
-export function SupplierBadge({ 
-  suppliers, 
-  variant = 'compact', 
+export function SupplierBadge({
+  suppliers,
+  variant = "compact",
   showConfidence = true,
-  className = '' 
+  className = "",
 }: SupplierBadgeProps) {
   if (!suppliers || suppliers.length === 0) {
     return null;
@@ -74,7 +110,7 @@ export function SupplierBadge({
     return `${Math.round(confidence * 100)}%`;
   };
 
-  if (variant === 'minimal') {
+  if (variant === "minimal") {
     return (
       <div className={`flex items-center gap-1 ${className}`}>
         {suppliers.slice(0, 3).map((supplier, idx) => {
@@ -97,7 +133,7 @@ export function SupplierBadge({
     );
   }
 
-  if (variant === 'compact') {
+  if (variant === "compact") {
     return (
       <div className={`flex flex-wrap items-center gap-2 ${className}`}>
         <span className="flex items-center gap-1 text-[9px] font-black text-gray-400 uppercase tracking-widest">
@@ -106,7 +142,7 @@ export function SupplierBadge({
         {suppliers.map((supplier, idx) => {
           const colors = getSupplierColor(supplier.supplierCode);
           const matchInfo = getMatchTypeInfo(supplier.matchType);
-          
+
           return (
             <div
               key={supplier.id || idx}
@@ -115,7 +151,7 @@ export function SupplierBadge({
               <span className="text-[10px] font-black uppercase tracking-wider">
                 {supplier.supplierName}
               </span>
-              {supplier.matchType === 'giata' && (
+              {supplier.matchType === "giata" && (
                 <ShieldCheck size={10} className="text-green-600" />
               )}
               {showConfidence && supplier.matchConfidence !== null && (
@@ -139,19 +175,21 @@ export function SupplierBadge({
           Data Sources ({suppliers.length})
         </span>
       </div>
-      
+
       <div className="space-y-2">
         {suppliers.map((supplier, idx) => {
           const colors = getSupplierColor(supplier.supplierCode);
           const matchInfo = getMatchTypeInfo(supplier.matchType);
-          
+
           return (
             <div
               key={supplier.id || idx}
               className={`flex items-center justify-between p-3 rounded-xl ${colors.bg} ${colors.border} border`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg ${colors.text} bg-white/50 flex items-center justify-center font-black text-xs uppercase`}>
+                <div
+                  className={`w-8 h-8 rounded-lg ${colors.text} bg-white/50 flex items-center justify-center font-black text-xs uppercase`}
+                >
                   {supplier.supplierCode.slice(0, 2)}
                 </div>
                 <div>
@@ -171,13 +209,13 @@ export function SupplierBadge({
                   </div>
                 </div>
               </div>
-              
+
               <div className="text-right">
                 {showConfidence && supplier.matchConfidence !== null && (
                   <div className="flex items-center gap-1">
                     <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full ${supplier.matchConfidence >= 0.9 ? 'bg-green-500' : supplier.matchConfidence >= 0.7 ? 'bg-yellow-500' : 'bg-red-400'}`}
+                      <div
+                        className={`h-full rounded-full ${supplier.matchConfidence >= 0.9 ? "bg-green-500" : supplier.matchConfidence >= 0.7 ? "bg-yellow-500" : "bg-red-400"}`}
                         style={{ width: `${supplier.matchConfidence * 100}%` }}
                       />
                     </div>
@@ -186,12 +224,12 @@ export function SupplierBadge({
                     </span>
                   </div>
                 )}
-                {supplier.syncStatus === 'synced' && (
+                {supplier.syncStatus === "synced" && (
                   <span className="flex items-center gap-1 text-[9px] font-bold text-green-600 mt-1">
                     <CheckCircle2 size={10} /> Synced
                   </span>
                 )}
-                {supplier.syncStatus === 'error' && (
+                {supplier.syncStatus === "error" && (
                   <span className="flex items-center gap-1 text-[9px] font-bold text-red-500 mt-1">
                     <AlertCircle size={10} /> Sync Error
                   </span>
@@ -206,25 +244,33 @@ export function SupplierBadge({
 }
 
 // Compact inline badge for cards
-export function SupplierBadgeInline({ suppliers }: { suppliers: SupplierMapping[] }) {
+export function SupplierBadgeInline({
+  suppliers,
+}: {
+  suppliers: SupplierMapping[];
+}) {
   if (!suppliers || suppliers.length === 0) return null;
 
   return (
     <div className="flex items-center gap-1">
       {suppliers.slice(0, 2).map((supplier, idx) => {
-        const colors = SUPPLIER_COLORS[supplier.supplierCode.toLowerCase()] || SUPPLIER_COLORS.default;
+        const colors =
+          SUPPLIER_COLORS[supplier.supplierCode.toLowerCase()] ||
+          SUPPLIER_COLORS.default;
         return (
           <span
             key={supplier.id || idx}
             className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${colors.bg} ${colors.text}`}
           >
             {supplier.supplierCode}
-            {supplier.matchType === 'giata' && <ShieldCheck size={8} />}
+            {supplier.matchType === "giata" && <ShieldCheck size={8} />}
           </span>
         );
       })}
       {suppliers.length > 2 && (
-        <span className="text-[8px] font-bold text-gray-400">+{suppliers.length - 2}</span>
+        <span className="text-[8px] font-bold text-gray-400">
+          +{suppliers.length - 2}
+        </span>
       )}
     </div>
   );

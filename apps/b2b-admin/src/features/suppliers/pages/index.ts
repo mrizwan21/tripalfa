@@ -14,7 +14,7 @@
  * <Route path="/suppliers/:supplierId/gateway" element={<SupplierGatewayPage />} />
  */
 
-export { default as SuppliersList } from './SuppliersList'
-export { SuppliersManagement } from './SuppliersManagement'
-export { SupplierGateway, SupplierGatewayPage } from './SupplierGateway'
-export type { SupplierGatewayProps } from './SupplierGateway'
+export { default as SuppliersList } from "./SuppliersList";
+export { SuppliersManagement } from "./SuppliersManagement";
+export { SupplierGateway, SupplierGatewayPage } from "./SupplierGateway";
+export type { SupplierGatewayProps } from "./SupplierGateway";

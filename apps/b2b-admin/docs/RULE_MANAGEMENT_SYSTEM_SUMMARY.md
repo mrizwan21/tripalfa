@@ -45,6 +45,7 @@ apps/b2b-admin/
 ## 🔧 Technical Architecture
 
 ### Frontend Stack
+
 - **React 18** with TypeScript for type safety
 - **React Query** for state management and API calls
 - **React Hook Form** with Zod for form validation
@@ -53,6 +54,7 @@ apps/b2b-admin/
 - **Sonner** for toast notifications
 
 ### Security Features
+
 - **Role-Based Access Control (RBAC)** with granular permissions
 - **Input validation** using Zod schemas
 - **SQL injection prevention** through parameterized queries
@@ -61,6 +63,7 @@ apps/b2b-admin/
 - **Rate limiting** support
 
 ### Database Schema
+
 ```prisma
 model Rule {
   id          String   @id @default(cuid())
@@ -95,11 +98,13 @@ model RuleAudit {
 ## 🚀 Features Implemented
 
 ### 1. Rule Management Interface
+
 - **Main Dashboard**: Centralized rule management with category-based organization
 - **Permission-Based Access**: Role-based access control for all operations
 - **Real-time Updates**: Live updates when rules are modified
 
 ### 2. Rule Categories
+
 - **Flight Rules**: Rules for flight bookings and operations
 - **Hotel Rules**: Rules for hotel bookings and operations
 - **Car Rules**: Rules for car rental bookings
@@ -109,12 +114,14 @@ model RuleAudit {
 - **Booking Rules**: General booking rules
 
 ### 3. Advanced Filtering & Search
+
 - **Multi-criteria filtering**: By category, status, priority, date ranges
 - **Full-text search**: Search across rule names and descriptions
 - **Pagination**: Efficient handling of large rule sets
 - **Sorting**: Sort by name, priority, creation date, etc.
 
 ### 4. Rule Creation & Editing
+
 - **Form validation**: Comprehensive validation using Zod schemas
 - **Condition builder**: JSON schema-based condition definition
 - **Action configuration**: Flexible action configuration system
@@ -122,18 +129,21 @@ model RuleAudit {
 - **Status control**: Activate/deactivate rules as needed
 
 ### 5. Analytics & Monitoring
+
 - **Performance metrics**: Execution time, success rates, usage statistics
 - **Real-time analytics**: Live performance monitoring
 - **Historical data**: Trend analysis and performance history
 - **Category insights**: Performance breakdown by rule category
 
 ### 6. Audit & Compliance
+
 - **Complete audit trail**: All rule changes are logged
 - **User attribution**: Track who made changes and when
 - **Change history**: View before/after states of rule modifications
 - **Compliance reporting**: Generate audit reports for compliance
 
 ### 7. Security & Permissions
+
 - **Granular permissions**: View, create, edit, delete, analytics, audit access
 - **Permission guards**: Component-level permission checking
 - **Security validation**: Input sanitization and validation
@@ -142,6 +152,7 @@ model RuleAudit {
 ## 📋 API Endpoints
 
 ### Rule Management
+
 - `GET /api/rules` - List rules with filtering/pagination
 - `GET /api/rules/:id` - Get specific rule details
 - `POST /api/rules` - Create new rule
@@ -150,32 +161,38 @@ model RuleAudit {
 - `PATCH /api/rules/:id/status` - Update rule status
 
 ### Analytics
+
 - `GET /api/rules/:id/analytics` - Get rule performance analytics
 - `GET /api/rules/analytics/summary` - Get analytics summary for all rules
 
 ### Audit Logs
+
 - `GET /api/rules/:id/audit` - Get audit log for specific rule
 - `GET /api/rules/audit` - Get audit logs for all rules
 
 ### Categories
+
 - `GET /api/rules/categories` - Get available rule categories
 - `POST /api/rules/categories` - Create new category
 
 ## 🛡️ Security Measures
 
 ### Authentication & Authorization
+
 - JWT token-based authentication
 - Role-based access control with granular permissions
 - Permission validation on every API request
 - Secure session management
 
 ### Data Protection
+
 - Input validation using JSON Schema
 - SQL injection prevention through parameterized queries
 - XSS prevention through proper escaping
 - Sensitive data encryption at rest
 
 ### Audit & Monitoring
+
 - Complete audit trail for all rule changes
 - User activity logging
 - Security event monitoring
@@ -184,12 +201,14 @@ model RuleAudit {
 ## 📊 Performance Optimizations
 
 ### Frontend Optimizations
+
 - **Virtualization**: Efficient rendering of large rule lists
 - **Caching**: Smart caching strategies for frequently accessed data
 - **Lazy loading**: Component-level code splitting
 - **Debounced search**: Optimized search performance
 
 ### Backend Optimizations
+
 - **Database indexing**: Optimized queries with proper indexing
 - **Pagination**: Efficient handling of large datasets
 - **Caching**: Redis-based caching for frequently accessed rules
@@ -198,18 +217,21 @@ model RuleAudit {
 ## 🧪 Testing Strategy
 
 ### Unit Tests
+
 - Permission system tests (`rulePermissions.test.ts`)
 - Component rendering tests
 - Utility function tests
 - Security validation tests
 
 ### Integration Tests
+
 - API endpoint testing
 - Database integration testing
 - Permission flow testing
 - Security boundary testing
 
 ### Manual Testing
+
 - Cross-browser compatibility
 - Responsive design testing
 - Accessibility testing
@@ -218,18 +240,21 @@ model RuleAudit {
 ## 🚀 Deployment Ready
 
 ### Environment Configuration
+
 - Environment variable configuration
 - Database migration scripts
 - API endpoint configuration
 - Security settings
 
 ### Monitoring & Maintenance
+
 - Performance monitoring setup
 - Error tracking and logging
 - Regular security audits
 - Backup and recovery procedures
 
 ### Documentation
+
 - Complete deployment guide
 - API documentation with examples
 - Troubleshooting guide
@@ -238,16 +263,19 @@ model RuleAudit {
 ## 📈 Business Value
 
 ### Operational Efficiency
+
 - **Centralized management**: Single interface for all rule management
 - **Automated workflows**: Reduce manual intervention in rule processing
 - **Real-time monitoring**: Immediate visibility into rule performance
 
 ### Compliance & Security
+
 - **Audit trails**: Complete compliance with regulatory requirements
 - **Access control**: Granular permission management
 - **Security validation**: Robust security measures
 
 ### Scalability
+
 - **Modular architecture**: Easy to extend and modify
 - **Performance optimized**: Handles large rule sets efficiently
 - **Future-ready**: Designed for future business needs
@@ -255,12 +283,14 @@ model RuleAudit {
 ## 🔄 Next Steps
 
 ### Immediate Actions
+
 1. **Database Setup**: Run migrations to create rule management tables
 2. **API Implementation**: Implement backend API endpoints
 3. **Permission Configuration**: Set up role-based permissions
 4. **Testing**: Execute comprehensive testing suite
 
 ### Future Enhancements
+
 1. **Rule Templates**: Pre-built rule templates for common scenarios
 2. **Bulk Operations**: Bulk rule creation and management
 3. **Advanced Analytics**: Machine learning-based rule optimization
@@ -269,12 +299,14 @@ model RuleAudit {
 ## 📞 Support & Maintenance
 
 ### Documentation
+
 - **Deployment Guide**: Step-by-step deployment instructions
 - **API Documentation**: Complete API reference with examples
 - **Troubleshooting Guide**: Common issues and solutions
 - **Best Practices**: Guidelines for optimal usage
 
 ### Monitoring
+
 - **Performance Metrics**: Key performance indicators
 - **Error Tracking**: Automated error detection and reporting
 - **Usage Analytics**: User behavior and system usage patterns

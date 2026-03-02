@@ -7,6 +7,7 @@ Comprehensive guide for the API Gateway configuration tab in supplier management
 ## 📋 Overview
 
 The API Gateway tab enables suppliers to configure and manage API integrations with dynamic endpoint mapping based on:
+
 - Selected **Product** (Hotel, Flight, Tours, etc.)
 - Deployment **Environment** (Development, Staging, Production)
 - **Geography** and **Channel** routing rules
@@ -29,6 +30,7 @@ The API Gateway tab enables suppliers to configure and manage API integrations w
 ```
 
 **Environment Configurations:**
+
 - **Development**: Sandbox URLs, test credentials, permissive settings, detailed logging
 - **Staging**: Pre-production URLs, validated credentials, moderate rate limits, info logging
 - **Production**: Live URLs, secure credentials, strict rate limits, warning logging only
@@ -82,7 +84,7 @@ Load Hotel-specific authentication requirements
 
 ## 🔄 Environment Switching
 
-```
+```mermaid
 Current Environment: Development
 
                     ┌─────────────────┐
@@ -150,7 +152,7 @@ Current Environment: Development
 
 Dynamically shows fields based on selected product:
 
-```
+```text
 Hotel Product Form:
 ┌─────────────────────────────────────┐
 │ Hotel API - Base Configuration      │
@@ -184,7 +186,7 @@ Flight Product Form:
 
 ### Phase 3: Endpoint Configuration
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │ Configure Endpoints for Hotel/Development           │
 ├──────────────────────────────────────────────────────┤
@@ -221,7 +223,7 @@ Flight Product Form:
 
 ### Phase 4: Request/Response Mapping
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │ Request/Response Transformations                     │
 ├──────────────────────────────────────────────────────┤
@@ -245,7 +247,7 @@ Flight Product Form:
 
 ### Phase 5: Geography & Channel Routing
 
-```
+```text
 ┌──────────────────────────────────────────────────────┐
 │ Routing Configuration                                │
 ├──────────────────────────────────────────────────────┤

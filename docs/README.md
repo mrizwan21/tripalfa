@@ -5,42 +5,46 @@ A modern microservices-based travel booking platform with B2C Booking Engine, B2
 ## 🏗️ Project Structure
 
 ```text
-TripAlfa/
-├── apps/                    # Frontend applications
-│   ├── booking-engine/      # B2C Booking Engine (Vite + React)
-│   ├── b2b-admin/           # B2B Admin Panel (Next.js)
-│   └── super-admin/         # Super Admin Panel (Vite + React)
-│
-├── services/                # Backend microservices
-│   ├── api-gateway/         # Centralized API Gateway
-│   ├── booking-service/     # Booking management
-│   ├── inventory-service/   # Inventory & suppliers
-│   ├── payment-service/     # Payment processing
-│   ├── user-service/        # User authentication
-│   ├── notification-service/# Email/SMS notifications
-│   └── analytics-service/   # Reporting & analytics
-│
-├── packages/                # Shared libraries
-│   ├── shared-types/        # TypeScript types
-│   ├── shared-utils/        # Common utilities
-│   └── ui-components/       # Shared React components
-│
-├── infrastructure/          # Infrastructure configs
-│   ├── compose/             # Docker Compose configurations
-│   ├── k8s/                 # Kubernetes manifests
-│   ├── nginx/               # NGINX configs
-│   ├── monitoring/          # Prometheus, Grafana
-│   ├── scripts/             # Deployment scripts
-│   └── wicked/              # Wicked API management configs
-│
-├── database/                # Database schemas
-│   └── prisma/              # Prisma schema & migrations
-│
-└── docs/                    # Documentation
-    ├── architecture/        # Architecture documentation
-    ├── api/                 # API documentation
-    └── guides/              # Development guides
+TripAlfa - Node/
+├── apps/                         # Frontend applications
+│   ├── booking-engine/           # B2C booking frontend (Vite + React)
+│   └── b2b-admin/                # B2B admin frontend (Vite + React)
+├── services/                     # Backend microservices
+│   ├── api-gateway/
+│   ├── booking-service/
+│   ├── booking-engine-service/
+│   ├── b2b-admin-service/
+│   ├── payment-service/
+│   ├── user-service/
+│   ├── notification-service/
+│   ├── kyc-service/
+│   ├── marketing-service/
+│   ├── organization-service/
+│   ├── wallet-service/
+│   └── rule-engine-service/
+├── packages/                     # Shared workspace packages
+│   ├── api-clients/
+│   ├── message-queue/
+│   ├── notifications/
+│   ├── resilience/
+│   ├── rules/
+│   ├── shared-database/
+│   ├── shared-types/
+│   ├── shared-utils/
+│   ├── static-data/
+│   ├── ui-components/
+│   └── wallet/
+├── database/
+│   ├── prisma/                   # Main Prisma schema & migrations
+│   └── static-db/                # Static reference DB assets
+├── infrastructure/               # Compose, monitoring, nginx, templates
+├── scripts/                      # Local scripts, setup, verification
+├── docs/                         # Product, architecture, API, deployment docs
+├── types/                        # Global ambient type declarations
+└── mcp-wikivoyage/               # Local MCP server workspace
 ```
+
+For strict placement rules and an enforceable directory map, see [Repository Structure Guide](./REPOSITORY_STRUCTURE.md).
 
 ## 🚀 Quick Start
 
@@ -54,84 +58,96 @@ TripAlfa/
 
 ```bash
 # Install all dependencies
-npm install
+pnpm install
 
 # Generate Prisma client
-npm run db:generate
+pnpm run db:generate
 
 # Start development
-npm run dev
+pnpm run dev
 ```
 
 ### Running Individual Apps
 
 ```bash
-# Booking Engine (port 3001)
-npm run dev --workspace=@tripalfa/booking-engine
+# Booking Engine (port 5176)
+pnpm run dev --workspace=@tripalfa/booking-engine
 
-# B2B Admin (port 3000)
-npm run dev --workspace=@tripalfa/b2b-admin
-
-# Super Admin (port 3002)
-npm run dev --workspace=@tripalfa/super-admin
+# B2B Admin (port 5173)
+pnpm run dev --workspace=@tripalfa/b2b-admin
 ```
 
 ### Running Services
 
 ```bash
 # Start all services with Docker
-docker-compose -f infrastructure/compose/docker-compose.yml up -d
+docker compose -f infrastructure/compose/docker-compose.yml up -d
 
 # Or run individual service
-npm run dev --workspace=@tripalfa/booking-service
+pnpm run dev --workspace=@tripalfa/booking-service
 ```
 
 ## 📖 Documentation
 
-- [Architecture Overview](./docs/architecture/microservices.md)
-- [System Design](./docs/architecture/system-design.md)
-- [API Gateway](./docs/api/gateway.md)
-- [Deployment Guide](./docs/guides/deployment.md)
-- [Quick Start Guide](./docs/guides/quick-start.md)
+- [Repository Structure Guide](./REPOSITORY_STRUCTURE.md)
+- [Documentation Index](./DOCUMENTATION_INDEX.md)
+- [Architecture Overview](./architecture/microservices.md)
+- [Backend Services](./architecture/BACKEND_SERVICES.md)
+- [API Documentation](./api/API_DOCUMENTATION.md)
+- [Deployment Guide](./operations/deployment.md)
+
+### Documentation Categories
+
+- `architecture/`: system architecture, service topology, resilience
+- `api/`: contracts, endpoint documentation, API integration testing
+- `integrations/`: supplier and external integration guides (Duffel, LiteAPI, wallet)
+- `operations/`: deployment, optimization, runbooks, quick references
+- `specs/`: product requirements, SRS, phased specifications
+- `status/`: implementation and feature status summaries
+- `migrations/`: migration-specific implementation notes
 
 ## 🛠️ Development
 
 ### Workspaces
 
-This project uses npm workspaces for monorepo management:
+This project uses pnpm workspaces for monorepo management:
 
-| Workspace | Description | Port |
-| -------- | ----------- | --- |
-| `@tripalfa/booking-engine` | B2C Booking Frontend | 3001 |
-| `@tripalfa/b2b-admin` | B2B Admin Frontend | 3000 |
-| `@tripalfa/super-admin` | Super Admin Frontend | 3002 |
-| `@tripalfa/api-gateway` | API Gateway | 3000 |
-| `@tripalfa/booking-service` | Booking Service | 3001 |
+| Workspace                   | Description          | Port |
+| --------------------------- | -------------------- | ---- |
+| `@tripalfa/booking-engine`  | B2C Booking Frontend | 5176 |
+| `@tripalfa/b2b-admin`       | B2B Admin Frontend   | 5173 |
+| `@tripalfa/api-gateway`     | API Gateway          | 3000 |
+| `@tripalfa/booking-service` | Booking Service      | 3001 |
 
 ### Database
 
 ```bash
 # Run migrations
-npm run db:migrate
+pnpm run db:migrate
 
 # Push schema changes
-npm run db:push
+pnpm run db:push
 
 # Generate Prisma client
-npm run db:generate
+pnpm run db:generate
 ```
 
 ## 📦 Services Overview
 
-| Service | Port | Description |
-| ----- | --- | ----------- |
-| API Gateway | 3000 | Request routing, auth, rate limiting |
-| Booking Service | 3001 | Flight/hotel bookings |
-| Inventory Service | 3002 | Real-time inventory |
-| Payment Service | 3003 | Payment processing |
-| User Service | 3004 | Authentication & profiles |
-| Notification Service | 3009 | Email/SMS notifications |
-| Analytics Service | 3006 | Business intelligence |
+| Service                | Description                                        |
+| ---------------------- | -------------------------------------------------- |
+| API Gateway            | Request routing, auth, cross-service orchestration |
+| Booking Service        | Core flight/hotel booking domain logic             |
+| Booking Engine Service | Backend APIs supporting the booking frontend       |
+| B2B Admin Service      | Backend APIs supporting B2B admin workflows        |
+| Payment Service        | Wallet, payments, and transaction orchestration    |
+| User Service           | Authentication and user profile management         |
+| Notification Service   | Email/SMS notification orchestration               |
+| KYC Service            | Identity and compliance workflows                  |
+| Marketing Service      | Campaign and engagement workflows                  |
+| Organization Service   | Enterprise and B2B organization management         |
+| Wallet Service         | Wallet-specific operations and balances            |
+| Rule Engine Service    | Dynamic business rules and policy execution        |
 
 ## 🤝 Contributing
 
@@ -149,20 +165,20 @@ We welcome contributions! Please follow these steps:
 2. **Install dependencies**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Set up the database**
 
    ```bash
-   npm run db:generate
-   npm run db:migrate
+   pnpm run db:generate
+   pnpm run db:migrate
    ```
 
 4. **Start development servers**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ### Development Workflow
@@ -185,10 +201,10 @@ We welcome contributions! Please follow these steps:
    npx tsc -p tsconfig.json --noEmit
 
    # Build verification
-   npm run build
+   pnpm run build
 
    # Run tests
-   npm test
+   pnpm test
    ```
 
 4. **Commit your changes**
@@ -211,6 +227,7 @@ We welcome contributions! Please follow these steps:
 - **Linting**: Follow ESLint configuration
 - **Commits**: Use conventional commit format
 - **PRs**: Include description and link to issues
+- **Package Manager**: Use pnpm for all operations
 
 ### Architecture Guidelines
 

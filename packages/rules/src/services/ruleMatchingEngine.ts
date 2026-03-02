@@ -1,8 +1,13 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
-import { MarkupRule, CommissionRule, RuleMatchContext } from '../types';
-import { ruleMatchesConditions, sortRulesByPriority, filterActiveRules, ruleAppliesToService } from '../utils';
-import { RuleMatchingError } from '../errors';
+import { PrismaClient } from "@prisma/client";
+import { MarkupRule, CommissionRule, RuleMatchContext } from "../types";
+import {
+  ruleMatchesConditions,
+  sortRulesByPriority,
+  filterActiveRules,
+  ruleAppliesToService,
+} from "../utils";
+import { RuleMatchingError } from "../errors";
 
 /**
  * Rule Matching Engine
@@ -24,16 +29,18 @@ export class RuleMatchingEngine {
   /**
    * Find all applicable markup rules for the given context
    */
-  async findApplicableMarkupRules(context: RuleMatchContext): Promise<MarkupRule[]> {
+  async findApplicableMarkupRules(
+    context: RuleMatchContext,
+  ): Promise<MarkupRule[]> {
     try {
-      const cacheKey = this.getCacheKey('markup', context);
+      const cacheKey = this.getCacheKey("markup", context);
 
       // Check cache first
       if (this.cacheEnabled && this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
-      const serviceType = context.bookingType || context.serviceType || 'all';
+      const serviceType = context.bookingType || context.serviceType || "all";
 
       // Fetch from database
       let rules = await this.prisma.markupRule.findMany({
@@ -42,9 +49,9 @@ export class RuleMatchingEngine {
           validFrom: { lte: new Date() },
           OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
           ...(context.companyId && { companyId: context.companyId }),
-          applicableTo: { hasSome: [serviceType, 'all'] }
+          applicableTo: { hasSome: [serviceType, "all"] },
         },
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }]
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
       });
 
       // Filter based on context matching
@@ -63,23 +70,27 @@ export class RuleMatchingEngine {
 
       return sorted;
     } catch (error) {
-      throw new RuleMatchingError('Error finding applicable markup rules', { error: String(error) });
+      throw new RuleMatchingError("Error finding applicable markup rules", {
+        error: String(error),
+      });
     }
   }
 
   /**
    * Find all applicable commission rules for the given context
    */
-  async findApplicableCommissionRules(context: RuleMatchContext): Promise<CommissionRule[]> {
+  async findApplicableCommissionRules(
+    context: RuleMatchContext,
+  ): Promise<CommissionRule[]> {
     try {
-      const cacheKey = this.getCacheKey('commission', context);
+      const cacheKey = this.getCacheKey("commission", context);
 
       // Check cache first
       if (this.cacheEnabled && this.cache.has(cacheKey)) {
         return this.cache.get(cacheKey);
       }
 
-      const serviceType = context.bookingType || context.serviceType || 'all';
+      const serviceType = context.bookingType || context.serviceType || "all";
 
       // Fetch from database
       let rules = await this.prisma.commissionRule.findMany({
@@ -88,13 +99,15 @@ export class RuleMatchingEngine {
           validFrom: { lte: new Date() },
           OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
           ...(context.companyId && { companyId: context.companyId }),
-          applicableTo: { hasSome: [serviceType, 'all'] }
+          applicableTo: { hasSome: [serviceType, "all"] },
         },
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }]
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
       });
 
       // Filter based on context matching
-      const applicableRules = rules.filter((rule: CommissionRule) => this.contextMatchesCommission(rule, context));
+      const applicableRules = rules.filter((rule: CommissionRule) =>
+        this.contextMatchesCommission(rule, context),
+      );
 
       // Sort by priority
       const sorted = sortRulesByPriority(applicableRules) as CommissionRule[];
@@ -107,14 +120,18 @@ export class RuleMatchingEngine {
 
       return sorted;
     } catch (error) {
-      throw new RuleMatchingError('Error finding applicable commission rules', { error: String(error) });
+      throw new RuleMatchingError("Error finding applicable commission rules", {
+        error: String(error),
+      });
     }
   }
 
   /**
    * Find first applicable markup rule (highest priority)
    */
-  async findFirstApplicableMarkupRule(context: RuleMatchContext): Promise<MarkupRule | null> {
+  async findFirstApplicableMarkupRule(
+    context: RuleMatchContext,
+  ): Promise<MarkupRule | null> {
     const rules = await this.findApplicableMarkupRules(context);
     return rules.length > 0 ? rules[0] : null;
   }
@@ -122,7 +139,9 @@ export class RuleMatchingEngine {
   /**
    * Find first applicable commission rule (highest priority)
    */
-  async findFirstApplicableCommissionRule(context: RuleMatchContext): Promise<CommissionRule | null> {
+  async findFirstApplicableCommissionRule(
+    context: RuleMatchContext,
+  ): Promise<CommissionRule | null> {
     const rules = await this.findApplicableCommissionRules(context);
     return rules.length > 0 ? rules[0] : null;
   }
@@ -130,7 +149,7 @@ export class RuleMatchingEngine {
   /**
    * Invalidate cache for a rule type
    */
-  invalidateCache(ruleType?: 'markup' | 'commission'): void {
+  invalidateCache(ruleType?: "markup" | "commission"): void {
     if (!ruleType) {
       this.cache.clear();
     } else {
@@ -140,7 +159,7 @@ export class RuleMatchingEngine {
           keysToDelete.push(key);
         }
       }
-      keysToDelete.forEach(key => this.cache.delete(key));
+      keysToDelete.forEach((key) => this.cache.delete(key));
     }
   }
 
@@ -159,17 +178,29 @@ export class RuleMatchingEngine {
    */
   private contextMatches(rule: MarkupRule, context: RuleMatchContext): boolean {
     // Check branch restrictions
-    if (rule.branchIds?.length && context.branchId && !rule.branchIds.includes(context.branchId)) {
+    if (
+      rule.branchIds?.length &&
+      context.branchId &&
+      !rule.branchIds.includes(context.branchId)
+    ) {
       return false;
     }
 
     // Check user restrictions
-    if (rule.userIds?.length && context.userId && !rule.userIds.includes(context.userId)) {
+    if (
+      rule.userIds?.length &&
+      context.userId &&
+      !rule.userIds.includes(context.userId)
+    ) {
       return false;
     }
 
     // Check supplier restrictions
-    if (rule.supplierIds?.length && context.supplierId && !rule.supplierIds.includes(context.supplierId)) {
+    if (
+      rule.supplierIds?.length &&
+      context.supplierId &&
+      !rule.supplierIds.includes(context.supplierId)
+    ) {
       return false;
     }
 
@@ -179,9 +210,16 @@ export class RuleMatchingEngine {
   /**
    * Check if commission rule context matches
    */
-  private contextMatchesCommission(rule: CommissionRule, context: RuleMatchContext): boolean {
+  private contextMatchesCommission(
+    rule: CommissionRule,
+    context: RuleMatchContext,
+  ): boolean {
     // Check supplier restrictions
-    if (rule.supplierIds?.length && context.supplierId && !rule.supplierIds.includes(context.supplierId)) {
+    if (
+      rule.supplierIds?.length &&
+      context.supplierId &&
+      !rule.supplierIds.includes(context.supplierId)
+    ) {
       return false;
     }
 
@@ -197,12 +235,12 @@ export class RuleMatchingEngine {
       context.companyId,
       context.supplierId,
       context.branchId,
-      context.userId
+      context.userId,
     ]
       .filter(Boolean)
-      .join(':');
+      .join(":");
 
-    return `rules:${type}:${contextKey || 'default'}`;
+    return `rules:${type}:${contextKey || "default"}`;
   }
 
   /**

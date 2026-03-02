@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { weatherApi, WeatherData, WeatherCoordinates } from '../api/weatherApi';
+import { useState, useEffect, useCallback } from "react";
+import { weatherApi } from "../api/weatherApi";
+
+type WeatherData = Record<string, any>;
+type WeatherCoordinates = { latitude: number; longitude: number };
 
 export interface UseWeatherDataResult {
   weather: WeatherData | null;
@@ -17,8 +20,8 @@ export interface UseWeatherDataResult {
  */
 export function useWeatherData(
   coordinates: WeatherCoordinates | null | undefined,
-  units: 'metric' | 'imperial' | 'standard' = 'metric',
-  lang: string = 'en'
+  units: "metric" | "imperial" | "standard" = "metric",
+  lang: string = "en",
 ): UseWeatherDataResult {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,7 +30,7 @@ export function useWeatherData(
 
   const fetchWeather = useCallback(async () => {
     if (!coordinates?.latitude || !coordinates?.longitude) {
-      setError('Location coordinates not available');
+      setError("Location coordinates not available");
       return;
     }
 
@@ -36,7 +39,7 @@ export function useWeatherData(
     if (!apiKey) {
       setIsConfigured(false);
       setError(
-        'Weather API key not configured. Please set VITE_OPENWEATHERMAP_API_KEY in your environment.'
+        "Weather API key not configured. Please set VITE_OPENWEATHERMAP_API_KEY in your environment.",
       );
       return;
     }
@@ -49,7 +52,7 @@ export function useWeatherData(
       const data = await weatherApi.getWeather(coordinates, units, lang);
       setWeather(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch weather data');
+      setError(err.message || "Failed to fetch weather data");
       setWeather(null);
     } finally {
       setLoading(false);

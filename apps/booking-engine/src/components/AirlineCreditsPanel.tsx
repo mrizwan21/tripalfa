@@ -1,7 +1,7 @@
 /**
  * Airline Credits Panel
  * Displays customer's airline credits and usage history
- * 
+ *
  * Features:
  * - List all airline credits by airline
  * - Show expiration dates and balances
@@ -9,8 +9,10 @@
  * - Usage history
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FC } from 'react';
+import React, { useState, useEffect } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
+import { Button } from "@/components/ui/button";
 
 interface AirlineCredit {
   id: string;
@@ -22,7 +24,7 @@ interface AirlineCredit {
   currency: string;
   expiresAt: string;
   issuedAt: string;
-  status: 'active' | 'expired' | 'used';
+  status: "active" | "expired" | "used";
   reason?: string;
 }
 
@@ -46,13 +48,13 @@ interface AirlineCreditsPanelProps {
   customerId: string;
 }
 
-type FilterStatus = 'all' | 'active' | 'expired' | 'used';
+type FilterStatus = "all" | "active" | "expired" | "used";
 
 const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
   const [data, setData] = useState<AirlineCreditsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [expandedCredit, setExpandedCredit] = useState<string | null>(null);
 
   useEffect(() => {
@@ -68,39 +70,54 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
         `/api/customers/${customerId}/airline-credits`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${getStoredAuthToken()}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch airline credits');
+        throw new Error("Failed to fetch airline credits");
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status: AirlineCredit['status']) => {
+  const getStatusBadge = (status: AirlineCredit["status"]) => {
     const config = {
-      active: { label: 'Active', color: '#4caf50', icon: '✓' },
-      expired: { label: 'Expired', color: '#f44336', icon: '✕' },
-      used: { label: 'Used', color: '#2196f3', icon: '✓' },
+      active: {
+        label: "Active",
+        color: "hsl(var(--secondary))",
+        bgColor: "hsl(var(--secondary) / 0.14)",
+        icon: "✓",
+      },
+      expired: {
+        label: "Expired",
+        color: "hsl(var(--destructive))",
+        bgColor: "hsl(var(--destructive) / 0.14)",
+        icon: "✕",
+      },
+      used: {
+        label: "Used",
+        color: "hsl(var(--primary))",
+        bgColor: "hsl(var(--primary) / 0.14)",
+        icon: "✓",
+      },
     };
     return config[status];
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -115,18 +132,22 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
     return Math.ceil(diff / (1000 * 3600 * 24));
   };
 
-  const filteredCredits = data?.credits.filter((credit) => {
-    if (filterStatus === 'all') return true;
-    return credit.status === filterStatus;
-  }) || [];
+  const filteredCredits =
+    data?.credits.filter((credit) => {
+      if (filterStatus === "all") return true;
+      return credit.status === filterStatus;
+    }) || [];
 
-  const groupedByAirline = filteredCredits.reduce((acc, credit) => {
-    if (!acc[credit.airlineCode]) {
-      acc[credit.airlineCode] = [];
-    }
-    acc[credit.airlineCode].push(credit);
-    return acc;
-  }, {} as Record<string, AirlineCredit[]>);
+  const groupedByAirline = filteredCredits.reduce(
+    (acc, credit) => {
+      if (!acc[credit.airlineCode]) {
+        acc[credit.airlineCode] = [];
+      }
+      acc[credit.airlineCode].push(credit);
+      return acc;
+    },
+    {} as Record<string, AirlineCredit[]>,
+  );
 
   return (
     <div className="airline-credits-panel">
@@ -134,7 +155,13 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <button onClick={fetchAirlineCredits}>Retry</button>
+          <Button
+            variant="outline"
+            size="default"
+            onClick={fetchAirlineCredits}
+          >
+            Retry
+          </Button>
         </div>
       )}
 
@@ -158,30 +185,40 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
 
           {/* Filter */}
           <div className="credit-filters">
-            <button
-              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('all')}
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "all" ? "active" : ""}`}
+              onClick={() => setFilterStatus("all")}
             >
               All ({data.credits.length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'active' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('active')}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "active" ? "active" : ""}`}
+              onClick={() => setFilterStatus("active")}
             >
-              Active ({data.credits.filter((c) => c.status === 'active').length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'expired' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('expired')}
+              Active ({data.credits.filter((c) => c.status === "active").length}
+              )
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "expired" ? "active" : ""}`}
+              onClick={() => setFilterStatus("expired")}
             >
-              Expired ({data.credits.filter((c) => c.status === 'expired').length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'used' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('used')}
+              Expired (
+              {data.credits.filter((c) => c.status === "expired").length})
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "used" ? "active" : ""}`}
+              onClick={() => setFilterStatus("used")}
             >
-              Used ({data.credits.filter((c) => c.status === 'used').length})
-            </button>
+              Used ({data.credits.filter((c) => c.status === "used").length})
+            </Button>
           </div>
 
           {/* Credits by Airline */}
@@ -192,117 +229,142 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             </div>
           ) : (
             <div className="credits-list">
-              {Object.entries(groupedByAirline).map(([airlineCode, credits]) => (
-                <div key={airlineCode} className="airline-group">
-                  <div className="airline-header">
-                    <span className="airline-name">
-                      {credits[0].airlineName} ({airlineCode})
-                    </span>
-                    <span className="airline-total">
-                      {data.currency} {credits.reduce((sum, c) => sum + (c.amount - c.usedAmount), 0).toFixed(2)}
-                    </span>
-                  </div>
+              {Object.entries(groupedByAirline).map(
+                ([airlineCode, credits]) => (
+                  <div key={airlineCode} className="airline-group">
+                    <div className="airline-header">
+                      <span className="airline-name">
+                        {credits[0].airlineName} ({airlineCode})
+                      </span>
+                      <span className="airline-total">
+                        {data.currency}{" "}
+                        {credits
+                          .reduce(
+                            (sum, c) => sum + (c.amount - c.usedAmount),
+                            0,
+                          )
+                          .toFixed(2)}
+                      </span>
+                    </div>
 
-                  <div className="credits-items">
-                    {credits.map((credit) => {
-                      const statusConfig = getStatusBadge(credit.status);
-                      const daysLeft = getDaysUntilExpiration(credit.expiresAt);
-                      const balance = credit.amount - credit.usedAmount;
+                    <div className="credits-items">
+                      {credits.map((credit) => {
+                        const statusConfig = getStatusBadge(credit.status);
+                        const daysLeft = getDaysUntilExpiration(
+                          credit.expiresAt,
+                        );
+                        const balance = credit.amount - credit.usedAmount;
 
-                      return (
-                        <div
-                          key={credit.id}
-                          className={`credit-item ${credit.status}`}
-                        >
+                        return (
                           <div
-                            className="credit-header-row"
-                            onClick={() =>
-                              setExpandedCredit(
-                                expandedCredit === credit.id ? null : credit.id
-                              )
-                            }
+                            key={credit.id}
+                            className={`credit-item ${credit.status}`}
                           >
-                            <div className="credit-left">
-                              <p className="credit-code">{credit.code}</p>
-                              <p className="credit-issued">
-                                Issued: {formatDate(credit.issuedAt)}
-                              </p>
-                            </div>
-
-                            <div className="credit-middle">
-                              <span
-                                className="status-badge"
-                                style={{
-                                  backgroundColor: statusConfig.color + '20',
-                                  color: statusConfig.color,
-                                }}
-                              >
-                                {statusConfig.label}
-                              </span>
-                            </div>
-
-                            <div className="credit-right">
-                              <p className="credit-balance">
-                                {data.currency} {balance.toFixed(2)}
-                              </p>
-                              {credit.status === 'active' && daysLeft <= 30 && (
-                                <p className="expiry-warning">
-                                  Expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}
+                            <div
+                              className="credit-header-row"
+                              onClick={() =>
+                                setExpandedCredit(
+                                  expandedCredit === credit.id
+                                    ? null
+                                    : credit.id,
+                                )
+                              }
+                            >
+                              <div className="credit-left">
+                                <p className="credit-code">{credit.code}</p>
+                                <p className="credit-issued">
+                                  Issued: {formatDate(credit.issuedAt)}
                                 </p>
-                              )}
-                              {credit.status === 'expired' && (
-                                <p className="expired-date">
-                                  Expired: {formatDate(credit.expiresAt)}
-                                </p>
-                              )}
-                            </div>
+                              </div>
 
-                            <div className="expand-icon">
-                              {expandedCredit === credit.id ? '▼' : '▶'}
-                            </div>
-                          </div>
-
-                          {/* Expanded Details */}
-                          {expandedCredit === credit.id && (
-                            <div className="credit-details">
-                              <div className="detail-row">
-                                <span className="detail-label">Original Amount:</span>
-                                <span className="detail-value">
-                                  {data.currency} {credit.amount.toFixed(2)}
+                              <div className="credit-middle">
+                                <span
+                                  className="status-badge"
+                                  style={{
+                                    backgroundColor: statusConfig.bgColor,
+                                    color: statusConfig.color,
+                                  }}
+                                >
+                                  {statusConfig.label}
                                 </span>
                               </div>
-                              <div className="detail-row">
-                                <span className="detail-label">Used Amount:</span>
-                                <span className="detail-value">
-                                  {data.currency} {credit.usedAmount.toFixed(2)}
-                                </span>
-                              </div>
-                              <div className="detail-row">
-                                <span className="detail-label">Remaining:</span>
-                                <span className="detail-value">
+
+                              <div className="credit-right">
+                                <p className="credit-balance">
                                   {data.currency} {balance.toFixed(2)}
-                                </span>
+                                </p>
+                                {credit.status === "active" &&
+                                  daysLeft <= 30 && (
+                                    <p className="expiry-warning">
+                                      Expires in {daysLeft} day
+                                      {daysLeft !== 1 ? "s" : ""}
+                                    </p>
+                                  )}
+                                {credit.status === "expired" && (
+                                  <p className="expired-date">
+                                    Expired: {formatDate(credit.expiresAt)}
+                                  </p>
+                                )}
                               </div>
-                              <div className="detail-row">
-                                <span className="detail-label">Expires:</span>
-                                <span className="detail-value">
-                                  {formatDate(credit.expiresAt)}
-                                </span>
+
+                              <div className="expand-icon">
+                                {expandedCredit === credit.id ? "▼" : "▶"}
                               </div>
-                              {credit.reason && (
-                                <div className="detail-row">
-                                  <span className="detail-label">Reason:</span>
-                                  <span className="detail-value">{credit.reason}</span>
-                                </div>
-                              )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+
+                            {/* Expanded Details */}
+                            {expandedCredit === credit.id && (
+                              <div className="credit-details">
+                                <div className="detail-row">
+                                  <span className="detail-label">
+                                    Original Amount:
+                                  </span>
+                                  <span className="detail-value">
+                                    {data.currency} {credit.amount.toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="detail-row">
+                                  <span className="detail-label">
+                                    Used Amount:
+                                  </span>
+                                  <span className="detail-value">
+                                    {data.currency}{" "}
+                                    {credit.usedAmount.toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="detail-row">
+                                  <span className="detail-label">
+                                    Remaining:
+                                  </span>
+                                  <span className="detail-value">
+                                    {data.currency} {balance.toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="detail-row">
+                                  <span className="detail-label">Expires:</span>
+                                  <span className="detail-value">
+                                    {formatDate(credit.expiresAt)}
+                                  </span>
+                                </div>
+                                {credit.reason && (
+                                  <div className="detail-row">
+                                    <span className="detail-label">
+                                      Reason:
+                                    </span>
+                                    <span className="detail-value">
+                                      {credit.reason}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ),
+              )}
             </div>
           )}
 
@@ -315,7 +377,9 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
                   <div key={record.id} className="history-item">
                     <div className="history-icon">🎫</div>
                     <div className="history-details">
-                      <p className="history-description">{record.description}</p>
+                      <p className="history-description">
+                        {record.description}
+                      </p>
                       <p className="history-date">{formatDate(record.date)}</p>
                     </div>
                     <div className="history-amount">
@@ -334,7 +398,9 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
               <li>Credits are automatically applied to your next booking</li>
               <li>Credits are prioritized by expiration date</li>
               <li>Unused credits will expire on the date shown</li>
-              <li>Combine credits with wallet and card for flexible payments</li>
+              <li>
+                Combine credits with wallet and card for flexible payments
+              </li>
               <li>Check back regularly for new credits from your bookings</li>
             </ul>
           </div>
@@ -360,8 +426,8 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #ffebee;
-  border-left: 4px solid #c62828;
+  background: hsl(var(--destructive) / 0.12);
+  border-left: 4px solid hsl(var(--destructive));
   border-radius: 8px;
   margin-bottom: 20px;
 }
@@ -369,15 +435,15 @@ const styles = `
 .error-alert p {
   margin: 0;
   flex: 1;
-  color: #c62828;
+  color: hsl(var(--destructive));
 }
 
 .error-alert button {
   padding: 6px 12px;
   background: white;
-  border: 1px solid #c62828;
+  border: 1px solid hsl(var(--destructive));
   border-radius: 4px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   cursor: pointer;
   font-size: 12px;
 }
@@ -393,8 +459,8 @@ const styles = `
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #007bff;
+  border: 3px solid hsl(var(--muted));
+  border-top-color: hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -409,8 +475,8 @@ const styles = `
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #fff3cd, #fffacd);
-  border: 1px solid #ffe082;
+  background: linear-gradient(135deg, hsl(var(--secondary) / 0.16), hsl(var(--secondary) / 0.12));
+  border: 1px solid hsl(var(--secondary) / 0.4);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
@@ -423,7 +489,7 @@ const styles = `
 .total-label {
   margin: 0 0 8px 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -432,7 +498,7 @@ const styles = `
   margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: #f57f17;
+  color: hsl(var(--secondary));
 }
 
 .total-icon {
@@ -451,8 +517,8 @@ const styles = `
 
 .filter-btn {
   padding: 8px 16px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
@@ -462,13 +528,13 @@ const styles = `
 }
 
 .filter-btn:hover {
-  background: #e0e0e0;
+  background: hsl(var(--border));
 }
 
 .filter-btn.active {
-  background: #007bff;
+  background: hsl(var(--primary));
   color: white;
-  border-color: #007bff;
+  border-color: hsl(var(--primary));
 }
 
 /* Empty State */
@@ -484,7 +550,7 @@ const styles = `
 
 .empty-state p {
   margin: 0;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Credits List */
@@ -494,7 +560,7 @@ const styles = `
 }
 
 .airline-group {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   overflow: hidden;
 }
@@ -504,18 +570,18 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  background: #f9f9f9;
-  border-bottom: 1px solid #e0e0e0;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
   font-weight: 700;
 }
 
 .airline-name {
   font-size: 14px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .airline-total {
-  color: #f57f17;
+  color: hsl(var(--secondary));
 }
 
 .credits-items {
@@ -524,7 +590,7 @@ const styles = `
 }
 
 .credit-item {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .credit-item:last-child {
@@ -542,7 +608,7 @@ const styles = `
 }
 
 .credit-header-row:hover {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 .credit-left {
@@ -555,13 +621,13 @@ const styles = `
   margin: 0;
   font-size: 13px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .credit-issued {
   margin: 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .status-badge {
@@ -584,31 +650,31 @@ const styles = `
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .expiry-warning {
   margin: 0;
   font-size: 11px;
-  color: #ff9800;
+  color: hsl(var(--secondary));
   font-weight: 600;
 }
 
 .expired-date {
   margin: 0;
   font-size: 11px;
-  color: #f44336;
+  color: hsl(var(--destructive));
 }
 
 .expand-icon {
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   text-align: center;
 }
 
 /* Expanded Details */
 .credit-details {
-  background: #fafafa;
+  background: hsl(var(--background));
   padding: 12px 16px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -624,13 +690,13 @@ const styles = `
 
 .detail-label {
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 600;
 }
 
 .detail-value {
   font-size: 13px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   font-weight: 700;
 }
 
@@ -638,14 +704,14 @@ const styles = `
 .usage-history {
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 2px solid #e0e0e0;
+  border-top: 2px solid hsl(var(--border));
 }
 
 .usage-history h3 {
   margin: 0 0 16px 0;
   font-size: 14px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .history-items {
@@ -658,7 +724,7 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 6px;
 }
 
@@ -675,25 +741,25 @@ const styles = `
   margin: 0 0 2px 0;
   font-size: 13px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .history-date {
   margin: 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .history-amount {
   font-size: 13px;
   font-weight: 700;
-  color: #f44336;
+  color: hsl(var(--destructive));
 }
 
 /* Info Box */
 .credits-info {
-  background: #f3e5f5;
-  border: 1px solid #e1bee7;
+  background: hsl(var(--accent) / 0.16);
+  border: 1px solid hsl(var(--accent) / 0.4);
   border-radius: 8px;
   padding: 16px;
   margin-top: 24px;
@@ -703,7 +769,7 @@ const styles = `
   margin: 0 0 12px 0;
   font-size: 12px;
   font-weight: 700;
-  color: #6a1b9a;
+  color: hsl(var(--primary));
   text-transform: uppercase;
 }
 
@@ -715,13 +781,13 @@ const styles = `
 
 .credits-info li {
   font-size: 12px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   margin-bottom: 6px;
 }
 
 .credits-info li:before {
   content: "✓ ";
-  color: #7b1fa2;
+  color: hsl(var(--primary));
   font-weight: 700;
   margin-right: 6px;
 }

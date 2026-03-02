@@ -4,14 +4,14 @@
  * Handles routing, error handling, caching, and request/response interceptors
  */
 
-import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosError } from "axios";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface APIEndpoint {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   path: string;
   description: string;
   cache?: {
@@ -73,7 +73,7 @@ export class APIManager {
   private cache: Map<string, CacheEntry> = new Map();
   private config: APIManagerConfig;
   private requestInterceptors: Array<(config: any) => any> = [];
-  private responseInterceptors: Array<(response: AxiosResponse) => AxiosResponse> = [];
+  private responseInterceptors: Array<(response: any) => any> = [];
   private errorInterceptors: Array<(error: AxiosError) => Promise<never>> = [];
 
   private constructor(config: APIManagerConfig) {
@@ -82,8 +82,8 @@ export class APIManager {
       baseURL: config.baseURL,
       timeout: config.timeout,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
     });
 
@@ -97,7 +97,10 @@ export class APIManager {
   public static getInstance(config?: APIManagerConfig): APIManager {
     if (!APIManager.instance) {
       const defaultConfig: APIManagerConfig = {
-        baseURL: (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || 'http://localhost:3000/api',
+        baseURL:
+          (typeof import.meta !== "undefined" &&
+            import.meta.env?.VITE_API_URL) ||
+          "http://localhost:3000/api",
         timeout: 30000,
         retryAttempts: 3,
         retryDelay: 1000,
@@ -115,7 +118,10 @@ export class APIManager {
    */
   public registerModule(module: APIModule): void {
     this.modules.set(module.name, module);
-    this.log('Module registered', { module: module.name, baseURL: module.baseURL });
+    this.log("Module registered", {
+      module: module.name,
+      baseURL: module.baseURL,
+    });
   }
 
   /**
@@ -142,14 +148,16 @@ export class APIManager {
   /**
    * Add response interceptor
    */
-  public addResponseInterceptor(interceptor: (response: AxiosResponse) => AxiosResponse): void {
+  public addResponseInterceptor(interceptor: (response: any) => any): void {
     this.responseInterceptors.push(interceptor);
   }
 
   /**
    * Add error interceptor
    */
-  public addErrorInterceptor(interceptor: (error: AxiosError) => Promise<never>): void {
+  public addErrorInterceptor(
+    interceptor: (error: AxiosError) => Promise<never>,
+  ): void {
     this.errorInterceptors.push(interceptor);
   }
 
@@ -161,13 +169,14 @@ export class APIManager {
     this.axiosInstance.interceptors.request.use(
       (config) => {
         // Add auth token if available
-        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        const token =
+          localStorage.getItem("token") || localStorage.getItem("authToken");
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
 
         // Add request ID for tracking
-        config.headers['X-Request-ID'] = this.generateRequestId();
+        config.headers["X-Request-ID"] = this.generateRequestId();
 
         // Run custom interceptors
         let finalConfig = config;
@@ -175,15 +184,15 @@ export class APIManager {
           finalConfig = interceptor(finalConfig);
         }
 
-        this.log('Request sent', {
+        this.log("Request sent", {
           method: config.method,
           url: config.url,
-          requestId: config.headers['X-Request-ID'],
+          requestId: config.headers["X-Request-ID"],
         });
 
         return finalConfig;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // Response interceptor
@@ -195,11 +204,11 @@ export class APIManager {
           finalResponse = interceptor(finalResponse);
         }
 
-        this.log('Response received', {
+        this.log("Response received", {
           method: response.config.method,
           url: response.config.url,
           status: response.status,
-          requestId: response.config.headers['X-Request-ID'],
+          requestId: response.config.headers["X-Request-ID"],
         });
 
         return finalResponse;
@@ -217,7 +226,7 @@ export class APIManager {
         // Handle errors
         this.handleError(error);
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -226,20 +235,20 @@ export class APIManager {
    */
   public async get<T = any>(
     url: string,
-    options?: any
+    options?: any,
   ): Promise<APIResponse<T>> {
     try {
       // Check cache first
       if (this.config.enableCache && !options?.skipCache) {
         const cached = this.getCached<T>(url);
         if (cached) {
-          this.log('Cache hit', { url });
+          this.log("Cache hit", { url });
           return { success: true, data: cached };
         }
       }
 
-      const response = await this.axiosInstance.get<APIResponse<T>>(url, options);
-      
+      const response = await this.axiosInstance.get(url, options);
+
       // Cache response if enabled
       if (this.config.enableCache && response.data) {
         this.setCached(url, response.data.data, this.config.cacheTTL);
@@ -257,11 +266,11 @@ export class APIManager {
   public async post<T = any>(
     url: string,
     data?: any,
-    options?: any
+    options?: any,
   ): Promise<APIResponse<T>> {
     try {
-      const response = await this.axiosInstance.post<APIResponse<T>>(url, data, options);
-      
+      const response = await this.axiosInstance.post(url, data, options);
+
       // Invalidate related cache entries
       this.invalidateCache(url);
 
@@ -277,11 +286,11 @@ export class APIManager {
   public async put<T = any>(
     url: string,
     data?: any,
-    options?: any
+    options?: any,
   ): Promise<APIResponse<T>> {
     try {
-      const response = await this.axiosInstance.put<APIResponse<T>>(url, data, options);
-      
+      const response = await this.axiosInstance.put(url, data, options);
+
       // Invalidate related cache entries
       this.invalidateCache(url);
 
@@ -297,11 +306,11 @@ export class APIManager {
   public async patch<T = any>(
     url: string,
     data?: any,
-    options?: any
+    options?: any,
   ): Promise<APIResponse<T>> {
     try {
-      const response = await this.axiosInstance.patch<APIResponse<T>>(url, data, options);
-      
+      const response = await this.axiosInstance.patch(url, data, options);
+
       // Invalidate related cache entries
       this.invalidateCache(url);
 
@@ -316,11 +325,11 @@ export class APIManager {
    */
   public async delete<T = any>(
     url: string,
-    options?: any
+    options?: any,
   ): Promise<APIResponse<T>> {
     try {
-      const response = await this.axiosInstance.delete<APIResponse<T>>(url, options);
-      
+      const response = await this.axiosInstance.delete(url, options);
+
       // Invalidate related cache entries
       this.invalidateCache(url);
 
@@ -382,8 +391,8 @@ export class APIManager {
     return {
       success: false,
       error: {
-        code: axiosError.code || 'UNKNOWN_ERROR',
-        message: axiosError.message || 'An error occurred',
+        code: axiosError.code || "UNKNOWN_ERROR",
+        message: axiosError.message || "An error occurred",
         details: axiosError.response?.data,
       },
     };
@@ -398,28 +407,31 @@ export class APIManager {
     switch (status) {
       case 401:
         // Unauthorized - clear auth and redirect to login
-        localStorage.removeItem('token');
-        localStorage.removeItem('authToken');
-        window.location.href = '/login';
+        localStorage.removeItem("token");
+        localStorage.removeItem("authToken");
+        window.location.href = "/login";
         break;
       case 403:
         // Forbidden
-        this.log('Access forbidden', { url: error.request.url });
+        this.log("Access forbidden", { url: error.request.url });
         break;
       case 404:
         // Not found
-        this.log('Resource not found', { url: error.request.url });
+        this.log("Resource not found", { url: error.request.url });
         break;
       case 429:
         // Rate limited
-        this.log('Rate limited', { url: error.request.url, retryAfter: error.response?.headers['retry-after'] });
+        this.log("Rate limited", {
+          url: error.request.url,
+          retryAfter: error.response?.headers["retry-after"],
+        });
         break;
       case 500:
         // Server error
-        this.log('Server error', { url: error.request.url });
+        this.log("Server error", { url: error.request.url });
         break;
       default:
-        this.log('Request error', { status, message: error.message });
+        this.log("Request error", { status, message: error.message });
     }
   }
 
@@ -434,9 +446,9 @@ export class APIManager {
    * Log messages (only in development or if enabled)
    */
   private log(message: string, data?: any): void {
-    const isDev = typeof import.meta !== 'undefined' && import.meta.env?.DEV;
+    const isDev = typeof import.meta !== "undefined" && import.meta.env?.DEV;
     if (this.config.enableLogging && isDev) {
-      console.log(`[APIManager] ${message}`, data || '');
+      console.log(`[APIManager] ${message}`, data || "");
     }
   }
 
@@ -455,7 +467,7 @@ export class APIManager {
    */
   public clearCache(): void {
     this.cache.clear();
-    this.log('Cache cleared');
+    this.log("Cache cleared");
   }
 
   /**
@@ -463,118 +475,325 @@ export class APIManager {
    */
   private registerMicroserviceModules(): void {
     const getEnvVar = (key: string, fallback: string): string => {
-      if (typeof import.meta !== 'undefined' && import.meta.env) {
-        return (import.meta.env as Record<string, string | undefined>)[key] || fallback;
+      if (typeof import.meta !== "undefined" && import.meta.env) {
+        return (
+          (import.meta.env as Record<string, string | undefined>)[key] ||
+          fallback
+        );
       }
       return fallback;
     };
 
     // Payment Service Module
     this.registerModule({
-      name: 'payment',
-      baseURL: getEnvVar('VITE_PAYMENT_SERVICE_URL', 'http://localhost:3003'),
+      name: "payment",
+      baseURL: getEnvVar("VITE_PAYMENT_SERVICE_URL", "http://localhost:3003"),
       endpoints: {
-        processPayment: { method: 'POST', path: '/api/payments/process', description: 'Process payment' },
-        getPayments: { method: 'GET', path: '/api/payments', description: 'List payments' },
-        getPayment: { method: 'GET', path: '/api/payments/:id', description: 'Get payment details' },
-        refundPayment: { method: 'POST', path: '/api/payments/:id/refund', description: 'Refund payment' },
-        getPaymentMethods: { method: 'GET', path: '/api/payments/methods', description: 'Get payment methods' },
-        getPaymentAnalytics: { method: 'GET', path: '/api/payments/analytics', description: 'Get payment analytics' },
-        getVirtualCards: { method: 'GET', path: '/api/virtual-cards', description: 'List virtual cards' },
-        createVirtualCard: { method: 'POST', path: '/api/virtual-cards', description: 'Create virtual card' },
-        getVirtualCard: { method: 'GET', path: '/api/virtual-cards/:id', description: 'Get virtual card details' },
-        updateVirtualCard: { method: 'PUT', path: '/api/virtual-cards/:id', description: 'Update virtual card' },
-        activateVirtualCard: { method: 'POST', path: '/api/virtual-cards/:id/activate', description: 'Activate virtual card' },
-        deactivateVirtualCard: { method: 'POST', path: '/api/virtual-cards/:id/deactivate', description: 'Deactivate virtual card' },
-        blockVirtualCard: { method: 'POST', path: '/api/virtual-cards/:id/block', description: 'Block virtual card' },
-        unblockVirtualCard: { method: 'POST', path: '/api/virtual-cards/:id/unblock', description: 'Unblock virtual card' },
-        getVirtualCardTransactions: { method: 'GET', path: '/api/virtual-cards/:id/transactions', description: 'Get card transactions' },
-        createVirtualCardTransaction: { method: 'POST', path: '/api/virtual-cards/:id/transactions', description: 'Create card transaction' },
-        getVirtualCardSettings: { method: 'GET', path: '/api/virtual-cards/settings', description: 'Get card settings' },
-        updateVirtualCardSettings: { method: 'PUT', path: '/api/virtual-cards/settings', description: 'Update card settings' },
-        getVirtualCardStats: { method: 'GET', path: '/api/virtual-cards/stats', description: 'Get card statistics' },
-      }
+        processPayment: {
+          method: "POST",
+          path: "/api/payments/process",
+          description: "Process payment",
+        },
+        getPayments: {
+          method: "GET",
+          path: "/api/payments",
+          description: "List payments",
+        },
+        getPayment: {
+          method: "GET",
+          path: "/api/payments/:id",
+          description: "Get payment details",
+        },
+        refundPayment: {
+          method: "POST",
+          path: "/api/payments/:id/refund",
+          description: "Refund payment",
+        },
+        getPaymentMethods: {
+          method: "GET",
+          path: "/api/payments/methods",
+          description: "Get payment methods",
+        },
+        getPaymentAnalytics: {
+          method: "GET",
+          path: "/api/payments/analytics",
+          description: "Get payment analytics",
+        },
+        getVirtualCards: {
+          method: "GET",
+          path: "/api/virtual-cards",
+          description: "List virtual cards",
+        },
+        createVirtualCard: {
+          method: "POST",
+          path: "/api/virtual-cards",
+          description: "Create virtual card",
+        },
+        getVirtualCard: {
+          method: "GET",
+          path: "/api/virtual-cards/:id",
+          description: "Get virtual card details",
+        },
+        updateVirtualCard: {
+          method: "PUT",
+          path: "/api/virtual-cards/:id",
+          description: "Update virtual card",
+        },
+        activateVirtualCard: {
+          method: "POST",
+          path: "/api/virtual-cards/:id/activate",
+          description: "Activate virtual card",
+        },
+        deactivateVirtualCard: {
+          method: "POST",
+          path: "/api/virtual-cards/:id/deactivate",
+          description: "Deactivate virtual card",
+        },
+        blockVirtualCard: {
+          method: "POST",
+          path: "/api/virtual-cards/:id/block",
+          description: "Block virtual card",
+        },
+        unblockVirtualCard: {
+          method: "POST",
+          path: "/api/virtual-cards/:id/unblock",
+          description: "Unblock virtual card",
+        },
+        getVirtualCardTransactions: {
+          method: "GET",
+          path: "/api/virtual-cards/:id/transactions",
+          description: "Get card transactions",
+        },
+        createVirtualCardTransaction: {
+          method: "POST",
+          path: "/api/virtual-cards/:id/transactions",
+          description: "Create card transaction",
+        },
+        getVirtualCardSettings: {
+          method: "GET",
+          path: "/api/virtual-cards/settings",
+          description: "Get card settings",
+        },
+        updateVirtualCardSettings: {
+          method: "PUT",
+          path: "/api/virtual-cards/settings",
+          description: "Update card settings",
+        },
+        getVirtualCardStats: {
+          method: "GET",
+          path: "/api/virtual-cards/stats",
+          description: "Get card statistics",
+        },
+      },
     });
 
     // KYC Service Module
     this.registerModule({
-      name: 'kyc',
-      baseURL: getEnvVar('VITE_KYC_SERVICE_URL', 'http://localhost:3008'),
+      name: "kyc",
+      baseURL: getEnvVar("VITE_KYC_SERVICE_URL", "http://localhost:3008"),
       endpoints: {
-        getKycStatus: { method: 'GET', path: '/api/kyc/status/:userId', description: 'Get KYC status' },
-        submitKyc: { method: 'POST', path: '/api/kyc/submit', description: 'Submit KYC documents' },
-        verifyKyc: { method: 'PUT', path: '/api/kyc/verify/:userId', description: 'Verify KYC' },
-        getPendingKyc: { method: 'GET', path: '/api/kyc/pending', description: 'Get pending KYC verifications' },
-        getDocuments: { method: 'GET', path: '/api/documents/:userId', description: 'Get user documents' },
-        uploadDocument: { method: 'POST', path: '/api/documents/upload', description: 'Upload document' },
-        deleteDocument: { method: 'DELETE', path: '/api/documents/:documentId', description: 'Delete document' },
-        verifyDocument: { method: 'PUT', path: '/api/documents/:documentId/verify', description: 'Verify document' },
-        getDocumentTypes: { method: 'GET', path: '/api/documents/types/list', description: 'Get document types' },
-      }
+        getKycStatus: {
+          method: "GET",
+          path: "/api/kyc/status/:userId",
+          description: "Get KYC status",
+        },
+        submitKyc: {
+          method: "POST",
+          path: "/api/kyc/submit",
+          description: "Submit KYC documents",
+        },
+        verifyKyc: {
+          method: "PUT",
+          path: "/api/kyc/verify/:userId",
+          description: "Verify KYC",
+        },
+        getPendingKyc: {
+          method: "GET",
+          path: "/api/kyc/pending",
+          description: "Get pending KYC verifications",
+        },
+        getDocuments: {
+          method: "GET",
+          path: "/api/documents/:userId",
+          description: "Get user documents",
+        },
+        uploadDocument: {
+          method: "POST",
+          path: "/api/documents/upload",
+          description: "Upload document",
+        },
+        deleteDocument: {
+          method: "DELETE",
+          path: "/api/documents/:documentId",
+          description: "Delete document",
+        },
+        verifyDocument: {
+          method: "PUT",
+          path: "/api/documents/:documentId/verify",
+          description: "Verify document",
+        },
+        getDocumentTypes: {
+          method: "GET",
+          path: "/api/documents/types/list",
+          description: "Get document types",
+        },
+      },
     });
 
     // Marketing Service Module
     this.registerModule({
-      name: 'marketing',
-      baseURL: getEnvVar('VITE_MARKETING_SERVICE_URL', 'http://localhost:3009'),
+      name: "marketing",
+      baseURL: getEnvVar("VITE_MARKETING_SERVICE_URL", "http://localhost:3009"),
       endpoints: {
-        getCampaigns: { method: 'GET', path: '/api/campaigns', description: 'List campaigns' },
-        createCampaign: { method: 'POST', path: '/api/campaigns', description: 'Create campaign' },
-        getCampaign: { method: 'GET', path: '/api/campaigns/:id', description: 'Get campaign details' },
-        updateCampaign: { method: 'PUT', path: '/api/campaigns/:id', description: 'Update campaign' },
-        deleteCampaign: { method: 'DELETE', path: '/api/campaigns/:id', description: 'Delete campaign' },
-      }
+        getCampaigns: {
+          method: "GET",
+          path: "/api/campaigns",
+          description: "List campaigns",
+        },
+        createCampaign: {
+          method: "POST",
+          path: "/api/campaigns",
+          description: "Create campaign",
+        },
+        getCampaign: {
+          method: "GET",
+          path: "/api/campaigns/:id",
+          description: "Get campaign details",
+        },
+        updateCampaign: {
+          method: "PUT",
+          path: "/api/campaigns/:id",
+          description: "Update campaign",
+        },
+        deleteCampaign: {
+          method: "DELETE",
+          path: "/api/campaigns/:id",
+          description: "Delete campaign",
+        },
+      },
     });
 
     // Support Service Module
     this.registerModule({
-      name: 'support',
-      baseURL: getEnvVar('VITE_SUPPORT_SERVICE_URL', 'http://localhost:3010'),
+      name: "support",
+      baseURL: getEnvVar("VITE_SUPPORT_SERVICE_URL", "http://localhost:3010"),
       endpoints: {
-        getTickets: { method: 'GET', path: '/api/tickets', description: 'List support tickets' },
-        createTicket: { method: 'POST', path: '/api/tickets', description: 'Create support ticket' },
-      }
+        getTickets: {
+          method: "GET",
+          path: "/api/tickets",
+          description: "List support tickets",
+        },
+        createTicket: {
+          method: "POST",
+          path: "/api/tickets",
+          description: "Create support ticket",
+        },
+      },
     });
 
     // Tax Service Module
     this.registerModule({
-      name: 'tax',
-      baseURL: getEnvVar('VITE_TAX_SERVICE_URL', 'http://localhost:3011'),
+      name: "tax",
+      baseURL: getEnvVar("VITE_TAX_SERVICE_URL", "http://localhost:3011"),
       endpoints: {
-        calculateTax: { method: 'GET', path: '/api/tax/calculate', description: 'Calculate taxes' },
-        getTaxRates: { method: 'GET', path: '/api/tax/rates/:country', description: 'Get tax rates' },
-      }
+        calculateTax: {
+          method: "GET",
+          path: "/api/tax/calculate",
+          description: "Calculate taxes",
+        },
+        getTaxRates: {
+          method: "GET",
+          path: "/api/tax/rates/:country",
+          description: "Get tax rates",
+        },
+      },
     });
 
     // Audit Service Module
     this.registerModule({
-      name: 'audit',
-      baseURL: getEnvVar('VITE_AUDIT_SERVICE_URL', 'http://localhost:3012'),
+      name: "audit",
+      baseURL: getEnvVar("VITE_AUDIT_SERVICE_URL", "http://localhost:3012"),
       endpoints: {
-        getAuditLogs: { method: 'GET', path: '/api/audit/logs', description: 'Get audit logs' },
-        logAction: { method: 'POST', path: '/api/audit/log', description: 'Log action' },
-        getComplianceReport: { method: 'GET', path: '/api/audit/compliance', description: 'Get compliance report' },
-      }
+        getAuditLogs: {
+          method: "GET",
+          path: "/api/audit/logs",
+          description: "Get audit logs",
+        },
+        logAction: {
+          method: "POST",
+          path: "/api/audit/log",
+          description: "Log action",
+        },
+        getComplianceReport: {
+          method: "GET",
+          path: "/api/audit/compliance",
+          description: "Get compliance report",
+        },
+      },
     });
 
     // API Gateway Module (existing functionality)
     this.registerModule({
-      name: 'gateway',
-      baseURL: getEnvVar('VITE_API_GATEWAY_URL', 'http://localhost:3000'),
+      name: "gateway",
+      baseURL: getEnvVar("VITE_API_GATEWAY_URL", "http://localhost:3000"),
       endpoints: {
         // Keep existing gateway endpoints
-        getBookings: { method: 'GET', path: '/api/bookings', description: 'Get bookings' },
-        createBooking: { method: 'POST', path: '/api/bookings', description: 'Create booking' },
-        getBooking: { method: 'GET', path: '/api/bookings/:id', description: 'Get booking details' },
-        updateBooking: { method: 'PUT', path: '/api/bookings/:id', description: 'Update booking' },
-        cancelBooking: { method: 'DELETE', path: '/api/bookings/:id', description: 'Cancel booking' },
-        getUsers: { method: 'GET', path: '/api/users', description: 'List users' },
-        getUser: { method: 'GET', path: '/api/users/:id', description: 'Get user details' },
-        updateUser: { method: 'PUT', path: '/api/users/:id', description: 'Update user' },
-        getCompanies: { method: 'GET', path: '/api/companies', description: 'List companies' },
-        getCompany: { method: 'GET', path: '/api/companies/:id', description: 'Get company details' },
-        updateCompany: { method: 'PUT', path: '/api/companies/:id', description: 'Update company' },
-      }
+        getBookings: {
+          method: "GET",
+          path: "/api/bookings",
+          description: "Get bookings",
+        },
+        createBooking: {
+          method: "POST",
+          path: "/api/bookings",
+          description: "Create booking",
+        },
+        getBooking: {
+          method: "GET",
+          path: "/api/bookings/:id",
+          description: "Get booking details",
+        },
+        updateBooking: {
+          method: "PUT",
+          path: "/api/bookings/:id",
+          description: "Update booking",
+        },
+        cancelBooking: {
+          method: "DELETE",
+          path: "/api/bookings/:id",
+          description: "Cancel booking",
+        },
+        getUsers: {
+          method: "GET",
+          path: "/api/users",
+          description: "List users",
+        },
+        getUser: {
+          method: "GET",
+          path: "/api/users/:id",
+          description: "Get user details",
+        },
+        updateUser: {
+          method: "PUT",
+          path: "/api/users/:id",
+          description: "Update user",
+        },
+        getCompanies: {
+          method: "GET",
+          path: "/api/companies",
+          description: "List companies",
+        },
+        getCompany: {
+          method: "GET",
+          path: "/api/companies/:id",
+          description: "Get company details",
+        },
+        updateCompany: {
+          method: "PUT",
+          path: "/api/companies/:id",
+          description: "Update company",
+        },
+      },
     });
   }
 }

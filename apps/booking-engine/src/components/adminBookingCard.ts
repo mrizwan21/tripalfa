@@ -15,5 +15,5 @@ export type {
   QueueType,
   QueueStatus,
   Priority,
-  ServiceType
-} from '@tripalfa/shared-types';
+  ServiceType,
+} from "../../../../packages/shared-types/src/index.js";

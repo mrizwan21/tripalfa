@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { loyaltyApi, CustomerLoyalty } from '../api/loyaltyApi';
+import { useState, useEffect } from "react";
+import { loyaltyApi } from "../api/loyaltyApi";
 
-export function useLoyaltyBalance(userId = 'current') {
+type CustomerLoyalty = Record<string, any>;
+
+export function useLoyaltyBalance(userId = "current") {
   const [balance, setBalance] = useState<CustomerLoyalty | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);

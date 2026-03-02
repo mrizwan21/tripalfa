@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import './HoldOrderForm.css';
+import React, { useState, useEffect } from "react";
+import "./HoldOrderForm.css";
 
 interface PassengerData {
   title: string;
@@ -20,31 +20,35 @@ interface HoldOrderFormProps {
 const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
   offerId,
   onHoldOrderCreated,
-  onError
+  onError,
 }) => {
   const [loading, setLoading] = useState(false);
   const [passengers, setPassengers] = useState<PassengerData[]>([
     {
-      title: 'mr',
-      given_name: '',
-      family_name: '',
-      email: '',
-      phone_number: '',
-      born_on: '',
-      gender: 'm'
-    }
+      title: "mr",
+      given_name: "",
+      family_name: "",
+      email: "",
+      phone_number: "",
+      born_on: "",
+      gender: "m",
+    },
   ]);
   const [customerInfo, setCustomerInfo] = useState({
-    customerId: '',
-    customerEmail: '',
-    customerPhone: ''
+    customerId: "",
+    customerEmail: "",
+    customerPhone: "",
   });
 
-  const handlePassengerChange = (index: number, field: string, value: string) => {
+  const handlePassengerChange = (
+    index: number,
+    field: string,
+    value: string,
+  ) => {
     const newPassengers = [...passengers];
     newPassengers[index] = {
       ...newPassengers[index],
-      [field]: value
+      [field]: value,
     };
     setPassengers(newPassengers);
   };
@@ -53,14 +57,14 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
     setPassengers([
       ...passengers,
       {
-        title: 'mr',
-        given_name: '',
-        family_name: '',
-        email: passengers[0]?.email || '',
-        phone_number: passengers[0]?.phone_number || '',
-        born_on: '',
-        gender: 'm'
-      }
+        title: "mr",
+        given_name: "",
+        family_name: "",
+        email: passengers[0]?.email || "",
+        phone_number: passengers[0]?.phone_number || "",
+        born_on: "",
+        gender: "m",
+      },
     ]);
   };
 
@@ -73,7 +77,7 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
   const handleCustomerInfoChange = (field: string, value: string) => {
     setCustomerInfo({
       ...customerInfo,
-      [field]: value
+      [field]: value,
     });
   };
 
@@ -82,39 +86,40 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
 
     // Validation
     if (!customerInfo.customerId || !customerInfo.customerEmail) {
-      onError?.('Customer ID and email are required');
+      onError?.("Customer ID and email are required");
       return;
     }
 
-    if (passengers.some(p => !p.given_name || !p.family_name || !p.born_on)) {
-      onError?.('Please complete all passenger information');
+    if (passengers.some((p) => !p.given_name || !p.family_name || !p.born_on)) {
+      onError?.("Please complete all passenger information");
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await fetch('/api/bookings/hold/orders', {
-        method: 'POST',
+      const response = await fetch("/api/bookings/hold/orders", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           offerId,
           passengers,
-          ...customerInfo
-        })
+          ...customerInfo,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create hold order');
+        throw new Error(error.error || "Failed to create hold order");
       }
 
       const result = await response.json();
       onHoldOrderCreated?.(result.data);
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to create hold order';
+      const errorMsg =
+        error instanceof Error ? error.message : "Failed to create hold order";
       onError?.(errorMsg);
     } finally {
       setLoading(false);
@@ -125,7 +130,8 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
     <div className="hold-order-form">
       <h2>Create Hold Order</h2>
       <p className="form-description">
-        Hold this flight and pay later. Your booking will be reserved until the payment deadline.
+        Hold this flight and pay later. Your booking will be reserved until the
+        payment deadline.
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -139,7 +145,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
               id="customerId"
               type="text"
               value={customerInfo.customerId}
-              onChange={(e) => handleCustomerInfoChange('customerId', e.target.value)}
+              onChange={(e) =>
+                handleCustomerInfoChange("customerId", e.target.value)
+              }
               placeholder="Enter your customer ID"
               required
             />
@@ -151,7 +159,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
               id="customerEmail"
               type="email"
               value={customerInfo.customerEmail}
-              onChange={(e) => handleCustomerInfoChange('customerEmail', e.target.value)}
+              onChange={(e) =>
+                handleCustomerInfoChange("customerEmail", e.target.value)
+              }
               placeholder="your@email.com"
               required
             />
@@ -163,7 +173,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
               id="customerPhone"
               type="tel"
               value={customerInfo.customerPhone}
-              onChange={(e) => handleCustomerInfoChange('customerPhone', e.target.value)}
+              onChange={(e) =>
+                handleCustomerInfoChange("customerPhone", e.target.value)
+              }
               placeholder="+1234567890"
             />
           </div>
@@ -180,7 +192,7 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                 {passengers.length > 1 && (
                   <button
                     type="button"
-                    className="btn-remove"
+                    className="btn-remove px-4 py-2 rounded-md text-sm font-medium"
                     onClick={() => handleRemovePassenger(index)}
                   >
                     Remove
@@ -193,7 +205,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                   <label>Title *</label>
                   <select
                     value={passenger.title}
-                    onChange={(e) => handlePassengerChange(index, 'title', e.target.value)}
+                    onChange={(e) =>
+                      handlePassengerChange(index, "title", e.target.value)
+                    }
                     required
                   >
                     <option value="mr">Mr.</option>
@@ -208,7 +222,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                   <label>Gender *</label>
                   <select
                     value={passenger.gender}
-                    onChange={(e) => handlePassengerChange(index, 'gender', e.target.value)}
+                    onChange={(e) =>
+                      handlePassengerChange(index, "gender", e.target.value)
+                    }
                     required
                   >
                     <option value="m">Male</option>
@@ -223,7 +239,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                   <input
                     type="text"
                     value={passenger.given_name}
-                    onChange={(e) => handlePassengerChange(index, 'given_name', e.target.value)}
+                    onChange={(e) =>
+                      handlePassengerChange(index, "given_name", e.target.value)
+                    }
                     placeholder="First name"
                     required
                   />
@@ -234,7 +252,13 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                   <input
                     type="text"
                     value={passenger.family_name}
-                    onChange={(e) => handlePassengerChange(index, 'family_name', e.target.value)}
+                    onChange={(e) =>
+                      handlePassengerChange(
+                        index,
+                        "family_name",
+                        e.target.value,
+                      )
+                    }
                     placeholder="Last name"
                     required
                   />
@@ -247,7 +271,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                   <input
                     type="date"
                     value={passenger.born_on}
-                    onChange={(e) => handlePassengerChange(index, 'born_on', e.target.value)}
+                    onChange={(e) =>
+                      handlePassengerChange(index, "born_on", e.target.value)
+                    }
                     required
                   />
                 </div>
@@ -257,7 +283,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                   <input
                     type="email"
                     value={passenger.email}
-                    onChange={(e) => handlePassengerChange(index, 'email', e.target.value)}
+                    onChange={(e) =>
+                      handlePassengerChange(index, "email", e.target.value)
+                    }
                     placeholder="passenger@email.com"
                     required
                   />
@@ -269,7 +297,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
                 <input
                   type="tel"
                   value={passenger.phone_number}
-                  onChange={(e) => handlePassengerChange(index, 'phone_number', e.target.value)}
+                  onChange={(e) =>
+                    handlePassengerChange(index, "phone_number", e.target.value)
+                  }
                   placeholder="+1234567890"
                   required
                 />
@@ -279,7 +309,7 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
 
           <button
             type="button"
-            className="btn-secondary"
+            className="btn-secondary px-4 py-2 rounded-md text-sm font-medium"
             onClick={handleAddPassenger}
           >
             + Add Another Passenger
@@ -291,9 +321,9 @@ const HoldOrderForm: React.FC<HoldOrderFormProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary"
+            className="btn-primary px-4 py-2 rounded-md text-sm font-medium"
           >
-            {loading ? 'Creating Hold Order...' : 'Create Hold Order'}
+            {loading ? "Creating Hold Order..." : "Create Hold Order"}
           </button>
         </div>
       </form>

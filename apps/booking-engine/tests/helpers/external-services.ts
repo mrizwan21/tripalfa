@@ -1,13 +1,15 @@
-import fs from 'fs';
+import fs from "fs";
 
-export const stripeKey = fs.readFileSync('../../../../secrets/stripe_secret_key.txt', 'utf-8').trim();
+export const stripeKey = fs
+  .readFileSync("../../../../secrets/stripe_secret_key.txt", "utf-8")
+  .trim();
 export const duffelSandbox = {
-  apiKey: process.env.DUFFEL_SANDBOX_KEY || 'duffel_test_key',
-  endpoint: 'https://api.duffel.com/test',
+  apiKey: process.env.DUFFEL_SANDBOX_KEY || "duffel_test_key",
+  endpoint: "https://api.duffel.com/test",
 };
 export const liteApiSandbox = {
-  apiKey: process.env.LITEAPI_SANDBOX_KEY || 'liteapi_test_key',
-  endpoint: 'https://sandbox.liteapi.com',
+  apiKey: process.env.LITEAPI_SANDBOX_KEY || "liteapi_test_key",
+  endpoint: "https://sandbox.liteapi.com",
 };
 
 export function mockExternalFailure(service: string) {

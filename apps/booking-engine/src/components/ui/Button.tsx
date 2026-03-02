@@ -1,39 +1,44 @@
-import React from 'react';
-import { cn } from '@tripalfa/ui-components';
+import React from "react";
+import { cn } from "@tripalfa/ui-components";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "destructive";
+  size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   children: React.ReactNode;
 }
 
 export const Button: React.FC<ButtonProps> = ({
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   isLoading,
   children,
-  className = '',
+  className = "",
   disabled,
   ...props
 }) => {
   const variantClasses = {
-    primary: 'btn-primary',
-    secondary: 'btn-secondary',
-    outline: 'btn-outline',
-    ghost: 'btn-ghost',
-    destructive: 'btn-destructive',
+    primary: "btn-primary",
+    secondary: "btn-secondary",
+    outline: "btn-outline",
+    ghost: "btn-ghost",
+    destructive: "btn-destructive",
   };
 
   const sizeClasses = {
-    sm: 'btn-sm',
-    md: 'btn-md',
-    lg: 'btn-lg',
+    sm: "btn-sm",
+    md: "btn-md",
+    lg: "btn-lg",
   };
 
   return (
     <button
-      className={cn('btn', variantClasses[variant], sizeClasses[size], className)}
+      className={cn(
+        "btn",
+        variantClasses[variant],
+        sizeClasses[size],
+        className,
+      )}
       disabled={isLoading || disabled}
       {...props}
     >

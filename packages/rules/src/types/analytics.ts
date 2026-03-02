@@ -3,11 +3,17 @@
  * Comprehensive type definitions for deal performance analytics and reporting
  */
 
-export type PeriodType = 'daily' | 'weekly' | 'monthly' | 'yearly';
-export type EventType = 'search' | 'view' | 'apply' | 'booking' | 'cancellation' | 'rejection';
-export type CustomerType = 'b2c' | 'b2b';
-export type Channel = 'web' | 'mobile' | 'api' | 'b2b_portal';
-export type ProductType = 'flight' | 'hotel';
+export type PeriodType = "daily" | "weekly" | "monthly" | "yearly";
+export type EventType =
+  | "search"
+  | "view"
+  | "apply"
+  | "booking"
+  | "cancellation"
+  | "rejection";
+export type CustomerType = "b2c" | "b2b";
+export type Channel = "web" | "mobile" | "api" | "b2b_portal";
+export type ProductType = "flight" | "hotel";
 
 /**
  * Period definition for analytics queries
@@ -164,7 +170,7 @@ export interface AnalyticsSnapshot {
   periodStart: Date;
   periodEnd: Date;
   periodType: PeriodType;
-  metrics: DealPerformance['metrics'];
+  metrics: DealPerformance["metrics"];
   createdAt: Date;
   calculatedAt: Date;
 }
@@ -173,7 +179,7 @@ export interface AnalyticsSnapshot {
  * Export options
  */
 export interface ExportOptions {
-  format: 'csv' | 'json' | 'xlsx';
+  format: "csv" | "json" | "xlsx";
   includeDetails: boolean;
   includeTrends: boolean;
   includeComparison: boolean;
@@ -185,9 +191,13 @@ export interface ExportOptions {
 export interface AnalyticsAlert {
   id: string;
   dealId: string;
-  type: 'low_conversion' | 'low_revenue' | 'high_cancellations' | 'underutilized_discount';
+  type:
+    | "low_conversion"
+    | "low_revenue"
+    | "high_cancellations"
+    | "underutilized_discount";
   threshold: number;
-  severity: 'low' | 'medium' | 'high';
+  severity: "low" | "medium" | "high";
   isActive: boolean;
   createdAt: Date;
 }

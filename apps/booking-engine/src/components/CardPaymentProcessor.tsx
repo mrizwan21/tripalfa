@@ -1,7 +1,7 @@
 /**
  * Card Payment Processor Component
  * Handles Stripe card payment integration
- * 
+ *
  * Features:
  * - Stripe Elements integration
  * - Card form with validation
@@ -11,8 +11,9 @@
  * - PCI compliance
  */
 
-import React, { useState, useCallback } from 'react';
-import type { FC } from 'react';
+import React, { useState, useCallback } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
 
 interface CardDetails {
   cardholderName: string;
@@ -48,10 +49,10 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
   disabled = false,
 }) => {
   const [cardDetails, setCardDetails] = useState<CardDetails>({
-    cardholderName: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
+    cardholderName: "",
+    cardNumber: "",
+    expiryDate: "",
+    cvv: "",
   });
 
   const [validation, setValidation] = useState<CardValidation>({
@@ -67,7 +68,7 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
 
   // Validate card number using Luhn algorithm
   const validateCardNumber = (cardNumber: string): boolean => {
-    const cleaned = cardNumber.replace(/\s/g, '');
+    const cleaned = cardNumber.replace(/\s/g, "");
     if (!/^\d{13,19}$/.test(cleaned)) return false;
 
     let sum = 0;
@@ -95,7 +96,7 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
     const regex = /^(0[1-9]|1[0-2])\/\d{2}$/;
     if (!regex.test(expiryDate)) return false;
 
-    const [month, year] = expiryDate.split('/');
+    const [month, year] = expiryDate.split("/");
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear() % 100;
     const currentMonth = currentDate.getMonth() + 1;
@@ -116,28 +117,28 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
 
   // Format card number with spaces
   const formatCardNumber = (value: string): string => {
-    const cleaned = value.replace(/\s/g, '');
-    const formatted = cleaned.replace(/(\d{4})/g, '$1 ').trim();
+    const cleaned = value.replace(/\s/g, "");
+    const formatted = cleaned.replace(/(\d{4})/g, "$1 ").trim();
     return formatted.substring(0, 19);
   };
 
   // Format expiry date
   const formatExpiryDate = (value: string): string => {
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replace(/\D/g, "");
     if (cleaned.length >= 2) {
-      return cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4);
+      return cleaned.slice(0, 2) + "/" + cleaned.slice(2, 4);
     }
     return cleaned;
   };
 
   // Get card type from card number
   const getCardType = (cardNumber: string): string => {
-    const cleaned = cardNumber.replace(/\s/g, '');
-    if (/^4[0-9]{12}(?:[0-9]{3})?$/.test(cleaned)) return 'Visa';
-    if (/^5[1-5][0-9]{14}$/.test(cleaned)) return 'Mastercard';
-    if (/^3[47][0-9]{13}$/.test(cleaned)) return 'American Express';
-    if (/^6(?:011|5[0-9]{2})[0-9]{12}$/.test(cleaned)) return 'Discover';
-    return 'Unknown';
+    const cleaned = cardNumber.replace(/\s/g, "");
+    if (/^4[0-9]{12}(?:[0-9]{3})?$/.test(cleaned)) return "Visa";
+    if (/^5[1-5][0-9]{14}$/.test(cleaned)) return "Mastercard";
+    if (/^3[47][0-9]{13}$/.test(cleaned)) return "American Express";
+    if (/^6(?:011|5[0-9]{2})[0-9]{12}$/.test(cleaned)) return "Discover";
+    return "Unknown";
   };
 
   const handleCardNumberChange = useCallback(
@@ -148,7 +149,7 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
       const isValid = validateCardNumber(formatted);
       setValidation((prev) => ({ ...prev, cardNumber: isValid }));
     },
-    []
+    [],
   );
 
   const handleExpiryDateChange = useCallback(
@@ -159,16 +160,19 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
       const isValid = validateExpiryDate(formatted);
       setValidation((prev) => ({ ...prev, expiryDate: isValid }));
     },
-    []
+    [],
   );
 
-  const handleCVVChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const cvv = e.target.value.replace(/\D/g, '').substring(0, 4);
-    setCardDetails((prev) => ({ ...prev, cvv }));
+  const handleCVVChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const cvv = e.target.value.replace(/\D/g, "").substring(0, 4);
+      setCardDetails((prev) => ({ ...prev, cvv }));
 
-    const isValid = validateCVV(cvv);
-    setValidation((prev) => ({ ...prev, cvv: isValid }));
-  }, []);
+      const isValid = validateCVV(cvv);
+      setValidation((prev) => ({ ...prev, cvv: isValid }));
+    },
+    [],
+  );
 
   const handleCardholderNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,7 +182,7 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
       const isValid = name.trim().length >= 3;
       setValidation((prev) => ({ ...prev, cardholderName: isValid }));
     },
-    []
+    [],
   );
 
   // Check if all fields are valid
@@ -186,7 +190,7 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
 
   const handleSubmitPayment = useCallback(async () => {
     if (!isFormValid) {
-      setError('Please complete all fields correctly');
+      setError("Please complete all fields correctly");
       return;
     }
 
@@ -197,28 +201,31 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
     try {
       // In a real scenario, you would tokenize the card with Stripe
       // For now, we'll simulate the API call
-      
-      const response = await fetch(`/api/bookings/${bookingId}/process-card-payment`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+
+      const response = await fetch(
+        `/api/bookings/${bookingId}/process-card-payment`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${getStoredAuthToken()}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            cardholderName: cardDetails.cardholderName,
+            cardNumber: cardDetails.cardNumber.replace(/\s/g, ""),
+            expiryDate: cardDetails.expiryDate,
+            cvv: cardDetails.cvv,
+            amount: cardAmount,
+            currency: currency,
+            // In production, send Stripe token instead of card details
+            // stripeToken: token,
+          }),
         },
-        body: JSON.stringify({
-          cardholderName: cardDetails.cardholderName,
-          cardNumber: cardDetails.cardNumber.replace(/\s/g, ''),
-          expiryDate: cardDetails.expiryDate,
-          cvv: cardDetails.cvv,
-          amount: cardAmount,
-          currency: currency,
-          // In production, send Stripe token instead of card details
-          // stripeToken: token,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Card payment processing failed');
+        throw new Error(error.message || "Card payment processing failed");
       }
 
       const result = await response.json();
@@ -226,13 +233,23 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
       onProcessing?.(false);
       onSuccess?.(result);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      const errorMessage =
+        err instanceof Error ? err.message : "Payment processing failed";
       setError(errorMessage);
       setIsProcessing(false);
       onProcessing?.(false);
       onError?.(errorMessage);
     }
-  }, [cardDetails, isFormValid, bookingId, cardAmount, currency, onSuccess, onError, onProcessing]);
+  }, [
+    cardDetails,
+    isFormValid,
+    bookingId,
+    cardAmount,
+    currency,
+    onSuccess,
+    onError,
+    onProcessing,
+  ]);
 
   const cardType = getCardType(cardDetails.cardNumber);
 
@@ -255,7 +272,10 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
       <div className="card-form">
         {/* Cardholder Name */}
         <div className="form-group">
-          <label htmlFor="cardholderName" className="form-label">
+          <label
+            htmlFor="cardholderName"
+            className="form-label text-sm font-medium"
+          >
             Cardholder Name
             {validation.cardholderName && <span className="valid-icon">✓</span>}
           </label>
@@ -269,22 +289,29 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
             className={`form-input ${
               cardDetails.cardholderName
                 ? validation.cardholderName
-                  ? 'valid'
-                  : 'invalid'
-                : ''
+                  ? "valid"
+                  : "invalid"
+                : ""
             }`}
           />
           {cardDetails.cardholderName && !validation.cardholderName && (
-            <span className="form-error">Name must be at least 3 characters</span>
+            <span className="form-error">
+              Name must be at least 3 characters
+            </span>
           )}
         </div>
 
         {/* Card Number */}
         <div className="form-group full-width">
-          <label htmlFor="cardNumber" className="form-label">
+          <label
+            htmlFor="cardNumber"
+            className="form-label text-sm font-medium"
+          >
             Card Number
             {validation.cardNumber && <span className="valid-icon">✓</span>}
-            {cardType !== 'Unknown' && <span className="card-type">{cardType}</span>}
+            {cardType !== "Unknown" && (
+              <span className="card-type">{cardType}</span>
+            )}
           </label>
           <input
             id="cardNumber"
@@ -297,9 +324,9 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
             className={`form-input ${
               cardDetails.cardNumber
                 ? validation.cardNumber
-                  ? 'valid'
-                  : 'invalid'
-                : ''
+                  ? "valid"
+                  : "invalid"
+                : ""
             }`}
           />
           {cardDetails.cardNumber && !validation.cardNumber && (
@@ -310,7 +337,10 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
         {/* Expiry Date and CVV Row */}
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="expiryDate" className="form-label">
+            <label
+              htmlFor="expiryDate"
+              className="form-label text-sm font-medium"
+            >
               Expiration Date
               {validation.expiryDate && <span className="valid-icon">✓</span>}
             </label>
@@ -325,9 +355,9 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
               className={`form-input ${
                 cardDetails.expiryDate
                   ? validation.expiryDate
-                    ? 'valid'
-                    : 'invalid'
-                  : ''
+                    ? "valid"
+                    : "invalid"
+                  : ""
               }`}
             />
             {cardDetails.expiryDate && !validation.expiryDate && (
@@ -337,13 +367,13 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
 
           <div className="form-group">
             <div className="cvv-label-wrapper">
-              <label htmlFor="cvv" className="form-label">
+              <label htmlFor="cvv" className="form-label text-sm font-medium">
                 CVV
                 {validation.cvv && <span className="valid-icon">✓</span>}
               </label>
               <button
                 type="button"
-                className="cvv-hint-btn"
+                className="cvv-hint-btn px-4 py-2 rounded-md text-sm font-medium"
                 onClick={() => setShowCVVHint(!showCVVHint)}
                 disabled={disabled || isProcessing}
               >
@@ -359,11 +389,7 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
               disabled={disabled || isProcessing}
               maxLength={4}
               className={`form-input ${
-                cardDetails.cvv
-                  ? validation.cvv
-                    ? 'valid'
-                    : 'invalid'
-                  : ''
+                cardDetails.cvv ? (validation.cvv ? "valid" : "invalid") : ""
               }`}
             />
             {cardDetails.cvv && !validation.cvv && (
@@ -380,14 +406,17 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
         {/* Security Notice */}
         <div className="security-notice">
           <span className="lock-icon">🔒</span>
-          <p>Your card information is encrypted and secure. We never store your card details.</p>
+          <p>
+            Your card information is encrypted and secure. We never store your
+            card details.
+          </p>
         </div>
 
         {/* Submit Button */}
         <button
           onClick={handleSubmitPayment}
           disabled={!isFormValid || disabled || isProcessing}
-          className="submit-btn"
+          className="submit-btn px-4 py-2 rounded-md text-sm font-medium"
           type="button"
         >
           {isProcessing ? (
@@ -404,7 +433,9 @@ const CardPaymentProcessor: FC<CardPaymentProcessorProps> = ({
       {/* Test Card Info */}
       <div className="test-info">
         <p>
-          <strong>Test Mode:</strong> Use card number <code>4242 4242 4242 4242</code>, any future expiry date, and any 3-digit CVV
+          <strong>Test Mode:</strong> Use card number{" "}
+          <code>4242 4242 4242 4242</code>, any future expiry date, and any
+          3-digit CVV
         </p>
       </div>
     </div>
@@ -419,7 +450,7 @@ const styles = `
 .card-payment-processor {
   background: white;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   overflow: hidden;
 }
 
@@ -428,20 +459,20 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background: #f9f9f9;
-  border-bottom: 1px solid #e0e0e0;
+  background: hsl(var(--muted));
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .card-payment-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .amount-badge {
-  background: #e3f2fd;
-  color: #007bff;
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 13px;
@@ -454,13 +485,13 @@ const styles = `
   gap: 12px;
   margin: 16px;
   padding: 12px 16px;
-  background: #ffebee;
-  border: 1px solid #ef5350;
+  background: hsl(var(--destructive) / 0.12);
+  border: 1px solid hsl(var(--destructive));
   border-radius: 8px;
 }
 
 .error-icon {
-  color: #c62828;
+  color: hsl(var(--destructive));
   font-size: 18px;
   font-weight: bold;
   flex-shrink: 0;
@@ -469,7 +500,7 @@ const styles = `
 .card-error-alert p {
   margin: 0;
   font-size: 13px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   font-weight: 500;
 }
 
@@ -497,19 +528,19 @@ const styles = `
   gap: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: hsl(var(--foreground));
   margin-bottom: 8px;
 }
 
 .valid-icon {
-  color: #4caf50;
+  color: hsl(var(--secondary));
   font-weight: bold;
 }
 
 .card-type {
   margin-left: auto;
-  background: #e8eaf6;
-  color: #3f51b5;
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 11px;
@@ -519,7 +550,7 @@ const styles = `
 .form-input {
   width: 100%;
   padding: 12px;
-  border: 2px solid #ddd;
+  border: 2px solid hsl(var(--border));
   border-radius: 8px;
   font-size: 14px;
   font-family: 'Courier New', monospace;
@@ -529,30 +560,30 @@ const styles = `
 
 .form-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1);
 }
 
 .form-input.valid {
-  border-color: #4caf50;
-  background: #f1f8f6;
+  border-color: hsl(var(--secondary));
+  background: hsl(var(--secondary) / 0.1);
 }
 
 .form-input.invalid {
-  border-color: #ef5350;
-  background: #fdf7f7;
+  border-color: hsl(var(--destructive));
+  background: hsl(var(--destructive) / 0.08);
 }
 
 .form-input:disabled {
-  background: #f5f5f5;
-  color: #999;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
   cursor: not-allowed;
 }
 
 .form-error {
   display: block;
   font-size: 12px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   margin-top: 4px;
   font-weight: 500;
 }
@@ -567,10 +598,10 @@ const styles = `
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid #ccc;
+  border: 1px solid hsl(var(--border));
   border-radius: 50%;
   background: white;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
@@ -578,8 +609,8 @@ const styles = `
 }
 
 .cvv-hint-btn:hover:not(:disabled) {
-  background: #e8e8e8;
-  border-color: #999;
+  background: hsl(var(--muted));
+  border-color: hsl(var(--muted-foreground));
 }
 
 .cvv-hint-btn:disabled {
@@ -589,12 +620,12 @@ const styles = `
 
 .cvv-hint {
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin-top: 6px;
   padding: 8px;
-  background: #fafafa;
+  background: hsl(var(--background));
   border-radius: 4px;
-  border-left: 3px solid #ff9800;
+  border-left: 3px solid hsl(var(--secondary));
 }
 
 .security-notice {
@@ -602,7 +633,7 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #e8f5e9;
+  background: hsl(var(--secondary) / 0.12);
   border-radius: 8px;
   margin-bottom: 20px;
 }
@@ -614,13 +645,13 @@ const styles = `
 .security-notice p {
   margin: 0;
   font-size: 12px;
-  color: #2e7d32;
+  color: hsl(var(--secondary));
 }
 
 .submit-btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #007bff, #0056b3);
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85));
   color: white;
   border: none;
   border-radius: 8px;
@@ -635,7 +666,7 @@ const styles = `
 }
 
 .submit-btn:hover:not(:disabled) {
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+  box-shadow: 0 4px 12px hsl(var(--primary) / 0.4);
   transform: translateY(-2px);
 }
 
@@ -660,10 +691,10 @@ const styles = `
 
 .test-info {
   padding: 12px 20px;
-  background: #fffde7;
-  border-top: 1px solid #fff59d;
+  background: hsl(var(--secondary) / 0.12);
+  border-top: 1px solid hsl(var(--secondary) / 0.4);
   font-size: 12px;
-  color: #f57f17;
+  color: hsl(var(--secondary));
 }
 
 .test-info p {
@@ -675,7 +706,7 @@ const styles = `
   padding: 2px 6px;
   border-radius: 3px;
   font-family: 'Courier New', monospace;
-  color: #d32f2f;
+  color: hsl(var(--destructive));
 }
 
 /* Responsive */

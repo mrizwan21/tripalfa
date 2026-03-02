@@ -1,3 +1,3 @@
-import { globalTeardown } from './global.setup';
+import { globalTeardown } from "./global.setup";
 
 export default globalTeardown;

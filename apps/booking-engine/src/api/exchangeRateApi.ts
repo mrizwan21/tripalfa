@@ -1,24 +1,21 @@
 /**
- * Exchange Rate API Client (Open Exchange Rates)
- * 
- * Provides currency exchange rates for flight/hotel bookings
- * - Real-time exchange rates
- * - Currency conversion
- * - Historical rates (if needed)
+ * Exchange Rate API Client
+ *
+ * Source of truth: backend endpoint `/api/exchange-rates/latest`
+ * backed by static DB rates refreshed by hourly cron.
  */
-
-import axios, { AxiosInstance } from 'axios';
 
 // Currency code type
 export type CurrencyCode = string;
 
 // Exchange rate response
 export interface ExchangeRatesResponse {
-  disclaimer: string;
-  license: string;
+  success: boolean;
   timestamp: number;
   base: string;
   rates: Record<CurrencyCode, number>;
+  source?: string;
+  updatedAt?: string | null;
 }
 
 // Conversion result
@@ -33,155 +30,196 @@ export interface ConversionResult {
 
 // Popular currencies for travel
 export const POPULAR_CURRENCIES: CurrencyCode[] = [
-  'USD', 'EUR', 'GBP', 'AED', 'SAR', 'QAR', 'KWD', 'BHD',
-  'JPY', 'CNY', 'INR', 'PKR', 'PHP', 'THB', 'SGD', 'MYR',
-  'AUD', 'NZD', 'CAD', 'CHF', 'SEK', 'NOK', 'DKK',
+  "USD",
+  "EUR",
+  "GBP",
+  "AED",
+  "SAR",
+  "QAR",
+  "KWD",
+  "BHD",
+  "JPY",
+  "CNY",
+  "INR",
+  "PKR",
+  "PHP",
+  "THB",
+  "SGD",
+  "MYR",
+  "AUD",
+  "NZD",
+  "CAD",
+  "CHF",
+  "SEK",
+  "NOK",
+  "DKK",
 ];
 
 // Currency symbols
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  AED: 'د.إ',
-  SAR: '﷼',
-  QAR: '﷼',
-  KWD: 'د.ك',
-  BHD: '.د.ب',
-  JPY: '¥',
-  CNY: '¥',
-  INR: '₹',
-  PKR: '₨',
-  PHP: '₱',
-  THB: '฿',
-  SGD: 'S$',
-  MYR: 'RM',
-  AUD: 'A$',
-  NZD: 'NZ$',
-  CAD: 'C$',
-  CHF: 'CHF',
-  SEK: 'kr',
-  NOK: 'kr',
-  DKK: 'kr',
-  ZAR: 'R',
-  TRY: '₺',
-  RUB: '₽',
-  BRL: 'R$',
-  MXN: '$',
-  HKD: 'HK$',
-  KRW: '₩',
-  IDR: 'Rp',
-  VND: '₫',
-  EGP: 'E£',
-  MAD: 'د.م.',
-  TND: 'د.ت',
-  JOD: 'د.ا',
-  LBP: 'ل.ل',
-  OMR: '﷼',
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  AED: "د.إ",
+  SAR: "﷼",
+  QAR: "﷼",
+  KWD: "د.ك",
+  BHD: ".د.ب",
+  JPY: "¥",
+  CNY: "¥",
+  INR: "₹",
+  PKR: "₨",
+  PHP: "₱",
+  THB: "฿",
+  SGD: "S$",
+  MYR: "RM",
+  AUD: "A$",
+  NZD: "NZ$",
+  CAD: "C$",
+  CHF: "CHF",
+  SEK: "kr",
+  NOK: "kr",
+  DKK: "kr",
+  ZAR: "R",
+  TRY: "₺",
+  RUB: "₽",
+  BRL: "R$",
+  MXN: "$",
+  HKD: "HK$",
+  KRW: "₩",
+  IDR: "Rp",
+  VND: "₫",
+  EGP: "E£",
+  MAD: "د.م.",
+  TND: "د.ت",
+  JOD: "د.ا",
+  LBP: "ل.ل",
+  OMR: "﷼",
 };
 
 // Currency names
 export const CURRENCY_NAMES: Record<CurrencyCode, string> = {
-  USD: 'US Dollar',
-  EUR: 'Euro',
-  GBP: 'British Pound',
-  AED: 'UAE Dirham',
-  SAR: 'Saudi Riyal',
-  QAR: 'Qatari Riyal',
-  KWD: 'Kuwaiti Dinar',
-  BHD: 'Bahraini Dinar',
-  JPY: 'Japanese Yen',
-  CNY: 'Chinese Yuan',
-  INR: 'Indian Rupee',
-  PKR: 'Pakistani Rupee',
-  PHP: 'Philippine Peso',
-  THB: 'Thai Baht',
-  SGD: 'Singapore Dollar',
-  MYR: 'Malaysian Ringgit',
-  AUD: 'Australian Dollar',
-  NZD: 'New Zealand Dollar',
-  CAD: 'Canadian Dollar',
-  CHF: 'Swiss Franc',
-  SEK: 'Swedish Krona',
-  NOK: 'Norwegian Krone',
-  DKK: 'Danish Krone',
-  ZAR: 'South African Rand',
-  TRY: 'Turkish Lira',
-  RUB: 'Russian Ruble',
-  BRL: 'Brazilian Real',
-  MXN: 'Mexican Peso',
-  HKD: 'Hong Kong Dollar',
-  KRW: 'South Korean Won',
-  IDR: 'Indonesian Rupiah',
-  VND: 'Vietnamese Dong',
-  EGP: 'Egyptian Pound',
-  MAD: 'Moroccan Dirham',
-  TND: 'Tunisian Dinar',
-  JOD: 'Jordanian Dinar',
-  LBP: 'Lebanese Pound',
-  OMR: 'Omani Rial',
+  USD: "US Dollar",
+  EUR: "Euro",
+  GBP: "British Pound",
+  AED: "UAE Dirham",
+  SAR: "Saudi Riyal",
+  QAR: "Qatari Riyal",
+  KWD: "Kuwaiti Dinar",
+  BHD: "Bahraini Dinar",
+  JPY: "Japanese Yen",
+  CNY: "Chinese Yuan",
+  INR: "Indian Rupee",
+  PKR: "Pakistani Rupee",
+  PHP: "Philippine Peso",
+  THB: "Thai Baht",
+  SGD: "Singapore Dollar",
+  MYR: "Malaysian Ringgit",
+  AUD: "Australian Dollar",
+  NZD: "New Zealand Dollar",
+  CAD: "Canadian Dollar",
+  CHF: "Swiss Franc",
+  SEK: "Swedish Krona",
+  NOK: "Norwegian Krone",
+  DKK: "Danish Krone",
+  ZAR: "South African Rand",
+  TRY: "Turkish Lira",
+  RUB: "Russian Ruble",
+  BRL: "Brazilian Real",
+  MXN: "Mexican Peso",
+  HKD: "Hong Kong Dollar",
+  KRW: "South Korean Won",
+  IDR: "Indonesian Rupiah",
+  VND: "Vietnamese Dong",
+  EGP: "Egyptian Pound",
+  MAD: "Moroccan Dirham",
+  TND: "Tunisian Dinar",
+  JOD: "Jordanian Dinar",
+  LBP: "Lebanese Pound",
+  OMR: "Omani Rial",
 };
 
 class ExchangeRateApi {
-  private api: AxiosInstance;
-  private apiKey: string;
-  private baseURL = 'https://openexchangerates.org/api';
   private cache: { rates: ExchangeRatesResponse | null; timestamp: number } = {
     rates: null,
     timestamp: 0,
   };
   private cacheDuration = 60 * 60 * 1000; // 1 hour cache
 
-  constructor() {
-    this.apiKey = import.meta.env.VITE_OPENEXCHANGE_API_KEY || '';
-    
-    if (!this.apiKey) {
-      console.warn('OpenExchange API key not configured. Currency conversion features will use fallback rates.');
-    }
-
-    this.api = axios.create({
-      baseURL: this.baseURL,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-  }
-
   /**
    * Get latest exchange rates
    * @param base - Base currency (default: USD)
    */
-  async getLatestRates(base: CurrencyCode = 'USD'): Promise<ExchangeRatesResponse> {
-    if (!this.apiKey) {
-      // Return fallback rates if no API key
-      return this.getFallbackRates(base);
-    }
+  async getLatestRates(
+    base: CurrencyCode = "USD",
+  ): Promise<ExchangeRatesResponse> {
+    const normalizedBase = String(base || "USD").toUpperCase();
 
     // Check cache
     const now = Date.now();
-    if (this.cache.rates && (now - this.cache.timestamp) < this.cacheDuration) {
+    if (
+      this.cache.rates &&
+      this.cache.rates.base === normalizedBase &&
+      now - this.cache.timestamp < this.cacheDuration
+    ) {
       return this.cache.rates;
     }
 
     try {
-      const response = await this.api.get<ExchangeRatesResponse>('/latest.json', {
-        params: {
-          app_id: this.apiKey,
-          base,
+      const response = await fetch(
+        `/api/exchange-rates/latest?base=${encodeURIComponent(normalizedBase)}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch exchange rates (${response.status})`);
+      }
+
+      const data = await response.json();
+
+      if (!data?.rates || typeof data.rates !== "object") {
+        throw new Error("Invalid exchange rates response");
+      }
+
+      const normalizedRates: Record<CurrencyCode, number> = {};
+      for (const [code, rate] of Object.entries(data.rates)) {
+        const numericRate = Number(rate);
+        if (Number.isFinite(numericRate) && numericRate > 0) {
+          normalizedRates[String(code).toUpperCase()] = numericRate;
+        }
+      }
+
+      const payload: ExchangeRatesResponse = {
+        success: true,
+        timestamp: data.updatedAt ? Date.parse(data.updatedAt) || now : now,
+        base: String(data.base || normalizedBase).toUpperCase(),
+        rates: normalizedRates,
+        source: data.source,
+        updatedAt: data.updatedAt || null,
+      };
 
       // Update cache
       this.cache = {
-        rates: response.data,
+        rates: payload,
         timestamp: now,
       };
 
-      return response.data;
+      return payload;
     } catch (error: any) {
-      console.error('Exchange Rate API error:', error);
-      // Return fallback rates on error
-      return this.getFallbackRates(base);
+      console.error("Exchange Rate API error:", error);
+
+      // Return cached rates if available and base currency matches
+      if (this.cache.rates && this.cache.rates.base === normalizedBase) {
+        console.warn("Returning stale cached exchange rates due to API error");
+        return this.cache.rates;
+      }
+
+      throw error;
     }
   }
 
@@ -194,7 +232,7 @@ class ExchangeRateApi {
   async convert(
     amount: number,
     from: CurrencyCode,
-    to: CurrencyCode
+    to: CurrencyCode,
   ): Promise<ConversionResult> {
     // If same currency, return as-is
     if (from === to) {
@@ -209,12 +247,16 @@ class ExchangeRateApi {
     }
 
     // Get rates (base is USD)
-    const rates = await this.getLatestRates('USD');
-    
+    const rates = await this.getLatestRates("USD");
+
     // Get rates for both currencies
-    const fromRate = rates.rates[from] || 1;
-    const toRate = rates.rates[to] || 1;
-    
+    const fromRate = rates.rates[from];
+    const toRate = rates.rates[to];
+
+    if (!fromRate || !toRate) {
+      throw new Error(`Missing exchange rate for ${from}/${to}`);
+    }
+
     // Convert: amount -> USD -> target
     const usdAmount = amount / fromRate;
     const result = usdAmount * toRate;
@@ -226,7 +268,7 @@ class ExchangeRateApi {
       amount,
       result: Math.round(result * 100) / 100, // Round to 2 decimal places
       rate: Math.round(rate * 10000) / 10000, // Round to 4 decimal places
-      timestamp: rates.timestamp * 1000,
+      timestamp: rates.timestamp,
     };
   }
 
@@ -247,75 +289,29 @@ class ExchangeRateApi {
    */
   async getMultipleRates(
     base: CurrencyCode,
-    targets: CurrencyCode[]
+    targets: CurrencyCode[],
   ): Promise<Record<CurrencyCode, number>> {
-    const rates = await this.getLatestRates('USD');
-    
-    const baseRate = rates.rates[base] || 1;
-    const result: Record<CurrencyCode, number> = {};
-    
-    for (const target of targets) {
-      const targetRate = rates.rates[target] || 1;
-      result[target] = Math.round((targetRate / baseRate) * 10000) / 10000;
+    const rates = await this.getLatestRates("USD");
+    const normalizedBase = String(base).toUpperCase();
+    const baseRate = rates.rates[normalizedBase];
+    if (!baseRate) {
+      throw new Error(
+        `Missing exchange rate for base currency: ${normalizedBase}`,
+      );
     }
-    
+    const result: Record<CurrencyCode, number> = {};
+
+    for (const target of targets) {
+      const normalizedTarget = String(target).toUpperCase();
+      const targetRate = rates.rates[normalizedTarget];
+      if (!targetRate) {
+        continue;
+      }
+      result[normalizedTarget] =
+        Math.round((targetRate / baseRate) * 10000) / 10000;
+    }
+
     return result;
-  }
-
-  /**
-   * Fallback rates (approximate, for when API is unavailable)
-   * These are approximate rates and should not be used for actual transactions
-   */
-  private getFallbackRates(base: CurrencyCode): ExchangeRatesResponse {
-    // Approximate rates as of 2024 (for fallback only)
-    const fallbackRates: Record<CurrencyCode, number> = {
-      USD: 1,
-      EUR: 0.92,
-      GBP: 0.79,
-      AED: 3.67,
-      SAR: 3.75,
-      QAR: 3.64,
-      KWD: 0.31,
-      BHD: 0.38,
-      JPY: 149.50,
-      CNY: 7.24,
-      INR: 83.12,
-      PKR: 278.50,
-      PHP: 56.20,
-      THB: 35.80,
-      SGD: 1.34,
-      MYR: 4.72,
-      AUD: 1.53,
-      NZD: 1.64,
-      CAD: 1.36,
-      CHF: 0.88,
-      SEK: 10.42,
-      NOK: 10.68,
-      DKK: 6.87,
-      ZAR: 18.65,
-      TRY: 32.15,
-      RUB: 92.50,
-      BRL: 4.97,
-      MXN: 17.15,
-      HKD: 7.82,
-      KRW: 1325.50,
-      IDR: 15650,
-      VND: 24350,
-      EGP: 30.90,
-      MAD: 10.05,
-      TND: 3.12,
-      JOD: 0.71,
-      LBP: 89500,
-      OMR: 0.38,
-    };
-
-    return {
-      disclaimer: 'Fallback rates - not for actual transactions',
-      license: 'Fallback data',
-      timestamp: Math.floor(Date.now() / 1000),
-      base,
-      rates: fallbackRates,
-    };
   }
 
   /**
@@ -323,11 +319,11 @@ class ExchangeRateApi {
    */
   formatCurrency(amount: number, currency: CurrencyCode): string {
     const symbol = CURRENCY_SYMBOLS[currency] || currency;
-    const formatted = new Intl.NumberFormat('en-US', {
+    const formatted = new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
-    
+
     return `${symbol}${formatted}`;
   }
 }

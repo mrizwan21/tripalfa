@@ -1,105 +1,107 @@
 /**
  * Circuit Breaker Pattern Implementation
- * 
+ *
  * Prevents cascade failures by stopping requests to failing services.
  * States: CLOSED -> OPEN -> HALF_OPEN -> CLOSED
  */
 
-import EventEmitter from 'eventemitter3'
+import EventEmitter from "eventemitter3";
 
-export type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN'
+export type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
 
 export interface CircuitBreakerOptions {
   /** Name of the circuit breaker for logging */
-  name: string
+  name: string;
   /** Number of failures before opening circuit */
-  failureThreshold: number
+  failureThreshold: number;
   /** Number of successes in half-open state to close circuit */
-  successThreshold: number
+  successThreshold: number;
   /** Time in ms before attempting to close circuit (half-open state) */
-  timeout: number
+  timeout: number;
   /** Time window in ms for counting failures */
-  resetTimeout: number
+  resetTimeout: number;
   /** Enable logging */
-  enableLogging?: boolean
+  enableLogging?: boolean;
   /** Custom fallback function */
-  fallback?: <T>(error: Error) => Promise<T> | T
+  fallback?: <T>(error: Error) => Promise<T> | T;
 }
 
 export interface CircuitStats {
-  name: string
-  state: CircuitState
-  failures: number
-  successes: number
-  lastFailureTime: number | null
-  lastSuccessTime: number | null
-  totalRequests: number
-  totalFailures: number
-  totalSuccesses: number
+  name: string;
+  state: CircuitState;
+  failures: number;
+  successes: number;
+  lastFailureTime: number | null;
+  lastSuccessTime: number | null;
+  totalRequests: number;
+  totalFailures: number;
+  totalSuccesses: number;
 }
 
 interface FailureRecord {
-  timestamp: number
-  error: Error
+  timestamp: number;
+  error: Error;
 }
 
 /**
  * Circuit Breaker
- * 
+ *
  * Implements the circuit breaker pattern to prevent cascade failures.
  * When a service is failing, the circuit opens and subsequent requests
  * fail fast without attempting to call the service.
  */
 export class CircuitBreaker extends EventEmitter {
-  private state: CircuitState = 'CLOSED'
-  private failures: FailureRecord[] = []
-  private successes: number = 0
-  private lastFailureTime: number | null = null
-  private lastSuccessTime: number | null = null
-  private totalRequests: number = 0
-  private totalFailures: number = 0
-  private totalSuccesses: number = 0
-  private halfOpenStartTime: number | null = null
-  
-  private readonly options: Required<Omit<CircuitBreakerOptions, 'fallback'>> & { fallback?: CircuitBreakerOptions['fallback'] }
+  private state: CircuitState = "CLOSED";
+  private failures: FailureRecord[] = [];
+  private successes: number = 0;
+  private lastFailureTime: number | null = null;
+  private lastSuccessTime: number | null = null;
+  private totalRequests: number = 0;
+  private totalFailures: number = 0;
+  private totalSuccesses: number = 0;
+  private halfOpenStartTime: number | null = null;
+
+  private readonly options: Required<
+    Omit<CircuitBreakerOptions, "fallback">
+  > & { fallback?: CircuitBreakerOptions["fallback"] };
 
   constructor(options: CircuitBreakerOptions) {
-    super()
+    super();
     this.options = {
       ...options,
       resetTimeout: options.resetTimeout || 60000,
       enableLogging: options.enableLogging ?? false,
-    }
+    };
   }
 
   /**
    * Execute a function with circuit breaker protection
    */
   async execute<T>(fn: () => Promise<T>): Promise<T> {
-    this.totalRequests++
+    this.totalRequests++;
 
     // Check if circuit should transition from OPEN to HALF_OPEN
-    if (this.state === 'OPEN') {
+    if (this.state === "OPEN") {
       if (this.shouldAttemptReset()) {
-        this.transitionTo('HALF_OPEN')
+        this.transitionTo("HALF_OPEN");
       } else {
-        return this.handleOpenCircuit<T>()
+        return this.handleOpenCircuit<T>();
       }
     }
 
     try {
-      const result = await fn()
-      this.onSuccess()
-      return result
+      const result = await fn();
+      this.onSuccess();
+      return result;
     } catch (error) {
-      this.onFailure(error as Error)
-      
+      this.onFailure(error as Error);
+
       // If circuit is now open, use fallback or throw
-      if (this.state === 'OPEN') {
-        return this.handleOpenCircuit<T>()
+      if (this.state === "OPEN") {
+        return this.handleOpenCircuit<T>();
       }
-      
-      throw error
+
+      throw error;
     }
   }
 
@@ -107,105 +109,105 @@ export class CircuitBreaker extends EventEmitter {
    * Handle request when circuit is OPEN
    */
   private async handleOpenCircuit<T>(): Promise<T> {
-    this.emit('reject', { name: this.options.name, state: this.state })
-    
+    this.emit("reject", { name: this.options.name, state: this.state });
+
     if (this.options.fallback) {
-      this.log('Using fallback function')
-      return this.options.fallback(new Error('Circuit breaker is OPEN'))
+      this.log("Using fallback function");
+      return this.options.fallback(new Error("Circuit breaker is OPEN"));
     }
-    
+
     throw new CircuitBreakerError(
       `Circuit breaker '${this.options.name}' is OPEN`,
-      this.getStats()
-    )
+      this.getStats(),
+    );
   }
 
   /**
    * Check if enough time has passed to attempt reset
    */
   private shouldAttemptReset(): boolean {
-    if (!this.lastFailureTime) return false
-    return Date.now() - this.lastFailureTime >= this.options.timeout
+    if (!this.lastFailureTime) return false;
+    return Date.now() - this.lastFailureTime >= this.options.timeout;
   }
 
   /**
    * Handle successful execution
    */
   private onSuccess(): void {
-    this.lastSuccessTime = Date.now()
-    this.totalSuccesses++
+    this.lastSuccessTime = Date.now();
+    this.totalSuccesses++;
 
-    if (this.state === 'HALF_OPEN') {
-      this.successes++
+    if (this.state === "HALF_OPEN") {
+      this.successes++;
       if (this.successes >= this.options.successThreshold) {
-        this.transitionTo('CLOSED')
+        this.transitionTo("CLOSED");
       }
-    } else if (this.state === 'CLOSED') {
+    } else if (this.state === "CLOSED") {
       // Reset failure count on success
       this.failures = this.failures.filter(
-        f => Date.now() - f.timestamp < this.options.resetTimeout
-      )
+        (f) => Date.now() - f.timestamp < this.options.resetTimeout,
+      );
     }
-    
-    this.emit('success', { name: this.options.name, state: this.state })
+
+    this.emit("success", { name: this.options.name, state: this.state });
   }
 
   /**
    * Handle failed execution
    */
   private onFailure(error: Error): void {
-    this.lastFailureTime = Date.now()
-    this.totalFailures++
-    
+    this.lastFailureTime = Date.now();
+    this.totalFailures++;
+
     // Add to failure record
-    this.failures.push({ timestamp: Date.now(), error })
-    
+    this.failures.push({ timestamp: Date.now(), error });
+
     // Clean old failures outside window
     this.failures = this.failures.filter(
-      f => Date.now() - f.timestamp < this.options.resetTimeout
-    )
+      (f) => Date.now() - f.timestamp < this.options.resetTimeout,
+    );
 
-    if (this.state === 'HALF_OPEN') {
+    if (this.state === "HALF_OPEN") {
       // Any failure in half-open state opens the circuit
-      this.transitionTo('OPEN')
-    } else if (this.state === 'CLOSED') {
+      this.transitionTo("OPEN");
+    } else if (this.state === "CLOSED") {
       if (this.failures.length >= this.options.failureThreshold) {
-        this.transitionTo('OPEN')
+        this.transitionTo("OPEN");
       }
     }
-    
-    this.emit('failure', { 
-      name: this.options.name, 
-      state: this.state, 
+
+    this.emit("failure", {
+      name: this.options.name,
+      state: this.state,
       error,
-      failureCount: this.failures.length 
-    })
+      failureCount: this.failures.length,
+    });
   }
 
   /**
    * Transition to a new state
    */
   private transitionTo(newState: CircuitState): void {
-    const oldState = this.state
-    this.state = newState
-    
-    this.log(`State transition: ${oldState} -> ${newState}`)
-    this.emit('stateChange', { 
-      name: this.options.name, 
-      oldState, 
-      newState,
-      stats: this.getStats()
-    })
+    const oldState = this.state;
+    this.state = newState;
 
-    if (newState === 'CLOSED') {
-      this.failures = []
-      this.successes = 0
-      this.halfOpenStartTime = null
-    } else if (newState === 'HALF_OPEN') {
-      this.successes = 0
-      this.halfOpenStartTime = Date.now()
-    } else if (newState === 'OPEN') {
-      this.halfOpenStartTime = null
+    this.log(`State transition: ${oldState} -> ${newState}`);
+    this.emit("stateChange", {
+      name: this.options.name,
+      oldState,
+      newState,
+      stats: this.getStats(),
+    });
+
+    if (newState === "CLOSED") {
+      this.failures = [];
+      this.successes = 0;
+      this.halfOpenStartTime = null;
+    } else if (newState === "HALF_OPEN") {
+      this.successes = 0;
+      this.halfOpenStartTime = Date.now();
+    } else if (newState === "OPEN") {
+      this.halfOpenStartTime = null;
     }
   }
 
@@ -213,7 +215,7 @@ export class CircuitBreaker extends EventEmitter {
    * Get current circuit breaker state
    */
   getState(): CircuitState {
-    return this.state
+    return this.state;
   }
 
   /**
@@ -230,15 +232,15 @@ export class CircuitBreaker extends EventEmitter {
       totalRequests: this.totalRequests,
       totalFailures: this.totalFailures,
       totalSuccesses: this.totalSuccesses,
-    }
+    };
   }
 
   /**
    * Force open the circuit
    */
   trip(): void {
-    if (this.state !== 'OPEN') {
-      this.transitionTo('OPEN')
+    if (this.state !== "OPEN") {
+      this.transitionTo("OPEN");
     }
   }
 
@@ -246,8 +248,8 @@ export class CircuitBreaker extends EventEmitter {
    * Force close the circuit (reset)
    */
   reset(): void {
-    if (this.state !== 'CLOSED') {
-      this.transitionTo('CLOSED')
+    if (this.state !== "CLOSED") {
+      this.transitionTo("CLOSED");
     }
   }
 
@@ -255,26 +257,26 @@ export class CircuitBreaker extends EventEmitter {
    * Check if circuit is open
    */
   isOpen(): boolean {
-    return this.state === 'OPEN'
+    return this.state === "OPEN";
   }
 
   /**
    * Check if circuit is closed
    */
   isClosed(): boolean {
-    return this.state === 'CLOSED'
+    return this.state === "CLOSED";
   }
 
   /**
    * Check if circuit is half-open
    */
   isHalfOpen(): boolean {
-    return this.state === 'HALF_OPEN'
+    return this.state === "HALF_OPEN";
   }
 
   private log(message: string): void {
     if (this.options.enableLogging) {
-      console.log(`[CircuitBreaker:${this.options.name}] ${message}`)
+      console.log(`[CircuitBreaker:${this.options.name}] ${message}`);
     }
   }
 }
@@ -283,12 +285,12 @@ export class CircuitBreaker extends EventEmitter {
  * Circuit Breaker Error
  */
 export class CircuitBreakerError extends Error {
-  public readonly stats: CircuitStats
+  public readonly stats: CircuitStats;
 
   constructor(message: string, stats: CircuitStats) {
-    super(message)
-    this.name = 'CircuitBreakerError'
-    this.stats = stats
+    super(message);
+    this.name = "CircuitBreakerError";
+    this.stats = stats;
   }
 }
 
@@ -297,7 +299,7 @@ export class CircuitBreakerError extends Error {
  */
 export function createCircuitBreaker(
   name: string,
-  options?: Partial<CircuitBreakerOptions>
+  options?: Partial<CircuitBreakerOptions>,
 ): CircuitBreaker {
   return new CircuitBreaker({
     name,
@@ -306,7 +308,7 @@ export function createCircuitBreaker(
     timeout: 30000,
     resetTimeout: 60000,
     ...options,
-  })
+  });
 }
 
-export default CircuitBreaker
+export default CircuitBreaker;

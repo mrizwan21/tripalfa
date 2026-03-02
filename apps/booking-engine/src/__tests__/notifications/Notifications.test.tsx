@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { BrowserRouter } from "react-router-dom";
 import Notifications from "../../pages/Notifications";
 import {
   MOCK_NOTIFICATION_LIST,
@@ -12,8 +12,11 @@ import {
   filterNotificationsByStatus,
   searchNotifications,
   getUnreadNotifications,
-} from './__mocks__/fixtures';
-import { initializeNotificationsStore, resetNotificationsStore } from './__mocks__/handlers';
+} from "./__mocks__/fixtures";
+import {
+  initializeNotificationsStore,
+  resetNotificationsStore,
+} from "./__mocks__/handlers";
 
 /**
  * Test suite for Notifications page component
@@ -25,11 +28,11 @@ const renderNotifications = () => {
   return render(
     <BrowserRouter>
       <Notifications />
-    </BrowserRouter>
+    </BrowserRouter>,
   );
 };
 
-describe('Notifications Page Component', () => {
+describe("Notifications Page Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     initializeNotificationsStore(MOCK_NOTIFICATION_LIST);
@@ -46,35 +49,48 @@ describe('Notifications Page Component', () => {
    * Test 1: Page loads and displays notification list
    * Tests that notifications page renders with a list of notifications
    */
-  it('should load page and display notification list', async () => {
+  it("should load page and display notification list", async () => {
     renderNotifications();
 
     await waitFor(() => {
       // Wait for notifications to load
-      const notificationElements = screen.queryAllByText(/booking|request|change/i);
+      const notificationElements = screen.queryAllByText(
+        /booking|request|change/i,
+      );
       expect(notificationElements.length).toBeGreaterThan(0);
     });
 
     // Check that list is rendered
-    const notificationList = screen.queryByRole('list') || screen.queryByTestId('notification-list');
-    expect(notificationList || screen.queryByText(/special|booking|flight/i)).toBeTruthy();
+    const notificationList =
+      screen.queryByRole("list") || screen.queryByTestId("notification-list");
+    expect(
+      notificationList || screen.queryByText(/special|booking|flight/i),
+    ).toBeTruthy();
   });
 
   /**
    * Test 2: Different notification types displayed
    * Tests that page correctly displays different notification types (SUCCESS, ERROR, INFO, WARNING)
    */
-  it('should display different notification types correctly', async () => {
+  it("should display different notification types correctly", async () => {
     renderNotifications();
 
     await waitFor(() => {
       // Check for different types in the list
-      const hasSuccessType = MOCK_NOTIFICATION_LIST.some(n => n.type === 'SUCCESS');
-      const hasErrorType = MOCK_NOTIFICATION_LIST.some(n => n.type === 'ERROR');
-      const hasInfoType = MOCK_NOTIFICATION_LIST.some(n => n.type === 'INFO');
-      const hasWarningType = MOCK_NOTIFICATION_LIST.some(n => n.type === 'WARNING');
+      const hasSuccessType = MOCK_NOTIFICATION_LIST.some(
+        (n) => n.type === "SUCCESS",
+      );
+      const hasErrorType = MOCK_NOTIFICATION_LIST.some(
+        (n) => n.type === "ERROR",
+      );
+      const hasInfoType = MOCK_NOTIFICATION_LIST.some((n) => n.type === "INFO");
+      const hasWarningType = MOCK_NOTIFICATION_LIST.some(
+        (n) => n.type === "WARNING",
+      );
 
-      expect(hasSuccessType || hasErrorType || hasInfoType || hasWarningType).toBe(true);
+      expect(
+        hasSuccessType || hasErrorType || hasInfoType || hasWarningType,
+      ).toBe(true);
     });
   });
 
@@ -82,12 +98,12 @@ describe('Notifications Page Component', () => {
    * Test 3: Notification status badges displayed
    * Tests that different status badges (PENDING, CONFIRMED, REJECTED, INFO, CANCELLED) are shown
    */
-  it('should display status badges for all notification statuses', async () => {
+  it("should display status badges for all notification statuses", async () => {
     renderNotifications();
 
     await waitFor(() => {
       const statusBadges = screen.queryAllByText(
-        /pending|confirmed|rejected|information|cancelled/i
+        /pending|confirmed|rejected|information|cancelled/i,
       );
       expect(statusBadges.length).toBeGreaterThan(0);
     });
@@ -97,7 +113,7 @@ describe('Notifications Page Component', () => {
    * Test 4: Unread notifications displayed
    * Tests that unread notifications are visually distinguished
    */
-  it('should display unread notifications', async () => {
+  it("should display unread notifications", async () => {
     renderNotifications();
 
     await waitFor(() => {
@@ -106,7 +122,9 @@ describe('Notifications Page Component', () => {
     });
 
     // Verify unread notifications are visible
-    const notifications = screen.queryAllByText(/special|booking|flight|change/i);
+    const notifications = screen.queryAllByText(
+      /special|booking|flight|change/i,
+    );
     expect(notifications.length).toBeGreaterThan(0);
   });
 
@@ -114,11 +132,13 @@ describe('Notifications Page Component', () => {
    * Test 5: Sorting by date (newest first)
    * Tests that notifications are sorted by date with newest first
    */
-  it('should sort notifications by date (newest first)', async () => {
+  it("should sort notifications by date (newest first)", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const sortedNotifs = sortNotificationsByDateNewest(MOCK_NOTIFICATION_LIST);
+      const sortedNotifs = sortNotificationsByDateNewest(
+        MOCK_NOTIFICATION_LIST,
+      );
 
       // Verify sorting logic works
       for (let i = 0; i < sortedNotifs.length - 1; i++) {
@@ -133,19 +153,25 @@ describe('Notifications Page Component', () => {
    * Test 6: Filtering by notification type
    * Tests that notifications can be filtered by type
    */
-  it('should filter notifications by type', async () => {
+  it("should filter notifications by type", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const successNotifications = filterNotificationsByType(MOCK_NOTIFICATION_LIST, 'SUCCESS');
-      const errorNotifications = filterNotificationsByType(MOCK_NOTIFICATION_LIST, 'ERROR');
+      const successNotifications = filterNotificationsByType(
+        MOCK_NOTIFICATION_LIST,
+        "SUCCESS",
+      );
+      const errorNotifications = filterNotificationsByType(
+        MOCK_NOTIFICATION_LIST,
+        "ERROR",
+      );
 
-      successNotifications.forEach(notif => {
-        expect(notif.type).toBe('SUCCESS');
+      successNotifications.forEach((notif) => {
+        expect(notif.type).toBe("SUCCESS");
       });
 
-      errorNotifications.forEach(notif => {
-        expect(notif.type).toBe('ERROR');
+      errorNotifications.forEach((notif) => {
+        expect(notif.type).toBe("ERROR");
       });
     });
   });
@@ -154,22 +180,25 @@ describe('Notifications Page Component', () => {
    * Test 7: Filtering by notification status
    * Tests that notifications can be filtered by status
    */
-  it('should filter notifications by status', async () => {
+  it("should filter notifications by status", async () => {
     renderNotifications();
 
     await waitFor(() => {
       const confirmedNotifications = filterNotificationsByStatus(
         MOCK_NOTIFICATION_LIST,
-        'CONFIRMED'
+        "CONFIRMED",
       );
-      const pendingNotifications = filterNotificationsByStatus(MOCK_NOTIFICATION_LIST, 'PENDING');
+      const pendingNotifications = filterNotificationsByStatus(
+        MOCK_NOTIFICATION_LIST,
+        "PENDING",
+      );
 
-      confirmedNotifications.forEach(notif => {
-        expect(notif.status).toBe('CONFIRMED');
+      confirmedNotifications.forEach((notif) => {
+        expect(notif.status).toBe("CONFIRMED");
       });
 
-      pendingNotifications.forEach(notif => {
-        expect(notif.status).toBe('PENDING');
+      pendingNotifications.forEach((notif) => {
+        expect(notif.status).toBe("PENDING");
       });
     });
   });
@@ -178,15 +207,18 @@ describe('Notifications Page Component', () => {
    * Test 8: Search by title and description
    * Tests that search functionality works for title and description
    */
-  it('should search notifications by title and description', async () => {
+  it("should search notifications by title and description", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const searchResults = searchNotifications(MOCK_NOTIFICATION_LIST, 'booking');
+      const searchResults = searchNotifications(
+        MOCK_NOTIFICATION_LIST,
+        "booking",
+      );
 
-      searchResults.forEach(notif => {
+      searchResults.forEach((notif) => {
         const content = `${notif.title} ${notif.description}`.toLowerCase();
-        expect(content).toContain('booking');
+        expect(content).toContain("booking");
       });
     });
   });
@@ -195,7 +227,7 @@ describe('Notifications Page Component', () => {
    * Test 9: Pagination (if applicable)
    * Tests that pagination controls work correctly
    */
-  it('should handle pagination correctly', async () => {
+  it("should handle pagination correctly", async () => {
     renderNotifications();
 
     await waitFor(() => {
@@ -214,16 +246,18 @@ describe('Notifications Page Component', () => {
    * Test 10: Empty state display
    * Tests that empty state is shown when no notifications exist
    */
-  it('should display empty state when no notifications', async () => {
+  it("should display empty state when no notifications", async () => {
     resetNotificationsStore();
 
     renderNotifications();
 
     await waitFor(() => {
       // When empty, should show empty state message
-      const emptyStateIndicators = screen.queryAllByText(/no.*notification|empty/i);
+      const emptyStateIndicators = screen.queryAllByText(
+        /no.*notification|empty/i,
+      );
       // Even if we don't see exact text, the page should still be functional
-      expect(screen.queryByRole('heading') || true).toBeTruthy();
+      expect(screen.queryByRole("heading") || true).toBeTruthy();
     });
   });
 
@@ -231,7 +265,7 @@ describe('Notifications Page Component', () => {
    * Test 11: Loading state display
    * Tests that loading state is shown while fetching notifications
    */
-  it('should display loading state during fetch', async () => {
+  it("should display loading state during fetch", async () => {
     vi.useFakeTimers();
     renderNotifications();
 
@@ -250,15 +284,16 @@ describe('Notifications Page Component', () => {
    * Test 12: Error state handling
    * Tests that error state is handled gracefully
    */
-  it('should handle error state gracefully', async () => {
+  it("should handle error state gracefully", async () => {
     renderNotifications();
 
     // The component should render even if there are errors
-    expect(screen.queryByRole('heading') || true).toBeTruthy();
+    expect(screen.queryByRole("heading") || true).toBeTruthy();
 
     await waitFor(() => {
       // Should still render the page structure
-      const pageContent = screen.queryByText(/notification/i) || screen.queryByText(/error/i);
+      const pageContent =
+        screen.queryByText(/notification/i) || screen.queryByText(/error/i);
       expect(pageContent || true).toBeTruthy();
     });
   });
@@ -267,11 +302,13 @@ describe('Notifications Page Component', () => {
    * Test 13: Click notification to view details
    * Tests that clicking a notification opens the details popup
    */
-  it('should open details popup on notification click', async () => {
+  it("should open details popup on notification click", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const notificationElement = screen.queryByText(MOCK_SSR_NOTIFICATION.title);
+      const notificationElement = screen.queryByText(
+        MOCK_SSR_NOTIFICATION.title,
+      );
       expect(notificationElement).toBeTruthy();
     });
 
@@ -281,7 +318,9 @@ describe('Notifications Page Component', () => {
 
       // Details popup should open
       await waitFor(() => {
-        const detailsContent = screen.queryByText(MOCK_SSR_NOTIFICATION.description);
+        const detailsContent = screen.queryByText(
+          MOCK_SSR_NOTIFICATION.description,
+        );
         expect(detailsContent || true).toBeTruthy();
       });
     }
@@ -291,7 +330,7 @@ describe('Notifications Page Component', () => {
    * Test 14: Mark as read functionality
    * Tests that notifications can be marked as read
    */
-  it('should mark notification as read', async () => {
+  it("should mark notification as read", async () => {
     renderNotifications();
 
     await waitFor(() => {
@@ -315,19 +354,25 @@ describe('Notifications Page Component', () => {
    * Test 15: Unread notification count updates
    * Tests that unread count is updated when marking notifications as read
    */
-  it('should update unread notification count', async () => {
+  it("should update unread notification count", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const initialUnreadCount = getUnreadNotifications(MOCK_NOTIFICATION_LIST).length;
+      const initialUnreadCount = getUnreadNotifications(
+        MOCK_NOTIFICATION_LIST,
+      ).length;
       expect(initialUnreadCount).toBeGreaterThan(0);
     });
 
     // After marking one as read, count should decrease
-    const unreadCountBefore = getUnreadNotifications(MOCK_NOTIFICATION_LIST).length;
+    const unreadCountBefore = getUnreadNotifications(
+      MOCK_NOTIFICATION_LIST,
+    ).length;
 
     // Simulate marking one as read
-    const notificationToMark = getUnreadNotifications(MOCK_NOTIFICATION_LIST)[0];
+    const notificationToMark = getUnreadNotifications(
+      MOCK_NOTIFICATION_LIST,
+    )[0];
     if (notificationToMark) {
       // Mark as read would happen through API or state management
       expect(notificationToMark.read).toBe(false);
@@ -338,7 +383,7 @@ describe('Notifications Page Component', () => {
    * Test 16: Real-time polling updates
    * Tests that real-time polling fetches new notifications
    */
-  it('should poll for real-time notification updates', async () => {
+  it("should poll for real-time notification updates", async () => {
     vi.useFakeTimers();
     renderNotifications();
 
@@ -353,7 +398,9 @@ describe('Notifications Page Component', () => {
     // Polling should have triggered
     await waitFor(() => {
       // Content should still be visible
-      expect(screen.queryByText(/special|booking|flight/i) || true).toBeTruthy();
+      expect(
+        screen.queryByText(/special|booking|flight/i) || true,
+      ).toBeTruthy();
     });
 
     vi.useRealTimers();
@@ -363,14 +410,16 @@ describe('Notifications Page Component', () => {
    * Additional test: Unread notification badge
    * Tests that unread count badge is displayed
    */
-  it('should display unread notification badge', async () => {
+  it("should display unread notification badge", async () => {
     renderNotifications();
 
     await waitFor(() => {
       const unreadCount = getUnreadNotifications(MOCK_NOTIFICATION_LIST).length;
 
       if (unreadCount > 0) {
-        const badgeElements = screen.queryAllByText(RegExp(String(unreadCount)));
+        const badgeElements = screen.queryAllByText(
+          RegExp(String(unreadCount)),
+        );
         expect(badgeElements.length >= 0).toBe(true);
       }
     });
@@ -380,7 +429,7 @@ describe('Notifications Page Component', () => {
    * Additional test: Keyboard navigation
    * Tests that notifications can be navigated with keyboard
    */
-  it('should support keyboard navigation', async () => {
+  it("should support keyboard navigation", async () => {
     const user = userEvent.setup({ delay: null });
     renderNotifications();
 
@@ -389,7 +438,7 @@ describe('Notifications Page Component', () => {
     });
 
     // Tab through notifications
-    await user.keyboard('{Tab}');
+    await user.keyboard("{Tab}");
 
     // Focused element should be accessible
     expect(document.activeElement).toBeTruthy();
@@ -399,7 +448,7 @@ describe('Notifications Page Component', () => {
    * Additional test: Notification detail passenger info
    * Tests that passenger information is shown in notification details
    */
-  it('should display passenger name in notification details', async () => {
+  it("should display passenger name in notification details", async () => {
     renderNotifications();
 
     await waitFor(() => {
@@ -415,7 +464,7 @@ describe('Notifications Page Component', () => {
    * Additional test: Segment information display
    * Tests that flight segment information is displayed
    */
-  it('should display segment information', async () => {
+  it("should display segment information", async () => {
     renderNotifications();
 
     await waitFor(() => {
@@ -430,11 +479,13 @@ describe('Notifications Page Component', () => {
    * Additional test: Price and currency display
    * Tests that price information is correctly displayed
    */
-  it('should display price information correctly', async () => {
+  it("should display price information correctly", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const notification = MOCK_NOTIFICATION_LIST.find(n => n.price && n.price > 0);
+      const notification = MOCK_NOTIFICATION_LIST.find(
+        (n) => n.price && n.price > 0,
+      );
       if (notification) {
         expect(notification.price).toBeGreaterThan(0);
         if (notification.currency) {
@@ -448,17 +499,19 @@ describe('Notifications Page Component', () => {
    * Additional test: Multiple filter combination
    * Tests that multiple filters can be applied together
    */
-  it('should apply multiple filters together', async () => {
+  it("should apply multiple filters together", async () => {
     renderNotifications();
 
     await waitFor(() => {
       // Filter by SUCCESS type and CONFIRMED status
-      const filtered = filterNotificationsByType(MOCK_NOTIFICATION_LIST, 'SUCCESS')
-        .filter(n => n.status === 'CONFIRMED');
+      const filtered = filterNotificationsByType(
+        MOCK_NOTIFICATION_LIST,
+        "SUCCESS",
+      ).filter((n) => n.status === "CONFIRMED");
 
-      filtered.forEach(notif => {
-        expect(notif.type).toBe('SUCCESS');
-        expect(notif.status).toBe('CONFIRMED');
+      filtered.forEach((notif) => {
+        expect(notif.type).toBe("SUCCESS");
+        expect(notif.status).toBe("CONFIRMED");
       });
     });
   });
@@ -467,15 +520,20 @@ describe('Notifications Page Component', () => {
    * Additional test: Search with passenger name
    * Tests that search works with passenger names
    */
-  it('should search by passenger name', async () => {
+  it("should search by passenger name", async () => {
     renderNotifications();
 
     await waitFor(() => {
-      const withPassenger = MOCK_NOTIFICATION_LIST.filter(n => n.passengerName);
+      const withPassenger = MOCK_NOTIFICATION_LIST.filter(
+        (n) => n.passengerName,
+      );
       expect(withPassenger.length).toBeGreaterThan(0);
 
-      withPassenger.forEach(notif => {
-        const searchResults = searchNotifications(MOCK_NOTIFICATION_LIST, notif.passengerName || '');
+      withPassenger.forEach((notif) => {
+        const searchResults = searchNotifications(
+          MOCK_NOTIFICATION_LIST,
+          notif.passengerName || "",
+        );
         expect(searchResults.length).toBeGreaterThan(0);
       });
     });

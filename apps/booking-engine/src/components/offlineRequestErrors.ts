@@ -11,7 +11,7 @@ export class OfflineRequestError extends Error {
     public statusCode: number,
     public message: string,
     public code: string,
-    public details?: Record<string, any>
+    public details?: Record<string, any>,
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -36,7 +36,7 @@ export class OfflineRequestError extends Error {
  */
 export class ValidationError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(400, message, 'VALIDATION_ERROR', details);
+    super(400, message, "VALIDATION_ERROR", details);
   }
 }
 
@@ -45,7 +45,7 @@ export class ValidationError extends OfflineRequestError {
  */
 export class NotFoundError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(404, message, 'NOT_FOUND', details);
+    super(404, message, "NOT_FOUND", details);
   }
 }
 
@@ -54,7 +54,7 @@ export class NotFoundError extends OfflineRequestError {
  */
 export class ConflictError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(409, message, 'CONFLICT', details);
+    super(409, message, "CONFLICT", details);
   }
 }
 
@@ -63,7 +63,7 @@ export class ConflictError extends OfflineRequestError {
  */
 export class PaymentError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(402, message, 'PAYMENT_FAILED', details);
+    super(402, message, "PAYMENT_FAILED", details);
   }
 }
 
@@ -72,7 +72,7 @@ export class PaymentError extends OfflineRequestError {
  */
 export class ForbiddenError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(403, message, 'FORBIDDEN', details);
+    super(403, message, "FORBIDDEN", details);
   }
 }
 
@@ -81,7 +81,7 @@ export class ForbiddenError extends OfflineRequestError {
  */
 export class UnauthorizedError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(401, message, 'UNAUTHORIZED', details);
+    super(401, message, "UNAUTHORIZED", details);
   }
 }
 
@@ -90,7 +90,7 @@ export class UnauthorizedError extends OfflineRequestError {
  */
 export class UnprocessableEntityError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(422, message, 'UNPROCESSABLE_ENTITY', details);
+    super(422, message, "UNPROCESSABLE_ENTITY", details);
   }
 }
 
@@ -98,8 +98,12 @@ export class UnprocessableEntityError extends OfflineRequestError {
  * 429 Too Many Requests - Rate limit exceeded
  */
 export class RateLimitError extends OfflineRequestError {
-  constructor(message: string, retryAfter?: number, details?: Record<string, any>) {
-    super(429, message, 'RATE_LIMIT_EXCEEDED', {
+  constructor(
+    message: string,
+    retryAfter?: number,
+    details?: Record<string, any>,
+  ) {
+    super(429, message, "RATE_LIMIT_EXCEEDED", {
       retryAfter,
       ...details,
     });
@@ -111,7 +115,7 @@ export class RateLimitError extends OfflineRequestError {
  */
 export class InternalServerError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(500, message, 'INTERNAL_SERVER_ERROR', details);
+    super(500, message, "INTERNAL_SERVER_ERROR", details);
   }
 }
 
@@ -120,14 +124,16 @@ export class InternalServerError extends OfflineRequestError {
  */
 export class ServiceUnavailableError extends OfflineRequestError {
   constructor(message: string, details?: Record<string, any>) {
-    super(503, message, 'SERVICE_UNAVAILABLE', details);
+    super(503, message, "SERVICE_UNAVAILABLE", details);
   }
 }
 
 /**
  * Check if an error is an OfflineRequestError
  */
-export function isOfflineRequestError(error: any): error is OfflineRequestError {
+export function isOfflineRequestError(
+  error: any,
+): error is OfflineRequestError {
   return error instanceof OfflineRequestError;
 }
 
@@ -158,17 +164,18 @@ export function formatErrorResponse(error: any) {
   if (error instanceof SyntaxError) {
     return {
       success: false,
-      error: 'VALIDATION_ERROR',
-      message: 'Invalid request format',
+      error: "VALIDATION_ERROR",
+      message: "Invalid request format",
     };
   }
 
   return {
     success: false,
-    error: 'INTERNAL_SERVER_ERROR',
-    message: process.env.NODE_ENV === 'production' 
-      ? 'An unexpected error occurred' 
-      : error.message,
+    error: "INTERNAL_SERVER_ERROR",
+    message:
+      process.env.NODE_ENV === "production"
+        ? "An unexpected error occurred"
+        : error.message,
   };
 }
 
@@ -179,7 +186,7 @@ export class InvalidStateTransitionError extends ConflictError {
   constructor(currentStatus: string, requestedAction: string) {
     super(
       `Cannot perform ${requestedAction} on request in ${currentStatus} status`,
-      { currentStatus, requestedAction }
+      { currentStatus, requestedAction },
     );
   }
 }
@@ -189,10 +196,9 @@ export class InvalidStateTransitionError extends ConflictError {
  */
 export class DuplicateActiveRequestError extends ConflictError {
   constructor(bookingId: string) {
-    super(
-      `An active offline request already exists for booking ${bookingId}`,
-      { bookingId }
-    );
+    super(`An active offline request already exists for booking ${bookingId}`, {
+      bookingId,
+    });
   }
 }
 
@@ -201,10 +207,9 @@ export class DuplicateActiveRequestError extends ConflictError {
  */
 export class MissingPricingError extends ConflictError {
   constructor(requestId: string) {
-    super(
-      `Pricing has not been submitted for request ${requestId}`,
-      { requestId }
-    );
+    super(`Pricing has not been submitted for request ${requestId}`, {
+      requestId,
+    });
   }
 }
 
@@ -213,10 +218,9 @@ export class MissingPricingError extends ConflictError {
  */
 export class DocumentGenerationError extends InternalServerError {
   constructor(message: string, documentType?: string) {
-    super(
-      `Failed to generate ${documentType || 'document'}: ${message}`,
-      { documentType }
-    );
+    super(`Failed to generate ${documentType || "document"}: ${message}`, {
+      documentType,
+    });
   }
 }
 

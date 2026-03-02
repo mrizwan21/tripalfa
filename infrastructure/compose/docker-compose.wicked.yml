@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   wicked-mongo:
@@ -56,7 +56,12 @@ services:
     image: haufelexware/wicked.api:latest
     container_name: wicked-api
     platform: linux/amd64
-    command: [ "sh", "-c", "sed -i 's/if (requiredScope) {/if (false) {/g' routes/utils.js && /usr/src/app/bin/docker-start.sh" ]
+    command:
+      [
+        "sh",
+        "-c",
+        "sed -i 's/if (requiredScope) {/if (false) {/g' routes/utils.js && /usr/src/app/bin/docker-start.sh",
+      ]
     environment:
       - NODE_ENV=docker
       - LOG_LEVEL=debug
@@ -139,7 +144,6 @@ volumes:
   wicked-mongo-data:
   wicked-redis-data:
   wicked-postgres-data:
-
 
 networks:
   wicked-net:

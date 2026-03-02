@@ -1,12 +1,12 @@
-import axios from 'axios';
+import axios from "axios";
 
 export interface SupportTicket {
   id: string;
   userId: string;
   subject: string;
   description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: "open" | "in_progress" | "resolved" | "closed";
+  priority: "low" | "medium" | "high" | "urgent";
   category: string;
   createdAt: string;
   updatedAt: string;
@@ -18,26 +18,30 @@ export interface SupportMessage {
   id: string;
   ticketId: string;
   senderId: string;
-  senderType: 'user' | 'agent';
+  senderType: "user" | "agent";
   message: string;
   attachments?: string[];
   createdAt: string;
 }
 
 export class SupportService {
-  private static baseURL = process.env.VITE_SUPPORT_SERVICE_URL || 'http://localhost:3008';
+  private static baseURL =
+    process.env.VITE_SUPPORT_SERVICE_URL || "http://localhost:3008";
 
   /**
    * Get all support tickets
    */
-  static async getTickets(params?: { status?: string; priority?: string }): Promise<SupportTicket[]> {
+  static async getTickets(params?: {
+    status?: string;
+    priority?: string;
+  }): Promise<SupportTicket[]> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.status) queryParams.append('status', params.status);
-      if (params?.priority) queryParams.append('priority', params.priority);
+      if (params?.status) queryParams.append("status", params.status);
+      if (params?.priority) queryParams.append("priority", params.priority);
 
       const response = await axios.get<SupportTicket[]>(
-        `${this.baseURL}/api/support/tickets?${queryParams.toString()}`
+        `${this.baseURL}/api/support/tickets?${queryParams.toString()}`,
       );
 
       return response.data;
@@ -53,13 +57,13 @@ export class SupportService {
     userId: string;
     subject: string;
     description: string;
-    priority: SupportTicket['priority'];
+    priority: SupportTicket["priority"];
     category: string;
   }): Promise<SupportTicket> {
     try {
       const response = await axios.post<SupportTicket>(
         `${this.baseURL}/api/support/tickets`,
-        ticket
+        ticket,
       );
 
       return response.data;
@@ -71,16 +75,19 @@ export class SupportService {
   /**
    * Add message to ticket
    */
-  static async addMessage(ticketId: string, message: {
-    senderId: string;
-    senderType: 'user' | 'agent';
-    message: string;
-    attachments?: string[];
-  }): Promise<SupportMessage> {
+  static async addMessage(
+    ticketId: string,
+    message: {
+      senderId: string;
+      senderType: "user" | "agent";
+      message: string;
+      attachments?: string[];
+    },
+  ): Promise<SupportMessage> {
     try {
       const response = await axios.post<SupportMessage>(
         `${this.baseURL}/api/support/tickets/${ticketId}/messages`,
-        message
+        message,
       );
 
       return response.data;

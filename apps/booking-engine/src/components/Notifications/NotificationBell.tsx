@@ -1,17 +1,28 @@
-import { useState, useRef, useEffect } from 'react';
-import { Bell, Loader2, Trash2, Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useNotifications, useUnreadNotificationCount } from '@/hooks/useNotifications';
+import { useState, useRef, useEffect } from "react";
+import { Bell, Loader2, Trash2, Eye } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  useNotifications,
+  useUnreadNotificationCount,
+} from "@/hooks/useNotifications";
 
 // Simple Badge component inline
-const Badge = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
-  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}>
+const Badge = ({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <span
+    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}
+  >
     {children}
   </span>
 );
 
 interface NotificationBellProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   showBadge?: boolean;
 }
 
@@ -19,87 +30,102 @@ interface NotificationBellProps {
 function getRelativeTime(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
+
+  if (diffInSeconds < 60) return "Just now";
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
   return date.toLocaleDateString();
 }
 
-export const NotificationBell = ({ size = 'md', showBadge = true }: NotificationBellProps) => {
+export const NotificationBell = ({
+  size = "md",
+  showBadge = true,
+}: NotificationBellProps) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { unreadCount } = useUnreadNotificationCount();
-  const { notifications, isLoading, error, markAsRead, markAllAsRead, deleteNotification } =
-    useNotifications(10);
+  const {
+    notifications,
+    isLoading,
+    error,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+  } = useNotifications(10);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const sizeClasses = {
-    sm: 'w-5 h-5',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
+    sm: "w-5 h-5",
+    md: "w-6 h-6",
+    lg: "w-8 h-8",
   };
 
   const getNotificationColor = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return 'border-red-300 bg-red-50';
-      case 'medium':
-        return 'border-yellow-300 bg-yellow-50';
-      case 'low':
-        return 'border-blue-300 bg-blue-50';
+      case "high":
+        return "border-red-300 bg-red-50";
+      case "medium":
+        return "border-yellow-300 bg-yellow-50";
+      case "low":
+        return "border-blue-300 bg-blue-50";
       default:
-        return 'border-gray-300 bg-gray-50';
+        return "border-border bg-muted";
     }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'offline_request_update':
-        return 'memo';
-      case 'price_alert':
-        return 'money';
-      case 'booking_reminder':
-        return 'airplane';
-      case 'approval_pending':
-        return 'hourglass';
+      case "offline_request_update":
+        return "memo";
+      case "price_alert":
+        return "money";
+      case "booking_reminder":
+        return "airplane";
+      case "approval_pending":
+        return "hourglass";
       default:
-        return 'envelope';
+        return "envelope";
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="sm"
         className="relative"
         onClick={() => setOpen(!open)}
       >
         <Bell className={sizeClasses[size]} />
         {showBadge && unreadCount > 0 && (
-          <Badge className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center p-0 text-xs">
-            {unreadCount > 99 ? '99+' : unreadCount}
+          <Badge className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center p-0 text-xs gap-2">
+            {unreadCount > 99 ? "99+" : unreadCount}
           </Badge>
         )}
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+        <div className="absolute right-0 top-full mt-2 w-96 bg-background rounded-lg shadow-lg border border-border z-50">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
+          <div className="flex items-center justify-between p-4 border-b gap-2">
+            <h3 className="font-semibold text-foreground text-xl font-semibold tracking-tight">
+              Notifications
+            </h3>
             {unreadCount > 0 && (
               <Button
                 variant="ghost"
@@ -121,11 +147,11 @@ export const NotificationBell = ({ size = 'md', showBadge = true }: Notification
 
           {/* Content */}
           {isLoading ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
+            <div className="flex items-center justify-center p-8 gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
           ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-gray-600">
+            <div className="p-8 text-center text-muted-foreground">
               <Bell className="w-12 h-12 mx-auto mb-2 opacity-30" />
               <p>No notifications</p>
             </div>
@@ -135,32 +161,34 @@ export const NotificationBell = ({ size = 'md', showBadge = true }: Notification
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors border-l-4 ${getNotificationColor(
-                      notification.priority
+                    className={`p-4 hover:bg-muted cursor-pointer transition-colors border-l-4 ${getNotificationColor(
+                      notification.priority,
                     )}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 gap-4">
                         <div className="flex items-center gap-2">
                           <span className="text-xl">
                             {getNotificationIcon(notification.type)}
                           </span>
-                          <div className="flex-1">
-                            <p className="font-medium text-sm text-gray-900 line-clamp-1">
+                          <div className="flex-1 gap-4">
+                            <p className="font-medium text-sm text-foreground line-clamp-1">
                               {notification.title}
                             </p>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                               {notification.message}
                             </p>
 
                             {notification.data?.bookingId && (
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-muted-foreground mt-1">
                                 Booking: {notification.data.bookingId}
                               </p>
                             )}
 
-                            <p className="text-xs text-gray-400 mt-1">
-                              {getRelativeTime(new Date(notification.createdAt))}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {getRelativeTime(
+                                new Date(notification.createdAt),
+                              )}
                             </p>
                           </div>
                         </div>
@@ -178,7 +206,7 @@ export const NotificationBell = ({ size = 'md', showBadge = true }: Notification
                             className="p-1 h-auto"
                             title="Mark as read"
                           >
-                            <Eye className="w-4 h-4 text-gray-600" />
+                            <Eye className="w-4 h-4 text-muted-foreground" />
                           </Button>
                         )}
 
@@ -217,7 +245,7 @@ export const NotificationBell = ({ size = 'md', showBadge = true }: Notification
           )}
 
           {/* Footer */}
-          <div className="p-3 border-t bg-gray-50 flex justify-center">
+          <div className="p-3 border-t bg-muted flex justify-center gap-4">
             <Button
               variant="ghost"
               size="sm"

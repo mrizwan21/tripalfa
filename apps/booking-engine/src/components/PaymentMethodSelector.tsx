@@ -1,7 +1,7 @@
 /**
  * Payment Method Selector Component
  * Allows customers to select payment methods (wallet, credits, card) and amounts
- * 
+ *
  * Features:
  * - Toggle wallet payment
  * - Select specific airline credits
@@ -11,8 +11,8 @@
  * - Error handling for invalid selections
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FC } from 'react';
+import React, { useState, useEffect } from "react";
+import type { FC } from "react";
 
 interface AirlineCredit {
   id: string;
@@ -47,7 +47,7 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
   totalAmount,
   walletBalance,
   availableCredits,
-  currency = 'USD',
+  currency = "USD",
   onPaymentMethodChange,
   onValidationChange,
 }) => {
@@ -74,26 +74,34 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
     const errors: string[] = [];
 
     if (newSelection.walletAmount > walletBalance) {
-      errors.push(`Wallet amount exceeds available balance (${currency} ${walletBalance.toFixed(2)})`);
+      errors.push(
+        `Wallet amount exceeds available balance (${currency} ${walletBalance.toFixed(2)})`,
+      );
     }
 
-    if (newSelection.creditsAmount > calculateCreditsAmount(newSelection.selectedCreditIds)) {
-      errors.push('Selected credits amount is invalid');
+    if (
+      newSelection.creditsAmount >
+      calculateCreditsAmount(newSelection.selectedCreditIds)
+    ) {
+      errors.push("Selected credits amount is invalid");
     }
 
-    const totalUsed = newSelection.walletAmount + newSelection.creditsAmount + newSelection.cardAmount;
+    const totalUsed =
+      newSelection.walletAmount +
+      newSelection.creditsAmount +
+      newSelection.cardAmount;
     if (Math.abs(totalUsed - totalAmount) > 0.01) {
       errors.push(
-        `Payment amounts don't match booking total. Total: ${currency} ${totalUsed.toFixed(2)}, Required: ${currency} ${totalAmount.toFixed(2)}`
+        `Payment amounts don't match booking total. Total: ${currency} ${totalUsed.toFixed(2)}, Required: ${currency} ${totalAmount.toFixed(2)}`,
       );
     }
 
     if (newSelection.cardAmount > totalAmount) {
-      errors.push('Card amount cannot exceed booking total');
+      errors.push("Card amount cannot exceed booking total");
     }
 
     if (newSelection.cardAmount < 0) {
-      errors.push('Card amount cannot be negative');
+      errors.push("Card amount cannot be negative");
     }
 
     const isValid = errors.length === 0;
@@ -114,7 +122,8 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
       newSelection.walletAmount = Math.min(walletBalance, totalAmount);
     }
 
-    newSelection.cardAmount = totalAmount - newSelection.walletAmount - newSelection.creditsAmount;
+    newSelection.cardAmount =
+      totalAmount - newSelection.walletAmount - newSelection.creditsAmount;
     newSelection = validateSelection(newSelection);
     setSelection(newSelection);
     onPaymentMethodChange?.(newSelection);
@@ -129,7 +138,8 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
       walletAmount: Math.min(walletAmount, walletBalance),
     };
 
-    newSelection.cardAmount = totalAmount - newSelection.walletAmount - newSelection.creditsAmount;
+    newSelection.cardAmount =
+      totalAmount - newSelection.walletAmount - newSelection.creditsAmount;
     newSelection = validateSelection(newSelection);
     setSelection(newSelection);
     onPaymentMethodChange?.(newSelection);
@@ -154,7 +164,8 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
       creditsAmount,
     };
 
-    newSelection.cardAmount = totalAmount - newSelection.walletAmount - newSelection.creditsAmount;
+    newSelection.cardAmount =
+      totalAmount - newSelection.walletAmount - newSelection.creditsAmount;
     newSelection = validateSelection(newSelection);
     setSelection(newSelection);
     onPaymentMethodChange?.(newSelection);
@@ -186,11 +197,16 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
             disabled={walletBalance <= 0}
             className="payment-checkbox"
           />
-          <label htmlFor="use-wallet" className="option-label">
+          <label
+            htmlFor="use-wallet"
+            className="option-label text-sm font-medium"
+          >
             <span className="icon">💰</span>
             <span className="name">Use Wallet</span>
             <span className="available">
-              {walletBalance > 0 ? `(${currency} ${walletBalance.toFixed(2)} available)` : '(Empty)'}
+              {walletBalance > 0
+                ? `(${currency} ${walletBalance.toFixed(2)} available)`
+                : "(Empty)"}
             </span>
           </label>
         </div>
@@ -215,13 +231,15 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
             </div>
             <div className="preset-buttons">
               <button
-                onClick={() => handleWalletAmountChange('0')}
+                onClick={() => handleWalletAmountChange("0")}
                 className="preset-btn"
               >
                 Clear
               </button>
               <button
-                onClick={() => handleWalletAmountChange(walletBalance.toString())}
+                onClick={() =>
+                  handleWalletAmountChange(walletBalance.toString())
+                }
                 className="preset-btn primary"
               >
                 Use All
@@ -241,7 +259,7 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
               checked={selection.useCredits}
               onChange={(e) => {
                 if (!e.target.checked) {
-                  handleCreditToggle('');
+                  handleCreditToggle("");
                   setSelection((prev) => ({
                     ...prev,
                     selectedCreditIds: [],
@@ -251,10 +269,15 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
               }}
               className="payment-checkbox"
             />
-            <label htmlFor="use-credits" className="option-label">
+            <label
+              htmlFor="use-credits"
+              className="option-label text-sm font-medium"
+            >
               <span className="icon">✈️</span>
               <span className="name">Use Airline Credits</span>
-              <span className="count">({availableCredits.length} available)</span>
+              <span className="count">
+                ({availableCredits.length} available)
+              </span>
             </label>
           </div>
 
@@ -269,13 +292,21 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
                     onChange={() => handleCreditToggle(credit.id)}
                     className="credit-checkbox"
                   />
-                  <label htmlFor={`credit-${credit.id}`} className="credit-label">
-                    <span className="airline-badge">{credit.airlineIataCode}</span>
+                  <label
+                    htmlFor={`credit-${credit.id}`}
+                    className="credit-label text-sm font-medium"
+                  >
+                    <span className="airline-badge">
+                      {credit.airlineIataCode}
+                    </span>
                     <span className="credit-info">
                       <span className="code">{credit.code}</span>
-                      <span className="amount">{currency} {credit.amount.toFixed(2)}</span>
+                      <span className="amount">
+                        {currency} {credit.amount.toFixed(2)}
+                      </span>
                       <span className="expiry">
-                        Expires {new Date(credit.expiresAt).toLocaleDateString()}
+                        Expires{" "}
+                        {new Date(credit.expiresAt).toLocaleDateString()}
                       </span>
                     </span>
                   </label>
@@ -334,24 +365,36 @@ const PaymentMethodSelector: FC<PaymentMethodSelectorProps> = ({
         <div className="summary-rows">
           <div className="summary-row">
             <span>From Wallet:</span>
-            <span className="amount">{currency} {selection.walletAmount.toFixed(2)}</span>
+            <span className="amount">
+              {currency} {selection.walletAmount.toFixed(2)}
+            </span>
           </div>
           <div className="summary-row">
             <span>From Credits:</span>
-            <span className="amount">{currency} {selection.creditsAmount.toFixed(2)}</span>
+            <span className="amount">
+              {currency} {selection.creditsAmount.toFixed(2)}
+            </span>
           </div>
           <div className="summary-row">
             <span>From Card:</span>
-            <span className="amount card">{currency} {selection.cardAmount.toFixed(2)}</span>
+            <span className="amount card">
+              {currency} {selection.cardAmount.toFixed(2)}
+            </span>
           </div>
           <div className="summary-row total">
             <span>Total:</span>
-            <span className="amount">{currency} {totalAmount.toFixed(2)}</span>
+            <span className="amount">
+              {currency} {totalAmount.toFixed(2)}
+            </span>
           </div>
         </div>
 
-        <div className={`validation-status ${selection.isValid ? 'valid' : 'invalid'}`}>
-          {selection.isValid ? '✅ Ready to proceed' : '❌ Please fix errors above'}
+        <div
+          className={`validation-status ${selection.isValid ? "valid" : "invalid"}`}
+        >
+          {selection.isValid
+            ? "✅ Ready to proceed"
+            : "❌ Please fix errors above"}
         </div>
       </div>
     </div>
@@ -364,7 +407,7 @@ export default PaymentMethodSelector;
 
 const styles = `
 .payment-method-selector {
-  background: white;
+  background: hsl(var(--background));
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -374,11 +417,11 @@ const styles = `
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 20px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .payment-method-option {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
@@ -416,12 +459,12 @@ const styles = `
 }
 
 .option-label .name {
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .option-label .available,
 .option-label .count {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 400;
   font-size: 13px;
   margin-left: auto;
@@ -430,7 +473,7 @@ const styles = `
 .option-details {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid hsl(var(--border));
 }
 
 .input-group {
@@ -442,24 +485,24 @@ const styles = `
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 6px;
-  color: #333;
+  color: hsl(var(--foreground));
 }
 
 .amount-input {
   display: flex;
   align-items: center;
-  background: #f9f9f9;
-  border: 1px solid #ddd;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   overflow: hidden;
 }
 
 .currency {
   padding: 10px 12px;
-  background: #f0f0f0;
+  background: hsl(var(--accent));
   font-weight: 600;
   font-size: 14px;
-  border-right: 1px solid #ddd;
+  border-right: 1px solid hsl(var(--border));
 }
 
 .amount-input .input {
@@ -478,26 +521,26 @@ const styles = `
 
 .preset-btn {
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
-  background: white;
+  background: hsl(var(--background));
   cursor: pointer;
   font-size: 13px;
   transition: all 0.2s;
 }
 
 .preset-btn:hover {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 .preset-btn.primary {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
 }
 
 .preset-btn.primary:hover {
-  background: #0056b3;
+  background: hsl(var(--primary) / 0.85);
 }
 
 .credits-options {
@@ -512,7 +555,7 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 6px;
   cursor: pointer;
 }
@@ -532,7 +575,7 @@ const styles = `
 }
 
 .airline-badge {
-  background: #e8f4f8;
+  background: hsl(var(--accent));
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 600;
@@ -550,30 +593,30 @@ const styles = `
 }
 
 .credit-info .code {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-family: monospace;
 }
 
 .credit-info .amount {
   font-weight: 600;
-  color: #28a745;
+  color: hsl(var(--primary));
   margin-left: auto;
 }
 
 .credit-info .expiry {
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-size: 12px;
 }
 
 .field-description {
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   margin-top: 8px;
 }
 
 .validation-errors {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: hsl(var(--accent));
+  border: 1px solid hsl(var(--accent-foreground) / 0.35);
   border-radius: 8px;
   padding: 12px;
   margin-bottom: 16px;
@@ -581,7 +624,7 @@ const styles = `
 
 .error-message {
   font-size: 13px;
-  color: #856404;
+  color: hsl(var(--accent-foreground));
   margin: 4px 0;
 }
 
@@ -590,8 +633,8 @@ const styles = `
 }
 
 .payment-summary {
-  background: #f0f7ff;
-  border: 1px solid #d0e8ff;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
   margin-top: 16px;
@@ -601,7 +644,7 @@ const styles = `
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .summary-rows {
@@ -615,24 +658,24 @@ const styles = `
   display: flex;
   justify-content: space-between;
   font-size: 13px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 .summary-row .amount {
   font-weight: 600;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .summary-row .amount.card {
-  color: #ff9800;
+  color: hsl(var(--accent-foreground));
 }
 
 .summary-row.total {
-  border-top: 1px solid #d0e8ff;
+  border-top: 1px solid hsl(var(--border));
   padding-top: 8px;
   margin-top: 8px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .validation-status {
@@ -644,13 +687,13 @@ const styles = `
 }
 
 .validation-status.valid {
-  background: #d4edda;
-  color: #155724;
+  background: hsl(var(--primary) / 0.15);
+  color: hsl(var(--primary));
 }
 
 .validation-status.invalid {
-  background: #f8d7da;
-  color: #721c24;
+  background: hsl(var(--destructive) / 0.15);
+  color: hsl(var(--destructive));
 }
 `;
 

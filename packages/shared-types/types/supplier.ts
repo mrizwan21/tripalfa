@@ -15,9 +15,9 @@ import {
   ApiVendorStatus,
   AuthType,
   HttpMethod,
-} from './enums';
-import { Address } from './company';
-import { InvoiceLineItem } from './finance';
+} from "./enums";
+import { Address } from "./company";
+import { InvoiceLineItem } from "./finance";
 
 // ============================================================================
 // Supplier Types
@@ -442,8 +442,8 @@ export interface SupplierListParams {
   category?: SupplierCategory;
   status?: SupplierStatus;
   isPreferred?: boolean;
-  sortBy?: 'name' | 'code' | 'priority' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "name" | "code" | "priority" | "createdAt";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface SupplierListResponse {

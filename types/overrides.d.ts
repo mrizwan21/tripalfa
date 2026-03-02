@@ -1,4 +1,4 @@
-declare module '@tripalfa/shared-types' {
+declare module "@tripalfa/shared-types" {
   export interface Adapter<TRequest = any, TResponse = any> {
     name: string;
     init?: () => Promise<void> | void;
@@ -37,7 +37,7 @@ declare module '@tripalfa/shared-types' {
   }
 }
 
-declare module '@prisma/client' {
+declare module "@prisma/client" {
   // Loosen Prisma client typings to allow access by model name variants used across the codebase.
   // This is a non-destructive compatibility shim; prefer correcting usages to exact model names later.
   interface PrismaClient {

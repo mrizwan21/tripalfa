@@ -54,7 +54,10 @@ export function CityAutocomplete({
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setSelectedIndex(-1);
       }
@@ -64,65 +67,80 @@ export function CityAutocomplete({
   }, []);
 
   // Fetch suggestions from static data service API (queries full database)
-  const fetchSuggestions = useCallback(async (query: string) => {
-    if (query.length < 2) {
-      setSuggestions([]);
-      setIsOpen(false);
-      return;
-    }
-
-    // Check cache first
-    const cacheKey = `${type}:${query.toLowerCase()}`;
-    const cached = suggestionCache.get(cacheKey);
-    if (cached) {
-      setSuggestions(cached);
-      setIsOpen(cached.length > 0);
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Call the static data service API which queries the full database
-      const response = await fetch(
-        `/static/suggestions?q=${encodeURIComponent(query)}&type=${type}&limit=15`
-      );
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const apiSuggestions: CitySuggestion[] = (data.data || []).map((item: any) => ({
-        code: item.code || item.iata_code || item.id || '',
-        title: item.title || item.name || '',
-        subtitle: item.subtitle || `${item.city || ''}, ${item.country || ''}`.trim(),
-        city: item.city || item.name || '',
-        country: item.country || item.countryName || '',
-        countryCode: item.countryCode || item.country_code || '',
-        latitude: item.latitude || 0,
-        longitude: item.longitude || 0,
-        type: item.type === 'AIRPORT' ? 'AIRPORT' : item.type === 'DESTINATION' ? 'DESTINATION' : 'CITY',
-      }));
-
-      if (apiSuggestions.length > 0) {
-        setSuggestions(apiSuggestions);
-        setIsOpen(true);
-        setSelectedIndex(-1);
-        // Cache the results
-        suggestionCache.set(cacheKey, apiSuggestions);
-      } else {
+  const fetchSuggestions = useCallback(
+    async (query: string) => {
+      if (query.length < 2) {
         setSuggestions([]);
         setIsOpen(false);
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching suggestions from static data service:", error);
-      setSuggestions([]);
-      setIsOpen(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [type]);
+
+      // Check cache first
+      const cacheKey = `${type}:${query.toLowerCase()}`;
+      const cached = suggestionCache.get(cacheKey);
+      if (cached) {
+        setSuggestions(cached);
+        setIsOpen(cached.length > 0);
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        // Call the static data service API which queries the full database
+        const response = await fetch(
+          `/static/suggestions?q=${encodeURIComponent(query)}&type=${type}&limit=15`,
+        );
+
+        if (!response.ok) {
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const apiSuggestions: CitySuggestion[] = (data.data || []).map(
+          (item: any) => ({
+            code: item.code || item.iata_code || item.id || "",
+            title: item.title || item.name || "",
+            subtitle:
+              item.subtitle ||
+              `${item.city || ""}, ${item.country || ""}`.trim(),
+            city: item.city || item.name || "",
+            country: item.country || item.countryName || "",
+            countryCode: item.countryCode || item.country_code || "",
+            latitude: item.latitude || 0,
+            longitude: item.longitude || 0,
+            type:
+              item.type === "AIRPORT"
+                ? "AIRPORT"
+                : item.type === "DESTINATION"
+                  ? "DESTINATION"
+                  : "CITY",
+          }),
+        );
+
+        if (apiSuggestions.length > 0) {
+          setSuggestions(apiSuggestions);
+          setIsOpen(true);
+          setSelectedIndex(-1);
+          // Cache the results
+          suggestionCache.set(cacheKey, apiSuggestions);
+        } else {
+          setSuggestions([]);
+          setIsOpen(false);
+        }
+      } catch (error) {
+        console.error(
+          "Error fetching suggestions from static data service:",
+          error,
+        );
+        setSuggestions([]);
+        setIsOpen(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [type],
+  );
 
   // Debounced search
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,7 +173,7 @@ export function CityAutocomplete({
       case "ArrowDown":
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : prev
+          prev < suggestions.length - 1 ? prev + 1 : prev,
         );
         break;
       case "ArrowUp":
@@ -194,7 +212,7 @@ export function CityAutocomplete({
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
       {label && (
-        <Label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">
+        <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 text-sm font-medium">
           {label}
         </Label>
       )}
@@ -202,7 +220,10 @@ export function CityAutocomplete({
         className="relative group mt-2 cursor-text"
         onClick={handleWrapperClick}
       >
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6366F1] group-hover:scale-110 transition-transform" size={18} />
+        <MapPin
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 group-hover:scale-110 transition-transform"
+          size={18}
+        />
         <Input
           ref={inputRef}
           type="text"
@@ -216,45 +237,45 @@ export function CityAutocomplete({
           }}
           placeholder={placeholder}
           disabled={disabled}
-          className="w-full h-11 pl-10 pr-10 bg-gray-50 border-2 border-transparent rounded-xl text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#6366F1] focus:bg-white hover:bg-white transition-all"
+          className="w-full h-11 pl-10 pr-10 bg-muted border-2 border-transparent rounded-xl text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500 focus:bg-card hover:bg-card transition-all"
         />
         {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
         )}
       </div>
 
       {/* Dropdown */}
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 w-full mt-1 bg-card border border-border rounded-xl shadow-lg overflow-hidden">
           <ul className="max-h-60 overflow-auto py-1">
             {suggestions.map((suggestion, index) => (
               <li
                 key={`${suggestion.code}-${index}`}
                 className={`px-4 py-3 cursor-pointer flex items-center gap-3 transition-colors ${
                   index === selectedIndex
-                    ? "bg-[#6366F1]/10 border-l-2 border-[#6366F1]"
-                    : "hover:bg-gray-50"
+                    ? "bg-indigo-500/10 border-l-2 border-indigo-500"
+                    : "hover:bg-muted"
                 }`}
                 onClick={() => selectSuggestion(suggestion)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-muted flex items-center justify-center gap-2">
                   {getIcon(suggestion.type)}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">
+                <div className="flex-1 min-w-0 gap-4">
+                  <p className="font-semibold text-foreground truncate">
                     {suggestion.title}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {suggestion.subtitle}
                     {suggestion.code && (
-                      <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">
+                      <span className="ml-2 px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">
                         {suggestion.code}
                       </span>
                     )}
                   </p>
                 </div>
-                <div className="flex-shrink-0 text-xs text-gray-400 uppercase">
+                <div className="flex-shrink-0 text-xs text-muted-foreground uppercase gap-4">
                   {suggestion.type}
                 </div>
               </li>

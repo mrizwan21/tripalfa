@@ -1,7 +1,7 @@
 /**
  * Combined Payment Flow Component (Main Container)
  * Orchestrates the complete payment wizard flow
- * 
+ *
  * Features:
  * - Multi-step payment wizard
  * - Step navigation and progress tracking
@@ -11,11 +11,14 @@
  * - Success handling
  */
 
-import React, { useState, useCallback } from 'react';
-import type { FC } from 'react';
-import PaymentOptionsDisplay from './PaymentOptionsDisplay';
-import PaymentMethodSelector, { type PaymentMethodSelection } from './PaymentMethodSelector';
-import PaymentConfirmation from './PaymentConfirmation';
+import React, { useState, useCallback } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
+import PaymentOptionsDisplay from "./PaymentOptionsDisplay";
+import PaymentMethodSelector, {
+  type PaymentMethodSelection,
+} from "./PaymentMethodSelector";
+import PaymentConfirmation from "./PaymentConfirmation";
 
 interface BookingDetails {
   bookingId: string;
@@ -27,7 +30,7 @@ interface BookingDetails {
   currency: string;
 }
 
-type PaymentStep = 'review' | 'select' | 'confirm' | 'success';
+type PaymentStep = "review" | "select" | "confirm" | "success";
 
 interface PaymentFlowState {
   currentStep: PaymentStep;
@@ -48,7 +51,7 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
   onCancel,
 }) => {
   const [flowState, setFlowState] = useState<PaymentFlowState>({
-    currentStep: 'review',
+    currentStep: "review",
     paymentSelection: null,
     error: null,
     loading: false,
@@ -64,18 +67,21 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
     }));
   }, []);
 
-  const handlePaymentMethodChange = useCallback((selection: PaymentMethodSelection) => {
-    setFlowState((prev) => ({
-      ...prev,
-      paymentSelection: selection,
-    }));
-  }, []);
+  const handlePaymentMethodChange = useCallback(
+    (selection: PaymentMethodSelection) => {
+      setFlowState((prev) => ({
+        ...prev,
+        paymentSelection: selection,
+      }));
+    },
+    [],
+  );
 
   const handleConfirmPayment = useCallback(async () => {
     if (!flowState.paymentSelection) {
       setFlowState((prev) => ({
         ...prev,
-        error: 'Payment selection not configured',
+        error: "Payment selection not configured",
       }));
       return;
     }
@@ -88,43 +94,41 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
 
     try {
       // Call the backend API to process combined payment
-      const response = await fetch(
-        `/api/bookings/${booking.bookingId}/pay`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            customerId: booking.customerId,
-            totalAmount: booking.totalAmount,
-            currency: booking.currency,
-            useWallet: flowState.paymentSelection.useWallet,
-            walletAmount: flowState.paymentSelection.walletAmount,
-            useCredits: flowState.paymentSelection.useCredits,
-            creditIds: flowState.paymentSelection.selectedCreditIds,
-            cardAmount: flowState.paymentSelection.cardAmount,
-          }),
-        }
-      );
+      const response = await fetch(`/api/bookings/${booking.bookingId}/pay`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          customerId: booking.customerId,
+          totalAmount: booking.totalAmount,
+          currency: booking.currency,
+          useWallet: flowState.paymentSelection.useWallet,
+          walletAmount: flowState.paymentSelection.walletAmount,
+          useCredits: flowState.paymentSelection.useCredits,
+          creditIds: flowState.paymentSelection.selectedCreditIds,
+          cardAmount: flowState.paymentSelection.cardAmount,
+        }),
+      });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Payment processing failed');
+        throw new Error(error.message || "Payment processing failed");
       }
 
       const result = await response.json();
 
       setFlowState((prev) => ({
         ...prev,
-        currentStep: 'success',
+        currentStep: "success",
         loading: false,
       }));
 
       onPaymentComplete?.(result);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       setFlowState((prev) => ({
         ...prev,
         error: errorMessage,
@@ -134,7 +138,7 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
   }, [flowState.paymentSelection, booking, onPaymentComplete]);
 
   const getProgressPercentage = (): number => {
-    const steps: PaymentStep[] = ['review', 'select', 'confirm', 'success'];
+    const steps: PaymentStep[] = ["review", "select", "confirm", "success"];
     const currentIndex = steps.indexOf(flowState.currentStep);
     return ((currentIndex + 1) / steps.length) * 100;
   };
@@ -144,19 +148,30 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
       {/* Progress Bar */}
       <div className="progress-section">
         <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${getProgressPercentage()}%` }} />
+          <div
+            className="progress-fill"
+            style={{ width: `${getProgressPercentage()}%` }}
+          />
         </div>
         <div className="step-indicator">
-          <div className={`step ${flowState.currentStep === 'review' ? 'active' : 'completed'}`}>
+          <div
+            className={`step ${flowState.currentStep === "review" ? "active" : "completed"}`}
+          >
             1. Review
           </div>
-          <div className={`step ${flowState.currentStep === 'select' ? 'active' : ''}`}>
+          <div
+            className={`step ${flowState.currentStep === "select" ? "active" : ""}`}
+          >
             2. Select
           </div>
-          <div className={`step ${flowState.currentStep === 'confirm' ? 'active' : ''}`}>
+          <div
+            className={`step ${flowState.currentStep === "confirm" ? "active" : ""}`}
+          >
             3. Confirm
           </div>
-          <div className={`step ${flowState.currentStep === 'success' ? 'active' : ''}`}>
+          <div
+            className={`step ${flowState.currentStep === "success" ? "active" : ""}`}
+          >
             4. Done
           </div>
         </div>
@@ -184,10 +199,10 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
           <span className="error-icon">⚠️</span>
           <div className="error-content">
             <p className="error-message">{flowState.error}</p>
-            {flowState.currentStep !== 'review' && (
+            {flowState.currentStep !== "review" && (
               <button
-                className="error-action"
-                onClick={() => handleStepChange('review')}
+                className="error-action px-4 py-2 rounded-md text-sm font-medium"
+                onClick={() => handleStepChange("review")}
               >
                 Go back to review
               </button>
@@ -197,7 +212,7 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
       )}
 
       {/* Step 1: Review Payment Options */}
-      {flowState.currentStep === 'review' && (
+      {flowState.currentStep === "review" && (
         <div className="step-content">
           <PaymentOptionsDisplay
             customerId={booking.customerId}
@@ -214,7 +229,7 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
       )}
 
       {/* Step 2: Select Payment Methods */}
-      {flowState.currentStep === 'select' && paymentOptions && (
+      {flowState.currentStep === "select" && paymentOptions && (
         <div className="step-content">
           <PaymentMethodSelector
             totalAmount={booking.totalAmount}
@@ -230,7 +245,7 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
       )}
 
       {/* Step 3: Confirm Payment */}
-      {flowState.currentStep === 'confirm' && flowState.paymentSelection && (
+      {flowState.currentStep === "confirm" && flowState.paymentSelection && (
         <div className="step-content">
           <PaymentConfirmation
             bookingDetails={booking}
@@ -241,22 +256,25 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
               creditsUsed: [], // Would be populated from payment options
             }}
             onConfirm={handleConfirmPayment}
-            onCancel={() => handleStepChange('select')}
+            onCancel={() => handleStepChange("select")}
             loading={flowState.loading}
           />
         </div>
       )}
 
       {/* Step 4: Success */}
-      {flowState.currentStep === 'success' && (
+      {flowState.currentStep === "success" && (
         <div className="step-content success-state">
           <div className="success-card">
             <div className="success-icon">✅</div>
             <h2>Payment Complete!</h2>
-            <p>Your booking has been confirmed and payment processed successfully.</p>
+            <p>
+              Your booking has been confirmed and payment processed
+              successfully.
+            </p>
             <button
               onClick={onCancel}
-              className="btn btn-primary"
+              className="btn btn-primary px-4 py-2 rounded-md text-sm font-medium"
             >
               Return to Bookings
             </button>
@@ -265,19 +283,19 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
       )}
 
       {/* Navigation Buttons */}
-      {flowState.currentStep !== 'success' && (
+      {flowState.currentStep !== "success" && (
         <div className="flow-navigation">
           <button
             onClick={onCancel}
-            className="btn btn-secondary"
+            className="btn btn-secondary px-4 py-2 rounded-md text-sm font-medium"
             disabled={flowState.loading}
           >
             Cancel
           </button>
 
-          {flowState.currentStep === 'review' && (
+          {flowState.currentStep === "review" && (
             <button
-              onClick={() => handleStepChange('select')}
+              onClick={() => handleStepChange("select")}
               className="btn btn-primary"
               disabled={flowState.loading}
             >
@@ -285,19 +303,21 @@ const CombinedPaymentFlow: FC<CombinedPaymentFlowProps> = ({
             </button>
           )}
 
-          {flowState.currentStep === 'select' && (
+          {flowState.currentStep === "select" && (
             <>
               <button
-                onClick={() => handleStepChange('review')}
+                onClick={() => handleStepChange("review")}
                 className="btn btn-secondary"
                 disabled={flowState.loading}
               >
                 Back
               </button>
               <button
-                onClick={() => handleStepChange('confirm')}
+                onClick={() => handleStepChange("confirm")}
                 className="btn btn-primary"
-                disabled={flowState.loading || !flowState.paymentSelection?.isValid}
+                disabled={
+                  flowState.loading || !flowState.paymentSelection?.isValid
+                }
               >
                 Review & Confirm
               </button>
@@ -335,7 +355,7 @@ const styles = `
 
 .progress-bar {
   height: 4px;
-  background: #e0e0e0;
+  background: hsl(var(--border));
   border-radius: 2px;
   overflow: hidden;
   margin-bottom: 20px;
@@ -343,7 +363,7 @@ const styles = `
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #007bff, #0056b3);
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.9));
   transition: width 0.3s ease;
 }
 
@@ -360,19 +380,19 @@ const styles = `
   font-size: 13px;
   font-weight: 600;
   border-radius: 8px;
-  background: #f5f5f5;
-  color: #999;
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
   transition: all 0.2s;
 }
 
 .step.active {
-  background: #e3f2fd;
-  color: #007bff;
+  background: hsl(var(--accent));
+  color: hsl(var(--primary));
 }
 
 .step.completed {
-  background: #e8f5e9;
-  color: #4caf50;
+  background: hsl(var(--secondary));
+  color: hsl(var(--primary));
 }
 
 /* Booking Header */
@@ -381,23 +401,23 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 12px;
   margin-bottom: 24px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
 }
 
 .booking-info h2 {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .passenger-info {
   margin: 0;
   font-size: 13px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 .amount-display {
@@ -409,14 +429,14 @@ const styles = `
 
 .amount-display .label {
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   margin-bottom: 4px;
 }
 
 .amount-display .amount {
   font-size: 24px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 /* Error Banner */
@@ -425,8 +445,8 @@ const styles = `
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: #ffebee;
-  border: 1px solid #ef5350;
+  background: hsl(var(--destructive) / 0.12);
+  border: 1px solid hsl(var(--destructive));
   border-radius: 8px;
   margin-bottom: 20px;
 }
@@ -443,23 +463,23 @@ const styles = `
 .error-message {
   margin: 0 0 8px 0;
   font-size: 14px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   font-weight: 500;
 }
 
 .error-action {
   padding: 6px 12px;
-  background: white;
-  border: 1px solid #ef5350;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--destructive));
   border-radius: 4px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .error-action:hover {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 /* Step Content */
@@ -489,7 +509,7 @@ const styles = `
 .success-card {
   text-align: center;
   padding: 40px 28px;
-  background: white;
+  background: hsl(var(--card));
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -503,12 +523,12 @@ const styles = `
   font-size: 24px;
   font-weight: 700;
   margin: 0 0 12px 0;
-  color: #2e7d32;
+  color: hsl(var(--primary));
 }
 
 .success-card p {
   font-size: 14px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin: 0 0 20px 0;
 }
 
@@ -518,7 +538,7 @@ const styles = `
   gap: 12px;
   justify-content: flex-end;
   padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid hsl(var(--border));
 }
 
 .btn {
@@ -537,24 +557,24 @@ const styles = `
 }
 
 .btn-primary {
-  background: #007bff;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   min-width: 120px;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0056b3;
+  background: hsl(var(--primary) / 0.9);
   box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .btn-secondary {
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  border: 1px solid hsl(var(--border));
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 /* Loading Overlay */
@@ -576,8 +596,8 @@ const styles = `
 .spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #f0f0f0;
-  border-top: 4px solid #007bff;
+  border: 4px solid hsl(var(--border));
+  border-top: 4px solid hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
@@ -590,7 +610,7 @@ const styles = `
 
 .loading-overlay p {
   font-size: 14px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 500;
 }
 

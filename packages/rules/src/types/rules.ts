@@ -1,8 +1,12 @@
-export type MarkupType = 'percentage' | 'fixed' | 'multiplier';
-export type CommissionType = 'percentage' | 'fixed';
-export type CommissionCalculationType = 'percentage' | 'fixed' | 'tiered';
-export type CommissionTargetType = 'supplier' | 'company' | 'platform' | 'partner';
-export type DiscountType = 'percentage' | 'fixed';
+export type MarkupType = "percentage" | "fixed" | "multiplier";
+export type CommissionType = "percentage" | "fixed";
+export type CommissionCalculationType = "percentage" | "fixed" | "tiered";
+export type CommissionTargetType =
+  | "supplier"
+  | "company"
+  | "platform"
+  | "partner";
+export type DiscountType = "percentage" | "fixed";
 
 /**
  * Rule matching context for determining applicable rules
@@ -14,7 +18,7 @@ export interface RuleMatchContext {
   advanceBookingDays?: number;
   travelDate?: Date;
   cabinClass?: string;
-  routeType?: 'domestic' | 'international' | 'all';
+  routeType?: "domestic" | "international" | "all";
   amount?: number;
   bookingType?: string;
   companyId?: string;
@@ -39,7 +43,7 @@ export interface MarkupConditions {
     to: string;
   };
   cabinClass?: string[];
-  routeType?: 'domestic' | 'international' | 'all';
+  routeType?: "domestic" | "international" | "all";
   [key: string]: unknown;
 }
 
@@ -201,7 +205,7 @@ export interface CommissionSettlement {
   commissionAmount: number;
   currency?: string;
   calculationType?: CommissionCalculationType;
-  status: 'pending' | 'settled' | 'failed' | 'paid' | 'cancelled';
+  status: "pending" | "settled" | "failed" | "paid" | "cancelled";
   notes?: string;
   settledAmount?: number;
   settledAt?: string;

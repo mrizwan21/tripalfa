@@ -2,11 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": [
-      "DOM",
-      "DOM.Iterable",
-      "ESNext"
-    ],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -23,59 +19,23 @@
     "jsxImportSource": "react",
     // "baseUrl": ".", // deprecated, removed for TS 7
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/components/ui/*": [
-        "../../packages/ui-components/ui/*"
-      ],
-      "@/components/ui": [
-        "../../packages/ui-components/ui"
-      ],
-      "@tripalfa/ui-components": [
-        "../../packages/ui-components"
-      ],
-      "@tripalfa/ui-components/*": [
-        "../../packages/ui-components/*"
-      ],
-      "@tripalfa/shared-utils": [
-        "../../packages/shared-utils"
-      ],
-      "@tripalfa/shared-utils/*": [
-        "../../packages/shared-utils/*"
-      ],
-      "@tripalfa/shared-types": [
-        "../../packages/shared-types/src"
-      ],
-      "@tripalfa/shared-types/*": [
-        "../../packages/shared-types/src/*"
-      ],
-      "@tripalfa/static-data": [
-        "../../packages/static-data/src"
-      ],
-      "@tripalfa/static-data/*": [
-        "../../packages/static-data/src/*"
-      ],
-      "@tripalfa/notifications": [
-        "../../packages/notifications/dist"
-      ],
-      "@tripalfa/notifications/*": [
-        "../../packages/notifications/dist/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/components/ui/*": ["../../packages/ui-components/ui/*"],
+      "@/components/ui": ["../../packages/ui-components/ui"],
+      "@tripalfa/ui-components": ["../../packages/ui-components"],
+      "@tripalfa/ui-components/*": ["../../packages/ui-components/*"],
+      "@tripalfa/shared-utils": ["../../packages/shared-utils"],
+      "@tripalfa/shared-utils/*": ["../../packages/shared-utils/*"],
+      "@tripalfa/shared-types": ["../../packages/shared-types/src"],
+      "@tripalfa/shared-types/*": ["../../packages/shared-types/src/*"],
+      "@tripalfa/static-data": ["../../packages/static-data/src"],
+      "@tripalfa/static-data/*": ["../../packages/static-data/src/*"],
+      "@tripalfa/notifications": ["../../packages/notifications/dist"],
+      "@tripalfa/notifications/*": ["../../packages/notifications/dist/*"]
     },
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "vite/client"
-    ]
+    "types": ["node", "react", "react-dom", "vite/client"]
   },
-  "include": [
-    "src",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/types/**/*.d.ts"
-  ],
+  "include": ["src", "src/**/*.ts", "src/**/*.tsx", "src/types/**/*.d.ts"],
   "exclude": [
     "node_modules",
     "dist",

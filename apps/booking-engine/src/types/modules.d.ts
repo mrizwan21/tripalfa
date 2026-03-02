@@ -1,3 +1,3 @@
-declare module 'react-hook-form';
-declare module '@hookform/resolvers/zod';
-declare module 'lucide-react';
+declare module "react-hook-form";
+declare module "@hookform/resolvers/zod";
+declare module "lucide-react";

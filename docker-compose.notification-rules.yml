@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 # Docker Compose for Notification & Rule Engine Services (Local Development)
 # Run with: docker-compose -f docker-compose.notification-rules.yml up

@@ -1,13 +1,13 @@
 /**
  * API Mock Fixtures
- * 
+ *
  * Predefined API mock responses for common scenarios.
  * Use these to mock API responses in your E2E tests.
- * 
+ *
  * @module api-integration/fixtures/api-mocks
  */
 
-import { ApiMockBuilder } from '../api-test-helpers';
+import { ApiMockBuilder } from "../api-test-helpers";
 
 /**
  * Authentication API Mocks
@@ -19,12 +19,12 @@ export const authMocks = {
   loginSuccess: (overrides?: Partial<LoginResponse>) => {
     return new ApiMockBuilder()
       .withData({
-        accessToken: 'mock_access_token_' + Date.now(),
-        refreshToken: 'mock_refresh_token_' + Date.now(),
+        accessToken: "mock_access_token_" + Date.now(),
+        refreshToken: "mock_refresh_token_" + Date.now(),
         expiresIn: 3600,
-        userId: 'user_' + Math.random().toString(36).substr(2, 9),
-        email: 'test.user@tripalfa.com',
-        role: 'CUSTOMER',
+        userId: "user_" + Math.random().toString(36).substr(2, 9),
+        email: "test.user@tripalfa.com",
+        role: "CUSTOMER",
         ...overrides,
       })
       .withStatus(200)
@@ -38,8 +38,8 @@ export const authMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'INVALID_CREDENTIALS',
-          message: 'Invalid email or password',
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password",
         },
       })
       .withStatus(401)
@@ -52,7 +52,7 @@ export const authMocks = {
   tokenRefresh: () => {
     return new ApiMockBuilder()
       .withData({
-        accessToken: 'new_mock_access_token_' + Date.now(),
+        accessToken: "new_mock_access_token_" + Date.now(),
         expiresIn: 3600,
       })
       .withStatus(200)
@@ -65,7 +65,7 @@ export const authMocks = {
   logoutSuccess: () => {
     return new ApiMockBuilder()
       .withData({
-        message: 'Logged out successfully',
+        message: "Logged out successfully",
       })
       .withStatus(200)
       .build();
@@ -83,14 +83,14 @@ export const flightMocks = {
     const offers = Array.from({ length: offerCount }, (_, i) => ({
       id: `flight_offer_${i}`,
       price: 100 + i * 50 + Math.random() * 50,
-      currency: 'USD',
-      airline: ['American Airlines', 'Delta', 'United', 'Southwest'][i % 4],
+      currency: "USD",
+      airline: ["American Airlines", "Delta", "United", "Southwest"][i % 4],
       flightNumber: `AA${100 + i}`,
-      origin: 'JFK',
-      destination: 'LAX',
+      origin: "JFK",
+      destination: "LAX",
       departureTime: new Date(Date.now() + 86400000).toISOString(),
       arrivalTime: new Date(Date.now() + 90000000).toISOString(),
-      duration: '5h 30m',
+      duration: "5h 30m",
       stops: 0,
       availableSeats: 10 - i,
     }));
@@ -120,7 +120,7 @@ export const flightMocks = {
           page: 1,
           limit: 20,
         },
-        message: 'No flights found for the selected criteria',
+        message: "No flights found for the selected criteria",
       })
       .withStatus(200)
       .build();
@@ -133,10 +133,10 @@ export const flightMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'SEARCH_ERROR',
-          message: 'Unable to search flights at this time',
+          code: "SEARCH_ERROR",
+          message: "Unable to search flights at this time",
           details: {
-            reason: 'External service unavailable',
+            reason: "External service unavailable",
           },
         },
       })
@@ -150,16 +150,18 @@ export const flightMocks = {
   bookingSuccess: (bookingRef?: string) => {
     return new ApiMockBuilder()
       .withData({
-        bookingReference: bookingRef || 'FL' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        status: 'CONFIRMED',
-        totalAmount: 450.00,
-        currency: 'USD',
+        bookingReference:
+          bookingRef ||
+          "FL" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        status: "CONFIRMED",
+        totalAmount: 450.0,
+        currency: "USD",
         createdAt: new Date().toISOString(),
         flightDetails: {
-          airline: 'American Airlines',
-          flightNumber: 'AA123',
-          origin: 'JFK',
-          destination: 'LAX',
+          airline: "American Airlines",
+          flightNumber: "AA123",
+          origin: "JFK",
+          destination: "LAX",
           departureTime: new Date(Date.now() + 86400000).toISOString(),
           arrivalTime: new Date(Date.now() + 90000000).toISOString(),
         },
@@ -175,8 +177,8 @@ export const flightMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'INSUFFICIENT_SEATS',
-          message: 'Not enough seats available for this flight',
+          code: "INSUFFICIENT_SEATS",
+          message: "Not enough seats available for this flight",
           details: {
             availableSeats: 2,
             requestedSeats: 4,
@@ -200,10 +202,10 @@ export const hotelMocks = {
       id: `hotel_${i}`,
       name: `Hotel ${String.fromCharCode(65 + i)}`,
       price: 80 + i * 30 + Math.random() * 20,
-      currency: 'USD',
+      currency: "USD",
       rating: 3 + Math.random() * 2,
       address: `${100 + i} Main Street, City`,
-      amenities: ['WiFi', 'Pool', 'Gym', 'Restaurant'].slice(0, i + 1),
+      amenities: ["WiFi", "Pool", "Gym", "Restaurant"].slice(0, i + 1),
       availableRooms: 5 - i,
     }));
 
@@ -232,7 +234,7 @@ export const hotelMocks = {
           page: 1,
           limit: 20,
         },
-        message: 'No hotels found for the selected criteria',
+        message: "No hotels found for the selected criteria",
       })
       .withStatus(200)
       .build();
@@ -244,16 +246,20 @@ export const hotelMocks = {
   bookingSuccess: (bookingRef?: string) => {
     return new ApiMockBuilder()
       .withData({
-        bookingReference: bookingRef || 'HT' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        status: 'CONFIRMED',
-        totalAmount: 350.00,
-        currency: 'USD',
+        bookingReference:
+          bookingRef ||
+          "HT" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        status: "CONFIRMED",
+        totalAmount: 350.0,
+        currency: "USD",
         createdAt: new Date().toISOString(),
         hotelDetails: {
-          name: 'Grand Hotel',
-          address: '123 Main Street, City',
-          checkIn: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-          checkOut: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+          name: "Grand Hotel",
+          address: "123 Main Street, City",
+          checkIn: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+          checkOut: new Date(Date.now() + 172800000)
+            .toISOString()
+            .split("T")[0],
           rooms: 2,
         },
       })
@@ -273,7 +279,7 @@ export const walletMocks = {
     return new ApiMockBuilder()
       .withData({
         balance,
-        currency: 'USD',
+        currency: "USD",
         lastUpdated: new Date().toISOString(),
       })
       .withStatus(200)
@@ -286,11 +292,11 @@ export const walletMocks = {
   topUpSuccess: (amount: number) => {
     return new ApiMockBuilder()
       .withData({
-        transactionId: 'txn_' + Date.now(),
+        transactionId: "txn_" + Date.now(),
         amount,
-        currency: 'USD',
+        currency: "USD",
         newBalance: 1000 + amount,
-        status: 'COMPLETED',
+        status: "COMPLETED",
         timestamp: new Date().toISOString(),
       })
       .withStatus(200)
@@ -303,10 +309,10 @@ export const walletMocks = {
   transactionsSuccess: (count: number = 5) => {
     const transactions = Array.from({ length: count }, (_, i) => ({
       id: `txn_${Date.now()}_${i}`,
-      type: ['TOP_UP', 'PAYMENT', 'REFUND'][i % 3],
+      type: ["TOP_UP", "PAYMENT", "REFUND"][i % 3],
       amount: 50 + i * 25,
-      currency: 'USD',
-      status: 'COMPLETED',
+      currency: "USD",
+      status: "COMPLETED",
       timestamp: new Date(Date.now() - i * 86400000).toISOString(),
       description: `Transaction ${i + 1}`,
     }));
@@ -331,8 +337,8 @@ export const walletMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'INSUFFICIENT_BALANCE',
-          message: 'Insufficient wallet balance for this transaction',
+          code: "INSUFFICIENT_BALANCE",
+          message: "Insufficient wallet balance for this transaction",
           details: {
             currentBalance: 50,
             requiredAmount: 450,
@@ -354,11 +360,11 @@ export const paymentMocks = {
   intentSuccess: (amount: number) => {
     return new ApiMockBuilder()
       .withData({
-        paymentIntentId: 'pi_' + Math.random().toString(36).substr(2, 10),
-        clientSecret: 'pi_secret_' + Math.random().toString(36).substr(2, 20),
+        paymentIntentId: "pi_" + Math.random().toString(36).substr(2, 10),
+        clientSecret: "pi_secret_" + Math.random().toString(36).substr(2, 20),
         amount,
-        currency: 'USD',
-        status: 'requires_payment_method',
+        currency: "USD",
+        status: "requires_payment_method",
         createdAt: new Date().toISOString(),
       })
       .withStatus(200)
@@ -371,11 +377,11 @@ export const paymentMocks = {
   confirmationSuccess: () => {
     return new ApiMockBuilder()
       .withData({
-        paymentIntentId: 'pi_' + Math.random().toString(36).substr(2, 10),
-        status: 'succeeded',
-        amount: 450.00,
-        currency: 'USD',
-        receiptUrl: 'https://receipts.tripalfa.com/r/' + Date.now(),
+        paymentIntentId: "pi_" + Math.random().toString(36).substr(2, 10),
+        status: "succeeded",
+        amount: 450.0,
+        currency: "USD",
+        receiptUrl: "https://receipts.tripalfa.com/r/" + Date.now(),
         confirmedAt: new Date().toISOString(),
       })
       .withStatus(200)
@@ -389,9 +395,9 @@ export const paymentMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'PAYMENT_DECLINED',
-          message: 'Your card was declined',
-          declineCode: 'card_declined',
+          code: "PAYMENT_DECLINED",
+          message: "Your card was declined",
+          declineCode: "card_declined",
         },
       })
       .withStatus(402)
@@ -404,13 +410,13 @@ export const paymentMocks = {
   requires3DSecure: () => {
     return new ApiMockBuilder()
       .withData({
-        paymentIntentId: 'pi_' + Math.random().toString(36).substr(2, 10),
-        status: 'requires_action',
+        paymentIntentId: "pi_" + Math.random().toString(36).substr(2, 10),
+        status: "requires_action",
         nextAction: {
-          type: 'use_stripe_sdk',
+          type: "use_stripe_sdk",
           stripeSdk: {
-            type: 'three_d_secure_redirect',
-            stripeJs: '...',
+            type: "three_d_secure_redirect",
+            stripeJs: "...",
           },
         },
       })
@@ -426,23 +432,24 @@ export const bookingMocks = {
   /**
    * Get booking details success
    */
-  getBookingSuccess: (status: string = 'CONFIRMED') => {
+  getBookingSuccess: (status: string = "CONFIRMED") => {
     return new ApiMockBuilder()
       .withData({
-        bookingReference: 'BK' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        bookingReference:
+          "BK" + Math.random().toString(36).substr(2, 6).toUpperCase(),
         status,
-        type: 'FLIGHT',
-        totalAmount: 450.00,
-        currency: 'USD',
+        type: "FLIGHT",
+        totalAmount: 450.0,
+        currency: "USD",
         createdAt: new Date(Date.now() - 86400000).toISOString(),
         passengers: [
           {
-            firstName: 'John',
-            lastName: 'Doe',
-            type: 'ADULT',
+            firstName: "John",
+            lastName: "Doe",
+            type: "ADULT",
           },
         ],
-        paymentStatus: 'PAID',
+        paymentStatus: "PAID",
       })
       .withStatus(200)
       .build();
@@ -454,11 +461,12 @@ export const bookingMocks = {
   cancelSuccess: () => {
     return new ApiMockBuilder()
       .withData({
-        bookingReference: 'BK' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        status: 'CANCELLED',
+        bookingReference:
+          "BK" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+        status: "CANCELLED",
         cancellationFee: 0,
-        refundAmount: 450.00,
-        refundCurrency: 'USD',
+        refundAmount: 450.0,
+        refundCurrency: "USD",
         cancelledAt: new Date().toISOString(),
       })
       .withStatus(200)
@@ -472,8 +480,8 @@ export const bookingMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'BOOKING_NOT_FOUND',
-          message: 'Booking not found',
+          code: "BOOKING_NOT_FOUND",
+          message: "Booking not found",
         },
       })
       .withStatus(404)
@@ -485,11 +493,12 @@ export const bookingMocks = {
    */
   listBookings: (count: number = 3) => {
     const bookings = Array.from({ length: count }, (_, i) => ({
-      bookingReference: 'BK' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-      status: ['CONFIRMED', 'PENDING', 'COMPLETED'][i % 3],
-      type: ['FLIGHT', 'HOTEL'][i % 2],
+      bookingReference:
+        "BK" + Math.random().toString(36).substr(2, 6).toUpperCase(),
+      status: ["CONFIRMED", "PENDING", "COMPLETED"][i % 3],
+      type: ["FLIGHT", "HOTEL"][i % 2],
       totalAmount: 200 + i * 100,
-      currency: 'USD',
+      currency: "USD",
       createdAt: new Date(Date.now() - i * 86400000).toISOString(),
     }));
 
@@ -517,14 +526,14 @@ export const healthMocks = {
   healthy: () => {
     return new ApiMockBuilder()
       .withData({
-        status: 'healthy',
+        status: "healthy",
         timestamp: new Date().toISOString(),
         services: {
-          database: 'connected',
-          cache: 'connected',
-          externalApis: 'operational',
+          database: "connected",
+          cache: "connected",
+          externalApis: "operational",
         },
-        version: '1.0.0',
+        version: "1.0.0",
       })
       .withStatus(200)
       .build();
@@ -536,16 +545,14 @@ export const healthMocks = {
   unhealthy: () => {
     return new ApiMockBuilder()
       .withData({
-        status: 'unhealthy',
+        status: "unhealthy",
         timestamp: new Date().toISOString(),
         services: {
-          database: 'disconnected',
-          cache: 'connected',
-          externalApis: 'degraded',
+          database: "disconnected",
+          cache: "connected",
+          externalApis: "degraded",
         },
-        errors: [
-          'Database connection timeout',
-        ],
+        errors: ["Database connection timeout"],
       })
       .withStatus(503)
       .build();
@@ -563,8 +570,8 @@ export const networkErrorMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'REQUEST_TIMEOUT',
-          message: 'The request timed out',
+          code: "REQUEST_TIMEOUT",
+          message: "The request timed out",
         },
       })
       .withStatus(408)
@@ -579,15 +586,15 @@ export const networkErrorMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many requests',
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many requests",
         },
       })
       .withStatus(429)
       .withHeaders({
-        'Retry-After': '60',
-        'X-RateLimit-Limit': '100',
-        'X-RateLimit-Remaining': '0',
+        "Retry-After": "60",
+        "X-RateLimit-Limit": "100",
+        "X-RateLimit-Remaining": "0",
       })
       .build();
   },
@@ -599,8 +606,8 @@ export const networkErrorMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'An unexpected error occurred',
+          code: "INTERNAL_SERVER_ERROR",
+          message: "An unexpected error occurred",
         },
       })
       .withStatus(500)
@@ -614,8 +621,8 @@ export const networkErrorMocks = {
     return new ApiMockBuilder()
       .withData({
         error: {
-          code: 'SERVICE_UNAVAILABLE',
-          message: 'Service temporarily unavailable',
+          code: "SERVICE_UNAVAILABLE",
+          message: "Service temporarily unavailable",
         },
       })
       .withStatus(503)

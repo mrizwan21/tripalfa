@@ -4,12 +4,12 @@
  * React hook for fetching and caching exchange rates
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   exchangeRateApi,
   CurrencyCode,
   ConversionResult,
-} from '../api/exchangeRateApi';
+} from "../api/exchangeRateApi";
 
 interface UseExchangeRateOptions {
   from: CurrencyCode;
@@ -52,8 +52,8 @@ export function useExchangeRate({
       setConversion(result);
       setRate(result.rate);
     } catch (err: any) {
-      console.error('Exchange rate fetch error:', err);
-      setError(err.message || 'Failed to fetch exchange rate');
+      console.error("Exchange rate fetch error:", err);
+      setError(err.message || "Failed to fetch exchange rate");
     } finally {
       setLoading(false);
     }
@@ -72,14 +72,14 @@ export function useExchangeRate({
         setRate(result.rate);
         return result;
       } catch (err: any) {
-        console.error('Exchange rate convert error:', err);
-        setError(err.message || 'Failed to convert currency');
+        console.error("Exchange rate convert error:", err);
+        setError(err.message || "Failed to convert currency");
         return null;
       } finally {
         setLoading(false);
       }
     },
-    [from, to]
+    [from, to],
   );
 
   useEffect(() => {
@@ -135,8 +135,8 @@ export function useMultipleRates({
       const result = await exchangeRateApi.getMultipleRates(base, targets);
       setRates(result);
     } catch (err: any) {
-      console.error('Multiple rates fetch error:', err);
-      setError(err.message || 'Failed to fetch exchange rates');
+      console.error("Multiple rates fetch error:", err);
+      setError(err.message || "Failed to fetch exchange rates");
     } finally {
       setLoading(false);
     }

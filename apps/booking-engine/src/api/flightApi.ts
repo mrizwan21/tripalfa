@@ -1,4 +1,4 @@
-import { api } from '../lib/api';
+import { api } from "../lib/api.js";
 
 interface FlightSearchParams {
   departureDate: string;
@@ -6,7 +6,7 @@ interface FlightSearchParams {
   arrivalAirport: string;
   passengers: number;
   returnDate?: string;
-  tripType?: 'oneway' | 'roundtrip';
+  tripType?: "oneway" | "roundtrip";
 }
 
 interface FlightSearchResult {
@@ -105,7 +105,7 @@ interface HoldBookingResponse {
 interface PaymentRequest {
   orderId: string;
   workflowId: string;
-  paymentMethod: 'card' | 'wallet' | 'bank_transfer';
+  paymentMethod: "card" | "wallet" | "bank_transfer";
   paymentDetails?: {
     cardLast4?: string;
     cardBrand?: string;
@@ -225,7 +225,7 @@ interface BookingRetrieveResponse {
 
 /**
  * FlightApi class - Uses centralized API manager for all requests
- * 
+ *
  * This class routes all API calls through the centralized `api` object from lib/api.ts
  * which provides:
  * - Consistent authentication token handling
@@ -238,9 +238,14 @@ class FlightApi {
    * Search for flights
    * POST /api/flights/search
    */
-  async search(params: FlightSearchParams): Promise<{ flights: FlightSearchResult[] }> {
+  async search(
+    params: FlightSearchParams,
+  ): Promise<{ flights: FlightSearchResult[] }> {
     try {
-      const response = await api.post<FlightSearchResponse>('/flights/search', params);
+      const response = await api.post<FlightSearchResponse>(
+        "/flights/search",
+        params,
+      );
       return {
         flights: response.data.flights,
       };
@@ -248,7 +253,7 @@ class FlightApi {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to search flights'
+          "Failed to search flights",
       );
     }
   }
@@ -259,15 +264,16 @@ class FlightApi {
    */
   async getFlightDetails(flightId: string): Promise<FlightSearchResult> {
     try {
-      const response = await api.get<{ success: boolean; data: FlightSearchResult }>(
-        `/flights/${flightId}`
-      );
+      const response = await api.get<{
+        success: boolean;
+        data: FlightSearchResult;
+      }>(`/flights/${flightId}`);
       return response.data;
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch flight details'
+          "Failed to fetch flight details",
       );
     }
   }
@@ -279,18 +285,26 @@ class FlightApi {
   /**
    * Create a hold booking (Book Now Pay Later)
    * POST /api/flight-booking/hold
-   * 
+   *
    * Step 1 of E2E Flow: Reserve inventory without immediate payment
    * Only available for refundable fares
    */
-  async createHoldBooking(request: HoldBookingRequest): Promise<HoldBookingResponse> {
+  async createHoldBooking(
+    request: HoldBookingRequest,
+  ): Promise<HoldBookingResponse> {
     try {
-      const response = await api.post<HoldBookingResponse>('/flight-booking/hold', request);
+      const response = await api.post<HoldBookingResponse>(
+        "/flight-booking/hold",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to create hold booking'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create hold booking",
       };
     }
   }
@@ -298,17 +312,23 @@ class FlightApi {
   /**
    * Process payment for hold booking
    * POST /api/flight-booking/payment
-   * 
+   *
    * Step 2 of E2E Flow: Convert hold to paid booking
    */
   async processPayment(request: PaymentRequest): Promise<PaymentResponse> {
     try {
-      const response = await api.post<PaymentResponse>('/flight-booking/payment', request);
+      const response = await api.post<PaymentResponse>(
+        "/flight-booking/payment",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to process payment'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to process payment",
       };
     }
   }
@@ -316,17 +336,22 @@ class FlightApi {
   /**
    * Retrieve booking details
    * GET /api/flight-booking/:orderId
-   * 
+   *
    * Step 3 of E2E Flow: Get booking details and status
    */
   async getBooking(orderId: string): Promise<BookingRetrieveResponse> {
     try {
-      const response = await api.get<BookingRetrieveResponse>(`/flight-booking/${orderId}`);
+      const response = await api.get<BookingRetrieveResponse>(
+        `/flight-booking/${orderId}`,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to retrieve booking'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to retrieve booking",
       };
     }
   }
@@ -334,17 +359,23 @@ class FlightApi {
   /**
    * Issue ticket for confirmed booking
    * POST /api/flight-booking/ticket
-   * 
+   *
    * Step 4 of E2E Flow: Convert paid booking to confirmed ticket
    */
   async issueTicket(request: TicketRequest): Promise<TicketResponse> {
     try {
-      const response = await api.post<TicketResponse>('/flight-booking/ticket', request);
+      const response = await api.post<TicketResponse>(
+        "/flight-booking/ticket",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to issue ticket'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to issue ticket",
       };
     }
   }
@@ -355,12 +386,18 @@ class FlightApi {
    */
   async generateReceipt(request: ReceiptRequest): Promise<ReceiptResponse> {
     try {
-      const response = await api.post<ReceiptResponse>('/flight-booking/receipt', request);
+      const response = await api.post<ReceiptResponse>(
+        "/flight-booking/receipt",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to generate receipt'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to generate receipt",
       };
     }
   }
@@ -368,17 +405,23 @@ class FlightApi {
   /**
    * Cancel booking/ticket
    * POST /api/flight-booking/cancel
-   * 
+   *
    * Step 5 of E2E Flow: Cancel ticket or reservation
    */
   async cancelBooking(request: CancelRequest): Promise<CancelResponse> {
     try {
-      const response = await api.post<CancelResponse>('/flight-booking/cancel', request);
+      const response = await api.post<CancelResponse>(
+        "/flight-booking/cancel",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to cancel booking'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to cancel booking",
       };
     }
   }
@@ -386,17 +429,23 @@ class FlightApi {
   /**
    * Generate refund note
    * POST /api/flight-booking/refund
-   * 
+   *
    * Step 6 of E2E Flow: Create refund documentation
    */
   async generateRefund(request: RefundRequest): Promise<RefundResponse> {
     try {
-      const response = await api.post<RefundResponse>('/flight-booking/refund', request);
+      const response = await api.post<RefundResponse>(
+        "/flight-booking/refund",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to generate refund'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to generate refund",
       };
     }
   }
@@ -407,12 +456,17 @@ class FlightApi {
    */
   async getWorkflow(workflowId: string): Promise<any> {
     try {
-      const response = await api.get<any>(`/flight-booking/workflow/${workflowId}`);
+      const response = await api.get<any>(
+        `/flight-booking/workflow/${workflowId}`,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to get workflow'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get workflow",
       };
     }
   }
@@ -430,18 +484,29 @@ class FlightApi {
     isRefundable?: boolean;
     contactEmail: string;
     contactPhone: string;
-    customer: { firstName: string; lastName: string; email: string; phone: string };
-    paymentMethod: 'card' | 'wallet' | 'bank_transfer';
+    customer: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+    };
+    paymentMethod: "card" | "wallet" | "bank_transfer";
     paymentDetails?: { cardLast4?: string; cardBrand?: string };
     issueTicket?: boolean;
   }): Promise<any> {
     try {
-      const response = await api.post<any>('/flight-booking/complete-flow', request);
+      const response = await api.post<any>(
+        "/flight-booking/complete-flow",
+        request,
+      );
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to complete flow'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to complete flow",
       };
     }
   }
@@ -453,7 +518,7 @@ class FlightApi {
   /**
    * Create a Duffel hold order (book now, pay later)
    * POST /api/duffel/orders/hold
-   * 
+   *
    * This creates an order with type: 'hold' which reserves the booking
    * for a limited time before payment is required.
    */
@@ -461,14 +526,14 @@ class FlightApi {
     selected_offers: string[];
     passengers: Array<{
       id?: string;
-      type: 'adult' | 'child' | 'infant';
+      type: "adult" | "child" | "infant";
       given_name: string;
       family_name: string;
       email: string;
       phone_number: string;
       born_at?: string;
-      gender?: 'm' | 'f';
-      title?: 'mr' | 'mrs' | 'ms' | 'miss' | 'dr' | 'prof';
+      gender?: "m" | "f";
+      title?: "mr" | "mrs" | "ms" | "miss" | "dr" | "prof";
     }>;
     contact?: { email: string; phone: string };
     userId?: string;
@@ -485,12 +550,15 @@ class FlightApi {
         order?: any;
         payment_required_by?: string;
         error?: string;
-      }>('/duffel/orders/hold', params);
+      }>("/duffel/orders/hold", params);
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to create hold order'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create hold order",
       };
     }
   }
@@ -499,7 +567,10 @@ class FlightApi {
    * Pay for a Duffel hold order
    * POST /api/duffel/orders/:id/pay
    */
-  async payForDuffelOrder(orderId: string, paymentMethodType: 'balance' | 'card' = 'balance'): Promise<{
+  async payForDuffelOrder(
+    orderId: string,
+    paymentMethodType: "balance" | "card" = "balance",
+  ): Promise<{
     success: boolean;
     payment_intent?: any;
     error?: string;
@@ -516,7 +587,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to pay for order'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to pay for order",
       };
     }
   }
@@ -529,7 +603,7 @@ class FlightApi {
     order_id: string;
     amount?: string;
     currency?: string;
-    payment_method?: { type: 'balance' | 'card' };
+    payment_method?: { type: "balance" | "card" };
   }): Promise<{
     success: boolean;
     payment_intent?: any;
@@ -540,12 +614,15 @@ class FlightApi {
         success: boolean;
         payment_intent?: any;
         error?: string;
-      }>('/duffel/payment-intents', params);
+      }>("/duffel/payment-intents", params);
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to create payment intent'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create payment intent",
       };
     }
   }
@@ -556,7 +633,9 @@ class FlightApi {
    */
   async getDuffelPaymentIntent(paymentIntentId: string): Promise<any> {
     try {
-      const response = await api.get<any>(`/duffel/payment-intents/${paymentIntentId}`);
+      const response = await api.get<any>(
+        `/duffel/payment-intents/${paymentIntentId}`,
+      );
       return response;
     } catch (error: any) {
       return null;
@@ -582,7 +661,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to confirm payment intent'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to confirm payment intent",
       };
     }
   }
@@ -602,10 +684,11 @@ class FlightApi {
   }> {
     try {
       const queryParams = new URLSearchParams();
-      if (params.offer_id) queryParams.append('offer_id', params.offer_id);
-      if (params.order_id) queryParams.append('order_id', params.order_id);
-      if (params.segment_id) queryParams.append('segment_id', params.segment_id);
-      
+      if (params.offer_id) queryParams.append("offer_id", params.offer_id);
+      if (params.order_id) queryParams.append("order_id", params.order_id);
+      if (params.segment_id)
+        queryParams.append("segment_id", params.segment_id);
+
       const response = await api.get<{
         success: boolean;
         data?: any[];
@@ -615,7 +698,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to get seat maps'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get seat maps",
       };
     }
   }
@@ -647,12 +733,15 @@ class FlightApi {
         success: boolean;
         cancellation?: any;
         error?: string;
-      }>('/duffel/order-cancellations', { order_id: orderId });
+      }>("/duffel/order-cancellations", { order_id: orderId });
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to cancel order'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to cancel order",
       };
     }
   }
@@ -676,7 +765,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to confirm cancellation'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to confirm cancellation",
       };
     }
   }
@@ -704,7 +796,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to get available services'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get available services",
       };
     }
   }
@@ -716,9 +811,9 @@ class FlightApi {
   async addDuffelBaggage(params: {
     order_id: string;
     services: Array<{
-    id: string;
-    quantity: number;
-  }>;
+      id: string;
+      quantity: number;
+    }>;
   }): Promise<{
     success: boolean;
     order?: any;
@@ -729,12 +824,15 @@ class FlightApi {
         success: boolean;
         order?: any;
         error?: string;
-      }>('/duffel/bags', params);
+      }>("/duffel/bags", params);
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to add baggage'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to add baggage",
       };
     }
   }
@@ -758,7 +856,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to get order available services'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get order available services",
       };
     }
   }
@@ -782,10 +883,12 @@ class FlightApi {
   }> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.passenger_id) queryParams.append('passenger_id', params.passenger_id);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-      
+      if (params?.passenger_id)
+        queryParams.append("passenger_id", params.passenger_id);
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.offset)
+        queryParams.append("offset", params.offset.toString());
+
       const response = await api.get<{
         success: boolean;
         data?: any[];
@@ -795,7 +898,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to get loyalty accounts'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get loyalty accounts",
       };
     }
   }
@@ -818,12 +924,15 @@ class FlightApi {
         success: boolean;
         data?: any;
         error?: string;
-      }>('/duffel/loyalty-programme-accounts', params);
+      }>("/duffel/loyalty-programme-accounts", params);
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to create loyalty account'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create loyalty account",
       };
     }
   }
@@ -842,7 +951,10 @@ class FlightApi {
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to delete loyalty account'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to delete loyalty account",
       };
     }
   }
@@ -865,12 +977,15 @@ class FlightApi {
         success: boolean;
         data?: any;
         error?: string;
-      }>('/duffel/cfar-offers', { order_id: orderId });
+      }>("/duffel/cfar-offers", { order_id: orderId });
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to get CFAR offers'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to get CFAR offers",
       };
     }
   }
@@ -881,7 +996,7 @@ class FlightApi {
    */
   async createDuffelCFARContract(params: {
     cfar_offer_id: string;
-    payment_method?: { type: 'balance' | 'card' };
+    payment_method?: { type: "balance" | "card" };
   }): Promise<{
     success: boolean;
     data?: any;
@@ -892,12 +1007,15 @@ class FlightApi {
         success: boolean;
         data?: any;
         error?: string;
-      }>('/duffel/cfar-contracts', params);
+      }>("/duffel/cfar-contracts", params);
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to create CFAR contract'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create CFAR contract",
       };
     }
   }
@@ -919,12 +1037,15 @@ class FlightApi {
         success: boolean;
         data?: any;
         error?: string;
-      }>('/duffel/cfar-claims', params);
+      }>("/duffel/cfar-claims", params);
       return response;
     } catch (error: any) {
       return {
         success: false,
-        error: error.response?.data?.error || error.message || 'Failed to create CFAR claim'
+        error:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to create CFAR claim",
       };
     }
   }
@@ -935,7 +1056,9 @@ class FlightApi {
    */
   async getDuffelCFARContract(contractId: string): Promise<any> {
     try {
-      const response = await api.get<any>(`/duffel/cfar-contracts/${contractId}`);
+      const response = await api.get<any>(
+        `/duffel/cfar-contracts/${contractId}`,
+      );
       return response;
     } catch (error: any) {
       return null;

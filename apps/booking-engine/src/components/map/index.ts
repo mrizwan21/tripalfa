@@ -5,19 +5,19 @@
  */
 
 // Main map component
-export { MapboxMap, calculateCenter, calculateZoom } from './MapboxMap';
+export { MapboxMap, calculateCenter, calculateZoom } from "./MapboxMap";
 
 // Hotel-specific map
-export { HotelMap } from './HotelMap';
+export { HotelMap } from "./HotelMap";
 
 // Flight-specific map
-export { FlightMap } from './FlightMap';
+export { FlightMap } from "./FlightMap";
 
 // Animated flight map (loading/search state)
-export { AnimatedFlightMap } from './AnimatedFlightMap';
+export { AnimatedFlightMap } from "./AnimatedFlightMap";
 
 // Animated hotel map (loading/search state)
-export { AnimatedHotelMap } from './AnimatedHotelMap';
+export { AnimatedHotelMap } from "./AnimatedHotelMap";
 
 // Re-export types and config
 export {
@@ -29,4 +29,4 @@ export {
   type HotelMapMarker,
   type FlightMapMarker,
   type FlightPath,
-} from '../../lib/mapbox-config';
+} from "../../lib/mapbox-config";

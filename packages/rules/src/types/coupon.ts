@@ -1,5 +1,5 @@
-export type DiscountType = 'percentage' | 'fixed';
-export type RedemptionStatus = 'pending' | 'redeemed' | 'reversed' | 'expired';
+export type DiscountType = "percentage" | "fixed";
+export type RedemptionStatus = "pending" | "redeemed" | "reversed" | "expired";
 
 /**
  * Coupon discount conditions
@@ -115,5 +115,10 @@ export interface CouponValidationResult {
   coupon?: DiscountCoupon;
   discountAmount?: number;
   errorMessage?: string;
-  errorCode?: 'INVALID_CODE' | 'EXPIRED' | 'USAGE_LIMIT' | 'MIN_AMOUNT' | 'NOT_APPLICABLE';
+  errorCode?:
+    | "INVALID_CODE"
+    | "EXPIRED"
+    | "USAGE_LIMIT"
+    | "MIN_AMOUNT"
+    | "NOT_APPLICABLE";
 }

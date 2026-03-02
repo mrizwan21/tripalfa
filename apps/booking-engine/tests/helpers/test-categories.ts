@@ -7,62 +7,62 @@
  * and filtering E2E tests by category, priority, and type.
  */
 
-import { test } from '@playwright/test';
+import { test } from "@playwright/test";
 
 /**
  * Test category tags for organizing tests
  */
 export const TEST_CATEGORIES = {
   // Priority levels
-  SMOKE: '@smoke',
-  CRITICAL: '@critical',
-  REGRESSION: '@regression',
+  SMOKE: "@smoke",
+  CRITICAL: "@critical",
+  REGRESSION: "@regression",
 
   // Feature areas
-  FLIGHT: '@flight',
-  HOTEL: '@hotel',
-  WALLET: '@wallet',
-  PAYMENT: '@payment',
-  BOOKING: '@booking',
-  USER: '@user',
-  AUTH: '@auth',
+  FLIGHT: "@flight",
+  HOTEL: "@hotel",
+  WALLET: "@wallet",
+  PAYMENT: "@payment",
+  BOOKING: "@booking",
+  USER: "@user",
+  AUTH: "@auth",
 
   // Test types
-  ERROR: '@error',
-  VALIDATION: '@validation',
-  TIMEOUT: '@timeout',
-  NETWORK: '@network',
-  API: '@api',
-  E2E: '@e2e',
+  ERROR: "@error",
+  VALIDATION: "@validation",
+  TIMEOUT: "@timeout",
+  NETWORK: "@network",
+  API: "@api",
+  E2E: "@e2e",
 
   // Special testing
-  VISUAL: '@visual',
-  ACCESSIBILITY: '@a11y',
-  PERFORMANCE: '@performance',
-  SECURITY: '@security',
+  VISUAL: "@visual",
+  ACCESSIBILITY: "@a11y",
+  PERFORMANCE: "@performance",
+  SECURITY: "@security",
 
   // Environment
-  LOCAL: '@local',
-  CI: '@ci',
-  STAGING: '@staging',
-  PRODUCTION: '@prod',
+  LOCAL: "@local",
+  CI: "@ci",
+  STAGING: "@staging",
+  PRODUCTION: "@prod",
 
   // Browser
-  CHROMIUM: '@chromium',
-  FIREFOX: '@firefox',
-  WEBKIT: '@webkit',
-  MOBILE: '@mobile',
-  TABLET: '@tablet',
+  CHROMIUM: "@chromium",
+  FIREFOX: "@firefox",
+  WEBKIT: "@webkit",
+  MOBILE: "@mobile",
+  TABLET: "@tablet",
 } as const;
 
 /**
  * Test priority levels
  */
 export const TEST_PRIORITY = {
-  P0: '@P0', // Critical - must pass
-  P1: '@P1', // High - should pass
-  P2: '@P2', // Medium - nice to have
-  P3: '@P3', // Low - future consideration
+  P0: "@P0", // Critical - must pass
+  P1: "@P1", // High - should pass
+  P2: "@P2", // Medium - nice to have
+  P3: "@P3", // Low - future consideration
 } as const;
 
 /**
@@ -85,7 +85,7 @@ export interface TestMetadata {
 export function createTaggedTest(
   title: string,
   metadata: TestMetadata,
-  testFn: Parameters<typeof test>[1]
+  testFn: any,
 ) {
   const tags: string[] = [];
 
@@ -95,7 +95,7 @@ export function createTaggedTest(
   if (metadata.story) tags.push(`@story:${metadata.story}`);
   if (metadata.ticket) tags.push(`@ticket:${metadata.ticket}`);
 
-  const tagString = tags.length > 0 ? ` ${tags.join(' ')}` : '';
+  const tagString = tags.length > 0 ? ` ${tags.join(" ")}` : "";
   const fullTitle = `${title}${tagString}`;
 
   return test(fullTitle, testFn);
@@ -108,13 +108,15 @@ export function withMetadata(metadata: TestMetadata) {
   return function (
     target: any,
     propertyKey: string,
-    descriptor: PropertyDescriptor
+    descriptor: PropertyDescriptor,
   ) {
     const originalMethod = descriptor.value;
 
     descriptor.value = function (...args: any[]) {
       // Add metadata to test context
-      const testInfo = args.find(arg => arg && typeof arg === 'object' && 'title' in arg);
+      const testInfo = args.find(
+        (arg) => arg && typeof arg === "object" && "title" in arg,
+      );
       if (testInfo) {
         (testInfo as any).metadata = metadata;
       }
@@ -129,14 +131,14 @@ export function withMetadata(metadata: TestMetadata) {
  * Filter tests by category
  */
 export function filterByCategory(tests: string[], category: string): string[] {
-  return tests.filter(test => test.includes(category));
+  return tests.filter((test) => test.includes(category));
 }
 
 /**
  * Filter tests by priority
  */
 export function filterByPriority(tests: string[], priority: string): string[] {
-  return tests.filter(test => test.includes(priority));
+  return tests.filter((test) => test.includes(priority));
 }
 
 /**
@@ -157,14 +159,18 @@ export function getCriticalTests(tests: string[]): string[] {
  * Get tests by feature area
  */
 export function getTestsByFeature(tests: string[], feature: string): string[] {
-  return tests.filter(test => test.includes(`@feature:${feature}`));
+  return tests.filter((test) => test.includes(`@feature:${feature}`));
 }
 
 /**
  * Test suite builder for organizing tests
  */
 export class TestSuiteBuilder {
-  private tests: Array<{ title: string; metadata: TestMetadata; fn: Function }> = [];
+  private tests: Array<{
+    title: string;
+    metadata: TestMetadata;
+    fn: Function;
+  }> = [];
 
   addTest(title: string, metadata: TestMetadata, fn: Function): this {
     this.tests.push({ title, metadata, fn });
@@ -179,13 +185,13 @@ export class TestSuiteBuilder {
 
   filterByCategory(category: string): TestSuiteBuilder {
     const filtered = new TestSuiteBuilder();
-    filtered.tests = this.tests.filter(t => t.metadata.category === category);
+    filtered.tests = this.tests.filter((t) => t.metadata.category === category);
     return filtered;
   }
 
   filterByPriority(priority: string): TestSuiteBuilder {
     const filtered = new TestSuiteBuilder();
-    filtered.tests = this.tests.filter(t => t.metadata.priority === priority);
+    filtered.tests = this.tests.filter((t) => t.metadata.priority === priority);
     return filtered;
   }
 }
@@ -195,19 +201,25 @@ export class TestSuiteBuilder {
  */
 export function generateTestReportMetadata(
   testResults: any[],
-  options: { includeFlaky?: boolean; includeSkipped?: boolean } = {}
+  options: { includeFlaky?: boolean; includeSkipped?: boolean } = {},
 ): object {
   const { includeFlaky = true, includeSkipped = true } = options;
 
-  const passed = testResults.filter(r => r.status === 'passed').length;
-  const failed = testResults.filter(r => r.status === 'failed').length;
-  const flaky = includeFlaky ? testResults.filter(r => r.status === 'flaky').length : 0;
-  const skipped = includeSkipped ? testResults.filter(r => r.status === 'skipped').length : 0;
+  const passed = testResults.filter((r) => r.status === "passed").length;
+  const failed = testResults.filter((r) => r.status === "failed").length;
+  const flaky = includeFlaky
+    ? testResults.filter((r) => r.status === "flaky").length
+    : 0;
+  const skipped = includeSkipped
+    ? testResults.filter((r) => r.status === "skipped").length
+    : 0;
 
   // Group by category
   const byCategory: Record<string, number> = {};
-  Object.values(TEST_CATEGORIES).forEach(cat => {
-    const count = testResults.filter(r => r.title && r.title.includes(cat)).length;
+  Object.values(TEST_CATEGORIES).forEach((cat) => {
+    const count = testResults.filter(
+      (r) => r.title && r.title.includes(cat),
+    ).length;
     if (count > 0) {
       byCategory[cat] = count;
     }
@@ -215,8 +227,10 @@ export function generateTestReportMetadata(
 
   // Group by priority
   const byPriority: Record<string, number> = {};
-  Object.values(TEST_PRIORITY).forEach(pri => {
-    const count = testResults.filter(r => r.title && r.title.includes(pri)).length;
+  Object.values(TEST_PRIORITY).forEach((pri) => {
+    const count = testResults.filter(
+      (r) => r.title && r.title.includes(pri),
+    ).length;
     if (count > 0) {
       byPriority[pri] = count;
     }
@@ -229,7 +243,8 @@ export function generateTestReportMetadata(
       failed,
       flaky,
       skipped,
-      passRate: testResults.length > 0 ? (passed / testResults.length) * 100 : 0,
+      passRate:
+        testResults.length > 0 ? (passed / testResults.length) * 100 : 0,
     },
     byCategory,
     byPriority,

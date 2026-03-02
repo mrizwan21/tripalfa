@@ -2,19 +2,19 @@
   max-width: 800px;
   margin: 20px 0;
   padding: 20px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hold-order-form h2 {
-  color: #333;
+  color: hsl(var(--foreground));
   margin-bottom: 8px;
   font-size: 24px;
 }
 
 .form-description {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
   margin-bottom: 20px;
   line-height: 1.5;
@@ -27,7 +27,7 @@
 }
 
 .hold-order-form fieldset {
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--input));
   border-radius: 6px;
   padding: 16px;
   background: white;
@@ -36,7 +36,7 @@
 .hold-order-form legend {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: hsl(var(--foreground));
   padding: 0 8px;
 }
 
@@ -54,13 +54,13 @@
 .form-group label {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: hsl(var(--foreground));
 }
 
 .form-group input,
 .form-group select {
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--input));
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
@@ -70,8 +70,8 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
 }
 
 .form-row {
@@ -91,11 +91,11 @@
 }
 
 .passenger-section {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--input));
   border-radius: 6px;
   padding: 16px;
   margin-bottom: 16px;
-  background: #fafafa;
+  background: hsl(var(--muted));
 }
 
 .passenger-header {
@@ -109,13 +109,13 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: hsl(var(--foreground));
 }
 
 .btn-remove {
   padding: 6px 12px;
-  background: #ff6b6b;
-  color: white;
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
   border: none;
   border-radius: 4px;
   font-size: 12px;
@@ -125,13 +125,13 @@
 }
 
 .btn-remove:hover {
-  background: #ff5252;
+  background: hsl(var(--destructive) / 0.9);
 }
 
 .btn-secondary {
   padding: 10px 16px;
-  background: #2196F3;
-  color: white;
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
   border: none;
   border-radius: 4px;
   font-size: 14px;
@@ -143,7 +143,7 @@
 }
 
 .btn-secondary:hover {
-  background: #1976D2;
+  background: hsl(var(--secondary) / 0.9);
 }
 
 .form-actions {
@@ -151,49 +151,51 @@
   gap: 12px;
   justify-content: flex-end;
   padding-top: 12px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid hsl(var(--border));
 }
 
 .btn-primary {
   padding: 12px 24px;
-  background: #4CAF50;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   border: none;
   border-radius: 4px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition:
+    background 0.2s,
+    transform 0.1s;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #45a049;
+  background: hsl(var(--primary) / 0.9);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn-primary:disabled {
-  background: #ccc;
+  background: hsl(var(--muted-foreground) / 0.5);
   cursor: not-allowed;
   opacity: 0.7;
 }
 
 .alert-error {
   padding: 12px 16px;
-  background: #ffebee;
-  border: 1px solid #ff6b6b;
+  background: hsl(var(--destructive) / 0.12);
+  border: 1px solid hsl(var(--destructive) / 0.5);
   border-radius: 4px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   font-size: 14px;
   margin-bottom: 16px;
 }
 
 .alert-success {
   padding: 12px 16px;
-  background: #e8f5e9;
-  border: 1px solid #4CAF50;
+  background: hsl(var(--primary) / 0.12);
+  border: 1px solid hsl(var(--primary) / 0.5);
   border-radius: 4px;
-  color: #2e7d32;
+  color: hsl(var(--primary));
   font-size: 14px;
   margin-bottom: 16px;
 }

@@ -1,11 +1,17 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@tripalfa/ui-components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@tripalfa/ui-components/ui/card";
 import { Button } from "@tripalfa/ui-components/ui/button";
 import { Badge } from "@tripalfa/ui-components/ui/badge";
 import { Overview } from "@/features/dashboard/components/Overview";
 import { RecentSales } from "@/features/dashboard/components/RecentSales";
 import { motion } from "framer-motion";
 import { cn } from "@tripalfa/shared-utils/utils";
-import * as Icons from 'lucide-react';
+import * as Icons from "lucide-react";
 
 const {
   TrendingUp,
@@ -83,7 +89,16 @@ const colorVariants = {
   },
 };
 
-function StatCard({ title, value, change, trend, icon: Icon, description, color, index }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  change,
+  trend,
+  icon: Icon,
+  description,
+  color,
+  index,
+}: StatCardProps) {
   const colors = colorVariants[color];
   const TrendIcon = trend === "up" ? ArrowUpRight : ArrowRight;
 
@@ -94,54 +109,67 @@ function StatCard({ title, value, change, trend, icon: Icon, description, color,
       transition={{ delay: index * 0.1, duration: 0.4 }}
       whileHover={{ y: -4 }}
     >
-      <Card className="relative overflow-hidden border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90 hover:border-cyan-500/30 transition-all duration-300 group">
+      <Card className="relative overflow-hidden border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90 hover:border-cyan-500/30 transition-all duration-300 group">
         {/* Gradient background on hover */}
-        <div className={cn(
-          "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-          colors.gradient
-        )} />
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+            colors.gradient,
+          )}
+        />
 
         {/* Glow effect on hover */}
-        <div className={cn(
-          "absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl",
-          `bg-gradient-to-r ${colors.bg}`
-        )} style={{ filter: 'blur(20px)', opacity: 0.1 }} />
+        <div
+          className={cn(
+            "absolute -inset-px rounded-xl opacity-10 group-hover:opacity-100 transition-opacity duration-500 blur-[20px]",
+            `bg-gradient-to-r ${colors.bg}`,
+          )}
+        />
 
-        <CardHeader className="flex flex-row items-center justify-between pb-3 relative">
-          <CardTitle className="text-sm font-medium text-slate-400">{title}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between pb-3 relative gap-2 space-y-0">
+          <CardTitle className="text-sm font-medium text-muted-foreground">
+            {title}
+          </CardTitle>
           <motion.div
             whileHover={{ scale: 1.1, rotate: 5 }}
             className={cn(
               "flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br shadow-lg relative overflow-hidden",
               colors.bg,
-              colors.glow
+              colors.glow,
             )}
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent" />
-            <Icon className="h-5 w-5 text-white relative z-10" />
+            <Icon className="h-5 w-5 text-primary-foreground relative z-10" />
           </motion.div>
         </CardHeader>
 
-        <CardContent className="relative">
-          <div className="text-3xl font-bold text-white tracking-tight">{value}</div>
+        <CardContent className="relative p-6">
+          <div className="text-3xl font-bold text-foreground tracking-tight">
+            {value}
+          </div>
           <div className="flex items-center gap-2 mt-2">
-            <div className={cn(
-              "flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium border",
-              trend === "up" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-rose-500/10 text-rose-400 border-rose-500/30"
-            )}>
+            <div
+              className={cn(
+                "flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium border",
+                trend === "up"
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                  : "bg-rose-500/10 text-rose-400 border-rose-500/30",
+              )}
+            >
               <TrendIcon className="h-3 w-3" />
               {change}
             </div>
-            <span className="text-xs text-slate-500">{description}</span>
+            <span className="text-xs text-muted-foreground">{description}</span>
           </div>
 
           {/* Mini chart decoration */}
           <div className="absolute bottom-0 right-0 opacity-20">
             <svg width="100" height="40" viewBox="0 0 100 40">
               <path
-                d={trend === "up"
-                  ? "M0 35 L20 30 L40 32 L60 20 L80 25 L100 5"
-                  : "M0 10 L20 15 L40 12 L60 25 L80 20 L100 35"
+                d={
+                  trend === "up"
+                    ? "M0 35 L20 30 L40 32 L60 20 L80 25 L100 5"
+                    : "M0 10 L20 15 L40 12 L60 25 L80 20 L100 35"
                 }
                 stroke="currentColor"
                 strokeWidth="3"
@@ -158,10 +186,38 @@ function StatCard({ title, value, change, trend, icon: Icon, description, color,
 
 // Activity Feed Component
 const activities = [
-  { id: 1, user: "John Doe", action: "created a new booking", time: "2 min ago", icon: Car, color: "cyan" },
-  { id: 2, user: "Sarah Smith", action: "completed payment", time: "5 min ago", icon: CreditCard, color: "emerald" },
-  { id: 3, user: "Mike Johnson", action: "updated profile", time: "12 min ago", icon: Users, color: "purple" },
-  { id: 4, user: "Emily Brown", action: "cancelled booking", time: "25 min ago", icon: Calendar, color: "rose" },
+  {
+    id: 1,
+    user: "John Doe",
+    action: "created a new booking",
+    time: "2 min ago",
+    icon: Car,
+    color: "cyan",
+  },
+  {
+    id: 2,
+    user: "Sarah Smith",
+    action: "completed payment",
+    time: "5 min ago",
+    icon: CreditCard,
+    color: "emerald",
+  },
+  {
+    id: 3,
+    user: "Mike Johnson",
+    action: "updated profile",
+    time: "12 min ago",
+    icon: Users,
+    color: "purple",
+  },
+  {
+    id: 4,
+    user: "Emily Brown",
+    action: "cancelled booking",
+    time: "25 min ago",
+    icon: Calendar,
+    color: "rose",
+  },
 ];
 
 // Quick Stats Row
@@ -219,7 +275,7 @@ export default function DashboardPage() {
       {/* Background decorations */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-      
+
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -228,7 +284,7 @@ export default function DashboardPage() {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10"
       >
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Zap className="h-7 w-7 text-cyan-400" />
             Welcome back, Admin!
           </h2>
@@ -237,23 +293,29 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center bg-[#111827]/50 rounded-xl border border-cyan-500/10 p-1">
+          <div className="flex items-center bg-card/50 rounded-xl border border-cyan-500/10 p-1 gap-2">
             {["today", "week", "month", "year"].map((range) => (
-              <button
+              <Button
                 key={range}
+                variant="ghost"
+                size="sm"
                 onClick={() => setDateRange(range)}
                 className={cn(
                   "px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200",
                   dateRange === range
                     ? "bg-gradient-to-r from-cyan-500/20 to-purple-500/20 text-cyan-400 border border-cyan-500/30"
-                    : "text-slate-400 hover:text-cyan-300 hover:bg-cyan-500/5"
+                    : "text-muted-foreground hover:text-cyan-300 hover:bg-cyan-500/5",
                 )}
               >
                 {range.charAt(0).toUpperCase() + range.slice(1)}
-              </button>
+              </Button>
             ))}
           </div>
-          <Button variant="outline" size="sm" className="h-9 gap-2 border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/5 hover:border-cyan-500/40 bg-transparent">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2 border-cyan-500/20 text-cyan-400 hover:/5 hover:border-cyan-500/40 bg-transparent"
+          >
             <Download className="h-4 w-4" />
             Export
           </Button>
@@ -270,20 +332,26 @@ export default function DashboardPage() {
         {quickStats.map((stat, index) => (
           <div
             key={stat.label}
-            className="flex items-center gap-3 p-4 bg-gradient-to-br from-[#111827]/50 to-[#0a0e17]/50 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 group"
+            className="flex items-center gap-3 p-4 bg-gradient-to-br from-card/50 to-background/50 rounded-xl border border-cyan-500/10 hover:border-cyan-500/30 transition-all duration-300 group"
           >
-            <div className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-lg border transition-all duration-300",
-              stat.color === "cyan" && "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 group-hover:shadow-lg group-hover:shadow-cyan-500/20",
-              stat.color === "emerald" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 group-hover:shadow-lg group-hover:shadow-emerald-500/20",
-              stat.color === "amber" && "bg-amber-500/10 text-amber-400 border-amber-500/30 group-hover:shadow-lg group-hover:shadow-amber-500/20",
-              stat.color === "purple" && "bg-purple-500/10 text-purple-400 border-purple-500/30 group-hover:shadow-lg group-hover:shadow-purple-500/20",
-            )}>
+            <div
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-lg border transition-all duration-300",
+                stat.color === "cyan" &&
+                  "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 group-hover:shadow-lg group-hover:shadow-cyan-500/20",
+                stat.color === "emerald" &&
+                  "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 group-hover:shadow-lg group-hover:shadow-emerald-500/20",
+                stat.color === "amber" &&
+                  "bg-amber-500/10 text-amber-400 border-amber-500/30 group-hover:shadow-lg group-hover:shadow-amber-500/20",
+                stat.color === "purple" &&
+                  "bg-purple-500/10 text-purple-400 border-purple-500/30 group-hover:shadow-lg group-hover:shadow-purple-500/20",
+              )}
+            >
               <stat.icon className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs text-slate-400">{stat.label}</p>
-              <p className="text-lg font-bold text-white">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-lg font-bold text-foreground">{stat.value}</p>
             </div>
           </div>
         ))}
@@ -305,11 +373,11 @@ export default function DashboardPage() {
           transition={{ delay: 0.3, duration: 0.4 }}
           className="lg:col-span-4"
         >
-          <Card className="border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90 overflow-hidden">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
+          <Card className="border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90 overflow-hidden">
+            <CardHeader className="pb-4 space-y-0 gap-2">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                  <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-cyan-400" />
                     Revenue Overview
                   </CardTitle>
@@ -318,11 +386,18 @@ export default function DashboardPage() {
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
+                  <Badge
+                    variant="outline"
+                    className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                  >
                     <TrendingUp className="h-3 w-3 mr-1" />
                     +12.5%
                   </Badge>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/5">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-cyan-400 hover:/5"
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </div>
@@ -342,11 +417,11 @@ export default function DashboardPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.4 }}
           >
-            <Card className="border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
+            <Card className="border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90">
+              <CardHeader className="pb-4 space-y-0 gap-2">
+                <div className="flex items-center justify-between gap-2">
                   <div>
-                    <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <CreditCard className="h-5 w-5 text-emerald-400" />
                       Recent Sales
                     </CardTitle>
@@ -354,7 +429,11 @@ export default function DashboardPage() {
                       Latest transactions
                     </CardDescription>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-cyan-400 hover:text-cyan-300 hover:/5"
+                  >
                     View all
                   </Button>
                 </div>
@@ -371,11 +450,11 @@ export default function DashboardPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.4 }}
           >
-            <Card className="border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between">
+            <Card className="border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90">
+              <CardHeader className="pb-4 space-y-0 gap-2">
+                <div className="flex items-center justify-between gap-2">
                   <div>
-                    <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+                    <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <Activity className="h-5 w-5 text-purple-400" />
                       Recent Activity
                     </CardTitle>
@@ -395,21 +474,31 @@ export default function DashboardPage() {
                       transition={{ delay: 0.6 + index * 0.1 }}
                       className="flex items-start gap-3 group"
                     >
-                      <div className={cn(
-                        "flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border transition-all duration-300",
-                        activity.color === "cyan" && "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 group-hover:shadow-lg group-hover:shadow-cyan-500/20",
-                        activity.color === "emerald" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 group-hover:shadow-lg group-hover:shadow-emerald-500/20",
-                        activity.color === "purple" && "bg-purple-500/10 text-purple-400 border-purple-500/30 group-hover:shadow-lg group-hover:shadow-purple-500/20",
-                        activity.color === "rose" && "bg-rose-500/10 text-rose-400 border-rose-500/30 group-hover:shadow-lg group-hover:shadow-rose-500/20",
-                      )}>
+                      <div
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border transition-all duration-300",
+                          activity.color === "cyan" &&
+                            "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 group-hover:shadow-lg group-hover:shadow-cyan-500/20",
+                          activity.color === "emerald" &&
+                            "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 group-hover:shadow-lg group-hover:shadow-emerald-500/20",
+                          activity.color === "purple" &&
+                            "bg-purple-500/10 text-purple-400 border-purple-500/30 group-hover:shadow-lg group-hover:shadow-purple-500/20",
+                          activity.color === "rose" &&
+                            "bg-rose-500/10 text-rose-400 border-rose-500/30 group-hover:shadow-lg group-hover:shadow-rose-500/20",
+                        )}
+                      >
                         <activity.icon className="h-4 w-4" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-white">
+                      <div className="flex-1 min-w-0 gap-4">
+                        <p className="text-sm text-foreground">
                           <span className="font-medium">{activity.user}</span>{" "}
-                          <span className="text-slate-400">{activity.action}</span>
+                          <span className="text-muted-foreground">
+                            {activity.action}
+                          </span>
                         </p>
-                        <p className="text-xs text-cyan-400/50 mt-0.5">{activity.time}</p>
+                        <p className="text-xs text-cyan-400/50 mt-0.5">
+                          {activity.time}
+                        </p>
                       </div>
                     </motion.div>
                   ))}
@@ -428,23 +517,35 @@ export default function DashboardPage() {
         className="grid gap-4 md:grid-cols-3 relative z-10"
       >
         {/* Quick Actions */}
-        <Card className="border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
+        <Card className="border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90">
+          <CardHeader className="pb-3 space-y-0 gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-cyan-400" />
               Quick Actions
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start hover:bg-cyan-500/5 hover:border-cyan-500/30 hover:text-cyan-400 border-cyan-500/10 text-slate-300 bg-transparent" size="sm">
+          <CardContent className="space-y-2 p-6">
+            <Button
+              variant="outline"
+              className="w-full justify-start hover:/5 hover:border-cyan-500/30 hover:text-cyan-400 border-cyan-500/10 text-foreground/90 bg-transparent"
+              size="sm"
+            >
               <Users className="mr-2 h-4 w-4" />
               Manage Users
             </Button>
-            <Button variant="outline" className="w-full justify-start hover:bg-emerald-500/5 hover:border-emerald-500/30 hover:text-emerald-400 border-cyan-500/10 text-slate-300 bg-transparent" size="sm">
+            <Button
+              variant="outline"
+              className="w-full justify-start hover:/5 hover:border-emerald-500/30 hover:text-emerald-400 border-cyan-500/10 text-foreground/90 bg-transparent"
+              size="sm"
+            >
               <CreditCard className="mr-2 h-4 w-4" />
               View Transactions
             </Button>
-            <Button variant="outline" className="w-full justify-start hover:bg-amber-500/5 hover:border-amber-500/30 hover:text-amber-400 border-cyan-500/10 text-slate-300 bg-transparent" size="sm">
+            <Button
+              variant="outline"
+              className="w-full justify-start hover:bg-amber-500/5 hover:border-amber-500/30 hover:text-amber-400 border-cyan-500/10 text-foreground/90 bg-transparent"
+              size="sm"
+            >
               <Activity className="mr-2 h-4 w-4" />
               System Status
             </Button>
@@ -452,43 +553,55 @@ export default function DashboardPage() {
         </Card>
 
         {/* System Health */}
-        <Card className="border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
+        <Card className="border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90">
+          <CardHeader className="pb-3 space-y-0 gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <Activity className="h-4 w-4 text-emerald-400" />
               System Health
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+          <CardContent className="space-y-4 p-6">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50" />
-                <span className="text-sm text-slate-300">API Status</span>
+                <span className="text-sm text-foreground/90">API Status</span>
               </div>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
+              <Badge
+                variant="outline"
+                className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs"
+              >
                 Operational
               </Badge>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/50" />
-                <span className="text-sm text-slate-300">Database</span>
+                <span className="text-sm text-foreground/90">Database</span>
               </div>
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
+              <Badge
+                variant="outline"
+                className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs"
+              >
                 Healthy
               </Badge>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-cyan-400 shadow-lg shadow-cyan-500/50" />
-                <span className="text-sm text-slate-300">Services</span>
+                <span className="text-sm text-foreground/90">Services</span>
               </div>
               <span className="text-sm font-medium text-cyan-400">99.9%</span>
             </div>
             <div className="pt-2 border-t border-cyan-500/10">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-500">Last check: 2 min ago</span>
-                <Button variant="ghost" size="sm" className="h-auto py-0 px-2 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/5">
+              <div className="flex items-center justify-between text-xs gap-2">
+                <span className="text-muted-foreground">
+                  Last check: 2 min ago
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto py-0 px-2 text-cyan-400 hover:text-cyan-300 hover:/5"
+                >
                   View Details
                 </Button>
               </div>
@@ -497,28 +610,32 @@ export default function DashboardPage() {
         </Card>
 
         {/* Location Stats */}
-        <Card className="border-cyan-500/10 bg-gradient-to-br from-[#111827]/80 to-[#0a0e17]/90">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
+        <Card className="border-cyan-500/10 bg-gradient-to-br from-card/80 to-background/90">
+          <CardHeader className="pb-3 space-y-0 gap-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <MapPin className="h-4 w-4 text-purple-400" />
               Top Locations
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-6">
             {[
               { city: "New York", trips: 452, percent: 85 },
               { city: "Los Angeles", trips: 328, percent: 65 },
               { city: "Chicago", trips: 245, percent: 48 },
             ].map((location) => (
               <div key={location.city} className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-300">{location.city}</span>
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-foreground/90">
+                      {location.city}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-cyan-400">{location.trips} trips</span>
+                  <span className="text-sm font-medium text-cyan-400">
+                    {location.trips} trips
+                  </span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-800/50 rounded-full overflow-hidden border border-cyan-500/10">
+                <div className="h-1.5 w-full bg-muted/40 rounded-full overflow-hidden border border-cyan-500/10">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${location.percent}%` }}

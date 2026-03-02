@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ESNext",
-    "lib": ["ES2020"],
+    "lib": ["ES2020", "DOM"],
     "jsx": "react-jsx",
     "composite": true,
     "declaration": true,
@@ -28,9 +28,9 @@
     "constants.ts",
     "types.ts",
     "utils.ts",
-    "logger.ts"
+    "logger.ts",
+    "api.ts",
+    "hooks.ts"
   ],
-  "references": [
-    { "path": "../shared-types" }
-  ]
+  "references": [{ "path": "../shared-types" }]
 }

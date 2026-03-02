@@ -1,11 +1,11 @@
-import { api } from '../lib/api';
+import { api } from "../lib/api.js";
 
 /**
  * Weather API Client (OpenWeatherMap One Call API 3.0)
- * 
+ *
  * Routes all weather requests through the backend proxy to hide API keys from the frontend.
  * The backend handles the actual OpenWeatherMap API calls.
- * 
+ *
  * Provides current weather and forecast data for hotel locations:
  * - Current weather conditions
  * - 48-hour hourly forecast
@@ -85,7 +85,7 @@ export interface WeatherData {
 
 /**
  * WeatherApi class - Uses centralized API manager for all requests
- * 
+ *
  * This class routes all weather API calls through the backend proxy (`/api/weather`)
  * which provides:
  * - API key security (keys are stored on the backend, not exposed in frontend)
@@ -98,15 +98,15 @@ class WeatherApi {
   /**
    * Get weather data for a location
    * Routes through backend proxy at GET /api/weather
-   * 
+   *
    * @param coords - Hotel coordinates (latitude, longitude)
    * @param units - Temperature units: 'metric' (Celsius) | 'imperial' (Fahrenheit) | 'standard' (Kelvin)
    * @param lang - Language for weather descriptions (e.g., 'en', 'es', 'fr')
    */
   async getWeather(
     coords: WeatherCoordinates,
-    units: 'metric' | 'imperial' | 'standard' = 'metric',
-    lang: string = 'en'
+    units: "metric" | "imperial" | "standard" = "metric",
+    lang: string = "en",
   ): Promise<WeatherData> {
     try {
       const queryParams = new URLSearchParams({
@@ -114,17 +114,17 @@ class WeatherApi {
         lon: coords.longitude.toString(),
         units,
         lang,
-        exclude: 'minutely', // Exclude minutely data to reduce response size
+        exclude: "minutely", // Exclude minutely data to reduce response size
       });
 
       const response = await api.get<any>(`/weather?${queryParams.toString()}`);
       return this.parseWeatherResponse(response);
     } catch (error: any) {
-      console.error('Weather API error:', error);
+      console.error("Weather API error:", error);
       throw new Error(
         error.response?.data?.message ||
           error.message ||
-          'Failed to fetch weather data'
+          "Failed to fetch weather data",
       );
     }
   }
@@ -142,14 +142,14 @@ class WeatherApi {
         feelsLike: current.feels_like,
         humidity: current.humidity,
         pressure: current.pressure,
-        description: weather.main || 'Unknown',
-        icon: weather.icon || '',
+        description: weather.main || "Unknown",
+        icon: weather.icon || "",
         windSpeed: current.wind_speed,
         windGust: current.wind_gust,
         cloudiness: current.clouds,
         uvi: current.uvi,
         visibility: current.visibility,
-        precipitation: current.rain?.['1h'] || current.snow?.['1h'],
+        precipitation: current.rain?.["1h"] || current.snow?.["1h"],
       },
       hourly: (data.hourly || []).map((hour: any) => {
         const hourWeather = hour.weather?.[0] || {};
@@ -159,12 +159,12 @@ class WeatherApi {
           feelsLike: hour.feels_like,
           humidity: hour.humidity,
           pressure: hour.pressure,
-          description: hourWeather.main || 'Unknown',
-          icon: hourWeather.icon || '',
+          description: hourWeather.main || "Unknown",
+          icon: hourWeather.icon || "",
           windSpeed: hour.wind_speed,
           windGust: hour.wind_gust,
           cloudiness: hour.clouds,
-          precipitation: hour.rain?.['1h'] || hour.snow?.['1h'],
+          precipitation: hour.rain?.["1h"] || hour.snow?.["1h"],
           pop: hour.pop,
         };
       }),
@@ -188,8 +188,8 @@ class WeatherApi {
           },
           humidity: day.humidity,
           pressure: day.pressure,
-          description: dayWeather.main || 'Unknown',
-          icon: dayWeather.icon || '',
+          description: dayWeather.main || "Unknown",
+          icon: dayWeather.icon || "",
           windSpeed: day.wind_speed,
           windGust: day.wind_gust,
           cloudiness: day.clouds,

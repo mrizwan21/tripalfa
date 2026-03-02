@@ -1,46 +1,48 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Notifications from '../../pages/Notifications';
-import * as api from '../../lib/api';
-import { MOCK_NOTIFICATIONS } from '../../lib/notification-types';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import Notifications from "../../pages/Notifications";
+import * as api from "../../lib/api";
+import { MOCK_NOTIFICATIONS } from "../../lib/notification-types";
 
 // Mock the API
-vi.mock('../../lib/api', () => ({
+vi.mock("../../lib/api", () => ({
   listNotifications: vi.fn(),
   markNotificationRead: vi.fn(),
 }));
 
-describe('Notifications Page', () => {
+describe("Notifications Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('Page Loading', () => {
-    it('should render the page title', async () => {
+  describe("Page Loading", () => {
+    it("should render the page title", async () => {
       (api.listNotifications as any).mockResolvedValue([]);
       render(<Notifications />);
-      expect(screen.getByText('Notifications')).toBeInTheDocument();
+      expect(screen.getByText("Notifications")).toBeInTheDocument();
     });
 
-    it('should show loading state initially', async () => {
+    it("should show loading state initially", async () => {
       (api.listNotifications as any).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () => new Promise(() => {}), // Never resolves
       );
       render(<Notifications />);
       expect(screen.getByText(/Fetching your alerts/i)).toBeInTheDocument();
     });
 
-    it('should load notifications from API', async () => {
+    it("should load notifications from API", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(MOCK_NOTIFICATIONS[0].title)).toBeInTheDocument();
+        expect(
+          screen.getByText(MOCK_NOTIFICATIONS[0].title),
+        ).toBeInTheDocument();
       });
     });
 
-    it('should handle API errors gracefully', async () => {
-      (api.listNotifications as any).mockRejectedValue(new Error('API Error'));
+    it("should handle API errors gracefully", async () => {
+      (api.listNotifications as any).mockRejectedValue(new Error("API Error"));
       render(<Notifications />);
 
       await waitFor(() => {
@@ -49,18 +51,20 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Empty State', () => {
-    it('should display empty state when no notifications', async () => {
+  describe("Empty State", () => {
+    it("should display empty state when no notifications", async () => {
       (api.listNotifications as any).mockResolvedValue([]);
       render(<Notifications />);
 
       await waitFor(() => {
         expect(screen.getByText(/All caught up/i)).toBeInTheDocument();
-        expect(screen.getByText(/You don't have any notifications/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/You don't have any notifications/i),
+        ).toBeInTheDocument();
       });
     });
 
-    it('should display inbox icon in empty state', async () => {
+    it("should display inbox icon in empty state", async () => {
       (api.listNotifications as any).mockResolvedValue([]);
       render(<Notifications />);
 
@@ -70,8 +74,8 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Notification List Display', () => {
-    it('should display all notifications', async () => {
+  describe("Notification List Display", () => {
+    it("should display all notifications", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -82,40 +86,42 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should display notification types correctly', async () => {
+    it("should display notification types correctly", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Booking Confirmed')).toBeInTheDocument();
+        expect(screen.getByText("Booking Confirmed")).toBeInTheDocument();
         expect(screen.getByText(/Special Meal Request/i)).toBeInTheDocument();
       });
     });
 
-    it('should display notification descriptions', async () => {
+    it("should display notification descriptions", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
         expect(
-          screen.getByText(/Your booking has been successfully confirmed/i)
+          screen.getByText(/Your booking has been successfully confirmed/i),
         ).toBeInTheDocument();
       });
     });
 
-    it('should show correct number of notifications in list', async () => {
+    it("should show correct number of notifications in list", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        const notificationItems = screen.getAllByRole('group'); // Assuming notifications are in groups
-        expect(notificationItems.length).toBeGreaterThanOrEqual(MOCK_NOTIFICATIONS.length);
+        const notificationItems = screen.getAllByRole("group"); // Assuming notifications are in groups
+        expect(notificationItems.length).toBeGreaterThanOrEqual(
+          MOCK_NOTIFICATIONS.length,
+        );
       });
     });
   });
 
-  describe('Unread Count Badge', () => {
-    it('should display unread count badge', async () => {
+  describe("Unread Count Badge", () => {
+    it("should display unread count badge", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -127,7 +133,7 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should hide badge when all notifications are read', async () => {
+    it("should hide badge when all notifications are read", async () => {
       const allReadNotifications = MOCK_NOTIFICATIONS.map((n) => ({
         ...n,
         read: true,
@@ -136,18 +142,20 @@ describe('Notifications Page', () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.queryByText('0')).not.toBeInTheDocument();
+        expect(screen.queryByText("0")).not.toBeInTheDocument();
       });
     });
 
-    it('should update unread count when marking as read', async () => {
+    it("should update unread count when marking as read", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       (api.markNotificationRead as any).mockResolvedValue(true);
 
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(MOCK_NOTIFICATIONS[0].title)).toBeInTheDocument();
+        expect(
+          screen.getByText(MOCK_NOTIFICATIONS[0].title),
+        ).toBeInTheDocument();
       });
 
       // Click on first unread notification
@@ -162,15 +170,23 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Notification Status Display', () => {
-    it('should display status badges correctly', async () => {
+  describe("Notification Status Display", () => {
+    it("should display status badges correctly", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        const statuses = ['CONFIRMED', 'PENDING', 'REJECTED', 'INFO', 'CANCELLED'];
+        const statuses = [
+          "CONFIRMED",
+          "PENDING",
+          "REJECTED",
+          "INFO",
+          "CANCELLED",
+        ];
         statuses.forEach((status) => {
-          const notification = MOCK_NOTIFICATIONS.find((n) => n.status === status);
+          const notification = MOCK_NOTIFICATIONS.find(
+            (n) => n.status === status,
+          );
           if (notification) {
             expect(screen.getByText(notification.title)).toBeInTheDocument();
           }
@@ -178,39 +194,51 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should show CONFIRMED badge with correct styling', async () => {
-      const confirmedNotification = MOCK_NOTIFICATIONS.find((n) => n.status === 'CONFIRMED');
+    it("should show CONFIRMED badge with correct styling", async () => {
+      const confirmedNotification = MOCK_NOTIFICATIONS.find(
+        (n) => n.status === "CONFIRMED",
+      );
       (api.listNotifications as any).mockResolvedValue([confirmedNotification]);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(confirmedNotification!.title)).toBeInTheDocument();
+        expect(
+          screen.getByText(confirmedNotification!.title),
+        ).toBeInTheDocument();
       });
     });
 
-    it('should show PENDING badge with correct styling', async () => {
-      const pendingNotification = MOCK_NOTIFICATIONS.find((n) => n.status === 'PENDING');
+    it("should show PENDING badge with correct styling", async () => {
+      const pendingNotification = MOCK_NOTIFICATIONS.find(
+        (n) => n.status === "PENDING",
+      );
       (api.listNotifications as any).mockResolvedValue([pendingNotification]);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(pendingNotification!.title)).toBeInTheDocument();
+        expect(
+          screen.getByText(pendingNotification!.title),
+        ).toBeInTheDocument();
       });
     });
 
-    it('should show REJECTED badge with correct styling', async () => {
-      const rejectedNotification = MOCK_NOTIFICATIONS.find((n) => n.status === 'REJECTED');
+    it("should show REJECTED badge with correct styling", async () => {
+      const rejectedNotification = MOCK_NOTIFICATIONS.find(
+        (n) => n.status === "REJECTED",
+      );
       (api.listNotifications as any).mockResolvedValue([rejectedNotification]);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(rejectedNotification!.title)).toBeInTheDocument();
+        expect(
+          screen.getByText(rejectedNotification!.title),
+        ).toBeInTheDocument();
       });
     });
   });
 
-  describe('Unread Indicator', () => {
-    it('should highlight unread notifications', async () => {
+  describe("Unread Indicator", () => {
+    it("should highlight unread notifications", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       const { container } = render(<Notifications />);
 
@@ -220,20 +248,20 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should show visual indicator for unread notifications', async () => {
+    it("should show visual indicator for unread notifications", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       const { container } = render(<Notifications />);
 
       await waitFor(() => {
         // Unread notifications should have a visual indicator (left border)
-        const indicators = container.querySelectorAll('.absolute');
+        const indicators = container.querySelectorAll(".absolute");
         expect(indicators.length).toBeGreaterThan(0);
       });
     });
   });
 
-  describe('Mark as Read Functionality', () => {
-    it('should call markNotificationRead when clicking notification', async () => {
+  describe("Mark as Read Functionality", () => {
+    it("should call markNotificationRead when clicking notification", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       (api.markNotificationRead as any).mockResolvedValue(true);
 
@@ -246,35 +274,37 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should update notification read status in UI', async () => {
-      const notifications = [
-        { ...MOCK_NOTIFICATIONS[0], isRead: false },
-      ];
+    it("should update notification read status in UI", async () => {
+      const notifications = [{ ...MOCK_NOTIFICATIONS[0], isRead: false }];
       (api.listNotifications as any).mockResolvedValue(notifications);
       (api.markNotificationRead as any).mockResolvedValue(true);
 
       const { rerender } = render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(MOCK_NOTIFICATIONS[0].title)).toBeInTheDocument();
+        expect(
+          screen.getByText(MOCK_NOTIFICATIONS[0].title),
+        ).toBeInTheDocument();
       });
     });
   });
 
-  describe('Sorting and Organization', () => {
-    it('should sort notifications by date (newest first)', async () => {
+  describe("Sorting and Organization", () => {
+    it("should sort notifications by date (newest first)", async () => {
       const sortedNotifications = [...MOCK_NOTIFICATIONS].sort(
-        (a, b) => new Date(b.when).getTime() - new Date(a.when).getTime()
+        (a, b) => new Date(b.when).getTime() - new Date(a.when).getTime(),
       );
       (api.listNotifications as any).mockResolvedValue(sortedNotifications);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(sortedNotifications[0].title)).toBeInTheDocument();
+        expect(
+          screen.getByText(sortedNotifications[0].title),
+        ).toBeInTheDocument();
       });
     });
 
-    it('should maintain notification order', async () => {
+    it("should maintain notification order", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       const { container } = render(<Notifications />);
 
@@ -287,8 +317,8 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Mark All as Read Button', () => {
-    it('should display mark all as read button', async () => {
+  describe("Mark All as Read Button", () => {
+    it("should display mark all as read button", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -297,7 +327,7 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should be clickable', async () => {
+    it("should be clickable", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -308,9 +338,11 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Notification Types Display', () => {
-    it('should display SSR notifications correctly', async () => {
-      const ssrNotifications = MOCK_NOTIFICATIONS.filter((n) => n.type === 'INFO');
+  describe("Notification Types Display", () => {
+    it("should display SSR notifications correctly", async () => {
+      const ssrNotifications = MOCK_NOTIFICATIONS.filter(
+        (n) => n.type === "INFO",
+      );
       (api.listNotifications as any).mockResolvedValue(ssrNotifications);
       render(<Notifications />);
 
@@ -321,9 +353,13 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should display CONFIRMATION notifications correctly', async () => {
-      const confirmationNotifications = MOCK_NOTIFICATIONS.filter((n) => n.type === 'SUCCESS');
-      (api.listNotifications as any).mockResolvedValue(confirmationNotifications);
+    it("should display CONFIRMATION notifications correctly", async () => {
+      const confirmationNotifications = MOCK_NOTIFICATIONS.filter(
+        (n) => n.type === "SUCCESS",
+      );
+      (api.listNotifications as any).mockResolvedValue(
+        confirmationNotifications,
+      );
       render(<Notifications />);
 
       await waitFor(() => {
@@ -333,8 +369,10 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should display ITINERARY_CHANGE notifications correctly', async () => {
-      const itineraryNotifications = MOCK_NOTIFICATIONS.filter((n) => n.type === 'INFO');
+    it("should display ITINERARY_CHANGE notifications correctly", async () => {
+      const itineraryNotifications = MOCK_NOTIFICATIONS.filter(
+        (n) => n.type === "INFO",
+      );
       (api.listNotifications as any).mockResolvedValue(itineraryNotifications);
       render(<Notifications />);
 
@@ -345,8 +383,10 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should display AMENDMENT notifications correctly', async () => {
-      const amendmentNotifications = MOCK_NOTIFICATIONS.filter((n) => n.type === 'WARNING');
+    it("should display AMENDMENT notifications correctly", async () => {
+      const amendmentNotifications = MOCK_NOTIFICATIONS.filter(
+        (n) => n.type === "WARNING",
+      );
       (api.listNotifications as any).mockResolvedValue(amendmentNotifications);
       render(<Notifications />);
 
@@ -358,8 +398,8 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Pagination', () => {
-    it('should handle large number of notifications', async () => {
+  describe("Pagination", () => {
+    it("should handle large number of notifications", async () => {
       const manyNotifications = Array.from({ length: 100 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
@@ -369,46 +409,46 @@ describe('Notifications Page', () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
       });
     });
   });
 
-  describe('Accessibility', () => {
-    it('should have proper heading hierarchy', async () => {
+  describe("Accessibility", () => {
+    it("should have proper heading hierarchy", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        const heading = screen.getByRole('heading', { level: 1 });
-        expect(heading.textContent).toContain('Notifications');
+        const heading = screen.getByRole("heading", { level: 1 });
+        expect(heading.textContent).toContain("Notifications");
       });
     });
 
-    it('should have accessible buttons', async () => {
+    it("should have accessible buttons", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        const buttons = screen.getAllByRole('button');
+        const buttons = screen.getAllByRole("button");
         expect(buttons.length).toBeGreaterThan(0);
       });
     });
 
-    it('should have descriptive page text', async () => {
+    it("should have descriptive page text", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
         expect(
-          screen.getByText(/Personalized alerts about your trips/i)
+          screen.getByText(/Personalized alerts about your trips/i),
         ).toBeInTheDocument();
       });
     });
   });
 
-  describe('Performance', () => {
-    it('should render 50+ notifications without performance issues', async () => {
+  describe("Performance", () => {
+    it("should render 50+ notifications without performance issues", async () => {
       const manyNotifications = Array.from({ length: 50 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[i % MOCK_NOTIFICATIONS.length],
         id: `notif-${i}`,
@@ -423,10 +463,10 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle API fetch errors', async () => {
+  describe("Error Handling", () => {
+    it("should handle API fetch errors", async () => {
       (api.listNotifications as any).mockRejectedValue(
-        new Error('Network error')
+        new Error("Network error"),
       );
       render(<Notifications />);
 
@@ -435,9 +475,9 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should recover from errors', async () => {
+    it("should recover from errors", async () => {
       (api.listNotifications as any)
-        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error("Network error"))
         .mockResolvedValueOnce(MOCK_NOTIFICATIONS);
 
       const { rerender } = render(<Notifications />);
@@ -459,8 +499,8 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('User Interactions', () => {
-    it('should be clickable to view details', async () => {
+  describe("User Interactions", () => {
+    it("should be clickable to view details", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -471,57 +511,30 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should handle rapid clicks', async () => {
+    it("should handle rapid clicks", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       (api.markNotificationRead as any).mockResolvedValue(true);
       render(<Notifications />);
 
       await waitFor(() => {
         const notification = screen.getByText(MOCK_NOTIFICATIONS[0].title);
-        
+
         // Rapid clicks
         fireEvent.click(notification);
         fireEvent.click(notification);
         fireEvent.click(notification);
-        
+
         // Should not cause errors
         expect(api.markNotificationRead).toHaveBeenCalled();
       });
     });
   });
 
-  describe('Filtering Notifications', () => {
-    it('should filter notifications by type', async () => {
-      const typeFilter = 'SUCCESS';
-      const filteredNotifications = MOCK_NOTIFICATIONS.filter((n) => n.type === typeFilter);
-      (api.listNotifications as any).mockResolvedValue(filteredNotifications);
-      render(<Notifications />);
-
-      await waitFor(() => {
-        filteredNotifications.forEach((n) => {
-          expect(screen.getByText(n.title)).toBeInTheDocument();
-        });
-      });
-    });
-
-    it('should filter notifications by status', async () => {
-      const statusFilter = 'CONFIRMED';
-      const filteredNotifications = MOCK_NOTIFICATIONS.filter((n) => n.status === statusFilter);
-      (api.listNotifications as any).mockResolvedValue(filteredNotifications);
-      render(<Notifications />);
-
-      await waitFor(() => {
-        filteredNotifications.forEach((n) => {
-          expect(screen.getByText(n.title)).toBeInTheDocument();
-        });
-      });
-    });
-
-    it('should support multiple filters (type + status)', async () => {
-      const typeFilter = 'SUCCESS';
-      const statusFilter = 'CONFIRMED';
+  describe("Filtering Notifications", () => {
+    it("should filter notifications by type", async () => {
+      const typeFilter = "SUCCESS";
       const filteredNotifications = MOCK_NOTIFICATIONS.filter(
-        (n) => n.type === typeFilter && n.status === statusFilter
+        (n) => n.type === typeFilter,
       );
       (api.listNotifications as any).mockResolvedValue(filteredNotifications);
       render(<Notifications />);
@@ -533,7 +546,38 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should clear filters and show all notifications', async () => {
+    it("should filter notifications by status", async () => {
+      const statusFilter = "CONFIRMED";
+      const filteredNotifications = MOCK_NOTIFICATIONS.filter(
+        (n) => n.status === statusFilter,
+      );
+      (api.listNotifications as any).mockResolvedValue(filteredNotifications);
+      render(<Notifications />);
+
+      await waitFor(() => {
+        filteredNotifications.forEach((n) => {
+          expect(screen.getByText(n.title)).toBeInTheDocument();
+        });
+      });
+    });
+
+    it("should support multiple filters (type + status)", async () => {
+      const typeFilter = "SUCCESS";
+      const statusFilter = "CONFIRMED";
+      const filteredNotifications = MOCK_NOTIFICATIONS.filter(
+        (n) => n.type === typeFilter && n.status === statusFilter,
+      );
+      (api.listNotifications as any).mockResolvedValue(filteredNotifications);
+      render(<Notifications />);
+
+      await waitFor(() => {
+        filteredNotifications.forEach((n) => {
+          expect(screen.getByText(n.title)).toBeInTheDocument();
+        });
+      });
+    });
+
+    it("should clear filters and show all notifications", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -544,7 +588,7 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should display empty state when no notifications match filter', async () => {
+    it("should display empty state when no notifications match filter", async () => {
       (api.listNotifications as any).mockResolvedValue([]);
       render(<Notifications />);
 
@@ -554,11 +598,11 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Search Functionality', () => {
-    it('should search notifications by title', async () => {
-      const searchTerm = 'Booking';
+  describe("Search Functionality", () => {
+    it("should search notifications by title", async () => {
+      const searchTerm = "Booking";
       const searchResults = MOCK_NOTIFICATIONS.filter((n) =>
-        n.title.toLowerCase().includes(searchTerm.toLowerCase())
+        n.title.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       (api.listNotifications as any).mockResolvedValue(searchResults);
       render(<Notifications />);
@@ -570,10 +614,10 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should search notifications by description', async () => {
-      const searchTerm = 'confirmed';
+    it("should search notifications by description", async () => {
+      const searchTerm = "confirmed";
       const searchResults = MOCK_NOTIFICATIONS.filter((n) =>
-        n.description.toLowerCase().includes(searchTerm.toLowerCase())
+        n.description.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       (api.listNotifications as any).mockResolvedValue(searchResults);
       render(<Notifications />);
@@ -585,7 +629,7 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should clear search results', async () => {
+    it("should clear search results", async () => {
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
@@ -596,7 +640,7 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should display empty state when no search results', async () => {
+    it("should display empty state when no search results", async () => {
       (api.listNotifications as any).mockResolvedValue([]);
       render(<Notifications />);
 
@@ -605,14 +649,14 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should combine search with filters', async () => {
-      const searchTerm = 'meal';
-      const typeFilter = 'INFO';
+    it("should combine search with filters", async () => {
+      const searchTerm = "meal";
+      const typeFilter = "INFO";
       const results = MOCK_NOTIFICATIONS.filter(
         (n) =>
           n.type === typeFilter &&
           (n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            n.description.toLowerCase().includes(searchTerm.toLowerCase()))
+            n.description.toLowerCase().includes(searchTerm.toLowerCase())),
       );
       (api.listNotifications as any).mockResolvedValue(results);
       render(<Notifications />);
@@ -624,23 +668,25 @@ describe('Notifications Page', () => {
       });
     });
 
-    it('should debounce search input', async () => {
+    it("should debounce search input", async () => {
       vi.useFakeTimers();
       (api.listNotifications as any).mockResolvedValue(MOCK_NOTIFICATIONS);
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(MOCK_NOTIFICATIONS[0].title)).toBeInTheDocument();
+        expect(
+          screen.getByText(MOCK_NOTIFICATIONS[0].title),
+        ).toBeInTheDocument();
       });
 
       vi.runAllTimers();
       vi.useRealTimers();
     });
 
-    it('should be case-insensitive', async () => {
-      const searchTerm = 'BOOKING';
+    it("should be case-insensitive", async () => {
+      const searchTerm = "BOOKING";
       const searchResults = MOCK_NOTIFICATIONS.filter((n) =>
-        n.title.toLowerCase().includes(searchTerm.toLowerCase())
+        n.title.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       (api.listNotifications as any).mockResolvedValue(searchResults);
       render(<Notifications />);
@@ -653,23 +699,25 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Pagination', () => {
-    it('should paginate notifications (10 per page by default)', async () => {
+  describe("Pagination", () => {
+    it("should paginate notifications (10 per page by default)", async () => {
       const manyNotifications = Array.from({ length: 50 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
         title: `Notification ${i}`,
       }));
-      (api.listNotifications as any).mockResolvedValue(manyNotifications.slice(0, 10));
+      (api.listNotifications as any).mockResolvedValue(
+        manyNotifications.slice(0, 10),
+      );
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
-        expect(screen.getByText('Notification 9')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
+        expect(screen.getByText("Notification 9")).toBeInTheDocument();
       });
     });
 
-    it('should navigate to next page', async () => {
+    it("should navigate to next page", async () => {
       const manyNotifications = Array.from({ length: 30 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
@@ -684,14 +732,14 @@ describe('Notifications Page', () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
       });
 
       // Click next button (if it exists)
       // This would need to be implemented in the component
     });
 
-    it('should navigate to previous page', async () => {
+    it("should navigate to previous page", async () => {
       const manyNotifications = Array.from({ length: 30 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
@@ -706,14 +754,14 @@ describe('Notifications Page', () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 10')).toBeInTheDocument();
+        expect(screen.getByText("Notification 10")).toBeInTheDocument();
       });
 
       // Click previous button (if it exists)
       // This would need to be implemented in the component
     });
 
-    it('should change page size', async () => {
+    it("should change page size", async () => {
       const manyNotifications = Array.from({ length: 100 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
@@ -728,68 +776,72 @@ describe('Notifications Page', () => {
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
       });
 
       // Change page size to 25
       // This would need to be implemented in the component
     });
 
-    it('should handle pagination with filters', async () => {
+    it("should handle pagination with filters", async () => {
       const manyNotifications = Array.from({ length: 50 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
         title: `Notification ${i}`,
-        type: i % 2 === 0 ? 'SUCCESS' : 'INFO',
+        type: i % 2 === 0 ? "SUCCESS" : "INFO",
       }));
 
-      const filtered = manyNotifications.filter((n) => n.type === 'SUCCESS');
+      const filtered = manyNotifications.filter((n) => n.type === "SUCCESS");
       (api.listNotifications as any).mockResolvedValue(filtered.slice(0, 10));
 
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
       });
     });
 
-    it('should handle pagination with search', async () => {
+    it("should handle pagination with search", async () => {
       const manyNotifications = Array.from({ length: 50 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
         title: `Notification ${i}`,
-        description: i < 25 ? 'booking' : 'other',
+        description: i < 25 ? "booking" : "other",
       }));
 
       const searchResults = manyNotifications.filter((n) =>
-        n.description.includes('booking')
+        n.description.includes("booking"),
       );
-      (api.listNotifications as any).mockResolvedValue(searchResults.slice(0, 10));
+      (api.listNotifications as any).mockResolvedValue(
+        searchResults.slice(0, 10),
+      );
 
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
       });
     });
 
-    it('should display page information', async () => {
+    it("should display page information", async () => {
       const manyNotifications = Array.from({ length: 50 }, (_, i) => ({
         ...MOCK_NOTIFICATIONS[0],
         id: `notif-${i}`,
         title: `Notification ${i}`,
       }));
 
-      (api.listNotifications as any).mockResolvedValue(manyNotifications.slice(0, 10));
+      (api.listNotifications as any).mockResolvedValue(
+        manyNotifications.slice(0, 10),
+      );
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText('Notification 0')).toBeInTheDocument();
+        expect(screen.getByText("Notification 0")).toBeInTheDocument();
       });
       // Page info would be displayed if implemented
     });
 
-    it('should handle empty results with pagination', async () => {
+    it("should handle empty results with pagination", async () => {
       (api.listNotifications as any).mockResolvedValue([]);
       render(<Notifications />);
 
@@ -799,15 +851,17 @@ describe('Notifications Page', () => {
     });
   });
 
-  describe('Real-time Updates', () => {
-    it('should reload notifications when needed', async () => {
+  describe("Real-time Updates", () => {
+    it("should reload notifications when needed", async () => {
       const initialNotifications = [MOCK_NOTIFICATIONS[0]];
       (api.listNotifications as any).mockResolvedValue(initialNotifications);
 
       render(<Notifications />);
 
       await waitFor(() => {
-        expect(screen.getByText(initialNotifications[0].title)).toBeInTheDocument();
+        expect(
+          screen.getByText(initialNotifications[0].title),
+        ).toBeInTheDocument();
       });
     });
   });

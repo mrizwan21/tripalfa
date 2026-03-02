@@ -16,6 +16,7 @@ build/
 *.log
 logs/
 *.log.*
+database/static-db/nohup.out
 
 # Runtime data
 pids

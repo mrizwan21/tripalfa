@@ -117,27 +117,27 @@ npm install @tripalfa/notifications
 
 ```typescript
 // In your service file
-import { initializeNotificationManager } from '@tripalfa/notifications';
-import pino from 'pino';
+import { initializeNotificationManager } from "@tripalfa/notifications";
+import pino from "pino";
 
 const logger = pino();
 
 export const notificationManager = initializeNotificationManager({
   logger,
   email: {
-    from: process.env.EMAIL_FROM || 'noreply@tripalfa.com',
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_SECURE === 'true',
+    from: process.env.EMAIL_FROM || "noreply@tripalfa.com",
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.EMAIL_PORT || "587"),
+    secure: process.env.EMAIL_SECURE === "true",
     auth: {
-      user: process.env.EMAIL_USER || '',
-      pass: process.env.EMAIL_PASS || '',
+      user: process.env.EMAIL_USER || "",
+      pass: process.env.EMAIL_PASS || "",
     },
   },
   sms: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
-    authToken: process.env.TWILIO_AUTH_TOKEN || '',
-    fromNumber: process.env.TWILIO_FROM_NUMBER || '',
+    accountSid: process.env.TWILIO_ACCOUNT_SID || "",
+    authToken: process.env.TWILIO_AUTH_TOKEN || "",
+    fromNumber: process.env.TWILIO_FROM_NUMBER || "",
   },
 });
 ```
@@ -145,45 +145,50 @@ export const notificationManager = initializeNotificationManager({
 ## 📊 Package Contents Summary
 
 ### Source Files
-| File | Lines | Purpose |
-|------|-------|---------|
-| `src/index.ts` | 60 | Main export & initialization helpers |
-| `src/types/index.ts` | 220 | 40+ type definitions |
-| `src/services/base.ts` | 150 | Abstract base service class |
-| `src/services/index.ts` | 250 | NotificationManager implementation |
-| `src/channels/index.ts` | 280 | 6 channel implementations |
-| `src/middleware/index.ts` | 190 | 6 middleware factories |
-| `src/utils/logger.ts` | 60 | Logger configuration |
 
-**Total Source Code: 1,210 lines**
+| File                      | Lines | Purpose                              |
+| ------------------------- | ----- | ------------------------------------ |
+| `src/index.ts`            | 60    | Main export & initialization helpers |
+| `src/types/index.ts`      | 220   | 40+ type definitions                 |
+| `src/services/base.ts`    | 150   | Abstract base service class          |
+| `src/services/index.ts`   | 250   | NotificationManager implementation   |
+| `src/channels/index.ts`   | 280   | 6 channel implementations            |
+| `src/middleware/index.ts` | 190   | 6 middleware factories               |
+| `src/utils/logger.ts`     | 60    | Logger configuration                 |
+
+#### Total Source Code: 1,210 lines
 
 ### Documentation
-| File | Lines | Content |
-|------|-------|---------|
-| `README.md` | 700 | Features, API, usage examples |
-| `INTEGRATION.md` | 400 | Integration guide, examples |
-| `SUMMARY.md` | 250 | Feature overview |
-| `SETUP.md` | 300 | This file |
 
-**Total Documentation: 1,650 lines**
+| File             | Lines | Content                       |
+| ---------------- | ----- | ----------------------------- |
+| `README.md`      | 700   | Features, API, usage examples |
+| `INTEGRATION.md` | 400   | Integration guide, examples   |
+| `SUMMARY.md`     | 250   | Feature overview              |
+| `SETUP.md`       | 300   | This file                     |
+
+#### Total Documentation: 1,650 lines
 
 ### Configuration Files
+
 - `package.json` - NPM configuration with all dependencies
 - `tsconfig.json` - TypeScript strict mode
 - `.eslintrc.json` - ESLint rules
 - `.gitignore` - Git configuration
 
-**Total: 13 files**
+#### Total: 13 files
 
 ## 🔌 Integration Checklist
 
 ### Pre-Integration
+
 - [ ] Review README.md (main documentation)
 - [ ] Review INTEGRATION.md (integration details)
 - [ ] Set up environment variables
 - [ ] Install dependencies (`npm install`)
 
 ### Service Integration (Each Service)
+
 - [ ] Import NotificationManager
 - [ ] Initialize with config
 - [ ] Register channels
@@ -192,6 +197,7 @@ export const notificationManager = initializeNotificationManager({
 - [ ] Add error handling
 
 ### API Integration
+
 - [ ] Create notification routes
 - [ ] Add authentication middleware
 - [ ] Add validation middleware
@@ -200,6 +206,7 @@ export const notificationManager = initializeNotificationManager({
 - [ ] Test endpoints
 
 ### WebSocket Integration (if needed)
+
 - [ ] Setup Socket.IO with package
 - [ ] Add authentication
 - [ ] Connect to NotificationManager
@@ -207,6 +214,7 @@ export const notificationManager = initializeNotificationManager({
 - [ ] Test real-time delivery
 
 ### Database Integration (optional)
+
 - [ ] Add Prisma schema
 - [ ] Run migrations
 - [ ] Extend BaseNotificationService
@@ -214,6 +222,7 @@ export const notificationManager = initializeNotificationManager({
 - [ ] Test data storage
 
 ### Testing
+
 - [ ] Unit tests with NullChannel
 - [ ] Integration tests
 - [ ] End-to-end tests
@@ -223,6 +232,7 @@ export const notificationManager = initializeNotificationManager({
 ## 🛠️ Build & Development
 
 ### Development Mode
+
 ```bash
 # Watch mode - recompile on changes
 npm run dev --workspace=@tripalfa/notifications
@@ -233,6 +243,7 @@ npm run dev
 ```
 
 ### Build for Production
+
 ```bash
 # Build the package
 npm run build --workspace=@tripalfa/notifications
@@ -243,6 +254,7 @@ npm run build
 ```
 
 ### Linting
+
 ```bash
 # Lint the package
 npm run lint --workspace=@tripalfa/notifications
@@ -254,57 +266,64 @@ npm run lint:fix --workspace=@tripalfa/notifications
 ## 📦 Exports & Usage
 
 ### Main Export (NotificationManager)
+
 ```typescript
-import { NotificationManager } from '@tripalfa/notifications';
+import { NotificationManager } from "@tripalfa/notifications";
 ```
 
 ### Channel Implementations
+
 ```typescript
-import { 
-  EmailChannel, 
-  SMSChannel, 
-  PushNotificationChannel, 
+import {
+  EmailChannel,
+  SMSChannel,
+  PushNotificationChannel,
   InAppNotificationChannel,
-  NullChannel 
-} from '@tripalfa/notifications';
+  NullChannel,
+} from "@tripalfa/notifications";
 ```
 
 ### Type Definitions
+
 ```typescript
-import { 
+import {
   Notification,
   NotificationPayload,
   NotificationPreferences,
   NotificationChannel,
   NotificationType,
-  NotificationStatus
-} from '@tripalfa/notifications';
+  NotificationStatus,
+} from "@tripalfa/notifications";
 ```
 
 ### Middleware
+
 ```typescript
 import {
   createAuthMiddleware,
   createAuthorizationMiddleware,
   createErrorHandler,
   validateNotificationPayload,
-  createRateLimitMiddleware
-} from '@tripalfa/notifications';
+  createRateLimitMiddleware,
+} from "@tripalfa/notifications";
 ```
 
 ### Utilities
+
 ```typescript
-import { createLogger } from '@tripalfa/notifications';
+import { createLogger } from "@tripalfa/notifications";
 ```
 
 ### Initialization Helper
+
 ```typescript
-import { initializeNotificationManager } from '@tripalfa/notifications';
+import { initializeNotificationManager } from "@tripalfa/notifications";
 ```
 
 ## 🔍 Key Files Reference
 
 ### Must Read (In Order)
+
 1. **README.md** - Start here
 2. **INTEGRATION.md** - Detailed guide
 3. **src/types/index.ts** - Type definitions
@@ -312,6 +331,7 @@ import { initializeNotificationManager } from '@tripalfa/notifications';
 5. **src/channels/index.ts** - Channel implementations
 
 ### Reference When Needed
+
 - **src/middleware/index.ts** - Middleware implementations
 - **SUMMARY.md** - Quick feature reference
 - **NOTIFICATION_BACKEND_COMPILATION.md** - Architecture deep-dive
@@ -319,12 +339,14 @@ import { initializeNotificationManager } from '@tripalfa/notifications';
 ## ✅ Validation Checklist After Integration
 
 ### Configuration
+
 - [ ] Environment variables set
 - [ ] Email credentials valid
 - [ ] SMS/Twilio credentials valid
 - [ ] Logger configured
 
 ### Functionality
+
 - [ ] Can send notifications
 - [ ] Channels work correctly
 - [ ] Preferences respected
@@ -333,6 +355,7 @@ import { initializeNotificationManager } from '@tripalfa/notifications';
 - [ ] WebSocket delivery works (if integrated)
 
 ### Quality
+
 - [ ] TypeScript strict mode passes
 - [ ] ESLint passes
 - [ ] Unit tests pass
@@ -343,30 +366,39 @@ import { initializeNotificationManager } from '@tripalfa/notifications';
 ## 🚨 Troubleshooting
 
 ### Issue: Module not found
+
 ```
 Error: Cannot find module '@tripalfa/notifications'
 ```
+
 **Solution:** Run `npm install` to ensure package is installed
 
 ### Issue: TypeScript errors
-```
+
+```text
 ERROR: Type 'X' is not assignable to type 'Y'
 ```
+
 **Solution:** Check type imports, ensure using correct types from `@tripalfa/notifications`
 
 ### Issue: Channel not registered
-```
+
+```bash
 Error: Channel [channelType] not configured
 ```
+
 **Solution:** Make sure to call `manager.registerChannel(...)` before sending
 
 ### Issue: Environment variables not loaded
+
 **Solution:** Ensure `.env` file exists and is readable. Check `.gitignore` includes `.env`
 
 ### Issue: Email not sending
+
 **Solution:** Verify SMTP credentials, check firewall, review email logs
 
 ### Issue: SMS not delivering
+
 **Solution:** Verify Twilio account balance, check phone number format
 
 ## 📈 Performance Characteristics
@@ -380,6 +412,7 @@ Error: Channel [channelType] not configured
 ## 🔐 Security Considerations
 
 ✅ **Implemented**
+
 - JWT authentication middleware
 - Role-based authorization
 - Input validation
@@ -388,6 +421,7 @@ Error: Channel [channelType] not configured
 - Structured logging
 
 **To Implement**
+
 - HTTPS enforcement
 - CORS configuration
 - Database encryption
@@ -398,7 +432,7 @@ Error: Channel [channelType] not configured
 
 - **Repository**: TripAlfa monorepo
 - **Package Location**: `packages/notifications`
-- **Contact**: dev-team@tripalfa.com
+- **Contact**: <dev-team@tripalfa.com>
 - **Documentation**: See `README.md`, `INTEGRATION.md`, `SUMMARY.md`
 
 ## 🎯 Success Criteria
@@ -414,21 +448,24 @@ The integration is successful when:
 ✅ Database persists notifications (if using)  
 ✅ Monitoring shows expected statistics  
 ✅ No performance degradation  
-✅ Error handling works smoothly  
+✅ Error handling works smoothly
 
 ## 📋 Project Timeline
 
 ### Week 1
+
 - Day 1-2: Integration with booking-service
 - Day 3-4: Integration with api-gateway
 - Day 5: Testing and bugfixes
 
 ### Week 2
+
 - Day 1: Database integration (Prisma)
 - Day 2-3: WebSocket setup
 - Day 4-5: Testing & monitoring
 
 ### Week 3+
+
 - Optimization
 - Performance tuning
 - Production deployment
@@ -461,38 +498,44 @@ The integration is successful when:
 
 ```typescript
 // 1. Import
-import { initializeNotificationManager } from '@tripalfa/notifications';
+import { initializeNotificationManager } from "@tripalfa/notifications";
 
 // 2. Initialize
 const manager = initializeNotificationManager({
-  email: { /* config */ },
-  sms: { /* config */ },
-  push: { /* config */ },
+  email: {
+    /* config */
+  },
+  sms: {
+    /* config */
+  },
+  push: {
+    /* config */
+  },
 });
 
 // 3. Send notification
 const id = await manager.sendNotification({
-  userId: 'user-123',
-  type: 'booking_confirmed',
-  title: 'Booking Confirmed',
-  message: 'Your booking is confirmed',
-  channels: ['email', 'push', 'in_app'],
-  priority: 'high',
+  userId: "user-123",
+  type: "booking_confirmed",
+  title: "Booking Confirmed",
+  message: "Your booking is confirmed",
+  channels: ["email", "push", "in_app"],
+  priority: "high",
 });
 
 // 4. Get preferences
-const prefs = await manager.getPreferences('user-123');
+const prefs = await manager.getPreferences("user-123");
 
 // 5. Update preferences
-await manager.updatePreferences('user-123', {
+await manager.updatePreferences("user-123", {
   emailEnabled: true,
   smsEnabled: false,
 });
 
 // 6. View statistics
 const stats = manager.getStats();
-console.log('Total notifications:', stats.totalNotifications);
-console.log('Failure rate:', stats.failureRate + '%');
+console.log("Total notifications:", stats.totalNotifications);
+console.log("Failure rate:", stats.failureRate + "%");
 ```
 
 ---

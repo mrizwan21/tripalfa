@@ -3,20 +3,24 @@
  * Displays available ancillary services during booking flow
  */
 
-import React, { useState, useEffect } from 'react';
-import './AncillaryServices.css';
+import React, { useState, useEffect } from "react";
+import "./AncillaryServices.css";
 import ancillaryServicesApi, {
   Service,
   ServiceSelection,
   ServiceCategory,
-  ServiceType
-} from '../services/ancillaryServicesApi';
+  ServiceType,
+} from "../services/ancillaryServicesApi";
+import { Button } from "./ui/button";
 
 interface AncillaryServicesProps {
   offerId?: string;
   orderId?: string;
-  mode: 'booking' | 'post-booking';
-  onServicesSelected?: (services: ServiceSelection[], totalAmount: string) => void;
+  mode: "booking" | "post-booking";
+  onServicesSelected?: (
+    services: ServiceSelection[],
+    totalAmount: string,
+  ) => void;
   onClose?: () => void;
 }
 
@@ -25,16 +29,20 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
   orderId,
   mode,
   onServicesSelected,
-  onClose
+  onClose,
 }) => {
   const [services, setServices] = useState<Service[]>([]);
   const [categories, setCategories] = useState<ServiceCategory[]>([]);
-  const [selectedServices, setSelectedServices] = useState<Map<string, ServiceSelection>>(new Map());
-  const [selectedCategory, setSelectedCategory] = useState<ServiceType | 'all'>('all');
+  const [selectedServices, setSelectedServices] = useState<
+    Map<string, ServiceSelection>
+  >(new Map());
+  const [selectedCategory, setSelectedCategory] = useState<ServiceType | "all">(
+    "all",
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [totalAmount, setTotalAmount] = useState('0.00');
-  const [currency, setCurrency] = useState('GBP');
+  const [totalAmount, setTotalAmount] = useState("0.00");
+  const [currency, setCurrency] = useState("GBP");
 
   // Fetch available services on component mount
   useEffect(() => {
@@ -47,21 +55,22 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
       setError(null);
 
       let response;
-      if (mode === 'booking' && offerId) {
+      if (mode === "booking" && offerId) {
         response = await ancillaryServicesApi.getServicesForBooking(offerId);
-      } else if (mode === 'post-booking' && orderId) {
+      } else if (mode === "post-booking" && orderId) {
         response = await ancillaryServicesApi.getServicesForOrder(orderId);
       } else {
-        throw new Error('Invalid parameters for ancillary services');
+        throw new Error("Invalid parameters for ancillary services");
       }
 
       setServices(response.data.services);
-      
-      const fetchedCategories = await ancillaryServicesApi.getServiceCategories();
+
+      const fetchedCategories =
+        await ancillaryServicesApi.getServiceCategories();
       setCategories(fetchedCategories.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch services');
-      console.error('Error fetching ancillary services:', err);
+      setError(err instanceof Error ? err.message : "Failed to fetch services");
+      console.error("Error fetching ancillary services:", err);
     } finally {
       setLoading(false);
     }
@@ -75,7 +84,7 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
         id: service.id,
         quantity,
         passengerIds: service.passengerIds,
-        segmentIds: service.segmentIds
+        segmentIds: service.segmentIds,
       });
     } else {
       newSelected.delete(service.id);
@@ -88,9 +97,9 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
   const calculateTotal = (selected: Map<string, ServiceSelection>) => {
     let total = 0;
     selected.forEach((selection) => {
-      const service = services.find(s => s.id === selection.id);
+      const service = services.find((s) => s.id === selection.id);
       if (service) {
-        const serviceAmount = parseFloat(service.baseAmount || '0');
+        const serviceAmount = parseFloat(service.baseAmount || "0");
         total += serviceAmount * selection.quantity;
       }
     });
@@ -103,40 +112,48 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
       setLoading(true);
       const servicesArray = Array.from(selectedServices.values());
 
-      if (mode === 'booking' && offerId) {
-        const result = await ancillaryServicesApi.selectServicesForBooking(offerId, servicesArray);
+      if (mode === "booking" && offerId) {
+        const result = await ancillaryServicesApi.selectServicesForBooking(
+          offerId,
+          servicesArray,
+        );
         setCurrency(result.data.currency);
         setTotalAmount(result.data.totalAmount);
         onServicesSelected?.(servicesArray, result.data.totalAmount);
-      } else if (mode === 'post-booking' && orderId) {
-        const result = await ancillaryServicesApi.addServicesToOrder(orderId, servicesArray);
+      } else if (mode === "post-booking" && orderId) {
+        const result = await ancillaryServicesApi.addServicesToOrder(
+          orderId,
+          servicesArray,
+        );
         setCurrency(result.data.currency);
         setTotalAmount(result.data.totalAmount);
         onServicesSelected?.(servicesArray, result.data.totalAmount);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to confirm services');
-      console.error('Error confirming services:', err);
+      setError(
+        err instanceof Error ? err.message : "Failed to confirm services",
+      );
+      console.error("Error confirming services:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredServices =
-    selectedCategory === 'all'
+    selectedCategory === "all"
       ? services
-      : services.filter(s => s.type === selectedCategory);
+      : services.filter((s) => s.type === selectedCategory);
 
   const getCategoryIcon = (type: ServiceType): string => {
     const icons: Record<ServiceType, string> = {
-      baggage: '🧳',
-      meal: '🍽️',
-      seat: '💺',
-      special_request: '♿',
-      lounge: '✈️',
-      insurance: '🛡️'
+      baggage: "🧳",
+      meal: "🍽️",
+      seat: "💺",
+      special_request: "♿",
+      lounge: "✈️",
+      insurance: "🛡️",
     };
-    return icons[type] || '📦';
+    return icons[type] || "📦";
   };
 
   if (loading && services.length === 0) {
@@ -150,44 +167,53 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
   return (
     <div className="ancillary-services-container">
       <div className="ancillary-services-header">
-        <h2>{mode === 'booking' ? 'Add Services' : 'Manage Services'}</h2>
+        <h2>{mode === "booking" ? "Add Services" : "Manage Services"}</h2>
         {onClose && (
-          <button className="close-btn" onClick={onClose}>
+          <Button
+            variant="outline"
+            size="md"
+            className="close-btn"
+            onClick={onClose}
+          >
             ✕
-          </button>
+          </Button>
         )}
       </div>
 
-      {error && (
-        <div className="error-message">{error}</div>
-      )}
+      {error && <div className="error-message">{error}</div>}
 
       {/* Category Filter */}
       <div className="category-filter">
-        <button
-          className={`category-btn ${selectedCategory === 'all' ? 'active' : ''}`}
-          onClick={() => setSelectedCategory('all')}
+        <Button
+          variant="outline"
+          size="md"
+          className={`category-btn ${selectedCategory === "all" ? "active" : ""}`}
+          onClick={() => setSelectedCategory("all")}
         >
           All Services
-        </button>
-        {categories.map(cat => (
-          <button
+        </Button>
+        {categories.map((cat) => (
+          <Button
+            variant="outline"
+            size="md"
             key={cat.type}
-            className={`category-btn ${selectedCategory === cat.type ? 'active' : ''}`}
+            className={`category-btn ${selectedCategory === cat.type ? "active" : ""}`}
             onClick={() => setSelectedCategory(cat.type)}
           >
             <span className="icon">{getCategoryIcon(cat.type)}</span>
             <span className="name">{cat.name}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Services List */}
       <div className="services-list">
         {filteredServices.length === 0 ? (
-          <div className="no-services">No services available in this category</div>
+          <div className="no-services">
+            No services available in this category
+          </div>
         ) : (
-          filteredServices.map(service => {
+          filteredServices.map((service) => {
             const selected = selectedServices.get(service.id);
             const quantity = selected?.quantity || 0;
 
@@ -213,40 +239,52 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
 
                 <div className="service-actions">
                   <div className="quantity-selector">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="md"
                       className="qty-btn"
-                      onClick={() => handleServiceToggle(service, Math.max(0, quantity - 1))}
+                      onClick={() =>
+                        handleServiceToggle(service, Math.max(0, quantity - 1))
+                      }
                       disabled={quantity === 0}
                     >
                       −
-                    </button>
+                    </Button>
                     <input
                       type="number"
                       min="0"
                       max={service.maximumQuantity}
                       value={quantity}
-                      onChange={e => 
-                        handleServiceToggle(service, Math.min(
-                          parseInt(e.target.value) || 0,
-                          service.maximumQuantity
-                        ))
+                      onChange={(e) =>
+                        handleServiceToggle(
+                          service,
+                          Math.min(
+                            parseInt(e.target.value) || 0,
+                            service.maximumQuantity,
+                          ),
+                        )
                       }
                       className="qty-input"
                     />
-                    <button
+                    <Button
+                      variant="outline"
+                      size="md"
                       className="qty-btn"
-                      onClick={() => handleServiceToggle(service, Math.min(
-                        quantity + 1,
-                        service.maximumQuantity
-                      ))}
+                      onClick={() =>
+                        handleServiceToggle(
+                          service,
+                          Math.min(quantity + 1, service.maximumQuantity),
+                        )
+                      }
                       disabled={quantity >= service.maximumQuantity}
                     >
                       +
-                    </button>
+                    </Button>
                   </div>
                   {quantity > 0 && (
                     <div className="service-total">
-                      {currency} {(parseFloat(service.baseAmount) * quantity).toFixed(2)}
+                      {currency}{" "}
+                      {(parseFloat(service.baseAmount) * quantity).toFixed(2)}
                     </div>
                   )}
                 </div>
@@ -265,7 +303,9 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
           </div>
           <div className="summary-row total">
             <span>Total Amount:</span>
-            <span>{currency} {totalAmount}</span>
+            <span>
+              {currency} {totalAmount}
+            </span>
           </div>
         </div>
       )}
@@ -273,21 +313,25 @@ export const AncillaryServices: React.FC<AncillaryServicesProps> = ({
       {/* Actions */}
       <div className="actions">
         {onClose && (
-          <button
+          <Button
+            variant="outline"
+            size="md"
             className="btn btn-secondary"
             onClick={onClose}
             disabled={loading}
           >
             Cancel
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant="outline"
+          size="md"
           className="btn btn-primary"
           onClick={handleConfirm}
           disabled={selectedServices.size === 0 || loading}
         >
-          {loading ? 'Processing...' : 'Confirm Services'}
-        </button>
+          {loading ? "Processing..." : "Confirm Services"}
+        </Button>
       </div>
     </div>
   );

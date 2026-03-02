@@ -1,38 +1,50 @@
 // Gateway API Service Layer
 // Handles all API Gateway configuration and management operations
 
-import { APIManager } from './APIManager'
-import {
-  SupplierAPIGateway,
-  SupplierAPIGatewayFormData,
-  GatewayTestResponse,
-  GatewayListResponse,
-  SupplierAPIGatewayResponse,
-  GatewayEndpointsResponse,
-  GatewayHealthCheckResult,
-  CredentialValidation,
-  GatewayMetrics,
-  GatewayAlert,
-} from './types-gateway'
-import { ApiResponse } from './types'
-import { APIEndpoint } from './types-gateway'
+import { APIManager } from "./APIManager";
 
-const apiManager = APIManager.getInstance()
+type ApiResponse<T = any> = {
+  success: boolean;
+  data?: T;
+  error?: any;
+  message?: string;
+};
+
+type SupplierAPIGateway = Record<string, any>;
+type SupplierAPIGatewayFormData = Record<string, any>;
+type GatewayTestResponse = Record<string, any>;
+type GatewayListResponse = Record<string, any>;
+type SupplierAPIGatewayResponse = Record<string, any>;
+type GatewayEndpointsResponse = Record<string, any>;
+type GatewayHealthCheckResult = Record<string, any>;
+type CredentialValidation = Record<string, any>;
+type GatewayMetrics = Record<string, any>;
+type GatewayAlert = Record<string, any>;
+
+type APIEndpoint = {
+  id?: string;
+  method?: string;
+  path?: string;
+  description?: string;
+  [key: string]: any;
+};
+
+const apiManager = APIManager.getInstance();
 
 // ============================================================================
 // GATEWAY MODULE DEFINITION
 // ============================================================================
 
 const GATEWAY_MODULE = {
-  name: 'gateway',
-  baseURL: '/api/suppliers', // Will be appended with {supplierId}/gateway
-  version: 'v1',
+  name: "gateway",
+  baseURL: "/api/suppliers", // Will be appended with {supplierId}/gateway
+  version: "v1",
   endpoints: {
     // List Gateways
     listGateways: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways',
-      description: 'List all API gateways for a supplier',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways",
+      description: "List all API gateways for a supplier",
       cache: {
         enabled: true,
         ttl: 300000,
@@ -42,9 +54,9 @@ const GATEWAY_MODULE = {
 
     // Get Gateway Detail
     getGateway: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}',
-      description: 'Get detailed API gateway configuration',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}",
+      description: "Get detailed API gateway configuration",
       cache: {
         enabled: true,
         ttl: 300000,
@@ -54,9 +66,9 @@ const GATEWAY_MODULE = {
 
     // Create Gateway
     createGateway: {
-      method: 'POST' as const,
-      path: '/api/suppliers/{supplierId}/gateways',
-      description: 'Create new API gateway configuration',
+      method: "POST" as const,
+      path: "/api/suppliers/{supplierId}/gateways",
+      description: "Create new API gateway configuration",
       cache: {
         enabled: false,
       },
@@ -65,9 +77,9 @@ const GATEWAY_MODULE = {
 
     // Update Gateway
     updateGateway: {
-      method: 'PUT' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}',
-      description: 'Update API gateway configuration',
+      method: "PUT" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}",
+      description: "Update API gateway configuration",
       cache: {
         enabled: false,
       },
@@ -76,9 +88,9 @@ const GATEWAY_MODULE = {
 
     // Delete Gateway
     deleteGateway: {
-      method: 'DELETE' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}',
-      description: 'Delete API gateway configuration',
+      method: "DELETE" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}",
+      description: "Delete API gateway configuration",
       cache: {
         enabled: false,
       },
@@ -87,9 +99,9 @@ const GATEWAY_MODULE = {
 
     // Test Credentials
     testCredentials: {
-      method: 'POST' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/test-credentials',
-      description: 'Validate API credentials',
+      method: "POST" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/test-credentials",
+      description: "Validate API credentials",
       cache: {
         enabled: false,
       },
@@ -98,9 +110,9 @@ const GATEWAY_MODULE = {
 
     // Test Endpoint
     testEndpoint: {
-      method: 'POST' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/test-endpoint',
-      description: 'Test a specific API endpoint',
+      method: "POST" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/test-endpoint",
+      description: "Test a specific API endpoint",
       cache: {
         enabled: false,
       },
@@ -110,9 +122,9 @@ const GATEWAY_MODULE = {
 
     // Full Gateway Test
     testGateway: {
-      method: 'POST' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/test',
-      description: 'Run full gateway health check',
+      method: "POST" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/test",
+      description: "Run full gateway health check",
       cache: {
         enabled: false,
       },
@@ -122,9 +134,9 @@ const GATEWAY_MODULE = {
 
     // Get Gateway Endpoints
     getGatewayEndpoints: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints',
-      description: 'Get all endpoints for a gateway',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints",
+      description: "Get all endpoints for a gateway",
       cache: {
         enabled: true,
         ttl: 300000,
@@ -134,9 +146,9 @@ const GATEWAY_MODULE = {
 
     // Add Endpoint to Gateway
     addGatewayEndpoint: {
-      method: 'POST' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints',
-      description: 'Add a new endpoint to gateway configuration',
+      method: "POST" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints",
+      description: "Add a new endpoint to gateway configuration",
       cache: {
         enabled: false,
       },
@@ -145,9 +157,9 @@ const GATEWAY_MODULE = {
 
     // Update Endpoint
     updateGatewayEndpoint: {
-      method: 'PUT' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints/{endpointId}',
-      description: 'Update gateway endpoint configuration',
+      method: "PUT" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints/{endpointId}",
+      description: "Update gateway endpoint configuration",
       cache: {
         enabled: false,
       },
@@ -156,9 +168,9 @@ const GATEWAY_MODULE = {
 
     // Delete Endpoint
     deleteGatewayEndpoint: {
-      method: 'DELETE' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints/{endpointId}',
-      description: 'Delete gateway endpoint',
+      method: "DELETE" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/endpoints/{endpointId}",
+      description: "Delete gateway endpoint",
       cache: {
         enabled: false,
       },
@@ -167,9 +179,9 @@ const GATEWAY_MODULE = {
 
     // Get Gateway Metrics
     getGatewayMetrics: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/metrics',
-      description: 'Get gateway usage and performance metrics',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/metrics",
+      description: "Get gateway usage and performance metrics",
       cache: {
         enabled: true,
         ttl: 60000,
@@ -179,9 +191,9 @@ const GATEWAY_MODULE = {
 
     // Get Gateway Health
     getGatewayHealth: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/health',
-      description: 'Get gateway health status',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/health",
+      description: "Get gateway health status",
       cache: {
         enabled: true,
         ttl: 60000,
@@ -191,9 +203,9 @@ const GATEWAY_MODULE = {
 
     // Get Gateway Alerts
     getGatewayAlerts: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/alerts',
-      description: 'Get active alerts for gateway',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/alerts",
+      description: "Get active alerts for gateway",
       cache: {
         enabled: true,
         ttl: 30000,
@@ -203,9 +215,9 @@ const GATEWAY_MODULE = {
 
     // Get Product-Specific Configuration
     getProductGatewayConfig: {
-      method: 'GET' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/products/{productId}',
-      description: 'Get product-specific gateway configuration',
+      method: "GET" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/products/{productId}",
+      description: "Get product-specific gateway configuration",
       cache: {
         enabled: true,
         ttl: 300000,
@@ -215,19 +227,19 @@ const GATEWAY_MODULE = {
 
     // Update Product Configuration
     updateProductGatewayConfig: {
-      method: 'PUT' as const,
-      path: '/api/suppliers/{supplierId}/gateways/{gatewayId}/products/{productId}',
-      description: 'Update product-specific endpoint mappings',
+      method: "PUT" as const,
+      path: "/api/suppliers/{supplierId}/gateways/{gatewayId}/products/{productId}",
+      description: "Update product-specific endpoint mappings",
       cache: {
         enabled: false,
       },
       requiresAuth: true,
     },
   },
-}
+};
 
 // Register the module
-apiManager.registerModule(GATEWAY_MODULE)
+apiManager.registerModule(GATEWAY_MODULE);
 
 // ============================================================================
 // GATEWAY SERVICE CLASS
@@ -239,9 +251,9 @@ export class GatewayAPIService {
    */
   static async listGateways(
     supplierId: string,
-    params?: { page?: number; limit?: number }
+    params?: { page?: number; limit?: number },
   ): Promise<ApiResponse<GatewayListResponse>> {
-    return apiManager.get(`/api/suppliers/${supplierId}/gateways`, { params })
+    return apiManager.get(`/api/suppliers/${supplierId}/gateways`, { params });
   }
 
   /**
@@ -249,11 +261,9 @@ export class GatewayAPIService {
    */
   static async getGateway(
     supplierId: string,
-    gatewayId: string
+    gatewayId: string,
   ): Promise<ApiResponse<SupplierAPIGatewayResponse>> {
-    return apiManager.get(
-      `/api/suppliers/${supplierId}/gateways/${gatewayId}`
-    )
+    return apiManager.get(`/api/suppliers/${supplierId}/gateways/${gatewayId}`);
   }
 
   /**
@@ -261,9 +271,9 @@ export class GatewayAPIService {
    */
   static async createGateway(
     supplierId: string,
-    data: SupplierAPIGatewayFormData
+    data: SupplierAPIGatewayFormData,
   ): Promise<ApiResponse<SupplierAPIGateway>> {
-    return apiManager.post(`/api/suppliers/${supplierId}/gateways`, data)
+    return apiManager.post(`/api/suppliers/${supplierId}/gateways`, data);
   }
 
   /**
@@ -272,12 +282,12 @@ export class GatewayAPIService {
   static async updateGateway(
     supplierId: string,
     gatewayId: string,
-    data: Partial<SupplierAPIGatewayFormData>
+    data: Partial<SupplierAPIGatewayFormData>,
   ): Promise<ApiResponse<SupplierAPIGateway>> {
     return apiManager.put(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}`,
-      data
-    )
+      data,
+    );
   }
 
   /**
@@ -285,11 +295,11 @@ export class GatewayAPIService {
    */
   static async deleteGateway(
     supplierId: string,
-    gatewayId: string
+    gatewayId: string,
   ): Promise<ApiResponse<{ success: boolean }>> {
     return apiManager.delete(
-      `/api/suppliers/${supplierId}/gateways/${gatewayId}`
-    )
+      `/api/suppliers/${supplierId}/gateways/${gatewayId}`,
+    );
   }
 
   /**
@@ -297,12 +307,12 @@ export class GatewayAPIService {
    */
   static async testCredentials(
     supplierId: string,
-    gatewayId: string
+    gatewayId: string,
   ): Promise<ApiResponse<CredentialValidation>> {
     return apiManager.post(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/test-credentials`,
-      {}
-    )
+      {},
+    );
   }
 
   /**
@@ -312,12 +322,12 @@ export class GatewayAPIService {
     supplierId: string,
     gatewayId: string,
     endpointId: string,
-    testData?: any
+    testData?: any,
   ): Promise<ApiResponse<GatewayTestResponse>> {
     return apiManager.post(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/test-endpoint`,
-      { endpointId, testData }
-    )
+      { endpointId, testData },
+    );
   }
 
   /**
@@ -325,12 +335,12 @@ export class GatewayAPIService {
    */
   static async testGateway(
     supplierId: string,
-    gatewayId: string
+    gatewayId: string,
   ): Promise<ApiResponse<GatewayHealthCheckResult>> {
     return apiManager.post(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/test`,
-      {}
-    )
+      {},
+    );
   }
 
   /**
@@ -339,13 +349,13 @@ export class GatewayAPIService {
   static async getGatewayEndpoints(
     supplierId: string,
     gatewayId: string,
-    productId?: string
+    productId?: string,
   ): Promise<ApiResponse<GatewayEndpointsResponse>> {
     const url = productId
       ? `/api/suppliers/${supplierId}/gateways/${gatewayId}/products/${productId}`
-      : `/api/suppliers/${supplierId}/gateways/${gatewayId}/endpoints`
+      : `/api/suppliers/${supplierId}/gateways/${gatewayId}/endpoints`;
 
-    return apiManager.get(url)
+    return apiManager.get(url);
   }
 
   /**
@@ -354,12 +364,12 @@ export class GatewayAPIService {
   static async addGatewayEndpoint(
     supplierId: string,
     gatewayId: string,
-    endpoint: Omit<APIEndpoint, 'id'>
+    endpoint: Omit<APIEndpoint, "id">,
   ): Promise<ApiResponse<APIEndpoint>> {
     return apiManager.post(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/endpoints`,
-      endpoint
-    )
+      endpoint,
+    );
   }
 
   /**
@@ -369,12 +379,12 @@ export class GatewayAPIService {
     supplierId: string,
     gatewayId: string,
     endpointId: string,
-    data: Partial<APIEndpoint>
+    data: Partial<APIEndpoint>,
   ): Promise<ApiResponse<APIEndpoint>> {
     return apiManager.put(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/endpoints/${endpointId}`,
-      data
-    )
+      data,
+    );
   }
 
   /**
@@ -383,11 +393,11 @@ export class GatewayAPIService {
   static async deleteGatewayEndpoint(
     supplierId: string,
     gatewayId: string,
-    endpointId: string
+    endpointId: string,
   ): Promise<ApiResponse<{ success: boolean }>> {
     return apiManager.delete(
-      `/api/suppliers/${supplierId}/gateways/${gatewayId}/endpoints/${endpointId}`
-    )
+      `/api/suppliers/${supplierId}/gateways/${gatewayId}/endpoints/${endpointId}`,
+    );
   }
 
   /**
@@ -396,12 +406,12 @@ export class GatewayAPIService {
   static async getGatewayMetrics(
     supplierId: string,
     gatewayId: string,
-    period?: 'hour' | 'day' | 'week' | 'month'
+    period?: "hour" | "day" | "week" | "month",
   ): Promise<ApiResponse<GatewayMetrics>> {
     return apiManager.get(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/metrics`,
-      { params: { period } }
-    )
+      { params: { period } },
+    );
   }
 
   /**
@@ -409,11 +419,11 @@ export class GatewayAPIService {
    */
   static async getGatewayHealth(
     supplierId: string,
-    gatewayId: string
+    gatewayId: string,
   ): Promise<ApiResponse<GatewayHealthCheckResult>> {
     return apiManager.get(
-      `/api/suppliers/${supplierId}/gateways/${gatewayId}/health`
-    )
+      `/api/suppliers/${supplierId}/gateways/${gatewayId}/health`,
+    );
   }
 
   /**
@@ -421,11 +431,11 @@ export class GatewayAPIService {
    */
   static async getGatewayAlerts(
     supplierId: string,
-    gatewayId: string
+    gatewayId: string,
   ): Promise<ApiResponse<GatewayAlert[]>> {
     return apiManager.get(
-      `/api/suppliers/${supplierId}/gateways/${gatewayId}/alerts`
-    )
+      `/api/suppliers/${supplierId}/gateways/${gatewayId}/alerts`,
+    );
   }
 
   /**
@@ -434,11 +444,11 @@ export class GatewayAPIService {
   static async getProductGatewayConfig(
     supplierId: string,
     gatewayId: string,
-    productId: string
+    productId: string,
   ): Promise<ApiResponse<any>> {
     return apiManager.get(
-      `/api/suppliers/${supplierId}/gateways/${gatewayId}/products/${productId}`
-    )
+      `/api/suppliers/${supplierId}/gateways/${gatewayId}/products/${productId}`,
+    );
   }
 
   /**
@@ -448,12 +458,12 @@ export class GatewayAPIService {
     supplierId: string,
     gatewayId: string,
     productId: string,
-    config: any
+    config: any,
   ): Promise<ApiResponse<any>> {
     return apiManager.put(
       `/api/suppliers/${supplierId}/gateways/${gatewayId}/products/${productId}`,
-      config
-    )
+      config,
+    );
   }
 
   /**
@@ -461,22 +471,22 @@ export class GatewayAPIService {
    */
   static async clearGatewayCache(
     supplierId?: string,
-    gatewayId?: string
+    gatewayId?: string,
   ): Promise<void> {
     const cacheKeysToInvalidate = [
-      'gateways',
-      'gateway-detail',
-      'gateway-endpoints',
-      'gateway-metrics',
-      'gateway-health',
-      'gateway-alerts',
-      'product-gateway-config',
-    ]
+      "gateways",
+      "gateway-detail",
+      "gateway-endpoints",
+      "gateway-metrics",
+      "gateway-health",
+      "gateway-alerts",
+      "product-gateway-config",
+    ];
 
     cacheKeysToInvalidate.forEach((key) => {
-      apiManager.invalidateCache(key)
-    })
+      apiManager.invalidateCache(key);
+    });
   }
 }
 
-export default GatewayAPIService
+export default GatewayAPIService;

@@ -50,26 +50,31 @@ TripAlfa follows a modular, microservices-based architecture with the following 
 >
 > **Required Architecture:**
 >
-> - **NEON Cloud** for application data (`neondb`)
+> - **Neon (CLI-managed project/container)** for application data (`neondb`)
 > - **Local Docker Postgres** for static flight/hotel data (`staticdatabase`)
 
 ### Database Architecture
 
-| Database | Purpose | Services | Environment |
-| --- | --- | --- | --- |
-| **NEON** `neondb` | Application Data | API Gateway, Booking, Payment, User, KYC, Wallet, Notification, Organization, Marketing | Neon Cloud |
-| **Local Docker** `staticdatabase` | Static Reference Data | Booking/static lookup flows (flight, hotel, airports, etc.) | Local PostgreSQL (`postgres-static`) |
+Live verification matrix: [docs/operations/DATABASE_BUILD_STATUS_MATRIX.md](docs/operations/DATABASE_BUILD_STATUS_MATRIX.md)
 
-### NEON Project Details
+| Database                          | Purpose               | Services                                                                                | Environment                          |
+| --------------------------------- | --------------------- | --------------------------------------------------------------------------------------- | ------------------------------------ |
+| **Neon** `neondb`                 | Application Data      | API Gateway, Booking, Payment, User, KYC, Wallet, Notification, Organization, Marketing | Neon (via `neonctl`)                 |
+| **Local Docker** `staticdatabase` | Static Reference Data | Booking/static lookup flows (flight, hotel, airports, etc.)                             | Local PostgreSQL (`postgres-static`) |
 
-- **Project:** TripAlfa (curly-queen-75335750)
-- **Organization:** Cleen
-- **Region:** AWS US West 2
-- **PostgreSQL Version:** 17
-- **Compute:** Autoscaling (0.25 - 2 vCPU)
-- **Console:** [Neon Project Console](https://console.neon.tech/app/projects/curly-queen-75335750)
+### Neon Access (CLI First)
 
-> You can use Neon Cloud connection strings directly (from Neon dashboard) for local development.
+- Install and initialize Neon CLI:
+
+```bash
+brew install neonctl && neonctl init
+```
+
+- Use your Neon CLI/project output to set:
+  - `NEON_DATABASE_URL` (pooled endpoint)
+  - `DIRECT_NEON_DATABASE_URL` (direct endpoint)
+
+> Use Neon connection strings generated from your current Neon project/container setup.
 > MCP is optional and mainly useful for branch/schema/query workflows, not required for runtime DB connectivity.
 
 ### Quick Start (Neon + Local Static DB)
@@ -102,8 +107,8 @@ STATIC_DATABASE_URL=postgresql://postgres:postgres@postgres-static:5432/staticda
 
 **For setup & troubleshooting, see:**
 
-- 📖 [NEON Setup & Verification Guide](docs/NEON_SETUP_AND_VERIFICATION.md)
-- 📊 [NEON Deployment Status](docs/NEON_DEPLOYMENT_STATUS.md)
+- 📖 [Neon Setup & Verification Guide](docs/NEON_SETUP_AND_VERIFICATION.md)
+- 📊 [Neon Deployment Status](docs/NEON_DEPLOYMENT_STATUS.md)
 - ✅ [Deployment Verification Guide](docs/NEON_DEPLOYMENT_VERIFICATION.md)
 
 ---
@@ -137,10 +142,10 @@ packages/static-data/
 #### Usage
 
 ```typescript
-import { getAirports, getCurrencies } from '@tripalfa/static-data';
+import { getAirports, getCurrencies } from "@tripalfa/static-data";
 
 // Get airports with optional search parameters
-const airports = await getAirports({ query: 'London', limit: 10 });
+const airports = await getAirports({ query: "London", limit: 10 });
 
 // Get currencies
 const currencies = await getCurrencies();
@@ -149,16 +154,16 @@ const currencies = await getCurrencies();
 #### B2B Admin Data
 
 ```typescript
-import { 
-  MOCK_NOTIFICATIONS, 
+import {
+  MOCK_NOTIFICATIONS,
   getMockNotifications,
   MOCK_SUPPLIERS,
   getMockSuppliers,
   MOCK_VENDORS,
   getMockVendors,
   MOCK_CONTRACTS,
-  getMockContracts 
-} from '@tripalfa/static-data';
+  getMockContracts,
+} from "@tripalfa/static-data";
 
 // Get mock notifications
 const notifications = getMockNotifications();
@@ -262,9 +267,9 @@ TripAlfa - Node/
 
 The TripAlfa booking engine includes a comprehensive E2E testing suite using Playwright:
 
-- **[E2E Test Execution Guide](docs/testing/E2E_TEST_EXECUTION_GUIDE.md)**: How to run, debug, and troubleshoot E2E tests
-- **[Test Data Management Guide](docs/testing/TEST_DATA_MANAGEMENT_GUIDE.md)**: Managing test fixtures, seeding, and test data
-- **[Implementation Summary](docs/testing/E2E_TESTING_IMPLEMENTATION_SUMMARY.md)**: Overview of Phase 1 testing initiative
+- **[E2E Test Execution Guide](docs/E2E_TEST_EXECUTION_GUIDE.md)**: How to run, debug, and troubleshoot E2E tests
+- **[Test Data Management Guide](docs/TEST_DATA_MANAGEMENT_GUIDE.md)**: Managing test fixtures, seeding, and test data
+- **[Implementation Summary](docs/E2E_TESTING_IMPLEMENTATION_SUMMARY.md)**: Overview of Phase 1 testing initiative
 
 **Quick Start**:
 

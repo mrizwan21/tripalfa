@@ -1,50 +1,32 @@
 {
-    "compilerOptions": {
-        "target": "ESNext",
-        "lib": [
-            "DOM",
-            "DOM.Iterable",
-            "ESNext"
-        ],
-        "allowJs": false,
-        "skipLibCheck": true,
-        "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true,
-        "strict": false,
-        "forceConsistentCasingInFileNames": true,
-        "module": "ESNext",
-        "moduleResolution": "bundler",
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "noEmit": true,
-        "jsx": "react-jsx",
-        "ignoreDeprecations": "5.0",
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "./*"
-            ],
-            "@/components/ui/*": [
-                "./ui/*"
-            ],
-            "@tripalfa/shared-utils": [
-                "../shared-utils"
-            ],
-            "@tripalfa/shared-utils/*": [
-                "../shared-utils/*"
-            ],
-            "@tripalfa/shared-types": [
-                "../shared-types"
-            ],
-            "@tripalfa/shared-types/*": [
-                "../shared-types/*"
-            ]
-        }
-    },
-    "include": [
-        "."
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "noEmit": false,
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "ignoreDeprecations": "5.0",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/components/ui/*": ["./ui/*"],
+      "@tripalfa/shared-utils": ["../shared-utils"],
+      "@tripalfa/shared-utils/*": ["../shared-utils/*"],
+      "@tripalfa/shared-types": ["../shared-types"],
+      "@tripalfa/shared-types/*": ["../shared-types/*"]
+    }
+  },
+  "include": ["."],
+  "exclude": ["node_modules"]
 }

@@ -30,7 +30,7 @@ routes:
     tags:
       - ancillary-services
       - duffel
-  
+
   # ====== ANCILLARY OFFERS ENDPOINTS ======
   - name: duffel-ancillary-offers
     service: duffel-ancillary

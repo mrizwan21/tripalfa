@@ -1,26 +1,26 @@
 export type Money = { amount: number; currency: string };
 
 export type BookingStatus =
-  | 'On hold'
-  | 'In process'
-  | 'Ticketed'
-  | 'Refund on hold'
-  | 'Refunded'
-  | 'Cancel in process'
-  | 'Canceled'
-  | 'Additional request'
-  | 'Service confirmed'
-  | 'Service rejected'
-  | 'Used'
-  | 'Vouchered'
-  | 'Issued'
-  | 'Hold';
+  | "On hold"
+  | "In process"
+  | "Ticketed"
+  | "Refund on hold"
+  | "Refunded"
+  | "Cancel in process"
+  | "Canceled"
+  | "Additional request"
+  | "Service confirmed"
+  | "Service rejected"
+  | "Used"
+  | "Vouchered"
+  | "Issued"
+  | "Hold";
 
 export interface Booking {
   id: string;
   bookingId?: string; // TL-###### when issued
   userId?: string; // Added for wallet integration
-  product: 'hotel' | 'flight';
+  product: "hotel" | "flight";
   status: BookingStatus | string;
   reference?: string;
   total: Money;
@@ -83,7 +83,12 @@ export interface FlightFare {
   cabin: string;
   amount: number;
   currency: string;
-  includedBags: { quantity: number; weight?: number; unit?: string; type?: string }[];
+  includedBags: {
+    quantity: number;
+    weight?: number;
+    unit?: string;
+    type?: string;
+  }[];
   segments?: FlightSegment[];
   rules?: string;
   raw?: any;
@@ -94,7 +99,7 @@ export interface SpecialServiceRequest {
   name: string;
   description?: string;
   price: number;
-  status: 'Confirmed' | 'Pending' | 'Rejected' | 'RQ';
+  status: "Confirmed" | "Pending" | "Rejected" | "RQ";
   passengerIndex?: number;
 }
 
@@ -104,7 +109,7 @@ export interface AncillaryService {
   description?: string;
   price: number;
   currency: string;
-  type: 'baggage' | 'seat' | 'meal' | 'other';
+  type: "baggage" | "seat" | "meal" | "other";
   raw?: any;
 }
 

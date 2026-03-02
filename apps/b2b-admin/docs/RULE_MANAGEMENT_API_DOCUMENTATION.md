@@ -83,16 +83,16 @@ Retrieve a list of rules with filtering and pagination.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `category` | string | No | Filter by rule category |
-| `status` | string | No | Filter by status (active, inactive, draft) |
-| `search` | string | No | Search in rule name and description |
-| `priority` | number | No | Filter by priority level |
-| `page` | number | No | Page number (default: 1) |
-| `limit` | number | No | Items per page (default: 20, max: 100) |
-| `sortBy` | string | No | Sort field (name, priority, createdAt, updatedAt) |
-| `sortOrder` | string | No | Sort order (asc, desc) |
+| Parameter   | Type   | Required | Description                                       |
+| ----------- | ------ | -------- | ------------------------------------------------- |
+| `category`  | string | No       | Filter by rule category                           |
+| `status`    | string | No       | Filter by status (active, inactive, draft)        |
+| `search`    | string | No       | Search in rule name and description               |
+| `priority`  | number | No       | Filter by priority level                          |
+| `page`      | number | No       | Page number (default: 1)                          |
+| `limit`     | number | No       | Items per page (default: 20, max: 100)            |
+| `sortBy`    | string | No       | Sort field (name, priority, createdAt, updatedAt) |
+| `sortOrder` | string | No       | Sort order (asc, desc)                            |
 
 **Response:**
 
@@ -211,6 +211,7 @@ Create a new rule.
 ```
 
 **Validation Rules:**
+
 - `name`: Required, 3-100 characters
 - `category`: Required, must be valid category
 - `conditions`: Required, valid JSON schema
@@ -368,11 +369,11 @@ Get rule performance analytics.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `startDate` | string | No | Start date (YYYY-MM-DD) |
-| `endDate` | string | No | End date (YYYY-MM-DD) |
-| `timeframe` | string | No | Timeframe (hour, day, week, month) |
+| Parameter   | Type   | Required | Description                        |
+| ----------- | ------ | -------- | ---------------------------------- |
+| `startDate` | string | No       | Start date (YYYY-MM-DD)            |
+| `endDate`   | string | No       | End date (YYYY-MM-DD)              |
+| `timeframe` | string | No       | Timeframe (hour, day, week, month) |
 
 **Response:**
 
@@ -449,13 +450,13 @@ Get audit log for a specific rule.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `page` | number | No | Page number (default: 1) |
-| `limit` | number | No | Items per page (default: 20, max: 100) |
-| `action` | string | No | Filter by action (created, updated, deleted) |
-| `startDate` | string | No | Start date filter |
-| `endDate` | string | No | End date filter |
+| Parameter   | Type   | Required | Description                                  |
+| ----------- | ------ | -------- | -------------------------------------------- |
+| `page`      | number | No       | Page number (default: 1)                     |
+| `limit`     | number | No       | Items per page (default: 20, max: 100)       |
+| `action`    | string | No       | Filter by action (created, updated, deleted) |
+| `startDate` | string | No       | Start date filter                            |
+| `endDate`   | string | No       | End date filter                              |
 
 **Response:**
 
@@ -505,14 +506,14 @@ Get audit logs for all rules.
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `userId` | string | No | Filter by user ID |
-| `action` | string | No | Filter by action type |
-| `startDate` | string | No | Start date filter |
-| `endDate` | string | No | End date filter |
-| `page` | number | No | Page number |
-| `limit` | number | No | Items per page |
+| Parameter   | Type   | Required | Description           |
+| ----------- | ------ | -------- | --------------------- |
+| `userId`    | string | No       | Filter by user ID     |
+| `action`    | string | No       | Filter by action type |
+| `startDate` | string | No       | Start date filter     |
+| `endDate`   | string | No       | End date filter       |
+| `page`      | number | No       | Page number           |
+| `limit`     | number | No       | Items per page        |
 
 **Response:**
 
@@ -658,6 +659,7 @@ Create a new rule category.
 ### Create Rule Example
 
 **Request:**
+
 ```http
 POST /api/rules
 Authorization: Bearer your-jwt-token
@@ -689,6 +691,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```http
 HTTP/1.1 201 Created
 Content-Type: application/json
@@ -728,6 +731,7 @@ Content-Type: application/json
 ### Error Response Example
 
 **Response:**
+
 ```http
 HTTP/1.1 400 Bad Request
 Content-Type: application/json

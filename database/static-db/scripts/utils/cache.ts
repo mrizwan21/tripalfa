@@ -4,8 +4,8 @@
  * Simple in-memory cache for API responses with optional JSON persistence.
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
 interface CacheEntry<T> {
   value: T;
@@ -33,7 +33,10 @@ export class ApiCache {
     }
   }
 
-  private getCacheKey(endpoint: string, params?: Record<string, unknown>): string {
+  private getCacheKey(
+    endpoint: string,
+    params?: Record<string, unknown>,
+  ): string {
     if (!params || Object.keys(params).length === 0) {
       return `cache:${endpoint}`;
     }
@@ -42,7 +45,10 @@ export class ApiCache {
   }
 
   private getFileCachePath(key: string): string {
-    const hash = Buffer.from(key).toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+    const hash = Buffer.from(key)
+      .toString("base64")
+      .replace(/\//g, "_")
+      .replace(/\+/g, "-");
     return path.join(this.cacheDir!, `${hash}.json`);
   }
 
@@ -62,7 +68,7 @@ export class ApiCache {
       try {
         const filePath = this.getFileCachePath(key);
         if (fs.existsSync(filePath)) {
-          const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+          const data = JSON.parse(fs.readFileSync(filePath, "utf-8"));
           if (data.expires > now) {
             // Restore to memory cache
             this.cache.set(key, data);
@@ -92,7 +98,7 @@ export class ApiCache {
     if (this.cacheDir) {
       try {
         const filePath = this.getFileCachePath(key);
-        fs.writeFileSync(filePath, JSON.stringify(entry), 'utf-8');
+        fs.writeFileSync(filePath, JSON.stringify(entry), "utf-8");
       } catch {
         // Ignore file cache write errors (in-memory cache is sufficient)
       }

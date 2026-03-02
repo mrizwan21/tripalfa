@@ -7,23 +7,23 @@
 // SUPPLIER TYPES
 // ============================================================================
 
-export type SupplierType = 'GDS' | 'Aggregator' | 'Direct' | 'Wholesaler';
-export type PricingModel = 'Commissionable' | 'Net' | 'Markup';
-export type SupplierStatus = 'Active' | 'Inactive' | 'Suspended' | 'Pending';
-export type CommissionType = 'API' | 'Offline';
-export type ProductPresence = 'Online' | 'Offline';
-export type PaymentMode = 'Online' | 'Offline';
-export type PaymentStatus = 'Active' | 'Expired' | 'Suspended' | 'Inactive';
+export type SupplierType = "GDS" | "Aggregator" | "Direct" | "Wholesaler";
+export type PricingModel = "Commissionable" | "Net" | "Markup";
+export type SupplierStatus = "Active" | "Inactive" | "Suspended" | "Pending";
+export type CommissionType = "API" | "Offline";
+export type ProductPresence = "Online" | "Offline";
+export type PaymentMode = "Online" | "Offline";
+export type PaymentStatus = "Active" | "Expired" | "Suspended" | "Inactive";
 export type DocumentType =
-  | 'Supplier Contract'
-  | 'Owner Passport Copy'
-  | 'Commercial License'
-  | 'SLA Document'
-  | 'NDA'
-  | 'Tax Certificate'
-  | 'Insurance Certificate';
-export type APIEnvironment = 'Test' | 'Production';
-export type RuleStatus = 'Active' | 'Expired' | 'Inactive';
+  | "Supplier Contract"
+  | "Owner Passport Copy"
+  | "Commercial License"
+  | "SLA Document"
+  | "NDA"
+  | "Tax Certificate"
+  | "Insurance Certificate";
+export type APIEnvironment = "Test" | "Production";
+export type RuleStatus = "Active" | "Expired" | "Inactive";
 
 // ============================================================================
 // COMMON TYPES
@@ -99,8 +99,8 @@ export interface SupplierListFilters {
   status?: SupplierStatus;
   pricingModel?: PricingModel;
   country?: string;
-  sortBy?: 'name' | 'rating' | 'orders' | 'date';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "name" | "rating" | "orders" | "date";
+  sortOrder?: "asc" | "desc";
 }
 
 // ============================================================================
@@ -149,7 +149,7 @@ export interface SupplierRule {
 
 export interface RuleCondition {
   field: string;
-  operator: 'equals' | 'contains' | 'greaterThan' | 'lessThan' | 'between';
+  operator: "equals" | "contains" | "greaterThan" | "lessThan" | "between";
   value: any;
 }
 
@@ -169,14 +169,14 @@ export interface SupplierRuleFormData {
 // ============================================================================
 
 export type AccountType =
-  | 'PayPal'
-  | 'Cash'
-  | 'Google Pay'
-  | 'Bank Transfer'
-  | 'Stripe'
-  | 'Credit Card'
-  | 'Wire Transfer';
-export type Currency = 'USD' | 'SAR' | 'EUR' | 'GBP' | 'BHD' | 'LYD' | 'AED';
+  | "PayPal"
+  | "Cash"
+  | "Google Pay"
+  | "Bank Transfer"
+  | "Stripe"
+  | "Credit Card"
+  | "Wire Transfer";
+export type Currency = "USD" | "SAR" | "EUR" | "GBP" | "BHD" | "LYD" | "AED";
 
 export interface SupplierPayment {
   id: string;
@@ -219,7 +219,7 @@ export interface SupplierDocument {
   mimeType: string;
   issueDate?: string;
   expiryDate?: string;
-  status: 'Valid' | 'Expiring Soon' | 'Expired';
+  status: "Valid" | "Expiring Soon" | "Expired";
   uploadedDate: string;
   uploadedBy: string;
 }
@@ -242,7 +242,7 @@ export interface SupplierAPICredential {
   environment: APIEnvironment;
   username: string;
   endpoint?: string;
-  status: 'Active' | 'Inactive' | 'Revoked';
+  status: "Active" | "Inactive" | "Revoked";
   lastUsed?: string;
   createdDate: string;
   lastModified: string;
@@ -270,7 +270,7 @@ export interface SupplierStats {
   totalCustomers: number;
   products: number;
   activeRules: number;
-  period: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  period: "daily" | "weekly" | "monthly" | "yearly";
   data: StatPoint[];
 }
 
@@ -299,7 +299,7 @@ export interface SupplierAnalytics {
 export interface SupplierHealthCheck {
   id: string;
   supplierId: string;
-  status: 'Healthy' | 'Degraded' | 'Down';
+  status: "Healthy" | "Degraded" | "Down";
   responseTime: number;
   lastCheck: string;
   nextCheck: string;
@@ -307,14 +307,14 @@ export interface SupplierHealthCheck {
 }
 
 export interface HealthIssue {
-  type: 'connection' | 'timeout' | 'error' | 'performance';
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  type: "connection" | "timeout" | "error" | "performance";
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   timestamp: string;
 }
 
 export interface APIEndpoint {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   path: string;
   description: string;
   parameters?: any[];
@@ -371,7 +371,7 @@ export interface PaginationParams {
 
 export interface SortParams {
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
 }
 
 // ============================================================================
@@ -380,7 +380,7 @@ export interface SortParams {
 
 export interface FilterQuery {
   field: string;
-  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'regex';
+  operator: "eq" | "ne" | "gt" | "gte" | "lt" | "lte" | "in" | "nin" | "regex";
   value: any;
 }
 

@@ -10,7 +10,7 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface PaginationMeta {
@@ -82,56 +82,57 @@ export type HttpStatusCode =
 // ============================================================================
 export const API_ERROR_CODES = {
   // Authentication
-  AUTH_REQUIRED: 'AUTH_REQUIRED',
-  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
-  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
-  TOKEN_INVALID: 'TOKEN_INVALID',
-  REFRESH_TOKEN_EXPIRED: 'REFRESH_TOKEN_EXPIRED',
-  SESSION_EXPIRED: 'SESSION_EXPIRED',
-  
+  AUTH_REQUIRED: "AUTH_REQUIRED",
+  INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
+  TOKEN_EXPIRED: "TOKEN_EXPIRED",
+  TOKEN_INVALID: "TOKEN_INVALID",
+  REFRESH_TOKEN_EXPIRED: "REFRESH_TOKEN_EXPIRED",
+  SESSION_EXPIRED: "SESSION_EXPIRED",
+
   // Authorization
-  FORBIDDEN: 'FORBIDDEN',
-  INSUFFICIENT_PERMISSIONS: 'INSUFFICIENT_PERMISSIONS',
-  ROLE_NOT_ALLOWED: 'ROLE_NOT_ALLOWED',
-  
+  FORBIDDEN: "FORBIDDEN",
+  INSUFFICIENT_PERMISSIONS: "INSUFFICIENT_PERMISSIONS",
+  ROLE_NOT_ALLOWED: "ROLE_NOT_ALLOWED",
+
   // Validation
-  VALIDATION_ERROR: 'VALIDATION_ERROR',
-  INVALID_INPUT: 'INVALID_INPUT',
-  MISSING_REQUIRED_FIELD: 'MISSING_REQUIRED_FIELD',
-  INVALID_FORMAT: 'INVALID_FORMAT',
-  
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  INVALID_INPUT: "INVALID_INPUT",
+  MISSING_REQUIRED_FIELD: "MISSING_REQUIRED_FIELD",
+  INVALID_FORMAT: "INVALID_FORMAT",
+
   // Resource
-  NOT_FOUND: 'NOT_FOUND',
-  ALREADY_EXISTS: 'ALREADY_EXISTS',
-  CONFLICT: 'CONFLICT',
-  DELETED: 'DELETED',
-  
+  NOT_FOUND: "NOT_FOUND",
+  ALREADY_EXISTS: "ALREADY_EXISTS",
+  CONFLICT: "CONFLICT",
+  DELETED: "DELETED",
+
   // Business Logic
-  BUSINESS_RULE_VIOLATION: 'BUSINESS_RULE_VIOLATION',
-  INSUFFICIENT_BALANCE: 'INSUFFICIENT_BALANCE',
-  BOOKING_NOT_ALLOWED: 'BOOKING_NOT_ALLOWED',
-  BOOKING_FAILED: 'BOOKING_FAILED',
-  PAYMENT_FAILED: 'PAYMENT_FAILED',
-  REFUND_NOT_ALLOWED: 'REFUND_NOT_ALLOWED',
-  
+  BUSINESS_RULE_VIOLATION: "BUSINESS_RULE_VIOLATION",
+  INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
+  BOOKING_NOT_ALLOWED: "BOOKING_NOT_ALLOWED",
+  BOOKING_FAILED: "BOOKING_FAILED",
+  PAYMENT_FAILED: "PAYMENT_FAILED",
+  REFUND_NOT_ALLOWED: "REFUND_NOT_ALLOWED",
+
   // Rate Limiting
-  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
-  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
-  
+  RATE_LIMIT_EXCEEDED: "RATE_LIMIT_EXCEEDED",
+  QUOTA_EXCEEDED: "QUOTA_EXCEEDED",
+
   // External Services
-  SUPPLIER_ERROR: 'SUPPLIER_ERROR',
-  GDS_ERROR: 'GDS_ERROR',
-  PAYMENT_GATEWAY_ERROR: 'PAYMENT_GATEWAY_ERROR',
-  EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
-  TIMEOUT_ERROR: 'TIMEOUT_ERROR',
-  
+  SUPPLIER_ERROR: "SUPPLIER_ERROR",
+  GDS_ERROR: "GDS_ERROR",
+  PAYMENT_GATEWAY_ERROR: "PAYMENT_GATEWAY_ERROR",
+  EXTERNAL_SERVICE_ERROR: "EXTERNAL_SERVICE_ERROR",
+  TIMEOUT_ERROR: "TIMEOUT_ERROR",
+
   // Server
-  INTERNAL_ERROR: 'INTERNAL_ERROR',
-  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
-  DATABASE_ERROR: 'DATABASE_ERROR',
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+  DATABASE_ERROR: "DATABASE_ERROR",
 } as const;
 
-export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
+export type ApiErrorCode =
+  (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
 
 // ============================================================================
 // Filter/Search Types
@@ -195,7 +196,7 @@ export interface BulkUpdateRequest<T> {
 // Export/Import Types
 // ============================================================================
 export interface ExportRequest {
-  format: 'csv' | 'xlsx' | 'pdf' | 'json';
+  format: "csv" | "xlsx" | "pdf" | "json";
   filters?: Record<string, unknown>;
   columns?: string[];
   fileName?: string;
@@ -314,7 +315,7 @@ export interface SearchSuggestionsResponse {
 // Health Check Types
 // ============================================================================
 export interface HealthCheckResponse {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   version: string;
   timestamp: string;
   services: ServiceHealth[];
@@ -323,7 +324,7 @@ export interface HealthCheckResponse {
 
 export interface ServiceHealth {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   latency?: number;
   lastCheck: string;
   error?: string;

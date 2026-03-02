@@ -7,14 +7,14 @@
  * - Performance analysis and conflict detection
  * - Execution history and tracking
  * - Rule versioning and snapshots
- * 
+ *
  * This service now uses the centralized APIManager for all API calls,
  * providing consistent error handling, caching, and request/response interceptors.
- * 
+ *
  * Types are now aligned with @tripalfa/api-clients package.
  */
 
-import { APIManager } from '../api-manager/APIManager'
+import { APIManager } from "../api-manager/APIManager.js";
 import type {
   Rule,
   RuleStatus,
@@ -37,22 +37,22 @@ import type {
   ActionType,
   RuleRetryPolicy,
   ExecutionContext,
-} from '@tripalfa/api-clients'
+} from "@tripalfa/api-clients";
 
 // Get the singleton APIManager instance
-const apiManager = APIManager.getInstance()
+const apiManager = APIManager.getInstance();
 
 // ============================================================================
 // SERVICE CLASS
 // ============================================================================
 
 export class RuleEngineService {
-  private apiBaseUrl: string
-  private apiKey: string
+  private apiBaseUrl: string;
+  private apiKey: string;
 
-  constructor(baseUrl: string = '/api', apiKey: string = '') {
-    this.apiBaseUrl = baseUrl
-    this.apiKey = apiKey
+  constructor(baseUrl: string = "/api", apiKey: string = "") {
+    this.apiBaseUrl = baseUrl;
+    this.apiKey = apiKey;
   }
 
   /**
@@ -63,17 +63,17 @@ export class RuleEngineService {
     try {
       const response = await apiManager.post<Rule>(
         `${this.apiBaseUrl}/rules`,
-        request
-      )
+        request,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to create rule')
+        throw new Error(response.error?.message || "Failed to create rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error creating rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error creating rule:", error);
+      throw error;
     }
   }
 
@@ -84,17 +84,17 @@ export class RuleEngineService {
   async getRule(ruleId: string): Promise<Rule> {
     try {
       const response = await apiManager.get<Rule>(
-        `${this.apiBaseUrl}/rules/${ruleId}`
-      )
+        `${this.apiBaseUrl}/rules/${ruleId}`,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Rule not found')
+        throw new Error(response.error?.message || "Rule not found");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error fetching rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error fetching rule:", error);
+      throw error;
     }
   }
 
@@ -106,29 +106,29 @@ export class RuleEngineService {
     status?: RuleStatus,
     category?: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<Rule[]> {
     try {
       const params: Record<string, string | number> = {
         limit,
         offset,
-      }
-      if (status) params.status = status
-      if (category) params.category = category
+      };
+      if (status) params.status = status;
+      if (category) params.category = category;
 
       const response = await apiManager.get<Rule[]>(
         `${this.apiBaseUrl}/rules`,
-        { params }
-      )
+        { params },
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to list rules')
+        throw new Error(response.error?.message || "Failed to list rules");
       }
 
-      return response.data || []
+      return response.data || [];
     } catch (error) {
-      console.error('[RuleEngineService] Error listing rules:', error)
-      throw error
+      console.error("[RuleEngineService] Error listing rules:", error);
+      throw error;
     }
   }
 
@@ -140,17 +140,17 @@ export class RuleEngineService {
     try {
       const response = await apiManager.patch<Rule>(
         `${this.apiBaseUrl}/rules/${ruleId}`,
-        updates
-      )
+        updates,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to update rule')
+        throw new Error(response.error?.message || "Failed to update rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error updating rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error updating rule:", error);
+      throw error;
     }
   }
 
@@ -161,15 +161,15 @@ export class RuleEngineService {
   async deleteRule(ruleId: string): Promise<void> {
     try {
       const response = await apiManager.delete(
-        `${this.apiBaseUrl}/rules/${ruleId}`
-      )
+        `${this.apiBaseUrl}/rules/${ruleId}`,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to delete rule')
+        throw new Error(response.error?.message || "Failed to delete rule");
       }
     } catch (error) {
-      console.error('[RuleEngineService] Error deleting rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error deleting rule:", error);
+      throw error;
     }
   }
 
@@ -185,17 +185,17 @@ export class RuleEngineService {
           data: request.data,
           userId: request.userId,
           testMode: request.testMode,
-        }
-      )
+        },
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to execute rule')
+        throw new Error(response.error?.message || "Failed to execute rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error executing rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error executing rule:", error);
+      throw error;
     }
   }
 
@@ -211,17 +211,17 @@ export class RuleEngineService {
           condition: request.condition,
           sampleData: request.sampleData,
           includeActions: request.includeActions,
-        }
-      )
+        },
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to debug rule')
+        throw new Error(response.error?.message || "Failed to debug rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error debugging rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error debugging rule:", error);
+      throw error;
     }
   }
 
@@ -232,17 +232,17 @@ export class RuleEngineService {
   async analyzeRule(ruleId: string): Promise<RuleAnalysisResponse> {
     try {
       const response = await apiManager.get<RuleAnalysisResponse>(
-        `${this.apiBaseUrl}/rules/${ruleId}/analyze`
-      )
+        `${this.apiBaseUrl}/rules/${ruleId}/analyze`,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to analyze rule')
+        throw new Error(response.error?.message || "Failed to analyze rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error analyzing rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error analyzing rule:", error);
+      throw error;
     }
   }
 
@@ -253,17 +253,17 @@ export class RuleEngineService {
   async checkConflicts(ruleId: string): Promise<RuleConflictCheckResponse> {
     try {
       const response = await apiManager.get<RuleConflictCheckResponse>(
-        `${this.apiBaseUrl}/rules/${ruleId}/conflicts`
-      )
+        `${this.apiBaseUrl}/rules/${ruleId}/conflicts`,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to check conflicts')
+        throw new Error(response.error?.message || "Failed to check conflicts");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error checking conflicts:', error)
-      throw error
+      console.error("[RuleEngineService] Error checking conflicts:", error);
+      throw error;
     }
   }
 
@@ -274,22 +274,27 @@ export class RuleEngineService {
   async getExecutionHistory(
     ruleId: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<RuleExecutionHistory[]> {
     try {
       const response = await apiManager.get<RuleExecutionHistory[]>(
         `${this.apiBaseUrl}/rules/${ruleId}/executions`,
-        { params: { limit, offset } }
-      )
+        { params: { limit, offset } },
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to fetch execution history')
+        throw new Error(
+          response.error?.message || "Failed to fetch execution history",
+        );
       }
 
-      return response.data || []
+      return response.data || [];
     } catch (error) {
-      console.error('[RuleEngineService] Error fetching execution history:', error)
-      throw error
+      console.error(
+        "[RuleEngineService] Error fetching execution history:",
+        error,
+      );
+      throw error;
     }
   }
 
@@ -300,17 +305,17 @@ export class RuleEngineService {
   async getExecution(executionId: string): Promise<RuleExecutionHistory> {
     try {
       const response = await apiManager.get<RuleExecutionHistory>(
-        `${this.apiBaseUrl}/executions/${executionId}`
-      )
+        `${this.apiBaseUrl}/executions/${executionId}`,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to fetch execution')
+        throw new Error(response.error?.message || "Failed to fetch execution");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error fetching execution:', error)
-      throw error
+      console.error("[RuleEngineService] Error fetching execution:", error);
+      throw error;
     }
   }
 
@@ -318,24 +323,21 @@ export class RuleEngineService {
    * Duplicate a rule
    * Uses centralized APIManager
    */
-  async duplicateRule(
-    ruleId: string,
-    newName?: string
-  ): Promise<Rule> {
+  async duplicateRule(ruleId: string, newName?: string): Promise<Rule> {
     try {
       const response = await apiManager.post<Rule>(
         `${this.apiBaseUrl}/rules/${ruleId}/duplicate`,
-        { newName }
-      )
+        { newName },
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to duplicate rule')
+        throw new Error(response.error?.message || "Failed to duplicate rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error duplicating rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error duplicating rule:", error);
+      throw error;
     }
   }
 
@@ -347,17 +349,17 @@ export class RuleEngineService {
     try {
       const response = await apiManager.post<Rule>(
         `${this.apiBaseUrl}/rules/${ruleId}/enable`,
-        {}
-      )
+        {},
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to enable rule')
+        throw new Error(response.error?.message || "Failed to enable rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error enabling rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error enabling rule:", error);
+      throw error;
     }
   }
 
@@ -369,17 +371,17 @@ export class RuleEngineService {
     try {
       const response = await apiManager.post<Rule>(
         `${this.apiBaseUrl}/rules/${ruleId}/disable`,
-        {}
-      )
+        {},
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to disable rule')
+        throw new Error(response.error?.message || "Failed to disable rule");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error disabling rule:', error)
-      throw error
+      console.error("[RuleEngineService] Error disabling rule:", error);
+      throw error;
     }
   }
 
@@ -388,28 +390,28 @@ export class RuleEngineService {
    * Uses centralized APIManager
    */
   async getRuleStats(ruleId: string): Promise<{
-    totalExecutions: number
-    successCount: number
-    failureCount: number
-    successRate: number
-    averageDuration: number
-    lastExecution?: string
+    totalExecutions: number;
+    successCount: number;
+    failureCount: number;
+    successRate: number;
+    averageDuration: number;
+    lastExecution?: string;
   }> {
     try {
       const response = await apiManager.get<any>(
-        `${this.apiBaseUrl}/rules/${ruleId}/stats`
-      )
+        `${this.apiBaseUrl}/rules/${ruleId}/stats`,
+      );
 
       if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to fetch stats')
+        throw new Error(response.error?.message || "Failed to fetch stats");
       }
 
-      return response.data!
+      return response.data!;
     } catch (error) {
-      console.error('[RuleEngineService] Error fetching stats:', error)
-      throw error
+      console.error("[RuleEngineService] Error fetching stats:", error);
+      throw error;
     }
   }
 }
 
-export default RuleEngineService
+export default RuleEngineService;

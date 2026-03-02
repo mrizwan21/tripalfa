@@ -12,9 +12,11 @@ Successfully integrated two new management modules into the Rules Engine package
 ### Services
 
 #### 1. MarkupService (`/packages/rules/src/services/markupService.ts`)
+
 **Purpose**: Dedicated service for managing markup rules with complete CRUD operations
 
 **Key Features**:
+
 - Create, read, update, delete markup rules
 - List rules with filtering (by company, service type, supplier ID)
 - Activate/deactivate rules
@@ -23,6 +25,7 @@ Successfully integrated two new management modules into the Rules Engine package
 - Full validation and error handling
 
 **Methods**:
+
 - `createMarkupRule(ruleData: MarkupRuleCreate): Promise<MarkupRule>`
 - `updateMarkupRule(id: string, updates: MarkupRuleUpdate): Promise<MarkupRule>`
 - `getMarkupRule(id: string): Promise<MarkupRule | null>`
@@ -34,6 +37,7 @@ Successfully integrated two new management modules into the Rules Engine package
 - `countMarkupRules(filters?): Promise<number>`
 
 **Integration Points**:
+
 - Works alongside `RuleMatchingEngine` for markup rule matching
 - Integrates with `PricingEngine` for application
 - Provides database abstraction via Prisma
@@ -41,15 +45,18 @@ Successfully integrated two new management modules into the Rules Engine package
 ---
 
 #### 2. AirlineDealsService (`/packages/rules/src/services/airlineDealsService.ts`)
+
 **Purpose**: Specialized service for airline-specific deal management
 
 **Deal Categories Supported**:
+
 - **Private Fare** - Negotiated fares with suppliers
 - **NDC Special** - New Distribution Channel ancillaries and special services
 - **Route Specific** - Route-based pricing and conditions
 - **Contract** - Airline partnership contracts with commission terms
 
 **Key Features**:
+
 - Create airline deals with domain-specific metadata
 - Search for private fares by route
 - Retrieve NDC special deals with ancillaries
@@ -60,6 +67,7 @@ Successfully integrated two new management modules into the Rules Engine package
 - Activate/pause deals
 
 **Methods**:
+
 - `createAirlineDeal(dealData): Promise<SupplierDeal>`
 - `getPrivateFareByRoute(airlineCode, origin, destination, journeyType): Promise<SupplierDeal | null>`
 - `getNDCDeals(airlineCode, options?): Promise<SupplierDeal[]>`
@@ -74,6 +82,7 @@ Successfully integrated two new management modules into the Rules Engine package
 - `countAirlineDeals(airlineCode, dealCategory?): Promise<number>`
 
 **Metadata Structure**:
+
 ```typescript
 {
   airlineCode: string;
@@ -92,7 +101,7 @@ Successfully integrated two new management modules into the Rules Engine package
 
 ### Type Definitions
 
-#### Added to `/packages/rules/src/types/deals.ts`:
+#### Added to `/packages/rules/src/types/deals.ts`
 
 1. **Airline Deal Category Type**
    - `AirlineDealCategory` - Union type for airline deal categories
@@ -112,15 +121,17 @@ Successfully integrated two new management modules into the Rules Engine package
 
 ### Package Exports
 
-#### Updated `/packages/rules/src/index.ts`:
+#### Updated `/packages/rules/src/index.ts`
 
 **New Service Exports**:
+
 ```typescript
-export { MarkupService } from './services/markupService';
-export { AirlineDealsService } from './services/airlineDealsService';
+export { MarkupService } from "./services/markupService";
+export { AirlineDealsService } from "./services/airlineDealsService";
 ```
 
 **New Type Exports**:
+
 ```typescript
 export type {
   AirlineDealCategory,
@@ -130,8 +141,8 @@ export type {
   AirlineDealUpdate,
   PrivateFareConfig,
   NDCSpecialDeal,
-  AirlineContract
-}
+  AirlineContract,
+};
 ```
 
 ---
@@ -141,22 +152,26 @@ export type {
 ### MarkupService Integration
 
 **With RuleMatchingEngine**:
+
 - Uses same `RuleMatchContext` for matching
 - Supports finding applicable rules for pricing contexts
 - Works with service type and supplier filtering
 
 **With PricingEngine**:
+
 - Retrieved rules are applied to pricing calculations
 - Markup values are applied based on rule type (percentage/fixed/multiplier)
 
 ### AirlineDealsService Integration
 
 **With DealService**:
+
 - Extends generic `SupplierDeal` with airline-specific features
 - Uses same deal framework for consistency
 - Compatible with existing deal matching logic
 
 **With PLBService**:
+
 - APB-eligible deals can be tracked for airline performance bonuses
 - Contract terms support commission and APB requirements
 
@@ -165,6 +180,7 @@ export type {
 ## Feature Capabilities
 
 ### MarkupService
+
 ✅ Rule CRUD operations
 ✅ Filtering and search
 ✅ Validation
@@ -174,6 +190,7 @@ export type {
 ✅ Soft delete support
 
 ### AirlineDealsService
+
 ✅ Private fare route matching
 ✅ NDC ancillary management
 ✅ Route-specific pricing
@@ -190,9 +207,11 @@ export type {
 All services use Prisma ORM with the following assumptions:
 
 **MarkupService**:
+
 - `markupRule` table with fields: id, companyId, name, code, priority, applicableTo[], serviceTypes[], markupType, markupValue, minMarkup, maxMarkup, conditions, supplierIds[], branchIds[], userIds[], isActive, validFrom, validTo, metadata, createdAt, updatedAt
 
 **AirlineDealsService**:
+
 - Uses existing `supplierDeals` table
 - Stores airline data in JSON metadata field
 - Supports queries on nested metadata fields
@@ -215,33 +234,33 @@ All services use Prisma ORM with the following assumptions:
 ### MarkupService Usage
 
 ```typescript
-import { MarkupService } from '@tripalfa/rules';
+import { MarkupService } from "@tripalfa/rules";
 
 const markupService = new MarkupService();
 
 // Create a markup rule
 const rule = await markupService.createMarkupRule({
-  name: 'Q4 Premium Markup',
-  code: 'Q4_PREMIUM',
-  applicableTo: ['flight', 'hotel'],
-  serviceTypes: ['flight', 'hotel'],
-  markupType: 'percentage',
+  name: "Q4 Premium Markup",
+  code: "Q4_PREMIUM",
+  applicableTo: ["flight", "hotel"],
+  serviceTypes: ["flight", "hotel"],
+  markupType: "percentage",
   markupValue: 15,
-  validFrom: '2024-10-01',
-  validTo: '2024-12-31',
+  validFrom: "2024-10-01",
+  validTo: "2024-12-31",
   priority: 10,
-  supplierIds: ['emirates', 'etihad']
+  supplierIds: ["emirates", "etihad"],
 });
 
 // Get applicable rules for context
 const applicableRules = await markupService.getApplicableMarkupRules({
-  serviceType: 'flight',
-  supplierCode: 'emirates'
+  serviceType: "flight",
+  supplierCode: "emirates",
 });
 
 // Update rule
 await markupService.updateMarkupRule(rule.id, {
-  markupValue: 20
+  markupValue: 20,
 });
 
 // Deactivate rule
@@ -251,42 +270,46 @@ await markupService.deactivateMarkupRule(rule.id);
 ### AirlineDealsService Usage
 
 ```typescript
-import { AirlineDealsService } from '@tripalfa/rules';
+import { AirlineDealsService } from "@tripalfa/rules";
 
 const airlineDealsService = new AirlineDealsService();
 
 // Create private fare
 const privateFare = await airlineDealsService.createAirlineDeal({
-  name: 'DXB-JFK Private Fare',
-  code: 'EMIRATES_DXB_JFK_PF',
-  airlineCode: 'EK',
-  dealCategory: 'private_fare',
-  dealType: 'contracted_rate',
-  supplierCodes: ['emirates'],
-  discountType: 'percentage',
+  name: "DXB-JFK Private Fare",
+  code: "EMIRATES_DXB_JFK_PF",
+  airlineCode: "EK",
+  dealCategory: "private_fare",
+  dealType: "contracted_rate",
+  supplierCodes: ["emirates"],
+  discountType: "percentage",
   discountValue: 8,
-  validFrom: '2024-01-01',
-  validTo: '2024-12-31',
-  cabinClasses: ['economy', 'business'],
-  aircraftTypes: ['B777', 'A380'],
-  apbEligible: true
+  validFrom: "2024-01-01",
+  validTo: "2024-12-31",
+  cabinClasses: ["economy", "business"],
+  aircraftTypes: ["B777", "A380"],
+  apbEligible: true,
 });
 
 // Get NDC special deals
-const ndcDeals = await airlineDealsService.getNDCDeals('EK', {
-  includeAncillaries: true
+const ndcDeals = await airlineDealsService.getNDCDeals("EK", {
+  includeAncillaries: true,
 });
 
 // Get route-specific deals
-const routeDeals = await airlineDealsService.getRouteSpecificDeals('EK', 'DXB', 'LHR');
+const routeDeals = await airlineDealsService.getRouteSpecificDeals(
+  "EK",
+  "DXB",
+  "LHR",
+);
 
 // Get APB-eligible deals
-const apbDeals = await airlineDealsService.getAPBEligibleDeals('EK');
+const apbDeals = await airlineDealsService.getAPBEligibleDeals("EK");
 
 // List all airline deals
-const allDeals = await airlineDealsService.listAirlineDeals('EK', {
-  dealCategory: 'private_fare',
-  status: 'active'
+const allDeals = await airlineDealsService.listAirlineDeals("EK", {
+  dealCategory: "private_fare",
+  status: "active",
 });
 ```
 
@@ -306,6 +329,7 @@ const allDeals = await airlineDealsService.listAirlineDeals('EK', {
 ## Summary
 
 The Rules Engine package now includes comprehensive management for:
+
 - **Markup Rules** - Fine-grained pricing control
 - **Airline Deals** - Airline-specific pricing, contracts, and ancillaries
 

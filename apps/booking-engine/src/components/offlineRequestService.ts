@@ -1,5 +1,5 @@
-import { Prisma } from '@prisma/client';
-import { v4 as uuidv4 } from 'uuid';
+import { Prisma } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
 import {
   OfflineChangeRequest,
   OfflineRequestStatus,
@@ -11,17 +11,17 @@ import {
   OfflineRequestAuditLog,
   PriceDifference,
   StaffPricing,
-} from '@tripalfa/shared-types';
-import prisma from '../database/prisma';
-import { createLogger } from '@tripalfa/shared-utils/logger';
-const logger = createLogger({ serviceName: 'booking-engine' });
-import bookingService from './bookingService';
-import paymentService from './paymentService';
-import { DocumentGenerationService } from './documentGenerationService';
-import { NotificationService } from './notificationService';
-import emailService from './mailjetEmailService';
-import { CacheService } from '../cache/redis';
-import { BookingDocument } from '../types/enhancedBooking';
+} from "@tripalfa/shared-types";
+import prisma from "../database/prisma";
+import { createLogger } from "@tripalfa/shared-utils/logger";
+const logger = createLogger({ serviceName: "booking-engine" });
+import bookingService from "./bookingService";
+import paymentService from "./paymentService";
+import { DocumentGenerationService } from "./documentGenerationService";
+import { NotificationService } from "./notificationService";
+import emailService from "./mailjetEmailService";
+import { CacheService } from "../cache/redis";
+import { BookingDocument } from "../types/enhancedBooking";
 
 // Instantiate services
 const notificationService = new NotificationService(new CacheService());
@@ -37,7 +37,9 @@ class OfflineRequestService {
    */
   private generateRequestRef(year: number): string {
     const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    const random = Math.floor(Math.random() * 100000)
+      .toString()
+      .padStart(5, "0");
     return `OCR-${year}-${random}`;
   }
 
@@ -46,14 +48,17 @@ class OfflineRequestService {
    */
   async createRequest(
     payload: CreateOfflineRequestPayload,
-    userId: string
+    userId: string,
   ): Promise<OfflineChangeRequest> {
     // Step 1: Verify booking exists
     let booking;
     try {
       booking = await bookingService.getBookingById(payload.bookingId);
     } catch (error) {
-      logger.error('Error fetching booking', { bookingId: payload.bookingId, error });
+      logger.error("Error fetching booking", {
+        bookingId: payload.bookingId,
+        error,
+      });
     }
 
     if (!booking) {
@@ -61,8 +66,8 @@ class OfflineRequestService {
     }
 
     // Verify customer ownership (if customer is creating the request)
-    if (booking.userId !== userId && userId !== 'system') {
-      throw new Error('Forbidden: You do not own this booking');
+    if (booking.userId !== userId && userId !== "system") {
+      throw new Error("Forbidden: You do not own this booking");
     }
 
     // Step 2: Check for existing active request
@@ -83,7 +88,7 @@ class OfflineRequestService {
 
     if (activeRequest) {
       throw new Error(
-        `Active request already exists for this booking (${activeRequest.requestRef})`
+        `Active request already exists for this booking (${activeRequest.requestRef})`,
       );
     }
 
@@ -105,7 +110,7 @@ class OfflineRequestService {
         taxes: (booking as any).pricing?.taxes || 0,
         markup: (booking as any).pricing?.markup || 0,
         totalPrice: (booking as any).pricing?.totalPrice || 0,
-        currency: (booking as any).pricing?.currency || 'USD',
+        currency: (booking as any).pricing?.currency || "USD",
       },
       documents: (booking as any).documents || {},
       bookingRef: payload.bookingRef,
@@ -135,17 +140,17 @@ class OfflineRequestService {
       offlineRequest.id,
       OfflineRequestAuditAction.CREATED,
       userId,
-      'customer',
+      "customer",
       undefined,
       {
         requestType: payload.requestType,
         changeReason: payload.requestedChanges.changeReason,
         bookingId: payload.bookingId,
-      }
+      },
     );
 
     // Step 7: Send notification to customer
-    await this.notifyCustomer(offlineRequest as any, 'request_created');
+    await this.notifyCustomer(offlineRequest as any, "request_created");
 
     return this.formatOfflineRequest(offlineRequest);
   }
@@ -153,7 +158,9 @@ class OfflineRequestService {
   /**
    * Get offline request by ID
    */
-  async getRequestById(requestId: string): Promise<OfflineChangeRequest | null> {
+  async getRequestById(
+    requestId: string,
+  ): Promise<OfflineChangeRequest | null> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
@@ -164,7 +171,9 @@ class OfflineRequestService {
   /**
    * Get offline request by request reference
    */
-  async getRequestByRef(requestRef: string): Promise<OfflineChangeRequest | null> {
+  async getRequestByRef(
+    requestRef: string,
+  ): Promise<OfflineChangeRequest | null> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { requestRef },
     });
@@ -175,13 +184,15 @@ class OfflineRequestService {
   /**
    * Get offline requests for a booking
    */
-  async getRequestsByBooking(bookingId: string): Promise<OfflineChangeRequest[]> {
+  async getRequestsByBooking(
+    bookingId: string,
+  ): Promise<OfflineChangeRequest[]> {
     const requests = await prisma.offlineChangeRequest.findMany({
       where: { bookingId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return requests.map(req => this.formatOfflineRequest(req));
+    return requests.map((req) => this.formatOfflineRequest(req));
   }
 
   /**
@@ -190,7 +201,7 @@ class OfflineRequestService {
   async getCustomerRequests(
     bookingId: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<{
     total: number;
     requests: OfflineChangeRequest[];
@@ -198,7 +209,7 @@ class OfflineRequestService {
     const [requests, total] = await Promise.all([
       prisma.offlineChangeRequest.findMany({
         where: { bookingId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
         skip: offset,
       }),
@@ -209,7 +220,7 @@ class OfflineRequestService {
 
     return {
       total,
-      requests: requests.map(req => this.formatOfflineRequest(req)),
+      requests: requests.map((req) => this.formatOfflineRequest(req)),
     };
   }
 
@@ -219,7 +230,7 @@ class OfflineRequestService {
   async getStaffQueue(
     status: OfflineRequestStatus = OfflineRequestStatus.PENDING_STAFF,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<{
     total: number;
     items: OfflineChangeRequest[];
@@ -227,7 +238,7 @@ class OfflineRequestService {
     const [requests, total] = await Promise.all([
       prisma.offlineChangeRequest.findMany({
         where: { status },
-        orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+        orderBy: [{ priority: "desc" }, { createdAt: "asc" }],
         take: limit,
         skip: offset,
       }),
@@ -238,7 +249,7 @@ class OfflineRequestService {
 
     return {
       total,
-      items: requests.map(req => this.formatOfflineRequest(req)),
+      items: requests.map((req) => this.formatOfflineRequest(req)),
     };
   }
 
@@ -248,19 +259,19 @@ class OfflineRequestService {
   async submitPricing(
     requestId: string,
     payload: SubmitPricingPayload,
-    staffId: string
+    staffId: string,
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
     if (!request) {
-      throw new Error('Offline request not found');
+      throw new Error("Offline request not found");
     }
 
     if (request.status !== OfflineRequestStatus.PENDING_STAFF) {
       throw new Error(
-        `Cannot submit pricing for request in ${request.status} status`
+        `Cannot submit pricing for request in ${request.status} status`,
       );
     }
 
@@ -273,9 +284,13 @@ class OfflineRequestService {
     };
 
     // Validate required payload fields
-    if (payload.newBaseFare === undefined || payload.newTaxes === undefined ||
-      payload.newMarkup === undefined || payload.newTotalPrice === undefined) {
-      throw new Error('Missing required pricing fields');
+    if (
+      payload.newBaseFare === undefined ||
+      payload.newTaxes === undefined ||
+      payload.newMarkup === undefined ||
+      payload.newTotalPrice === undefined
+    ) {
+      throw new Error("Missing required pricing fields");
     }
 
     // Calculate price difference
@@ -320,14 +335,14 @@ class OfflineRequestService {
     });
 
     // Notify customer via notification hook
-    await this.notifyCustomer(updatedRequest as any, 'pricing_submitted');
+    await this.notifyCustomer(updatedRequest as any, "pricing_submitted");
 
     // Create audit log
     await this.createAuditLog(
       requestId,
       OfflineRequestAuditAction.PRICING_SUBMITTED,
       staffId,
-      'staff',
+      "staff",
       {
         status: request.status,
         staffPricing: request.staffPricing,
@@ -336,7 +351,7 @@ class OfflineRequestService {
       {
         staffPricing: staffPricing as any,
         priceDifference: priceDifference as any,
-      }
+      },
     );
 
     return this.formatOfflineRequest(updatedRequest as any);
@@ -349,28 +364,26 @@ class OfflineRequestService {
     requestId: string,
     userId: string,
     approved: boolean,
-    rejectionReason?: string
+    rejectionReason?: string,
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
     if (!request) {
-      throw new Error('Offline request not found');
+      throw new Error("Offline request not found");
     }
 
-    if (
-      request.status !== OfflineRequestStatus.PENDING_CUSTOMER_APPROVAL
-    ) {
+    if (request.status !== OfflineRequestStatus.PENDING_CUSTOMER_APPROVAL) {
       throw new Error(
-        `Cannot approve/reject request in ${request.status} status`
+        `Cannot approve/reject request in ${request.status} status`,
       );
     }
 
     // Handle rejection case
     if (!approved) {
       if (!rejectionReason) {
-        throw new Error('rejectionReason is required when rejecting');
+        throw new Error("rejectionReason is required when rejecting");
       }
 
       const customerApproval = {
@@ -396,13 +409,13 @@ class OfflineRequestService {
         requestId,
         OfflineRequestAuditAction.REJECTED,
         userId,
-        'customer',
+        "customer",
         { status: request.status },
-        { rejectionReason }
+        { rejectionReason },
       );
 
       // Notify customer of rejection
-      await this.notifyCustomer(updatedRequest as any, 'request_rejected');
+      await this.notifyCustomer(updatedRequest as any, "request_rejected");
 
       return this.formatOfflineRequest(updatedRequest);
     }
@@ -421,13 +434,20 @@ class OfflineRequestService {
     const priceDifference = (request.priceDifference as any) || {};
     const totalDueAmount = priceDifference.totalDiff || 0;
     const isZeroAmountApproval = totalDueAmount <= 0;
-    const nextStatus = totalDueAmount > 0
-      ? OfflineRequestStatus.PAYMENT_PENDING
-      : OfflineRequestStatus.COMPLETED;
+    const nextStatus =
+      totalDueAmount > 0
+        ? OfflineRequestStatus.PAYMENT_PENDING
+        : OfflineRequestStatus.COMPLETED;
 
     // If going directly to completed, execute completion workflow
     if (isZeroAmountApproval) {
-      return this.finalizeRequestCompletion(requestId, userId, 'system', 0, 'none');
+      return this.finalizeRequestCompletion(
+        requestId,
+        userId,
+        "system",
+        0,
+        "none",
+      );
     }
 
     const updatedRequest = await prisma.offlineChangeRequest.update({
@@ -441,16 +461,16 @@ class OfflineRequestService {
     });
 
     // Notify customer of approval
-    await this.notifyCustomer(updatedRequest as any, 'request_approved');
+    await this.notifyCustomer(updatedRequest as any, "request_approved");
 
     // Create audit log
     await this.createAuditLog(
       requestId,
       OfflineRequestAuditAction.APPROVED,
       userId,
-      'customer',
+      "customer",
       { status: request.status },
-      { nextStatus }
+      { nextStatus },
     );
 
     return this.formatOfflineRequest(updatedRequest);
@@ -465,31 +485,36 @@ class OfflineRequestService {
     amount: number,
     method: string,
     transactionRef?: string,
-    paymentDetails?: Record<string, any>
+    paymentDetails?: Record<string, any>,
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
     if (!request) {
-      throw new Error('Offline request not found');
+      throw new Error("Offline request not found");
     }
 
     // Check if request is in valid state for payment (APPROVED or PAYMENT_PENDING)
-    if (![OfflineRequestStatus.APPROVED, OfflineRequestStatus.PAYMENT_PENDING].includes(request.status as OfflineRequestStatus)) {
+    if (
+      ![
+        OfflineRequestStatus.APPROVED,
+        OfflineRequestStatus.PAYMENT_PENDING,
+      ].includes(request.status as OfflineRequestStatus)
+    ) {
       throw new Error(
-        `Cannot process payment for request in ${request.status} status`
+        `Cannot process payment for request in ${request.status} status`,
       );
     }
 
     // Validate payment amount against price difference
     const priceDifference = (request.priceDifference as any) || {};
     const expectedAmount = priceDifference.totalDiff || 0;
-    const currency = priceDifference.currency || 'USD';
+    const currency = priceDifference.currency || "USD";
 
     if (Math.abs(amount - expectedAmount) > 0.01) {
       throw new Error(
-        `Payment amount (${amount}) does not match expected amount (${expectedAmount})`
+        `Payment amount (${amount}) does not match expected amount (${expectedAmount})`,
       );
     }
 
@@ -500,45 +525,52 @@ class OfflineRequestService {
         requestId, // Use requestId as orderId
         amount,
         currency,
-        (method === 'wallet' ? 'balance' : 'card') as 'balance' | 'card' // Map method names
+        (method === "wallet" ? "balance" : "card") as "balance" | "card", // Map method names
       );
 
-      if (paymentRecord.status !== 'completed') {
-        throw new Error(`Payment processing failed: ${paymentRecord.errorMessage || 'Unknown error'}`);
+      if (paymentRecord.status !== "completed") {
+        throw new Error(
+          `Payment processing failed: ${paymentRecord.errorMessage || "Unknown error"}`,
+        );
       }
 
       return this.finalizeRequestCompletion(
         requestId,
-        'system',
+        "system",
         method,
         amount,
         paymentRecord.reference || transactionRef || paymentId,
-        paymentDetails
+        paymentDetails,
       );
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Error processing payment', { requestId, error: errorMsg });
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      logger.error("Error processing payment", { requestId, error: errorMsg });
 
       // Log payment failure for audit
       await this.createAuditLog(
         requestId,
-        'PAYMENT_PROCESSED' as any,
-        'system',
-        'system',
+        "PAYMENT_PROCESSED" as any,
+        "system",
+        "system",
         { status: request.status },
-        { error: errorMsg, failed: true }
+        { error: errorMsg, failed: true },
       );
 
       // Send failure notification if possible
       try {
-        const failedBooking = await bookingService.getBookingById(request.bookingId);
+        const failedBooking = await bookingService.getBookingById(
+          request.bookingId,
+        );
         await notificationService.sendPaymentNotification(
           failedBooking as any,
-          'failed',
-          amount
+          "failed",
+          amount,
         );
       } catch (notifError) {
-        logger.error('Error sending payment failure notification', { requestId, error: notifError });
+        logger.error("Error sending payment failure notification", {
+          requestId,
+          error: notifError,
+        });
       }
 
       throw error;
@@ -550,14 +582,14 @@ class OfflineRequestService {
    */
   async completeRequest(
     requestId: string,
-    documentUrls: string[] = []
+    documentUrls: string[] = [],
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
     if (!request) {
-      throw new Error('Offline request not found');
+      throw new Error("Offline request not found");
     }
 
     const reissuedDocuments = {
@@ -583,10 +615,10 @@ class OfflineRequestService {
     await this.createAuditLog(
       requestId,
       OfflineRequestAuditAction.COMPLETED,
-      'system',
-      'system',
+      "system",
+      "system",
       { status: request.status },
-      { reissuedDocuments }
+      { reissuedDocuments },
     );
 
     return this.formatOfflineRequest(updatedRequest);
@@ -598,14 +630,14 @@ class OfflineRequestService {
   async cancelRequest(
     requestId: string,
     userId: string,
-    reason: string
+    reason: string,
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
     if (!request) {
-      throw new Error('Offline request not found');
+      throw new Error("Offline request not found");
     }
 
     const allowedStates = [
@@ -615,9 +647,7 @@ class OfflineRequestService {
     ];
 
     if (!allowedStates.includes(request.status as OfflineRequestStatus)) {
-      throw new Error(
-        `Cannot cancel request in ${request.status} status`
-      );
+      throw new Error(`Cannot cancel request in ${request.status} status`);
     }
 
     const timeline = (request.timeline || {}) as any;
@@ -636,9 +666,9 @@ class OfflineRequestService {
       requestId,
       OfflineRequestAuditAction.CANCELLED,
       userId,
-      'customer',
+      "customer",
       { status: request.status },
-      { reason }
+      { reason },
     );
 
     return this.formatOfflineRequest(updatedRequest);
@@ -650,14 +680,14 @@ class OfflineRequestService {
   async addInternalNote(
     requestId: string,
     note: string,
-    staffId: string
+    staffId: string,
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
     if (!request) {
-      throw new Error('Offline request not found');
+      throw new Error("Offline request not found");
     }
 
     const internalNotes = request.internalNotes || [];
@@ -682,7 +712,7 @@ class OfflineRequestService {
   async getAuditLog(
     requestId: string,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<{
     total: number;
     logs: OfflineRequestAuditLog[];
@@ -690,7 +720,7 @@ class OfflineRequestService {
     const [logs, total] = await Promise.all([
       prisma.offlineRequestAuditLog.findMany({
         where: { offlineRequestId: requestId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
         skip: offset,
       }),
@@ -701,7 +731,7 @@ class OfflineRequestService {
 
     return {
       total,
-      logs: logs.map(log => this.formatAuditLog(log)),
+      logs: logs.map((log) => this.formatAuditLog(log)),
     };
   }
 
@@ -720,59 +750,66 @@ class OfflineRequestService {
     paymentMethod: string,
     paymentAmount: number,
     transactionRef: string,
-    paymentDetails?: any
+    paymentDetails?: any,
   ): Promise<OfflineChangeRequest> {
     const request = await prisma.offlineChangeRequest.findUnique({
       where: { id: requestId },
     });
 
-    if (!request) throw new Error('Offline request not found');
+    if (!request) throw new Error("Offline request not found");
 
-    const requestedChanges = (request.requestedChanges as any);
-    const staffPricing = (request.staffPricing as any) as StaffPricing;
+    const requestedChanges = request.requestedChanges as any;
+    const staffPricing = request.staffPricing as any as StaffPricing;
     const currentPriceDiff = (request.priceDifference as any)?.totalDiff || 0;
 
     // Step 1: Pre-generate documents to get new ticket/voucher numbers
     const docService = new DocumentGenerationService(emailService);
     const booking = await bookingService.getBookingById(request.bookingId);
     const generatedDocs: BookingDocument[] = [];
-    const documentUrls: Array<{ type: string; url: string; number?: string }> = [];
+    const documentUrls: Array<{ type: string; url: string; number?: string }> =
+      [];
 
     let newTicketNumber: string | undefined;
     let newVoucherNumber: string | undefined;
 
     // Generate reissued ticket/voucher
-    if (booking.type === 'flight') {
-      const originalTicketNumber = (request.originalDetails as any)?.itinerary?.ticketNumber || booking.ticketNumber || 'N/A';
+    if (booking.type === "flight") {
+      const originalTicketNumber =
+        (request.originalDetails as any)?.itinerary?.ticketNumber ||
+        booking.ticketNumber ||
+        "N/A";
       const reissuedTicket = await docService.generateReissuedETicket(
         originalTicketNumber,
         requestedChanges?.newItinerary,
         staffPricing,
         booking as any,
-        request as any
+        request as any,
       );
       generatedDocs.push(reissuedTicket);
       newTicketNumber = reissuedTicket.metadata?.newTicketNumber;
       documentUrls.push({
-        type: 'reissued_e_ticket',
+        type: "reissued_e_ticket",
         url: reissuedTicket.fileUrl,
-        number: newTicketNumber
+        number: newTicketNumber,
       });
-    } else if (booking.type === 'hotel') {
-      const originalVoucherNumber = (request.originalDetails as any)?.itinerary?.voucherNumber || booking.voucherNumber || 'N/A';
+    } else if (booking.type === "hotel") {
+      const originalVoucherNumber =
+        (request.originalDetails as any)?.itinerary?.voucherNumber ||
+        booking.voucherNumber ||
+        "N/A";
       const reissuedVoucher = await docService.generateReissuedHotelVoucher(
         originalVoucherNumber,
         requestedChanges?.newItinerary,
         staffPricing,
         booking as any,
-        request as any
+        request as any,
       );
       generatedDocs.push(reissuedVoucher);
       newVoucherNumber = reissuedVoucher.metadata?.newVoucherNumber;
       documentUrls.push({
-        type: 'reissued_hotel_voucher',
+        type: "reissued_hotel_voucher",
         url: reissuedVoucher.fileUrl,
-        number: newVoucherNumber
+        number: newVoucherNumber,
       });
     }
 
@@ -780,10 +817,13 @@ class OfflineRequestService {
     const amendmentInvoice = await docService.generateAmendmentInvoice(
       booking as any,
       currentPriceDiff,
-      request as any
+      request as any,
     );
     generatedDocs.push(amendmentInvoice);
-    documentUrls.push({ type: 'amendment_invoice', url: amendmentInvoice.fileUrl });
+    documentUrls.push({
+      type: "amendment_invoice",
+      url: amendmentInvoice.fileUrl,
+    });
 
     // Generate receipt if payment was made
     if (paymentAmount > 0) {
@@ -794,15 +834,15 @@ class OfflineRequestService {
           amount: paymentAmount,
           currency: staffPricing.currency,
           method: paymentMethod,
-          status: 'completed',
+          status: "completed",
           paidAt: new Date().toISOString(),
           transactionRef,
-          paymentDetails
+          paymentDetails,
         } as any,
-        request as any
+        request as any,
       );
       generatedDocs.push(receipt);
-      documentUrls.push({ type: 'receipt', url: receipt.fileUrl });
+      documentUrls.push({ type: "receipt", url: receipt.fileUrl });
     }
 
     // Step 2: Update original booking with new details AND new numbers
@@ -815,34 +855,41 @@ class OfflineRequestService {
       staffPricing?.supplierPNR,
       request.requestRef,
       paymentAmount,
-      requestedChanges?.changeReason
+      requestedChanges?.changeReason,
     );
 
     // Step 3: Send documents to customer
-    const customerEmail = updatedBooking.customerEmail || updatedBooking.passengers?.[0]?.email;
+    const customerEmail =
+      updatedBooking.customerEmail || updatedBooking.passengers?.[0]?.email;
     if (customerEmail) {
       await docService.sendDocuments(
         generatedDocs,
         customerEmail,
-        updatedBooking.customerName || updatedBooking.passengers?.[0]?.firstName
+        updatedBooking.customerName ||
+          updatedBooking.passengers?.[0]?.firstName,
       );
     }
 
     // Step 4: Update request status and store reissued documents metadata
-    const payment = paymentAmount > 0 ? {
-      paymentId: transactionRef,
-      amount: paymentAmount,
-      currency: staffPricing.currency,
-      method: paymentMethod,
-      status: 'completed',
-      paidAt: new Date().toISOString(),
-      transactionRef,
-      paymentDetails,
-    } : undefined;
+    const payment =
+      paymentAmount > 0
+        ? {
+            paymentId: transactionRef,
+            amount: paymentAmount,
+            currency: staffPricing.currency,
+            method: paymentMethod,
+            status: "completed",
+            paidAt: new Date().toISOString(),
+            transactionRef,
+            paymentDetails,
+          }
+        : undefined;
 
     const timeline = (request.timeline || {}) as any;
-    if (paymentAmount > 0) timeline.paymentCompletedAt = new Date().toISOString();
-    timeline.customerApprovedAt = timeline.customerApprovedAt || new Date().toISOString();
+    if (paymentAmount > 0)
+      timeline.paymentCompletedAt = new Date().toISOString();
+    timeline.customerApprovedAt =
+      timeline.customerApprovedAt || new Date().toISOString();
     timeline.documentsIssuedAt = new Date().toISOString();
     timeline.completedAt = new Date().toISOString();
 
@@ -858,16 +905,16 @@ class OfflineRequestService {
     });
 
     // Notify customer
-    await this.notifyCustomer(updatedRequest as any, 'request_completed');
+    await this.notifyCustomer(updatedRequest as any, "request_completed");
 
     // Audit log
     await this.createAuditLog(
       requestId,
       OfflineRequestAuditAction.COMPLETED,
       userId,
-      userId === 'system' ? 'system' : 'staff',
+      userId === "system" ? "system" : "staff",
       { status: request.status },
-      { reissuedDocuments: documentUrls }
+      { reissuedDocuments: documentUrls },
     );
 
     return this.formatOfflineRequest(updatedRequest);
@@ -877,9 +924,9 @@ class OfflineRequestService {
     offlineRequestId: string,
     action: OfflineRequestAuditAction,
     actorId: string,
-    actorType: 'customer' | 'staff' | 'system',
+    actorType: "customer" | "staff" | "system",
     oldValues?: any,
-    newValues?: any
+    newValues?: any,
   ): Promise<void> {
     await prisma.offlineRequestAuditLog.create({
       data: {
@@ -897,9 +944,11 @@ class OfflineRequestService {
    * Format database record to API response
    */
   private formatOfflineRequest(record: any): OfflineChangeRequest {
-    const requestType = (record.requestType || 'other') as OfflineRequestType;
-    const status = (record.status || OfflineRequestStatus.PENDING_STAFF) as OfflineRequestStatus;
-    const priority = (record.priority || OfflineRequestPriority.MEDIUM) as OfflineRequestPriority;
+    const requestType = (record.requestType || "other") as OfflineRequestType;
+    const status = (record.status ||
+      OfflineRequestStatus.PENDING_STAFF) as OfflineRequestStatus;
+    const priority = (record.priority ||
+      OfflineRequestPriority.MEDIUM) as OfflineRequestPriority;
 
     return {
       id: record.id,
@@ -911,11 +960,19 @@ class OfflineRequestService {
       priority,
       originalDetails: record.originalDetails as any,
       requestedChanges: record.requestedChanges as any,
-      staffPricing: record.staffPricing ? (record.staffPricing as StaffPricing) : undefined,
-      priceDifference: record.priceDifference ? (record.priceDifference as PriceDifference) : undefined,
-      customerApproval: record.customerApproval ? (record.customerApproval as any) : undefined,
+      staffPricing: record.staffPricing
+        ? (record.staffPricing as StaffPricing)
+        : undefined,
+      priceDifference: record.priceDifference
+        ? (record.priceDifference as PriceDifference)
+        : undefined,
+      customerApproval: record.customerApproval
+        ? (record.customerApproval as any)
+        : undefined,
       payment: record.payment ? (record.payment as any) : undefined,
-      reissuedDocuments: record.reissuedDocuments ? (record.reissuedDocuments as any) : undefined,
+      reissuedDocuments: record.reissuedDocuments
+        ? (record.reissuedDocuments as any)
+        : undefined,
       timeline: record.timeline as any,
       tags: record.tags || [],
       internalNotes: record.internalNotes || [],
@@ -931,9 +988,12 @@ class OfflineRequestService {
     return {
       id: record.id,
       offlineRequestId: record.offlineRequestId,
-      action: (record.action || 'created') as OfflineRequestAuditAction,
+      action: (record.action || "created") as OfflineRequestAuditAction,
       actorId: record.actorId,
-      actorType: (record.actorType || 'system') as 'customer' | 'staff' | 'system',
+      actorType: (record.actorType || "system") as
+        | "customer"
+        | "staff"
+        | "system",
       oldValues: record.oldValues,
       newValues: record.newValues,
       details: record.details,
@@ -945,13 +1005,16 @@ class OfflineRequestService {
    * Send customer notification via queue
    * This integrates with the notification system to inform customers of status changes
    */
-  private async notifyCustomer(request: OfflineChangeRequest, notificationType: string): Promise<void> {
+  private async notifyCustomer(
+    request: OfflineChangeRequest,
+    notificationType: string,
+  ): Promise<void> {
     try {
       // Create notification queue entry
       await prisma.offlineRequestNotificationQueue.create({
         data: {
           offlineRequestId: request.id,
-          status: 'pending',
+          status: "pending",
           notificationType,
           recipientIds: [], // Populated by notification service
           content: {
@@ -967,7 +1030,7 @@ class OfflineRequestService {
       });
     } catch (error) {
       // Log but don't throw - notification failures shouldn't block the workflow
-      console.error('Failed to queue notification:', error);
+      console.error("Failed to queue notification:", error);
     }
   }
 }

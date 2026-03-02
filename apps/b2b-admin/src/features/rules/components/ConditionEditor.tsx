@@ -1,50 +1,83 @@
-import React, { useState, useCallback, useMemo } from 'react'
-import * as Icons from 'lucide-react';
+import React, { useState, useCallback, useMemo } from "react";
+import * as Icons from "lucide-react";
 
-const {
-  Plus,
-  Trash2,
-  ChevronDown
-} = Icons as any;
-import type { RuleCondition, ConditionOperator } from '@/features/rules/types-rule-engine'
+import { Button } from "@tripalfa/ui-components/ui/button";
+
+const { Plus, Trash2, ChevronDown } = Icons as any;
+
+type ConditionOperator =
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "ends_with"
+  | "greater_than"
+  | "less_than"
+  | "greater_equal"
+  | "less_equal"
+  | "in"
+  | "not_in"
+  | "exists"
+  | "not_exists"
+  | "regex"
+  | "between"
+  | "matches"
+  | "any_of"
+  | "all_of";
+
+type RuleCondition =
+  | {
+      id?: string;
+      type: "simple";
+      field: string;
+      operator: ConditionOperator;
+      value?: any;
+    }
+  | {
+      id?: string;
+      type: "group";
+      logic: "AND" | "OR" | "XOR";
+      conditions: RuleCondition[];
+    };
 
 // ============================================================================
 // CONDITION EDITOR - VISUAL CONDITION BUILDER
 // ============================================================================
 
 export interface ConditionEditorProps {
-  condition?: RuleCondition
-  onConditionChange?: (condition: RuleCondition) => void
-  availableFields?: string[]
-  disabled?: boolean
+  condition?: RuleCondition;
+  onConditionChange?: (condition: RuleCondition) => void;
+  availableFields?: string[];
+  disabled?: boolean;
 }
 
 const CONDITION_OPERATORS: ConditionOperator[] = [
-  'equals',
-  'not_equals',
-  'contains',
-  'not_contains',
-  'starts_with',
-  'ends_with',
-  'greater_than',
-  'less_than',
-  'greater_equal',
-  'less_equal',
-  'in',
-  'not_in',
-  'exists',
-  'not_exists',
-  'regex',
-  'between',
-  'matches',
-  'any_of',
-  'all_of',
-]
+  "equals",
+  "not_equals",
+  "contains",
+  "not_contains",
+  "starts_with",
+  "ends_with",
+  "greater_than",
+  "less_than",
+  "greater_equal",
+  "less_equal",
+  "in",
+  "not_in",
+  "exists",
+  "not_exists",
+  "regex",
+  "between",
+  "matches",
+  "any_of",
+  "all_of",
+];
 
-const LOGIC_OPERATORS = ['AND', 'OR', 'XOR'] as const
+const LOGIC_OPERATORS = ["AND", "OR", "XOR"] as const;
 
 export const ConditionEditor: React.FC<ConditionEditorProps> = ({
-  condition = { type: 'simple', field: '', operator: 'equals', value: '' },
+  condition = { type: "simple", field: "", operator: "equals", value: "" },
   onConditionChange,
   availableFields = [],
   disabled = false,
@@ -52,39 +85,43 @@ export const ConditionEditor: React.FC<ConditionEditorProps> = ({
   const [conditionData, setConditionData] = useState<RuleCondition>({
     ...condition,
     id: condition.id || `cond-${Date.now()}`,
-  })
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['root']))
+  });
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    new Set(["root"]),
+  );
 
   const handleConditionChange = useCallback(
     (updated: RuleCondition) => {
-      setConditionData(updated)
-      onConditionChange?.(updated)
+      setConditionData(updated);
+      onConditionChange?.(updated);
     },
-    [onConditionChange]
-  )
+    [onConditionChange],
+  );
 
   const toggleGroup = (groupId: string) => {
     setExpandedGroups((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(groupId)) {
-        next.delete(groupId)
+        next.delete(groupId);
       } else {
-        next.add(groupId)
+        next.add(groupId);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">Condition Builder</h3>
-        <button
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-semibold text-foreground text-xl font-semibold tracking-tight">
+          Condition Builder
+        </h3>
+        <Button
           onClick={() =>
             handleConditionChange({
               id: `cond-${Date.now()}-group`,
-              type: 'group',
-              logic: 'AND',
+              type: "group",
+              logic: "AND",
               conditions: [conditionData],
             })
           }
@@ -95,17 +132,17 @@ export const ConditionEditor: React.FC<ConditionEditorProps> = ({
           "
         >
           + Add Group
-        </button>
+        </Button>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-card border border-border rounded-lg p-4">
         <ConditionNode
           condition={conditionData}
           nodeId="root"
           onConditionChange={handleConditionChange}
           availableFields={availableFields}
-          isExpanded={expandedGroups.has('root')}
-          onToggleExpand={() => toggleGroup('root')}
+          isExpanded={expandedGroups.has("root")}
+          onToggleExpand={() => toggleGroup("root")}
           disabled={disabled}
           isRoot
         />
@@ -114,22 +151,22 @@ export const ConditionEditor: React.FC<ConditionEditorProps> = ({
       {/* Condition Preview */}
       <ConditionPreview condition={conditionData} />
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // CONDITION NODE SUB-COMPONENT (Recursive)
 // ============================================================================
 
 interface ConditionNodeProps {
-  condition: RuleCondition
-  nodeId: string
-  onConditionChange: (condition: RuleCondition) => void
-  availableFields: string[]
-  isExpanded: boolean
-  onToggleExpand: () => void
-  disabled?: boolean
-  isRoot?: boolean
+  condition: RuleCondition;
+  nodeId: string;
+  onConditionChange: (condition: RuleCondition) => void;
+  availableFields: string[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  disabled?: boolean;
+  isRoot?: boolean;
 }
 
 const ConditionNode: React.FC<ConditionNodeProps> = ({
@@ -142,7 +179,7 @@ const ConditionNode: React.FC<ConditionNodeProps> = ({
   disabled = false,
   isRoot = false,
 }) => {
-  if (condition.type === 'simple') {
+  if (condition.type === "simple") {
     return (
       <SimpleCondition
         condition={condition as any}
@@ -150,10 +187,10 @@ const ConditionNode: React.FC<ConditionNodeProps> = ({
         availableFields={availableFields}
         disabled={disabled}
       />
-    )
+    );
   }
 
-  if (condition.type === 'group') {
+  if (condition.type === "group") {
     return (
       <GroupCondition
         condition={condition as any}
@@ -165,21 +202,21 @@ const ConditionNode: React.FC<ConditionNodeProps> = ({
         disabled={disabled}
         isRoot={isRoot}
       />
-    )
+    );
   }
 
-  return null
-}
+  return null;
+};
 
 // ============================================================================
 // SIMPLE CONDITION SUB-COMPONENT
 // ============================================================================
 
 interface SimpleConditionProps {
-  condition: RuleCondition & { type: 'simple' }
-  onConditionChange: (condition: RuleCondition) => void
-  availableFields: string[]
-  disabled?: boolean
+  condition: RuleCondition & { type: "simple" };
+  onConditionChange: (condition: RuleCondition) => void;
+  availableFields: string[];
+  disabled?: boolean;
 }
 
 const SimpleCondition: React.FC<SimpleConditionProps> = ({
@@ -188,12 +225,14 @@ const SimpleCondition: React.FC<SimpleConditionProps> = ({
   availableFields,
   disabled = false,
 }) => {
-  const doesNotNeedValue = ['exists', 'not_exists']
+  const doesNotNeedValue = ["exists", "not_exists"];
 
   return (
     <div className="flex gap-2 items-end">
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-gray-700 mb-1">Field</label>
+      <div className="flex-1 gap-4">
+        <label className="block text-xs font-medium text-foreground mb-1">
+          Field
+        </label>
         <select
           value={condition.field}
           onChange={(e) =>
@@ -204,9 +243,9 @@ const SimpleCondition: React.FC<SimpleConditionProps> = ({
           }
           disabled={disabled}
           className="
-            w-full px-2 py-1 border border-gray-300 rounded text-sm
+            w-full px-2 py-1 border border-border rounded text-sm
             focus:outline-none focus:ring-2 focus:ring-blue-500
-            disabled:bg-gray-100 disabled:cursor-not-allowed
+            disabled:bg-muted disabled:cursor-not-allowed
           "
         >
           <option value="">Select field...</option>
@@ -218,8 +257,10 @@ const SimpleCondition: React.FC<SimpleConditionProps> = ({
         </select>
       </div>
 
-      <div className="flex-1">
-        <label className="block text-xs font-medium text-gray-700 mb-1">Operator</label>
+      <div className="flex-1 gap-4">
+        <label className="block text-xs font-medium text-foreground mb-1">
+          Operator
+        </label>
         <select
           value={condition.operator}
           onChange={(e) =>
@@ -230,25 +271,28 @@ const SimpleCondition: React.FC<SimpleConditionProps> = ({
           }
           disabled={disabled}
           className="
-            w-full px-2 py-1 border border-gray-300 rounded text-sm
+            w-full px-2 py-1 border border-border rounded text-sm
             focus:outline-none focus:ring-2 focus:ring-blue-500
-            disabled:bg-gray-100 disabled:cursor-not-allowed
+            disabled:bg-muted disabled:cursor-not-allowed
           "
         >
           {CONDITION_OPERATORS.map((op) => (
             <option key={op} value={op}>
-              {op.replace(/_/g, ' ').charAt(0).toUpperCase() + op.replace(/_/g, ' ').slice(1)}
+              {op.replace(/_/g, " ").charAt(0).toUpperCase() +
+                op.replace(/_/g, " ").slice(1)}
             </option>
           ))}
         </select>
       </div>
 
-      {!doesNotNeedValue.includes(condition.operator || 'equals') && (
-        <div className="flex-1">
-          <label className="block text-xs font-medium text-gray-700 mb-1">Value</label>
+      {!doesNotNeedValue.includes(condition.operator || "equals") && (
+        <div className="flex-1 gap-4">
+          <label className="block text-xs font-medium text-foreground mb-1">
+            Value
+          </label>
           <input
             type="text"
-            value={condition.value || ''}
+            value={condition.value || ""}
             onChange={(e) =>
               onConditionChange({
                 ...condition,
@@ -258,30 +302,30 @@ const SimpleCondition: React.FC<SimpleConditionProps> = ({
             placeholder="Enter value..."
             disabled={disabled}
             className="
-              w-full px-2 py-1 border border-gray-300 rounded text-sm
+              w-full px-2 py-1 border border-border rounded text-sm
               focus:outline-none focus:ring-2 focus:ring-blue-500
-              disabled:bg-gray-100 disabled:cursor-not-allowed
+              disabled:bg-muted disabled:cursor-not-allowed
             "
           />
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // GROUP CONDITION SUB-COMPONENT
 // ============================================================================
 
 interface GroupConditionProps {
-  condition: RuleCondition & { type: 'group' }
-  nodeId: string
-  onConditionChange: (condition: RuleCondition) => void
-  availableFields: string[]
-  isExpanded: boolean
-  onToggleExpand: () => void
-  disabled?: boolean
-  isRoot?: boolean
+  condition: RuleCondition & { type: "group" };
+  nodeId: string;
+  onConditionChange: (condition: RuleCondition) => void;
+  availableFields: string[];
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  disabled?: boolean;
+  isRoot?: boolean;
 }
 
 const GroupCondition: React.FC<GroupConditionProps> = ({
@@ -297,57 +341,67 @@ const GroupCondition: React.FC<GroupConditionProps> = ({
   const handleAddCondition = useCallback(() => {
     const newCondition: RuleCondition = {
       id: `cond-${Date.now()}`,
-      type: 'simple',
-      field: '',
-      operator: 'equals',
-      value: '',
-    }
+      type: "simple",
+      field: "",
+      operator: "equals",
+      value: "",
+    };
 
     onConditionChange({
       ...condition,
       conditions: [...(condition.conditions || []), newCondition],
-    })
-  }, [condition, onConditionChange])
+    });
+  }, [condition, onConditionChange]);
 
   const handleRemoveCondition = useCallback(
     (index: number) => {
       onConditionChange({
         ...condition,
         conditions: condition.conditions?.filter((_, i) => i !== index) || [],
-      })
+      });
     },
-    [condition, onConditionChange]
-  )
+    [condition, onConditionChange],
+  );
 
   const handleUpdateCondition = useCallback(
     (index: number, updated: RuleCondition) => {
       onConditionChange({
         ...condition,
-        conditions: condition.conditions?.map((c, i) => (i === index ? updated : c)) || [],
-      })
+        conditions:
+          condition.conditions?.map((c, i) => (i === index ? updated : c)) ||
+          [],
+      });
     },
-    [condition, onConditionChange]
-  )
+    [condition, onConditionChange],
+  );
 
   return (
-    <div className="space-y-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-      <div className="flex items-center justify-between">
-        <button
+    <div className="space-y-3 p-3 bg-muted border border-border rounded-lg">
+      <div className="flex items-center justify-between gap-2">
+        <Button
           onClick={onToggleExpand}
-          className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 text-foreground hover:text-foreground/90 px-4 py-2 rounded-md"
           disabled={disabled}
         >
           <ChevronDown
             size={18}
-            className={`transition-transform ${isExpanded ? '' : '-rotate-90'}`}
+            className={`transition-transform ${isExpanded ? "" : "-rotate-90"}`}
           />
           <span className="font-medium">
-            {isRoot ? 'Root Condition' : 'Condition Group'}
+            {isRoot ? "Root Condition" : "Condition Group"}
           </span>
-        </button>
+        </Button>
         {!isRoot && (
-          <button
-            onClick={() => onConditionChange({ id: `cond-${Date.now()}`, type: 'simple', field: '', operator: 'equals', value: '' })}
+          <Button
+            onClick={() =>
+              onConditionChange({
+                id: `cond-${Date.now()}`,
+                type: "simple",
+                field: "",
+                operator: "equals",
+                value: "",
+              })
+            }
             disabled={disabled}
             className="
               px-2 py-1 text-xs font-medium text-red-600 border border-red-300 rounded
@@ -355,17 +409,19 @@ const GroupCondition: React.FC<GroupConditionProps> = ({
             "
           >
             Remove Group
-          </button>
+          </Button>
         )}
       </div>
 
       {isExpanded && (
         <div className="space-y-3">
           <div className="flex gap-2 items-center">
-            <span className="text-xs font-medium text-gray-600">Logic:</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              Logic:
+            </span>
             <div className="flex gap-1">
               {LOGIC_OPERATORS.map((op) => (
-                <button
+                <Button
                   key={op}
                   onClick={() =>
                     onConditionChange({
@@ -378,14 +434,14 @@ const GroupCondition: React.FC<GroupConditionProps> = ({
                     transition-colors
                     ${
                       condition.logic === op
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "border-border text-foreground hover:border-foreground/40"
                     }
                   `}
                   disabled={disabled}
                 >
                   {op}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -393,18 +449,23 @@ const GroupCondition: React.FC<GroupConditionProps> = ({
           {/* Sub-conditions */}
           <div className="space-y-2">
             {condition.conditions?.map((subCondition, index) => (
-              <div key={index} className="space-y-2 p-2 bg-white rounded border border-gray-200">
+              <div
+                key={index}
+                className="space-y-2 p-2 bg-card rounded border border-border"
+              >
                 <ConditionNode
                   condition={subCondition}
                   nodeId={`${nodeId}-${index}`}
-                  onConditionChange={(updated) => handleUpdateCondition(index, updated)}
+                  onConditionChange={(updated) =>
+                    handleUpdateCondition(index, updated)
+                  }
                   availableFields={availableFields}
                   isExpanded={true}
                   onToggleExpand={() => {}}
                   disabled={disabled}
                 />
                 {condition.conditions && condition.conditions.length > 1 && (
-                  <button
+                  <Button
                     onClick={() => handleRemoveCondition(index)}
                     disabled={disabled}
                     className="
@@ -413,13 +474,13 @@ const GroupCondition: React.FC<GroupConditionProps> = ({
                     "
                   >
                     Remove Condition
-                  </button>
+                  </Button>
                 )}
               </div>
             ))}
           </div>
 
-          <button
+          <Button
             onClick={handleAddCondition}
             disabled={disabled}
             className="
@@ -429,49 +490,49 @@ const GroupCondition: React.FC<GroupConditionProps> = ({
             "
           >
             + Add Condition
-          </button>
+          </Button>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // CONDITION PREVIEW SUB-COMPONENT
 // ============================================================================
 
 interface ConditionPreviewProps {
-  condition: RuleCondition
+  condition: RuleCondition;
 }
 
 const ConditionPreview: React.FC<ConditionPreviewProps> = ({ condition }) => {
   const preview = useMemo(() => {
-    if (condition.type === 'simple') {
-      const operator = (condition.operator as string).replace(/_/g, ' ')
-      return `${condition.field} ${operator} ${condition.value}`
+    if (condition.type === "simple") {
+      const operator = (condition.operator as string).replace(/_/g, " ");
+      return `${condition.field} ${operator} ${condition.value}`;
     }
 
-    if (condition.type === 'group') {
+    if (condition.type === "group") {
       const subPreviews = (condition.conditions || []).map((c) => {
-        if (c.type === 'simple') {
-          const operator = (c.operator as string).replace(/_/g, ' ')
-          return `${c.field} ${operator} ${c.value}`
+        if (c.type === "simple") {
+          const operator = (c.operator as string).replace(/_/g, " ");
+          return `${c.field} ${operator} ${c.value}`;
         }
-        return '(...)'
-      })
+        return "(...)";
+      });
 
-      return `(${subPreviews.join(` ${condition.logic} `)})`
+      return `(${subPreviews.join(` ${condition.logic} `)})`;
     }
 
-    return ''
-  }, [condition])
+    return "";
+  }, [condition]);
 
   return (
     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
       <p className="text-xs font-medium text-blue-900">Condition Preview:</p>
       <p className="font-mono text-sm text-blue-800 mt-1">{preview}</p>
     </div>
-  )
-}
+  );
+};
 
-export default ConditionEditor
+export default ConditionEditor;

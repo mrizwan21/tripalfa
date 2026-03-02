@@ -1,6 +1,6 @@
 /**
  * B2B Admin Frontend - Notification Management Tests
- * 
+ *
  * Tests cover:
  * - Notification management dashboard
  * - User notification preferences and settings
@@ -11,10 +11,10 @@
  * - Notification history and audit logs
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import "@testing-library/jest-dom";
 
 // Mock Admin Notification Dashboard Component
 function AdminNotificationDashboard({
@@ -31,8 +31,8 @@ function AdminNotificationDashboard({
   onTemplateCreate: (template: any) => void;
 }) {
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
-  const [filterType, setFilterType] = React.useState('all');
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filterType, setFilterType] = React.useState("all");
+  const [searchTerm, setSearchTerm] = React.useState("");
 
   const handleSelectAll = () => {
     if (selectedIds.length === notifications.length) {
@@ -44,13 +44,16 @@ function AdminNotificationDashboard({
 
   const handleCheckboxChange = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
   const filteredNotifications = notifications.filter((n) => {
-    if (filterType !== 'all' && n.type !== filterType) return false;
-    if (searchTerm && !n.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+    if (filterType !== "all" && n.type !== filterType) return false;
+    if (
+      searchTerm &&
+      !n.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ) {
       return false;
     }
     return true;
@@ -117,7 +120,10 @@ function AdminNotificationDashboard({
           </thead>
           <tbody>
             {filteredNotifications.map((notification) => (
-              <tr key={notification.id} data-testid={`notification-row-${notification.id}`}>
+              <tr
+                key={notification.id}
+                data-testid={`notification-row-${notification.id}`}
+              >
                 <td>
                   <input
                     type="checkbox"
@@ -127,7 +133,7 @@ function AdminNotificationDashboard({
                 </td>
                 <td>{notification.title}</td>
                 <td>{notification.type}</td>
-                <td>{notification.status || 'pending'}</td>
+                <td>{notification.status || "pending"}</td>
                 <td>{new Date(notification.createdAt).toLocaleDateString()}</td>
                 <td>
                   <button
@@ -159,8 +165,8 @@ function UserNotificationPreferences({
     smsEnabled: true,
     pushEnabled: false,
     inAppEnabled: true,
-    notificationFrequency: 'immediate',
-    quietHours: { enabled: false, start: '22:00', end: '08:00' },
+    notificationFrequency: "immediate",
+    quietHours: { enabled: false, start: "22:00", end: "08:00" },
   });
 
   const handleToggle = (key: string) => {
@@ -178,7 +184,7 @@ function UserNotificationPreferences({
           <input
             type="checkbox"
             checked={preferences.emailEnabled}
-            onChange={() => handleToggle('emailEnabled')}
+            onChange={() => handleToggle("emailEnabled")}
             data-testid="email-toggle"
           />
           Email Notifications
@@ -190,7 +196,7 @@ function UserNotificationPreferences({
           <input
             type="checkbox"
             checked={preferences.smsEnabled}
-            onChange={() => handleToggle('smsEnabled')}
+            onChange={() => handleToggle("smsEnabled")}
             data-testid="sms-toggle"
           />
           SMS Notifications
@@ -202,7 +208,7 @@ function UserNotificationPreferences({
           <input
             type="checkbox"
             checked={preferences.pushEnabled}
-            onChange={() => handleToggle('pushEnabled')}
+            onChange={() => handleToggle("pushEnabled")}
             data-testid="push-toggle"
           />
           Push Notifications
@@ -214,7 +220,7 @@ function UserNotificationPreferences({
           <input
             type="checkbox"
             checked={preferences.inAppEnabled}
-            onChange={() => handleToggle('inAppEnabled')}
+            onChange={() => handleToggle("inAppEnabled")}
             data-testid="inapp-toggle"
           />
           In-App Notifications
@@ -288,7 +294,7 @@ beforeEach(() => {
     useState: vi.fn((initialState) => {
       let state = initialState;
       const setState = vi.fn((newState) => {
-        if (typeof newState === 'function') {
+        if (typeof newState === "function") {
           state = newState(state);
         } else {
           state = newState;
@@ -302,46 +308,46 @@ beforeEach(() => {
   };
 });
 
-describe('B2B Admin - Notification Management', () => {
+describe("B2B Admin - Notification Management", () => {
   const mockNotifications = [
     {
-      id: 'ntf-001',
-      title: 'Order Created',
-      type: 'order',
-      status: 'sent',
-      createdAt: '2024-01-15T10:30:00Z',
+      id: "ntf-001",
+      title: "Order Created",
+      type: "order",
+      status: "sent",
+      createdAt: "2024-01-15T10:30:00Z",
     },
     {
-      id: 'ntf-002',
-      title: 'Payment Received',
-      type: 'payment',
-      status: 'sent',
-      createdAt: '2024-01-15T11:00:00Z',
+      id: "ntf-002",
+      title: "Payment Received",
+      type: "payment",
+      status: "sent",
+      createdAt: "2024-01-15T11:00:00Z",
     },
     {
-      id: 'ntf-003',
-      title: 'System Alert',
-      type: 'alert',
-      status: 'unread',
-      createdAt: '2024-01-15T12:00:00Z',
+      id: "ntf-003",
+      title: "System Alert",
+      type: "alert",
+      status: "unread",
+      createdAt: "2024-01-15T12:00:00Z",
     },
     {
-      id: 'ntf-004',
-      title: 'Booking Failed',
-      type: 'order',
-      status: 'error',
-      createdAt: '2024-01-15T13:00:00Z',
+      id: "ntf-004",
+      title: "Booking Failed",
+      type: "order",
+      status: "error",
+      createdAt: "2024-01-15T13:00:00Z",
     },
     {
-      id: 'ntf-005',
-      title: 'Payment Error',
-      type: 'payment',
-      status: 'error',
-      createdAt: '2024-01-15T13:30:00Z',
+      id: "ntf-005",
+      title: "Payment Error",
+      type: "payment",
+      status: "error",
+      createdAt: "2024-01-15T13:30:00Z",
     },
   ];
-  describe('Error Notification Flows', () => {
-    it('should display error notification for booking failure', () => {
+  describe("Error Notification Flows", () => {
+    it("should display error notification for booking failure", () => {
       render(
         <AdminNotificationDashboard
           notifications={[mockNotifications[3]]}
@@ -349,13 +355,13 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
-      expect(screen.getByText('Booking Failed')).toBeInTheDocument();
-      expect(screen.getByText('error')).toBeInTheDocument();
+      expect(screen.getByText("Booking Failed")).toBeInTheDocument();
+      expect(screen.getByText("error")).toBeInTheDocument();
     });
 
-    it('should display error notification for payment error', () => {
+    it("should display error notification for payment error", () => {
       render(
         <AdminNotificationDashboard
           notifications={[mockNotifications[4]]}
@@ -363,15 +369,15 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
-      expect(screen.getByText('Payment Error')).toBeInTheDocument();
-      expect(screen.getByText('error')).toBeInTheDocument();
+      expect(screen.getByText("Payment Error")).toBeInTheDocument();
+      expect(screen.getByText("error")).toBeInTheDocument();
     });
   });
 
-  describe('Notification Timing and UX', () => {
-    it('should show loading state for async notification fetch', async () => {
+  describe("Notification Timing and UX", () => {
+    it("should show loading state for async notification fetch", async () => {
       function AsyncDashboard() {
         const [loading, setLoading] = React.useState(true);
         React.useEffect(() => {
@@ -391,9 +397,9 @@ describe('B2B Admin - Notification Management', () => {
       }
       vi.useFakeTimers();
       render(<AsyncDashboard />);
-      expect(screen.getByTestId('dashboard-loading')).toBeInTheDocument();
+      expect(screen.getByTestId("dashboard-loading")).toBeInTheDocument();
       vi.advanceTimersByTime(400);
-      expect(screen.getByText('Order Created')).toBeInTheDocument();
+      expect(screen.getByText("Order Created")).toBeInTheDocument();
       vi.useRealTimers();
     });
   });
@@ -402,8 +408,8 @@ describe('B2B Admin - Notification Management', () => {
     vi.clearAllMocks();
   });
 
-  describe('Notification Dashboard', () => {
-    it('should display admin notification dashboard', () => {
+  describe("Notification Dashboard", () => {
+    it("should display admin notification dashboard", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -411,15 +417,15 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByTestId('admin-dashboard')).toBeInTheDocument();
-      expect(screen.getByTestId('search-input')).toBeInTheDocument();
-      expect(screen.getByTestId('filter-select')).toBeInTheDocument();
+      expect(screen.getByTestId("admin-dashboard")).toBeInTheDocument();
+      expect(screen.getByTestId("search-input")).toBeInTheDocument();
+      expect(screen.getByTestId("filter-select")).toBeInTheDocument();
     });
 
-    it('should display all notifications', () => {
+    it("should display all notifications", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -427,15 +433,15 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByText('Order Created')).toBeInTheDocument();
-      expect(screen.getByText('Payment Received')).toBeInTheDocument();
-      expect(screen.getByText('System Alert')).toBeInTheDocument();
+      expect(screen.getByText("Order Created")).toBeInTheDocument();
+      expect(screen.getByText("Payment Received")).toBeInTheDocument();
+      expect(screen.getByText("System Alert")).toBeInTheDocument();
     });
 
-    it('should allow filtering by notification type', () => {
+    it("should allow filtering by notification type", () => {
       const onFilterChange = vi.fn();
       render(
         <AdminNotificationDashboard
@@ -444,16 +450,18 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const filterSelect = screen.getByTestId('filter-select') as HTMLSelectElement;
-      fireEvent.change(filterSelect, { target: { value: 'order' } });
+      const filterSelect = screen.getByTestId(
+        "filter-select",
+      ) as HTMLSelectElement;
+      fireEvent.change(filterSelect, { target: { value: "order" } });
 
-      expect(onFilterChange).toHaveBeenCalledWith('order');
+      expect(onFilterChange).toHaveBeenCalledWith("order");
     });
 
-    it('should allow searching notifications', () => {
+    it("should allow searching notifications", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -461,16 +469,18 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const searchInput = screen.getByTestId('search-input') as HTMLInputElement;
-      fireEvent.change(searchInput, { target: { value: 'Payment' } });
+      const searchInput = screen.getByTestId(
+        "search-input",
+      ) as HTMLInputElement;
+      fireEvent.change(searchInput, { target: { value: "Payment" } });
 
-      expect(screen.getByText('Payment Received')).toBeInTheDocument();
+      expect(screen.getByText("Payment Received")).toBeInTheDocument();
     });
 
-    it('should handle select all functionality', () => {
+    it("should handle select all functionality", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -478,16 +488,16 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const selectAllBtn = screen.getByTestId('select-all-btn');
+      const selectAllBtn = screen.getByTestId("select-all-btn");
       fireEvent.click(selectAllBtn);
 
       expect(selectAllBtn).toBeInTheDocument();
     });
 
-    it('should handle bulk delete', () => {
+    it("should handle bulk delete", () => {
       const onBulkDelete = vi.fn();
       render(
         <AdminNotificationDashboard
@@ -496,19 +506,19 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={onBulkDelete}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const selectAllBtn = screen.getByTestId('select-all-btn');
+      const selectAllBtn = screen.getByTestId("select-all-btn");
       fireEvent.click(selectAllBtn);
 
-      const bulkDeleteBtn = screen.queryByTestId('bulk-delete-btn');
+      const bulkDeleteBtn = screen.queryByTestId("bulk-delete-btn");
       if (bulkDeleteBtn) {
         fireEvent.click(bulkDeleteBtn);
       }
     });
 
-    it('should delete individual notification', () => {
+    it("should delete individual notification", () => {
       const onDeleteNotification = vi.fn();
       render(
         <AdminNotificationDashboard
@@ -517,16 +527,16 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={onDeleteNotification}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const deleteBtn = screen.getByTestId('delete-btn-ntf-001');
+      const deleteBtn = screen.getByTestId("delete-btn-ntf-001");
       fireEvent.click(deleteBtn);
 
-      expect(onDeleteNotification).toHaveBeenCalledWith('ntf-001');
+      expect(onDeleteNotification).toHaveBeenCalledWith("ntf-001");
     });
 
-    it('should display notification metadata', () => {
+    it("should display notification metadata", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -534,129 +544,135 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
       // Table should contain type and status columns
-      expect(screen.getByText('order')).toBeInTheDocument();
-      expect(screen.getByText('payment')).toBeInTheDocument();
+      expect(screen.getByText("order")).toBeInTheDocument();
+      expect(screen.getByText("payment")).toBeInTheDocument();
     });
   });
 
-  describe('User Notification Preferences', () => {
-    it('should display user preferences form', () => {
+  describe("User Notification Preferences", () => {
+    it("should display user preferences form", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByTestId('preferences-form')).toBeInTheDocument();
-      expect(screen.getByTestId('email-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('sms-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('push-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('inapp-toggle')).toBeInTheDocument();
+      expect(screen.getByTestId("preferences-form")).toBeInTheDocument();
+      expect(screen.getByTestId("email-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("sms-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("push-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("inapp-toggle")).toBeInTheDocument();
     });
 
-    it('should toggle email notifications', () => {
+    it("should toggle email notifications", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      const emailToggle = screen.getByTestId('email-toggle') as HTMLInputElement;
+      const emailToggle = screen.getByTestId(
+        "email-toggle",
+      ) as HTMLInputElement;
       expect(emailToggle).toBeInTheDocument();
-      expect(emailToggle.type).toBe('checkbox');
+      expect(emailToggle.type).toBe("checkbox");
     });
 
-    it('should toggle SMS notifications', () => {
+    it("should toggle SMS notifications", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      const smsToggle = screen.getByTestId('sms-toggle') as HTMLInputElement;
+      const smsToggle = screen.getByTestId("sms-toggle") as HTMLInputElement;
       expect(smsToggle).toBeInTheDocument();
-      expect(smsToggle.type).toBe('checkbox');
+      expect(smsToggle.type).toBe("checkbox");
     });
 
-    it('should toggle push notifications', () => {
+    it("should toggle push notifications", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      const pushToggle = screen.getByTestId('push-toggle') as HTMLInputElement;
+      const pushToggle = screen.getByTestId("push-toggle") as HTMLInputElement;
       expect(pushToggle).toBeInTheDocument();
-      expect(pushToggle.type).toBe('checkbox');
+      expect(pushToggle.type).toBe("checkbox");
     });
 
-    it('should have notification frequency selector', () => {
+    it("should have notification frequency selector", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      const frequencySelect = screen.getByTestId('frequency-select') as HTMLSelectElement;
+      const frequencySelect = screen.getByTestId(
+        "frequency-select",
+      ) as HTMLSelectElement;
       expect(frequencySelect).toBeInTheDocument();
-      expect(frequencySelect).toHaveProperty('value', 'immediate');
+      expect(frequencySelect).toHaveProperty("value", "immediate");
     });
 
-    it('should have quiet hours toggle', () => {
+    it("should have quiet hours toggle", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      const quietHoursToggle = screen.getByTestId('quiet-hours-toggle') as HTMLInputElement;
+      const quietHoursToggle = screen.getByTestId(
+        "quiet-hours-toggle",
+      ) as HTMLInputElement;
       expect(quietHoursToggle).toBeInTheDocument();
-      expect(quietHoursToggle.type).toBe('checkbox');
+      expect(quietHoursToggle.type).toBe("checkbox");
     });
 
-    it('should save preferences when button clicked', () => {
+    it("should save preferences when button clicked", () => {
       const onSavePreferences = vi.fn();
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={onSavePreferences}
-        />
+        />,
       );
 
-      const saveBtn = screen.getByTestId('save-preferences-btn');
+      const saveBtn = screen.getByTestId("save-preferences-btn");
       fireEvent.click(saveBtn);
 
       expect(onSavePreferences).toHaveBeenCalled();
     });
 
-    it('should render all preference form elements', () => {
+    it("should render all preference form elements", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByTestId('preferences-form')).toBeInTheDocument();
-      expect(screen.getByTestId('email-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('sms-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('push-toggle')).toBeInTheDocument();
-      expect(screen.getByTestId('frequency-select')).toBeInTheDocument();
+      expect(screen.getByTestId("preferences-form")).toBeInTheDocument();
+      expect(screen.getByTestId("email-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("sms-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("push-toggle")).toBeInTheDocument();
+      expect(screen.getByTestId("frequency-select")).toBeInTheDocument();
     });
   });
 
-  describe('Role-Based Access Control', () => {
-    it('should display delete button for admins', () => {
+  describe("Role-Based Access Control", () => {
+    it("should display delete button for admins", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -664,13 +680,13 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByTestId('delete-btn-ntf-001')).toBeInTheDocument();
+      expect(screen.getByTestId("delete-btn-ntf-001")).toBeInTheDocument();
     });
 
-    it('should allow bulk operations for admins', () => {
+    it("should allow bulk operations for admins", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -678,15 +694,15 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      expect(screen.getByTestId('select-all-btn')).toBeInTheDocument();
+      expect(screen.getByTestId("select-all-btn")).toBeInTheDocument();
     });
   });
 
-  describe('Notification History', () => {
-    it('should display notification dates', () => {
+  describe("Notification History", () => {
+    it("should display notification dates", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -694,7 +710,7 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
       // Dates should be displayed in the table
@@ -702,7 +718,7 @@ describe('B2B Admin - Notification Management', () => {
       expect(dateElements.length).toBeGreaterThan(0);
     });
 
-    it('should display notification status', () => {
+    it("should display notification status", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -710,19 +726,19 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const sentElements = screen.getAllByText('sent');
+      const sentElements = screen.getAllByText("sent");
       expect(sentElements.length).toBeGreaterThan(0);
-      
-      const unreadElements = screen.queryAllByText('unread');
+
+      const unreadElements = screen.queryAllByText("unread");
       expect(unreadElements.length).toBeGreaterThan(0);
     });
   });
 
-  describe('Accessibility', () => {
-    it('should have accessible select all button', () => {
+  describe("Accessibility", () => {
+    it("should have accessible select all button", () => {
       render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -730,14 +746,14 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
-      const selectAllBtn = screen.getByLabelText('Select all notifications');
+      const selectAllBtn = screen.getByLabelText("Select all notifications");
       expect(selectAllBtn).toBeInTheDocument();
     });
 
-    it('should have proper table structure for accessibility', () => {
+    it("should have proper table structure for accessibility", () => {
       const { container } = render(
         <AdminNotificationDashboard
           notifications={mockNotifications}
@@ -745,23 +761,25 @@ describe('B2B Admin - Notification Management', () => {
           onDeleteNotification={() => {}}
           onBulkDelete={() => {}}
           onTemplateCreate={() => {}}
-        />
+        />,
       );
 
       const table = container.querySelector('table[role="grid"]');
       expect(table).toBeInTheDocument();
     });
 
-    it('should have accessible preference labels', () => {
+    it("should have accessible preference labels", () => {
       render(
         <UserNotificationPreferences
           userId="user-123"
           onSavePreferences={() => {}}
-        />
+        />,
       );
 
       expect(screen.getByLabelText(/Email Notifications/)).toBeInTheDocument();
-      expect(screen.getByLabelText('Notification Frequency')).toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Notification Frequency"),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -12,14 +12,18 @@ The Wallet Management API provides comprehensive endpoints for managing user wal
 ## Authentication
 
 ### API Key Authentication
+
 Include your API key in the request header:
-```
+
+```http
 X-API-Key: your-api-key-here
 ```
 
 ### Bearer Token Authentication
+
 Include your JWT token in the request header:
-```
+
+```http
 Authorization: Bearer your-jwt-token
 ```
 
@@ -57,9 +61,11 @@ All API responses follow a consistent error format:
 ### Health Check
 
 #### GET /health
+
 Returns service health status and metadata.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -71,21 +77,24 @@ Returns service health status and metadata.
 ### Wallet Management
 
 #### GET /wallets
+
 Retrieve all wallets with their current balances.
 
 **Query Parameters:**
+
 - `userId` (optional): Filter by user ID
 - `currency` (optional): Filter by currency
 - `status` (optional): Filter by wallet status (`ACTIVE`, `INACTIVE`, `SUSPENDED`)
 
 **Response:**
+
 ```json
 [
   {
     "id": "wallet_12345",
     "userId": "user_67890",
     "currency": "USD",
-    "balance": 1500.00,
+    "balance": 1500.0,
     "status": "ACTIVE",
     "createdAt": "2024-10-25T10:30:00Z",
     "updatedAt": "2024-10-25T10:30:00Z"
@@ -94,28 +103,33 @@ Retrieve all wallets with their current balances.
 ```
 
 #### POST /wallets
+
 Create a new wallet for a user.
 
 **Request Body:**
+
 ```json
 {
   "userId": "user_67890",
   "currency": "USD",
-  "initialBalance": 1000.00
+  "initialBalance": 1000.0
 }
 ```
 
 **Response:** 201 Created with wallet object
 
 #### GET /wallets/{id}
+
 Retrieve a specific wallet by ID.
 
 **Response:** Wallet object
 
 #### PUT /wallets/{id}
+
 Update an existing wallet.
 
 **Request Body:**
+
 ```json
 {
   "status": "SUSPENDED"
@@ -125,6 +139,7 @@ Update an existing wallet.
 **Response:** Updated wallet object
 
 #### DELETE /wallets/{id}
+
 Delete a wallet by ID.
 
 **Response:** 204 No Content
@@ -132,9 +147,11 @@ Delete a wallet by ID.
 ### Transaction Management
 
 #### GET /transactions
+
 Retrieve all transactions with filtering and pagination.
 
 **Query Parameters:**
+
 - `walletId` (optional): Filter by wallet ID
 - `userId` (optional): Filter by user ID
 - `type` (optional): Filter by transaction type (`CREDIT`, `DEBIT`, `TRANSFER`)
@@ -146,6 +163,7 @@ Retrieve all transactions with filtering and pagination.
 - `offset` (optional): Offset for pagination (default: 0)
 
 **Response:**
+
 ```json
 {
   "transactions": [
@@ -153,7 +171,7 @@ Retrieve all transactions with filtering and pagination.
       "id": "txn_12345",
       "walletId": "wallet_12345",
       "type": "CREDIT",
-      "amount": 500.00,
+      "amount": 500.0,
       "currency": "USD",
       "status": "COMPLETED",
       "gatewayReference": "pay_67890",
@@ -172,14 +190,16 @@ Retrieve all transactions with filtering and pagination.
 ```
 
 #### POST /transactions
+
 Create a new transaction.
 
 **Request Body:**
+
 ```json
 {
   "walletId": "wallet_12345",
   "type": "DEBIT",
-  "amount": 250.00,
+  "amount": 250.0,
   "currency": "USD",
   "gatewayReference": "booking_12345",
   "description": "Flight booking payment",
@@ -193,19 +213,23 @@ Create a new transaction.
 **Response:** 201 Created with transaction object
 
 #### GET /transactions/{id}
+
 Retrieve a specific transaction by ID.
 
 **Response:** Transaction object
 
 #### POST /transactions/{id}/cancel
+
 Cancel a pending transaction.
 
 **Response:** Updated transaction object with status `CANCELLED`
 
 #### POST /transactions/{id}/complete
+
 Complete a pending transaction.
 
 **Request Body:**
+
 ```json
 {
   "gatewayReference": "pay_67890"
@@ -217,14 +241,16 @@ Complete a pending transaction.
 ### Transfer Operations
 
 #### POST /transfers
+
 Create a transfer between wallets.
 
 **Request Body:**
+
 ```json
 {
   "fromWalletId": "wallet_12345",
   "toWalletId": "wallet_67890",
-  "amount": 100.00,
+  "amount": 100.0,
   "currency": "USD",
   "description": "Internal transfer"
 }
@@ -233,9 +259,11 @@ Create a transfer between wallets.
 **Response:** 201 Created with transfer details
 
 #### GET /transfers
+
 Retrieve all transfers with filtering.
 
 **Query Parameters:**
+
 - `walletId` (optional): Filter by wallet ID (either from or to)
 - `userId` (optional): Filter by user ID
 - `status` (optional): Filter by transfer status
@@ -243,9 +271,11 @@ Retrieve all transfers with filtering.
 ### Ledger Management
 
 #### GET /ledger
+
 Retrieve ledger entries with filtering.
 
 **Query Parameters:**
+
 - `walletId` (optional): Filter by wallet ID
 - `transactionId` (optional): Filter by transaction ID
 - `account` (optional): Filter by ledger account
@@ -253,13 +283,14 @@ Retrieve ledger entries with filtering.
 - `endDate` (optional): Filter by end date
 
 **Response:**
+
 ```json
 [
   {
     "id": "ledger_12345",
     "transactionId": "txn_12345",
     "account": "WALLET_DEBIT",
-    "amount": -250.00,
+    "amount": -250.0,
     "currency": "USD",
     "description": "Flight booking payment",
     "createdAt": "2024-10-25T10:30:00Z"
@@ -270,13 +301,16 @@ Retrieve ledger entries with filtering.
 ### Exchange Rate Management
 
 #### GET /exchange-rates
+
 Retrieve current exchange rates.
 
 **Query Parameters:**
+
 - `baseCurrency` (optional): Base currency for rates
 - `targetCurrency` (optional): Target currency for rates
 
 **Response:**
+
 ```json
 [
   {
@@ -291,6 +325,7 @@ Retrieve current exchange rates.
 ```
 
 #### POST /exchange-rates/refresh
+
 Refresh exchange rates from external providers.
 
 **Response:** 200 OK with refresh status
@@ -298,21 +333,24 @@ Refresh exchange rates from external providers.
 ### Settlement Management
 
 #### GET /settlements
+
 Retrieve all settlements.
 
 **Query Parameters:**
+
 - `gateway` (optional): Filter by gateway
 - `status` (optional): Filter by settlement status
 - `startDate` (optional): Filter by start date
 - `endDate` (optional): Filter by end date
 
 **Response:**
+
 ```json
 [
   {
     "id": "settlement_12345",
     "gateway": "stripe",
-    "amount": 5000.00,
+    "amount": 5000.0,
     "currency": "USD",
     "status": "COMPLETED",
     "settledAt": "2024-10-25T10:30:00Z",
@@ -322,13 +360,15 @@ Retrieve all settlements.
 ```
 
 #### POST /settlements
+
 Create a new settlement.
 
 **Request Body:**
+
 ```json
 {
   "gateway": "stripe",
-  "amount": 5000.00,
+  "amount": 5000.0,
   "currency": "USD",
   "reference": "settlement_12345"
 }
@@ -339,21 +379,24 @@ Create a new settlement.
 ### Bank Statement Management
 
 #### GET /bank-statements
+
 Retrieve bank statements.
 
 **Query Parameters:**
+
 - `gateway` (optional): Filter by gateway
 - `matched` (optional): Filter by match status
 - `startDate` (optional): Filter by start date
 - `endDate` (optional): Filter by end date
 
 **Response:**
+
 ```json
 [
   {
     "id": "statement_12345",
     "gateway": "stripe",
-    "amount": 1000.00,
+    "amount": 1000.0,
     "currency": "USD",
     "description": "Customer payment",
     "date": "2024-10-25",
@@ -365,9 +408,11 @@ Retrieve bank statements.
 ```
 
 #### POST /bank-statements/match
+
 Match bank statements with transactions.
 
 **Request Body:**
+
 ```json
 {
   "statementId": "statement_12345",
@@ -380,21 +425,24 @@ Match bank statements with transactions.
 ### Dispute Management
 
 #### GET /disputes
+
 Retrieve all disputes.
 
 **Query Parameters:**
+
 - `transactionId` (optional): Filter by transaction ID
 - `gateway` (optional): Filter by gateway
 - `status` (optional): Filter by dispute status
 
 **Response:**
+
 ```json
 [
   {
     "id": "dispute_12345",
     "transactionId": "txn_12345",
     "gateway": "stripe",
-    "amount": 250.00,
+    "amount": 250.0,
     "currency": "USD",
     "status": "PENDING",
     "reason": "Customer dispute",
@@ -405,15 +453,17 @@ Retrieve all disputes.
 ```
 
 #### POST /disputes
+
 Create a new dispute.
 
 **Request Body:**
+
 ```json
 {
   "transactionId": "txn_12345",
   "gateway": "stripe",
   "reason": "Customer dispute",
-  "amount": 250.00,
+  "amount": 250.0,
   "currency": "USD"
 }
 ```
@@ -423,20 +473,23 @@ Create a new dispute.
 ### FX Adjustment Management
 
 #### GET /fx-adjustments
+
 Retrieve all FX adjustments.
 
 **Query Parameters:**
+
 - `settlementId` (optional): Filter by settlement ID
 - `startDate` (optional): Filter by start date
 - `endDate` (optional): Filter by end date
 
 **Response:**
+
 ```json
 [
   {
     "id": "fx_12345",
     "settlementId": "settlement_12345",
-    "amount": 50.00,
+    "amount": 50.0,
     "currency": "USD",
     "rate": 0.85,
     "createdAt": "2024-10-25T10:30:00Z"
@@ -445,13 +498,15 @@ Retrieve all FX adjustments.
 ```
 
 #### POST /fx-adjustments
+
 Create a new FX adjustment.
 
 **Request Body:**
+
 ```json
 {
   "settlementId": "settlement_12345",
-  "amount": 50.00,
+  "amount": 50.0,
   "currency": "USD",
   "rate": 0.85
 }
@@ -462,14 +517,17 @@ Create a new FX adjustment.
 ### Configuration Endpoints
 
 #### GET /config/active-wallets
+
 Retrieve configuration for all active wallets. Used by other services to get current wallet configuration.
 
 **Response:** Array of active wallet objects
 
 #### GET /config/exchange-rates/latest
+
 Retrieve the latest exchange rates for all supported currencies.
 
 **Response:**
+
 ```json
 {
   "rates": {
@@ -517,6 +575,7 @@ Retrieve the latest exchange rates for all supported currencies.
 ## Rate Limiting
 
 The API implements rate limiting to ensure fair usage:
+
 - Default: 200 requests per minute per API key
 - Burst limit: 50 requests per second
 - Higher limits available for enterprise accounts
@@ -526,6 +585,7 @@ The API implements rate limiting to ensure fair usage:
 The wallet service supports webhook events for real-time notifications:
 
 ### Supported Event Types
+
 - `transaction.completed`: Transaction successfully completed
 - `transaction.failed`: Transaction failed
 - `wallet.created`: New wallet created
@@ -533,13 +593,14 @@ The wallet service supports webhook events for real-time notifications:
 - `settlement.completed`: Settlement completed
 
 ### Webhook Payload Example
+
 ```json
 {
   "event": "transaction.completed",
   "data": {
     "transactionId": "txn_12345",
     "walletId": "wallet_12345",
-    "amount": 250.00,
+    "amount": 250.0,
     "currency": "USD",
     "completedAt": "2024-10-25T10:30:00Z"
   },
@@ -551,6 +612,7 @@ The wallet service supports webhook events for real-time notifications:
 ## Monitoring
 
 The API provides health check endpoints and metrics for monitoring:
+
 - `/health`: Service health status
 - Request/response logging with correlation IDs
 - Performance metrics and error tracking
@@ -568,6 +630,7 @@ The API provides health check endpoints and metrics for monitoring:
 ## Support
 
 For API support and documentation updates:
-- Email: api-support@tripalfa.com
-- Documentation: https://docs.tripalfa.com/wallet-management
-- Status Page: https://status.tripalfa.com
+
+- Email: <api-support@tripalfa.com>
+- Documentation: <https://docs.tripalfa.com/wallet-management>
+- Status Page: <https://status.tripalfa.com>

@@ -3,6 +3,7 @@
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 Node.js >= 18.0.0
 npm >= 9.0.0
@@ -14,6 +15,7 @@ TypeScript 5.0+
 ### Installation Steps
 
 #### 1. Install Dependencies
+
 ```bash
 # From workspace root
 npm install
@@ -23,6 +25,7 @@ npm install --workspace=@tripalfa/b2b-admin
 ```
 
 #### 2. Verify Tailwind Configuration
+
 ```bash
 # Check that tailwind.config.ts is in place
 ls -la apps/b2b-admin/tailwind.config.ts
@@ -32,14 +35,16 @@ grep content apps/b2b-admin/tailwind.config.ts
 ```
 
 #### 3. Import Global Styles
+
 In your main application file (`src/main.tsx` or `src/App.tsx`):
 
 ```typescript
-import './styles/global.css'
-import 'tailwindcss/tailwind.css'
+import "./styles/global.css";
+import "tailwindcss/tailwind.css";
 ```
 
 #### 4. Setup PostCSS
+
 Create `postcss.config.js` in `apps/b2b-admin/`:
 
 ```javascript
@@ -48,7 +53,7 @@ export default {
     tailwindcss: {},
     autoprefixer: {},
   },
-}
+};
 ```
 
 ---
@@ -56,6 +61,7 @@ export default {
 ## 📁 File Organization
 
 ### Current Files
+
 ```
 apps/b2b-admin/
 ├── src/
@@ -87,33 +93,33 @@ apps/b2b-admin/
 ### 1. Create Theme Hook (`src/hooks/useTheme.ts`)
 
 ```typescript
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = "light" | "dark" | "system";
 
-export const useTheme = (initialTheme: Theme = 'system') => {
+export const useTheme = (initialTheme: Theme = "system") => {
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
     const getSystemTheme = () => {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
     };
 
-    const currentTheme = theme === 'system' ? getSystemTheme() : theme;
+    const currentTheme = theme === "system" ? getSystemTheme() : theme;
 
-    if (currentTheme === 'dark') {
-      document.documentElement.classList.add('dark');
+    if (currentTheme === "dark") {
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
 
-    localStorage.setItem('theme', theme);
+    localStorage.setItem("theme", theme);
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
   return { theme, setTheme, toggleTheme };
@@ -179,6 +185,7 @@ export default App;
 ## 🎯 Component Implementation Checklist
 
 ### Phase 1: Foundation Components
+
 - [ ] Button (all variants)
 - [ ] Card (all variants)
 - [ ] Badge/StatusBadge
@@ -187,6 +194,7 @@ export default App;
 - [ ] Icon Factory
 
 ### Phase 2: Layout Components
+
 - [ ] Header/Navigation
 - [ ] Sidebar
 - [ ] DashboardLayout
@@ -194,6 +202,7 @@ export default App;
 - [ ] Container
 
 ### Phase 3: Data Display Components
+
 - [ ] MetricCard
 - [ ] Table/DataTable
 - [ ] Charts (Line, Bar, Pie)
@@ -201,6 +210,7 @@ export default App;
 - [ ] Modal/Dialog
 
 ### Phase 4: Dashboard Components
+
 - [ ] AnalyticsDashboard
 - [ ] MetricsGrid
 - [ ] RulesManager
@@ -208,6 +218,7 @@ export default App;
 - [ ] PerformanceMetrics
 
 ### Phase 5: Advanced Features
+
 - [ ] Search/Filter
 - [ ] Pagination
 - [ ] Batch Actions
@@ -219,23 +230,28 @@ export default App;
 ## 🔧 Configuration Files
 
 ### ESLint Configuration
+
 ```javascript
 // eslint.config.js
 export default [
   {
-    files: ['src/**/*.{js,jsx,ts,tsx}'],
+    files: ["src/**/*.{js,jsx,ts,tsx}"],
     rules: {
-      'no-unused-vars': ['error', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_'
-      }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      "no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
     },
   },
 ];
 ```
 
 ### TypeScript Configuration
+
 ```json
 {
   "compilerOptions": {
@@ -274,12 +290,12 @@ export default [
 ### Responsive Hook (`src/hooks/useResponsive.ts`)
 
 ```typescript
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export const useResponsive = () => {
   const [windowSize, setWindowSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1024,
-    height: typeof window !== 'undefined' ? window.innerHeight : 768,
+    width: typeof window !== "undefined" ? window.innerWidth : 1024,
+    height: typeof window !== "undefined" ? window.innerHeight : 768,
   });
 
   useEffect(() => {
@@ -290,15 +306,16 @@ export const useResponsive = () => {
       });
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return {
     isMobile: windowSize.width < 640,
     isTablet: windowSize.width >= 640 && windowSize.width < 1024,
     isDesktop: windowSize.width >= 1024,
-    isPrint: typeof window !== 'undefined' && window.matchMedia('print').matches,
+    isPrint:
+      typeof window !== "undefined" && window.matchMedia("print").matches,
   };
 };
 ```
@@ -307,26 +324,42 @@ export const useResponsive = () => {
 
 ```typescript
 export const getColorClass = (
-  variant: 'primary' | 'secondary' | 'success' | 'warning' | 'error'
+  variant: "primary" | "secondary" | "success" | "warning" | "error",
 ): string => {
   const colors = {
-    primary: 'from-blue-600 to-purple-600',
-    secondary: 'from-purple-600 to-pink-600',
-    success: 'from-green-600 to-emerald-600',
-    warning: 'from-yellow-600 to-orange-600',
-    error: 'from-red-600 to-rose-600',
+    primary: "from-blue-600 to-purple-600",
+    secondary: "from-purple-600 to-pink-600",
+    success: "from-green-600 to-emerald-600",
+    warning: "from-yellow-600 to-orange-600",
+    error: "from-red-600 to-rose-600",
   };
   return colors[variant];
 };
 
 export const getStatusColor = (
-  status: 'active' | 'inactive' | 'error' | 'warning'
+  status: "active" | "inactive" | "error" | "warning",
 ) => {
   const statusColors = {
-    active: { bg: 'bg-green-500/10', text: 'text-green-700', border: 'border-green-200' },
-    inactive: { bg: 'bg-slate-500/10', text: 'text-slate-700', border: 'border-slate-200' },
-    error: { bg: 'bg-red-500/10', text: 'text-red-700', border: 'border-red-200' },
-    warning: { bg: 'bg-yellow-500/10', text: 'text-yellow-700', border: 'border-yellow-200' },
+    active: {
+      bg: "bg-green-500/10",
+      text: "text-green-700",
+      border: "border-green-200",
+    },
+    inactive: {
+      bg: "bg-slate-500/10",
+      text: "text-slate-700",
+      border: "border-slate-200",
+    },
+    error: {
+      bg: "bg-red-500/10",
+      text: "text-red-700",
+      border: "border-red-200",
+    },
+    warning: {
+      bg: "bg-yellow-500/10",
+      text: "text-yellow-700",
+      border: "border-yellow-200",
+    },
   };
   return statusColors[status];
 };
@@ -337,30 +370,37 @@ export const getStatusColor = (
 ## 📦 Common Dependencies
 
 ### Core
+
 - `react@18+`
 - `react-dom@18+`
 - `typescript@5+`
 
 ### Styling
+
 - `tailwindcss@3.3+`
 - `autoprefixer`
 - `postcss`
 
 ### Icons
+
 - `lucide-react` (Recommended for modern icons)
 
 ### Charts
+
 - `recharts` (Recommended for data visualization)
 
 ### Utilities
+
 - `clsx` (Conditional class names)
 - `class-variance-authority` (Advanced component styling)
 
 ### Forms
+
 - `react-hook-form` (Form management)
 - `zod` (Schema validation)
 
 ### State Management
+
 - `zustand` or `jotai` (Lightweight options)
 
 ---
@@ -371,13 +411,13 @@ export const getStatusColor = (
 
 ```javascript
 export default {
-  preset: 'ts-jest',
-  testEnvironment: 'jsdom',
-  roots: ['<rootDir>/src'],
-  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  preset: "ts-jest",
+  testEnvironment: "jsdom",
+  roots: ["<rootDir>/src"],
+  testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '^@components/(.*)$': '<rootDir>/src/components/$1',
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@components/(.*)$": "<rootDir>/src/components/$1",
   },
 };
 ```
@@ -410,26 +450,31 @@ export { customRender as render };
 ## 🚀 Build & Deployment
 
 ### Development
+
 ```bash
 npm run dev --workspace=@tripalfa/b2b-admin
 ```
 
 ### Type Checking
+
 ```bash
 npm run type-check
 ```
 
 ### Linting
+
 ```bash
 npm run lint --workspace=@tripalfa/b2b-admin
 ```
 
 ### Building
+
 ```bash
 npm run build --workspace=@tripalfa/b2b-admin
 ```
 
 ### Preview
+
 ```bash
 npm run preview --workspace=@tripalfa/b2b-admin
 ```
@@ -439,6 +484,7 @@ npm run preview --workspace=@tripalfa/b2b-admin
 ## 📋 Performance Optimization
 
 ### Code Splitting
+
 ```typescript
 import { lazy, Suspense } from 'react';
 
@@ -454,11 +500,13 @@ function App() {
 ```
 
 ### Image Optimization
+
 - Use WebP format with fallbacks
 - Implement lazy loading
 - Optimize SVGs for production
 
 ### CSS Optimization
+
 - Tailwind will tree-shake unused styles
 - Use CSS classes instead of inline styles
 - Leverage Tailwind's purge configuration
@@ -468,16 +516,19 @@ function App() {
 ## 📚 Additional Resources
 
 ### Documentation
+
 - [Tailwind CSS Docs](https://tailwindcss.com/docs)
 - [React Documentation](https://react.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 
 ### Design Inspiration
+
 - [Tailwind UI](https://tailwindui.com)
 - [Shadcn/ui](https://ui.shadcn.com)
 - [Headless UI](https://headlessui.dev)
 
 ### Tools
+
 - [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
 - [PostCSS Language Support](https://marketplace.visualstudio.com/items?itemName=csstools.postcss)
 
@@ -513,6 +564,6 @@ function App() {
 **Setup**: ✅ Complete  
 **Documentation**: ✅ Comprehensive  
 **Templates**: ✅ Ready  
-**Configuration**: ✅ Production-Ready  
+**Configuration**: ✅ Production-Ready
 
 **Next Steps**: Start implementing components following the COMPONENT_LIBRARY.md guide.

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown } from "lucide-react"
-import api from "@/shared/lib/api"
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal, ArrowUpDown } from "lucide-react";
+import api from "@/shared/lib/api";
 
-import { Button } from "@tripalfa/ui-components/ui/button"
+import { Button } from "@tripalfa/ui-components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,25 +12,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@tripalfa/ui-components/ui/dropdown-menu"
-import { Badge } from "@tripalfa/ui-components/ui/badge"
+} from "@tripalfa/ui-components/ui/dropdown-menu";
+import { Badge } from "@tripalfa/ui-components/ui/badge";
 
 // This type is used to define the shape of our data.
 export type Booking = {
-  id: string
-  reference: string
-  status: "pending" | "confirmed" | "cancelled" | "failed"
-  userEmail: string
-  amount: number
-  currency: string
-  createdAt: string
-  pnr?: string
-  phone?: string
-  supplier?: string
-  channel?: string
-  kind?: "flight" | "hotel" | "other"
-  onHold?: boolean
-}
+  id: string;
+  reference: string;
+  status: "pending" | "confirmed" | "cancelled" | "failed";
+  userEmail: string;
+  amount: number;
+  currency: string;
+  createdAt: string;
+  pnr?: string;
+  phone?: string;
+  supplier?: string;
+  channel?: string;
+  kind?: "flight" | "hotel" | "other";
+  onHold?: boolean;
+};
 
 export const columns: ColumnDef<Booking>[] = [
   {
@@ -41,28 +41,28 @@ export const columns: ColumnDef<Booking>[] = [
     accessorKey: "kind",
     header: "Type",
     cell: ({ row }) => {
-      const kind = (row.getValue("kind") as string) || "—"
-      return kind.charAt(0).toUpperCase() + kind.slice(1)
+      const kind = (row.getValue("kind") as string) || "—";
+      return kind.charAt(0).toUpperCase() + kind.slice(1);
     },
   },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status") as string
+      const status = row.getValue("status") as string;
       return (
         <Badge
           variant={
             status === "confirmed"
               ? "default" // default in shadcn is usually primary color
               : status === "pending"
-              ? "secondary"
-              : "destructive"
+                ? "secondary"
+                : "destructive"
           }
         >
           {status}
         </Badge>
-      )
+      );
     },
   },
   {
@@ -76,77 +76,80 @@ export const columns: ColumnDef<Booking>[] = [
           Email
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
-      )
+      );
     },
   },
   {
     accessorKey: "amount",
     header: () => <div className="text-right">Amount</div>,
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"))
+      const amount = parseFloat(row.getValue("amount"));
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: row.original.currency,
-      }).format(amount)
+      }).format(amount);
 
-      return <div className="text-right font-medium">{formatted}</div>
+      return <div className="text-right font-medium">{formatted}</div>;
     },
   },
   {
     accessorKey: "createdAt",
     header: "Created At",
     cell: ({ row }) => {
-        return new Date(row.getValue("createdAt")).toLocaleDateString()
-    }
+      return new Date(row.getValue("createdAt")).toLocaleDateString();
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const booking = row.original
-      const isFlight = booking.kind === "flight"
-      const isHotel = booking.kind === "hotel"
+      const booking = row.original;
+      const isFlight = booking.kind === "flight";
+      const isHotel = booking.kind === "hotel";
 
       const actionCall = async (path: string, success: string) => {
         try {
-          await api.post(path)
-          alert(success)
+          await api.post(path);
+          alert(success);
         } catch (err) {
-          console.error(`Action failed for ${path}`, err)
-          alert("Action failed. Please retry or check logs.")
+          console.error(`Action failed for ${path}`, err);
+          alert("Action failed. Please retry or check logs.");
         }
-      }
+      };
 
       const handle = (action: string) => {
-        const base = `/admin/bookings/${booking.id}`
+        const base = `/admin/bookings/${booking.id}`;
         switch (action) {
           case "view":
-            window.location.href = `/bookings/${booking.id}`
-            break
+            window.location.href = `/bookings/${booking.id}`;
+            break;
           case "cancel-flight":
-            void actionCall(`${base}/cancel`, "Flight booking cancelled")
-            break
+            void actionCall(`${base}/cancel`, "Flight booking cancelled");
+            break;
           case "refund-flight":
-            void actionCall(`${base}/refund`, "Flight booking refunded")
-            break
+            void actionCall(`${base}/refund`, "Flight booking refunded");
+            break;
           case "reissue-flight":
-            void actionCall(`${base}/reissue`, "Flight booking re-issued")
-            break
+            void actionCall(`${base}/reissue`, "Flight booking re-issued");
+            break;
           case "pay-flight":
-            void actionCall(`${base}/pay`, "Payment completed")
-            break
+            void actionCall(`${base}/pay`, "Payment completed");
+            break;
           case "cancel-hotel":
-            void actionCall(`${base}/cancel`, "Hotel booking cancelled")
-            break
+            void actionCall(`${base}/cancel`, "Hotel booking cancelled");
+            break;
           case "amend-hotel":
-            void actionCall(`${base}/amend`, "Hotel booking amendment submitted")
-            break
+            void actionCall(
+              `${base}/amend`,
+              "Hotel booking amendment submitted",
+            );
+            break;
           case "cancel-generic":
-            void actionCall(`${base}/cancel`, "Booking cancelled")
-            break
+            void actionCall(`${base}/cancel`, "Booking cancelled");
+            break;
           default:
-            break
+            break;
         }
-      }
+      };
 
       return (
         <DropdownMenu>
@@ -201,7 +204,7 @@ export const columns: ColumnDef<Booking>[] = [
             )}
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
-]
+];

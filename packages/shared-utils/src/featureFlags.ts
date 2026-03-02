@@ -1,14 +1,14 @@
 /**
  * Feature Flag System for Booking Management V2
- * 
+ *
  * This module provides environment-based and user-segment based feature flags
  * for gradual rollout of the V2 booking management system.
- * 
+ *
  * Infrastructure Flags (Environment Variables):
  * - BOOKING_V2_GATEWAY_ENABLED
  * - BOOKING_V2_BACKEND_ENABLED
  * - BOOKING_V2_FRONTEND_ENABLED
- * 
+ *
  * User Segment Flags (Database/Config):
  * - enabled_segments: ["internal", "staging", "prod_10pct"]
  * - enabled_users: ["admin@tripalfa.com"]
@@ -24,12 +24,12 @@ export interface FeatureFlagConfig {
   gatewayEnabled: boolean;
   backendEnabled: boolean;
   frontendEnabled: boolean;
-  
+
   // User segment flags
   enabledSegments: string[];
   enabledUsers: string[];
   rolloutPercentage: number;
-  
+
   // Global override (for emergency kill switch)
   globalEnabled: boolean;
 }
@@ -46,13 +46,20 @@ export interface UserContext {
 // ============================================
 
 const DEFAULT_CONFIG: FeatureFlagConfig = {
-  gatewayEnabled: process.env.BOOKING_V2_GATEWAY_ENABLED === 'true',
-  backendEnabled: process.env.BOOKING_V2_BACKEND_ENABLED === 'true',
-  frontendEnabled: process.env.BOOKING_V2_FRONTEND_ENABLED === 'true',
-  enabledSegments: (process.env.BOOKING_V2_ENABLED_SEGMENTS || 'internal,staging').split(','),
-  enabledUsers: (process.env.BOOKING_V2_ENABLED_USERS || '').split(',').filter(Boolean),
-  rolloutPercentage: parseInt(process.env.BOOKING_V2_ROLLOUT_PERCENTAGE || '0', 10),
-  globalEnabled: process.env.BOOKING_V2_ENABLED === 'true'
+  gatewayEnabled: process.env.BOOKING_V2_GATEWAY_ENABLED === "true",
+  backendEnabled: process.env.BOOKING_V2_BACKEND_ENABLED === "true",
+  frontendEnabled: process.env.BOOKING_V2_FRONTEND_ENABLED === "true",
+  enabledSegments: (
+    process.env.BOOKING_V2_ENABLED_SEGMENTS || "internal,staging"
+  ).split(","),
+  enabledUsers: (process.env.BOOKING_V2_ENABLED_USERS || "")
+    .split(",")
+    .filter(Boolean),
+  rolloutPercentage: parseInt(
+    process.env.BOOKING_V2_ROLLOUT_PERCENTAGE || "0",
+    10,
+  ),
+  globalEnabled: process.env.BOOKING_V2_ENABLED === "true",
 };
 
 // ============================================
@@ -61,7 +68,7 @@ const DEFAULT_CONFIG: FeatureFlagConfig = {
 
 /**
  * Check if booking V2 is enabled for a given user context
- * 
+ *
  * Evaluation Order:
  * 1. Check infrastructure flags first (if disabled, return false)
  * 2. Check global override (if enabled, return true)
@@ -70,27 +77,34 @@ const DEFAULT_CONFIG: FeatureFlagConfig = {
  * 5. Check rollout percentage (random selection)
  * 6. Default: false
  */
-export function isBookingV2Enabled(context: UserContext, config: FeatureFlagConfig = DEFAULT_CONFIG): boolean {
+export function isBookingV2Enabled(
+  context: UserContext,
+  config: FeatureFlagConfig = DEFAULT_CONFIG,
+): boolean {
   // Phase 1: Check infrastructure flags
-  if (!config.gatewayEnabled || !config.backendEnabled || !config.frontendEnabled) {
+  if (
+    !config.gatewayEnabled ||
+    !config.backendEnabled ||
+    !config.frontendEnabled
+  ) {
     return false;
   }
-  
+
   // Phase 2: Global override (emergency kill switch)
   if (config.globalEnabled) {
     return true;
   }
-  
+
   // Phase 3: Check user segment
   if (context.segment && config.enabledSegments.includes(context.segment)) {
     return true;
   }
-  
+
   // Phase 4: Check specific user IDs
   if (config.enabledUsers.includes(context.email)) {
     return true;
   }
-  
+
   // Phase 5: Rollout percentage (deterministic based on user ID)
   if (config.rolloutPercentage > 0) {
     const userHash = hashString(context.userId);
@@ -99,7 +113,7 @@ export function isBookingV2Enabled(context: UserContext, config: FeatureFlagConf
       return true;
     }
   }
-  
+
   // Default: disabled
   return false;
 }
@@ -108,15 +122,15 @@ export function isBookingV2Enabled(context: UserContext, config: FeatureFlagConf
  * Check if a specific V2 feature is enabled
  */
 export function isFeatureEnabled(
-  feature: 'bookings' | 'queues' | 'pricing' | 'invoices' | 'payments',
+  feature: "bookings" | "queues" | "pricing" | "invoices" | "payments",
   context: UserContext,
-  config: FeatureFlagConfig = DEFAULT_CONFIG
+  config: FeatureFlagConfig = DEFAULT_CONFIG,
 ): boolean {
   // First check if V2 is enabled
   if (!isBookingV2Enabled(context, config)) {
     return false;
   }
-  
+
   // All features are enabled when V2 is enabled
   return true;
 }
@@ -132,7 +146,7 @@ function hashString(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32bit integer
   }
   return Math.abs(hash);
@@ -148,7 +162,9 @@ export function getFeatureFlagConfig(): FeatureFlagConfig {
 /**
  * Update feature flag configuration (useful for testing)
  */
-export function updateFeatureFlagConfig(updates: Partial<FeatureFlagConfig>): void {
+export function updateFeatureFlagConfig(
+  updates: Partial<FeatureFlagConfig>,
+): void {
   Object.assign(DEFAULT_CONFIG, updates);
 }
 
@@ -182,28 +198,30 @@ export interface FeatureFlagStatusResponse {
 /**
  * Get feature flag status for API response
  */
-export function getFeatureFlagStatus(context: UserContext): FeatureFlagStatusResponse {
+export function getFeatureFlagStatus(
+  context: UserContext,
+): FeatureFlagStatusResponse {
   const config = getFeatureFlagConfig();
   const enabled = isBookingV2Enabled(context, config);
-  
+
   return {
     bookingV2: {
       enabled,
       features: {
-        bookings: isFeatureEnabled('bookings', context, config),
-        queues: isFeatureEnabled('queues', context, config),
-        pricing: isFeatureEnabled('pricing', context, config),
-        invoices: isFeatureEnabled('invoices', context, config),
-        payments: isFeatureEnabled('payments', context, config)
+        bookings: isFeatureEnabled("bookings", context, config),
+        queues: isFeatureEnabled("queues", context, config),
+        pricing: isFeatureEnabled("pricing", context, config),
+        invoices: isFeatureEnabled("invoices", context, config),
+        payments: isFeatureEnabled("payments", context, config),
       },
       config: {
         gatewayEnabled: config.gatewayEnabled,
         backendEnabled: config.backendEnabled,
         frontendEnabled: config.frontendEnabled,
         rolloutPercentage: config.rolloutPercentage,
-        enabledSegments: config.enabledSegments
-      }
-    }
+        enabledSegments: config.enabledSegments,
+      },
+    },
   };
 }
 
@@ -212,30 +230,30 @@ export function getFeatureFlagStatus(context: UserContext): FeatureFlagStatusRes
 // ============================================
 
 export const WORKFLOW_STATES = {
-  DRAFT: 'draft',
-  QUEUED: 'queued',
-  PRICING: 'pricing',
-  INVOICED: 'invoiced',
-  PAYMENT_PENDING: 'payment_pending',
-  PAYMENT_CONFIRMED: 'payment_confirmed',
-  SUPPLIER_BOOKING: 'supplier_booking',
-  CONFIRMED: 'confirmed',
-  COMPLETED: 'completed',
-  CANCELLED: 'cancelled'
+  DRAFT: "draft",
+  QUEUED: "queued",
+  PRICING: "pricing",
+  INVOICED: "invoiced",
+  PAYMENT_PENDING: "payment_pending",
+  PAYMENT_CONFIRMED: "payment_confirmed",
+  SUPPLIER_BOOKING: "supplier_booking",
+  CONFIRMED: "confirmed",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
 } as const;
 
 export const QUEUE_ACTIONS = {
-  SUBMIT: 'submit',
-  PRICE: 'price',
-  INVOICE: 'invoice',
-  CONFIRM_PAYMENT: 'confirm_payment',
-  BOOK_SUPPLIER: 'book_supplier',
-  CONFIRM: 'confirm',
-  COMPLETE: 'complete',
-  CANCEL: 'cancel'
+  SUBMIT: "submit",
+  PRICE: "price",
+  INVOICE: "invoice",
+  CONFIRM_PAYMENT: "confirm_payment",
+  BOOK_SUPPLIER: "book_supplier",
+  CONFIRM: "confirm",
+  COMPLETE: "complete",
+  CANCEL: "cancel",
 } as const;
 
 export const API_VERSIONS = {
-  V1: 'v1',
-  V2: 'v2'
+  V1: "v1",
+  V2: "v2",
 } as const;

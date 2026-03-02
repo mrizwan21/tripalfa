@@ -1,0 +1,62 @@
+{
+  "passed": 4,
+  "failed": 5,
+  "skipped": 1,
+  "results": [
+    {
+      "name": "Payment Creation with Gateway Processing",
+      "status": "failed",
+      "duration": 372,
+      "error": "Insufficient balance. Available: 0, Required: 1000"
+    },
+    {
+      "name": "Payout Processing",
+      "status": "skipped",
+      "duration": 363
+    },
+    {
+      "name": "Refund Processing",
+      "status": "failed",
+      "duration": 734,
+      "error": "Stripe API key is required"
+    },
+    {
+      "name": "Adjustment Processing",
+      "status": "failed",
+      "duration": 721,
+      "error": "Stripe API key is required"
+    },
+    {
+      "name": "Multi-Currency Payment Support",
+      "status": "failed",
+      "duration": 371,
+      "error": "Wallet already exists for this supplier"
+    },
+    {
+      "name": "Webhook Processing",
+      "status": "passed",
+      "duration": 184
+    },
+    {
+      "name": "Payment Retry Mechanism",
+      "status": "passed",
+      "duration": 1989
+    },
+    {
+      "name": "Payment Cancellation",
+      "status": "failed",
+      "duration": 747,
+      "error": "Stripe API key is required"
+    },
+    {
+      "name": "Payment Statistics",
+      "status": "passed",
+      "duration": 373
+    },
+    {
+      "name": "Error Handling",
+      "status": "passed",
+      "duration": 1299
+    }
+  ]
+}

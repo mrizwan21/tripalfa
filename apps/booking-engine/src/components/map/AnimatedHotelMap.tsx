@@ -7,15 +7,15 @@
  * - Search radius visualization
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import {
   MAPBOX_TOKEN,
   MAPBOX_STYLES,
   MARKER_COLORS,
   MapCoordinates,
-} from '../../lib/mapbox-config';
+} from "../../lib/mapbox-config";
 
 // Set Mapbox access token
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -37,19 +37,19 @@ interface AnimatedHotelMapProps {
     country: string;
     currency: string;
   };
-  
+
   // Hotels to animate
   hotels?: HotelLocation[];
-  
+
   // Animation options
   animationDuration?: number; // in milliseconds
   showSearchRadius?: boolean;
   searchRadiusKm?: number;
-  
+
   // Map options
   className?: string;
   height?: string;
-  
+
   // Callbacks
   onHotelClick?: (hotel: HotelLocation) => void;
 }
@@ -70,33 +70,35 @@ const HOTEL_SVG = (color: string = MARKER_COLORS.hotel) => `
 function generateRandomHotels(
   center: MapCoordinates,
   count: number = 8,
-  radiusKm: number = 5
+  radiusKm: number = 5,
 ): HotelLocation[] {
   const hotels: HotelLocation[] = [];
   const hotelNames = [
-    'Grand Plaza Hotel',
-    'Sunset Resort',
-    'City Center Inn',
-    'Luxury Suites',
-    'Boutique Hotel',
-    'Riverside Lodge',
-    'Mountain View Hotel',
-    'Beachfront Resort',
-    'Downtown Hotel',
-    'Garden Inn',
-    'Palace Hotel',
-    'Oriental Suites',
+    "Grand Plaza Hotel",
+    "Sunset Resort",
+    "City Center Inn",
+    "Luxury Suites",
+    "Boutique Hotel",
+    "Riverside Lodge",
+    "Mountain View Hotel",
+    "Beachfront Resort",
+    "Downtown Hotel",
+    "Garden Inn",
+    "Palace Hotel",
+    "Oriental Suites",
   ];
 
   for (let i = 0; i < count; i++) {
     // Random angle and distance
     const angle = (Math.PI * 2 * i) / count + Math.random() * 0.5;
     const distance = radiusKm * (0.3 + Math.random() * 0.7);
-    
+
     // Convert km to degrees (approximate)
     const latOffset = (distance / 110.574) * Math.cos(angle);
-    const lngOffset = (distance / (111.32 * Math.cos(center.latitude * Math.PI / 180))) * Math.sin(angle);
-    
+    const lngOffset =
+      (distance / (111.32 * Math.cos((center.latitude * Math.PI) / 180))) *
+      Math.sin(angle);
+
     hotels.push({
       id: `hotel-${i}`,
       name: hotelNames[i % hotelNames.length],
@@ -118,21 +120,22 @@ export function AnimatedHotelMap({
   animationDuration = 3000,
   showSearchRadius = true,
   searchRadiusKm = 5,
-  className = '',
-  height = '500px',
+  className = "",
+  height = "500px",
   onHotelClick,
 }: AnimatedHotelMapProps): React.JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const hotelMarkers = useRef<mapboxgl.Marker[]>([]);
   const animationFrame = useRef<number | null>(null);
-  
+
   const [mapLoaded, setMapLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [visibleHotels, setVisibleHotels] = useState<number>(0);
 
   // Generate hotels if not provided
-  const hotels = propHotels || generateRandomHotels(destination, 8, searchRadiusKm);
+  const hotels =
+    propHotels || generateRandomHotels(destination, 8, searchRadiusKm);
 
   // Initialize map
   useEffect(() => {
@@ -147,25 +150,24 @@ export function AnimatedHotelMap({
         interactive: false, // Disable interactions during loading
       });
 
-      map.current.on('load', () => {
+      map.current.on("load", () => {
         setMapLoaded(true);
       });
 
-      map.current.on('error', (e) => {
-        console.error('Mapbox error:', e);
-        setError('Failed to load map');
+      map.current.on("error", (e) => {
+        console.error("Mapbox error:", e);
+        setError("Failed to load map");
       });
-
     } catch (err) {
-      console.error('Failed to initialize map:', err);
-      setError('Failed to initialize map');
+      console.error("Failed to initialize map:", err);
+      setError("Failed to initialize map");
     }
 
     return () => {
       if (animationFrame.current) {
         cancelAnimationFrame(animationFrame.current);
       }
-      hotelMarkers.current.forEach(marker => marker.remove());
+      hotelMarkers.current.forEach((marker) => marker.remove());
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -178,7 +180,7 @@ export function AnimatedHotelMap({
     if (!map.current || !mapLoaded) return;
 
     // ── Add destination marker with pulse animation ───────────────────────────
-    const destEl = document.createElement('div');
+    const destEl = document.createElement("div");
     destEl.innerHTML = `
       <div class="destination-marker">
         <div class="pulse-ring"></div>
@@ -229,8 +231,8 @@ export function AnimatedHotelMap({
         }
       </style>
     `;
-    
-    new mapboxgl.Marker(destEl, { anchor: 'center' })
+
+    new mapboxgl.Marker(destEl, { anchor: "center" })
       .setLngLat([destination.longitude, destination.latitude])
       .addTo(map.current);
 
@@ -238,45 +240,45 @@ export function AnimatedHotelMap({
     if (showSearchRadius) {
       const radiusGeojson = createCircleGeojson(
         [destination.longitude, destination.latitude],
-        searchRadiusKm
+        searchRadiusKm,
       );
 
-      map.current.addSource('search-radius', {
-        type: 'geojson',
+      map.current.addSource("search-radius", {
+        type: "geojson",
         data: radiusGeojson,
       });
 
       map.current.addLayer({
-        id: 'search-radius-fill',
-        type: 'fill',
-        source: 'search-radius',
+        id: "search-radius-fill",
+        type: "fill",
+        source: "search-radius",
         paint: {
-          'fill-color': MARKER_COLORS.hotel,
-          'fill-opacity': 0.1,
+          "fill-color": MARKER_COLORS.hotel,
+          "fill-opacity": 0.1,
         },
       });
 
       map.current.addLayer({
-        id: 'search-radius-line',
-        type: 'line',
-        source: 'search-radius',
+        id: "search-radius-line",
+        type: "line",
+        source: "search-radius",
         paint: {
-          'line-color': MARKER_COLORS.hotel,
-          'line-width': 2,
-          'line-dasharray': [4, 4],
-          'line-opacity': 0.5,
+          "line-color": MARKER_COLORS.hotel,
+          "line-width": 2,
+          "line-dasharray": [4, 4],
+          "line-opacity": 0.5,
         },
       });
     }
 
     // ── Animate hotels appearing one by one ───────────────────────────────────
     const hotelDelay = animationDuration / hotels.length;
-    
+
     hotels.forEach((hotel, index) => {
       setTimeout(() => {
         if (!map.current) return;
-        
-        const hotelEl = document.createElement('div');
+
+        const hotelEl = document.createElement("div");
         hotelEl.style.cssText = `
           opacity: 0;
           transform: scale(0);
@@ -297,102 +299,119 @@ export function AnimatedHotelMap({
               font-size: 14px;
               font-weight: 800;
               color: ${MARKER_COLORS.hotel};
-            ">$${hotel.price || '---'}</span>
-            ${hotel.rating ? `
+            ">$${hotel.price || "---"}</span>
+            ${
+              hotel.rating
+                ? `
               <span style="
                 font-size: 10px;
-                color: #666;
+                color: hsl(var(--muted-foreground));
               ">★ ${hotel.rating}</span>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
         `;
-        
-        const marker = new mapboxgl.Marker(hotelEl, { anchor: 'bottom' })
+
+        const marker = new mapboxgl.Marker(hotelEl, { anchor: "bottom" })
           .setLngLat([hotel.longitude, hotel.latitude])
           .addTo(map.current);
-        
+
         hotelMarkers.current.push(marker);
-        
+
         // Animate in
         requestAnimationFrame(() => {
-          hotelEl.style.opacity = '1';
-          hotelEl.style.transform = 'scale(1)';
+          hotelEl.style.opacity = "1";
+          hotelEl.style.transform = "scale(1)";
         });
-        
-        setVisibleHotels(prev => prev + 1);
-        
+
+        setVisibleHotels((prev) => prev + 1);
+
         // Add click handler
         if (onHotelClick) {
-          hotelEl.style.cursor = 'pointer';
-          hotelEl.addEventListener('click', () => onHotelClick(hotel));
+          hotelEl.style.cursor = "pointer";
+          hotelEl.addEventListener("click", () => onHotelClick(hotel));
         }
       }, index * hotelDelay);
     });
-
-  }, [mapLoaded, destination, hotels, animationDuration, showSearchRadius, searchRadiusKm, onHotelClick]);
+  }, [
+    mapLoaded,
+    destination,
+    hotels,
+    animationDuration,
+    showSearchRadius,
+    searchRadiusKm,
+    onHotelClick,
+  ]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div 
-        className={`flex items-center justify-center bg-gray-900 rounded-2xl ${className}`}
+      <div
+        className={`flex items-center justify-center bg-foreground rounded-2xl ${className}`}
         style={{ height }}
       >
         <div className="text-center p-8">
-          <p className="text-gray-400 font-bold">{error}</p>
+          <p className="text-muted-foreground font-bold">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div 
+    <div
       className={`relative rounded-2xl overflow-hidden ${className}`}
       style={{ height }}
     >
       {/* Map container */}
-      <div 
-        ref={mapContainer} 
-        className="absolute inset-0"
-        style={{ width: '100%', height: '100%' }}
-      />
-      
+      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+
       {/* Loading overlay */}
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-foreground gap-2">
           <div className="text-center">
-            <div className="w-10 h-10 border-4 border-[#F59E0B] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-            <p className="text-gray-400 font-bold text-sm">Loading map...</p>
+            <div className="w-10 h-10 border-4 border-accent-foreground border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-muted-foreground font-bold text-sm">
+              Loading map...
+            </p>
           </div>
         </div>
       )}
-      
+
       {/* Destination info overlay */}
-      <div className="absolute top-6 left-6 bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 z-10 border border-gray-700">
+      <div className="absolute top-6 left-6 bg-foreground/80 backdrop-blur-md rounded-2xl p-4 z-10 border border-border/40">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#EF4444] flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          <div className="w-10 h-10 rounded-full bg-destructive flex items-center justify-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="white"
+            >
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
             </svg>
           </div>
           <div>
             <p className="text-lg font-black text-white">{destination.city}</p>
-            <p className="text-xs text-gray-400">{destination.country}</p>
+            <p className="text-xs text-muted-foreground">
+              {destination.country}
+            </p>
           </div>
         </div>
       </div>
-      
+
       {/* Hotels found counter */}
-      <div className="absolute top-6 right-6 bg-gray-900/80 backdrop-blur-md rounded-2xl px-4 py-3 z-10 border border-gray-700">
+      <div className="absolute top-6 right-6 bg-foreground/80 backdrop-blur-md rounded-2xl px-4 py-3 z-10 border border-border/40">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
           <span className="text-white font-bold">{visibleHotels}</span>
-          <span className="text-gray-400 text-sm">hotels found</span>
+          <span className="text-muted-foreground text-sm">hotels found</span>
         </div>
       </div>
-      
+
       {/* Mapbox attribution */}
-      <div className="absolute bottom-1 left-1 text-[10px] text-gray-500 bg-black/50 px-1 rounded">
+      <div className="absolute bottom-1 left-1 text-[10px] text-muted-foreground bg-black/50 px-1 rounded">
         © Mapbox © OpenStreetMap
       </div>
     </div>
@@ -401,23 +420,28 @@ export function AnimatedHotelMap({
 
 // ── Helper: Create circle GeoJSON ────────────────────────────────────────────
 
-function createCircleGeojson(center: [number, number], radiusKm: number): GeoJSON.GeoJSON {
+function createCircleGeojson(
+  center: [number, number],
+  radiusKm: number,
+): GeoJSON.GeoJSON {
   const points = 64;
   const coords: [number, number][] = [];
-  
+
   for (let i = 0; i < points; i++) {
     const angle = (2 * Math.PI * i) / points;
     const latOffset = (radiusKm / 110.574) * Math.cos(angle);
-    const lngOffset = (radiusKm / (111.32 * Math.cos(center[1] * Math.PI / 180))) * Math.sin(angle);
+    const lngOffset =
+      (radiusKm / (111.32 * Math.cos((center[1] * Math.PI) / 180))) *
+      Math.sin(angle);
     coords.push([center[0] + lngOffset, center[1] + latOffset]);
   }
   coords.push(coords[0]); // Close the polygon
-  
+
   return {
-    type: 'Feature',
+    type: "Feature",
     properties: {},
     geometry: {
-      type: 'Polygon',
+      type: "Polygon",
       coordinates: [coords],
     },
   };

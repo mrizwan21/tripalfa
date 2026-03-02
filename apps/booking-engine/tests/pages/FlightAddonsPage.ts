@@ -1,9 +1,9 @@
-import { BasePage } from './BasePage';
+import { BasePage } from "./BasePage";
 
 export class FlightAddonsPage extends BasePage {
   async addBaggage() {
     // Use 'force: true' to interact with hidden elements
-    await this.getByTestId('baggage-addon').click({ force: true });
+    await this.getByTestId("baggage-addon").click({ force: true });
   }
 
   async selectSeat(seatNumber: string) {
@@ -11,8 +11,10 @@ export class FlightAddonsPage extends BasePage {
   }
 
   async continue() {
-    await this.getByTestId('continue-button').click({ force: true });
+    await this.getByTestId("continue-button").click({ force: true });
     // Wait for passenger details page to load
-    await this.page.waitForSelector('[data-testid="passenger-form"]', { timeout: 10000 });
+    await this.page.waitForSelector('[data-testid="passenger-form"]', {
+      timeout: 10000,
+    });
   }
 }

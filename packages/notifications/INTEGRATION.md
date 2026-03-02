@@ -28,10 +28,7 @@ The package is already configured as a workspace. If not, add it to `package.jso
 
 ```json
 {
-  "workspaces": [
-    "packages/notifications",
-    "..."
-  ]
+  "workspaces": ["packages/notifications", "..."]
 }
 ```
 
@@ -69,27 +66,27 @@ FRONTEND_URL=https://app.tripalfa.com
 
 ```typescript
 // service.ts
-import { initializeNotificationManager } from '@tripalfa/notifications';
-import pino from 'pino';
+import { initializeNotificationManager } from "@tripalfa/notifications";
+import pino from "pino";
 
 const logger = pino();
 
 export const notificationManager = initializeNotificationManager({
   logger,
   email: {
-    from: process.env.EMAIL_FROM || 'noreply@tripalfa.com',
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_SECURE === 'true',
+    from: process.env.EMAIL_FROM || "noreply@tripalfa.com",
+    host: process.env.EMAIL_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.EMAIL_PORT || "587"),
+    secure: process.env.EMAIL_SECURE === "true",
     auth: {
-      user: process.env.EMAIL_USER || '',
-      pass: process.env.EMAIL_PASS || '',
+      user: process.env.EMAIL_USER || "",
+      pass: process.env.EMAIL_PASS || "",
     },
   },
   sms: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || '',
-    authToken: process.env.TWILIO_AUTH_TOKEN || '',
-    fromNumber: process.env.TWILIO_FROM_NUMBER || '',
+    accountSid: process.env.TWILIO_ACCOUNT_SID || "",
+    authToken: process.env.TWILIO_AUTH_TOKEN || "",
+    fromNumber: process.env.TWILIO_FROM_NUMBER || "",
   },
 });
 
@@ -99,29 +96,29 @@ export default notificationManager;
 ### Sending Notifications
 
 ```typescript
-import { notificationManager } from './notification.service';
+import { notificationManager } from "./notification.service";
 
 // Send a notification
 async function notifyBookingConfirmation(userId: string, bookingId: string) {
   try {
     const notificationId = await notificationManager.sendNotification({
       userId,
-      type: 'booking_confirmed',
-      title: 'Booking Confirmed',
-      message: 'Your booking has been confirmed successfully',
-      channels: ['email', 'push', 'in_app'],
-      priority: 'high',
+      type: "booking_confirmed",
+      title: "Booking Confirmed",
+      message: "Your booking has been confirmed successfully",
+      channels: ["email", "push", "in_app"],
+      priority: "high",
       data: {
         bookingId,
-        bookingReference: 'TR123456',
+        bookingReference: "TR123456",
       },
       actionUrl: `/bookings/${bookingId}`,
     });
 
-    console.log('Notification sent:', notificationId);
+    console.log("Notification sent:", notificationId);
     return notificationId;
   } catch (error) {
-    console.error('Failed to send notification:', error);
+    console.error("Failed to send notification:", error);
     throw error;
   }
 }
@@ -132,12 +129,12 @@ async function notifyBookingConfirmation(userId: string, bookingId: string) {
 ### Register Custom Channels
 
 ```typescript
-import { NotificationManager, BaseChannel } from '@tripalfa/notifications';
-import pino from 'pino';
+import { NotificationManager, BaseChannel } from "@tripalfa/notifications";
+import pino from "pino";
 
 // Create custom channel
 class SlackChannel extends BaseChannel {
-  protected name = 'slack';
+  protected name = "slack";
   private webhookUrl: string;
 
   constructor(webhookUrl: string, logger) {
@@ -152,15 +149,15 @@ class SlackChannel extends BaseChannel {
   async send(notification) {
     try {
       await fetch(this.webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: notification.title,
           blocks: [
             {
-              type: 'section',
+              type: "section",
               text: {
-                type: 'mrkdwn',
+                type: "mrkdwn",
                 text: `*${notification.title}*\n${notification.message}`,
               },
             },
@@ -180,7 +177,7 @@ class SlackChannel extends BaseChannel {
 // Register custom channel
 const manager = new NotificationManager(logger);
 manager.registerChannel(
-  new SlackChannel(process.env.SLACK_WEBHOOK_URL, logger)
+  new SlackChannel(process.env.SLACK_WEBHOOK_URL, logger),
 );
 ```
 
@@ -189,15 +186,15 @@ manager.registerChannel(
 ### Express Setup
 
 ```typescript
-import express from 'express';
-import { 
+import express from "express";
+import {
   notificationManager,
   createAuthMiddleware,
   validateNotificationPayload,
   createErrorHandler,
   createRateLimitMiddleware,
-} from '@tripalfa/notifications';
-import pino from 'pino';
+} from "@tripalfa/notifications";
+import pino from "pino";
 
 const app = express();
 const logger = pino();
@@ -205,31 +202,30 @@ const logger = pino();
 app.use(express.json());
 
 // Apply middleware
-app.use(
-  '/api/notifications',
-  createRateLimitMiddleware(100, 60000, logger)
-);
+app.use("/api/notifications", createRateLimitMiddleware(100, 60000, logger));
 
 // Routes
 app.post(
-  '/api/notifications',
+  "/api/notifications",
   createAuthMiddleware(logger),
   validateNotificationPayload,
   async (req, res, next) => {
     try {
-      const notificationId = await notificationManager.sendNotification(req.body);
+      const notificationId = await notificationManager.sendNotification(
+        req.body,
+      );
       res.status(201).json({
         id: notificationId,
-        message: 'Notification sent successfully',
+        message: "Notification sent successfully",
       });
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 app.get(
-  '/api/notifications',
+  "/api/notifications",
   createAuthMiddleware(logger),
   async (req, res, next) => {
     try {
@@ -240,7 +236,7 @@ app.get(
       const notifications = await notificationManager.getNotifications(
         userId,
         limit,
-        offset
+        offset,
       );
 
       res.json({
@@ -254,11 +250,11 @@ app.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 app.patch(
-  '/api/notifications/:id/read',
+  "/api/notifications/:id/read",
   createAuthMiddleware(logger),
   async (req, res, next) => {
     try {
@@ -267,11 +263,11 @@ app.patch(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 app.get(
-  '/api/notifications/preferences',
+  "/api/notifications/preferences",
   createAuthMiddleware(logger),
   async (req, res, next) => {
     try {
@@ -281,11 +277,11 @@ app.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 app.patch(
-  '/api/notifications/preferences',
+  "/api/notifications/preferences",
   createAuthMiddleware(logger),
   async (req, res, next) => {
     try {
@@ -296,14 +292,14 @@ app.patch(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 // Error handling
 app.use(createErrorHandler(logger));
 
 app.listen(3000, () => {
-  console.log('Notification API running on port 3000');
+  console.log("Notification API running on port 3000");
 });
 ```
 
@@ -312,10 +308,10 @@ app.listen(3000, () => {
 ### Socket.IO Setup
 
 ```typescript
-import express from 'express';
-import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import { notificationManager } from './notification.service';
+import express from "express";
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
+import { notificationManager } from "./notification.service";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -330,7 +326,7 @@ const io = new SocketIOServer(httpServer, {
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
-    return next(new Error('Authentication error'));
+    return next(new Error("Authentication error"));
   }
 
   // Verify JWT and attach user
@@ -344,7 +340,7 @@ io.use((socket, next) => {
 });
 
 // Connection handler
-io.on('connection', (socket) => {
+io.on("connection", (socket) => {
   const userId = socket.data.userId;
 
   console.log(`User ${userId} connected`);
@@ -353,29 +349,29 @@ io.on('connection', (socket) => {
   socket.join(`user:${userId}`);
 
   // Handle disconnect
-  socket.on('disconnect', () => {
+  socket.on("disconnect", () => {
     console.log(`User ${userId} disconnected`);
   });
 });
 
 // Broadcast notification to user
 export function broadcastNotification(userId: string, notification: any) {
-  io.to(`user:${userId}`).emit('notification:new', {
+  io.to(`user:${userId}`).emit("notification:new", {
     ...notification,
     timestamp: new Date().toISOString(),
   });
 }
 
 httpServer.listen(3001, () => {
-  console.log('WebSocket server running on port 3001');
+  console.log("WebSocket server running on port 3001");
 });
 ```
 
 ### Real-time Notification Broadcasting
 
 ```typescript
-import { broadcastNotification } from './websocket.service';
-import { notificationManager } from './notification.service';
+import { broadcastNotification } from "./websocket.service";
+import { notificationManager } from "./notification.service";
 
 async function createAndBroadcastNotification(userId: string, payload) {
   // Send notification via channels
@@ -405,7 +401,7 @@ model Notification {
   id                String   @id @default(cuid())
   userId            String
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   type              String
   title             String
   message           String
@@ -413,15 +409,15 @@ model Notification {
   status            String   @default("pending")
   data              Json?
   actionUrl         String?
-  
+
   channels          String[]
   readAt            DateTime?
   sentAt            DateTime?
   deliveredAt       DateTime?
-  
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([createdAt])
   @@fulltext([title, message])
@@ -431,7 +427,7 @@ model NotificationPreference {
   id                String   @id @default(cuid())
   userId            String   @unique
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   emailEnabled      Boolean  @default(true)
   smsEnabled        Boolean  @default(false)
   pushEnabled       Boolean  @default(true)
@@ -439,7 +435,7 @@ model NotificationPreference {
   priceDropAlerts   Boolean  @default(true)
   bookingReminders  Boolean  @default(true)
   promotionalEmails Boolean  @default(false)
-  
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 }
@@ -448,15 +444,15 @@ model PushSubscription {
   id                String   @id @default(cuid())
   userId            String
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   endpoint          String   @unique
   auth              String
   p256dh            String
   isActive          Boolean  @default(true)
-  
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-  
+
   @@index([userId])
 }
 
@@ -471,13 +467,17 @@ model User {
 ### Database-backed Service
 
 ```typescript
-import { PrismaClient } from '@prisma/client';
-import { BaseNotificationService, Notification, NotificationPayload } from '@tripalfa/notifications';
+import { PrismaClient } from "@prisma/client";
+import {
+  BaseNotificationService,
+  Notification,
+  NotificationPayload,
+} from "@tripalfa/notifications";
 
 export class PrismaNotificationService extends BaseNotificationService {
   constructor(
     private prisma: PrismaClient,
-    logger
+    logger,
   ) {
     super(logger);
   }
@@ -491,9 +491,9 @@ export class PrismaNotificationService extends BaseNotificationService {
         type: payload.type,
         title: payload.title,
         message: payload.message,
-        channels: payload.channels || ['in_app'],
-        priority: payload.priority || 'medium',
-        status: 'pending',
+        channels: payload.channels || ["in_app"],
+        priority: payload.priority || "medium",
+        status: "pending",
         data: payload.data,
         actionUrl: payload.actionUrl,
       },
@@ -502,12 +502,16 @@ export class PrismaNotificationService extends BaseNotificationService {
     return notification.id;
   }
 
-  async getNotifications(userId: string, limit: number, offset: number): Promise<Notification[]> {
+  async getNotifications(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Notification[]> {
     return this.prisma.notification.findMany({
       where: { userId },
       take: limit,
       skip: offset,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
   }
 
@@ -515,7 +519,7 @@ export class PrismaNotificationService extends BaseNotificationService {
     await this.prisma.notification.update({
       where: { id: notificationId },
       data: {
-        status: 'read',
+        status: "read",
         readAt: new Date(),
       },
     });
@@ -530,39 +534,39 @@ export class PrismaNotificationService extends BaseNotificationService {
 ### Unit Tests
 
 ```typescript
-import { NotificationManager, NullChannel } from '@tripalfa/notifications';
-import pino from 'pino';
+import { NotificationManager, NullChannel } from "@tripalfa/notifications";
+import pino from "pino";
 
-describe('NotificationManager', () => {
+describe("NotificationManager", () => {
   let manager;
   let logger;
 
   beforeEach(() => {
-    logger = pino({ level: 'silent' });
+    logger = pino({ level: "silent" });
     manager = new NotificationManager(logger);
     manager.registerChannel(new NullChannel(logger));
   });
 
-  test('should send notification', async () => {
+  test("should send notification", async () => {
     const id = await manager.sendNotification({
-      userId: 'test-user',
-      type: 'booking_confirmed',
-      title: 'Test',
-      message: 'Test message',
+      userId: "test-user",
+      type: "booking_confirmed",
+      title: "Test",
+      message: "Test message",
     });
 
     expect(id).toBeDefined();
   });
 
-  test('should track unread count', async () => {
+  test("should track unread count", async () => {
     await manager.sendNotification({
-      userId: 'test-user',
-      type: 'booking_confirmed',
-      title: 'Test',
-      message: 'Test message',
+      userId: "test-user",
+      type: "booking_confirmed",
+      title: "Test",
+      message: "Test message",
     });
 
-    const count = await manager.getUnreadCount('test-user');
+    const count = await manager.getUnreadCount("test-user");
     expect(count).toBeGreaterThan(0);
   });
 });
@@ -586,8 +590,8 @@ telnet smtp.gmail.com 587
 ```typescript
 // Validate Twilio config
 manager.registerChannel(new SMSChannel(config, logger));
-const smsChannel = manager.getChannel('sms');
-console.log('SMS Config Valid:', smsChannel.validateConfig());
+const smsChannel = manager.getChannel("sms");
+console.log("SMS Config Valid:", smsChannel.validateConfig());
 ```
 
 ### Issue: WebSocket authentication fails
@@ -596,9 +600,9 @@ console.log('SMS Config Valid:', smsChannel.validateConfig());
 
 ```typescript
 // Client-side
-const socket = io('http://localhost:3001', {
+const socket = io("http://localhost:3001", {
   auth: {
-    token: localStorage.getItem('auth-token'),
+    token: localStorage.getItem("auth-token"),
   },
 });
 ```
@@ -609,19 +613,23 @@ const socket = io('http://localhost:3001', {
 
 ```typescript
 // Implement notification cleanup
-setInterval(async () => {
-  const threshold = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
-  await prisma.notification.deleteMany({
-    where: {
-      createdAt: { lt: threshold },
-    },
-  });
-}, 24 * 60 * 60 * 1000); // Daily
+setInterval(
+  async () => {
+    const threshold = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days
+    await prisma.notification.deleteMany({
+      where: {
+        createdAt: { lt: threshold },
+      },
+    });
+  },
+  24 * 60 * 60 * 1000,
+); // Daily
 ```
 
 ## Support
 
 For issues or questions:
+
 1. Check the README.md
 2. Review example code in `/examples`
 3. Check test files in `/__tests__`

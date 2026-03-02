@@ -1,36 +1,35 @@
 // @ts-ignore
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@tripalfa/shared-utils"
+import { cn } from "@tripalfa/shared-utils";
 
 /* ============================================
    INPUT DESIGN TOKENS - STANDARDIZED STYLING
    ============================================ */
 const inputTokens = {
   heights: {
-    sm: "2rem",       /* 32px */
-    default: "2.5rem", /* 40px */
-    lg: "3rem",       /* 48px */
+    sm: "2rem" /* 32px */,
+    default: "2.5rem" /* 40px */,
+    lg: "3rem" /* 48px */,
   },
   padding: {
-    sm: "0.5rem",     /* 8px */
-    default: "0.75rem", /* 12px */
-    lg: "1rem",       /* 16px */
+    sm: "0.5rem" /* 8px */,
+    default: "0.75rem" /* 12px */,
+    lg: "1rem" /* 16px */,
   },
   fontSize: {
-    sm: "0.8125rem",  /* 13px */
-    default: "0.875rem", /* 14px */
-    lg: "0.9375rem",  /* 15px */
+    sm: "0.8125rem" /* 13px */,
+    default: "0.875rem" /* 14px */,
+    lg: "0.9375rem" /* 15px */,
   },
 } as const;
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  inputSize?: 'sm' | 'default' | 'lg';
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  inputSize?: "sm" | "default" | "lg";
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, inputSize = 'default', ...props }, ref) => {
+  ({ className, type, inputSize = "default", ...props }, ref) => {
     return (
       <input
         type={type}
@@ -41,20 +40,22 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50 focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-50",
           "hover:border-slate-300 transition-colors duration-200",
-          className
+          className,
         )}
-        style={{
-          height: inputTokens.heights[inputSize],
-          paddingLeft: inputTokens.padding[inputSize],
-          paddingRight: inputTokens.padding[inputSize],
-          fontSize: inputTokens.fontSize[inputSize],
-        } as React.CSSProperties}
+        style={
+          {
+            height: inputTokens.heights[inputSize],
+            paddingLeft: inputTokens.padding[inputSize],
+            paddingRight: inputTokens.padding[inputSize],
+            fontSize: inputTokens.fontSize[inputSize],
+          } as React.CSSProperties
+        }
         ref={ref}
         {...props}
       />
-    )
-  }
-)
-Input.displayName = "Input"
+    );
+  },
+);
+Input.displayName = "Input";
 
-export { Input }
+export { Input };

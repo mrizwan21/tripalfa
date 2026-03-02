@@ -12,125 +12,126 @@ import {
   ApiResponse,
   PermissionValidationRequest,
   RoleCreationRequest,
-  PermissionCreationRequest
-} from '@tripalfa/shared-types/types/permissions';
+  PermissionCreationRequest,
+} from "../../../../../packages/shared-types/types/permissions.js";
 
 // Mock data for development
 const mockPermissions: Permission[] = [
   {
-    id: 'company:companies:manage',
+    id: "company:companies:manage",
     category: PermissionCategory.COMPANY,
     resource: PermissionResource.COMPANY,
     action: PermissionAction.MANAGE,
-    description: 'Full management access to organization operations',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
+    description: "Full management access to organization operations",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'company:departments:manage',
+    id: "company:departments:manage",
     category: PermissionCategory.DEPARTMENT,
     resource: PermissionResource.DEPARTMENT,
     action: PermissionAction.MANAGE,
-    description: 'Full management access to department operations',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
+    description: "Full management access to department operations",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'company:kyc:documents:manage',
+    id: "company:kyc:documents:manage",
     category: PermissionCategory.KYC,
     resource: PermissionResource.KYC_DOCUMENT,
     action: PermissionAction.MANAGE,
-    description: 'Full management access to KYC document operations',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
+    description: "Full management access to KYC document operations",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'company:virtual_card:cards:manage',
+    id: "company:virtual_card:cards:manage",
     category: PermissionCategory.VIRTUAL_CARD,
     resource: PermissionResource.VIRTUAL_CARD,
     action: PermissionAction.MANAGE,
-    description: 'Full management access to virtual card operations',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  }
+    description: "Full management access to virtual card operations",
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
 ];
 
 const mockRoles: Role[] = [
   {
-    id: 'ADMIN',
-    name: 'ADMIN',
-    description: 'Admin with management and review capabilities',
+    id: "ADMIN",
+    name: "ADMIN",
+    description: "Admin with management and review capabilities",
     permissions: [
-      'company:companies:view',
-      'company:companies:update',
-      'company:departments:view',
-      'company:departments:create',
-      'company:kyc:documents:view',
-      'company:kyc:documents:verify',
-      'company:virtual_card:cards:view',
-      'company:virtual_card:transactions:view'
+      "company:companies:view",
+      "company:companies:update",
+      "company:departments:view",
+      "company:departments:create",
+      "company:kyc:documents:view",
+      "company:kyc:documents:verify",
+      "company:virtual_card:cards:view",
+      "company:virtual_card:transactions:view",
     ],
     isActive: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'B2B',
-    name: 'B2B',
-    description: 'B2B User with operational access to organization features',
+    id: "B2B",
+    name: "B2B",
+    description: "B2B User with operational access to organization features",
     permissions: [
-      'company:companies:view',
-      'company:departments:view',
-      'company:kyc:documents:view',
-      'company:kyc:documents:create',
-      'company:virtual_card:cards:view',
-      'company:virtual_card:cards:create'
+      "company:companies:view",
+      "company:departments:view",
+      "company:kyc:documents:view",
+      "company:kyc:documents:create",
+      "company:virtual_card:cards:view",
+      "company:virtual_card:cards:create",
     ],
     isActive: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'VIEWER',
-    name: 'VIEWER',
-    description: 'Viewer role with read-only access to organization management',
+    id: "VIEWER",
+    name: "VIEWER",
+    description: "Viewer role with read-only access to organization management",
     permissions: [
-      'company:companies:view',
-      'company:departments:view',
-      'company:kyc:documents:view',
-      'company:virtual_card:cards:view'
+      "company:companies:view",
+      "company:departments:view",
+      "company:kyc:documents:view",
+      "company:virtual_card:cards:view",
     ],
     isActive: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-01-01T00:00:00Z'
-  }
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
 ];
 
 const mockAuditLogs: AuditLogEntry[] = [
   {
-    id: '1',
-    timestamp: '2024-01-01T10:00:00Z',
-    userId: 'user123',
-    action: 'VIEW',
-    resource: 'company:companies:manage',
-    result: 'GRANTED',
-    ipAddress: '192.168.1.1',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    id: "1",
+    timestamp: "2024-01-01T10:00:00Z",
+    userId: "user123",
+    action: "VIEW",
+    resource: "company:companies:manage",
+    result: "GRANTED",
+    ipAddress: "192.168.1.1",
+    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
   },
   {
-    id: '2',
-    timestamp: '2024-01-01T10:05:00Z',
-    userId: 'user456',
-    action: 'CREATE',
-    resource: 'company:departments:manage',
-    result: 'DENIED',
-    ipAddress: '192.168.1.2',
-    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-  }
+    id: "2",
+    timestamp: "2024-01-01T10:05:00Z",
+    userId: "user456",
+    action: "CREATE",
+    resource: "company:departments:manage",
+    result: "DENIED",
+    ipAddress: "192.168.1.2",
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+  },
 ];
 
 export class PermissionService {
-  private static API_BASE = '/api/permissions';
+  private static API_BASE = "/api/permissions";
 
   /**
    * Get all available permissions
@@ -144,13 +145,13 @@ export class PermissionService {
       return {
         success: true,
         data: mockPermissions,
-        message: 'Permissions loaded successfully'
+        message: "Permissions loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to load permissions'
+        error: "Failed to load permissions",
       };
     }
   }
@@ -167,13 +168,13 @@ export class PermissionService {
       return {
         success: true,
         data: mockRoles,
-        message: 'Roles loaded successfully'
+        message: "Roles loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to load roles'
+        error: "Failed to load roles",
       };
     }
   }
@@ -181,31 +182,35 @@ export class PermissionService {
   /**
    * Get permission matrix for all roles
    */
-  static async getPermissionMatrix(): Promise<ApiResponse<PermissionMatrixEntry[]>> {
+  static async getPermissionMatrix(): Promise<
+    ApiResponse<PermissionMatrixEntry[]>
+  > {
     try {
       // In production, this would make an API call
       // return await api.get(`${this.API_BASE}/role-matrix`);
 
       // For now, return mock data
-      const matrix: PermissionMatrixEntry[] = mockRoles.map(role => ({
+      const matrix: PermissionMatrixEntry[] = mockRoles.map((role) => ({
         role: role.name,
         permissions: role.permissions,
-        categories: role.permissions.map(p => {
-          const parts = p.split(':');
-          return parts[0] as PermissionCategory;
-        }).filter((category, index, arr) => arr.indexOf(category) === index)
+        categories: role.permissions
+          .map((p) => {
+            const parts = p.split(":");
+            return parts[0] as PermissionCategory;
+          })
+          .filter((category, index, arr) => arr.indexOf(category) === index),
       }));
 
       return {
         success: true,
         data: matrix,
-        message: 'Permission matrix loaded successfully'
+        message: "Permission matrix loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to load permission matrix'
+        error: "Failed to load permission matrix",
       };
     }
   }
@@ -213,7 +218,9 @@ export class PermissionService {
   /**
    * Get audit logs
    */
-  static async getAuditLogs(): Promise<ApiResponse<{ auditLog: AuditLogEntry[] }>> {
+  static async getAuditLogs(): Promise<
+    ApiResponse<{ auditLog: AuditLogEntry[] }>
+  > {
     try {
       // In production, this would make an API call
       // return await api.get(`${this.API_BASE}/audit`);
@@ -222,13 +229,13 @@ export class PermissionService {
       return {
         success: true,
         data: { auditLog: mockAuditLogs },
-        message: 'Audit logs loaded successfully'
+        message: "Audit logs loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: { auditLog: [] },
-        error: 'Failed to load audit logs'
+        error: "Failed to load audit logs",
       };
     }
   }
@@ -236,36 +243,45 @@ export class PermissionService {
   /**
    * Validate user permissions
    */
-  static async validatePermissions(request: PermissionValidationRequest): Promise<ApiResponse<PermissionResponse>> {
+  static async validatePermissions(
+    request: PermissionValidationRequest,
+  ): Promise<ApiResponse<PermissionResponse>> {
     try {
       // In production, this would make an API call
       // return await api.post(`${this.API_BASE}/validate`, request);
 
       // For now, return mock validation
-      const granted = request.permissions.every(permission =>
-        mockRoles.find(r => r.name === 'SUPER_ADMIN')?.permissions.includes(permission)
+      const granted = request.permissions.every((permission) =>
+        mockRoles
+          .find((r) => r.name === "SUPER_ADMIN")
+          ?.permissions.includes(permission),
       );
 
       return {
         success: true,
         data: {
           granted,
-          reason: granted ? 'All permissions granted' : 'Insufficient permissions',
+          reason: granted
+            ? "All permissions granted"
+            : "Insufficient permissions",
           requiredPermissions: request.permissions,
-          userPermissions: mockRoles.find(r => r.name === 'SUPER_ADMIN')?.permissions || []
+          userPermissions:
+            mockRoles.find((r) => r.name === "SUPER_ADMIN")?.permissions || [],
         },
-        message: granted ? 'Permissions validated successfully' : 'Permission validation failed'
+        message: granted
+          ? "Permissions validated successfully"
+          : "Permission validation failed",
       };
     } catch (error) {
       return {
         success: false,
         data: {
           granted: false,
-          reason: 'Validation failed',
+          reason: "Validation failed",
           requiredPermissions: request.permissions,
-          userPermissions: []
+          userPermissions: [],
         },
-        error: 'Failed to validate permissions'
+        error: "Failed to validate permissions",
       };
     }
   }
@@ -273,7 +289,9 @@ export class PermissionService {
   /**
    * Create a new role
    */
-  static async createRole(roleData: RoleCreationRequest): Promise<ApiResponse<Role>> {
+  static async createRole(
+    roleData: RoleCreationRequest,
+  ): Promise<ApiResponse<Role>> {
     try {
       // In production, this would make an API call
       // return await api.post(`${this.API_BASE}/roles`, roleData);
@@ -286,7 +304,7 @@ export class PermissionService {
         permissions: roleData.permissions,
         isActive: roleData.isActive,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       mockRoles.push(newRole);
@@ -294,13 +312,13 @@ export class PermissionService {
       return {
         success: true,
         data: newRole,
-        message: 'Role created successfully'
+        message: "Role created successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: {} as Role,
-        error: 'Failed to create role'
+        error: "Failed to create role",
       };
     }
   }
@@ -308,37 +326,40 @@ export class PermissionService {
   /**
    * Update an existing role
    */
-  static async updateRole(roleId: string, roleData: Partial<Role>): Promise<ApiResponse<Role>> {
+  static async updateRole(
+    roleId: string,
+    roleData: Partial<Role>,
+  ): Promise<ApiResponse<Role>> {
     try {
       // In production, this would make an API call
       // return await api.put(`${this.API_BASE}/roles/${roleId}`, roleData);
 
       // For now, return mock update
-      const roleIndex = mockRoles.findIndex(r => r.id === roleId);
+      const roleIndex = mockRoles.findIndex((r) => r.id === roleId);
       if (roleIndex === -1) {
         return {
           success: false,
           data: {} as Role,
-          error: 'Role not found'
+          error: "Role not found",
         };
       }
 
       mockRoles[roleIndex] = {
         ...mockRoles[roleIndex],
         ...roleData,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       return {
         success: true,
         data: mockRoles[roleIndex],
-        message: 'Role updated successfully'
+        message: "Role updated successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: {} as Role,
-        error: 'Failed to update role'
+        error: "Failed to update role",
       };
     }
   }
@@ -346,18 +367,20 @@ export class PermissionService {
   /**
    * Delete a role
    */
-  static async deleteRole(roleId: string): Promise<ApiResponse<{ success: boolean }>> {
+  static async deleteRole(
+    roleId: string,
+  ): Promise<ApiResponse<{ success: boolean }>> {
     try {
       // In production, this would make an API call
       // return await api.delete(`${this.API_BASE}/roles/${roleId}`);
 
       // For now, return mock deletion
-      const roleIndex = mockRoles.findIndex(r => r.id === roleId);
+      const roleIndex = mockRoles.findIndex((r) => r.id === roleId);
       if (roleIndex === -1) {
         return {
           success: false,
           data: { success: false },
-          error: 'Role not found'
+          error: "Role not found",
         };
       }
 
@@ -366,13 +389,13 @@ export class PermissionService {
       return {
         success: true,
         data: { success: true },
-        message: 'Role deleted successfully'
+        message: "Role deleted successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: { success: false },
-        error: 'Failed to delete role'
+        error: "Failed to delete role",
       };
     }
   }
@@ -380,7 +403,9 @@ export class PermissionService {
   /**
    * Create a new permission
    */
-  static async createPermission(permissionData: PermissionCreationRequest): Promise<ApiResponse<Permission>> {
+  static async createPermission(
+    permissionData: PermissionCreationRequest,
+  ): Promise<ApiResponse<Permission>> {
     try {
       // In production, this would make an API call
       // return await api.post(`${this.API_BASE}/permissions`, permissionData);
@@ -393,7 +418,7 @@ export class PermissionService {
         action: permissionData.action,
         description: permissionData.description,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       mockPermissions.push(newPermission);
@@ -401,13 +426,13 @@ export class PermissionService {
       return {
         success: true,
         data: newPermission,
-        message: 'Permission created successfully'
+        message: "Permission created successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: {} as Permission,
-        error: 'Failed to create permission'
+        error: "Failed to create permission",
       };
     }
   }
@@ -424,29 +449,41 @@ export class PermissionService {
       const summary: PermissionSummary = {
         totalRoles: mockRoles.length,
         totalPermissions: mockPermissions.length,
-        activeRoles: mockRoles.filter(r => r.isActive).length,
-        inactiveRoles: mockRoles.filter(r => !r.isActive).length,
+        activeRoles: mockRoles.filter((r) => r.isActive).length,
+        inactiveRoles: mockRoles.filter((r) => !r.isActive).length,
         permissionDistribution: {
-          [PermissionCategory.COMPANY]: mockPermissions.filter(p => p.category === PermissionCategory.COMPANY).length,
-          [PermissionCategory.DEPARTMENT]: mockPermissions.filter(p => p.category === PermissionCategory.DEPARTMENT).length,
-          [PermissionCategory.DESIGNATION]: mockPermissions.filter(p => p.category === PermissionCategory.DESIGNATION).length,
-          [PermissionCategory.COST_CENTER]: mockPermissions.filter(p => p.category === PermissionCategory.COST_CENTER).length,
-          [PermissionCategory.KYC]: mockPermissions.filter(p => p.category === PermissionCategory.KYC).length,
-          [PermissionCategory.VIRTUAL_CARD]: mockPermissions.filter(p => p.category === PermissionCategory.VIRTUAL_CARD).length
+          [PermissionCategory.COMPANY]: mockPermissions.filter(
+            (p) => p.category === PermissionCategory.COMPANY,
+          ).length,
+          [PermissionCategory.DEPARTMENT]: mockPermissions.filter(
+            (p) => p.category === PermissionCategory.DEPARTMENT,
+          ).length,
+          [PermissionCategory.DESIGNATION]: mockPermissions.filter(
+            (p) => p.category === PermissionCategory.DESIGNATION,
+          ).length,
+          [PermissionCategory.COST_CENTER]: mockPermissions.filter(
+            (p) => p.category === PermissionCategory.COST_CENTER,
+          ).length,
+          [PermissionCategory.KYC]: mockPermissions.filter(
+            (p) => p.category === PermissionCategory.KYC,
+          ).length,
+          [PermissionCategory.VIRTUAL_CARD]: mockPermissions.filter(
+            (p) => p.category === PermissionCategory.VIRTUAL_CARD,
+          ).length,
         },
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
 
       return {
         success: true,
         data: summary,
-        message: 'Permission summary loaded successfully'
+        message: "Permission summary loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: {} as PermissionSummary,
-        error: 'Failed to load permission summary'
+        error: "Failed to load permission summary",
       };
     }
   }
@@ -454,24 +491,26 @@ export class PermissionService {
   /**
    * Get user permissions
    */
-  static async getUserPermissions(userId: string): Promise<ApiResponse<{ permissions: string[] }>> {
+  static async getUserPermissions(
+    userId: string,
+  ): Promise<ApiResponse<{ permissions: string[] }>> {
     try {
       // In production, this would make an API call
       // return await api.get(`${this.API_BASE}/user/${userId}`);
 
       // For now, return mock data
-      const userRole = mockRoles.find(r => r.name === 'SUPER_ADMIN');
+      const userRole = mockRoles.find((r) => r.name === "SUPER_ADMIN");
 
       return {
         success: true,
         data: { permissions: userRole?.permissions || [] },
-        message: 'User permissions loaded successfully'
+        message: "User permissions loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: { permissions: [] },
-        error: 'Failed to load user permissions'
+        error: "Failed to load user permissions",
       };
     }
   }
@@ -479,35 +518,42 @@ export class PermissionService {
   /**
    * Bulk validate permissions
    */
-  static async bulkValidatePermissions(requests: PermissionValidationRequest[]): Promise<ApiResponse<PermissionResponse[]>> {
+  static async bulkValidatePermissions(
+    requests: PermissionValidationRequest[],
+  ): Promise<ApiResponse<PermissionResponse[]>> {
     try {
       // In production, this would make an API call
       // return await api.post(`${this.API_BASE}/bulk-validate`, requests);
 
       // For now, return mock validation
-      const results = requests.map(request => {
-        const granted = request.permissions.every(permission =>
-          mockRoles.find(r => r.name === 'SUPER_ADMIN')?.permissions.includes(permission)
+      const results = requests.map((request) => {
+        const granted = request.permissions.every((permission) =>
+          mockRoles
+            .find((r) => r.name === "SUPER_ADMIN")
+            ?.permissions.includes(permission),
         );
 
         return {
           granted,
-          reason: granted ? 'All permissions granted' : 'Insufficient permissions',
+          reason: granted
+            ? "All permissions granted"
+            : "Insufficient permissions",
           requiredPermissions: request.permissions,
-          userPermissions: mockRoles.find(r => r.name === 'SUPER_ADMIN')?.permissions || []
+          userPermissions:
+            mockRoles.find((r) => r.name === "SUPER_ADMIN")?.permissions || [],
         };
       });
 
       return {
         success: true,
         data: results,
-        message: 'Bulk permission validation completed'
+        message: "Bulk permission validation completed",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to validate permissions'
+        error: "Failed to validate permissions",
       };
     }
   }
@@ -520,13 +566,13 @@ export class PermissionService {
       return {
         success: true,
         data: Object.values(PermissionCategory),
-        message: 'Categories loaded successfully'
+        message: "Categories loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to load categories'
+        error: "Failed to load categories",
       };
     }
   }
@@ -539,13 +585,13 @@ export class PermissionService {
       return {
         success: true,
         data: Object.values(PermissionAction),
-        message: 'Actions loaded successfully'
+        message: "Actions loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to load actions'
+        error: "Failed to load actions",
       };
     }
   }
@@ -558,13 +604,13 @@ export class PermissionService {
       return {
         success: true,
         data: Object.values(PermissionResource),
-        message: 'Resources loaded successfully'
+        message: "Resources loaded successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: [],
-        error: 'Failed to load resources'
+        error: "Failed to load resources",
       };
     }
   }
@@ -581,17 +627,17 @@ export class PermissionService {
       return {
         success: true,
         data: {
-          testResult: 'success',
+          testResult: "success",
           testData: testData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         },
-        message: 'Permission test completed successfully'
+        message: "Permission test completed successfully",
       };
     } catch (error) {
       return {
         success: false,
         data: {},
-        error: 'Failed to test permissions'
+        error: "Failed to test permissions",
       };
     }
   }

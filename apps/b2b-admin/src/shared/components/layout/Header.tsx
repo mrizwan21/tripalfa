@@ -1,4 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@tripalfa/ui-components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@tripalfa/ui-components/ui/avatar";
 import { Button } from "@tripalfa/ui-components/ui/button";
 import {
   DropdownMenu,
@@ -88,28 +92,37 @@ export function Header() {
   // Get page title based on route
   const getPageTitle = () => {
     const path = location.pathname;
-    if (path === "/") return { title: "Dashboard", subtitle: "Overview of your business" };
-    if (path.includes("/analytics")) return { title: "Analytics", subtitle: "Detailed insights & reports" };
-    if (path.includes("/bookings")) return { title: "Bookings", subtitle: "Manage all reservations" };
-    if (path.includes("/users")) return { title: "User Management", subtitle: "Manage user accounts" };
+    if (path === "/")
+      return { title: "Dashboard", subtitle: "Overview of your business" };
+    if (path.includes("/analytics"))
+      return { title: "Analytics", subtitle: "Detailed insights & reports" };
+    if (path.includes("/bookings"))
+      return { title: "Bookings", subtitle: "Manage all reservations" };
+    if (path.includes("/users"))
+      return { title: "User Management", subtitle: "Manage user accounts" };
     if (path.includes("/organization") || path.includes("/companies")) {
       return { title: "Organizations", subtitle: "Organization management" };
     }
-    if (path.includes("/wallet")) return { title: "Wallet", subtitle: "Credits & transactions" };
-    if (path.includes("/finance")) return { title: "Finance", subtitle: "Financial overview" };
-    if (path.includes("/suppliers")) return { title: "Suppliers", subtitle: "Supplier management" };
-    if (path.includes("/rules")) return { title: "Rules Engine", subtitle: "Automated workflows" };
-    if (path.includes("/system")) return { title: "System Health", subtitle: "Monitor performance" };
+    if (path.includes("/wallet"))
+      return { title: "Wallet", subtitle: "Credits & transactions" };
+    if (path.includes("/finance"))
+      return { title: "Finance", subtitle: "Financial overview" };
+    if (path.includes("/suppliers"))
+      return { title: "Suppliers", subtitle: "Supplier management" };
+    if (path.includes("/rules"))
+      return { title: "Rules Engine", subtitle: "Automated workflows" };
+    if (path.includes("/system"))
+      return { title: "System Health", subtitle: "Monitor performance" };
     return { title: "Admin Portal", subtitle: "Manage your platform" };
   };
 
   const pageInfo = getPageTitle();
 
   return (
-    <header className="flex h-20 w-full items-center justify-between border-b border-cyan-500/10 bg-[#0a0e17]/80 backdrop-blur-xl px-6 sticky top-0 z-30 relative">
+    <header className="flex h-20 w-full items-center justify-between border-b border-cyan-500/10 bg-slate-950/80 backdrop-blur-xl px-6 sticky top-0 z-30 relative">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none" />
-      
+
       {/* Left Section - Page Title */}
       <div className="flex items-center gap-4 relative z-10">
         <motion.div
@@ -148,12 +161,15 @@ export function Header() {
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 text-cyan-400 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5 bg-transparent"
+              className="h-10 w-10 text-cyan-400 border-cyan-500/20 hover:border-cyan-500/40 hover:/5 bg-transparent"
             >
               <Sparkles className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 glass border-cyan-500/20 bg-[#0d1117]/95">
+          <DropdownMenuContent
+            align="end"
+            className="w-56 glass border-cyan-500/20 bg-slate-900/95"
+          >
             <DropdownMenuLabel className="text-xs font-semibold text-cyan-400/70 uppercase tracking-wider">
               Quick Actions
             </DropdownMenuLabel>
@@ -161,13 +177,15 @@ export function Header() {
             {quickActions.map((action) => (
               <DropdownMenuItem
                 key={action.label}
-                className="flex items-center justify-between cursor-pointer text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/5 focus:bg-cyan-500/5 focus:text-cyan-400"
+                className="flex items-center justify-between cursor-pointer text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/5 focus:bg-cyan-500/5 focus:text-cyan-400 gap-2"
               >
                 <div className="flex items-center gap-2">
                   <action.icon className="h-4 w-4 text-cyan-400" />
                   <span>{action.label}</span>
                 </div>
-                <kbd className="text-[10px] text-cyan-400/50">{action.shortcut}</kbd>
+                <kbd className="text-[10px] text-cyan-400/50">
+                  {action.shortcut}
+                </kbd>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -176,34 +194,51 @@ export function Header() {
         {/* Time Display */}
         <div className="hidden lg:flex flex-col items-end px-3 py-1 rounded-lg bg-cyan-500/5 border border-cyan-500/10">
           <span className="text-sm font-semibold text-cyan-400 font-mono">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {currentTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
           </span>
           <span className="text-xs text-cyan-400/50">
-            {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+            {currentTime.toLocaleDateString([], {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })}
           </span>
         </div>
 
         {/* Notifications */}
-        <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+        <DropdownMenu
+          open={notificationsOpen}
+          onOpenChange={setNotificationsOpen}
+        >
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 text-slate-400 border-cyan-500/20 hover:border-cyan-500/40 hover:bg-cyan-500/5 relative bg-transparent"
+              className="h-10 w-10 text-slate-400 border-cyan-500/20 hover:border-cyan-500/40 hover:/5 relative bg-transparent"
             >
               <Bell className="h-4 w-4" />
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-cyan-500 opacity-30 animate-ping" />
-                <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 text-[10px] font-bold text-white">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center gap-4">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-cyan-500 opacity-30 animate-ping gap-4" />
+                <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 text-[10px] font-bold text-white gap-4">
                   3
                 </span>
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80 p-0 glass border-cyan-500/20 bg-[#0d1117]/95">
-            <div className="flex items-center justify-between p-4 border-b border-cyan-500/10">
+          <DropdownMenuContent
+            align="end"
+            className="w-80 p-0 glass border-cyan-500/20 bg-slate-900/95"
+          >
+            <div className="flex items-center justify-between p-4 border-b border-cyan-500/10 gap-2">
               <h4 className="font-semibold text-white">Notifications</h4>
-              <Button variant="ghost" size="sm" className="h-auto py-1 px-2 text-xs text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto py-1 px-2 text-xs text-cyan-400 hover:text-cyan-300 hover:/5"
+              >
                 Mark all read
               </Button>
             </div>
@@ -216,22 +251,40 @@ export function Header() {
                   transition={{ delay: index * 0.1 }}
                   className={cn(
                     "flex items-start gap-3 p-4 border-b border-cyan-500/5 last:border-0 hover:bg-cyan-500/5 cursor-pointer transition-colors",
-                    notification.borderColor
+                    notification.borderColor,
                   )}
                 >
-                  <div className={cn("flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border", notification.bgColor, notification.borderColor)}>
-                    <notification.icon className={cn("h-4 w-4", notification.color)} />
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-lg shrink-0 border",
+                      notification.bgColor,
+                      notification.borderColor,
+                    )}
+                  >
+                    <notification.icon
+                      className={cn("h-4 w-4", notification.color)}
+                    />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{notification.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">{notification.message}</p>
-                    <p className="text-[10px] text-cyan-400/50 mt-1">{notification.time}</p>
+                  <div className="flex-1 min-w-0 gap-4">
+                    <p className="text-sm font-medium text-white">
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <p className="text-[10px] text-cyan-400/50 mt-1">
+                      {notification.time}
+                    </p>
                   </div>
                 </motion.div>
               ))}
             </div>
             <div className="p-3 border-t border-cyan-500/10">
-              <Button variant="ghost" size="sm" className="w-full text-xs text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/5">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full text-xs text-slate-400 hover:text-cyan-400 hover:/5"
+              >
                 View all notifications
               </Button>
             </div>
@@ -243,7 +296,7 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="relative h-11 pl-2 pr-3 rounded-xl hover:bg-cyan-500/5 gap-2 border border-cyan-500/10"
+              className="relative h-11 pl-2 pr-3 rounded-xl hover:/5 gap-2 border border-cyan-500/10"
             >
               <div className="relative">
                 <Avatar className="h-8 w-8 border-2 border-cyan-500/30">
@@ -252,16 +305,22 @@ export function Header() {
                     AD
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-[#0a0e17] shadow-lg shadow-emerald-500/50" />
+                <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-slate-950 shadow-lg shadow-emerald-500/50" />
               </div>
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-semibold text-white">Admin User</span>
+                <span className="text-sm font-semibold text-white">
+                  Admin User
+                </span>
                 <span className="text-[10px] text-cyan-400/60">Admin</span>
               </div>
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent className="w-64 glass border-cyan-500/20 bg-[#0d1117]/95" align="end" forceMount>
+          <DropdownMenuContent
+            className="w-64 glass border-cyan-500/20 bg-slate-900/95"
+            align="end"
+            forceMount
+          >
             <DropdownMenuLabel className="font-normal p-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12 border-2 border-cyan-500/30">
@@ -269,10 +328,10 @@ export function Header() {
                     AD
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-4">
                   <p className="text-sm font-semibold text-white">Admin User</p>
                   <p className="text-xs text-cyan-400/60">admin@tripalfa.com</p>
-                  <span className="inline-flex mt-1.5 w-fit items-center rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-cyan-400 border border-cyan-500/30">
+                  <span className="inline-flex mt-1.5 w-fit items-center rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 px-2 py-0.5 text-[10px] font-medium text-cyan-400 border border-cyan-500/30 gap-4">
                     <Zap className="h-3 w-3 mr-1" />
                     Admin
                   </span>
@@ -282,18 +341,24 @@ export function Header() {
 
             <DropdownMenuSeparator className="bg-cyan-500/10" />
 
-            <DropdownMenuItem asChild className="cursor-pointer py-2.5 text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/5 focus:bg-cyan-500/5 focus:text-cyan-400">
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer py-2.5 text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/5 focus:bg-cyan-500/5 focus:text-cyan-400"
+            >
               <Link to="/profile" className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/20 gap-4">
                   <User className="h-4 w-4 text-cyan-400" />
                 </div>
                 <span>Profile</span>
               </Link>
             </DropdownMenuItem>
 
-            <DropdownMenuItem asChild className="cursor-pointer py-2.5 text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/5 focus:bg-cyan-500/5 focus:text-cyan-400">
+            <DropdownMenuItem
+              asChild
+              className="cursor-pointer py-2.5 text-slate-300 hover:text-cyan-400 hover:bg-cyan-500/5 focus:bg-cyan-500/5 focus:text-cyan-400"
+            >
               <Link to="/settings" className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/20 gap-4">
                   <Settings className="h-4 w-4 text-cyan-400" />
                 </div>
                 <span>Settings</span>
@@ -303,7 +368,7 @@ export function Header() {
             <DropdownMenuSeparator className="bg-cyan-500/10" />
 
             <DropdownMenuItem className="cursor-pointer py-2.5 text-rose-400 focus:text-rose-300 focus:bg-rose-500/5 hover:bg-rose-500/5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/10 border border-rose-500/20">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/10 border border-rose-500/20 gap-4">
                 <LogOut className="h-4 w-4 text-rose-400" />
               </div>
               <span>Log out</span>

@@ -4,7 +4,7 @@
  * All API calls are routed through the centralized api.ts facade.
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import {
   fetchPopularDestinations,
   fetchAirports,
@@ -22,14 +22,14 @@ import {
   fetchRoomTypesDB,
   fetchSuggestions,
   queryKeys,
-} from '../lib/api';
+} from "../lib/api";
 
 /**
  * Hook to fetch popular destinations for homepage
  */
 export function usePopularDestinations(limit = 20) {
   return useQuery({
-    queryKey: ['popularDestinations', limit],
+    queryKey: ["popularDestinations", limit],
     queryFn: () => fetchPopularDestinations(limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -41,7 +41,7 @@ export function usePopularDestinations(limit = 20) {
  */
 export function usePopularHotels(limit = 20) {
   return useQuery({
-    queryKey: ['popularHotels', limit],
+    queryKey: ["popularHotels", limit],
     queryFn: () => fetchPopularDestinations(limit),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -52,7 +52,7 @@ export function usePopularHotels(limit = 20) {
  */
 export function useAirports(query?: string) {
   return useQuery({
-    queryKey: ['airports', query],
+    queryKey: ["airports", query],
     queryFn: () => fetchAirports(query),
     enabled: !query || query.length >= 2,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -64,7 +64,7 @@ export function useAirports(query?: string) {
  */
 export function useAirlines(query?: string) {
   return useQuery({
-    queryKey: ['airlines', query],
+    queryKey: ["airlines", query],
     queryFn: () => fetchAirlines(query),
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -75,7 +75,7 @@ export function useAirlines(query?: string) {
  */
 export function useCities(query?: string) {
   return useQuery({
-    queryKey: ['cities', query],
+    queryKey: ["cities", query],
     queryFn: () => fetchCities(query),
     enabled: !query || query.length >= 2,
     staleTime: 60 * 60 * 1000, // 1 hour
@@ -87,7 +87,7 @@ export function useCities(query?: string) {
  */
 export function useCountries(query?: string) {
   return useQuery({
-    queryKey: ['countries', query],
+    queryKey: ["countries", query],
     queryFn: () => fetchCountries(query),
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -98,7 +98,7 @@ export function useCountries(query?: string) {
  */
 export function useCurrencies() {
   return useQuery({
-    queryKey: ['currencies'],
+    queryKey: ["currencies"],
     queryFn: fetchCurrencies,
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -109,7 +109,7 @@ export function useCurrencies() {
  */
 export function useNationalities(query?: string) {
   return useQuery({
-    queryKey: ['nationalities', query],
+    queryKey: ["nationalities", query],
     queryFn: () => fetchNationalities(query),
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -120,7 +120,7 @@ export function useNationalities(query?: string) {
  */
 export function usePhoneCodes() {
   return useQuery({
-    queryKey: ['phoneCodes'],
+    queryKey: ["phoneCodes"],
     queryFn: fetchPhoneCodes,
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -131,7 +131,7 @@ export function usePhoneCodes() {
  */
 export function useLoyaltyPrograms(query?: string) {
   return useQuery({
-    queryKey: ['loyaltyPrograms', query],
+    queryKey: ["loyaltyPrograms", query],
     queryFn: () => fetchLoyaltyPrograms(query),
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -140,9 +140,9 @@ export function useLoyaltyPrograms(query?: string) {
 /**
  * Hook to fetch all loyalty programs (airline + hotel)
  */
-export function useLoyaltyProgramsAll(type?: 'airline' | 'hotel') {
+export function useLoyaltyProgramsAll(type?: "airline" | "hotel") {
   return useQuery({
-    queryKey: ['loyaltyProgramsAll', type],
+    queryKey: ["loyaltyProgramsAll", type],
     queryFn: () => fetchLoyaltyProgramsAll(type),
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -151,9 +151,12 @@ export function useLoyaltyProgramsAll(type?: 'airline' | 'hotel') {
 /**
  * Hook to fetch hotel amenities
  */
-export function useHotelAmenities(params?: { category?: string; popular?: boolean }) {
+export function useHotelAmenities(params?: {
+  category?: string;
+  popular?: boolean;
+}) {
   return useQuery({
-    queryKey: ['hotelAmenities', params],
+    queryKey: ["hotelAmenities", params],
     queryFn: () => fetchHotelAmenities(params),
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -164,7 +167,7 @@ export function useHotelAmenities(params?: { category?: string; popular?: boolea
  */
 export function useHotelTypes() {
   return useQuery({
-    queryKey: ['hotelTypes'],
+    queryKey: ["hotelTypes"],
     queryFn: fetchHotelTypes,
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -175,7 +178,7 @@ export function useHotelTypes() {
  */
 export function useBoardTypes() {
   return useQuery({
-    queryKey: ['boardTypes'],
+    queryKey: ["boardTypes"],
     queryFn: fetchBoardTypes,
     staleTime: 60 * 60 * 1000, // 1 hour
   });
@@ -186,7 +189,7 @@ export function useBoardTypes() {
  */
 export function useRoomTypes(hotelId?: string) {
   return useQuery({
-    queryKey: ['roomTypes', hotelId],
+    queryKey: ["roomTypes", hotelId],
     queryFn: () => fetchRoomTypesDB(hotelId),
     enabled: !!hotelId,
     staleTime: 30 * 60 * 1000, // 30 minutes
@@ -196,9 +199,12 @@ export function useRoomTypes(hotelId?: string) {
 /**
  * Hook for autocomplete suggestions (airports, cities)
  */
-export function useSuggestions(query: string, type: 'flight' | 'hotel' = 'flight') {
+export function useSuggestions(
+  query: string,
+  type: "flight" | "hotel" = "flight",
+) {
   return useQuery({
-    queryKey: ['suggestions', query, type],
+    queryKey: ["suggestions", query, type],
     queryFn: () => fetchSuggestions(query, type),
     enabled: query.length >= 2,
     staleTime: 5 * 60 * 1000, // 5 minutes

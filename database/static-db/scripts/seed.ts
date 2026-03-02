@@ -15,25 +15,27 @@
  *   npx ts-node scripts/seed.ts --only=duffel
  */
 
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
-import { closePool } from './utils/db';
-import { createLogger } from './utils/logger';
-import { syncExchangeRates } from './sync-exchange-rates';
-import { syncLiteAPI } from './sync-liteapi';
-import { syncDuffel } from './sync-duffel';
+import { closePool } from "./utils/db";
+import { createLogger } from "./utils/logger";
+import { syncExchangeRates } from "./sync-exchange-rates";
+import { syncLiteAPI } from "./sync-liteapi";
+import { syncDuffel } from "./sync-duffel";
 
-const log = createLogger('Seed');
+const log = createLogger("Seed");
 
 // ---- CLI arg parsing -------------------------------------------
 
-function parseArgs(): { only?: 'rates' | 'liteapi' | 'duffel' } {
-  const onlyArg = process.argv.find((a) => a.startsWith('--only='));
+function parseArgs(): { only?: "rates" | "liteapi" | "duffel" } {
+  const onlyArg = process.argv.find((a) => a.startsWith("--only="));
   if (onlyArg) {
-    const val = onlyArg.split('=')[1] as 'rates' | 'liteapi' | 'duffel';
-    if (!['rates', 'liteapi', 'duffel'].includes(val)) {
-      console.error(`Unknown --only value: "${val}". Must be rates | liteapi | duffel`);
+    const val = onlyArg.split("=")[1] as "rates" | "liteapi" | "duffel";
+    if (!["rates", "liteapi", "duffel"].includes(val)) {
+      console.error(
+        `Unknown --only value: "${val}". Must be rates | liteapi | duffel`,
+      );
       process.exit(1);
     }
     return { only: val };
@@ -55,16 +57,22 @@ async function main(): Promise<void> {
   const { only } = parseArgs();
   const startAll = Date.now();
 
-  log.info(`Static DB seed starting${only ? ` (--only=${only})` : ''}`);
-  log.info('─'.repeat(50));
+  log.info(`Static DB seed starting${only ? ` (--only=${only})` : ""}`);
+  log.info("─".repeat(50));
 
-  const steps: Array<{ label: string; fn: () => Promise<void>; key: string }> = [
-    { label: 'Exchange Rates (OER)', key: 'rates',   fn: syncExchangeRates },
-    { label: 'LiteAPI (hotels)',     key: 'liteapi', fn: syncLiteAPI },
-    { label: 'Duffel (flights)',     key: 'duffel',  fn: syncDuffel },
-  ];
+  const steps: Array<{ label: string; fn: () => Promise<void>; key: string }> =
+    [
+      { label: "Exchange Rates (OER)", key: "rates", fn: syncExchangeRates },
+      { label: "LiteAPI (hotels)", key: "liteapi", fn: syncLiteAPI },
+      { label: "Duffel (flights)", key: "duffel", fn: syncDuffel },
+    ];
 
-  const results: Array<{ label: string; durationMs: number; status: 'ok' | 'error'; error?: string }> = [];
+  const results: Array<{
+    label: string;
+    durationMs: number;
+    status: "ok" | "error";
+    error?: string;
+  }> = [];
 
   for (const step of steps) {
     if (only && step.key !== only) continue;
@@ -74,30 +82,35 @@ async function main(): Promise<void> {
     try {
       await step.fn();
       const durationMs = Date.now() - t0;
-      results.push({ label: step.label, durationMs, status: 'ok' });
+      results.push({ label: step.label, durationMs, status: "ok" });
       log.success(`✓  ${step.label}  [${formatMs(durationMs)}]`);
     } catch (err) {
       const durationMs = Date.now() - t0;
       const errMsg = (err as Error).message;
-      results.push({ label: step.label, durationMs, status: 'error', error: errMsg });
+      results.push({
+        label: step.label,
+        durationMs,
+        status: "error",
+        error: errMsg,
+      });
       log.error(`✗  ${step.label}  [${formatMs(durationMs)}]: ${errMsg}`);
     }
   }
 
   // Summary table
   const totalMs = Date.now() - startAll;
-  log.info('\n' + '─'.repeat(50));
-  log.info('SYNC SUMMARY');
-  log.info('─'.repeat(50));
+  log.info("\n" + "─".repeat(50));
+  log.info("SYNC SUMMARY");
+  log.info("─".repeat(50));
   for (const r of results) {
-    const icon = r.status === 'ok' ? '✅' : '❌';
+    const icon = r.status === "ok" ? "✅" : "❌";
     log.info(`${icon}  ${r.label.padEnd(30)} ${formatMs(r.durationMs)}`);
     if (r.error) log.info(`   Error: ${r.error}`);
   }
-  log.info('─'.repeat(50));
+  log.info("─".repeat(50));
   log.info(`Total time: ${formatMs(totalMs)}`);
 
-  const failed = results.filter((r) => r.status === 'error');
+  const failed = results.filter((r) => r.status === "error");
   if (failed.length) {
     log.error(`${failed.length} step(s) failed`);
     process.exit(1);

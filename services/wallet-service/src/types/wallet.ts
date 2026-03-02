@@ -1,7 +1,7 @@
 // src/types/index.ts
 // Comprehensive TypeScript types for wallet service
 
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from "@prisma/client";
 
 /**
  * Branded type for monetary values to distinguish from regular numbers
@@ -18,18 +18,18 @@ export type DecimalLike = { toString(): string } | number | null | undefined;
 /**
  * Safely convert a MonetaryValue to a number
  * This is the recommended way to handle Prisma Decimal values in calculations
- * 
+ *
  * @param value - The monetary value to convert (Decimal, number, string, null, or undefined)
  * @param defaultValue - The default value to return if the input is null/undefined (default: 0)
  * @returns A number suitable for calculations
- * 
+ *
  * @example
  * const balance = toNumber(wallet.balance); // Decimal -> number
  * const amount = toNumber(transaction.amount, 0); // with default
  */
 export function toNumber(value: DecimalLike, defaultValue: number = 0): number {
   if (value === null || value === undefined) return defaultValue;
-  if (typeof value === 'number') return value;
+  if (typeof value === "number") return value;
   const parsed = Number(value.toString());
   return isNaN(parsed) ? defaultValue : parsed;
 }
@@ -53,7 +53,7 @@ export type PrismaWalletLedger = Prisma.WalletLedgerGetPayload<{}>;
 /**
  * Convert a Prisma Wallet result to our Wallet interface type
  * This provides a type-safe mapping that handles Decimal conversions
- * 
+ *
  * @param prismaWallet - The wallet from a Prisma query
  * @returns A Wallet with proper type conversions applied
  */
@@ -74,11 +74,13 @@ export function mapPrismaWallet(prismaWallet: PrismaWallet): Wallet {
 
 /**
  * Convert a Prisma WalletTransaction result to our WalletTransaction interface type
- * 
+ *
  * @param prismaTx - The transaction from a Prisma query
  * @returns A WalletTransaction with proper type conversions applied
  */
-export function mapPrismaTransaction(prismaTx: PrismaWalletTransaction): WalletTransaction {
+export function mapPrismaTransaction(
+  prismaTx: PrismaWalletTransaction,
+): WalletTransaction {
   return {
     id: prismaTx.id,
     walletId: prismaTx.walletId,
@@ -103,39 +105,39 @@ export function mapPrismaTransaction(prismaTx: PrismaWalletTransaction): WalletT
 }
 
 export enum UserType {
-  CUSTOMER = 'customer',
-  AGENCY = 'agency',
-  TRAVEL_SUPPLIER = 'travel_supplier',
-  ADMIN = 'admin',
+  CUSTOMER = "customer",
+  AGENCY = "agency",
+  TRAVEL_SUPPLIER = "travel_supplier",
+  ADMIN = "admin",
 }
 
 export enum TransactionType {
-  TOPUP = 'topup',
-  DEBIT = 'debit',
-  CUSTOMER_PURCHASE = 'customer_purchase',
-  AGENCY_PURCHASE = 'agency_purchase',
-  SUPPLIER_SETTLEMENT = 'supplier_settlement',
-  AGENCY_COMMISSION = 'agency_commission',
-  REFUND = 'refund',
-  CHARGEBACK = 'chargeback',
-  INTERNAL_TRANSFER = 'internal_transfer',
-  FEE = 'fee',
-  REVERSAL = 'reversal',
+  TOPUP = "topup",
+  DEBIT = "debit",
+  CUSTOMER_PURCHASE = "customer_purchase",
+  AGENCY_PURCHASE = "agency_purchase",
+  SUPPLIER_SETTLEMENT = "supplier_settlement",
+  AGENCY_COMMISSION = "agency_commission",
+  REFUND = "refund",
+  CHARGEBACK = "chargeback",
+  INTERNAL_TRANSFER = "internal_transfer",
+  FEE = "fee",
+  REVERSAL = "reversal",
 }
 
 export enum TransactionFlow {
-  CUSTOMER_TO_SUPPLIER = 'customer_to_supplier',
-  SUPPLIER_TO_AGENCY = 'supplier_to_agency',
-  AGENCY_TO_CUSTOMER = 'agency_to_customer',
-  INTERNAL = 'internal',
+  CUSTOMER_TO_SUPPLIER = "customer_to_supplier",
+  SUPPLIER_TO_AGENCY = "supplier_to_agency",
+  AGENCY_TO_CUSTOMER = "agency_to_customer",
+  INTERNAL = "internal",
 }
 
 export enum TransactionStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REVERSED = 'reversed',
-  DISPUTED = 'disputed',
+  PENDING = "pending",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  REVERSED = "reversed",
+  DISPUTED = "disputed",
 }
 
 // User model
@@ -218,24 +220,24 @@ export interface Transaction {
   fxRate?: number;
   baseCurrency?: string;
   baseAmount?: number;
-  
+
   payerId?: string; // who initiated payment
   payeeId?: string; // who receives payment
   relatedTransactionId?: string; // for linked transactions
-  
+
   bookingId?: string;
   invoiceId?: string;
   counterparty?: string;
   description?: string;
-  
+
   gateway?: string;
   gatewayReference?: string;
   gatewayFee?: number;
-  
+
   status: TransactionStatus;
   idempotencyKey?: string;
   exchangeSnapshotFetchedAt?: Date;
-  
+
   metadata?: Record<string, any>;
   createdAt: Date;
   updatedAt: Date;
@@ -248,7 +250,7 @@ export interface ExchangeRateSnapshot {
   baseCurrency: string;
   rates: Record<string, number>;
   fetchedAt: Date;
-  status: 'active' | 'stale' | 'error';
+  status: "active" | "stale" | "error";
   errorMessage?: string;
   createdAt: Date;
 }

@@ -1,4 +1,4 @@
-import { MarkupRule, CommissionRule, RuleMatchContext } from '../types';
+import { MarkupRule, CommissionRule, RuleMatchContext } from "../types";
 
 /**
  * Utility functions for rule matching and validation
@@ -7,7 +7,10 @@ import { MarkupRule, CommissionRule, RuleMatchContext } from '../types';
 /**
  * Check if a markup rule matches the given context
  */
-export function ruleMatchesConditions(rule: MarkupRule, context: RuleMatchContext): boolean {
+export function ruleMatchesConditions(
+  rule: MarkupRule,
+  context: RuleMatchContext,
+): boolean {
   if (!rule.conditions) {
     return true;
   }
@@ -16,14 +19,20 @@ export function ruleMatchesConditions(rule: MarkupRule, context: RuleMatchContex
 
   // Check supplier codes
   if (conditions.supplierCode && Array.isArray(conditions.supplierCode)) {
-    if (context.supplierCode && !conditions.supplierCode.includes(context.supplierCode)) {
+    if (
+      context.supplierCode &&
+      !conditions.supplierCode.includes(context.supplierCode)
+    ) {
       return false;
     }
   }
 
   // Check fare class
   if (conditions.fareClass && Array.isArray(conditions.fareClass)) {
-    if (context.fareClass && !conditions.fareClass.includes(context.fareClass)) {
+    if (
+      context.fareClass &&
+      !conditions.fareClass.includes(context.fareClass)
+    ) {
       return false;
     }
   }
@@ -33,7 +42,10 @@ export function ruleMatchesConditions(rule: MarkupRule, context: RuleMatchContex
     if (context.advanceBookingDays !== undefined) {
       const min = conditions.advanceBookingDays.min || 0;
       const max = conditions.advanceBookingDays.max || Infinity;
-      if (context.advanceBookingDays < min || context.advanceBookingDays > max) {
+      if (
+        context.advanceBookingDays < min ||
+        context.advanceBookingDays > max
+      ) {
         return false;
       }
     }
@@ -50,14 +62,21 @@ export function ruleMatchesConditions(rule: MarkupRule, context: RuleMatchContex
 
   // Check cabin class
   if (conditions.cabinClass && Array.isArray(conditions.cabinClass)) {
-    if (context.cabinClass && !conditions.cabinClass.includes(context.cabinClass)) {
+    if (
+      context.cabinClass &&
+      !conditions.cabinClass.includes(context.cabinClass)
+    ) {
       return false;
     }
   }
 
   // Check route type
   if (conditions.routeType) {
-    if (context.routeType && conditions.routeType !== 'all' && conditions.routeType !== context.routeType) {
+    if (
+      context.routeType &&
+      conditions.routeType !== "all" &&
+      conditions.routeType !== context.routeType
+    ) {
       return false;
     }
   }
@@ -68,7 +87,9 @@ export function ruleMatchesConditions(rule: MarkupRule, context: RuleMatchContex
 /**
  * Sort rules by priority (highest first)
  */
-export function sortRulesByPriority<T extends { priority: number; createdAt: string }>(rules: T[]): T[] {
+export function sortRulesByPriority<
+  T extends { priority: number; createdAt: string },
+>(rules: T[]): T[] {
   return [...rules].sort((a, b) => {
     if (b.priority !== a.priority) {
       return b.priority - a.priority;
@@ -81,11 +102,10 @@ export function sortRulesByPriority<T extends { priority: number; createdAt: str
 /**
  * Filter active rules within their validity period
  */
-export function filterActiveRules<T extends { isActive: boolean; validFrom: string; validTo?: string }>(
-  rules: T[],
-  asOfDate: Date = new Date()
-): T[] {
-  return rules.filter(rule => {
+export function filterActiveRules<
+  T extends { isActive: boolean; validFrom: string; validTo?: string },
+>(rules: T[], asOfDate: Date = new Date()): T[] {
+  return rules.filter((rule) => {
     if (!rule.isActive) {
       return false;
     }
@@ -100,8 +120,13 @@ export function filterActiveRules<T extends { isActive: boolean; validFrom: stri
 /**
  * Check if rule applies to a specific service type
  */
-export function ruleAppliesToService(rule: { applicableTo: string[] }, serviceType: string): boolean {
-  return rule.applicableTo.includes(serviceType) || rule.applicableTo.includes('all');
+export function ruleAppliesToService(
+  rule: { applicableTo: string[] },
+  serviceType: string,
+): boolean {
+  return (
+    rule.applicableTo.includes(serviceType) || rule.applicableTo.includes("all")
+  );
 }
 
 /**
@@ -109,17 +134,17 @@ export function ruleAppliesToService(rule: { applicableTo: string[] }, serviceTy
  */
 export function ruleAppliesToEntity(
   rule: { supplierIds?: string[]; branchIds?: string[]; userIds?: string[] },
-  entityType: 'supplier' | 'branch' | 'user',
-  entityId?: string
+  entityType: "supplier" | "branch" | "user",
+  entityId?: string,
 ): boolean {
   if (!entityId) {
     return true; // No restriction if no entity ID provided
   }
 
   const fieldMap = {
-    supplier: 'supplierIds',
-    branch: 'branchIds',
-    user: 'userIds'
+    supplier: "supplierIds",
+    branch: "branchIds",
+    user: "userIds",
   };
 
   const field = fieldMap[entityType] as keyof typeof rule;
@@ -135,17 +160,21 @@ export function ruleAppliesToEntity(
 /**
  * Calculate markup amount based on rule and base amount
  */
-export function calculateMarkupAmount(baseAmount: number, markupValue: number, markupType: string): number {
+export function calculateMarkupAmount(
+  baseAmount: number,
+  markupValue: number,
+  markupType: string,
+): number {
   let markup = 0;
 
   switch (markupType) {
-    case 'percentage':
+    case "percentage":
       markup = baseAmount * (markupValue / 100);
       break;
-    case 'fixed':
+    case "fixed":
       markup = markupValue;
       break;
-    case 'multiplier':
+    case "multiplier":
       markup = baseAmount * markupValue;
       break;
     default:
@@ -158,7 +187,11 @@ export function calculateMarkupAmount(baseAmount: number, markupValue: number, m
 /**
  * Apply min/max constraints to a calculated amount
  */
-export function applyAmountConstraints(amount: number, min?: number, max?: number): number {
+export function applyAmountConstraints(
+  amount: number,
+  min?: number,
+  max?: number,
+): number {
   let constrained = amount;
 
   if (min !== undefined && constrained < min) {
@@ -175,14 +208,18 @@ export function applyAmountConstraints(amount: number, min?: number, max?: numbe
 /**
  * Calculate commission amount based on rule and base amount
  */
-export function calculateCommissionAmount(baseAmount: number, commissionValue: number, commissionType: string): number {
+export function calculateCommissionAmount(
+  baseAmount: number,
+  commissionValue: number,
+  commissionType: string,
+): number {
   let commission = 0;
 
   switch (commissionType) {
-    case 'percentage':
+    case "percentage":
       commission = baseAmount * (commissionValue / 100);
       break;
-    case 'fixed':
+    case "fixed":
       commission = commissionValue;
       break;
     default:

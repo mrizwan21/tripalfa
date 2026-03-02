@@ -1,4 +1,4 @@
-# Dockerfile for rule-engine-service - NEON Database Support
+# Dockerfile for rule-engine-service - Neon Database Support
 # This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
 # Parameters: SERVICE_NAME=rule-engine-service, WORKSPACE_NAME=@tripalfa/rule-engine-service, PORT=3010, HEALTH_PATH=health
 

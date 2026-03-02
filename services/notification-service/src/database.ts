@@ -1,1 +1,1 @@
-export { prisma } from '@tripalfa/shared-database';
+export { prisma } from "@tripalfa/shared-database";

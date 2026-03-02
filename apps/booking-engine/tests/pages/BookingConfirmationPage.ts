@@ -1,15 +1,15 @@
-import { BasePage } from './BasePage';
+import { BasePage } from "./BasePage";
 
 export class BookingConfirmationPage extends BasePage {
   async verifyConfirmation() {
-    await this.getByTestId('booking-confirmation').waitFor();
+    await this.getByTestId("booking-confirmation").waitFor();
   }
 
   async getBookingReference(): Promise<string> {
-    return await this.getByTestId('booking-reference').textContent() || '';
+    return (await this.getByTestId("booking-reference").textContent()) || "";
   }
 
   async verifyHotelDetails() {
-    await this.getByTestId('hotel-details').waitFor();
+    await this.getByTestId("hotel-details").waitFor();
   }
 }

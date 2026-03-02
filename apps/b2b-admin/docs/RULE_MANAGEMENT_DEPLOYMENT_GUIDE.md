@@ -188,13 +188,13 @@ Configure rule management permissions in your permission system:
 ```typescript
 // In your permission configuration
 const RULE_PERMISSIONS = {
-  VIEW_RULES: 'rules.view',
-  CREATE_RULES: 'rules.create',
-  EDIT_RULES: 'rules.edit',
-  DELETE_RULES: 'rules.delete',
-  VIEW_ANALYTICS: 'rules.analytics',
-  VIEW_AUDIT_LOG: 'rules.audit',
-  MANAGE_CATEGORIES: 'rules.categories.manage'
+  VIEW_RULES: "rules.view",
+  CREATE_RULES: "rules.create",
+  EDIT_RULES: "rules.edit",
+  DELETE_RULES: "rules.delete",
+  VIEW_ANALYTICS: "rules.analytics",
+  VIEW_AUDIT_LOG: "rules.audit",
+  MANAGE_CATEGORIES: "rules.categories.manage",
 };
 ```
 
@@ -307,7 +307,7 @@ Implement rate limiting on rule management endpoints:
 const RULE_API_RATE_LIMIT = {
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many rule operations from this IP'
+  message: "Too many rule operations from this IP",
 };
 ```
 
@@ -343,26 +343,33 @@ pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME -t rules -t rule_audit > rule_backup
 ### Common Issues
 
 #### 1. Permission Errors
+
 **Problem**: Users can't access rule management features
 **Solution**: Check user role assignments and permission configuration
 
 #### 2. Database Migration Failures
+
 **Problem**: Prisma migrations fail during deployment
-**Solution**: 
+**Solution**:
+
 - Check database connection
 - Verify schema syntax
 - Run migrations in development first
 
 #### 3. API Endpoint Not Found
+
 **Problem**: Frontend can't connect to rule management APIs
-**Solution**: 
+**Solution**:
+
 - Verify API endpoints are implemented
 - Check CORS configuration
 - Ensure authentication is properly configured
 
 #### 4. Performance Issues
+
 **Problem**: Rule evaluation is slow
-**Solution**: 
+**Solution**:
+
 - Review rule complexity
 - Add database indexes on frequently queried fields
 - Consider caching frequently accessed rules
@@ -373,8 +380,8 @@ Enable debug logging for troubleshooting:
 
 ```typescript
 // In your environment configuration
-DEBUG_RULES=true
-DEBUG_PERMISSIONS=true
+DEBUG_RULES = true;
+DEBUG_PERMISSIONS = true;
 ```
 
 ### Support

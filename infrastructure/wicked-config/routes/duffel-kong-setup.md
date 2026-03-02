@@ -1,9 +1,11 @@
 # Kong Configuration for Duffel API Proxy
 
 ## Overview
+
 This document describes how to configure Kong to proxy all Duffel API requests from the API Gateway.
 
 ## Architecture
+
 ```
 API Gateway (port 3000)
     ↓
@@ -15,6 +17,7 @@ Duffel API (https://api.duffel.com/air)
 ## Kong Configuration
 
 ### 1. Service Definition
+
 ```bash
 # Create Duffel Upstream Service
 curl -X POST http://localhost:8001/services \
@@ -30,6 +33,7 @@ curl -X POST http://localhost:8001/services \
 ```
 
 ### 2. Route Definitions
+
 ```bash
 # Route for Seat Maps
 curl -X POST http://localhost:8001/services/duffel-service/routes \
@@ -60,6 +64,7 @@ curl -X POST http://localhost:8001/services/duffel-service/routes \
 ### 3. Plugins Configuration
 
 #### Authentication (Key Auth)
+
 ```bash
 curl -X POST http://localhost:8001/services/duffel-service/plugins \
   -d "name=key-auth" \
@@ -68,6 +73,7 @@ curl -X POST http://localhost:8001/services/duffel-service/plugins \
 ```
 
 #### Rate Limiting
+
 ```bash
 curl -X POST http://localhost:8001/services/duffel-service/plugins \
   -d "name=rate-limiting" \
@@ -77,6 +83,7 @@ curl -X POST http://localhost:8001/services/duffel-service/plugins \
 ```
 
 #### Request Transformer (Add Duffel-Version header)
+
 ```bash
 curl -X POST http://localhost:8001/services/duffel-service/plugins \
   -d "name=request-transformer" \
@@ -85,6 +92,7 @@ curl -X POST http://localhost:8001/services/duffel-service/plugins \
 ```
 
 #### Logging
+
 ```bash
 curl -X POST http://localhost:8001/services/duffel-service/plugins \
   -d "name=http-log" \
@@ -96,6 +104,7 @@ curl -X POST http://localhost:8001/services/duffel-service/plugins \
 ## API Gateway Configuration
 
 ### Environment Variables
+
 ```bash
 KONG_PROXY_URL=http://kong:8000
 DUFFEL_TEST_API_KEY=your_test_key_here
@@ -103,12 +112,15 @@ DUFFEL_PROD_API_KEY=your_prod_key_here
 ```
 
 ### Adapter Updates
+
 1. Update `DuffelAdapter.ts` baseUrl:
+
    ```typescript
    private baseUrl = process.env.KONG_PROXY_URL || 'http://localhost:8000';
    ```
 
 2. Update `AncillaryServicesAdapter.ts` baseUrl:
+
    ```typescript
    private baseUrl = process.env.KONG_PROXY_URL || 'http://localhost:8000';
    ```
@@ -116,6 +128,7 @@ DUFFEL_PROD_API_KEY=your_prod_key_here
 ## Local Development Setup
 
 ### docker-compose.yml
+
 ```yaml
 services:
   kong:
@@ -185,6 +198,7 @@ curl -s http://localhost:8000/seat_maps?offer_id=test \
 ## Testing
 
 ### Test Seat Maps through Kong
+
 ```bash
 curl -X GET "http://localhost:8000/seat_maps" \
   -H "Authorization: Bearer $DUFFEL_TEST_API_KEY" \
@@ -193,6 +207,7 @@ curl -X GET "http://localhost:8000/seat_maps" \
 ```
 
 ### Test through API Gateway (which now uses Kong)
+
 ```bash
 curl -s "http://localhost:3000/bookings/flight/seat-maps?orderId=test&offerId=of_123" | jq .
 ```
@@ -232,6 +247,7 @@ upstream:
 ## Troubleshooting
 
 ### Kong not starting
+
 ```bash
 # Check logs
 docker logs tripalfa-kong
@@ -241,6 +257,7 @@ docker exec tripalfa-kong kong migrations list
 ```
 
 ### Requests timing out
+
 ```bash
 # Increase Kong timeouts
 curl -X PATCH http://localhost:8001/services/duffel-service \
@@ -250,6 +267,7 @@ curl -X PATCH http://localhost:8001/services/duffel-service \
 ```
 
 ### Authentication errors
+
 ```bash
 # Verify API key is being passed through Kong
 curl -X GET "http://localhost:8000/seat_maps" \
@@ -258,6 +276,7 @@ curl -X GET "http://localhost:8000/seat_maps" \
 ```
 
 ## References
+
 - Kong Documentation: https://docs.konghq.com/
 - Konga UI: http://localhost:1337
 - Duffel API Docs: https://duffel.com/docs

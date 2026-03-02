@@ -2,12 +2,12 @@
  * Hotel Data Service
  * ===================
  * Hybrid data fetching service for hotel search and details.
- * 
+ *
  * Strategy:
  * 1. Static data (95%) - from Postgres static DB (hotel schema)
  * 2. Live data (rates/availability) - from LITEAPI
  * 3. Fallback - LITEAPI if static DB has no data
- * 
+ *
  * Tables used from Postgres:
  * - hotel.hotels (main hotel data)
  * - hotel.images (hotel gallery)
@@ -16,24 +16,29 @@
  * - hotel.reviews (guest reviews)
  */
 
-import { Pool } from 'pg';
-import CacheService, { CacheKeys, CACHE_TTL } from '../cache/redis.js';
+import { Pool } from "pg";
+import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
 
 // Database connection — MUST point to the static Docker DB for hotel & flight reference data, never Neon
 const STATIC_DATABASE_URL = process.env.STATIC_DATABASE_URL;
 if (!STATIC_DATABASE_URL) {
-  throw new Error('STATIC_DATABASE_URL env var must be set for hotel & flight static data (Docker static DB on port 5433)');
+  throw new Error(
+    "STATIC_DATABASE_URL env var must be set for hotel & flight static data (Docker static DB on port 5433)",
+  );
 }
-const pool = new Pool({ 
+const pool = new Pool({
   connectionString: STATIC_DATABASE_URL,
   max: 10,
 });
 
 // LiteAPI configuration
-const LITEAPI_API_BASE_URL = process.env.LITEAPI_API_BASE_URL || 'https://api.liteapi.travel/v3.0';
-const LITEAPI_BOOK_BASE_URL = process.env.LITEAPI_BOOK_BASE_URL || 'https://book.liteapi.travel/v3.0';
+const LITEAPI_API_BASE_URL =
+  process.env.LITEAPI_API_BASE_URL || "https://api.liteapi.travel/v3.0";
+const LITEAPI_BOOK_BASE_URL =
+  process.env.LITEAPI_BOOK_BASE_URL || "https://book.liteapi.travel/v3.0";
 const LITEAPI_PROD_API_KEY = process.env.LITEAPI_PROD_API_KEY;
-const LITEAPI_API_KEY = process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
+const LITEAPI_API_KEY =
+  process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
 // LITEAPI Booking Types
 export interface LiteAPIPrebookRequest {
   offerId: string;
@@ -185,8 +190,6 @@ export interface LiteAPIBookingResponse {
   error?: string;
 }
 
-
-
 // ============================================================================
 // Types
 // ============================================================================
@@ -251,25 +254,27 @@ export interface RoomRate {
     amount: number;
     currency: string;
   };
-  taxesAndFees?: {
-    included: boolean;
-    description?: string;
-    amount: number;
-    currency: string;
-  }[] | null;
+  taxesAndFees?:
+    | {
+        included: boolean;
+        description?: string;
+        amount: number;
+        currency: string;
+      }[]
+    | null;
   priceType?: string; // 'commission' or 'net'
   isRefundable: boolean;
-  refundableTag?: 'RFN' | 'NRFN';
+  refundableTag?: "RFN" | "NRFN";
   cancellationPolicy?: {
     cancelPolicyInfos: Array<{
       cancelTime: string;
       amount: number;
       currency: string;
-      type: 'amount' | 'percent';
+      type: "amount" | "percent";
       timezone: string;
     }>;
     hotelRemarks?: string[];
-    refundableTag: 'RFN' | 'NRFN';
+    refundableTag: "RFN" | "NRFN";
   };
   boardType?: string;
   boardName?: string;
@@ -279,8 +284,6 @@ export interface RoomRate {
   occupancyNumber?: number;
   remarks?: string;
 }
-
-
 
 // LITEAPI Hotel Details Types
 export interface LiteAPIHotelImage {
@@ -339,15 +342,13 @@ export interface LiteAPIRoom {
   photos?: LiteAPIRoomPhoto[];
 }
 
-
-
 export interface LiteAPICheckinCheckoutTimes {
   checkin?: string;
   checkout?: string;
   checkinStart?: string;
 }
 
-export interface HotelDetail extends Omit<HotelSearchResult, 'location'> {
+export interface HotelDetail extends Omit<HotelSearchResult, "location"> {
   // LITEAPI fields
   hotelDescription?: string;
   hotelImportantInformation?: string;
@@ -357,10 +358,10 @@ export interface HotelDetail extends Omit<HotelSearchResult, 'location'> {
     longitude?: number;
   };
   checkinCheckoutTimes?: LiteAPICheckinCheckoutTimes;
-  
+
   // Override location to allow both string and object
   location?: string;
-  
+
   // Standard fields
   address?: string;
   zip?: string;
@@ -371,13 +372,11 @@ export interface HotelDetail extends Omit<HotelSearchResult, 'location'> {
   policies?: HotelPolicy[];
   reviews?: HotelReview[];
   accessibility?: any;
-  
+
   // Additional LITEAPI fields
   facilities?: LiteAPIFacility[];
   rooms?: LiteAPIRoom[];
 }
-
-
 
 export interface HotelPolicy {
   type: string;
@@ -420,16 +419,14 @@ export interface LiteAPIHotelReviews {
   sentimentAnalysis?: LiteAPIReviewSentiment;
 }
 
-
-
 // ============================================================================
 // LiteAPI Helper
 // ============================================================================
 
 async function liteApiRequest<T>(
-  endpoint: string, 
-  method: string = 'GET', 
-  body?: object
+  endpoint: string,
+  method: string = "GET",
+  body?: object,
 ): Promise<T> {
   const url = `${LITEAPI_API_BASE_URL}${endpoint}`;
   const apiKey = LITEAPI_PROD_API_KEY || LITEAPI_API_KEY;
@@ -437,8 +434,8 @@ async function liteApiRequest<T>(
   const response = await fetch(url, {
     method,
     headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': apiKey || '',
+      "Content-Type": "application/json",
+      "X-API-Key": apiKey || "",
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -469,9 +466,9 @@ async function searchHotelsFromDB(params: {
   maxPrice?: number;
 }): Promise<HotelSearchResult[]> {
   const client = await pool.connect();
-  
+
   try {
-    const conditions: string[] = ['h.is_deleted = FALSE'];
+    const conditions: string[] = ["h.is_deleted = FALSE"];
     const queryParams: any[] = [];
     let paramIndex = 1;
 
@@ -491,11 +488,13 @@ async function searchHotelsFromDB(params: {
 
     // Star rating filter
     if (params.starRating && params.starRating.length > 0) {
-      conditions.push(`h.stars IN (${params.starRating.map(() => `$${paramIndex++}`).join(', ')})`);
+      conditions.push(
+        `h.stars IN (${params.starRating.map(() => `$${paramIndex++}`).join(", ")})`,
+      );
       queryParams.push(...params.starRating);
     }
 
-    const whereClause = conditions.join(' AND ');
+    const whereClause = conditions.join(" AND ");
     const limit = params.limit || 50;
     const offset = params.offset || 0;
 
@@ -547,13 +546,13 @@ async function searchHotelsFromDB(params: {
 
     const result = await client.query(query, queryParams);
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row.id,
       name: row.name,
       description: row.description,
-      image: row.main_photo || row.thumbnail || '/images/placeholder-hotel.jpg',
+      image: row.main_photo || row.thumbnail || "/images/placeholder-hotel.jpg",
       images: row.images || [],
-      location: row.address || row.city || '',
+      location: row.address || row.city || "",
       city: row.city,
       country: row.country_code,
       countryCode: row.country_code,
@@ -564,7 +563,7 @@ async function searchHotelsFromDB(params: {
       longitude: row.longitude,
       amenities: row.facility_names || [],
       facilityIds: row.facility_ids || [],
-      provider: 'StaticDB',
+      provider: "StaticDB",
       chainId: row.chain_id,
       hotelTypeId: row.hotel_type_id,
     }));
@@ -636,7 +635,9 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
       FROM hotel.accessibility 
       WHERE hotel_id = $1
     `;
-    const accessibilityResult = await client.query(accessibilityQuery, [hotelId]);
+    const accessibilityResult = await client.query(accessibilityQuery, [
+      hotelId,
+    ]);
 
     // Get recent reviews
     const reviewsQuery = `
@@ -654,9 +655,9 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
       id: row.id,
       name: row.name,
       description: row.description,
-      image: row.main_photo || row.thumbnail || '/images/placeholder-hotel.jpg',
+      image: row.main_photo || row.thumbnail || "/images/placeholder-hotel.jpg",
       images: row.images || [],
-      location: row.address || '',
+      location: row.address || "",
       city: row.city,
       country: row.country_code,
       countryCode: row.country_code,
@@ -673,15 +674,15 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
       checkOutTime: row.checkout,
       amenities: (row.facilities || []).map((f: any) => f.name),
       facilityIds: (row.facilities || []).map((f: any) => f.id),
-      provider: 'StaticDB',
+      provider: "StaticDB",
       chainId: row.chain_id,
       hotelTypeId: row.hotel_type_id,
-      policies: policiesResult.rows.map(p => ({
+      policies: policiesResult.rows.map((p) => ({
         type: p.policy_type,
         name: p.name,
         description: p.description,
       })),
-      reviews: reviewsResult.rows.map(r => ({
+      reviews: reviewsResult.rows.map((r) => ({
         id: r.id.toString(),
         reviewerName: r.reviewer_name,
         rating: r.average_score ? parseFloat(r.average_score) : undefined,
@@ -693,7 +694,7 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
       })),
       accessibility: accessibilityResult.rows[0]?.attributes || null,
       roomTypes: (row.rooms || []).map((r: any) => ({
-        id: r.id?.toString() || '',
+        id: r.id?.toString() || "",
         name: r.name,
         description: r.description,
         maxOccupancy: r.maxOccupancy,
@@ -708,7 +709,9 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
 /**
  * Get facilities from static database
  */
-async function getFacilitiesFromDB(): Promise<Array<{ id: number; code: string; name: string }>> {
+async function getFacilitiesFromDB(): Promise<
+  Array<{ id: number; code: string; name: string }>
+> {
   const client = await pool.connect();
 
   try {
@@ -758,19 +761,22 @@ async function getLiveRates(params: {
   }
 
   try {
-    const response = await liteApiRequest<any>('/hotels/rates', 'POST', {
+    const response = await liteApiRequest<any>("/hotels/rates", "POST", {
       hotelIds: params.hotelIds,
       checkin: params.checkin,
       checkout: params.checkout,
-      currency: params.currency || 'USD',
-      guestNationality: params.guestNationality || 'US',
+      currency: params.currency || "USD",
+      guestNationality: params.guestNationality || "US",
       occupancies: params.occupancies,
       maxRatesPerHotel: params.maxRatesPerHotel || 3,
       roomMapping: params.roomMapping ?? true,
       timeout: params.timeout || 8,
     });
 
-    const ratesMap = new Map<string, { rates: any[]; cheapestPrice?: number }>();
+    const ratesMap = new Map<
+      string,
+      { rates: any[]; cheapestPrice?: number }
+    >();
 
     // Parse response - LiteAPI returns data as array of hotel objects
     const hotels = response.data || response.hotels || [];
@@ -782,15 +788,22 @@ async function getLiveRates(params: {
       // Extract rates from room types (offers)
       const roomTypes = hotel.roomTypes || [];
       for (const room of roomTypes) {
-        for (const rate of (room.rates || [])) {
-          const price = rate.retailRate?.total?.[0]?.amount || rate.offerRetailRate?.amount || 0;
-          
+        for (const rate of room.rates || []) {
+          const price =
+            rate.retailRate?.total?.[0]?.amount ||
+            rate.offerRetailRate?.amount ||
+            0;
+
           // Parse cancellation policy
-          const cancellationPolicy = rate.cancellationPolicies ? {
-            cancelPolicyInfos: rate.cancellationPolicies.cancelPolicyInfos || [],
-            hotelRemarks: rate.cancellationPolicies.hotelRemarks || [],
-            refundableTag: rate.cancellationPolicies.refundableTag || 'NRFN',
-          } : undefined;
+          const cancellationPolicy = rate.cancellationPolicies
+            ? {
+                cancelPolicyInfos:
+                  rate.cancellationPolicies.cancelPolicyInfos || [],
+                hotelRemarks: rate.cancellationPolicies.hotelRemarks || [],
+                refundableTag:
+                  rate.cancellationPolicies.refundableTag || "NRFN",
+              }
+            : undefined;
 
           rates.push({
             // Basic identifiers
@@ -798,53 +811,62 @@ async function getLiveRates(params: {
             rateId: rate.rateId,
             roomTypeId: room.roomTypeId,
             roomName: room.name,
-            
+
             // Occupancy info
             occupancyNumber: rate.occupancyNumber,
             maxOccupancy: rate.maxOccupancy,
             adultCount: rate.adultCount,
             childCount: rate.childCount,
-            
+
             // Pricing - retail rate (what customer pays)
             price: {
               amount: price,
-              currency: rate.retailRate?.total?.[0]?.currency || rate.offerRetailRate?.currency || 'USD',
+              currency:
+                rate.retailRate?.total?.[0]?.currency ||
+                rate.offerRetailRate?.currency ||
+                "USD",
             },
-            
+
             // Suggested selling price (public facing price)
-            suggestedSellingPrice: rate.suggestedSellingPrice?.[0] ? {
-              amount: rate.suggestedSellingPrice[0].amount,
-              currency: rate.suggestedSellingPrice[0].currency,
-              source: rate.suggestedSellingPrice[0].source,
-            } : rate.suggestedSellingPrice ? {
-              amount: rate.suggestedSellingPrice.amount,
-              currency: rate.suggestedSellingPrice.currency,
-              source: rate.suggestedSellingPrice.source,
-            } : undefined,
-            
+            suggestedSellingPrice: rate.suggestedSellingPrice?.[0]
+              ? {
+                  amount: rate.suggestedSellingPrice[0].amount,
+                  currency: rate.suggestedSellingPrice[0].currency,
+                  source: rate.suggestedSellingPrice[0].source,
+                }
+              : rate.suggestedSellingPrice
+                ? {
+                    amount: rate.suggestedSellingPrice.amount,
+                    currency: rate.suggestedSellingPrice.currency,
+                    source: rate.suggestedSellingPrice.source,
+                  }
+                : undefined,
+
             // Initial price (direct hotel discount)
-            initialPrice: rate.initialPrice?.[0] ? {
-              amount: rate.initialPrice[0].amount,
-              currency: rate.initialPrice[0].currency,
-            } : undefined,
-            
+            initialPrice: rate.initialPrice?.[0]
+              ? {
+                  amount: rate.initialPrice[0].amount,
+                  currency: rate.initialPrice[0].currency,
+                }
+              : undefined,
+
             // Taxes and fees
             taxesAndFees: rate.taxesAndFees,
-            
+
             // Price type (commission or net)
             priceType: rate.priceType,
-            
+
             // Board/meal type
             boardType: room.boardType,
             boardName: room.boardName,
-            
+
             // Refundability
-            isRefundable: rate.refundableTag === 'RFN',
+            isRefundable: rate.refundableTag === "RFN",
             refundableTag: rate.refundableTag,
-            
+
             // Cancellation policy
             cancellationPolicy,
-            
+
             // Additional info
             remarks: rate.remarks,
           });
@@ -861,18 +883,16 @@ async function getLiveRates(params: {
       });
     }
 
-
-
     // Cache for 5 minutes
     await CacheService.set(
-      cacheKey, 
-      Object.fromEntries(ratesMap), 
-      CACHE_TTL.HOTEL_RATES
+      cacheKey,
+      Object.fromEntries(ratesMap),
+      CACHE_TTL.HOTEL_RATES,
     );
 
     return ratesMap;
   } catch (error) {
-    console.error('[HotelDataService] Failed to fetch live rates:', error);
+    console.error("[HotelDataService] Failed to fetch live rates:", error);
     return new Map();
   }
 }
@@ -906,11 +926,11 @@ export const HotelDataService = {
     sortOrder?: string;
   }): Promise<{ results: HotelSearchResult[]; total: number; source: string }> {
     const cacheKey = `hotel:search:${JSON.stringify(params)}`;
-    
+
     // Check cache
     const cached = await CacheService.get(cacheKey);
     if (cached) {
-      return { ...(cached as any), source: 'cache' };
+      return { ...(cached as any), source: "cache" };
     }
 
     // 1. Try static DB first
@@ -923,22 +943,26 @@ export const HotelDataService = {
       starRating: params.starRating,
     });
 
-    let source = 'static-db';
+    let source = "static-db";
 
     // 2. Fallback to LITEAPI if no results from DB
     if (hotels.length === 0) {
-      console.log('[HotelDataService] No results from static DB, falling back to LITEAPI');
-      
+      console.log(
+        "[HotelDataService] No results from static DB, falling back to LITEAPI",
+      );
+
       try {
         const liteApiParams: any = {
           checkin: params.checkin,
           checkout: params.checkout,
-          currency: 'USD',
-          guestNationality: 'US',
-          occupancies: [{
-            adults: params.adults || 2,
-            children: params.children || [],
-          }],
+          currency: "USD",
+          guestNationality: "US",
+          occupancies: [
+            {
+              adults: params.adults || 2,
+              children: params.children || [],
+            },
+          ],
           limit: params.limit || 50,
         };
 
@@ -949,83 +973,98 @@ export const HotelDataService = {
           liteApiParams.countryCode = params.countryCode;
         }
 
-        const response = await liteApiRequest<any>('/hotels/rates', 'POST', liteApiParams);
+        const response = await liteApiRequest<any>(
+          "/hotels/rates",
+          "POST",
+          liteApiParams,
+        );
         const apiHotels = response.data || response.hotels || [];
 
         hotels = apiHotels.map((h: any) => ({
           id: h.id || h.hotelId,
           name: h.name,
-          image: h.main_photo || h.thumbnail || '/images/placeholder-hotel.jpg',
-          location: h.address || '',
+          image: h.main_photo || h.thumbnail || "/images/placeholder-hotel.jpg",
+          location: h.address || "",
           city: h.city,
           rating: h.rating || 0,
           reviewCount: 0,
           latitude: h.latitude,
           longitude: h.longitude,
           price: {
-            amount: h.roomTypes?.[0]?.rates?.[0]?.retailRate?.total?.[0]?.amount || 0,
-            currency: 'USD',
+            amount:
+              h.roomTypes?.[0]?.rates?.[0]?.retailRate?.total?.[0]?.amount || 0,
+            currency: "USD",
           },
           amenities: [],
           facilityIds: h.facilityIds || [],
-          provider: 'LiteAPI',
-          roomTypes: h.roomTypes?.map((rt: any) => ({
-            id: rt.roomTypeId,
-            name: rt.name,
-            rates: rt.rates?.map((r: any) => ({
-              offerId: r.offerId,
-              price: {
-                amount: r.retailRate?.total?.[0]?.amount || 0,
-                currency: r.retailRate?.total?.[0]?.currency || 'USD',
-              },
-              isRefundable: r.refundableTag === 'RFN',
+          provider: "LiteAPI",
+          roomTypes:
+            h.roomTypes?.map((rt: any) => ({
+              id: rt.roomTypeId,
+              name: rt.name,
+              rates:
+                rt.rates?.map((r: any) => ({
+                  offerId: r.offerId,
+                  price: {
+                    amount: r.retailRate?.total?.[0]?.amount || 0,
+                    currency: r.retailRate?.total?.[0]?.currency || "USD",
+                  },
+                  isRefundable: r.refundableTag === "RFN",
+                })) || [],
             })) || [],
-          })) || [],
-          refundable: h.roomTypes?.[0]?.rates?.[0]?.refundableTag === 'RFN',
+          refundable: h.roomTypes?.[0]?.rates?.[0]?.refundableTag === "RFN",
         }));
 
-        source = 'liteapi-fallback';
+        source = "liteapi-fallback";
       } catch (error) {
-        console.error('[HotelDataService] LITEAPI fallback failed:', error);
+        console.error("[HotelDataService] LITEAPI fallback failed:", error);
       }
     }
 
     // 3. Enrich with live rates if we have check-in/out dates
     if (params.checkin && params.checkout && hotels.length > 0) {
-      const hotelIds = hotels.map(h => h.id).slice(0, 50); // Max 50 hotels at a time
+      const hotelIds = hotels.map((h) => h.id).slice(0, 50); // Max 50 hotels at a time
       const ratesMap = await getLiveRates({
         hotelIds,
         checkin: params.checkin,
         checkout: params.checkout,
-        occupancies: [{
-          adults: params.adults || 2,
-          children: params.children || [],
-        }],
+        occupancies: [
+          {
+            adults: params.adults || 2,
+            children: params.children || [],
+          },
+        ],
       });
 
       // Merge rates into hotels
-      hotels = hotels.map(hotel => {
+      hotels = hotels.map((hotel) => {
         const rateData = ratesMap.get(hotel.id);
         if (rateData) {
           return {
             ...hotel,
-            price: rateData.cheapestPrice ? {
-              amount: rateData.cheapestPrice,
-              currency: 'USD',
-            } : hotel.price,
-            roomTypes: rateData.rates.length > 0 ? 
-              rateData.rates.map(r => ({
-                id: r.roomTypeId || '',
-                name: r.roomName || 'Room',
-                boardType: r.boardType,
-                boardName: r.boardName,
-                rates: [{
-                  offerId: r.offerId,
-                  price: r.price,
-                  isRefundable: r.isRefundable,
-                  cancellationPolicy: r.cancellationPolicy,
-                }],
-              })) : hotel.roomTypes,
+            price: rateData.cheapestPrice
+              ? {
+                  amount: rateData.cheapestPrice,
+                  currency: "USD",
+                }
+              : hotel.price,
+            roomTypes:
+              rateData.rates.length > 0
+                ? rateData.rates.map((r) => ({
+                    id: r.roomTypeId || "",
+                    name: r.roomName || "Room",
+                    boardType: r.boardType,
+                    boardName: r.boardName,
+                    rates: [
+                      {
+                        offerId: r.offerId,
+                        price: r.price,
+                        isRefundable: r.isRefundable,
+                        cancellationPolicy: r.cancellationPolicy,
+                      },
+                    ],
+                  }))
+                : hotel.roomTypes,
           };
         }
         return hotel;
@@ -1036,34 +1075,34 @@ export const HotelDataService = {
     let filteredHotels = hotels;
 
     if (params.minPrice !== undefined) {
-      filteredHotels = filteredHotels.filter(h => 
-        (h.price?.amount || 0) >= params.minPrice!
+      filteredHotels = filteredHotels.filter(
+        (h) => (h.price?.amount || 0) >= params.minPrice!,
       );
     }
     if (params.maxPrice !== undefined) {
-      filteredHotels = filteredHotels.filter(h => 
-        (h.price?.amount || 0) <= params.maxPrice!
+      filteredHotels = filteredHotels.filter(
+        (h) => (h.price?.amount || 0) <= params.maxPrice!,
       );
     }
 
     // 5. Apply sorting
     if (params.sortBy) {
-      const isAsc = params.sortOrder === 'asc';
+      const isAsc = params.sortOrder === "asc";
       filteredHotels.sort((a, b) => {
         let aVal: any, bVal: any;
 
         switch (params.sortBy) {
-          case 'price':
+          case "price":
             aVal = a.price?.amount || 0;
             bVal = b.price?.amount || 0;
             break;
-          case 'rating':
+          case "rating":
             aVal = a.rating || 0;
             bVal = b.rating || 0;
             break;
-          case 'name':
-            return isAsc 
-              ? a.name.localeCompare(b.name) 
+          case "name":
+            return isAsc
+              ? a.name.localeCompare(b.name)
               : b.name.localeCompare(a.name);
           default:
             return 0;
@@ -1075,8 +1114,8 @@ export const HotelDataService = {
 
     const total = filteredHotels.length;
     const results = filteredHotels.slice(
-      params.offset || 0, 
-      (params.offset || 0) + (params.limit || 50)
+      params.offset || 0,
+      (params.offset || 0) + (params.limit || 50),
     );
 
     const response = { results, total, source };
@@ -1097,44 +1136,51 @@ export const HotelDataService = {
       checkout?: string;
       adults?: number;
       children?: number[];
-    }
+    },
   ): Promise<{ hotel: HotelDetail | null; source: string }> {
-    const cacheKey = `hotel:detail:${hotelId}:${params?.checkin || ''}:${params?.checkout || ''}`;
+    const cacheKey = `hotel:detail:${hotelId}:${params?.checkin || ""}:${params?.checkout || ""}`;
 
     // Check cache
     const cached = await CacheService.get(cacheKey);
     if (cached) {
-      return { ...(cached as any), source: 'cache' };
+      return { ...(cached as any), source: "cache" };
     }
 
     // 1. Try static DB first
     let hotel = await getHotelFromDB(hotelId);
-    let source = 'static-db';
+    let source = "static-db";
 
     // 2. Fallback to LITEAPI if not found
     if (!hotel) {
       try {
-        const response = await liteApiRequest<any>(`/data/hotel?hotelId=${hotelId}`, 'GET');
+        const response = await liteApiRequest<any>(
+          `/data/hotel?hotelId=${hotelId}`,
+          "GET",
+        );
         const data = response.data || response;
 
         if (data) {
           hotel = {
             // Basic identifiers
             id: data.id || hotelId,
-            name: data.name || '',
-            
+            name: data.name || "",
+
             // Description
             description: data.hotelDescription || data.description,
             hotelDescription: data.hotelDescription,
             hotelImportantInformation: data.hotelImportantInformation,
-            
+
             // Images
-            image: data.hotelImages?.[0]?.url || data.main_photo || data.thumbnail || '/images/placeholder-hotel.jpg',
+            image:
+              data.hotelImages?.[0]?.url ||
+              data.main_photo ||
+              data.thumbnail ||
+              "/images/placeholder-hotel.jpg",
             images: data.hotelImages?.map((img: any) => img.url) || [],
             hotelImages: data.hotelImages,
-            
+
             // Location
-            location: data.address || '',
+            location: data.address || "",
             city: data.city,
             country: data.country,
             countryCode: data.country?.toUpperCase(),
@@ -1146,62 +1192,63 @@ export const HotelDataService = {
             latitude: data.location?.latitude || data.latitude,
             longitude: data.location?.longitude || data.longitude,
 
-
-            
             // Ratings
             rating: data.rating || 0,
             starRating: data.starRating,
             reviewCount: data.reviewCount || 0,
-            
+
             // Contact
             phone: data.phone,
             email: data.email,
-            
+
             // Check-in/out times
-            checkInTime: data.checkinCheckoutTimes?.checkin || data.checkinStart || data.check_in,
+            checkInTime:
+              data.checkinCheckoutTimes?.checkin ||
+              data.checkinStart ||
+              data.check_in,
             checkOutTime: data.checkinCheckoutTimes?.checkout || data.checkout,
             checkinCheckoutTimes: data.checkinCheckoutTimes,
-            
+
             // Facilities/Amenities
             amenities: data.hotelFacilities || [],
-            facilities: data.facilities?.map((f: any) => ({
-              facilityId: f.facilityId,
-              name: f.name,
-            })) || [],
+            facilities:
+              data.facilities?.map((f: any) => ({
+                facilityId: f.facilityId,
+                name: f.name,
+              })) || [],
             facilityIds: data.facilities?.map((f: any) => f.facilityId) || [],
-            
+
             // Rooms
-            rooms: data.rooms?.map((r: any) => ({
-              id: r.roomId || r.id?.toString(),
-              roomId: r.roomId,
-              name: r.roomName || r.name,
-              description: r.description,
-              maxOccupancy: r.maxOccupancy,
-              maxAdults: r.maxAdults,
-              maxChildren: r.maxChildren,
-              bedType: r.bedType,
-              bedCount: r.bedCount,
-              sizeSqm: r.sizeSqm,
-              roomAmenities: r.roomAmenities,
-            })) || [],
+            rooms:
+              data.rooms?.map((r: any) => ({
+                id: r.roomId || r.id?.toString(),
+                roomId: r.roomId,
+                name: r.roomName || r.name,
+                description: r.description,
+                maxOccupancy: r.maxOccupancy,
+                maxAdults: r.maxAdults,
+                maxChildren: r.maxChildren,
+                bedType: r.bedType,
+                bedCount: r.bedCount,
+                sizeSqm: r.sizeSqm,
+                roomAmenities: r.roomAmenities,
+              })) || [],
             roomTypes: (data.rooms || []).map((r: any) => ({
-              id: r.roomId || r.id?.toString() || '',
+              id: r.roomId || r.id?.toString() || "",
               name: r.roomName || r.name,
               description: r.description,
               maxOccupancy: r.maxOccupancy,
               bedType: r.bedType,
               rates: [],
             })),
-            
+
             // Provider
-            provider: 'LiteAPI',
+            provider: "LiteAPI",
           };
-          source = 'liteapi-fallback';
+          source = "liteapi-fallback";
         }
-
-
       } catch (error) {
-        console.error('[HotelDataService] LITEAPI fallback failed:', error);
+        console.error("[HotelDataService] LITEAPI fallback failed:", error);
       }
     }
 
@@ -1211,30 +1258,36 @@ export const HotelDataService = {
         hotelIds: [hotelId],
         checkin: params.checkin,
         checkout: params.checkout,
-        occupancies: [{
-          adults: params.adults || 2,
-          children: params.children || [],
-        }],
+        occupancies: [
+          {
+            adults: params.adults || 2,
+            children: params.children || [],
+          },
+        ],
       });
 
       const rateData = ratesMap.get(hotelId);
       if (rateData && rateData.rates.length > 0) {
-        hotel.roomTypes = rateData.rates.map(r => ({
-          id: r.roomTypeId || '',
-          name: r.roomName || 'Room',
+        hotel.roomTypes = rateData.rates.map((r) => ({
+          id: r.roomTypeId || "",
+          name: r.roomName || "Room",
           boardType: r.boardType,
           boardName: r.boardName,
-          rates: [{
-            offerId: r.offerId,
-            price: r.price,
-            isRefundable: r.isRefundable,
-            cancellationPolicy: r.cancellationPolicy,
-          }],
+          rates: [
+            {
+              offerId: r.offerId,
+              price: r.price,
+              isRefundable: r.isRefundable,
+              cancellationPolicy: r.cancellationPolicy,
+            },
+          ],
         }));
-        hotel.price = rateData.cheapestPrice ? {
-          amount: rateData.cheapestPrice,
-          currency: 'USD',
-        } : undefined;
+        hotel.price = rateData.cheapestPrice
+          ? {
+              amount: rateData.cheapestPrice,
+              currency: "USD",
+            }
+          : undefined;
       }
     }
 
@@ -1251,8 +1304,10 @@ export const HotelDataService = {
   /**
    * Get facilities (amenities) list
    */
-  async getFacilities(): Promise<Array<{ id: number; code: string; name: string }>> {
-    const cacheKey = 'hotel:facilities:all';
+  async getFacilities(): Promise<
+    Array<{ id: number; code: string; name: string }>
+  > {
+    const cacheKey = "hotel:facilities:all";
 
     const cached = await CacheService.get(cacheKey);
     if (cached) {
@@ -1265,14 +1320,14 @@ export const HotelDataService = {
     // Fallback to LITEAPI if empty
     if (facilities.length === 0) {
       try {
-        const response = await liteApiRequest<any>('/data/facilities', 'GET');
+        const response = await liteApiRequest<any>("/data/facilities", "GET");
         facilities = (response.data || response || []).map((f: any) => ({
           id: f.id,
           code: f.code || f.name,
           name: f.name,
         }));
       } catch (error) {
-        console.error('[HotelDataService] Failed to fetch facilities:', error);
+        console.error("[HotelDataService] Failed to fetch facilities:", error);
       }
     }
 

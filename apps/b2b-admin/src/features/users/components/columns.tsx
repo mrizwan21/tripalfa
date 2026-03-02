@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal } from "lucide-react";
 
-import { Button } from "@tripalfa/ui-components/ui/button"
+import { Button } from "@tripalfa/ui-components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,18 +11,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@tripalfa/ui-components/ui/dropdown-menu"
-import { Badge } from "@tripalfa/ui-components/ui/badge"
+} from "@tripalfa/ui-components/ui/dropdown-menu";
+import { Badge } from "@tripalfa/ui-components/ui/badge";
 
 export type User = {
-  id: string
-  name: string
-  email: string
-  role: "admin" | "user" | "manager"
-  userType: "staff" | "b2b" | "b2c"
-  status: "active" | "inactive" | "suspended"
-  createdAt: string
-}
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user" | "manager";
+  userType: "staff" | "b2b" | "b2c";
+  status: "active" | "inactive" | "suspended";
+  createdAt: string;
+};
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -32,7 +32,9 @@ export const columns: ColumnDef<User>[] = [
   {
     accessorKey: "userType",
     header: "Type",
-    cell: ({ row }) => <Badge variant="secondary">{row.getValue("userType")}</Badge>,
+    cell: ({ row }) => (
+      <Badge variant="secondary">{row.getValue("userType")}</Badge>
+    ),
   },
   {
     accessorKey: "email",
@@ -42,32 +44,32 @@ export const columns: ColumnDef<User>[] = [
     accessorKey: "role",
     header: "Role",
     cell: ({ row }) => {
-      return <Badge variant="outline">{row.getValue("role")}</Badge>
+      return <Badge variant="outline">{row.getValue("role")}</Badge>;
     },
   },
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-        const status = row.getValue("status") as string
-        return (
-            <Badge variant={status === "active" ? "default" : "destructive"}>
-                {status}
-            </Badge>
-        )
-    }
+      const status = row.getValue("status") as string;
+      return (
+        <Badge variant={status === "active" ? "default" : "destructive"}>
+          {status}
+        </Badge>
+      );
+    },
   },
   {
-      accessorKey: "createdAt",
-      header: "Joined",
-      cell: ({ row }) => {
-        return new Date(row.getValue("createdAt")).toLocaleDateString()
-      }
+    accessorKey: "createdAt",
+    header: "Joined",
+    cell: ({ row }) => {
+      return new Date(row.getValue("createdAt")).toLocaleDateString();
+    },
   },
   {
     id: "actions",
     cell: ({ row }) => {
-      const user = row.original
+      const user = row.original;
 
       return (
         <DropdownMenu>
@@ -86,10 +88,12 @@ export const columns: ColumnDef<User>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Edit User</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive">
+              Delete User
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
-]
+];

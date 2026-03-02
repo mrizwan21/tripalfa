@@ -5,7 +5,7 @@
 services:
   # Main Duffel API Service
   - name: duffel-api-service
-    host: api-sandbox.duffel.com  # Use sandbox for dev/staging
+    host: api-sandbox.duffel.com # Use sandbox for dev/staging
     port: 443
     protocol: https
     path: /air

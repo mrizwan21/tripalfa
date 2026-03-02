@@ -165,7 +165,7 @@ plugins:
     config:
       minute: 2000
       policy: local
-  
+
   - name: cors
     enabled: true
     config:

@@ -6,35 +6,42 @@
 /**
  * Deal types supported
  */
-export type DealType = 
-  | 'contracted_rate'
-  | 'package_deal'
-  | 'early_bird'
-  | 'last_minute'
-  | 'free_nights'
-  | 'seasonal'
-  | 'supplier_exclusive'
-  | 'volume_discount';
+export type DealType =
+  | "contracted_rate"
+  | "package_deal"
+  | "early_bird"
+  | "last_minute"
+  | "free_nights"
+  | "seasonal"
+  | "supplier_exclusive"
+  | "volume_discount";
 
 /**
  * Deal status
  */
-export type DealStatus = 'draft' | 'active' | 'paused' | 'expired' | 'archived';
+export type DealStatus = "draft" | "active" | "paused" | "expired" | "archived";
 
 /**
  * Discount type for deals
  */
-export type DealDiscountType = 'percentage' | 'fixed' | 'tiered';
+export type DealDiscountType = "percentage" | "fixed" | "tiered";
 
 /**
  * Property type
  */
-export type PropertyType = 'hotel' | 'resort' | 'apartment' | 'villa' | 'boutique' | 'motel' | 'guest_house';
+export type PropertyType =
+  | "hotel"
+  | "resort"
+  | "apartment"
+  | "villa"
+  | "boutique"
+  | "motel"
+  | "guest_house";
 
 /**
  * Journey type
  */
-export type JourneyType = 'one_way' | 'round_trip' | 'multi_city' | 'all';
+export type JourneyType = "one_way" | "round_trip" | "multi_city" | "all";
 
 /**
  * Supplier deal definition
@@ -225,7 +232,7 @@ export interface ConflictReport {
     dealId1: string;
     dealId2: string;
     conflictType: string;
-    severity: 'low' | 'medium' | 'high';
+    severity: "low" | "medium" | "high";
   }>;
   totalConflicts: number;
 }
@@ -233,7 +240,11 @@ export interface ConflictReport {
 /**
  * Airline deal category types
  */
-export type AirlineDealCategory = 'private_fare' | 'ndc_special' | 'route_specific' | 'contract';
+export type AirlineDealCategory =
+  | "private_fare"
+  | "ndc_special"
+  | "route_specific"
+  | "contract";
 
 /**
  * Airline-specific deal metadata
@@ -311,7 +322,7 @@ export interface NDCSpecialDeal {
   baggage?: {
     pieces?: number;
     weight?: number;
-    unit?: 'kg' | 'lb';
+    unit?: "kg" | "lb";
   };
   seatSelection?: boolean;
   mealOptions?: string[];

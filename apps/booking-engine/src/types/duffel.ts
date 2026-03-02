@@ -8,13 +8,13 @@
 // CORE TYPES
 // ============================================================================
 
-export type CabinClass = 'economy' | 'premium_economy' | 'business' | 'first';
+export type CabinClass = "economy" | "premium_economy" | "business" | "first";
 
-export type PassengerType = 'adult' | 'child' | 'infant';
+export type PassengerType = "adult" | "child" | "infant";
 
-export type OrderType = 'instant' | 'hold';
+export type OrderType = "instant" | "hold";
 
-export type PaymentType = 'balance' | 'card' | 'pay_later';
+export type PaymentType = "balance" | "card" | "pay_later";
 
 // ============================================================================
 // AIRPORT & LOCATION TYPES
@@ -43,7 +43,7 @@ export interface DuffelPlace {
   iata_code: string;
   city_name?: string;
   country_name?: string;
-  type: 'airport' | 'city';
+  type: "airport" | "city";
 }
 
 // ============================================================================
@@ -78,8 +78,8 @@ export interface DuffelPassengerBase {
   email?: string;
   phone_number?: string;
   born_at?: string; // ISO 8601 date
-  gender?: 'm' | 'f';
-  title?: 'mr' | 'mrs' | 'ms' | 'miss' | 'dr' | 'prof';
+  gender?: "m" | "f";
+  title?: "mr" | "mrs" | "ms" | "miss" | "dr" | "prof";
   id?: string;
 }
 
@@ -96,7 +96,7 @@ export interface DuffelPassenger extends DuffelPassengerBase {
 
 export interface DuffelBaggage {
   id?: string;
-  type: 'checked' | 'carry_on';
+  type: "checked" | "carry_on";
   quantity: number;
   maximum_weight_kg?: number;
   maximum_dimensions?: {
@@ -115,8 +115,8 @@ export interface DuffelSlice {
   origin: string | DuffelAirport;
   destination: string | DuffelAirport;
   departure_date: string;
-  origin_type?: 'airport' | 'city';
-  destination_type?: 'airport' | 'city';
+  origin_type?: "airport" | "city";
+  destination_type?: "airport" | "city";
   segments?: DuffelSegment[];
   duration?: string; // ISO 8601 duration
   conditions?: DuffelSliceConditions;
@@ -154,7 +154,7 @@ export interface DuffelAmenity {
   id: string;
   name: string;
   description?: string;
-  type: 'meal' | 'beverage' | 'entertainment' | 'wifi' | 'power' | 'other';
+  type: "meal" | "beverage" | "entertainment" | "wifi" | "power" | "other";
   is_complimentary?: boolean;
 }
 
@@ -214,7 +214,7 @@ export interface DuffelOfferConditions {
 
 export interface DuffelService {
   id: string;
-  type: 'baggage' | 'seat' | 'meal' | 'lounge' | 'priority_boarding' | 'other';
+  type: "baggage" | "seat" | "meal" | "lounge" | "priority_boarding" | "other";
   total_amount: string;
   total_currency: string;
   passenger_id?: string;
@@ -250,8 +250,15 @@ export interface DuffelOrder {
   total_amount: string;
   total_currency: string;
   booking_reference: string;
-  status: 'created' | 'pending' | 'paid' | 'confirmed' | 'ticketed' | 'cancelled' | 'expired';
-  payment_status: 'awaiting_payment' | 'partial' | 'paid' | 'refunded';
+  status:
+    | "created"
+    | "pending"
+    | "paid"
+    | "confirmed"
+    | "ticketed"
+    | "cancelled"
+    | "expired";
+  payment_status: "awaiting_payment" | "partial" | "paid" | "refunded";
   documents?: DuffelDocument[];
   services?: DuffelService[];
   created_at: string;
@@ -262,7 +269,7 @@ export interface DuffelOrder {
 
 export interface DuffelDocument {
   id: string;
-  type: 'ticket' | 'boarding_pass' | 'invoice' | 'receipt' | 'itinerary';
+  type: "ticket" | "boarding_pass" | "invoice" | "receipt" | "itinerary";
   passenger_id: string;
   passenger_name?: string;
   ticket_number?: string;
@@ -280,7 +287,7 @@ export interface DuffelPaymentIntent {
   order_id: string;
   amount: string;
   currency: string;
-  status: 'pending' | 'succeeded' | 'failed' | 'requires_action';
+  status: "pending" | "succeeded" | "failed" | "requires_action";
   client_token?: string;
   payment_method?: DuffelPaymentMethod;
   created_at: string;
@@ -334,7 +341,14 @@ export interface DuffelSeatSection {
 }
 
 export interface DuffelSeatElement {
-  type: 'seat' | 'empty' | 'lavatory' | 'galley' | 'bassinet' | 'closet' | 'exit_row';
+  type:
+    | "seat"
+    | "empty"
+    | "lavatory"
+    | "galley"
+    | "bassinet"
+    | "closet"
+    | "exit_row";
   designator?: string;
   name?: string;
   available_services?: DuffelSeatService[];
@@ -355,7 +369,7 @@ export interface DuffelSeatService {
 export interface DuffelOrderCancellation {
   id: string;
   order_id: string;
-  status: 'pending' | 'confirmed' | 'failed' | 'expired';
+  status: "pending" | "confirmed" | "failed" | "expired";
   refund_amount?: string;
   refund_currency?: string;
   created_at: string;
@@ -365,7 +379,7 @@ export interface DuffelOrderCancellation {
 export interface DuffelOrderChangeRequest {
   id: string;
   order_id: string;
-  status: 'pending' | 'approved' | 'rejected' | 'expired';
+  status: "pending" | "approved" | "rejected" | "expired";
   slices?: DuffelSlice[];
   created_at: string;
 }
@@ -400,7 +414,7 @@ export interface CreateOfferRequestParams {
   return_available_services?: boolean;
   supplier_timeout?: number;
   // Private fares support - Duffel API
-  source?: 'duffel' | 'alliance' | 'airline' | 'corporate';
+  source?: "duffel" | "alliance" | "airline" | "corporate";
   payment_partner?: string;
   brand_id?: string;
   loyalty_programme_accounts?: Array<{
@@ -419,8 +433,8 @@ export interface CreateOrderParams {
     email: string;
     phone_number: string;
     born_at?: string;
-    gender?: 'm' | 'f';
-    title?: 'mr' | 'mrs' | 'ms' | 'miss' | 'dr' | 'prof';
+    gender?: "m" | "f";
+    title?: "mr" | "mrs" | "ms" | "miss" | "dr" | "prof";
     loyalty_programme?: {
       airline_iata_code: string;
       account_number: string;
@@ -448,7 +462,7 @@ export interface CreatePaymentIntentParams {
 export interface FlightSearchResult {
   id: string;
   offerId: string;
-  tripType: 'one-way' | 'round-trip' | 'multi-city';
+  tripType: "one-way" | "round-trip" | "multi-city";
   airline: string;
   carrierCode: string;
   flightNumber: string;
@@ -529,7 +543,7 @@ export interface FlightSearchState {
     returnDate?: string;
     travelers: number;
     cabinClass: CabinClass;
-    tripType: 'roundTrip' | 'oneWay' | 'multiCity';
+    tripType: "roundTrip" | "oneWay" | "multiCity";
   };
 }
 

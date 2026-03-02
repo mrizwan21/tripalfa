@@ -3,10 +3,10 @@
  * Exports all notification services and the main manager
  */
 
-export { BaseNotificationService } from './base';
+export { BaseNotificationService } from "./base";
 
-import { createLogger, Logger } from '@tripalfa/shared-utils/logger';
-import { BaseNotificationService } from './base';
+import { createLogger, Logger } from "@tripalfa/shared-utils/logger";
+import { BaseNotificationService } from "./base";
 import {
   Notification,
   NotificationPayload,
@@ -14,21 +14,23 @@ import {
   NotificationPreferences,
   NotificationChannel,
   ChannelConfig,
-} from '../types';
+} from "../types";
 
 /**
  * Main Notification Manager
  * Central service that orchestrates multi-channel notifications
  */
 export class NotificationManager extends BaseNotificationService {
-  private channels: Map<NotificationChannelType, NotificationChannel> = new Map();
+  private channels: Map<NotificationChannelType, NotificationChannel> =
+    new Map();
   private notifications: Map<string, Notification> = new Map();
   private preferences: Map<string, NotificationPreferences> = new Map();
   private nextId = 0;
 
   constructor(logger?: Logger) {
     // Use provided logger or create shared logger
-    const loggerInstance = logger || createLogger({ serviceName: 'notifications' });
+    const loggerInstance =
+      logger || createLogger({ serviceName: "notifications" });
     super(loggerInstance);
   }
 
@@ -43,11 +45,16 @@ export class NotificationManager extends BaseNotificationService {
     }
 
     if (!channel.validateConfig()) {
-      this.logger.warn({ channel: channelName }, 'Channel configuration invalid');
+      this.logger.warn(
+        { channel: channelName },
+        "Channel configuration invalid",
+      );
     }
 
     this.channels.set(channelName, channel);
-    this.logNotificationEvent('manager', 'channel_registered', { channel: channelName });
+    this.logNotificationEvent("manager", "channel_registered", {
+      channel: channelName,
+    });
   }
 
   /**
@@ -59,7 +66,9 @@ export class NotificationManager extends BaseNotificationService {
       this.validatePayload(payload);
 
       // Get user preferences
-      const preferences = this.preferences.get(payload.userId) || this.getDefaultPreferences(payload.userId);
+      const preferences =
+        this.preferences.get(payload.userId) ||
+        this.getDefaultPreferences(payload.userId);
 
       // Determine channels to use
       const channels = this.determineChannels(payload.channels, preferences);
@@ -72,9 +81,9 @@ export class NotificationManager extends BaseNotificationService {
         title: payload.title,
         message: payload.message,
         data: payload.data,
-        priority: payload.priority || 'medium',
+        priority: payload.priority || "medium",
         channels,
-        status: 'pending',
+        status: "pending",
         actionUrl: payload.actionUrl,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -85,18 +94,23 @@ export class NotificationManager extends BaseNotificationService {
 
       // Send through all channels concurrently
       const results = await Promise.allSettled(
-        channels.map((channelType) => this.sendViaChannel(notification, channelType))
+        channels.map((channelType) =>
+          this.sendViaChannel(notification, channelType),
+        ),
       );
 
       // Update notification status
-      const successCount = results.filter((r) => r.status === 'fulfilled' && r.value).length;
-      notification.status = successCount === channels.length ? 'sent' : 'failed';
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled" && r.value,
+      ).length;
+      notification.status =
+        successCount === channels.length ? "sent" : "failed";
       notification.sentAt = new Date();
       notification.updatedAt = new Date();
 
       this.notifications.set(notification.id, notification);
 
-      this.logNotificationEvent(notification.id, 'sent', {
+      this.logNotificationEvent(notification.id, "sent", {
         channels,
         successCount,
         totalChannels: channels.length,
@@ -112,11 +126,17 @@ export class NotificationManager extends BaseNotificationService {
   /**
    * Send notification via specific channel
    */
-  private async sendViaChannel(notification: Notification, channelType: NotificationChannelType): Promise<boolean> {
+  private async sendViaChannel(
+    notification: Notification,
+    channelType: NotificationChannelType,
+  ): Promise<boolean> {
     const channel = this.channels.get(channelType);
 
     if (!channel) {
-      this.logger.warn({ channel: channelType }, `Channel not configured: ${channelType}`);
+      this.logger.warn(
+        { channel: channelType },
+        `Channel not configured: ${channelType}`,
+      );
       return false;
     }
 
@@ -134,10 +154,20 @@ export class NotificationManager extends BaseNotificationService {
   /**
    * Get user notifications
    */
-  async getNotifications(userId: string, limit: number = 50, offset: number = 0): Promise<Notification[]> {
-    const userNotifications = Array.from(this.notifications.values()).filter((n) => n.userId === userId);
+  async getNotifications(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<Notification[]> {
+    const userNotifications = Array.from(this.notifications.values()).filter(
+      (n) => n.userId === userId,
+    );
 
-    const sorted = this.sortNotifications(userNotifications, 'createdAt', 'desc');
+    const sorted = this.sortNotifications(
+      userNotifications,
+      "createdAt",
+      "desc",
+    );
     const paginated = this.paginate(sorted, limit, offset);
 
     return paginated;
@@ -153,30 +183,35 @@ export class NotificationManager extends BaseNotificationService {
       throw new Error(`Notification ${notificationId} not found`);
     }
 
-    notification.status = 'read';
+    notification.status = "read";
     notification.readAt = new Date();
     notification.updatedAt = new Date();
 
     this.notifications.set(notificationId, notification);
-    this.logNotificationEvent(notificationId, 'marked_read');
+    this.logNotificationEvent(notificationId, "marked_read");
   }
 
   /**
    * Mark all user notifications as read
    */
   async markAllAsRead(userId: string): Promise<void> {
-    const userNotifications = Array.from(this.notifications.values()).filter((n) => n.userId === userId);
+    const userNotifications = Array.from(this.notifications.values()).filter(
+      (n) => n.userId === userId,
+    );
 
     for (const notification of userNotifications) {
-      if (notification.status !== 'read') {
-        notification.status = 'read';
+      if (notification.status !== "read") {
+        notification.status = "read";
         notification.readAt = new Date();
         notification.updatedAt = new Date();
         this.notifications.set(notification.id, notification);
       }
     }
 
-    this.logNotificationEvent('manager', 'all_marked_read', { userId, count: userNotifications.length });
+    this.logNotificationEvent("manager", "all_marked_read", {
+      userId,
+      count: userNotifications.length,
+    });
   }
 
   /**
@@ -184,7 +219,7 @@ export class NotificationManager extends BaseNotificationService {
    */
   async deleteNotification(notificationId: string): Promise<void> {
     this.notifications.delete(notificationId);
-    this.logNotificationEvent(notificationId, 'deleted');
+    this.logNotificationEvent(notificationId, "deleted");
   }
 
   /**
@@ -192,7 +227,7 @@ export class NotificationManager extends BaseNotificationService {
    */
   async getUnreadCount(userId: string): Promise<number> {
     return Array.from(this.notifications.values()).filter(
-      (n) => n.userId === userId && n.status === 'pending'
+      (n) => n.userId === userId && n.status === "pending",
     ).length;
   }
 
@@ -206,18 +241,25 @@ export class NotificationManager extends BaseNotificationService {
   /**
    * Update user preferences
    */
-  async updatePreferences(userId: string, updates: Partial<NotificationPreferences>): Promise<void> {
-    const current = this.preferences.get(userId) || this.getDefaultPreferences(userId);
+  async updatePreferences(
+    userId: string,
+    updates: Partial<NotificationPreferences>,
+  ): Promise<void> {
+    const current =
+      this.preferences.get(userId) || this.getDefaultPreferences(userId);
     const updated = { ...current, ...updates };
 
     this.preferences.set(userId, updated);
-    this.logNotificationEvent('manager', 'preferences_updated', { userId });
+    this.logNotificationEvent("manager", "preferences_updated", { userId });
   }
 
   /**
    * Determine which channels to use based on preferences
    */
-  private determineChannels(requestedChannels: NotificationChannelType[] | undefined, preferences: NotificationPreferences): NotificationChannelType[] {
+  private determineChannels(
+    requestedChannels: NotificationChannelType[] | undefined,
+    preferences: NotificationPreferences,
+  ): NotificationChannelType[] {
     const channels: NotificationChannelType[] = [];
 
     if (requestedChannels) {
@@ -228,14 +270,14 @@ export class NotificationManager extends BaseNotificationService {
       }
     } else {
       // Use all enabled channels from preferences
-      if (preferences.emailEnabled) channels.push('email');
-      if (preferences.smsEnabled) channels.push('sms');
-      if (preferences.pushEnabled) channels.push('push');
+      if (preferences.emailEnabled) channels.push("email");
+      if (preferences.smsEnabled) channels.push("sms");
+      if (preferences.pushEnabled) channels.push("push");
     }
 
     // Always include in_app
-    if (!channels.includes('in_app')) {
-      channels.push('in_app');
+    if (!channels.includes("in_app")) {
+      channels.push("in_app");
     }
 
     return channels;
@@ -244,15 +286,18 @@ export class NotificationManager extends BaseNotificationService {
   /**
    * Check if a channel is enabled for user
    */
-  private isChannelEnabledForUser(channel: NotificationChannelType, preferences: NotificationPreferences): boolean {
+  private isChannelEnabledForUser(
+    channel: NotificationChannelType,
+    preferences: NotificationPreferences,
+  ): boolean {
     switch (channel) {
-      case 'email':
+      case "email":
         return preferences.emailEnabled;
-      case 'sms':
+      case "sms":
         return preferences.smsEnabled;
-      case 'push':
+      case "push":
         return preferences.pushEnabled;
-      case 'in_app':
+      case "in_app":
         return true; // Always enabled
       default:
         return false;
@@ -285,7 +330,9 @@ export class NotificationManager extends BaseNotificationService {
   /**
    * Get channel instance
    */
-  getChannel(channelType: NotificationChannelType): NotificationChannel | undefined {
+  getChannel(
+    channelType: NotificationChannelType,
+  ): NotificationChannel | undefined {
     return this.channels.get(channelType);
   }
 
@@ -301,16 +348,25 @@ export class NotificationManager extends BaseNotificationService {
    */
   getStats() {
     const totalNotifications = this.notifications.size;
-    const sentNotifications = Array.from(this.notifications.values()).filter((n) => n.status === 'sent').length;
-    const failedNotifications = Array.from(this.notifications.values()).filter((n) => n.status === 'failed').length;
-    const readNotifications = Array.from(this.notifications.values()).filter((n) => n.status === 'read').length;
+    const sentNotifications = Array.from(this.notifications.values()).filter(
+      (n) => n.status === "sent",
+    ).length;
+    const failedNotifications = Array.from(this.notifications.values()).filter(
+      (n) => n.status === "failed",
+    ).length;
+    const readNotifications = Array.from(this.notifications.values()).filter(
+      (n) => n.status === "read",
+    ).length;
 
     return {
       totalNotifications,
       sentNotifications,
       failedNotifications,
       readNotifications,
-      failureRate: totalNotifications > 0 ? (failedNotifications / totalNotifications) * 100 : 0,
+      failureRate:
+        totalNotifications > 0
+          ? (failedNotifications / totalNotifications) * 100
+          : 0,
       registeredChannels: this.channels.size,
     };
   }

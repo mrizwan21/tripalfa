@@ -1,4 +1,4 @@
-# Dockerfile for api-gateway - NEON Database Support
+# Dockerfile for api-gateway - Neon Database Support
 # This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
 # Parameters: SERVICE_NAME=api-gateway, WORKSPACE_NAME=@tripalfa/api-gateway, PORT=3000, HEALTH_PATH=health
 

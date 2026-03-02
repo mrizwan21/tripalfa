@@ -1,4 +1,4 @@
-import { BasePage } from './BasePage';
+import { BasePage } from "./BasePage";
 
 export class HotelListPage extends BasePage {
   async selectHotel(index: number = 0) {

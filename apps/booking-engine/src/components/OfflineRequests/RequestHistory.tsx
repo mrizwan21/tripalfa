@@ -1,7 +1,13 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   ChevronDown,
   ChevronUp,
@@ -14,15 +20,18 @@ import {
   AlertCircle,
   Clock,
   FileText,
-} from 'lucide-react';
-import { AuditLog, OfflineChangeRequest } from '@tripalfa/shared-types';
+} from "lucide-react";
+import { AuditLog, OfflineChangeRequest } from "@tripalfa/shared-types";
 
 interface RequestHistoryProps {
   request: OfflineChangeRequest;
   auditLogs?: AuditLog[];
 }
 
-export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps) => {
+export const RequestHistory = ({
+  request,
+  auditLogs = [],
+}: RequestHistoryProps) => {
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
 
   const toggleLogExpansion = (logId: string) => {
@@ -37,19 +46,19 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
 
   const getActionIcon = (action: string) => {
     switch (action) {
-      case 'submitted':
+      case "submitted":
         return <Clock className="w-4 h-4 text-blue-600" />;
-      case 'under_review':
+      case "under_review":
         return <AlertCircle className="w-4 h-4 text-orange-600" />;
-      case 'approved':
+      case "approved":
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'rejected':
+      case "rejected":
         return <AlertCircle className="w-4 h-4 text-red-600" />;
-      case 'completed':
+      case "completed":
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'note_added':
+      case "note_added":
         return <MessageSquare className="w-4 h-4 text-purple-600" />;
-      case 'price_adjusted':
+      case "price_adjusted":
         return <DollarSign className="w-4 h-4 text-green-600" />;
       default:
         return <Clock className="w-4 h-4 text-gray-600" />;
@@ -58,85 +67,93 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
 
   const getActionLabel = (action: string) => {
     switch (action) {
-      case 'submitted':
-        return 'Request Submitted';
-      case 'under_review':
-        return 'Moved to Review';
-      case 'approved':
-        return 'Request Approved';
-      case 'rejected':
-        return 'Request Rejected';
-      case 'accepted':
-        return 'Changes Accepted';
-      case 'declined':
-        return 'Changes Declined';
-      case 'completed':
-        return 'Booking Updated';
-      case 'note_added':
-        return 'Note Added';
-      case 'price_adjusted':
-        return 'Price Adjusted';
+      case "submitted":
+        return "Request Submitted";
+      case "under_review":
+        return "Moved to Review";
+      case "approved":
+        return "Request Approved";
+      case "rejected":
+        return "Request Rejected";
+      case "accepted":
+        return "Changes Accepted";
+      case "declined":
+        return "Changes Declined";
+      case "completed":
+        return "Booking Updated";
+      case "note_added":
+        return "Note Added";
+      case "price_adjusted":
+        return "Price Adjusted";
       default:
-        return action.replaceAll('_', ' ');
+        return action.replaceAll("_", " ");
     }
   };
 
   const getActionColor = (action: string) => {
     switch (action) {
-      case 'submitted':
-      case 'under_review':
-        return 'bg-blue-50 border-blue-200';
-      case 'approved':
-      case 'accepted':
-      case 'completed':
-        return 'bg-green-50 border-green-200';
-      case 'rejected':
-      case 'declined':
-        return 'bg-red-50 border-red-200';
-      case 'note_added':
-        return 'bg-purple-50 border-purple-200';
-      case 'price_adjusted':
-        return 'bg-amber-50 border-amber-200';
+      case "submitted":
+      case "under_review":
+        return "bg-blue-50 border-blue-200";
+      case "approved":
+      case "accepted":
+      case "completed":
+        return "bg-green-50 border-green-200";
+      case "rejected":
+      case "declined":
+        return "bg-red-50 border-red-200";
+      case "note_added":
+        return "bg-purple-50 border-purple-200";
+      case "price_adjusted":
+        return "bg-amber-50 border-amber-200";
       default:
-        return 'bg-gray-50 border-gray-200';
+        return "bg-gray-50 border-gray-200";
     }
   };
 
   const renderLogDetails = (log: AuditLog) => {
-    const details = log.details as Record<string, any> || {};
+    const details = (log.details as Record<string, any>) || {};
 
     return (
       <div className="space-y-2 text-sm">
-        {log.action === 'price_adjusted' && (
+        {log.action === "price_adjusted" && (
           <div className="grid grid-cols-2 gap-2">
             {details.oldPrice && (
               <div>
                 <p className="text-gray-600 text-xs">Old Price</p>
-                <p className="font-medium text-gray-900">${details.oldPrice.toFixed(2)}</p>
+                <p className="font-medium text-gray-900">
+                  ${details.oldPrice.toFixed(2)}
+                </p>
               </div>
             )}
             {details.newPrice && (
               <div>
                 <p className="text-gray-600 text-xs">New Price</p>
-                <p className="font-medium text-gray-900">${details.newPrice.toFixed(2)}</p>
+                <p className="font-medium text-gray-900">
+                  ${details.newPrice.toFixed(2)}
+                </p>
               </div>
             )}
           </div>
         )}
 
-        {log.action === 'note_added' && details.note && (
+        {log.action === "note_added" && details.note && (
           <div className="bg-white rounded p-2 border border-gray-200">
             <p className="text-gray-700 italic">{details.note}</p>
           </div>
         )}
 
-        {log.action === 'submitted' && details.changes && (
-          <div className="space-y-1">
-            <p className="text-gray-600 text-xs font-medium">Requested Changes:</p>
+        {log.action === "submitted" && details.changes && (
+          <div className="space-y-2">
+            <p className="text-gray-600 text-xs font-medium">
+              Requested Changes:
+            </p>
             {details.changes.newDepartureDate && (
               <p className="text-gray-700">
                 <span className="text-gray-600">• New Departure: </span>
-                {new Date(details.changes.newDepartureDate).toLocaleDateString()}
+                {new Date(
+                  details.changes.newDepartureDate,
+                ).toLocaleDateString()}
               </p>
             )}
             {details.changes.newRoute && (
@@ -154,9 +171,11 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
           </div>
         )}
 
-        {log.action === 'approved' && (
-          <div className="space-y-1">
-            <p className="text-gray-600 text-xs font-medium">Approval Summary:</p>
+        {log.action === "approved" && (
+          <div className="space-y-2">
+            <p className="text-gray-600 text-xs font-medium">
+              Approval Summary:
+            </p>
             {details.approvalNotes && (
               <p className="text-gray-700">
                 <span className="text-gray-600">• Notes: </span>
@@ -165,23 +184,27 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
             )}
             {details.newPrice !== undefined && (
               <p className="text-gray-700">
-                <span className="text-gray-600">• Final Price: </span>
-                ${details.newPrice.toFixed(2)}
+                <span className="text-gray-600">• Final Price: </span>$
+                {details.newPrice.toFixed(2)}
               </p>
             )}
           </div>
         )}
 
-        {log.action === 'rejected' && details.reason && (
+        {log.action === "rejected" && details.reason && (
           <div className="bg-white rounded p-2 border border-gray-200">
-            <p className="text-gray-600 text-xs font-medium mb-1">Rejection Reason:</p>
+            <p className="text-gray-600 text-xs font-medium mb-1">
+              Rejection Reason:
+            </p>
             <p className="text-gray-700">{details.reason}</p>
           </div>
         )}
 
-        {log.action === 'completed' && details.bookingUpdated && (
-          <div className="space-y-1">
-            <p className="text-gray-600 text-xs font-medium">Update Confirmation:</p>
+        {log.action === "completed" && details.bookingUpdated && (
+          <div className="space-y-2">
+            <p className="text-gray-600 text-xs font-medium">
+              Update Confirmation:
+            </p>
             {details.newFlights && (
               <p className="text-gray-700">
                 <span className="text-gray-600">• New Flights Assigned</span>
@@ -208,19 +231,22 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
       id: `status-${request.status}`,
       timestamp: request.updatedAt,
       action: request.status,
-      actor: 'System',
+      actor: "System",
       details: null,
-      type: 'status',
+      type: "status",
     },
     ...(auditLogs?.map((log) => ({
       id: log.id,
       timestamp: log.createdAt,
       action: log.action,
-      actor: log.actorId === 'system' ? 'System' : `Staff Member (${log.actorId})`,
+      actor:
+        log.actorId === "system" ? "System" : `Staff Member (${log.actorId})`,
       details: log.details,
-      type: 'audit',
+      type: "audit",
     })) || []),
-  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  ].sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
 
   return (
     <Card>
@@ -247,28 +273,31 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
                 )}
 
                 {/* Timeline entry */}
-                <div className={`border rounded-lg p-3 ${getActionColor(entry.action)}`}>
+                <div
+                  className={`border rounded-lg p-3 ${getActionColor(entry.action)}`}
+                >
                   <div className="flex items-start gap-3">
                     {/* Icon */}
-                    <div className="flex-shrink-0 mt-1">
+                    <div className="flex-shrink-0 mt-1 gap-4">
                       {getActionIcon(entry.action)}
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 gap-4">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="font-medium text-gray-900">
                             {getActionLabel(entry.action)}
                           </p>
                           <p className="text-sm text-gray-600 mt-0.5">
-                            {new Date(entry.timestamp).toLocaleString()} • {entry.actor}
+                            {new Date(entry.timestamp).toLocaleString()} •{" "}
+                            {entry.actor}
                           </p>
                         </div>
 
                         {/* Badge */}
-                        {entry.type === 'status' && (
-                          <Badge className="flex-shrink-0">
+                        {entry.type === "status" && (
+                          <Badge className="flex-shrink-0 gap-4">
                             {entry.action.toUpperCase()}
                           </Badge>
                         )}
@@ -312,24 +341,37 @@ export const RequestHistory = ({ request, auditLogs = [] }: RequestHistoryProps)
         )}
 
         {/* Documents Section */}
-        {request.status === 'completed' && (
+        {request.status === "completed" && (
           <div className="mt-6 pt-6 border-t">
             <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Documents
             </h4>
             <div className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <FileText className="w-4 h-4 mr-2" />
                 E-Ticket
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <FileText className="w-4 h-4 mr-2" />
                 Receipt & Confirmation
               </Button>
               {request.requestedChanges?.newTotalPrice &&
-                request.requestedChanges.newTotalPrice !== request.originalBooking?.totalPrice && (
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                request.requestedChanges.newTotalPrice !==
+                  request.originalBooking?.totalPrice && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                  >
                     <DollarSign className="w-4 h-4 mr-2" />
                     Price Adjustment Invoice
                   </Button>

@@ -1,6 +1,6 @@
 // Test setup file
-import { vi } from 'vitest';
-import '@testing-library/jest-dom';
+import { vi } from "vitest";
+import "@testing-library/jest-dom";
 
 // Mock console methods to reduce noise in tests
 global.console = {
@@ -14,9 +14,9 @@ global.console = {
 };
 
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -43,7 +43,7 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
 }));
 
 // Setup for React Testing Library
-import { cleanup } from '@testing-library/react';
+import { cleanup } from "@testing-library/react";
 
 // Clean up after each test
 afterEach(() => {

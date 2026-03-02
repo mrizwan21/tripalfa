@@ -1,25 +1,25 @@
 /**
  * Lightweight API facade for the booking-engine app.
- * 
+ *
  * Data Flow Architecture:
- * 
+ *
  * 1. STATIC DATA (airports, airlines, hotels, destinations, etc.):
  *    - In-memory fallback data from packages/static-data (HOTEL_STATIC_DATA, etc.)
  *    - Formerly from static-data-service at port 3002 (now deleted)
  *    - Functions automatically fall back to in-memory data when service unavailable
- * 
+ *
  * 2. REAL-TIME SEARCH DATA (flights, hotels):
  *    - Routed through API Manager → Backend Services
  *    - Hybrid processing: Redis (caching/sorting) + Neon DB (filtering)
  *    - Flight search: /search/flights → Duffel API → Redis/Neon processing
  *    - Hotel search: /search/hotels → LiteAPI → Redis/Neon processing
- * 
+ *
  * 3. TRANSACTIONAL DATA (bookings, payments, wallet):
  *    - Routed through API Manager → Backend Services
  *    - All mutations go through api.post/put/delete methods
  */
 
-import { API_BASE_URL, API_ENDPOINTS } from './constants';
+import { API_BASE_URL, API_ENDPOINTS } from "./constants";
 
 // ============================================================================
 // STATIC DATA - Direct PostgreSQL Access (Not through API Manager)
@@ -27,32 +27,37 @@ import { API_BASE_URL, API_ENDPOINTS } from './constants';
 // Hotel static data - imported from centralized constants
 // Primary source: PostgreSQL static-data-service running in Docker container
 // Frontend fetches directly from /static/* endpoint (no API manager routing)
-import { 
-  HOTEL_STATIC_DATA, 
-  searchHotelDestinations 
-} from './constants/hotel-static-data';
+import {
+  HOTEL_STATIC_DATA,
+  searchHotelDestinations,
+} from "./constants/hotel-static-data";
 
 /**
  * Static data service endpoint (DEPRECATED - static-data-service deleted).
- * 
+ *
  * The /static/* calls now fail and trigger in-memory fallbacks.
  * Static data comes from packages/static-data constants (HOTEL_STATIC_DATA, etc.)
- * 
+ *
  * @deprecated - kept for reference, actual data from in-memory fallbacks
  */
-const STATIC_SVC = '/static';
+const STATIC_SVC = "/static";
 
 /** Thin fetch wrapper for the static-data-service */
 async function staticFetch<T = any>(path: string): Promise<T> {
   const res = await fetch(`${STATIC_SVC}${path}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`static-svc ${res.status} for ${path}`);
   const json = await res.json();
   // Handle case where service returns 200 OK with { error: "Not found" }
-  if (json && typeof json === 'object' && 'error' in json && !('data' in json)) {
+  if (
+    json &&
+    typeof json === "object" &&
+    "error" in json &&
+    !("data" in json)
+  ) {
     throw new Error(`static-svc error: ${json.error}`);
   }
   return json as Promise<T>;
@@ -99,7 +104,7 @@ export {
   type Cabin,
   type SeatMap,
   type GetSeatMapsResponse,
-} from '../services/duffelApiManager';
+} from "../services/duffelApiManager";
 
 // Legacy Duffel Flight Booking API (Offers, Orders, Payments) - for backward compatibility
 export {
@@ -113,7 +118,7 @@ export {
   getPayment,
   type PaymentMethod,
   type PaymentConfirmParams,
-} from '../services/duffelBookingApi';
+} from "../services/duffelBookingApi";
 
 // Seat Maps API
 export {
@@ -132,16 +137,14 @@ export {
   type PostBookingSeatResponse,
   type SeatOperationContext,
   type SeatOperationRequest,
-} from '../services/seatMapsApi';
+} from "../services/seatMapsApi";
 
 // Supplier Payment API
-export { processSupplierPayment } from '../services/supplierPaymentApi';
+export { processSupplierPayment } from "../services/supplierPaymentApi";
 
 // Innstant Travel Static Data API Configuration (disabled - using centralized package)
 // const INNSTANT_API_KEY = '$2y$10$yWot7dUYoc7.viH8vK1s0OG.D0n5uKm19Z84WznDiB.ESBnPOikr6';
 // const INNSTANT_BASE_URL = 'https://static-data.innstant-servers.com';
-
-
 
 // ============================================================================
 // Static Data Service Functions — fetch directly from PostgreSQL via /static/*
@@ -191,24 +194,43 @@ export async function fetchHotelFullStatic(id: string): Promise<{
   descriptions: any[];
   contacts: any[];
   reviews: any[];
-  rooms: any[];   // static room structures (no prices yet)
+  rooms: any[]; // static room structures (no prices yet)
   stats: { reviewCount: number; ratingAvg: number | null };
 } | null> {
   try {
     const res = await staticFetch<{ data: any }>(`/hotels/${id}/full`);
     if (!res?.data) return null;
 
-    const { hotel, images, amenities, descriptions, contacts, reviews, rooms, stats } = res.data;
+    const {
+      hotel,
+      images,
+      amenities,
+      descriptions,
+      contacts,
+      reviews,
+      rooms,
+      stats,
+    } = res.data;
 
     // Group amenities by category for easy rendering in Facilities component
     const amenitiesByCategory: Record<string, any[]> = {};
-    for (const a of (amenities ?? [])) {
-      const cat = a.category || 'General';
+    for (const a of amenities ?? []) {
+      const cat = a.category || "General";
       if (!amenitiesByCategory[cat]) amenitiesByCategory[cat] = [];
       amenitiesByCategory[cat].push(a);
     }
 
-    return { hotel, images: images ?? [], amenities: amenities ?? [], amenitiesByCategory, descriptions: descriptions ?? [], contacts: contacts ?? [], reviews: reviews ?? [], rooms: rooms ?? [], stats: stats ?? { reviewCount: 0, ratingAvg: null } };
+    return {
+      hotel,
+      images: images ?? [],
+      amenities: amenities ?? [],
+      amenitiesByCategory,
+      descriptions: descriptions ?? [],
+      contacts: contacts ?? [],
+      reviews: reviews ?? [],
+      rooms: rooms ?? [],
+      stats: stats ?? { reviewCount: 0, ratingAvg: null },
+    };
   } catch (e) {
     console.warn(`[fetchHotelFullStatic] failed for ${id}:`, e);
     return null;
@@ -219,39 +241,54 @@ export async function fetchHotelFullStatic(id: string): Promise<{
  * Fetch hotel amenities from PostgreSQL.
  * Falls back to LiteAPI, then to in-memory HOTEL_STATIC_DATA.AMENITIES.
  */
-async function fetchLiteAPIAmenities(params?: { category?: string; popular?: boolean }) {
+async function fetchLiteAPIAmenities(params?: {
+  category?: string;
+  popular?: boolean;
+}) {
   try {
-    console.debug('[fetchLiteAPIAmenities] Attempting LiteAPI amenities fetch');
+    console.debug("[fetchLiteAPIAmenities] Attempting LiteAPI amenities fetch");
     const qs = new URLSearchParams();
-    if (params?.category) qs.set('category', params.category);
-    if (params?.popular) qs.set('popular', 'true');
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/amenities${qs.toString() ? '?' + qs : ''}`);
+    if (params?.category) qs.set("category", params.category);
+    if (params?.popular) qs.set("popular", "true");
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/amenities${qs.toString() ? "?" + qs : ""}`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPIAmenities] LiteAPI returned ${res.data.length} amenities`);
+      console.debug(
+        `[fetchLiteAPIAmenities] LiteAPI returned ${res.data.length} amenities`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchLiteAPIAmenities] LiteAPI fetch failed:', e);
+    console.warn("[fetchLiteAPIAmenities] LiteAPI fetch failed:", e);
   }
   return [];
 }
 
-export async function fetchHotelAmenities(params?: { category?: string; popular?: boolean }) {
+export async function fetchHotelAmenities(params?: {
+  category?: string;
+  popular?: boolean;
+}) {
   try {
     const qs = new URLSearchParams();
-    if (params?.category) qs.set('category', params.category);
-    if (params?.popular) qs.set('popular', 'true');
-    const res = await staticFetch<{ data: any[] }>(`/hotel-amenities${qs.toString() ? '?' + qs : ''}`);
+    if (params?.category) qs.set("category", params.category);
+    if (params?.popular) qs.set("popular", "true");
+    const res = await staticFetch<{ data: any[] }>(
+      `/hotel-amenities${qs.toString() ? "?" + qs : ""}`,
+    );
     const data = res?.data ?? [];
     if (data.length > 0) return data;
   } catch (e) {
-    console.warn('[fetchHotelAmenities] DB fetch failed, attempting LiteAPI fallback:', e);
+    console.warn(
+      "[fetchHotelAmenities] DB fetch failed, attempting LiteAPI fallback:",
+      e,
+    );
   }
   // Fallback to LiteAPI
   const liteAPIData = await fetchLiteAPIAmenities(params);
   if (liteAPIData.length > 0) return liteAPIData;
-  
+
   // Final fallback to static data
   return HOTEL_STATIC_DATA.AMENITIES.all as any[];
 }
@@ -262,15 +299,21 @@ export async function fetchHotelAmenities(params?: { category?: string; popular?
  */
 async function fetchLiteAPIBoardTypes() {
   try {
-    console.debug('[fetchLiteAPIBoardTypes] Attempting LiteAPI board types fetch');
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/board-types`);
+    console.debug(
+      "[fetchLiteAPIBoardTypes] Attempting LiteAPI board types fetch",
+    );
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/board-types`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPIBoardTypes] LiteAPI returned ${res.data.length} board types`);
+      console.debug(
+        `[fetchLiteAPIBoardTypes] LiteAPI returned ${res.data.length} board types`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchLiteAPIBoardTypes] LiteAPI fetch failed:', e);
+    console.warn("[fetchLiteAPIBoardTypes] LiteAPI fetch failed:", e);
   }
   return [];
 }
@@ -281,16 +324,19 @@ async function fetchLiteAPIBoardTypes() {
  */
 export async function fetchBoardTypesDB() {
   try {
-    const res = await staticFetch<{ data: any[] }>('/board-types');
+    const res = await staticFetch<{ data: any[] }>("/board-types");
     const data = res?.data ?? [];
     if (data.length > 0) return data;
   } catch (e) {
-    console.warn('[fetchBoardTypesDB] DB fetch failed, attempting LiteAPI fallback:', e);
+    console.warn(
+      "[fetchBoardTypesDB] DB fetch failed, attempting LiteAPI fallback:",
+      e,
+    );
   }
   // Fallback to LiteAPI
   const liteAPIData = await fetchLiteAPIBoardTypes();
   if (liteAPIData.length > 0) return liteAPIData;
-  
+
   // Final fallback to static data
   return HOTEL_STATIC_DATA.BOARD_TYPES.all as any[];
 }
@@ -301,15 +347,21 @@ export async function fetchBoardTypesDB() {
  */
 async function fetchLiteAPIHotelTypes() {
   try {
-    console.debug('[fetchLiteAPIHotelTypes] Attempting LiteAPI hotel types fetch');
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/types`);
+    console.debug(
+      "[fetchLiteAPIHotelTypes] Attempting LiteAPI hotel types fetch",
+    );
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/types`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPIHotelTypes] LiteAPI returned ${res.data.length} hotel types`);
+      console.debug(
+        `[fetchLiteAPIHotelTypes] LiteAPI returned ${res.data.length} hotel types`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchLiteAPIHotelTypes] LiteAPI fetch failed:', e);
+    console.warn("[fetchLiteAPIHotelTypes] LiteAPI fetch failed:", e);
   }
   return [];
 }
@@ -320,16 +372,19 @@ async function fetchLiteAPIHotelTypes() {
  */
 export async function fetchHotelTypesDB() {
   try {
-    const res = await staticFetch<{ data: any[] }>('/hotel-types');
+    const res = await staticFetch<{ data: any[] }>("/hotel-types");
     const data = res?.data ?? [];
     if (data.length > 0) return data;
   } catch (e) {
-    console.warn('[fetchHotelTypesDB] DB fetch failed, attempting LiteAPI fallback:', e);
+    console.warn(
+      "[fetchHotelTypesDB] DB fetch failed, attempting LiteAPI fallback:",
+      e,
+    );
   }
   // Fallback to LiteAPI
   const liteAPIData = await fetchLiteAPIHotelTypes();
   if (liteAPIData.length > 0) return liteAPIData;
-  
+
   // Final fallback to static data
   return HOTEL_STATIC_DATA.TYPES.all as any[];
 }
@@ -339,11 +394,11 @@ export async function fetchHotelTypesDB() {
  */
 export async function fetchRoomTypesDB(hotelId?: string) {
   try {
-    const qs = hotelId ? `?hotelId=${hotelId}` : '';
+    const qs = hotelId ? `?hotelId=${hotelId}` : "";
     const res = await staticFetch<{ data: any[] }>(`/room-types${qs}`);
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchRoomTypesDB] DB fetch failed:', e);
+    console.warn("[fetchRoomTypesDB] DB fetch failed:", e);
     return [];
   }
 }
@@ -352,29 +407,39 @@ export async function fetchRoomTypesDB(hotelId?: string) {
  * LiteAPI destinations fallback - called when PostgreSQL is unavailable.
  * Fetches city/destination data from LiteAPI via backend proxy.
  */
-async function fetchLiteAPIDestinations(params?: { type?: string; countryCode?: string; search?: string }) {
+async function fetchLiteAPIDestinations(params?: {
+  type?: string;
+  countryCode?: string;
+  search?: string;
+}) {
   try {
     if (!params?.search || params.search.length < 2) {
       return [];
     }
-    console.debug(`[fetchLiteAPIDestinations] Attempting LiteAPI search for "${params.search}"`);
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/destinations?q=${encodeURIComponent(params.search)}&limit=20`);
+    console.debug(
+      `[fetchLiteAPIDestinations] Attempting LiteAPI search for "${params.search}"`,
+    );
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/destinations?q=${encodeURIComponent(params.search)}&limit=20`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPIDestinations] LiteAPI returned ${res.data.length} results`);
+      console.debug(
+        `[fetchLiteAPIDestinations] LiteAPI returned ${res.data.length} results`,
+      );
       return res.data.map((item: any) => ({
         id: item.id || item.code,
         name: item.name,
         city: item.name,
-        country: item.country || '',
-        countryCode: item.countryCode || '',
+        country: item.country || "",
+        countryCode: item.countryCode || "",
         latitude: item.latitude,
         longitude: item.longitude,
-        type: 'city',
+        type: "city",
       }));
     }
   } catch (e) {
-    console.warn('[fetchLiteAPIDestinations] LiteAPI fetch failed:', e);
+    console.warn("[fetchLiteAPIDestinations] LiteAPI fetch failed:", e);
   }
   return [];
 }
@@ -383,17 +448,26 @@ async function fetchLiteAPIDestinations(params?: { type?: string; countryCode?: 
  * Fetch destinations from PostgreSQL.
  * Falls back to LiteAPI when DB is unavailable.
  */
-export async function fetchDestinationsDB(params?: { type?: string; countryCode?: string; search?: string }) {
+export async function fetchDestinationsDB(params?: {
+  type?: string;
+  countryCode?: string;
+  search?: string;
+}) {
   try {
     const qs = new URLSearchParams();
-    if (params?.type) qs.set('type', params.type);
-    if (params?.countryCode) qs.set('countryCode', params.countryCode);
-    if (params?.search) qs.set('q', params.search);
-    const res = await staticFetch<{ data: any[] }>(`/destinations${qs.toString() ? '?' + qs : ''}`);
+    if (params?.type) qs.set("type", params.type);
+    if (params?.countryCode) qs.set("countryCode", params.countryCode);
+    if (params?.search) qs.set("q", params.search);
+    const res = await staticFetch<{ data: any[] }>(
+      `/destinations${qs.toString() ? "?" + qs : ""}`,
+    );
     const data = res?.data ?? [];
     if (data.length > 0) return data;
   } catch (e) {
-    console.warn('[fetchDestinationsDB] DB fetch failed, attempting LiteAPI fallback:', e);
+    console.warn(
+      "[fetchDestinationsDB] DB fetch failed, attempting LiteAPI fallback:",
+      e,
+    );
   }
   // Fallback to LiteAPI for destinations
   return await fetchLiteAPIDestinations(params);
@@ -405,17 +479,23 @@ export async function fetchDestinationsDB(params?: { type?: string; countryCode?
  */
 async function fetchLiteAPIPopularDestinations(limit = 12) {
   try {
-    console.debug('[fetchLiteAPIPopularDestinations] Attempting LiteAPI popular destinations fetch');
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/popular-destinations?limit=${limit}`);
+    console.debug(
+      "[fetchLiteAPIPopularDestinations] Attempting LiteAPI popular destinations fetch",
+    );
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/popular-destinations?limit=${limit}`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPIPopularDestinations] LiteAPI returned ${res.data.length} destinations`);
+      console.debug(
+        `[fetchLiteAPIPopularDestinations] LiteAPI returned ${res.data.length} destinations`,
+      );
       return res.data.map((item: any) => ({
         id: item.id || item.code,
         name: item.name,
         city: item.name,
-        country: item.country || '',
-        countryCode: item.countryCode || '',
+        country: item.country || "",
+        countryCode: item.countryCode || "",
         imageUrl: item.imageUrl || item.image,
         latitude: item.latitude,
         longitude: item.longitude,
@@ -423,7 +503,7 @@ async function fetchLiteAPIPopularDestinations(limit = 12) {
       }));
     }
   } catch (e) {
-    console.warn('[fetchLiteAPIPopularDestinations] LiteAPI fetch failed:', e);
+    console.warn("[fetchLiteAPIPopularDestinations] LiteAPI fetch failed:", e);
   }
   return [];
 }
@@ -434,17 +514,22 @@ async function fetchLiteAPIPopularDestinations(limit = 12) {
  */
 export async function fetchPopularDestinationsDB(limit = 12) {
   try {
-    const res = await staticFetch<{ data: any[] }>(`/popular-destinations?limit=${limit}`);
+    const res = await staticFetch<{ data: any[] }>(
+      `/popular-destinations?limit=${limit}`,
+    );
     if (res?.data && res.data.length > 0) return res.data;
   } catch (e) {
-    console.warn('[fetchPopularDestinationsDB] DB fetch failed, attempting LiteAPI fallback:', e);
+    console.warn(
+      "[fetchPopularDestinationsDB] DB fetch failed, attempting LiteAPI fallback:",
+      e,
+    );
   }
   // Fallback to LiteAPI
   const liteAPIData = await fetchLiteAPIPopularDestinations(limit);
   if (liteAPIData.length > 0) return liteAPIData;
-  
+
   // Final fallback to static data
-  console.debug('[fetchPopularDestinationsDB] Using static fallback data');
+  console.debug("[fetchPopularDestinationsDB] Using static fallback data");
   return HOTEL_STATIC_DATA.POPULAR_DESTINATIONS.slice(0, limit) as any[];
 }
 
@@ -453,10 +538,12 @@ export async function fetchPopularDestinationsDB(limit = 12) {
  */
 export async function fetchPopularHotels(limit = 12) {
   try {
-    const res = await staticFetch<{ data: any[] }>(`/hotels/popular?limit=${limit}`);
+    const res = await staticFetch<{ data: any[] }>(
+      `/hotels/popular?limit=${limit}`,
+    );
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchPopularHotels] DB fetch failed:', e);
+    console.warn("[fetchPopularHotels] DB fetch failed:", e);
     return [];
   }
 }
@@ -473,11 +560,11 @@ export interface SupplierMapping {
   supplierType: string;
   supplierHotelId?: string;
   supplierHotelCode?: string;
-  matchType: 'auto' | 'manual' | 'giata';
+  matchType: "auto" | "manual" | "giata";
   matchConfidence: number | null;
   matchVerifiedAt: string | null;
   lastSyncedAt: string | null;
-  syncStatus: 'pending' | 'synced' | 'error';
+  syncStatus: "pending" | "synced" | "error";
   isActive: boolean;
 }
 
@@ -495,12 +582,16 @@ export interface Supplier {
  * Fetch supplier mappings for a canonical hotel.
  * Returns all suppliers that have this hotel in their inventory.
  */
-export async function fetchHotelSuppliers(hotelId: string): Promise<SupplierMapping[]> {
+export async function fetchHotelSuppliers(
+  hotelId: string,
+): Promise<SupplierMapping[]> {
   try {
-    const res = await staticFetch<{ data: SupplierMapping[] }>(`/hotels/${hotelId}/suppliers`);
+    const res = await staticFetch<{ data: SupplierMapping[] }>(
+      `/hotels/${hotelId}/suppliers`,
+    );
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchHotelSuppliers] DB fetch failed:', e);
+    console.warn("[fetchHotelSuppliers] DB fetch failed:", e);
     return [];
   }
 }
@@ -509,21 +600,59 @@ export async function fetchHotelSuppliers(hotelId: string): Promise<SupplierMapp
  * Fetch all active suppliers.
  * @param type - Filter by supplier type: 'hotel' | 'flight'
  */
-export async function fetchSuppliers(type?: 'hotel' | 'flight'): Promise<Supplier[]> {
+export async function fetchSuppliers(
+  type?: "hotel" | "flight",
+): Promise<Supplier[]> {
   try {
-    const qs = type ? `?type=${type}` : '';
+    const qs = type ? `?type=${type}` : "";
     const res = await staticFetch<{ data: Supplier[] }>(`/suppliers${qs}`);
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchSuppliers] DB fetch failed:', e);
+    console.warn("[fetchSuppliers] DB fetch failed:", e);
     // Return hardcoded fallback
     return [
-      { id: 'hotelbeds', code: 'HOTELBEDS', name: 'Hotelbeds', type: 'hotel', status: true },
-      { id: 'liteapi', code: 'LITEAPI', name: 'LITEAPI', type: 'hotel', status: true },
-      { id: 'innstant', code: 'INNSTANT', name: 'Innstant Travel', type: 'hotel', status: true },
-      { id: 'duffel', code: 'DUFFEL', name: 'Duffel', type: 'flight', status: true },
-      { id: 'amadeus', code: 'AMADEUS', name: 'Amadeus', type: 'flight', status: true },
-      { id: 'giata', code: 'GIATA', name: 'GIATA', type: 'hotel', status: true },
+      {
+        id: "hotelbeds",
+        code: "HOTELBEDS",
+        name: "Hotelbeds",
+        type: "hotel",
+        status: true,
+      },
+      {
+        id: "liteapi",
+        code: "LITEAPI",
+        name: "LITEAPI",
+        type: "hotel",
+        status: true,
+      },
+      {
+        id: "innstant",
+        code: "INNSTANT",
+        name: "Innstant Travel",
+        type: "hotel",
+        status: true,
+      },
+      {
+        id: "duffel",
+        code: "DUFFEL",
+        name: "Duffel",
+        type: "flight",
+        status: true,
+      },
+      {
+        id: "amadeus",
+        code: "AMADEUS",
+        name: "Amadeus",
+        type: "flight",
+        status: true,
+      },
+      {
+        id: "giata",
+        code: "GIATA",
+        name: "GIATA",
+        type: "hotel",
+        status: true,
+      },
     ];
   }
 }
@@ -531,12 +660,16 @@ export async function fetchSuppliers(type?: 'hotel' | 'flight'): Promise<Supplie
 /**
  * Fetch supplier mappings for a destination.
  */
-export async function fetchDestinationSuppliers(destinationId: string): Promise<any[]> {
+export async function fetchDestinationSuppliers(
+  destinationId: string,
+): Promise<any[]> {
   try {
-    const res = await staticFetch<{ data: any[] }>(`/destinations/${destinationId}/suppliers`);
+    const res = await staticFetch<{ data: any[] }>(
+      `/destinations/${destinationId}/suppliers`,
+    );
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchDestinationSuppliers] DB fetch failed:', e);
+    console.warn("[fetchDestinationSuppliers] DB fetch failed:", e);
     return [];
   }
 }
@@ -549,21 +682,21 @@ export async function fetchHotelWithSuppliers(id: string) {
   try {
     const [hotelData, suppliers] = await Promise.all([
       fetchHotelFullStatic(id),
-      fetchHotelSuppliers(id)
+      fetchHotelSuppliers(id),
     ]);
 
     return hotelData ? { ...hotelData, suppliers } : null;
   } catch (e) {
-    console.warn('[fetchHotelWithSuppliers] Failed:', e);
+    console.warn("[fetchHotelWithSuppliers] Failed:", e);
     return null;
   }
 }
 
-
 // Helper function to map hotel results to consistent format
 function mapHotelResult(hotel: any) {
   // Extract refundability from various potential structures (LiteAPI, Inventory, etc.)
-  const isRefundable = hotel.refundable === true ||
+  const isRefundable =
+    hotel.refundable === true ||
     hotel.is_refundable === true ||
     hotel.offers?.[0]?.cancellation_policy?.is_refundable === true ||
     hotel.offers?.[0]?.refundable === true;
@@ -571,15 +704,23 @@ function mapHotelResult(hotel: any) {
   return {
     id: hotel.id,
     name: hotel.name,
-    image: hotel.image || hotel.primary_image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
-    location: hotel.location || `${hotel.city || 'Unknown'}, ${hotel.country || 'Unknown'}`,
+    image:
+      hotel.image ||
+      hotel.primary_image ||
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80",
+    location:
+      hotel.location ||
+      `${hotel.city || "Unknown"}, ${hotel.country || "Unknown"}`,
     rating: hotel.rating || hotel.star_rating || 4,
     reviews: hotel.reviews || hotel.reviewCount || 100,
-    price: hotel.price || { amount: hotel.pricePerNight || 200, currency: hotel.currency || 'USD' },
+    price: hotel.price || {
+      amount: hotel.pricePerNight || 200,
+      currency: hotel.currency || "USD",
+    },
     amenities: hotel.amenities || hotel.amenity_names || [],
-    provider: hotel.provider || 'Local',
+    provider: hotel.provider || "Local",
     refundable: isRefundable,
-    offers: hotel.offers || []
+    offers: hotel.offers || [],
   };
 }
 
@@ -588,11 +729,11 @@ export async function getBookingById(id: string) {
 }
 
 export async function processCardPayment(data: any) {
-  return await api.post('/payments/card', data);
+  return await api.post("/payments/card", data);
 }
 
 export async function processWalletPayment(data: any) {
-  return await api.post('/payments/wallet', data);
+  return await api.post("/payments/wallet", data);
 }
 
 export async function bookingAction(id: string, action: string, data?: any) {
@@ -600,40 +741,38 @@ export async function bookingAction(id: string, action: string, data?: any) {
 }
 
 export async function unreadNotificationCount() {
-  return await api.get('/notifications/unread-count');
+  return await api.get("/notifications/unread-count");
 }
 
 export async function postTopUp(data: any) {
   try {
-    const res = await api.post('/wallets/topup', data);
+    const res = await api.post("/wallets/topup", data);
     return res;
   } catch (error) {
-    console.error('Failed to top up wallet:', error);
+    console.error("Failed to top up wallet:", error);
     throw error;
   }
 }
 
-
 // ... existing code ...
 export async function listWalletTransactions() {
   try {
-    const res = await api.get('/wallets/transactions');
+    const res = await api.get("/wallets/transactions");
     return res.transactions || [];
   } catch (error) {
-    console.error('Failed to list wallet transactions:', error);
+    console.error("Failed to list wallet transactions:", error);
     return [];
   }
 }
 
 export async function getWalletBalance(userId: string) {
   // Mock wallet balance for demo/dev
-  return new Promise<{ currency: string, amount: number }>((resolve) => {
+  return new Promise<{ currency: string; amount: number }>((resolve) => {
     setTimeout(() => {
-      resolve({ currency: 'USD', amount: 2500.00 });
+      resolve({ currency: "USD", amount: 2500.0 });
     }, 500);
   });
 }
-
 
 // ============================================================================
 // Document & Ticketing API Functions
@@ -650,44 +789,72 @@ export interface BookingDocument {
   available: boolean;
 }
 
-export async function getDocuments(bookingId: string): Promise<BookingDocument[]> {
+export async function getDocuments(
+  bookingId: string,
+): Promise<BookingDocument[]> {
   try {
-    const res = await apiGetWithRetry<{ data?: { documents?: BookingDocument[] } }>(`/bookings/${bookingId}/documents`);
+    const res = await apiGetWithRetry<{
+      data?: { documents?: BookingDocument[] };
+    }>(`/bookings/${bookingId}/documents`);
     const docs = (res as any)?.data?.documents;
     return Array.isArray(docs) ? docs : [];
   } catch (error) {
-    console.error('Failed to fetch documents:', error);
+    console.error("Failed to fetch documents:", error);
     return [];
   }
 }
 
-export async function downloadDocument(bookingId: string, documentType: string): Promise<{ downloadUrl: string; expiresAt: string }> {
-  const res = await api.get<{ data: { downloadUrl: string; expiresAt: string } }>(`/bookings/${bookingId}/documents/${documentType}/download`);
+export async function downloadDocument(
+  bookingId: string,
+  documentType: string,
+): Promise<{ downloadUrl: string; expiresAt: string }> {
+  const res = await api.get<{
+    data: { downloadUrl: string; expiresAt: string };
+  }>(`/bookings/${bookingId}/documents/${documentType}/download`);
   return (res as any).data;
 }
 
-export async function issueTicket(bookingId: string, payload: {
-  walletId: string;
-  amount: number;
-  currency: string;
-  acceptedTerms: boolean;
-}): Promise<any> {
-  const res = await api.post<{ data: any }>(`/bookings/${bookingId}/issue-ticket`, payload);
+export async function issueTicket(
+  bookingId: string,
+  payload: {
+    walletId: string;
+    amount: number;
+    currency: string;
+    acceptedTerms: boolean;
+  },
+): Promise<any> {
+  const res = await api.post<{ data: any }>(
+    `/bookings/${bookingId}/issue-ticket`,
+    payload,
+  );
   return (res as any).data ?? res;
 }
 
-export async function sendOfflineRequest(bookingId: string, payload: {
-  requestType: string;
-  passengers?: any;
-  services?: any;
-  notes?: string;
-}): Promise<any> {
-  const res = await api.post<{ data: any }>(`/bookings/${bookingId}/offline-request`, payload);
+export async function sendOfflineRequest(
+  bookingId: string,
+  payload: {
+    requestType: string;
+    passengers?: any;
+    services?: any;
+    notes?: string;
+  },
+): Promise<any> {
+  const res = await api.post<{ data: any }>(
+    `/bookings/${bookingId}/offline-request`,
+    payload,
+  );
   return (res as any).data ?? res;
 }
 
-export async function emailDocument(bookingId: string, documentType: string, recipientEmail: string): Promise<any> {
-  const res = await api.post<{ data: any }>(`/bookings/${bookingId}/documents/${documentType}/email`, { recipientEmail });
+export async function emailDocument(
+  bookingId: string,
+  documentType: string,
+  recipientEmail: string,
+): Promise<any> {
+  const res = await api.post<{ data: any }>(
+    `/bookings/${bookingId}/documents/${documentType}/email`,
+    { recipientEmail },
+  );
   return (res as any).data ?? res;
 }
 
@@ -695,24 +862,24 @@ export async function emailDocument(bookingId: string, documentType: string, rec
 // Live Search Functions (routed through WickedHaufe -> Inventory Service)
 export async function searchHotels(params: any) {
   const payload = {
-    type: 'hotels', // Specify the search type for inventory service
+    type: "hotels", // Specify the search type for inventory service
     location: params.location,
     checkin: params.checkin,
     checkout: params.checkout,
     adults: params.adults,
     children: params.children,
     rooms: params.rooms,
-    countryCode: params.countryCode
+    countryCode: params.countryCode,
   };
 
   try {
     // 1. Try Inventory Service directly (hybrid approach: real data + mock pricing)
-    const response = await fetch('/api/search', {
-      method: 'POST',
+    const response = await fetch("/api/search", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (response.ok) {
@@ -721,7 +888,10 @@ export async function searchHotels(params: any) {
       return { hotels: hotels.map(mapHotelResult) };
     }
   } catch (inventoryError) {
-    console.warn('[api.ts] Inventory service search failed, trying API Gateway:', String(inventoryError));
+    console.warn(
+      "[api.ts] Inventory service search failed, trying API Gateway:",
+      String(inventoryError),
+    );
   }
 
   try {
@@ -729,15 +899,16 @@ export async function searchHotels(params: any) {
     const results = await api.post(API_ENDPOINTS.SEARCH_HOTELS, payload);
     return { hotels: results.results || [] };
   } catch (error) {
-    console.error('[api.ts] API Gateway hotel search failed, trying direct search:', String(error));
+    console.error(
+      "[api.ts] API Gateway hotel search failed, trying direct search:",
+      String(error),
+    );
   }
 
   // Removed direct LiteAPI fallback to avoid exposing provider keys in frontend
 
-  throw new Error('All hotel search methods failed - no results available');
+  throw new Error("All hotel search methods failed - no results available");
 }
-
-
 
 // ============================================
 // Hotel Static Data Functions (from centralized package)
@@ -749,16 +920,22 @@ export async function searchHotels(params: any) {
 export async function fetchFacilities() {
   try {
     // Use static hotel amenities data
-    return HOTEL_STATIC_DATA.AMENITIES.all.map(amenity => ({
+    return HOTEL_STATIC_DATA.AMENITIES.all.map((amenity) => ({
       code: amenity.code,
       name: amenity.name,
       category: amenity.category,
-      is_popular: amenity.is_popular || false
+      is_popular: amenity.is_popular || false,
     }));
   } catch (error) {
-    console.error('Failed to fetch facilities:', error);
+    console.error("Failed to fetch facilities:", error);
     // Fallback to basic amenities
-    return ['Swimming Pool', 'Spa', 'Fitness Center', 'Free WiFi', 'Parking'].map(n => ({ name: n }));
+    return [
+      "Swimming Pool",
+      "Spa",
+      "Fitness Center",
+      "Free WiFi",
+      "Parking",
+    ].map((n) => ({ name: n }));
   }
 }
 
@@ -768,14 +945,14 @@ export async function fetchFacilities() {
 export async function fetchHotelTypes() {
   try {
     // Use static hotel types data
-    return HOTEL_STATIC_DATA.TYPES.all.map(type => ({
+    return HOTEL_STATIC_DATA.TYPES.all.map((type) => ({
       code: type.code,
       name: type.name,
-      description: type.description
+      description: type.description,
     }));
   } catch (error) {
-    console.error('Failed to fetch hotel types:', error);
-    return ['Hotel', 'Apartment', 'Resort', 'Villa'].map(n => ({ name: n }));
+    console.error("Failed to fetch hotel types:", error);
+    return ["Hotel", "Apartment", "Resort", "Villa"].map((n) => ({ name: n }));
   }
 }
 
@@ -785,12 +962,12 @@ export async function fetchHotelTypes() {
 export async function fetchHotelChains() {
   try {
     // Use static hotel chains data
-    return HOTEL_STATIC_DATA.CHAINS.all.map(chain => ({
+    return HOTEL_STATIC_DATA.CHAINS.all.map((chain) => ({
       code: chain.code,
-      name: chain.name
+      name: chain.name,
     }));
   } catch (error) {
-    console.error('Failed to fetch hotel chains:', error);
+    console.error("Failed to fetch hotel chains:", error);
     return [];
   }
 }
@@ -801,10 +978,15 @@ export async function fetchHotelChains() {
  */
 export async function fetchPopularDestinations(limit = 20) {
   try {
-    const res = await staticFetch<{ data: any[] }>(`/popular-destinations?limit=${limit}`);
+    const res = await staticFetch<{ data: any[] }>(
+      `/popular-destinations?limit=${limit}`,
+    );
     if (res?.data && res.data.length > 0) return res.data;
   } catch (error) {
-    console.warn('[fetchPopularDestinations] DB fetch failed, using static fallback:', error);
+    console.warn(
+      "[fetchPopularDestinations] DB fetch failed, using static fallback:",
+      error,
+    );
   }
   return HOTEL_STATIC_DATA.POPULAR_DESTINATIONS;
 }
@@ -816,13 +998,13 @@ export async function fetchStarRatings() {
   try {
     return HOTEL_STATIC_DATA.STAR_RATINGS.all;
   } catch (error) {
-    console.error('Failed to fetch star ratings:', error);
+    console.error("Failed to fetch star ratings:", error);
     return [
-      { value: 1, label: '1 Star', icon: '★' },
-      { value: 2, label: '2 Stars', icon: '★★' },
-      { value: 3, label: '3 Stars', icon: '★★★' },
-      { value: 4, label: '4 Stars', icon: '★★★★' },
-      { value: 5, label: '5 Stars', icon: '★★★★★' }
+      { value: 1, label: "1 Star", icon: "★" },
+      { value: 2, label: "2 Stars", icon: "★★" },
+      { value: 3, label: "3 Stars", icon: "★★★" },
+      { value: 4, label: "4 Stars", icon: "★★★★" },
+      { value: 5, label: "5 Stars", icon: "★★★★★" },
     ];
   }
 }
@@ -834,7 +1016,7 @@ export async function fetchRoomTypes() {
   try {
     return HOTEL_STATIC_DATA.ROOM_TYPES.all;
   } catch (error) {
-    console.error('Failed to fetch room types:', error);
+    console.error("Failed to fetch room types:", error);
     return [];
   }
 }
@@ -846,7 +1028,7 @@ export async function fetchBoardTypes() {
   try {
     return HOTEL_STATIC_DATA.BOARD_TYPES.all;
   } catch (error) {
-    console.error('Failed to fetch board types:', error);
+    console.error("Failed to fetch board types:", error);
     return [];
   }
 }
@@ -858,7 +1040,7 @@ export async function fetchViewTypes() {
   try {
     return HOTEL_STATIC_DATA.VIEW_TYPES.all;
   } catch (error) {
-    console.error('Failed to fetch view types:', error);
+    console.error("Failed to fetch view types:", error);
     return [];
   }
 }
@@ -870,7 +1052,7 @@ export async function fetchPaymentTypes() {
   try {
     return HOTEL_STATIC_DATA.PAYMENT_TYPES.all;
   } catch (error) {
-    console.error('Failed to fetch payment types:', error);
+    console.error("Failed to fetch payment types:", error);
     return [];
   }
 }
@@ -882,7 +1064,7 @@ export async function searchHotelDestinationsAPI(query: string) {
   try {
     return searchHotelDestinations(query);
   } catch (error) {
-    console.error('Failed to search hotel destinations:', error);
+    console.error("Failed to search hotel destinations:", error);
     return [];
   }
 }
@@ -900,10 +1082,10 @@ export async function fetchAddonPrices() {
         baggageTrace: number;
         [key: string]: number;
       };
-    }>('/addon-prices');
+    }>("/addon-prices");
     return data.data || {};
   } catch (error) {
-    console.warn('Failed to fetch addon prices, using empty prices:', error);
+    console.warn("Failed to fetch addon prices, using empty prices:", error);
     return {};
   }
 }
@@ -911,8 +1093,14 @@ export async function fetchAddonPrices() {
 export async function searchFlights(params: any) {
   // Validate input parameters
   if (!params.origin || !params.destination || !params.departureDate) {
-    console.error('[api.ts] Missing required flight search parameters:', { origin: params.origin, destination: params.destination, departureDate: params.departureDate });
-    throw new Error('Missing required flight search parameters: origin, destination, or departureDate');
+    console.error("[api.ts] Missing required flight search parameters:", {
+      origin: params.origin,
+      destination: params.destination,
+      departureDate: params.departureDate,
+    });
+    throw new Error(
+      "Missing required flight search parameters: origin, destination, or departureDate",
+    );
   }
 
   const payload = {
@@ -922,54 +1110,72 @@ export async function searchFlights(params: any) {
           origin: params.origin,
           destination: params.destination,
           departure_date: params.departureDate,
-        }
+        },
       ],
-      passengers: params.passengers || (params.adults ? Array(params.adults).fill({ type: "adult" }) : [{ type: "adult" }]),
+      passengers:
+        params.passengers ||
+        (params.adults
+          ? Array(params.adults).fill({ type: "adult" })
+          : [{ type: "adult" }]),
       cabin_class: (params.cabinClass || "economy").toLowerCase(),
-      return_available_services: true // Ensure we get ancillaries
-    }
+      return_available_services: true, // Ensure we get ancillaries
+    },
   };
 
-  console.log('[api.ts] Flight search payload prepared:', JSON.stringify(payload, null, 2));
+  console.log(
+    "[api.ts] Flight search payload prepared:",
+    JSON.stringify(payload, null, 2),
+  );
 
   try {
-    console.log('[api.ts] SEARCH FLIGHTS: Attempting API Gateway request to /search/flights');
+    console.log(
+      "[api.ts] SEARCH FLIGHTS: Attempting API Gateway request to /search/flights",
+    );
     // Delegate to API Gateway (which uses DuffelAdapter with backend keys)
-    const response = await api.post('/search/flights', payload);
-    console.log('[api.ts] API Gateway response received:', response);
+    const response = await api.post("/search/flights", payload);
+    console.log("[api.ts] API Gateway response received:", response);
 
     // The backend's DuffelAdapter already transforms the response to FlightResult[]
     // Check if response is already transformed (has airline/carrierCode properties)
     // or if it's raw Duffel format (needs mapDuffelResponse)
-    const results = Array.isArray(response) ? response : (response.data || response.offers || []);
+    const results = Array.isArray(response)
+      ? response
+      : response.data || response.offers || [];
 
     if (results.length > 0 && results[0].carrierCode && !results[0].slices) {
       // Already transformed by backend - use directly
-      console.log('[api.ts] Using pre-transformed backend response, flights:', results.length);
+      console.log(
+        "[api.ts] Using pre-transformed backend response, flights:",
+        results.length,
+      );
       return results;
     }
 
     // Raw Duffel format - needs transformation
-    console.log('[api.ts] Raw Duffel format detected, transforming offers...');
+    console.log("[api.ts] Raw Duffel format detected, transforming offers...");
     const offers = response.data?.offers || response.offers || results || [];
-    console.log('[api.ts] Extracted offers count:', Array.isArray(offers) ? offers.length : 'N/A');
+    console.log(
+      "[api.ts] Extracted offers count:",
+      Array.isArray(offers) ? offers.length : "N/A",
+    );
     return mapDuffelResponse({ offers: Array.isArray(offers) ? offers : [] });
-
   } catch (error: any) {
-    console.error('[api.ts] API Gateway search failed:', {
+    console.error("[api.ts] API Gateway search failed:", {
       message: error?.message,
       status: error?.status,
-      toString: String(error)
+      toString: String(error),
     });
 
     // Fallback: try again with explicit logging
-    console.log('[api.ts] Retrying API Gateway with enhanced diagnostics...');
+    console.log("[api.ts] Retrying API Gateway with enhanced diagnostics...");
     try {
-      const response = await api.post('/search/flights', payload);
-      console.log('[api.ts] Retry successful');
+      const response = await api.post("/search/flights", payload);
+      console.log("[api.ts] Retry successful");
 
       // Same check for transformed vs raw response
-      const results = Array.isArray(response) ? response : (response.data || response.offers || []);
+      const results = Array.isArray(response)
+        ? response
+        : response.data || response.offers || [];
       if (results.length > 0 && results[0].carrierCode && !results[0].slices) {
         return results;
       }
@@ -977,17 +1183,19 @@ export async function searchFlights(params: any) {
       const offers = response.data?.offers || response.offers || results || [];
       return mapDuffelResponse({ offers: Array.isArray(offers) ? offers : [] });
     } catch (retryError: any) {
-      console.error('[api.ts] Retry also failed:', retryError?.message);
-      throw new Error(`Flight search failed after retry: ${error?.message || 'Unknown error'}`);
+      console.error("[api.ts] Retry also failed:", retryError?.message);
+      throw new Error(
+        `Flight search failed after retry: ${error?.message || "Unknown error"}`,
+      );
     }
   }
 }
 
 // Helper: Format ISO duration to human readable (PT2H30M -> 2h 30m)
 function formatDuration(isoDuration: string | null): string {
-  if (!isoDuration) return '--';
-  const hours = isoDuration.match(/(\d+)H/)?.[1] || '0';
-  const minutes = isoDuration.match(/(\d+)M/)?.[1] || '0';
+  if (!isoDuration) return "--";
+  const hours = isoDuration.match(/(\d+)H/)?.[1] || "0";
+  const minutes = isoDuration.match(/(\d+)M/)?.[1] || "0";
   return `${hours}h ${minutes}m`;
 }
 
@@ -996,7 +1204,7 @@ function calculateLayover(arrival: string, departure: string): string {
   const arr = new Date(arrival);
   const dep = new Date(departure);
   const diffMs = dep.getTime() - arr.getTime();
-  if (diffMs <= 0) return '0h 0m';
+  if (diffMs <= 0) return "0h 0m";
 
   const diffHrs = Math.floor(diffMs / 3600000);
   const diffMins = Math.floor((diffMs % 3600000) / 60000);
@@ -1040,8 +1248,21 @@ export interface FlightResult {
   refundable: boolean;
   airlineLogo?: string;
   segments: FlightSegmentResult[];
-  includedBags: Array<{ quantity: number; weight: number; unit: string; type?: string }>;
-  ancillaries: Array<{ id: string; name: string; description?: string; price: number; currency: string; type: string; raw?: any }>;
+  includedBags: Array<{
+    quantity: number;
+    weight: number;
+    unit: string;
+    type?: string;
+  }>;
+  ancillaries: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    currency: string;
+    type: string;
+    raw?: any;
+  }>;
   upsells?: FlightResult[];
 }
 
@@ -1060,32 +1281,53 @@ function mapDuffelResponse(data: any): FlightResult[] {
   // Helper to create a flight object from a Duffel offer
   const mapSingleOffer = (offer: any) => {
     // Validate offer structure with detailed error context
-    if (!offer.slices || !Array.isArray(offer.slices) || offer.slices.length === 0) {
-      console.warn('[mapDuffelResponse] Offer missing slices:', { offerId: offer?.id, keys: Object.keys(offer || {}) });
+    if (
+      !offer.slices ||
+      !Array.isArray(offer.slices) ||
+      offer.slices.length === 0
+    ) {
+      console.warn("[mapDuffelResponse] Offer missing slices:", {
+        offerId: offer?.id,
+        keys: Object.keys(offer || {}),
+      });
       return null;
     }
 
     const slice = offer.slices[0];
-    if (!slice.segments || !Array.isArray(slice.segments) || slice.segments.length === 0) {
-      console.warn('[mapDuffelResponse] Slice missing segments:', { offerId: offer?.id, sliceKeys: Object.keys(slice || {}) });
+    if (
+      !slice.segments ||
+      !Array.isArray(slice.segments) ||
+      slice.segments.length === 0
+    ) {
+      console.warn("[mapDuffelResponse] Slice missing segments:", {
+        offerId: offer?.id,
+        sliceKeys: Object.keys(slice || {}),
+      });
       return null;
     }
 
     const firstSegment = slice.segments[0];
     const lastSegment = slice.segments[slice.segments.length - 1];
     const durationStr = formatDuration(slice.duration);
-    const isRefundable = offer.conditions?.refund_before_departure?.allowed || false;
+    const isRefundable =
+      offer.conditions?.refund_before_departure?.allowed || false;
 
     return {
       id: offer.id,
       airline: offer.owner.name,
       carrierCode: offer.owner.iata_code,
-      flightNumber: `${offer.owner.iata_code}${firstSegment.marketing_carrier_flight_number || ''}`,
+      flightNumber: `${offer.owner.iata_code}${firstSegment.marketing_carrier_flight_number || ""}`,
       origin: firstSegment.origin.iata_code,
-      originCity: firstSegment.origin.city_name || firstSegment.origin.name || firstSegment.origin.iata_code,
+      originCity:
+        firstSegment.origin.city_name ||
+        firstSegment.origin.name ||
+        firstSegment.origin.iata_code,
       departureTime: firstSegment.departing_at,
       destination: lastSegment.destination.iata_code,
-      destinationCity: lastSegment.destination.city_name || lastSegment.destination.name || lastSegment.destination.iata_code,
+      destinationCity:
+        lastSegment.destination.city_name ||
+        lastSegment.destination.name ||
+        lastSegment.destination.iata_code,
       arrivalTime: lastSegment.arriving_at,
       duration: durationStr,
       amount: parseFloat(offer.total_amount),
@@ -1107,33 +1349,42 @@ function mapDuffelResponse(data: any): FlightResult[] {
           flightNumber: `${seg.marketing_carrier.iata_code}${seg.marketing_carrier_flight_number}`,
           airline: seg.marketing_carrier.name,
           duration: formatDuration(seg.duration),
-          layoverDuration: nextSeg ? calculateLayover(seg.arriving_at, nextSeg.departing_at) : null,
+          layoverDuration: nextSeg
+            ? calculateLayover(seg.arriving_at, nextSeg.departing_at)
+            : null,
           departureTerminal: seg.origin_terminal,
           arrivalTerminal: seg.destination_terminal,
-          aircraft: seg.aircraft?.name || 'Aircraft Info Unavailable'
+          aircraft: seg.aircraft?.name || "Aircraft Info Unavailable",
         };
       }),
       // Included bags – use actual values from Duffel (no hardcoded fallback weights)
-      includedBags: offer.passengers?.[0]?.baggages?.map((b: any) => ({
-        quantity: b.quantity || 1,
-        // Use actual Duffel bag weight if provided, otherwise leave undefined
-        maximum_weight_kg: b.maximum_weight_kg ?? undefined,
-        weight: b.maximum_weight_kg ?? undefined,
-        unit: 'kg',
-        type: b.type,  // 'checked' | 'carry_on'
-      })) || [],
+      includedBags:
+        offer.passengers?.[0]?.baggages?.map((b: any) => ({
+          quantity: b.quantity || 1,
+          // Use actual Duffel bag weight if provided, otherwise leave undefined
+          maximum_weight_kg: b.maximum_weight_kg ?? undefined,
+          weight: b.maximum_weight_kg ?? undefined,
+          unit: "kg",
+          type: b.type, // 'checked' | 'carry_on'
+        })) || [],
       // Available ancillary services from Duffel – preserve full raw object
       // so FlightAddons.tsx can read metadata (dimensions, max_quantity, etc.)
-      ancillaries: offer.available_services?.map((s: any) => ({
-        id: s.id,
-        name: s.metadata?.name || s.type,
-        description: s.metadata?.description,
-        price: parseFloat(s.total_amount || '0'),
-        currency: s.total_currency,
-        type: s.type === 'baggage' ? 'baggage' : (s.type === 'seat' ? 'seat' : 'other'),
-        // Keep full raw service so FlightAddons can access maximum_quantity, metadata, etc.
-        raw: s,
-      })) || []
+      ancillaries:
+        offer.available_services?.map((s: any) => ({
+          id: s.id,
+          name: s.metadata?.name || s.type,
+          description: s.metadata?.description,
+          price: parseFloat(s.total_amount || "0"),
+          currency: s.total_currency,
+          type:
+            s.type === "baggage"
+              ? "baggage"
+              : s.type === "seat"
+                ? "seat"
+                : "other",
+          // Keep full raw service so FlightAddons can access maximum_quantity, metadata, etc.
+          raw: s,
+        })) || [],
     };
   };
 
@@ -1142,20 +1393,37 @@ function mapDuffelResponse(data: any): FlightResult[] {
 
   offers.forEach((offer: any) => {
     // Validate before grouping
-    if (!offer.slices || !Array.isArray(offer.slices) || offer.slices.length === 0) {
-      console.warn('[mapDuffelResponse] Skipping offer - missing slices:', offer?.id);
+    if (
+      !offer.slices ||
+      !Array.isArray(offer.slices) ||
+      offer.slices.length === 0
+    ) {
+      console.warn(
+        "[mapDuffelResponse] Skipping offer - missing slices:",
+        offer?.id,
+      );
       return;
     }
 
     const slice = offer.slices[0];
-    if (!slice.segments || !Array.isArray(slice.segments) || slice.segments.length === 0) {
-      console.warn('[mapDuffelResponse] Skipping offer - missing segments:', offer?.id);
+    if (
+      !slice.segments ||
+      !Array.isArray(slice.segments) ||
+      slice.segments.length === 0
+    ) {
+      console.warn(
+        "[mapDuffelResponse] Skipping offer - missing segments:",
+        offer?.id,
+      );
       return;
     }
 
-    const identity = slice.segments.map((s: any) =>
-      `${s.marketing_carrier?.iata_code || 'UNKNOWN'}${s.marketing_carrier_flight_number || ''}-${s.departing_at}`
-    ).join('|');
+    const identity = slice.segments
+      .map(
+        (s: any) =>
+          `${s.marketing_carrier?.iata_code || "UNKNOWN"}${s.marketing_carrier_flight_number || ""}-${s.departing_at}`,
+      )
+      .join("|");
 
     if (!groups[identity]) groups[identity] = [];
     const mapped = mapSingleOffer(offer);
@@ -1164,7 +1432,7 @@ function mapDuffelResponse(data: any): FlightResult[] {
 
   // For each group, pick the cheapest as main and rest as upsells
   return Object.values(groups)
-    .filter(groupOffers => groupOffers.length > 0)
+    .filter((groupOffers) => groupOffers.length > 0)
     .map((groupOffers: any[]) => {
       const sorted = groupOffers.sort((a: any, b: any) => a.amount - b.amount);
       const bestOffer = sorted[0];
@@ -1177,10 +1445,12 @@ function mapDuffelResponse(data: any): FlightResult[] {
 export async function fetchSeatMaps(offerId: string) {
   try {
     // Route through backend proxy; do not expose provider keys in frontend
-    const data = await api.get<{ data: any }>(`/duffel/seat-maps?offer_id=${encodeURIComponent(offerId)}`);
+    const data = await api.get<{ data: any }>(
+      `/duffel/seat-maps?offer_id=${encodeURIComponent(offerId)}`,
+    );
     return (data as any)?.data ?? data;
   } catch (error) {
-    console.error('[api.ts] fetchSeatMaps failed:', error);
+    console.error("[api.ts] fetchSeatMaps failed:", error);
     return null;
   }
 }
@@ -1195,7 +1465,7 @@ export {
   isSeatElement,
   type SeatMapServiceResponse,
   type SeatSelectionResponse,
-} from '../services/duffelSeatMapsService';
+} from "../services/duffelSeatMapsService";
 
 // Re-export types
 export type {
@@ -1213,22 +1483,22 @@ export type {
   ProcessedSeatMap,
   SelectedSeatForBooking,
   SeatSelectionPayload,
-} from '../types/duffel-seat-maps';
+} from "../types/duffel-seat-maps";
 
 // Real Notifications
 export async function listNotifications() {
   try {
-    const res = await apiGetWithRetry<any>('/notifications');
-    return Array.isArray(res) ? res : (res?.items || []);
+    const res = await apiGetWithRetry<any>("/notifications");
+    return Array.isArray(res) ? res : res?.items || [];
   } catch (error) {
-    console.error('Failed to list notifications:', error);
+    console.error("Failed to list notifications:", error);
     return [];
   }
 }
 
 export async function markNotificationRead(id: string) {
   try {
-    await api.post('/notifications/mark-read', { id });
+    await api.post("/notifications/mark-read", { id });
   } catch (error) {
     console.error(`Failed to mark notification ${id} read:`, error);
   }
@@ -1255,13 +1525,13 @@ export async function fetchFlightById(id: string) {
  */
 export async function fetchAirports(query?: string) {
   try {
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=20` : '?limit=20';
+    const qs = query ? `?q=${encodeURIComponent(query)}&limit=20` : "?limit=20";
     const res = await staticFetch<{ data: any[] }>(`/airports${qs}`);
     const rows = res?.data ?? [];
     if (rows.length > 0) {
       return rows.map((a: any) => ({
-        type: 'AIRPORT' as const,
-        icon: 'plane',
+        type: "AIRPORT" as const,
+        icon: "plane",
         title: a.name,
         subtitle: `${a.city}, ${a.country}`,
         code: a.iata_code,
@@ -1273,17 +1543,20 @@ export async function fetchAirports(query?: string) {
       }));
     }
   } catch (e) {
-    console.warn('[fetchAirports] DB fetch failed:', e);
+    console.warn("[fetchAirports] DB fetch failed:", e);
   }
 
   // Fallback to Duffel API for live airport suggestions
   if (query) {
-    console.debug('[fetchAirports] Falling back to fetchDuffelSuggestions for query:', query);
+    console.debug(
+      "[fetchAirports] Falling back to fetchDuffelSuggestions for query:",
+      query,
+    );
     const duffelResults = await fetchDuffelSuggestions(query);
     // Map Duffel results to the airport shape
     return duffelResults.map((a: any) => ({
-      type: 'AIRPORT' as const,
-      icon: 'plane',
+      type: "AIRPORT" as const,
+      icon: "plane",
       title: a.title || a.name,
       subtitle: a.subtitle || `${a.city}, ${a.country}`,
       code: a.code || a.iata_code,
@@ -1305,19 +1578,22 @@ export async function fetchAirports(query?: string) {
  * Falls back to Duffel/LiteAPI search when DB is unavailable.
  */
 
-export async function fetchSuggestions(query: string, type: 'flight' | 'hotel' = 'flight') {
+export async function fetchSuggestions(
+  query: string,
+  type: "flight" | "hotel" = "flight",
+) {
   if (!query || query.length < 2) return [];
 
   // Helper to map an API item to the standard Suggestion shape
   const mapItem = (item: any) => ({
-    type: (item.type === 'AIRPORT' ? 'AIRPORT' : 'CITY') as 'AIRPORT' | 'CITY',
-    icon: item.icon || (item.type === 'AIRPORT' ? 'plane' : 'map-pin'),
+    type: (item.type === "AIRPORT" ? "AIRPORT" : "CITY") as "AIRPORT" | "CITY",
+    icon: item.icon || (item.type === "AIRPORT" ? "plane" : "map-pin"),
     title: item.title,
-    subtitle: item.subtitle || item.country || '',
+    subtitle: item.subtitle || item.country || "",
     code: item.code,
     city: item.city || item.title,
-    country: item.country || '',
-    countryCode: item.countryCode || '',
+    country: item.country || "",
+    countryCode: item.countryCode || "",
     latitude: item.latitude,
     longitude: item.longitude,
   });
@@ -1325,14 +1601,16 @@ export async function fetchSuggestions(query: string, type: 'flight' | 'hotel' =
   // 1. Try the PostgreSQL static-data-service (proxied via /static)
   try {
     const qs = `?q=${encodeURIComponent(query)}&type=${type}&limit=10`;
-    console.debug(`[fetchSuggestions] Attempting DB fetch for "${query}" (type: ${type})`);
+    console.debug(
+      `[fetchSuggestions] Attempting DB fetch for "${query}" (type: ${type})`,
+    );
 
     // Use a short 1.5s timeout for autocomplete — fast fallback is better than slow waiting
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 1500);
     const res = await fetch(`${STATIC_SVC}/suggestions${qs}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
       signal: controller.signal,
     }).finally(() => clearTimeout(timer));
 
@@ -1341,20 +1619,30 @@ export async function fetchSuggestions(query: string, type: 'flight' | 'hotel' =
         const json: { data: any[] } = await res.json();
         const rows = json?.data ?? [];
         if (rows.length > 0) {
-          console.debug(`[fetchSuggestions] DB returned ${rows.length} results`);
+          console.debug(
+            `[fetchSuggestions] DB returned ${rows.length} results`,
+          );
           return rows.map(mapItem);
         }
       } catch (e) {
-        console.warn('[fetchSuggestions] Failed to parse DB JSON (expected if backend is down)', e);
+        console.warn(
+          "[fetchSuggestions] Failed to parse DB JSON (expected if backend is down)",
+          e,
+        );
       }
     }
-    console.info(`[fetchSuggestions] DB returned no results for "${query}", falling back to API search.`);
+    console.info(
+      `[fetchSuggestions] DB returned no results for "${query}", falling back to API search.`,
+    );
   } catch (e) {
-    console.warn(`[fetchSuggestions] Backend unavailable for "${query}", using API fallback:`, e);
+    console.warn(
+      `[fetchSuggestions] Backend unavailable for "${query}", using API fallback:`,
+      e,
+    );
   }
 
   // 2. Fallback to Duffel API for flights or LiteAPI for hotels
-  if (type === 'flight') {
+  if (type === "flight") {
     const duffelResults = await fetchDuffelSuggestions(query);
     return duffelResults.map(mapItem);
   } else {
@@ -1369,20 +1657,28 @@ export async function fetchSuggestions(query: string, type: 'flight' | 'hotel' =
  */
 async function fetchDuffelSuggestions(query: string) {
   try {
-    console.debug(`[fetchDuffelSuggestions] Attempting Duffel search for "${query}" via backend proxy`);
+    console.debug(
+      `[fetchDuffelSuggestions] Attempting Duffel search for "${query}" via backend proxy`,
+    );
     // Use backend-proxied endpoint instead of direct Duffel API
-    const res = await api.get<{ success: boolean; data: any[] }>(`/duffel/airports?q=${encodeURIComponent(query)}&limit=10`);
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/duffel/airports?q=${encodeURIComponent(query)}&limit=10`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchDuffelSuggestions] Backend proxy returned ${res.data.length} results`);
+      console.debug(
+        `[fetchDuffelSuggestions] Backend proxy returned ${res.data.length} results`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchDuffelSuggestions] Backend proxy failed:', e);
+    console.warn("[fetchDuffelSuggestions] Backend proxy failed:", e);
   }
 
   // If backend proxy fails, return empty state (no hardcoded fallback)
-  console.warn(`[fetchDuffelSuggestions] All API sources exhausted for "${query}"`);
+  console.warn(
+    `[fetchDuffelSuggestions] All API sources exhausted for "${query}"`,
+  );
   return [];
 }
 
@@ -1392,20 +1688,28 @@ async function fetchDuffelSuggestions(query: string) {
  */
 async function fetchLiteAPISuggestions(query: string) {
   try {
-    console.debug(`[fetchLiteAPISuggestions] Attempting LiteAPI search for "${query}" via backend proxy`);
+    console.debug(
+      `[fetchLiteAPISuggestions] Attempting LiteAPI search for "${query}" via backend proxy`,
+    );
     // Use backend-proxied endpoint instead of direct LiteAPI
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/destinations?q=${encodeURIComponent(query)}&limit=10`);
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/destinations?q=${encodeURIComponent(query)}&limit=10`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPISuggestions] Backend proxy returned ${res.data.length} results`);
+      console.debug(
+        `[fetchLiteAPISuggestions] Backend proxy returned ${res.data.length} results`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchLiteAPISuggestions] Backend proxy failed:', e);
+    console.warn("[fetchLiteAPISuggestions] Backend proxy failed:", e);
   }
 
   // If backend proxy fails, return empty state (no hardcoded fallback)
-  console.warn(`[fetchLiteAPISuggestions] All API sources exhausted for "${query}"`);
+  console.warn(
+    `[fetchLiteAPISuggestions] All API sources exhausted for "${query}"`,
+  );
   return [];
 }
 
@@ -1416,17 +1720,31 @@ async function fetchLiteAPISuggestions(query: string) {
  */
 async function fetchDuffelAirlines(query?: string) {
   try {
-    console.debug('[fetchDuffelAirlines] Attempting Duffel airlines fetch via backend proxy');
+    console.debug(
+      "[fetchDuffelAirlines] Attempting Duffel airlines fetch via backend proxy",
+    );
     // Use backend-proxied endpoint to avoid exposing API keys in frontend
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=100` : '?limit=200';
-    const res = await api.get<{ success: boolean; data: Array<{ iata_code: string; name: string; logo_url?: string; country?: string }> }>(`/duffel/airlines${qs}`);
+    const qs = query
+      ? `?q=${encodeURIComponent(query)}&limit=100`
+      : "?limit=200";
+    const res = await api.get<{
+      success: boolean;
+      data: Array<{
+        iata_code: string;
+        name: string;
+        logo_url?: string;
+        country?: string;
+      }>;
+    }>(`/duffel/airlines${qs}`);
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchDuffelAirlines] Backend proxy returned ${res.data.length} airlines`);
+      console.debug(
+        `[fetchDuffelAirlines] Backend proxy returned ${res.data.length} airlines`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchDuffelAirlines] Backend proxy failed:', e);
+    console.warn("[fetchDuffelAirlines] Backend proxy failed:", e);
   }
   // Return empty array if all sources fail
   return [];
@@ -1436,14 +1754,33 @@ async function fetchDuffelAirlines(query?: string) {
  * Fetch airlines from PostgreSQL.
  * Falls back to Duffel API when DB is unavailable.
  */
-export async function fetchAirlines(query?: string): Promise<Array<{ iata_code: string; name: string; logo_url?: string; country?: string }>> {
+export async function fetchAirlines(query?: string): Promise<
+  Array<{
+    iata_code: string;
+    name: string;
+    logo_url?: string;
+    country?: string;
+  }>
+> {
   try {
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=100` : '?limit=200';
-    const res = await staticFetch<{ data: Array<{ iata_code: string; name: string; logo_url?: string; country?: string }> }>(`/airlines${qs}`);
+    const qs = query
+      ? `?q=${encodeURIComponent(query)}&limit=100`
+      : "?limit=200";
+    const res = await staticFetch<{
+      data: Array<{
+        iata_code: string;
+        name: string;
+        logo_url?: string;
+        country?: string;
+      }>;
+    }>(`/airlines${qs}`);
     const data = res?.data ?? [];
     if (data.length > 0) return data;
   } catch (e) {
-    console.warn('[fetchAirlines] DB fetch failed, attempting Duffel fallback:', e);
+    console.warn(
+      "[fetchAirlines] DB fetch failed, attempting Duffel fallback:",
+      e,
+    );
   }
   // Fallback to Duffel API for airlines
   return await fetchDuffelAirlines(query);
@@ -1451,16 +1788,16 @@ export async function fetchAirlines(query?: string): Promise<Array<{ iata_code: 
 
 export async function fetchAircrafts() {
   try {
-    const res = await api.get('/aircraft');
+    const res = await api.get("/aircraft");
     return res || [];
   } catch (error) {
-    console.error('Failed to fetch aircrafts:', error);
+    console.error("Failed to fetch aircrafts:", error);
     return [
-      { iata_code: '320', name: 'Airbus A320' },
-      { iata_code: '321', name: 'Airbus A321' },
-      { iata_code: '77W', name: 'Boeing 777-300ER' },
-      { iata_code: '789', name: 'Boeing 787-9' },
-      { iata_code: '388', name: 'Airbus A380-800' },
+      { iata_code: "320", name: "Airbus A320" },
+      { iata_code: "321", name: "Airbus A321" },
+      { iata_code: "77W", name: "Boeing 777-300ER" },
+      { iata_code: "789", name: "Boeing 787-9" },
+      { iata_code: "388", name: "Airbus A380-800" },
     ];
   }
 }
@@ -1471,16 +1808,16 @@ export async function fetchAircrafts() {
  */
 export async function fetchCurrencies() {
   try {
-    const res = await staticFetch<{ data: any[] }>('/currencies');
+    const res = await staticFetch<{ data: any[] }>("/currencies");
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchCurrencies] DB fetch failed, using fallback:', e);
+    console.warn("[fetchCurrencies] DB fetch failed, using fallback:", e);
     return [
-      { code: 'USD', name: 'US Dollar', symbol: '$' },
-      { code: 'EUR', name: 'Euro', symbol: '€' },
-      { code: 'GBP', name: 'British Pound', symbol: '£' },
-      { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
-      { code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س' },
+      { code: "USD", name: "US Dollar", symbol: "$" },
+      { code: "EUR", name: "Euro", symbol: "€" },
+      { code: "GBP", name: "British Pound", symbol: "£" },
+      { code: "AED", name: "UAE Dirham", symbol: "د.إ" },
+      { code: "SAR", name: "Saudi Riyal", symbol: "ر.س" },
     ];
   }
 }
@@ -1491,11 +1828,11 @@ export async function fetchCurrencies() {
  */
 export async function fetchCities(query?: string) {
   try {
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=20` : '?limit=20';
+    const qs = query ? `?q=${encodeURIComponent(query)}&limit=20` : "?limit=20";
     const res = await staticFetch<{ data: any[] }>(`/cities${qs}`);
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchCities] DB fetch failed:', e);
+    console.warn("[fetchCities] DB fetch failed:", e);
     return [];
   }
 }
@@ -1506,16 +1843,22 @@ export async function fetchCities(query?: string) {
  */
 async function fetchLiteAPICountries(query?: string) {
   try {
-    console.debug('[fetchLiteAPICountries] Attempting LiteAPI countries fetch');
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=250` : '?limit=250';
-    const res = await api.get<{ success: boolean; data: any[] }>(`/hotels/countries${qs}`);
+    console.debug("[fetchLiteAPICountries] Attempting LiteAPI countries fetch");
+    const qs = query
+      ? `?q=${encodeURIComponent(query)}&limit=250`
+      : "?limit=250";
+    const res = await api.get<{ success: boolean; data: any[] }>(
+      `/hotels/countries${qs}`,
+    );
 
     if (res && res.success && Array.isArray(res.data)) {
-      console.debug(`[fetchLiteAPICountries] LiteAPI returned ${res.data.length} countries`);
+      console.debug(
+        `[fetchLiteAPICountries] LiteAPI returned ${res.data.length} countries`,
+      );
       return res.data;
     }
   } catch (e) {
-    console.warn('[fetchLiteAPICountries] LiteAPI fetch failed:', e);
+    console.warn("[fetchLiteAPICountries] LiteAPI fetch failed:", e);
   }
   return [];
 }
@@ -1523,18 +1866,23 @@ async function fetchLiteAPICountries(query?: string) {
 /**
  * Fetch countries from PostgreSQL.
  * Falls back to LiteAPI when DB is unavailable.
- * 
+ *
  * NOTE: For React components, use the `useCountries()` hook from useStaticData.ts instead.
  * This function is for legacy non-React contexts.
  */
 export async function fetchCountries(query?: string) {
   try {
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=250` : '?limit=250';
+    const qs = query
+      ? `?q=${encodeURIComponent(query)}&limit=250`
+      : "?limit=250";
     const res = await staticFetch<{ data: any[] }>(`/countries${qs}`);
     const data = res?.data ?? [];
     if (data.length > 0) return data;
   } catch (e) {
-    console.warn('[fetchCountries] DB fetch failed, attempting LiteAPI fallback:', e);
+    console.warn(
+      "[fetchCountries] DB fetch failed, attempting LiteAPI fallback:",
+      e,
+    );
   }
   // Fallback to LiteAPI for countries
   return await fetchLiteAPICountries(query);
@@ -1556,23 +1904,86 @@ export async function fetchCountries(query?: string) {
  */
 export async function fetchPhoneCodes() {
   try {
-    const res = await staticFetch<{ data: any[] }>('/phone-codes');
+    const res = await staticFetch<{ data: any[] }>("/phone-codes");
     if (res?.data && res.data.length > 0) return res.data;
   } catch (e) {
-    console.warn('[fetchPhoneCodes] DB fetch failed, using static fallback:', e);
+    console.warn(
+      "[fetchPhoneCodes] DB fetch failed, using static fallback:",
+      e,
+    );
   }
   // Hardcoded fallback with alpha3 + numericCode
   return [
-    { alpha2: 'AE', alpha3: 'ARE', numericCode: 784, name: 'United Arab Emirates', phonePrefix: '+971' },
-    { alpha2: 'SA', alpha3: 'SAU', numericCode: 682, name: 'Saudi Arabia', phonePrefix: '+966' },
-    { alpha2: 'QA', alpha3: 'QAT', numericCode: 634, name: 'Qatar', phonePrefix: '+974' },
-    { alpha2: 'KW', alpha3: 'KWT', numericCode: 414, name: 'Kuwait', phonePrefix: '+965' },
-    { alpha2: 'BH', alpha3: 'BHR', numericCode: 48, name: 'Bahrain', phonePrefix: '+973' },
-    { alpha2: 'OM', alpha3: 'OMN', numericCode: 512, name: 'Oman', phonePrefix: '+968' },
-    { alpha2: 'US', alpha3: 'USA', numericCode: 840, name: 'United States', phonePrefix: '+1' },
-    { alpha2: 'GB', alpha3: 'GBR', numericCode: 826, name: 'United Kingdom', phonePrefix: '+44' },
-    { alpha2: 'IN', alpha3: 'IND', numericCode: 356, name: 'India', phonePrefix: '+91' },
-    { alpha2: 'PK', alpha3: 'PAK', numericCode: 586, name: 'Pakistan', phonePrefix: '+92' },
+    {
+      alpha2: "AE",
+      alpha3: "ARE",
+      numericCode: 784,
+      name: "United Arab Emirates",
+      phonePrefix: "+971",
+    },
+    {
+      alpha2: "SA",
+      alpha3: "SAU",
+      numericCode: 682,
+      name: "Saudi Arabia",
+      phonePrefix: "+966",
+    },
+    {
+      alpha2: "QA",
+      alpha3: "QAT",
+      numericCode: 634,
+      name: "Qatar",
+      phonePrefix: "+974",
+    },
+    {
+      alpha2: "KW",
+      alpha3: "KWT",
+      numericCode: 414,
+      name: "Kuwait",
+      phonePrefix: "+965",
+    },
+    {
+      alpha2: "BH",
+      alpha3: "BHR",
+      numericCode: 48,
+      name: "Bahrain",
+      phonePrefix: "+973",
+    },
+    {
+      alpha2: "OM",
+      alpha3: "OMN",
+      numericCode: 512,
+      name: "Oman",
+      phonePrefix: "+968",
+    },
+    {
+      alpha2: "US",
+      alpha3: "USA",
+      numericCode: 840,
+      name: "United States",
+      phonePrefix: "+1",
+    },
+    {
+      alpha2: "GB",
+      alpha3: "GBR",
+      numericCode: 826,
+      name: "United Kingdom",
+      phonePrefix: "+44",
+    },
+    {
+      alpha2: "IN",
+      alpha3: "IND",
+      numericCode: 356,
+      name: "India",
+      phonePrefix: "+91",
+    },
+    {
+      alpha2: "PK",
+      alpha3: "PAK",
+      numericCode: 586,
+      name: "Pakistan",
+      phonePrefix: "+92",
+    },
   ];
 }
 
@@ -1581,42 +1992,91 @@ export async function fetchPhoneCodes() {
  * Used in the passenger form for frequent flyer number section.
  * @param type - 'airline' | 'hotel' | '' (all)
  */
-export async function fetchLoyaltyProgramsAll(type?: 'airline' | 'hotel') {
+export async function fetchLoyaltyProgramsAll(type?: "airline" | "hotel") {
   try {
-    const qs = type ? `?type=${type}&limit=300` : '?limit=300';
-    const res = await staticFetch<{ data: any[] }>(`/loyalty-programs/all${qs}`);
+    const qs = type ? `?type=${type}&limit=300` : "?limit=300";
+    const res = await staticFetch<{ data: any[] }>(
+      `/loyalty-programs/all${qs}`,
+    );
     return res?.data ?? [];
   } catch (e) {
-    console.warn('[fetchLoyaltyProgramsAll] DB fetch failed, using static fallback:', e);
+    console.warn(
+      "[fetchLoyaltyProgramsAll] DB fetch failed, using static fallback:",
+      e,
+    );
     return [
-      { id: 'skywards', name: 'Emirates Skywards', programType: 'airline', providerCode: 'EK' },
-      { id: 'privilege-club', name: 'Qatar Airways Privilege Club', programType: 'airline', providerCode: 'QR' },
-      { id: 'alfursan', name: 'Saudia Alfursan', programType: 'airline', providerCode: 'SV' },
-      { id: 'aadvantage', name: 'AAdvantage', programType: 'airline', providerCode: 'AA' },
-      { id: 'miles-more', name: 'Miles & More', programType: 'airline', providerCode: 'LH' },
-      { id: 'flying-blue', name: 'Flying Blue', programType: 'airline', providerCode: 'AF' },
-      { id: 'executive-club', name: 'British Airways Executive Club', programType: 'airline', providerCode: 'BA' },
+      {
+        id: "skywards",
+        name: "Emirates Skywards",
+        programType: "airline",
+        providerCode: "EK",
+      },
+      {
+        id: "privilege-club",
+        name: "Qatar Airways Privilege Club",
+        programType: "airline",
+        providerCode: "QR",
+      },
+      {
+        id: "alfursan",
+        name: "Saudia Alfursan",
+        programType: "airline",
+        providerCode: "SV",
+      },
+      {
+        id: "aadvantage",
+        name: "AAdvantage",
+        programType: "airline",
+        providerCode: "AA",
+      },
+      {
+        id: "miles-more",
+        name: "Miles & More",
+        programType: "airline",
+        providerCode: "LH",
+      },
+      {
+        id: "flying-blue",
+        name: "Flying Blue",
+        programType: "airline",
+        providerCode: "AF",
+      },
+      {
+        id: "executive-club",
+        name: "British Airways Executive Club",
+        programType: "airline",
+        providerCode: "BA",
+      },
     ];
   }
 }
 
 export async function fetchNationalities(query?: string) {
   try {
-    const qs = query ? `?q=${encodeURIComponent(query)}&limit=250` : '?limit=250';
+    const qs = query
+      ? `?q=${encodeURIComponent(query)}&limit=250`
+      : "?limit=250";
     const res = await staticFetch<{ data: any[] }>(`/countries${qs}`);
     const rows = res?.data ?? [];
     // Derive nationalities from countries list
-    return rows.map((c: any) => ({ code: c.code, name: c.name, demonym: c.demonym || c.name }));
+    return rows.map((c: any) => ({
+      code: c.code,
+      name: c.name,
+      demonym: c.demonym || c.name,
+    }));
   } catch (e) {
-    console.warn('[fetchNationalities] DB fetch failed, using static fallback:', e);
+    console.warn(
+      "[fetchNationalities] DB fetch failed, using static fallback:",
+      e,
+    );
     return [
-      { code: 'SA', name: 'Saudi Arabia', demonym: 'Saudi' },
-      { code: 'AE', name: 'United Arab Emirates', demonym: 'Emirati' },
-      { code: 'QA', name: 'Qatar', demonym: 'Qatari' },
-      { code: 'US', name: 'United States', demonym: 'American' },
-      { code: 'GB', name: 'United Kingdom', demonym: 'British' },
-      { code: 'IN', name: 'India', demonym: 'Indian' },
-      { code: 'PK', name: 'Pakistan', demonym: 'Pakistani' },
+      { code: "SA", name: "Saudi Arabia", demonym: "Saudi" },
+      { code: "AE", name: "United Arab Emirates", demonym: "Emirati" },
+      { code: "QA", name: "Qatar", demonym: "Qatari" },
+      { code: "US", name: "United States", demonym: "American" },
+      { code: "GB", name: "United Kingdom", demonym: "British" },
+      { code: "IN", name: "India", demonym: "Indian" },
+      { code: "PK", name: "Pakistan", demonym: "Pakistani" },
     ];
   }
 }
@@ -1627,25 +2087,80 @@ export async function fetchNationalities(query?: string) {
  */
 export async function fetchLoyaltyPrograms(query?: string) {
   try {
-    const qs = query ? `?active=true&q=${encodeURIComponent(query)}` : '?active=true';
+    const qs = query
+      ? `?active=true&q=${encodeURIComponent(query)}`
+      : "?active=true";
     const res = await staticFetch<{ data: any[] }>(`/loyalty-programs${qs}`);
     const rows = res?.data ?? [];
     if (rows.length > 0) return rows;
   } catch (e) {
-    console.warn('[fetchLoyaltyPrograms] DB fetch failed, using static fallback:', e);
+    console.warn(
+      "[fetchLoyaltyPrograms] DB fetch failed, using static fallback:",
+      e,
+    );
   }
   // Hardcoded fallback
   return [
-    { id: 'skywards', airlineCode: 'EK', airlineName: 'Emirates', programName: 'Emirates Skywards' },
-    { id: 'privilege-club', airlineCode: 'QR', airlineName: 'Qatar Airways', programName: 'Privilege Club' },
-    { id: 'alfursan', airlineCode: 'SV', airlineName: 'Saudia', programName: 'Alfursan' },
-    { id: 'miles-more', airlineCode: 'LH', airlineName: 'Lufthansa', programName: 'Miles & More' },
-    { id: 'flying-blue', airlineCode: 'AF', airlineName: 'Air France', programName: 'Flying Blue' },
-    { id: 'executive-club', airlineCode: 'BA', airlineName: 'British Airways', programName: 'Executive Club' },
-    { id: 'aadvantage', airlineCode: 'AA', airlineName: 'American Airlines', programName: 'AAdvantage' },
-    { id: 'mileageplus', airlineCode: 'UA', airlineName: 'United Airlines', programName: 'MileagePlus' },
-    { id: 'skymiles', airlineCode: 'DL', airlineName: 'Delta Air Lines', programName: 'SkyMiles' },
-    { id: 'krisflyer', airlineCode: 'SQ', airlineName: 'Singapore Airlines', programName: 'KrisFlyer' },
+    {
+      id: "skywards",
+      airlineCode: "EK",
+      airlineName: "Emirates",
+      programName: "Emirates Skywards",
+    },
+    {
+      id: "privilege-club",
+      airlineCode: "QR",
+      airlineName: "Qatar Airways",
+      programName: "Privilege Club",
+    },
+    {
+      id: "alfursan",
+      airlineCode: "SV",
+      airlineName: "Saudia",
+      programName: "Alfursan",
+    },
+    {
+      id: "miles-more",
+      airlineCode: "LH",
+      airlineName: "Lufthansa",
+      programName: "Miles & More",
+    },
+    {
+      id: "flying-blue",
+      airlineCode: "AF",
+      airlineName: "Air France",
+      programName: "Flying Blue",
+    },
+    {
+      id: "executive-club",
+      airlineCode: "BA",
+      airlineName: "British Airways",
+      programName: "Executive Club",
+    },
+    {
+      id: "aadvantage",
+      airlineCode: "AA",
+      airlineName: "American Airlines",
+      programName: "AAdvantage",
+    },
+    {
+      id: "mileageplus",
+      airlineCode: "UA",
+      airlineName: "United Airlines",
+      programName: "MileagePlus",
+    },
+    {
+      id: "skymiles",
+      airlineCode: "DL",
+      airlineName: "Delta Air Lines",
+      programName: "SkyMiles",
+    },
+    {
+      id: "krisflyer",
+      airlineCode: "SQ",
+      airlineName: "Singapore Airlines",
+      programName: "KrisFlyer",
+    },
   ];
 }
 
@@ -1653,10 +2168,10 @@ export async function fetchLoyaltyPrograms(query?: string) {
 export async function holdFlightBooking(bookingData: any) {
   try {
     // Use the new flight-booking orchestrator with isRefundable validation
-    const res = await api.post('/api/flight-booking/hold', bookingData);
+    const res = await api.post("/api/flight-booking/hold", bookingData);
     return res;
   } catch (error) {
-    console.error('Failed to hold flight booking:', error);
+    console.error("Failed to hold flight booking:", error);
     throw error;
   }
 }
@@ -1664,43 +2179,41 @@ export async function holdFlightBooking(bookingData: any) {
 export async function holdHotelBooking(bookingData: any) {
   try {
     // Use the new hotel-booking orchestrator with isRefundable validation
-    const res = await api.post('/api/hotel-booking/hold', bookingData);
+    const res = await api.post("/api/hotel-booking/hold", bookingData);
     return res;
   } catch (error) {
-    console.error('Failed to hold hotel booking:', error);
+    console.error("Failed to hold hotel booking:", error);
     throw error;
   }
 }
 
-export async function listBookings(scope: string = 'all') {
+export async function listBookings(scope: string = "all") {
   try {
     const res = await apiGetWithRetry<any>(`/bookings?scope=${scope}`);
     return res?.bookings || res || [];
   } catch (error) {
-    console.error('Failed to list bookings:', error);
+    console.error("Failed to list bookings:", error);
     return []; // Return empty list on error
   }
 }
 
-
-
 // Document Management
 export async function listDocuments() {
   try {
-    const res = await api.get('/user/documents');
+    const res = await api.get("/user/documents");
     return Array.isArray(res) ? res : [];
   } catch (error) {
-    console.error('Failed to list documents:', error);
+    console.error("Failed to list documents:", error);
     return [];
   }
 }
 
 export async function uploadDocument(data: any) {
   try {
-    const res = await api.post('/user/documents', data);
+    const res = await api.post("/user/documents", data);
     return res;
   } catch (error) {
-    console.error('Failed to upload document:', error);
+    console.error("Failed to upload document:", error);
     throw error;
   }
 }
@@ -1717,101 +2230,124 @@ export async function deleteDocument(id: string) {
 
 // Minimal query key helpers used across hooks/pages
 export const queryKeys = {
-  auth: { user: ['auth', 'user'] },
-  user: { profile: ['user', 'profile'] },
+  auth: { user: ["auth", "user"] },
+  user: { profile: ["user", "profile"] },
   search: {
-    flights: (params: any) => ['search', 'flights', params],
-    hotels: (params: any) => ['search', 'hotels', params],
+    flights: (params: any) => ["search", "flights", params],
+    hotels: (params: any) => ["search", "hotels", params],
   },
   bookings: {
-    list: (scope: string) => ['bookings', scope],
-    detail: (id: string) => ['booking', id],
-    all: ['bookings', 'all'],
+    list: (scope: string) => ["bookings", scope],
+    detail: (id: string) => ["booking", id],
+    all: ["bookings", "all"],
   },
 };
 
 // Simple token helpers (persist to localStorage)
-let inMemoryAccessToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
-let inMemoryRefreshToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+let inMemoryAccessToken: string | null =
+  typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+let inMemoryRefreshToken: string | null =
+  typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
 
 export function setAccessToken(token: string | null) {
   inMemoryAccessToken = token;
-  if (typeof window !== 'undefined') {
-    if (token) localStorage.setItem('accessToken', token);
-    else localStorage.removeItem('accessToken');
+  if (typeof window !== "undefined") {
+    if (token) localStorage.setItem("accessToken", token);
+    else localStorage.removeItem("accessToken");
   }
 }
 
 export function setRefreshToken(token: string | null) {
   inMemoryRefreshToken = token;
-  if (typeof window !== 'undefined') {
-    if (token) localStorage.setItem('refreshToken', token);
-    else localStorage.removeItem('refreshToken');
+  if (typeof window !== "undefined") {
+    if (token) localStorage.setItem("refreshToken", token);
+    else localStorage.removeItem("refreshToken");
   }
 }
 
 export function clearTokens() {
   inMemoryAccessToken = null;
   inMemoryRefreshToken = null;
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   }
 }
 
 // Helper to join base and path with exactly one slash
 function joinBase(base: string, path: string): string {
-  const b = (base || '').replace(/\/$/, '');
-  const p = path.startsWith('/') ? path : `/${path}`;
+  const b = (base || "").replace(/\/$/, "");
+  const p = path.startsWith("/") ? path : `/${path}`;
   return `${b}${p}`;
 }
 
 // Safe logger that redacts tokens and reduces noise in production
-const isProd = typeof import.meta !== 'undefined' && (import.meta as any).env?.MODE === 'production';
+const isProd =
+  typeof import.meta !== "undefined" &&
+  (import.meta as any).env?.MODE === "production";
 function safeLog(...args: any[]) {
   if (isProd) return; // no-op in prod
-  try { console.log(...args); } catch { }
+  try {
+    console.log(...args);
+  } catch {}
 }
 function safeError(...args: any[]) {
-  try { console.error(...args); } catch { }
+  try {
+    console.error(...args);
+  } catch {}
 }
 
 // Helper to call real backend; returns parsed JSON or throws, with timeout and normalization
 async function remoteFetch(path: string, opts: RequestInit = {}) {
-  if (API_BASE_URL === null || typeof API_BASE_URL === 'undefined') {
-    throw new Error('API_BASE_URL not configured');
+  if (API_BASE_URL === null || typeof API_BASE_URL === "undefined") {
+    throw new Error("API_BASE_URL not configured");
   }
-  const url = path.startsWith('http') ? path : joinBase(API_BASE_URL, path);
+  const url = path.startsWith("http") ? path : joinBase(API_BASE_URL, path);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15000);
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(opts.headers as Record<string, string> || {}),
+    "Content-Type": "application/json",
+    ...((opts.headers as Record<string, string>) || {}),
   };
-  if (inMemoryAccessToken) headers['Authorization'] = `Bearer [REDACTED]`;
+  if (inMemoryAccessToken) headers["Authorization"] = `Bearer [REDACTED]`;
 
-  safeLog(`[remoteFetch] Request: ${opts.method || 'GET'} ${url}`);
+  safeLog(`[remoteFetch] Request: ${opts.method || "GET"} ${url}`);
   try {
-    const res = await fetch(url, { credentials: 'include', ...opts, headers, signal: controller.signal });
-    safeLog(`[remoteFetch] Response: ${res.status} ${res.statusText} from ${url}`);
+    const res = await fetch(url, {
+      credentials: "include",
+      ...opts,
+      headers,
+      signal: controller.signal,
+    });
+    safeLog(
+      `[remoteFetch] Response: ${res.status} ${res.statusText} from ${url}`,
+    );
 
     if (!res.ok) {
-      const raw = await res.text().catch(() => '');
+      const raw = await res.text().catch(() => "");
       let msg = raw;
-      try { const j = JSON.parse(raw); msg = j.message || j.error || raw; } catch { }
+      try {
+        const j = JSON.parse(raw);
+        msg = j.message || j.error || raw;
+      } catch {}
       const err: any = new Error(msg || `HTTP ${res.status}`);
       err.status = res.status;
       err.statusText = res.statusText;
       throw err;
     }
 
-    const contentType = res.headers.get('content-type') || '';
-    const result = contentType.includes('application/json') ? await res.json() : await res.text();
+    const contentType = res.headers.get("content-type") || "";
+    const result = contentType.includes("application/json")
+      ? await res.json()
+      : await res.text();
     return result;
   } catch (error: any) {
-    safeError(`[remoteFetch] Exception:`, { message: error?.message, name: error?.name });
+    safeError(`[remoteFetch] Exception:`, {
+      message: error?.message,
+      name: error?.name,
+    });
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -1821,29 +2357,44 @@ async function remoteFetch(path: string, opts: RequestInit = {}) {
 // Real API object - no mock fallbacks
 export const api = {
   async get<T = any>(path: string): Promise<T> {
-    return await remoteFetch(path, { method: 'GET' });
+    return await remoteFetch(path, { method: "GET" });
   },
   async post<T = any>(path: string, data?: unknown): Promise<T> {
-    return await remoteFetch(path, { method: 'POST', body: data ? JSON.stringify(data) : undefined });
+    return await remoteFetch(path, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    });
   },
   async put<T = any>(path: string, data?: unknown): Promise<T> {
-    return await remoteFetch(path, { method: 'PUT', body: data ? JSON.stringify(data) : undefined });
+    return await remoteFetch(path, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    });
   },
   async patch<T = any>(path: string, data?: unknown): Promise<T> {
-    return await remoteFetch(path, { method: 'PATCH', body: data ? JSON.stringify(data) : undefined });
+    return await remoteFetch(path, {
+      method: "PATCH",
+      body: data ? JSON.stringify(data) : undefined,
+    });
   },
   async delete<T = any>(path: string): Promise<T> {
-    return await remoteFetch(path, { method: 'DELETE' });
+    return await remoteFetch(path, { method: "DELETE" });
   },
 };
 
 // Retry helper for idempotent GETs only
-function sleep(ms: number) { return new Promise(res => setTimeout(res, ms)); }
-async function apiGetWithRetry<T = any>(path: string, maxRetries = 2, baseDelay = 300): Promise<T> {
+function sleep(ms: number) {
+  return new Promise((res) => setTimeout(res, ms));
+}
+async function apiGetWithRetry<T = any>(
+  path: string,
+  maxRetries = 2,
+  baseDelay = 300,
+): Promise<T> {
   let attempt = 0;
-  for (; ;) {
+  for (;;) {
     try {
-      return await remoteFetch(path, { method: 'GET' });
+      return await remoteFetch(path, { method: "GET" });
     } catch (err: any) {
       const status = err?.status;
       const retriable = !status || (status >= 500 && status < 600);
@@ -1857,32 +2408,44 @@ async function apiGetWithRetry<T = any>(path: string, maxRetries = 2, baseDelay 
 }
 
 // Booking API functions
-export async function confirmFlightBooking(bookingId: string, paymentDetails: any) {
+export async function confirmFlightBooking(
+  bookingId: string,
+  paymentDetails: any,
+) {
   try {
-    const result = await api.post(`/bookings/flight/confirm/${bookingId}`, paymentDetails);
+    const result = await api.post(
+      `/bookings/flight/confirm/${bookingId}`,
+      paymentDetails,
+    );
     return result;
   } catch (error) {
-    console.error('Failed to confirm flight booking:', error);
+    console.error("Failed to confirm flight booking:", error);
     throw error;
   }
 }
 
-export async function confirmHotelBooking(bookingId: string, paymentDetails: any) {
+export async function confirmHotelBooking(
+  bookingId: string,
+  paymentDetails: any,
+) {
   try {
-    const result = await api.post(`/bookings/hotel/confirm/${bookingId}`, paymentDetails);
+    const result = await api.post(
+      `/bookings/hotel/confirm/${bookingId}`,
+      paymentDetails,
+    );
     return result;
   } catch (error) {
-    console.error('Failed to confirm hotel booking:', error);
+    console.error("Failed to confirm hotel booking:", error);
     throw error;
   }
 }
 
 export async function fetchWallets() {
   try {
-    const result = await api.get('/wallets');
+    const result = await api.get("/wallets");
     return result;
   } catch (error) {
-    console.error('Failed to fetch wallets:', error);
+    console.error("Failed to fetch wallets:", error);
     throw error;
   }
 }
@@ -1899,9 +2462,9 @@ export async function fetchHotelRates(params: {
 }) {
   try {
     // LITEAPI routes are mounted at /api in booking-service
-    return await api.post('/api/hotels/rates', params);
+    return await api.post("/api/hotels/rates", params);
   } catch (error) {
-    console.error('fetchHotelRates failed:', error);
+    console.error("fetchHotelRates failed:", error);
     throw error;
   }
 }
@@ -1913,9 +2476,9 @@ export async function prebookHotel(params: {
 }) {
   try {
     // LITEAPI routes are mounted at /api in booking-service
-    return await api.post('/api/rates/prebook', params);
+    return await api.post("/api/rates/prebook", params);
   } catch (error) {
-    console.error('prebookHotel failed:', error);
+    console.error("prebookHotel failed:", error);
     throw error;
   }
 }
@@ -1927,9 +2490,9 @@ export async function bookHotel(params: {
 }) {
   try {
     // LITEAPI routes are mounted at /api in booking-service
-    return await api.post('/api/rates/book', params);
+    return await api.post("/api/rates/book", params);
   } catch (error) {
-    console.error('bookHotel failed:', error);
+    console.error("bookHotel failed:", error);
     throw error;
   }
 }
@@ -1938,27 +2501,27 @@ export async function bookHotel(params: {
 
 export async function fetchLoyaltySettings() {
   try {
-    return await api.get('/loyalty/loyalties');
+    return await api.get("/loyalty/loyalties");
   } catch (error) {
-    console.error('fetchLoyaltySettings failed:', error);
+    console.error("fetchLoyaltySettings failed:", error);
     throw error;
   }
 }
 
 export async function updateLoyaltySettings(settings: any) {
   try {
-    return await api.put('/loyalty/loyalties', settings);
+    return await api.put("/loyalty/loyalties", settings);
   } catch (error) {
-    console.error('updateLoyaltySettings failed:', error);
+    console.error("updateLoyaltySettings failed:", error);
     throw error;
   }
 }
 
 export async function fetchGuests() {
   try {
-    return await api.get('/loyalty/guests');
+    return await api.get("/loyalty/guests");
   } catch (error) {
-    console.error('fetchGuests failed:', error);
+    console.error("fetchGuests failed:", error);
     throw error;
   }
 }
@@ -1976,9 +2539,9 @@ export async function fetchGuestDetail(guestId: string) {
 
 export async function listHotelBookings() {
   try {
-    return await api.get('/bookings');
+    return await api.get("/bookings");
   } catch (error) {
-    console.error('listHotelBookings failed:', error);
+    console.error("listHotelBookings failed:", error);
     throw error;
   }
 }
@@ -1994,7 +2557,10 @@ export async function getHotelBooking(bookingId: string) {
 
 export async function cancelHotelBooking(bookingId: string, reason?: string) {
   try {
-    return await api.put(`/bookings/${bookingId}`, { status: 'cancelled', cancellationReason: reason });
+    return await api.put(`/bookings/${bookingId}`, {
+      status: "cancelled",
+      cancellationReason: reason,
+    });
   } catch (error) {
     console.error(`cancelHotelBooking failed for ${bookingId}:`, error);
     throw error;
@@ -2018,13 +2584,12 @@ export async function enableLoyaltyProgram(settings: {
   programName?: string;
 }) {
   try {
-    return await api.post('/loyalties', settings);
+    return await api.post("/loyalties", settings);
   } catch (error) {
-    console.error('enableLoyaltyProgram failed:', error);
+    console.error("enableLoyaltyProgram failed:", error);
     throw error;
   }
 }
-
 
 export async function getBookingHistory(id: string) {
   try {
@@ -2034,9 +2599,30 @@ export async function getBookingHistory(id: string) {
     console.error(`Failed to fetch history for ${id}:`, error);
     // Return dummy history for now if endpoint fails (for dev/demo)
     return [
-      { id: '1', action: 'Booking Created', date: new Date().toISOString(), type: 'system', description: 'Booking created successfully', user: 'System' },
-      { id: '2', action: 'Payment Processed', date: new Date().toISOString(), type: 'payment', description: 'Payment received via Credit Card', user: 'Admin' },
-      { id: '3', action: 'User Login', date: new Date(Date.now() - 3600000).toISOString(), type: 'login', description: 'User accessed booking details', user: 'Customer' }
+      {
+        id: "1",
+        action: "Booking Created",
+        date: new Date().toISOString(),
+        type: "system",
+        description: "Booking created successfully",
+        user: "System",
+      },
+      {
+        id: "2",
+        action: "Payment Processed",
+        date: new Date().toISOString(),
+        type: "payment",
+        description: "Payment received via Credit Card",
+        user: "Admin",
+      },
+      {
+        id: "3",
+        action: "User Login",
+        date: new Date(Date.now() - 3600000).toISOString(),
+        type: "login",
+        description: "User accessed booking details",
+        user: "Customer",
+      },
     ];
   }
 }

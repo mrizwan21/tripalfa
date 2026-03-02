@@ -7,11 +7,29 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@tripalfa/ui-components/ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tripalfa/ui-components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@tripalfa/ui-components/ui/card";
 import { Button } from "@tripalfa/ui-components/ui/button";
 import { Badge } from "@tripalfa/ui-components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tripalfa/ui-components/ui/tabs";
-import { Loader2, Plane, ArrowRight, AlertCircle, CheckCircle2, AlertTriangle } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@tripalfa/ui-components/ui/tabs";
+import {
+  Loader2,
+  Plane,
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 import api from "@/shared/lib/api";
 
 export interface Flight {
@@ -64,7 +82,13 @@ interface FlightAmendmentWorkflowProps {
 }
 
 // AlertBox component - custom alert without external library
-const AlertBox = ({ type, children }: { type: "success" | "warning" | "error" | "info"; children: React.ReactNode }) => {
+const AlertBox = ({
+  type,
+  children,
+}: {
+  type: "success" | "warning" | "error" | "info";
+  children: React.ReactNode;
+}) => {
   const styles = {
     success: "bg-emerald-50 border-emerald-300 text-emerald-800",
     warning: "bg-amber-50 border-amber-300 text-amber-800",
@@ -72,15 +96,21 @@ const AlertBox = ({ type, children }: { type: "success" | "warning" | "error" | 
     info: "bg-blue-50 border-blue-300 text-blue-800",
   };
   const icons = {
-    success: <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />,
-    warning: <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0" />,
-    error: <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />,
-    info: <Loader2 className="h-5 w-5 text-blue-600 animate-spin flex-shrink-0" />,
+    success: (
+      <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0 gap-4" />
+    ),
+    warning: (
+      <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 gap-4" />
+    ),
+    error: <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0 gap-4" />,
+    info: (
+      <Loader2 className="h-5 w-5 text-blue-600 animate-spin flex-shrink-0 gap-4" />
+    ),
   };
   return (
     <div className={`rounded-lg border-2 p-4 flex gap-3 ${styles[type]}`}>
       {icons[type]}
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 gap-4">{children}</div>
     </div>
   );
 };
@@ -91,13 +121,17 @@ export default function FlightAmendmentWorkflow({
   onOpenChange,
   onAmendmentComplete,
 }: FlightAmendmentWorkflowProps) {
-  const [step, setStep] = useState<"view" | "search" | "compare" | "user_approval" | "finalize">("view");
+  const [step, setStep] = useState<
+    "view" | "search" | "compare" | "user_approval" | "finalize"
+  >("view");
   const [offers, setOffers] = useState<AmendmentOffer | null>(null);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userApprovalSent, setUserApprovalSent] = useState(false);
-  const [userApprovalWaitTime, setUserApprovalWaitTime] = useState<number | null>(null);
+  const [userApprovalWaitTime, setUserApprovalWaitTime] = useState<
+    number | null
+  >(null);
 
   if (!amendment) return null;
 
@@ -105,12 +139,15 @@ export default function FlightAmendmentWorkflow({
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post(`/admin/bookings/${amendment.bookingId}/amendment/search-flights`, {
-        currentFlight: amendment.currentFlight,
-        requestType: amendment.requestType,
-        requestedDate: amendment.requestedDate,
-        requestedRoute: amendment.requestedRoute,
-      });
+      const res = await api.post(
+        `/admin/bookings/${amendment.bookingId}/amendment/search-flights`,
+        {
+          currentFlight: amendment.currentFlight,
+          requestType: amendment.requestType,
+          requestedDate: amendment.requestedDate,
+          requestedRoute: amendment.requestedRoute,
+        },
+      );
       setOffers(res.data as AmendmentOffer);
       setStep("search");
     } catch (err) {
@@ -130,12 +167,15 @@ export default function FlightAmendmentWorkflow({
         adjustmentType: "none",
         adjustmentAmount: 0,
       };
-      await api.post(`/admin/bookings/${amendment.bookingId}/amendment/send-user-approval`, {
-        amendmentId: amendment.id,
-        selectedFlight: flight,
-        financialImpact,
-        expiresIn: 24 * 60,
-      });
+      await api.post(
+        `/admin/bookings/${amendment.bookingId}/amendment/send-user-approval`,
+        {
+          amendmentId: amendment.id,
+          selectedFlight: flight,
+          financialImpact,
+          expiresIn: 24 * 60,
+        },
+      );
       setUserApprovalSent(true);
       setUserApprovalWaitTime(24);
       setStep("user_approval");
@@ -152,11 +192,14 @@ export default function FlightAmendmentWorkflow({
     setLoading(true);
     setError(null);
     try {
-      const res = await api.post(`/admin/bookings/${amendment.bookingId}/amendment/finalize`, {
-        amendmentId: amendment.id,
-        selectedFlight,
-        financialImpact: offers.financialImpact,
-      });
+      const res = await api.post(
+        `/admin/bookings/${amendment.bookingId}/amendment/finalize`,
+        {
+          amendmentId: amendment.id,
+          selectedFlight,
+          financialImpact: offers.financialImpact,
+        },
+      );
       const updatedAmendment = res.data as FlightAmendmentRequest;
       onAmendmentComplete?.(updatedAmendment);
       onOpenChange(false);
@@ -177,25 +220,46 @@ export default function FlightAmendmentWorkflow({
             Flight Amendment Workflow
           </DialogTitle>
           <DialogDescription>
-            Booking: {amendment.bookingReference} | Traveler: {amendment.traveler}
+            Booking: {amendment.bookingReference} | Traveler:{" "}
+            {amendment.traveler}
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={step} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="view" disabled={step !== "view" && step !== "search"} className="text-xs">
+          <TabsList className="grid w-full grid-cols-5 gap-4">
+            <TabsTrigger
+              value="view"
+              disabled={step !== "view" && step !== "search"}
+              className="text-xs"
+            >
               <span className="hidden sm:inline">Current</span>
             </TabsTrigger>
-            <TabsTrigger value="search" disabled={!offers && step !== "search"} className="text-xs">
+            <TabsTrigger
+              value="search"
+              disabled={!offers && step !== "search"}
+              className="text-xs"
+            >
               <span className="hidden sm:inline">Search</span>
             </TabsTrigger>
-            <TabsTrigger value="compare" disabled={!offers && step !== "compare"} className="text-xs">
+            <TabsTrigger
+              value="compare"
+              disabled={!offers && step !== "compare"}
+              className="text-xs"
+            >
               <span className="hidden sm:inline">Compare</span>
             </TabsTrigger>
-            <TabsTrigger value="user_approval" disabled={!userApprovalSent} className="text-xs">
+            <TabsTrigger
+              value="user_approval"
+              disabled={!userApprovalSent}
+              className="text-xs"
+            >
               <span className="hidden sm:inline">User Approval</span>
             </TabsTrigger>
-            <TabsTrigger value="finalize" disabled={!userApprovalSent} className="text-xs">
+            <TabsTrigger
+              value="finalize"
+              disabled={!userApprovalSent}
+              className="text-xs"
+            >
               <span className="hidden sm:inline">Finalize</span>
             </TabsTrigger>
           </TabsList>
@@ -203,73 +267,109 @@ export default function FlightAmendmentWorkflow({
           {/* STEP 1: View Current Booking */}
           <TabsContent value="view" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Current Flight Booking</CardTitle>
-                <CardDescription>This is what the traveler wants to amend</CardDescription>
+              <CardHeader className="space-y-0 gap-2">
+                <CardTitle className="text-lg">
+                  Current Flight Booking
+                </CardTitle>
+                <CardDescription>
+                  This is what the traveler wants to amend
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg bg-slate-50">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-3">Flight Details</h4>
+                  <div className="p-4 border rounded-lg bg-muted">
+                    <h4 className="font-semibold text-sm text-foreground mb-3">
+                      Flight Details
+                    </h4>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Airline:</span>
-                        <span className="font-medium">{amendment.currentFlight.airline}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Route:</span>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Airline:</span>
                         <span className="font-medium">
-                          {amendment.currentFlight.departure} → {amendment.currentFlight.arrival}
+                          {amendment.currentFlight.airline}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Departure:</span>
-                        <span className="font-medium">{amendment.currentFlight.departureTime}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Arrival:</span>
-                        <span className="font-medium">{amendment.currentFlight.arrivalTime}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Duration:</span>
-                        <span className="font-medium">{amendment.currentFlight.duration}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Stops:</span>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Route:</span>
                         <span className="font-medium">
-                          {amendment.currentFlight.stops === 0 ? "Direct" : `${amendment.currentFlight.stops} stop(s)`}
+                          {amendment.currentFlight.departure} →{" "}
+                          {amendment.currentFlight.arrival}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          Departure:
+                        </span>
+                        <span className="font-medium">
+                          {amendment.currentFlight.departureTime}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Arrival:</span>
+                        <span className="font-medium">
+                          {amendment.currentFlight.arrivalTime}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Duration:</span>
+                        <span className="font-medium">
+                          {amendment.currentFlight.duration}
+                        </span>
+                      </div>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">Stops:</span>
+                        <span className="font-medium">
+                          {amendment.currentFlight.stops === 0
+                            ? "Direct"
+                            : `${amendment.currentFlight.stops} stop(s)`}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="p-4 border rounded-lg bg-blue-50">
-                    <h4 className="font-semibold text-sm text-slate-800 mb-3">Amendment Request</h4>
+                    <h4 className="font-semibold text-sm text-foreground mb-3">
+                      Amendment Request
+                    </h4>
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-slate-600">Request Type:</span>
+                      <div className="flex justify-between gap-4">
+                        <span className="text-muted-foreground">
+                          Request Type:
+                        </span>
                         <Badge variant="outline" className="capitalize">
                           {amendment.requestType.replace("_", " ")}
                         </Badge>
                       </div>
                       {amendment.requestedDate && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Desired Date:</span>
-                          <span className="font-medium">{new Date(amendment.requestedDate).toLocaleDateString()}</span>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            Desired Date:
+                          </span>
+                          <span className="font-medium">
+                            {new Date(
+                              amendment.requestedDate,
+                            ).toLocaleDateString()}
+                          </span>
                         </div>
                       )}
                       {amendment.requestedRoute && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-600">Desired Route:</span>
+                        <div className="flex justify-between gap-4">
+                          <span className="text-muted-foreground">
+                            Desired Route:
+                          </span>
                           <span className="font-medium">
-                            {amendment.requestedRoute.from} → {amendment.requestedRoute.to}
+                            {amendment.requestedRoute.from} →{" "}
+                            {amendment.requestedRoute.to}
                           </span>
                         </div>
                       )}
                       {amendment.requestReason && (
                         <div className="mt-3 pt-3 border-t border-blue-200">
-                          <p className="text-slate-600 text-xs mb-1">User Reason:</p>
-                          <p className="text-slate-800 italic text-sm">"{amendment.requestReason}"</p>
+                          <p className="text-muted-foreground text-xs mb-1">
+                            User Reason:
+                          </p>
+                          <p className="text-foreground italic text-sm">
+                            "{amendment.requestReason}"
+                          </p>
                         </div>
                       )}
                     </div>
@@ -300,44 +400,67 @@ export default function FlightAmendmentWorkflow({
             {offers ? (
               <div className="space-y-4">
                 <AlertBox type="success">
-                  <p className="font-semibold">Found {offers.flights.length} alternative flight option(s)</p>
-                  <p className="text-sm">Select a flight to compare prices and financial impact</p>
+                  <p className="font-semibold">
+                    Found {offers.flights.length} alternative flight option(s)
+                  </p>
+                  <p className="text-sm">
+                    Select a flight to compare prices and financial impact
+                  </p>
                 </AlertBox>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Available Alternatives</CardTitle>
+                  <CardHeader className="space-y-0 gap-2">
+                    <CardTitle className="text-lg">
+                      Available Alternatives
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {offers.flights.map((flight) => (
                         <div
                           key={flight.id}
-                          className="p-4 border rounded-lg hover:bg-slate-50 cursor-pointer transition"
+                          className="p-4 border rounded-lg hover:bg-muted cursor-pointer transition"
                           onClick={() => {
                             setSelectedFlight(flight);
                             setStep("compare");
                           }}
                         >
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="font-semibold text-slate-900">{flight.airline}</p>
+                            <div className="flex-1 gap-4">
+                              <p className="font-semibold text-foreground">
+                                {flight.airline}
+                              </p>
                               <div className="flex items-center gap-3 mt-2 text-sm">
-                                <span className="font-medium">{flight.departure}</span>
-                                <span className="text-slate-500">{flight.departureTime}</span>
-                                <ArrowRight className="h-4 w-4 text-slate-400" />
-                                <span className="font-medium">{flight.arrival}</span>
-                                <span className="text-slate-500">{flight.arrivalTime}</span>
+                                <span className="font-medium">
+                                  {flight.departure}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {flight.departureTime}
+                                </span>
+                                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">
+                                  {flight.arrival}
+                                </span>
+                                <span className="text-muted-foreground">
+                                  {flight.arrivalTime}
+                                </span>
                               </div>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {flight.duration} • {flight.stops === 0 ? "Direct" : `${flight.stops} stop(s)`}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {flight.duration} •{" "}
+                                {flight.stops === 0
+                                  ? "Direct"
+                                  : `${flight.stops} stop(s)`}
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-semibold text-lg text-slate-900">
+                              <p className="font-semibold text-lg text-foreground">
                                 {flight.currency} {flight.price.toFixed(2)}
                               </p>
-                              <Button size="sm" variant="outline" className="mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="mt-2"
+                              >
                                 View Details
                               </Button>
                             </div>
@@ -350,8 +473,10 @@ export default function FlightAmendmentWorkflow({
               </div>
             ) : (
               <div className="text-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-slate-400" />
-                <p className="text-slate-600">Searching for alternatives...</p>
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  Searching for alternatives...
+                </p>
               </div>
             )}
           </TabsContent>
@@ -361,39 +486,67 @@ export default function FlightAmendmentWorkflow({
             {selectedFlight && offers && (
               <>
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Itinerary Comparison</CardTitle>
+                  <CardHeader className="space-y-0 gap-2">
+                    <CardTitle className="text-lg">
+                      Itinerary Comparison
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="border-2 border-slate-200 rounded-lg p-4 bg-slate-50">
-                        <h4 className="font-semibold text-sm text-slate-700 mb-3">Current Booking</h4>
+                      <div className="border-2 border-border rounded-lg p-4 bg-muted">
+                        <h4 className="font-semibold text-sm text-foreground mb-3">
+                          Current Booking
+                        </h4>
                         <div className="space-y-2 text-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{amendment.currentFlight.departure}</span>
-                            <span className="text-xs text-slate-500">→</span>
-                            <span className="font-medium">{amendment.currentFlight.arrival}</span>
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-medium">
+                              {amendment.currentFlight.departure}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              →
+                            </span>
+                            <span className="font-medium">
+                              {amendment.currentFlight.arrival}
+                            </span>
                           </div>
-                          <p className="text-slate-600">{amendment.currentFlight.departureTime}</p>
-                          <p className="text-xs text-slate-500">{amendment.currentFlight.duration}</p>
-                          <div className="pt-2 border-t border-slate-200 text-lg font-semibold text-slate-900">
-                            {amendment.currentFlight.currency} {amendment.currentFlight.price.toFixed(2)}
+                          <p className="text-muted-foreground">
+                            {amendment.currentFlight.departureTime}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {amendment.currentFlight.duration}
+                          </p>
+                          <div className="pt-2 border-t border-border text-lg font-semibold text-foreground">
+                            {amendment.currentFlight.currency}{" "}
+                            {amendment.currentFlight.price.toFixed(2)}
                           </div>
                         </div>
                       </div>
 
                       <div className="border-2 border-emerald-500 rounded-lg p-4 bg-emerald-50">
-                        <h4 className="font-semibold text-sm text-emerald-700 mb-3">Proposed Amendment</h4>
+                        <h4 className="font-semibold text-sm text-emerald-700 mb-3">
+                          Proposed Amendment
+                        </h4>
                         <div className="space-y-2 text-sm">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{selectedFlight.departure}</span>
-                            <span className="text-xs text-slate-500">→</span>
-                            <span className="font-medium">{selectedFlight.arrival}</span>
+                          <div className="flex justify-between items-center gap-4">
+                            <span className="font-medium">
+                              {selectedFlight.departure}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              →
+                            </span>
+                            <span className="font-medium">
+                              {selectedFlight.arrival}
+                            </span>
                           </div>
-                          <p className="text-slate-600">{selectedFlight.departureTime}</p>
-                          <p className="text-xs text-slate-500">{selectedFlight.duration}</p>
+                          <p className="text-muted-foreground">
+                            {selectedFlight.departureTime}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {selectedFlight.duration}
+                          </p>
                           <div className="pt-2 border-t border-emerald-200 text-lg font-semibold text-emerald-700">
-                            {selectedFlight.currency} {selectedFlight.price.toFixed(2)}
+                            {selectedFlight.currency}{" "}
+                            {selectedFlight.price.toFixed(2)}
                           </div>
                         </div>
                       </div>
@@ -402,33 +555,52 @@ export default function FlightAmendmentWorkflow({
                 </Card>
 
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Financial Impact Analysis</CardTitle>
+                  <CardHeader className="space-y-0 gap-2">
+                    <CardTitle className="text-lg">
+                      Financial Impact Analysis
+                    </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-3 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-600 mb-1">Current Fare</p>
-                        <p className="text-2xl font-semibold text-slate-900">
-                          {offers.financialImpact.currency} {offers.financialImpact.currentFarePrice.toFixed(2)}
+                      <div className="p-3 bg-muted rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Current Fare
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground">
+                          {offers.financialImpact.currency}{" "}
+                          {offers.financialImpact.currentFarePrice.toFixed(2)}
                         </p>
                       </div>
                       <div className="p-3 bg-emerald-50 rounded-lg">
-                        <p className="text-sm text-emerald-600 mb-1">New Fare</p>
+                        <p className="text-sm text-emerald-600 mb-1">
+                          New Fare
+                        </p>
                         <p className="text-2xl font-semibold text-emerald-700">
-                          {offers.financialImpact.currency} {offers.financialImpact.newFarePrice.toFixed(2)}
+                          {offers.financialImpact.currency}{" "}
+                          {offers.financialImpact.newFarePrice.toFixed(2)}
                         </p>
                       </div>
                     </div>
 
                     {offers.financialImpact.adjustmentType !== "none" && (
-                      <AlertBox type={offers.financialImpact.adjustmentType === "refund" ? "success" : "warning"}>
+                      <AlertBox
+                        type={
+                          offers.financialImpact.adjustmentType === "refund"
+                            ? "success"
+                            : "warning"
+                        }
+                      >
                         <div>
                           <p className="font-semibold">
-                            {offers.financialImpact.adjustmentType === "refund" ? "Refund Due" : "Additional Charge"}
+                            {offers.financialImpact.adjustmentType === "refund"
+                              ? "Refund Due"
+                              : "Additional Charge"}
                           </p>
                           <p className="text-lg font-bold mt-1">
-                            {offers.financialImpact.currency} {Math.abs(offers.financialImpact.adjustmentAmount).toFixed(2)}
+                            {offers.financialImpact.currency}{" "}
+                            {Math.abs(
+                              offers.financialImpact.adjustmentAmount,
+                            ).toFixed(2)}
                           </p>
                           <p className="text-sm mt-2">
                             {offers.financialImpact.adjustmentType === "refund"
@@ -445,11 +617,14 @@ export default function FlightAmendmentWorkflow({
               </>
             )}
 
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <Button variant="outline" onClick={() => setStep("search")}>
                 Back
               </Button>
-              <Button onClick={() => handleSendToUserApproval(selectedFlight!)} disabled={!selectedFlight || loading}>
+              <Button
+                onClick={() => handleSendToUserApproval(selectedFlight!)}
+                disabled={!selectedFlight || loading}
+              >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Send to Traveler for Approval
               </Button>
@@ -459,48 +634,71 @@ export default function FlightAmendmentWorkflow({
           {/* STEP 4: User Approval Status */}
           <TabsContent value="user_approval" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Waiting for Traveler Approval</CardTitle>
-                <CardDescription>An approval link has been sent to {amendment.traveler}. They have 24 hours to respond.</CardDescription>
+              <CardHeader className="space-y-0 gap-2">
+                <CardTitle className="text-lg">
+                  Waiting for Traveler Approval
+                </CardTitle>
+                <CardDescription>
+                  An approval link has been sent to {amendment.traveler}. They
+                  have 24 hours to respond.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 p-6">
                 <AlertBox type="info">
                   <div>
-                    <p className="font-semibold">Approval Request In Progress</p>
-                    <p className="text-sm mt-1">Time remaining: ~{userApprovalWaitTime} hours</p>
-                    <p className="text-sm mt-2">We're waiting for the traveler to review and approve the financial changes and new itinerary.</p>
+                    <p className="font-semibold">
+                      Approval Request In Progress
+                    </p>
+                    <p className="text-sm mt-1">
+                      Time remaining: ~{userApprovalWaitTime} hours
+                    </p>
+                    <p className="text-sm mt-2">
+                      We're waiting for the traveler to review and approve the
+                      financial changes and new itinerary.
+                    </p>
                   </div>
                 </AlertBox>
 
                 {selectedFlight && offers && (
                   <div className="space-y-3">
-                    <h4 className="font-semibold text-slate-800">What's Awaiting Approval:</h4>
+                    <h4 className="font-semibold text-foreground">
+                      What's Awaiting Approval:
+                    </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-3 border rounded-lg">
-                        <p className="text-sm text-slate-600 mb-2">New Flight Details</p>
-                        <p className="font-medium text-slate-900">{selectedFlight.airline}</p>
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-muted-foreground mb-2">
+                          New Flight Details
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {selectedFlight.airline}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
                           {selectedFlight.departure} → {selectedFlight.arrival}
                         </p>
-                        <p className="text-sm text-slate-600">{selectedFlight.departureTime}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {selectedFlight.departureTime}
+                        </p>
                       </div>
                       <div className="p-3 border rounded-lg">
-                        <p className="text-sm text-slate-600 mb-2">Financial Impact</p>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Financial Impact
+                        </p>
                         <Badge
                           variant="default"
                           className={
                             offers.financialImpact.adjustmentType === "refund"
                               ? "bg-emerald-100 text-emerald-800 border-0"
-                              : offers.financialImpact.adjustmentType === "charge"
-                              ? "bg-amber-100 text-amber-800 border-0"
-                              : "bg-slate-100 text-slate-800 border-0"
+                              : offers.financialImpact.adjustmentType ===
+                                  "charge"
+                                ? "bg-amber-100 text-amber-800 border-0"
+                                : "bg-muted text-foreground border-0"
                           }
                         >
                           {offers.financialImpact.adjustmentType === "refund"
                             ? `Refund: ${offers.financialImpact.currency} ${offers.financialImpact.adjustmentAmount.toFixed(2)}`
                             : offers.financialImpact.adjustmentType === "charge"
-                            ? `Charge: ${offers.financialImpact.currency} ${offers.financialImpact.adjustmentAmount.toFixed(2)}`
-                            : "No change"}
+                              ? `Charge: ${offers.financialImpact.currency} ${offers.financialImpact.adjustmentAmount.toFixed(2)}`
+                              : "No change"}
                         </Badge>
                       </div>
                     </div>
@@ -508,16 +706,23 @@ export default function FlightAmendmentWorkflow({
                 )}
 
                 <AlertBox type="warning">
-                  <p>Once the traveler approves, you must finalize the amendment to complete the process. They will receive confirmation immediately after.</p>
+                  <p>
+                    Once the traveler approves, you must finalize the amendment
+                    to complete the process. They will receive confirmation
+                    immediately after.
+                  </p>
                 </AlertBox>
               </CardContent>
             </Card>
 
-            <div className="flex justify-between">
+            <div className="flex justify-between gap-4">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Close (Stay in Queue)
               </Button>
-              <Button onClick={() => setStep("finalize")} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button
+                onClick={() => setStep("finalize")}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
                 Check Approval Status
               </Button>
             </div>
@@ -526,45 +731,70 @@ export default function FlightAmendmentWorkflow({
           {/* STEP 5: Finalize Amendment */}
           <TabsContent value="finalize" className="space-y-4">
             <AlertBox type="success">
-              <p className="font-semibold">✓ Traveler has approved the amendment</p>
-              <p className="text-sm mt-1">All details are confirmed. Click below to finalize and process the flight amendment.</p>
+              <p className="font-semibold">
+                ✓ Traveler has approved the amendment
+              </p>
+              <p className="text-sm mt-1">
+                All details are confirmed. Click below to finalize and process
+                the flight amendment.
+              </p>
             </AlertBox>
 
             {selectedFlight && offers && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Amendment Summary - Ready to Finalize</CardTitle>
+                <CardHeader className="space-y-0 gap-2">
+                  <CardTitle className="text-lg">
+                    Amendment Summary - Ready to Finalize
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-3 bg-slate-50 rounded-lg">
-                      <p className="text-xs text-slate-600 uppercase tracking-wide mb-2">Booking Reference</p>
-                      <p className="font-semibold text-lg text-slate-900">{amendment.bookingReference}</p>
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                        Booking Reference
+                      </p>
+                      <p className="font-semibold text-lg text-foreground">
+                        {amendment.bookingReference}
+                      </p>
                     </div>
-                    <div className="p-3 bg-slate-50 rounded-lg">
-                      <p className="text-xs text-slate-600 uppercase tracking-wide mb-2">Traveler</p>
-                      <p className="font-semibold text-slate-900">{amendment.traveler}</p>
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide mb-2">
+                        Traveler
+                      </p>
+                      <p className="font-semibold text-foreground">
+                        {amendment.traveler}
+                      </p>
                     </div>
                   </div>
 
                   <div className="border-t pt-4">
-                    <h4 className="font-semibold text-slate-800 mb-3">New Flight Assignment</h4>
+                    <h4 className="font-semibold text-foreground mb-3">
+                      New Flight Assignment
+                    </h4>
                     <div className="p-4 border border-emerald-300 bg-emerald-50 rounded-lg">
                       <div className="flex items-center gap-4">
-                        <div className="flex-1">
-                          <p className="font-semibold text-slate-900">{selectedFlight.airline}</p>
-                          <div className="flex items-center gap-2 mt-2 text-slate-800">
-                            <span className="font-medium">{selectedFlight.departure}</span>
+                        <div className="flex-1 gap-4">
+                          <p className="font-semibold text-foreground">
+                            {selectedFlight.airline}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2 text-foreground">
+                            <span className="font-medium">
+                              {selectedFlight.departure}
+                            </span>
                             <ArrowRight className="h-4 w-4" />
-                            <span className="font-medium">{selectedFlight.arrival}</span>
+                            <span className="font-medium">
+                              {selectedFlight.arrival}
+                            </span>
                           </div>
-                          <p className="text-sm text-slate-600 mt-1">
-                            {selectedFlight.departureTime} • {selectedFlight.duration}
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {selectedFlight.departureTime} •{" "}
+                            {selectedFlight.duration}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-slate-900">
-                            {selectedFlight.currency} {selectedFlight.price.toFixed(2)}
+                          <p className="text-lg font-bold text-foreground">
+                            {selectedFlight.currency}{" "}
+                            {selectedFlight.price.toFixed(2)}
                           </p>
                         </div>
                       </div>
@@ -573,8 +803,16 @@ export default function FlightAmendmentWorkflow({
 
                   {offers.financialImpact.adjustmentType !== "none" && (
                     <div className="border-t pt-4">
-                      <h4 className="font-semibold text-slate-800 mb-3">Financial Settlement</h4>
-                      <AlertBox type={offers.financialImpact.adjustmentType === "refund" ? "success" : "warning"}>
+                      <h4 className="font-semibold text-foreground mb-3">
+                        Financial Settlement
+                      </h4>
+                      <AlertBox
+                        type={
+                          offers.financialImpact.adjustmentType === "refund"
+                            ? "success"
+                            : "warning"
+                        }
+                      >
                         <div>
                           <p className="font-semibold">
                             {offers.financialImpact.adjustmentType === "refund"
@@ -604,7 +842,11 @@ export default function FlightAmendmentWorkflow({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Save Draft & Exit
               </Button>
-              <Button onClick={handleFinalizeAmendment} disabled={loading} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button
+                onClick={handleFinalizeAmendment}
+                disabled={loading}
+                className="hover:"
+              >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Finalize Amendment
               </Button>

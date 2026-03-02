@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
+    "module": "Node16",
     "composite": true,
     "declaration": true,
     "declarationMap": true,

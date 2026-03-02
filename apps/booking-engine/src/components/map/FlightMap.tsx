@@ -5,15 +5,15 @@
  * Uses Mapbox GL JS for interactive maps with flight paths.
  */
 
-import React from 'react';
-import { Plane, Clock, Navigation } from 'lucide-react';
-import { MapboxMap } from './MapboxMap';
+import React from "react";
+import { Plane, Clock, Navigation } from "lucide-react";
+import { MapboxMap } from "./MapboxMap";
 import {
   FlightMapMarker,
   FlightPath,
   MapCoordinates,
   MARKER_COLORS,
-} from '../../lib/mapbox-config';
+} from "../../lib/mapbox-config";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -30,25 +30,28 @@ interface FlightSegment {
 interface FlightMapProps {
   // Flight segments
   segments?: FlightSegment[];
-  
+
   // Airport coordinates (looked up from DB or API)
-  airports?: Record<string, {
-    code: string;
-    name: string;
-    city: string;
-    country?: string;
-    latitude: number;
-    longitude: number;
-  }>;
-  
+  airports?: Record<
+    string,
+    {
+      code: string;
+      name: string;
+      city: string;
+      country?: string;
+      latitude: number;
+      longitude: number;
+    }
+  >;
+
   // Or provide pre-built flight path
   flightPath?: FlightPath;
   flightMarkers?: FlightMapMarker[];
-  
+
   // Map configuration
   height?: string;
   className?: string;
-  
+
   // UI options
   showFlightInfo?: boolean;
   animated?: boolean;
@@ -61,7 +64,16 @@ interface FlightMapProps {
  */
 function segmentsToMapData(
   segments: FlightSegment[],
-  airports: Record<string, { code: string; name: string; city: string; latitude: number; longitude: number }>
+  airports: Record<
+    string,
+    {
+      code: string;
+      name: string;
+      city: string;
+      latitude: number;
+      longitude: number;
+    }
+  >,
 ): { path: FlightPath; markers: FlightMapMarker[] } {
   if (segments.length === 0) {
     // Return default (empty)
@@ -73,15 +85,15 @@ function segmentsToMapData(
       markers: [],
     };
   }
-  
+
   const markers: FlightMapMarker[] = [];
   const stopovers: MapCoordinates[] = [];
-  
+
   // Process each segment
   segments.forEach((segment, index) => {
     const originAirport = airports[segment.from];
     const destAirport = airports[segment.to];
-    
+
     // Add origin marker (only for first segment)
     if (index === 0 && originAirport) {
       markers.push({
@@ -91,10 +103,10 @@ function segmentsToMapData(
         city: originAirport.city,
         latitude: originAirport.latitude,
         longitude: originAirport.longitude,
-        type: 'origin',
+        type: "origin",
       });
     }
-    
+
     // Add stopover markers (for connecting flights)
     if (index > 0 && originAirport) {
       markers.push({
@@ -104,14 +116,14 @@ function segmentsToMapData(
         city: originAirport.city,
         latitude: originAirport.latitude,
         longitude: originAirport.longitude,
-        type: 'stopover',
+        type: "stopover",
       });
       stopovers.push({
         latitude: originAirport.latitude,
         longitude: originAirport.longitude,
       });
     }
-    
+
     // Add destination marker (only for last segment)
     if (index === segments.length - 1 && destAirport) {
       markers.push({
@@ -121,10 +133,10 @@ function segmentsToMapData(
         city: destAirport.city,
         latitude: destAirport.latitude,
         longitude: destAirport.longitude,
-        type: 'destination',
+        type: "destination",
       });
     }
-    
+
     // Add intermediate destinations as stopovers
     if (index < segments.length - 1 && destAirport) {
       stopovers.push({
@@ -133,15 +145,15 @@ function segmentsToMapData(
       });
     }
   });
-  
+
   // Build flight path
   const firstSegment = segments[0];
   const lastSegment = segments[segments.length - 1];
   const originAirport = airports[firstSegment.from];
   const destAirport = airports[lastSegment.to];
-  
+
   const path: FlightPath = {
-    origin: originAirport 
+    origin: originAirport
       ? { longitude: originAirport.longitude, latitude: originAirport.latitude }
       : { longitude: 0, latitude: 0 },
     destination: destAirport
@@ -149,7 +161,7 @@ function segmentsToMapData(
       : { longitude: 0, latitude: 0 },
     stopovers: stopovers.length > 0 ? stopovers : undefined,
   };
-  
+
   return { path, markers };
 }
 
@@ -157,7 +169,7 @@ function segmentsToMapData(
  * Format duration in hours and minutes
  */
 function formatDuration(minutes?: number): string {
-  if (!minutes) return '';
+  if (!minutes) return "";
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${hours}h ${mins}m`;
@@ -170,46 +182,57 @@ function FlightInfoCard({
   airports,
 }: {
   segments: FlightSegment[];
-  airports: Record<string, { code: string; name: string; city: string; latitude: number; longitude: number }>;
+  airports: Record<
+    string,
+    {
+      code: string;
+      name: string;
+      city: string;
+      latitude: number;
+      longitude: number;
+    }
+  >;
 }) {
   if (segments.length === 0) return null;
-  
+
   const firstSegment = segments[0];
   const lastSegment = segments[segments.length - 1];
   const totalDuration = segments.reduce((sum, s) => sum + (s.duration || 0), 0);
-  
+
   return (
     <div className="absolute top-6 left-6 bg-white rounded-2xl shadow-2xl p-4 z-10 border border-gray-100">
       <div className="flex items-center gap-4">
         {/* Origin */}
         <div className="text-center">
-          <p className="text-2xl font-black text-gray-900">{firstSegment.from}</p>
+          <p className="text-2xl font-black text-gray-900">
+            {firstSegment.from}
+          </p>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {airports[firstSegment.from]?.city || 'Origin'}
+            {airports[firstSegment.from]?.city || "Origin"}
           </p>
         </div>
-        
+
         {/* Flight path indicator */}
         <div className="flex items-center gap-2 px-4">
           <div className="w-2 h-2 rounded-full bg-green-500" />
           <div className="w-20 h-0.5 bg-gradient-to-r from-green-500 via-purple-500 to-red-500 relative">
-            <Plane 
-              size={16} 
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[#152467] rotate-90"
+            <Plane
+              size={16}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary rotate-90"
             />
           </div>
           <div className="w-2 h-2 rounded-full bg-red-500" />
         </div>
-        
+
         {/* Destination */}
         <div className="text-center">
           <p className="text-2xl font-black text-gray-900">{lastSegment.to}</p>
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {airports[lastSegment.to]?.city || 'Destination'}
+            {airports[lastSegment.to]?.city || "Destination"}
           </p>
         </div>
       </div>
-      
+
       {/* Flight details */}
       <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-gray-100">
         {totalDuration > 0 && (
@@ -220,7 +243,7 @@ function FlightInfoCard({
         )}
         {segments.length > 1 && (
           <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
-            {segments.length - 1} Stop{segments.length > 2 ? 's' : ''}
+            {segments.length - 1} Stop{segments.length > 2 ? "s" : ""}
           </span>
         )}
         {segments.length === 1 && (
@@ -240,38 +263,40 @@ export function FlightMap({
   airports = {},
   flightPath,
   flightMarkers,
-  height = '400px',
-  className = '',
+  height = "400px",
+  className = "",
   showFlightInfo = true,
   animated = true,
 }: FlightMapProps): React.JSX.Element {
   // Get flight path and markers
   let path: FlightPath | undefined = flightPath;
   let markers: FlightMapMarker[] = flightMarkers || [];
-  
+
   // Build from segments if provided
   if (segments && segments.length > 0 && Object.keys(airports).length > 0) {
     const mapData = segmentsToMapData(segments, airports);
     path = mapData.path;
     markers = mapData.markers;
   }
-  
+
   // No flight data
   if (!path || markers.length === 0) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-gray-100 rounded-2xl ${className}`}
         style={{ height }}
       >
         <div className="text-center p-8">
           <Plane className="mx-auto text-gray-300 mb-4" size={48} />
           <p className="text-gray-500 font-bold">Flight route not available</p>
-          <p className="text-gray-400 text-sm mt-2">Airport coordinates not provided</p>
+          <p className="text-gray-400 text-sm mt-2">
+            Airport coordinates not provided
+          </p>
         </div>
       </div>
     );
   }
-  
+
   return (
     <div className={`relative ${className}`}>
       <MapboxMap
@@ -282,12 +307,12 @@ export function FlightMap({
         showControls={true}
         interactive={true}
       />
-      
+
       {/* Flight info card */}
       {showFlightInfo && segments && segments.length > 0 && (
         <FlightInfoCard segments={segments} airports={airports} />
       )}
-      
+
       {/* Legend */}
       <div className="absolute bottom-6 right-6 bg-white rounded-xl shadow-lg p-3 z-10 border border-gray-100">
         <div className="flex items-center gap-4 text-[10px] font-bold">

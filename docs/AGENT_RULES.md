@@ -25,13 +25,13 @@
 
 ### 1.3 Database Architecture (DUAL SOURCE)
 
-| Database         | Purpose                                      | Access Method                      |
-|------------------|----------------------------------------------|-------------------------------------|
-| **Static Database** | All static/reference data            | PostgreSQL on Docker (local)        |
-| **NEON Database**   | Realtime API data, application data | MCP Server                         |
+| Database            | Purpose                             | Access Method                |
+| ------------------- | ----------------------------------- | ---------------------------- |
+| **Static Database** | All static/reference data           | PostgreSQL on Docker (local) |
+| **Neon Database**   | Realtime API data, application data | MCP Server                   |
 
 - **Static Data** → Source from local PostgreSQL static database
-- **Dynamic/Realtime Data** → Source from NEON database via MCP
+- **Dynamic/Realtime Data** → Source from Neon database via MCP
 
 ### 1.4 System Architecture
 
@@ -41,12 +41,12 @@
 
 ### 1.5 External API Integrations
 
-| Data Type | Provider |
-|-----------|----------|
-| Hotel Data | LITEAPI |
-| Flight Data | Duffel |
+| Data Type         | Provider     |
+| ----------------- | ------------ |
+| Hotel Data        | LITEAPI      |
+| Flight Data       | Duffel       |
 | Currency Exchange | OpenExchange |
-| Notifications | Brevo API |
+| Notifications     | Brevo API    |
 
 ### 1.6 Wallet Auto-Generation Rules
 
@@ -65,10 +65,10 @@
 
 ### 1.7 Booking Payment Options
 
-| Option | Description | Availability |
-|--------|-------------|--------------|
+| Option                         | Description                               | Availability              |
+| ------------------------------ | ----------------------------------------- | ------------------------- |
 | **Hold (Book Now, Pay Later)** | Reserve booking without immediate payment | **Refundable rates ONLY** |
-| **Pay Through Wallet** | Instant payment from wallet balance | All rates |
+| **Pay Through Wallet**         | Instant payment from wallet balance       | All rates                 |
 
 **Critical Logic:**
 
@@ -93,11 +93,11 @@
 - **Override Brevity:** Immediately suspend the "Zero Fluff" rule.
 - **Maximum Depth:** You must engage in exhaustive, deep-level reasoning.
 - **Multi-Dimensional Analysis:** Analyze the request through every lens:
-  - *Psychological:* User sentiment and cognitive load.
-  - *Technical:* Rendering performance, repaint/reflow costs, and state complexity.
-  - *Accessibility:* WCAG AAA strictness.
-  - *Scalability:* Long-term maintenance and modularity.
-- **Prohibition:** *NEVER* use surface-level logic. If the reasoning feels easy, dig deeper until the logic is irrefutable.
+  - _Psychological:_ User sentiment and cognitive load.
+  - _Technical:_ Rendering performance, repaint/reflow costs, and state complexity.
+  - _Accessibility:_ WCAG AAA strictness.
+  - _Scalability:_ Long-term maintenance and modularity.
+- **Prohibition:** _NEVER_ use surface-level logic. If the reasoning feels easy, dig deeper until the logic is irrefutable.
 
 ---
 
@@ -181,7 +181,7 @@ If a UI library (e.g., Shadcn UI, Radix, MUI) is detected or active in the proje
 
 ## 8. FILE ORGANIZATION CONVENTIONS
 
-```
+```text
 apps/
 ├── b2b-admin/          # Admin dashboard (React + Vite)
 ├── booking-engine/     # Main booking frontend (React + Vite)
@@ -228,4 +228,4 @@ pnpm db:push
 
 ---
 
-*This document serves as the authoritative guide for all AI agents working on the TripAlfa project. Deviations from these rules require explicit user approval.*
+_This document serves as the authoritative guide for all AI agents working on the TripAlfa project. Deviations from these rules require explicit user approval._

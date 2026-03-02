@@ -1,0 +1,620 @@
+{
+  "summary": {
+    "timestamp": "2026-03-01T19:55:43.331Z",
+    "totalTests": 52,
+    "passedTests": 52,
+    "failedTests": 0,
+    "skippedTests": 0,
+    "totalDuration": 3606,
+    "coverage": {
+      "walletCreation": true,
+      "topup": false,
+      "payment": false,
+      "transfer": false,
+      "refund": false,
+      "multiCurrency": false,
+      "reconciliation": false
+    },
+    "transactionsSummary": {
+      "totalTransactions": 27,
+      "byType": {
+        "undefined": 27
+      },
+      "totalVolume": 4025,
+      "totalFees": 0
+    },
+    "issues": [],
+    "recommendations": []
+  },
+  "results": [
+    {
+      "testName": "Create USD wallet",
+      "status": "passed",
+      "duration": 73
+    },
+    {
+      "testName": "Create EUR wallet",
+      "status": "passed",
+      "duration": 20
+    },
+    {
+      "testName": "Create GBP wallet",
+      "status": "passed",
+      "duration": 78
+    },
+    {
+      "testName": "Create JPY wallet",
+      "status": "passed",
+      "duration": 83
+    },
+    {
+      "testName": "Create AED wallet",
+      "status": "passed",
+      "duration": 12
+    },
+    {
+      "testName": "Create ZAR wallet",
+      "status": "passed",
+      "duration": 90
+    },
+    {
+      "testName": "Create AUD wallet",
+      "status": "passed",
+      "duration": 99
+    },
+    {
+      "testName": "Create CAD wallet",
+      "status": "passed",
+      "duration": 77
+    },
+    {
+      "testName": "Create CHF wallet",
+      "status": "passed",
+      "duration": 74
+    },
+    {
+      "testName": "Create CNY wallet",
+      "status": "passed",
+      "duration": 80
+    },
+    {
+      "testName": "Verify zero balance for new wallets",
+      "status": "passed",
+      "duration": 107
+    },
+    {
+      "testName": "Support all 65+ global currencies",
+      "status": "passed",
+      "duration": 0
+    },
+    {
+      "testName": "Top-up with Stripe (100 USD)",
+      "status": "passed",
+      "duration": 87
+    },
+    {
+      "testName": "Verify balance after top-up",
+      "status": "passed",
+      "duration": 13
+    },
+    {
+      "testName": "Top-up with PayPal (50 USD)",
+      "status": "passed",
+      "duration": 58
+    },
+    {
+      "testName": "Verify cumulative balance",
+      "status": "passed",
+      "duration": 78
+    },
+    {
+      "testName": "Top-up EUR wallet",
+      "status": "passed",
+      "duration": 95
+    },
+    {
+      "testName": "Idempotency: duplicate topup returns same transaction",
+      "status": "passed",
+      "duration": 83
+    },
+    {
+      "testName": "Pay 50 USD for booking",
+      "status": "passed",
+      "duration": 2
+    },
+    {
+      "testName": "Verify balance after payment",
+      "status": "passed",
+      "duration": 67
+    },
+    {
+      "testName": "Pay 100 USD for another booking",
+      "status": "passed",
+      "duration": 68
+    },
+    {
+      "testName": "Verify cumulative deductions",
+      "status": "passed",
+      "duration": 85
+    },
+    {
+      "testName": "Track transaction history (5 transactions)",
+      "status": "passed",
+      "duration": 48
+    },
+    {
+      "testName": "Process booking cancellation refund",
+      "status": "passed",
+      "duration": 65
+    },
+    {
+      "testName": "Verify balance increases after refund",
+      "status": "passed",
+      "duration": 27
+    },
+    {
+      "testName": "Process dispute refund",
+      "status": "passed",
+      "duration": 35
+    },
+    {
+      "testName": "Transfer 100 USD between customers",
+      "status": "passed",
+      "duration": 60
+    },
+    {
+      "testName": "Verify sender balance reduced by transfer + fee",
+      "status": "passed",
+      "duration": 85
+    },
+    {
+      "testName": "Verify recipient balance increased",
+      "status": "passed",
+      "duration": 4
+    },
+    {
+      "testName": "Top-up in USD (US Dollar)",
+      "status": "passed",
+      "duration": 64
+    },
+    {
+      "testName": "Top-up in CAD (Canadian Dollar)",
+      "status": "passed",
+      "duration": 57
+    },
+    {
+      "testName": "Top-up in EUR (Euro)",
+      "status": "passed",
+      "duration": 30
+    },
+    {
+      "testName": "Top-up in GBP (British Pound)",
+      "status": "passed",
+      "duration": 71
+    },
+    {
+      "testName": "Top-up in CHF (Swiss Franc)",
+      "status": "passed",
+      "duration": 95
+    },
+    {
+      "testName": "Top-up in JPY (Japanese Yen)",
+      "status": "passed",
+      "duration": 80
+    },
+    {
+      "testName": "Top-up in AUD (Australian Dollar)",
+      "status": "passed",
+      "duration": 16
+    },
+    {
+      "testName": "Top-up in CNY (Chinese Yuan)",
+      "status": "passed",
+      "duration": 100
+    },
+    {
+      "testName": "Top-up in INR (Indian Rupee)",
+      "status": "passed",
+      "duration": 90
+    },
+    {
+      "testName": "Top-up in SGD (Singapore Dollar)",
+      "status": "passed",
+      "duration": 24
+    },
+    {
+      "testName": "Top-up in AED (UAE Dirham)",
+      "status": "passed",
+      "duration": 6
+    },
+    {
+      "testName": "Top-up in SAR (Saudi Riyal)",
+      "status": "passed",
+      "duration": 43
+    },
+    {
+      "testName": "Top-up in ZAR (South African Rand)",
+      "status": "passed",
+      "duration": 3
+    },
+    {
+      "testName": "Top-up in EGP (Egyptian Pound)",
+      "status": "passed",
+      "duration": 99
+    },
+    {
+      "testName": "Top-up in BRL (Brazilian Real)",
+      "status": "passed",
+      "duration": 102
+    },
+    {
+      "testName": "Verify separate balances across 15 global currencies",
+      "status": "passed",
+      "duration": 464
+    },
+    {
+      "testName": "Support regional currency groups (Americas, Europe, Asia, ME, Africa)",
+      "status": "passed",
+      "duration": 0
+    },
+    {
+      "testName": "Maintain currency isolation (no cross-contamination)",
+      "status": "passed",
+      "duration": 152
+    },
+    {
+      "testName": "Get complete transaction history (multi-currency)",
+      "status": "passed",
+      "duration": 20
+    },
+    {
+      "testName": "Verify no duplicate transactions across all currencies",
+      "status": "passed",
+      "duration": 0
+    },
+    {
+      "testName": "Validate all transaction currencies are supported",
+      "status": "passed",
+      "duration": 0
+    },
+    {
+      "testName": "Verify transaction amounts are positive",
+      "status": "passed",
+      "duration": 0
+    },
+    {
+      "testName": "Generate transaction summary report",
+      "status": "passed",
+      "duration": 0
+    }
+  ],
+  "transactions": [
+    {
+      "success": true,
+      "transactionId": "txn-1772394940603",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_123456789",
+      "timestamp": "2026-03-01T19:55:40.603Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394940676",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 50,
+      "previousBalance": 100,
+      "newBalance": 150,
+      "gateway": "paypal",
+      "gatewayReference": "pp_987654321",
+      "timestamp": "2026-03-01T19:55:40.676Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394940849",
+      "userId": "2e4e5fbf-4588-429b-b072-39af1c09a8e7",
+      "currency": "EUR",
+      "amount": 500,
+      "previousBalance": 0,
+      "newBalance": 500,
+      "gateway": "card",
+      "gatewayReference": "card_555666777",
+      "timestamp": "2026-03-01T19:55:40.849Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394940879",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 25,
+      "previousBalance": 150,
+      "newBalance": 175,
+      "gateway": "stripe",
+      "gatewayReference": "pi_111111111",
+      "timestamp": "2026-03-01T19:55:40.879Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394940932",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 25,
+      "previousBalance": 175,
+      "newBalance": 200,
+      "gateway": "stripe",
+      "gatewayReference": "pi_111111111",
+      "timestamp": "2026-03-01T19:55:40.932Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941040",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 500,
+      "previousBalance": 200,
+      "newBalance": 700,
+      "gateway": "stripe",
+      "gatewayReference": "pi_prep_payment",
+      "timestamp": "2026-03-01T19:55:41.040Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941043",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 50,
+      "previousBalance": 700,
+      "newBalance": 650,
+      "bookingId": "BOOKING_001",
+      "timestamp": "2026-03-01T19:55:41.043Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941177",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 100,
+      "previousBalance": 650,
+      "newBalance": 550,
+      "bookingId": "BOOKING_002",
+      "timestamp": "2026-03-01T19:55:41.178Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941376",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 50,
+      "previousBalance": 550,
+      "newBalance": 600,
+      "reason": "booking_cancellation",
+      "timestamp": "2026-03-01T19:55:41.376Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941437",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 25,
+      "previousBalance": 600,
+      "newBalance": 625,
+      "reason": "dispute",
+      "timestamp": "2026-03-01T19:55:41.437Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941661",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 1000,
+      "previousBalance": 625,
+      "newBalance": 1625,
+      "gateway": "stripe",
+      "gatewayReference": "pi_transfer_prep",
+      "timestamp": "2026-03-01T19:55:41.661Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941721",
+      "from": {
+        "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+        "previousBalance": 1625,
+        "newBalance": 1523
+      },
+      "to": {
+        "userId": "2e4e5fbf-4588-429b-b072-39af1c09a8e7",
+        "previousBalance": 0,
+        "newBalance": 100
+      },
+      "amount": 100,
+      "fee": 2,
+      "currency": "USD",
+      "timestamp": "2026-03-01T19:55:41.721Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941876",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "USD",
+      "amount": 100,
+      "previousBalance": 1523,
+      "newBalance": 1623,
+      "gateway": "stripe",
+      "gatewayReference": "pi_usd_1772394941813",
+      "timestamp": "2026-03-01T19:55:41.876Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941932",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "CAD",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_cad_1772394941877",
+      "timestamp": "2026-03-01T19:55:41.932Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394941963",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "EUR",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_eur_1772394941934",
+      "timestamp": "2026-03-01T19:55:41.963Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942032",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "GBP",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_gbp_1772394941964",
+      "timestamp": "2026-03-01T19:55:42.032Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942129",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "CHF",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_chf_1772394942035",
+      "timestamp": "2026-03-01T19:55:42.129Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942208",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "JPY",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_jpy_1772394942130",
+      "timestamp": "2026-03-01T19:55:42.208Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942224",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "AUD",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_aud_1772394942210",
+      "timestamp": "2026-03-01T19:55:42.224Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942325",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "CNY",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_cny_1772394942226",
+      "timestamp": "2026-03-01T19:55:42.325Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942414",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "INR",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_inr_1772394942326",
+      "timestamp": "2026-03-01T19:55:42.414Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942439",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "SGD",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_sgd_1772394942416",
+      "timestamp": "2026-03-01T19:55:42.439Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942446",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "AED",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_aed_1772394942440",
+      "timestamp": "2026-03-01T19:55:42.446Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942487",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "SAR",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_sar_1772394942446",
+      "timestamp": "2026-03-01T19:55:42.487Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942492",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "ZAR",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_zar_1772394942489",
+      "timestamp": "2026-03-01T19:55:42.492Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942589",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "EGP",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_egp_1772394942492",
+      "timestamp": "2026-03-01T19:55:42.589Z"
+    },
+    {
+      "success": true,
+      "transactionId": "txn-1772394942691",
+      "userId": "beb3bc4c-acee-4cea-bb9e-694995f5633e",
+      "currency": "BRL",
+      "amount": 100,
+      "previousBalance": 0,
+      "newBalance": 100,
+      "gateway": "stripe",
+      "gatewayReference": "pi_brl_1772394942591",
+      "timestamp": "2026-03-01T19:55:42.691Z"
+    }
+  ],
+  "generatedAt": "2026-03-01T19:55:43.334Z"
+}

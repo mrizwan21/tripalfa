@@ -1,21 +1,21 @@
 /**
  * Hybrid Data Service
- * Manages real-time hotel data using a hybrid Redis + NEON approach
- * 
+ * Manages real-time hotel data using a hybrid Redis + Neon approach
+ *
  * Strategy:
  * - REDIS: Fast caching for frequently accessed data (search results, rates, sessions)
- * - NEON: Persistent storage for bookings, guests, transactions, vouchers
- * 
+ * - Neon: Persistent storage for bookings, guests, transactions, vouchers
+ *
  * This provides:
  * - Low latency responses from Redis cache
- * - Data durability and consistency from NEON
+ * - Data durability and consistency from Neon
  * - Cost-effective caching with configurable TTL
  */
 
-import { PrismaClient } from '@prisma/client';
-import CacheService, { CacheKeys, CACHE_TTL } from '../cache/redis.js';
+import { PrismaClient } from "@prisma/client";
+import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
 
-// Initialize NEON Prisma client
+// Initialize Neon Prisma client
 const neon = new PrismaClient();
 
 export type { PrismaClient };
@@ -26,17 +26,17 @@ export type { PrismaClient };
 
 export const BookingDataService = {
   /**
-   * Get booking from cache first, then NEON
+   * Get booking from cache first, then Neon
    */
   async getBooking(bookingId: string) {
     // Try Redis cache first
     const cacheKey = CacheKeys.prebookSession(bookingId);
     const cached = await CacheService.get(cacheKey);
-    if (cached && typeof cached === 'object') {
-      return { ...(cached as object), source: 'cache' };
+    if (cached && typeof cached === "object") {
+      return { ...(cached as object), source: "cache" };
     }
 
-    // Fetch from NEON
+    // Fetch from Neon
     const booking = await neon.booking.findUnique({
       where: { id: bookingId },
     });
@@ -46,11 +46,11 @@ export const BookingDataService = {
       await CacheService.set(cacheKey, booking, CACHE_TTL.MEDIUM);
     }
 
-    return booking ? { ...booking, source: 'neon' } : null;
+    return booking ? { ...booking, source: "neon" } : null;
   },
 
   /**
-   * Create booking in NEON and optionally cache
+   * Create booking in Neon and optionally cache
    */
   async createBooking(data: {
     userId: string;
@@ -83,7 +83,7 @@ export const BookingDataService = {
   },
 
   /**
-   * Update booking in NEON and invalidate cache
+   * Update booking in Neon and invalidate cache
    */
   async updateBooking(bookingId: string, data: any) {
     const booking = await neon.booking.update({
@@ -120,7 +120,7 @@ export const BookingDataService = {
         where,
         take: limit,
         skip: offset,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
       }),
       neon.booking.count({ where }),
     ]);
@@ -135,13 +135,13 @@ export const BookingDataService = {
 
 export const GuestDataService = {
   /**
-   * Get guest from cache first, then NEON
+   * Get guest from cache first, then Neon
    */
   async getGuest(guestId: string) {
     const cacheKey = CacheKeys.guestData(guestId);
     const cached = await CacheService.get(cacheKey);
-    if (cached && typeof cached === 'object') {
-      return { ...(cached as object), source: 'cache' };
+    if (cached && typeof cached === "object") {
+      return { ...(cached as object), source: "cache" };
     }
 
     const guest = await neon.user.findUnique({
@@ -160,7 +160,7 @@ export const GuestDataService = {
       await CacheService.set(cacheKey, guest, CACHE_TTL.GUEST_DATA);
     }
 
-    return guest ? { ...guest, source: 'neon' } : null;
+    return guest ? { ...guest, source: "neon" } : null;
   },
 
   /**
@@ -197,7 +197,7 @@ export const GuestDataService = {
   },
 
   /**
-   * Update guest in NEON and invalidate cache
+   * Update guest in Neon and invalidate cache
    */
   async updateGuest(guestId: string, data: any) {
     const guest = await neon.user.update({
@@ -214,17 +214,17 @@ export const GuestDataService = {
 };
 
 // ============================================================================
-// Transaction Data Management  
+// Transaction Data Management
 // ============================================================================
 
 export const TransactionDataService = {
   /**
-   * Record a transaction in NEON
+   * Record a transaction in Neon
    */
   async createTransaction(data: {
     bookingId: string;
     userId: string;
-    type: 'payment' | 'refund' | 'award' | 'redeem';
+    type: "payment" | "refund" | "award" | "redeem";
     amount: number;
     currency: string;
     description?: string;
@@ -269,10 +269,10 @@ export const TransactionDataService = {
       },
       take: limit,
       skip: offset,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
-    return bookings.map(b => {
+    return bookings.map((b) => {
       const metadata = b.metadata as Record<string, any> | null;
       return {
         id: b.id,
@@ -302,10 +302,14 @@ export const HotelSearchCache = {
     results: any[];
   }) {
     const cacheKey = CacheKeys.hotelSearch(params);
-    await CacheService.set(cacheKey, {
-      ...params,
-      cachedAt: new Date().toISOString(),
-    }, CACHE_TTL.HOTEL_SEARCH);
+    await CacheService.set(
+      cacheKey,
+      {
+        ...params,
+        cachedAt: new Date().toISOString(),
+      },
+      CACHE_TTL.HOTEL_SEARCH,
+    );
   },
 
   /**
@@ -323,15 +327,24 @@ export const HotelSearchCache = {
   /**
    * Cache room rates
    */
-  async cacheRoomRates(hotelId: string, checkin: string, checkout: string, rates: any[]) {
+  async cacheRoomRates(
+    hotelId: string,
+    checkin: string,
+    checkout: string,
+    rates: any[],
+  ) {
     const cacheKey = CacheKeys.hotelRates(hotelId, checkin, checkout);
-    await CacheService.set(cacheKey, {
-      hotelId,
-      checkin,
-      checkout,
-      rates,
-      cachedAt: new Date().toISOString(),
-    }, CACHE_TTL.HOTEL_RATES);
+    await CacheService.set(
+      cacheKey,
+      {
+        hotelId,
+        checkin,
+        checkout,
+        rates,
+        cachedAt: new Date().toISOString(),
+      },
+      CACHE_TTL.HOTEL_RATES,
+    );
   },
 
   /**
@@ -344,12 +357,12 @@ export const HotelSearchCache = {
 };
 
 // ============================================================================
-// Voucher Management (NEON persistence)
+// Voucher Management (Neon persistence)
 // ============================================================================
 
 export const VoucherDataService = {
   /**
-   * Create voucher record in NEON
+   * Create voucher record in Neon
    */
   async createVoucher(data: {
     code: string;
@@ -357,7 +370,7 @@ export const VoucherDataService = {
     userId: string;
     amount: number;
     currency: string;
-    status: 'active' | 'used' | 'expired';
+    status: "active" | "used" | "expired";
     expiresAt?: Date;
   }) {
     // This would create a voucher record in a Voucher table
@@ -391,7 +404,7 @@ export const VoucherDataService = {
     const bookings = await neon.booking.findMany({
       where: {
         metadata: {
-          path: ['voucher', 'code'],
+          path: ["voucher", "code"],
           equals: code,
         },
       },
@@ -405,14 +418,17 @@ export const VoucherDataService = {
   /**
    * Update voucher status
    */
-  async updateVoucherStatus(bookingId: string, status: 'active' | 'used' | 'expired') {
+  async updateVoucherStatus(
+    bookingId: string,
+    status: "active" | "used" | "expired",
+  ) {
     const booking = await neon.booking.findUnique({
       where: { id: bookingId },
     });
 
     const metadata = booking?.metadata as Record<string, any> | null;
     if (!metadata?.voucher) {
-      throw new Error('Voucher not found');
+      throw new Error("Voucher not found");
     }
 
     return neon.booking.update({

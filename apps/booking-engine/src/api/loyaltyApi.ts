@@ -31,7 +31,7 @@ export interface LoyaltyTransaction {
   id: string;
   customerId: string;
   points: number;
-  type: 'EARN' | 'REDEEM' | 'EXPIRE' | 'BONUS' | 'ADJUSTMENT';
+  type: "EARN" | "REDEEM" | "EXPIRE" | "BONUS" | "ADJUSTMENT";
   description: string;
   bookingReference?: string;
   createdAt: string;
@@ -66,10 +66,10 @@ class LoyaltyApiError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
-    this.name = 'LoyaltyApiError';
+    this.name = "LoyaltyApiError";
   }
 }
 
@@ -84,7 +84,8 @@ class LoyaltyApi {
 
   private constructor() {
     // Use booking-service through API gateway
-    this.baseUrl = import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:3000';
+    this.baseUrl =
+      import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:3000";
   }
 
   static getInstance(): LoyaltyApi {
@@ -105,20 +106,20 @@ class LoyaltyApi {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     for (let attempt = 0; attempt <= this.retryConfig.maxRetries; attempt++) {
       try {
         const headers: HeadersInit = {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...options.headers,
         };
 
-        const authToken = localStorage.getItem('authToken');
+        const authToken = localStorage.getItem("authToken");
         if (authToken) {
-          headers['Authorization'] = `Bearer ${authToken}`;
+          headers["Authorization"] = `Bearer ${authToken}`;
         }
 
         const response = await fetch(url, {
@@ -131,7 +132,7 @@ class LoyaltyApi {
           throw new LoyaltyApiError(
             response.status,
             errorData.message || `HTTP ${response.status}`,
-            errorData
+            errorData,
           );
         }
 
@@ -146,7 +147,7 @@ class LoyaltyApi {
       }
     }
 
-    throw new Error('Max retries exceeded');
+    throw new Error("Max retries exceeded");
   }
 
   async getUserLoyalty(userId: string): Promise<CustomerLoyaltyRecord> {
@@ -161,22 +162,22 @@ class LoyaltyApi {
       dateTo?: string;
       limit?: number;
       offset?: number;
-    }
+    },
   ): Promise<{ data: LoyaltyTransaction[]; total: number }> {
     const params = new URLSearchParams();
-    if (filters?.type) params.append('type', filters.type);
-    if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
-    if (filters?.dateTo) params.append('dateTo', filters.dateTo);
-    if (filters?.limit) params.append('limit', String(filters.limit));
-    if (filters?.offset) params.append('offset', String(filters.offset));
+    if (filters?.type) params.append("type", filters.type);
+    if (filters?.dateFrom) params.append("dateFrom", filters.dateFrom);
+    if (filters?.dateTo) params.append("dateTo", filters.dateTo);
+    if (filters?.limit) params.append("limit", String(filters.limit));
+    if (filters?.offset) params.append("offset", String(filters.offset));
 
     return this.request<{ data: LoyaltyTransaction[]; total: number }>(
-      `/api/loyalty/transactions/${userId}?${params.toString()}`
+      `/api/loyalty/transactions/${userId}?${params.toString()}`,
     );
   }
 
   async getTierBenefits(): Promise<TierBenefits[]> {
-    return this.request<TierBenefits[]>('/api/loyalty/tiers');
+    return this.request<TierBenefits[]>("/api/loyalty/tiers");
   }
 
   async getTierBenefit(tierId: string): Promise<TierBenefits> {
@@ -185,14 +186,14 @@ class LoyaltyApi {
 
   async redeemPoints(
     userId: string,
-    request: RedemptionRequest
+    request: RedemptionRequest,
   ): Promise<RedemptionResult> {
     return this.request<RedemptionResult>(
       `/api/loyalty/user/${userId}/redeem-points`,
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(request),
-      }
+      },
     );
   }
 
@@ -201,7 +202,7 @@ class LoyaltyApi {
     expiryDate: string;
   }> {
     return this.request<{ expiringPoints: number; expiryDate: string }>(
-      `/api/loyalty/user/${userId}/expiring-points`
+      `/api/loyalty/user/${userId}/expiring-points`,
     );
   }
 
@@ -209,18 +210,18 @@ class LoyaltyApi {
     userId: string,
     points: number,
     bookingReference: string,
-    description: string
+    description: string,
   ): Promise<{ success: boolean; newBalance: number }> {
     return this.request<{ success: boolean; newBalance: number }>(
       `/api/loyalty/user/${userId}/award-points`,
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
           points,
           bookingReference,
           description,
         }),
-      }
+      },
     );
   }
 }

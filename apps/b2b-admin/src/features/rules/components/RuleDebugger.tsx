@@ -1,105 +1,110 @@
-import React, { useState, useCallback, useMemo } from 'react'
-import * as Icons from 'lucide-react';
+import React, { useState, useCallback, useMemo } from "react";
+import * as Icons from "lucide-react";
 
-const {
-  Play,
-  Pause,
-  RotateCcw,
-  ChevronDown
-} = Icons as any;
-import type { RuleDebugSession, RuleCondition, DebugLog } from '@/features/rules/types-rule-engine'
+import { Button } from "@tripalfa/ui-components/ui/button";
+
+const { Play, Pause, RotateCcw, ChevronDown } = Icons as any;
+
+type DebugLog = {
+  level: "info" | "warn" | "error" | "debug" | string;
+  timestamp: string | number | Date;
+  message: string;
+  [key: string]: any;
+};
 
 // ============================================================================
 // RULE DEBUGGER - STEP-THROUGH DEBUGGING INTERFACE
 // ============================================================================
 
 export interface RuleDebuggerProps {
-  ruleName?: string
-  onDebugStart?: (sampleData: any) => Promise<any>
-  onDebugStop?: () => Promise<void>
-  disabled?: boolean
+  ruleName?: string;
+  onDebugStart?: (sampleData: any) => Promise<any>;
+  onDebugStop?: () => Promise<void>;
+  disabled?: boolean;
 }
 
 export interface DebugStep {
-  stepId: string
-  type: 'condition_evaluation' | 'action_execution' | 'condition_check'
-  description: string
-  status: 'pending' | 'running' | 'completed' | 'failed'
-  duration?: number
-  result?: any
-  error?: string
+  stepId: string;
+  type: "condition_evaluation" | "action_execution" | "condition_check";
+  description: string;
+  status: "pending" | "running" | "completed" | "failed";
+  duration?: number;
+  result?: any;
+  error?: string;
 }
 
 export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
-  ruleName = 'Rule',
+  ruleName = "Rule",
   onDebugStart,
   onDebugStop,
   disabled = false,
 }) => {
-  const [isDebugging, setIsDebugging] = useState(false)
-  const [sampleData, setSampleData] = useState<string>('{}')
-  const [debugSession, setDebugSession] = useState<any>(null)
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set())
-  const [isRunning, setIsRunning] = useState(false)
+  const [isDebugging, setIsDebugging] = useState(false);
+  const [sampleData, setSampleData] = useState<string>("{}");
+  const [debugSession, setDebugSession] = useState<any>(null);
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  const [isRunning, setIsRunning] = useState(false);
 
   const handleStartDebug = useCallback(async () => {
     try {
-      const data = JSON.parse(sampleData)
-      setIsRunning(true)
-      const session = await onDebugStart?.(data)
-      setDebugSession(session || null)
-      setIsDebugging(true)
+      const data = JSON.parse(sampleData);
+      setIsRunning(true);
+      const session = await onDebugStart?.(data);
+      setDebugSession(session || null);
+      setIsDebugging(true);
     } catch (err) {
-      alert('Invalid JSON input')
+      alert("Invalid JSON input");
     } finally {
-      setIsRunning(false)
+      setIsRunning(false);
     }
-  }, [sampleData, onDebugStart])
+  }, [sampleData, onDebugStart]);
 
   const handleStopDebug = useCallback(async () => {
-    await onDebugStop?.()
-    setIsDebugging(false)
-    setDebugSession(null)
-  }, [onDebugStop])
+    await onDebugStop?.();
+    setIsDebugging(false);
+    setDebugSession(null);
+  }, [onDebugStop]);
 
   const handleReset = useCallback(() => {
-    setSampleData('{}')
-    setDebugSession(null)
-    setIsDebugging(false)
-    setExpandedSteps(new Set())
-  }, [])
+    setSampleData("{}");
+    setDebugSession(null);
+    setIsDebugging(false);
+    setExpandedSteps(new Set());
+  }, []);
 
   const toggleStep = (stepId: string) => {
     setExpandedSteps((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(stepId)) {
-        next.delete(stepId)
+        next.delete(stepId);
       } else {
-        next.add(stepId)
+        next.add(stepId);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const conditionEvals = useMemo(() => {
-    return debugSession?.conditionEvaluationSteps || []
-  }, [debugSession])
+    return debugSession?.conditionEvaluationSteps || [];
+  }, [debugSession]);
 
   const actionSimulations = useMemo(() => {
-    return debugSession?.actionSimulations || []
-  }, [debugSession])
+    return debugSession?.actionSimulations || [];
+  }, [debugSession]);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Rule Debugger</h2>
-          <p className="text-gray-600 mt-1">Step-through debugging for {ruleName}</p>
+          <h2 className="text-2xl font-bold text-foreground">Rule Debugger</h2>
+          <p className="text-muted-foreground mt-1">
+            Step-through debugging for {ruleName}
+          </p>
         </div>
         <div className="flex gap-2">
           {!isDebugging && (
-            <button
+            <Button
               onClick={handleStartDebug}
               disabled={disabled || isRunning}
               className="
@@ -109,12 +114,12 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
               "
             >
               <Play size={18} />
-              {isRunning ? 'Starting...' : 'Start Debug'}
-            </button>
+              {isRunning ? "Starting..." : "Start Debug"}
+            </Button>
           )}
           {isDebugging && (
             <>
-              <button
+              <Button
                 onClick={handleStopDebug}
                 disabled={disabled}
                 className="
@@ -125,28 +130,32 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
               >
                 <Pause size={18} />
                 Stop Debug
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleReset}
                 disabled={disabled}
                 className="
-                  px-4 py-2 bg-gray-600 text-white rounded-lg font-medium
-                  hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed
+                  px-4 py-2 bg-muted text-foreground rounded-lg font-medium
+                  hover:bg-muted/80 disabled:opacity-50 disabled:cursor-not-allowed
                   transition-colors flex items-center gap-2
                 "
               >
                 <RotateCcw size={18} />
                 Reset
-              </button>
+              </Button>
             </>
           )}
         </div>
       </div>
 
       {/* Sample Data Input */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="font-semibold text-gray-900 mb-3">Sample Data</h3>
-        <p className="text-xs text-gray-600 mb-2">Provide sample data to test rule condition evaluation:</p>
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h3 className="font-semibold text-foreground mb-3 text-xl font-semibold tracking-tight">
+          Sample Data
+        </h3>
+        <p className="text-xs text-muted-foreground mb-2">
+          Provide sample data to test rule condition evaluation:
+        </p>
         <textarea
           value={sampleData}
           onChange={(e) => setSampleData(e.target.value)}
@@ -154,9 +163,9 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
           rows={6}
           placeholder={'{\n  "temperature": 45,\n  "userId": "user-123"\n}'}
           className="
-            w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm
+            w-full px-3 py-2 border border-border rounded-lg font-mono text-sm
             focus:outline-none focus:ring-2 focus:ring-blue-500
-            disabled:bg-gray-100 disabled:cursor-not-allowed
+            disabled:bg-muted disabled:cursor-not-allowed
           "
         />
       </div>
@@ -166,9 +175,11 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
         <div className="space-y-4">
           {/* Session Header */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <div>
-                <p className="font-semibold text-blue-900">Debug Session Active</p>
+                <p className="font-semibold text-blue-900">
+                  Debug Session Active
+                </p>
                 <p className="text-sm text-blue-700 mt-1">
                   Session ID: {debugSession.sessionId}
                 </p>
@@ -177,9 +188,13 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
                 <p className="text-sm text-blue-700">
                   Duration: {debugSession.duration}ms
                 </p>
-                <p className={`text-xs font-semibold mt-1 ${
-                  debugSession.overallStatus === 'success' ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <p
+                  className={`text-xs font-semibold mt-1 ${
+                    debugSession.overallStatus === "success"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
                   {debugSession.overallStatus.toUpperCase()}
                 </p>
               </div>
@@ -188,9 +203,13 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
 
           {/* Condition Evaluation Steps */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">Condition Evaluation</h3>
+            <h3 className="font-semibold text-foreground text-xl font-semibold tracking-tight">
+              Condition Evaluation
+            </h3>
             {conditionEvals.length === 0 ? (
-              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">No condition evaluations</p>
+              <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                No condition evaluations
+              </p>
             ) : (
               conditionEvals.map((step: any, idx: number) => (
                 <DebugStepCard
@@ -205,9 +224,13 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
 
           {/* Action Simulations */}
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">Action Simulations</h3>
+            <h3 className="font-semibold text-foreground text-xl font-semibold tracking-tight">
+              Action Simulations
+            </h3>
             {actionSimulations.length === 0 ? (
-              <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">No action simulations</p>
+              <p className="text-sm text-muted-foreground bg-muted p-3 rounded">
+                No action simulations
+              </p>
             ) : (
               actionSimulations.map((simulation: any, idx: number) => (
                 <ActionSimulationCard
@@ -223,8 +246,10 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
           {/* Debug Logs */}
           {debugSession.debugLogs && debugSession.debugLogs.length > 0 && (
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900">Debug Logs</h3>
-              <div className="bg-gray-900 text-gray-100 rounded-lg p-4 font-mono text-xs space-y-1 max-h-64 overflow-y-auto">
+              <h3 className="font-semibold text-foreground text-xl font-semibold tracking-tight">
+                Debug Logs
+              </h3>
+              <div className="bg-foreground text-background rounded-lg p-4 font-mono text-xs space-y-2 max-h-64 overflow-y-auto">
                 {debugSession.debugLogs.map((log: any, idx: number) => (
                   <DebugLogLine key={idx} log={log} />
                 ))}
@@ -240,8 +265,8 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
             />
             <SummaryCard
               label="Condition Result"
-              value={debugSession.conditionResult ? 'Matched' : 'Not Matched'}
-              color={debugSession.conditionResult ? 'green' : 'red'}
+              value={debugSession.conditionResult ? "Matched" : "Not Matched"}
+              color={debugSession.conditionResult ? "green" : "red"}
             />
             <SummaryCard
               label="Actions Simulated"
@@ -251,54 +276,66 @@ export const RuleDebugger: React.FC<RuleDebuggerProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // DEBUG STEP CARD SUB-COMPONENT
 // ============================================================================
 
 interface DebugStepCardProps {
-  step: any
-  isExpanded: boolean
-  onToggle: () => void
+  step: any;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
-const DebugStepCard: React.FC<DebugStepCardProps> = ({ step, isExpanded, onToggle }) => {
+const DebugStepCard: React.FC<DebugStepCardProps> = ({
+  step,
+  isExpanded,
+  onToggle,
+}) => {
   const statusColors: Record<string, string> = {
-    pending: 'bg-gray-100 text-gray-800',
-    running: 'bg-blue-100 text-blue-800',
-    completed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
-  }
+    pending: "bg-muted text-foreground",
+    running: "bg-blue-100 text-blue-800",
+    completed: "bg-green-100 text-green-800",
+    failed: "bg-red-100 text-red-800",
+  };
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <button
+    <div className="border border-border rounded-lg overflow-hidden">
+      <Button
         onClick={onToggle}
         className="
-          w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors
+          w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors
           text-left
-        "
+         rounded-md"
       >
         <ChevronDown
           size={18}
-          className={`transition-transform text-gray-400 flex-shrink-0 ${
-            isExpanded ? '' : '-rotate-90'
+          className={`transition-transform text-muted-foreground flex-shrink-0 ${
+            isExpanded ? "" : "-rotate-90"
           }`}
         />
-        <div className="flex-1">
-          <p className="font-medium text-gray-900">{step.description}</p>
-          <p className="text-xs text-gray-600 mt-1">{step.field || 'Condition'}</p>
+        <div className="flex-1 gap-4">
+          <p className="font-medium text-foreground">{step.description}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {step.field || "Condition"}
+          </p>
         </div>
-        <span className={`px-2 py-1 text-xs font-medium rounded ${statusColors[step.status]}`}>
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded ${statusColors[step.status]}`}
+        >
           {step.status.charAt(0).toUpperCase() + step.status.slice(1)}
         </span>
-        {step.duration && <span className="text-xs text-gray-600">{step.duration}ms</span>}
-      </button>
+        {step.duration && (
+          <span className="text-xs text-muted-foreground">
+            {step.duration}ms
+          </span>
+        )}
+      </Button>
 
       {isExpanded && (
-        <div className="border-t bg-gray-50 p-4 space-y-2">
+        <div className="border-t bg-muted p-4 space-y-2">
           <DetailRow label="Operator" value={step.operator} />
           <DetailRow label="Expected" value={step.expectedValue} />
           <DetailRow label="Actual" value={step.actualValue} />
@@ -308,17 +345,17 @@ const DebugStepCard: React.FC<DebugStepCardProps> = ({ step, isExpanded, onToggl
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // ACTION SIMULATION CARD SUB-COMPONENT
 // ============================================================================
 
 interface ActionSimulationCardProps {
-  simulation: any
-  isExpanded: boolean
-  onToggle: () => void
+  simulation: any;
+  isExpanded: boolean;
+  onToggle: () => void;
 }
 
 const ActionSimulationCard: React.FC<ActionSimulationCardProps> = ({
@@ -327,47 +364,58 @@ const ActionSimulationCard: React.FC<ActionSimulationCardProps> = ({
   onToggle,
 }) => {
   const statusColors: Record<string, string> = {
-    'would-execute': 'bg-blue-100 text-blue-800',
-    'would-skip': 'bg-gray-100 text-gray-800',
-    'would-fail': 'bg-red-100 text-red-800',
-    simulated: 'bg-green-100 text-green-800',
-  }
+    "would-execute": "bg-blue-100 text-blue-800",
+    "would-skip": "bg-muted text-foreground",
+    "would-fail": "bg-red-100 text-red-800",
+    simulated: "bg-green-100 text-green-800",
+  };
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <button
+    <div className="border border-border rounded-lg overflow-hidden">
+      <Button
         onClick={onToggle}
         className="
-          w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors
+          w-full flex items-center gap-3 p-3 hover:bg-muted transition-colors
           text-left
-        "
+         rounded-md"
       >
         <ChevronDown
           size={18}
-          className={`transition-transform text-gray-400 flex-shrink-0 ${
-            isExpanded ? '' : '-rotate-90'
+          className={`transition-transform text-muted-foreground flex-shrink-0 ${
+            isExpanded ? "" : "-rotate-90"
           }`}
         />
-        <div className="flex-1">
-          <p className="font-medium text-gray-900">{simulation.actionType}</p>
-          <p className="text-xs text-gray-600 mt-1">Action #{simulation.order}</p>
+        <div className="flex-1 gap-4">
+          <p className="font-medium text-foreground">{simulation.actionType}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Action #{simulation.order}
+          </p>
         </div>
-        <span className={`px-2 py-1 text-xs font-medium rounded ${
-          statusColors[simulation.simulationStatus] || statusColors['simulated']
-        }`}>
-          {simulation.simulationStatus.replace(/_/g, ' ')}
+        <span
+          className={`px-2 py-1 text-xs font-medium rounded ${
+            statusColors[simulation.simulationStatus] ||
+            statusColors["simulated"]
+          }`}
+        >
+          {simulation.simulationStatus.replace(/_/g, " ")}
         </span>
-        {simulation.duration && <span className="text-xs text-gray-600">{simulation.duration}ms</span>}
-      </button>
+        {simulation.duration && (
+          <span className="text-xs text-muted-foreground">
+            {simulation.duration}ms
+          </span>
+        )}
+      </Button>
 
       {isExpanded && (
-        <div className="border-t bg-gray-50 p-4 space-y-2">
+        <div className="border-t bg-muted p-4 space-y-2">
           <DetailRow label="Type" value={simulation.actionType} />
           <DetailRow label="Status" value={simulation.simulationStatus} />
           {simulation.simulatedOutput && (
             <div>
-              <p className="text-xs font-medium text-gray-700 mb-1">Output:</p>
-              <pre className="bg-gray-900 text-gray-100 p-2 rounded text-xs overflow-x-auto">
+              <p className="text-xs font-medium text-foreground mb-1">
+                Output:
+              </p>
+              <pre className="bg-foreground text-background p-2 rounded text-xs overflow-x-auto">
                 {JSON.stringify(simulation.simulatedOutput, null, 2)}
               </pre>
             </div>
@@ -378,87 +426,100 @@ const ActionSimulationCard: React.FC<ActionSimulationCardProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // DEBUG LOG LINE SUB-COMPONENT
 // ============================================================================
 
 interface DebugLogLineProps {
-  log: DebugLog
+  log: DebugLog;
 }
 
 const DebugLogLine: React.FC<DebugLogLineProps> = ({ log }) => {
   const levelColors: Record<string, string> = {
-    info: 'text-blue-300',
-    warn: 'text-yellow-300',
-    error: 'text-red-300',
-    debug: 'text-gray-400',
-  }
+    info: "text-blue-300",
+    warn: "text-yellow-300",
+    error: "text-red-300",
+    debug: "text-muted-foreground",
+  };
 
   return (
-    <div className={levelColors[log.level] || 'text-gray-300'}>
-      <span className="text-gray-600">[{log.timestamp.toString()}]</span> {log.message}
+    <div className={levelColors[log.level] || "text-muted-foreground"}>
+      <span className="text-muted-foreground">
+        [{log.timestamp.toString()}]
+      </span>{" "}
+      {log.message}
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // DETAIL ROW SUB-COMPONENT
 // ============================================================================
 
 interface DetailRowProps {
-  label: string
-  value: any
-  color?: 'default' | 'red' | 'green'
+  label: string;
+  value: any;
+  color?: "default" | "red" | "green";
 }
 
-const DetailRow: React.FC<DetailRowProps> = ({ label, value, color = 'default' }) => {
+const DetailRow: React.FC<DetailRowProps> = ({
+  label,
+  value,
+  color = "default",
+}) => {
   const colorClass = {
-    default: 'text-gray-600',
-    red: 'text-red-600',
-    green: 'text-green-600',
-  }[color]
+    default: "text-muted-foreground",
+    red: "text-red-600",
+    green: "text-green-600",
+  }[color];
 
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm font-medium text-gray-700">{label}:</span>
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-sm font-medium text-foreground">{label}:</span>
       <span className={`text-sm font-mono ${colorClass}`}>
-        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+        {typeof value === "object" ? JSON.stringify(value) : String(value)}
       </span>
     </div>
-  )
-}
+  );
+};
 
 // ============================================================================
 // SUMMARY CARD SUB-COMPONENT
 // ============================================================================
 
 interface SummaryCardProps {
-  label: string
-  value: string | number
-  color?: 'default' | 'green' | 'red'
+  label: string;
+  value: string | number;
+  color?: "default" | "green" | "red";
 }
 
-const SummaryCard: React.FC<SummaryCardProps> = ({ label, value, color = 'default' }) => {
+const SummaryCard: React.FC<SummaryCardProps> = ({
+  label,
+  value,
+  color = "default",
+}) => {
   const bgColors = {
-    default: 'bg-white',
-    green: 'bg-green-50',
-    red: 'bg-red-50',
-  }
+    default: "bg-card",
+    green: "bg-green-50",
+    red: "bg-red-50",
+  };
   const textColors = {
-    default: 'text-gray-900',
-    green: 'text-green-900',
-    red: 'text-red-900',
-  }
+    default: "text-foreground",
+    green: "text-green-900",
+    red: "text-red-900",
+  };
 
   return (
-    <div className={`${bgColors[color]} border border-gray-200 rounded-lg p-3 text-center`}>
-      <p className="text-xs text-gray-600 mb-1">{label}</p>
+    <div
+      className={`${bgColors[color]} border border-border rounded-lg p-3 text-center`}
+    >
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className={`text-lg font-bold ${textColors[color]}`}>{value}</p>
     </div>
-  )
-}
+  );
+};
 
-export default RuleDebugger
+export default RuleDebugger;

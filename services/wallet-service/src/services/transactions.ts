@@ -1,9 +1,14 @@
 // src/services/transactions.ts
 // Prisma-based transaction operations
-import { prisma } from '@tripalfa/shared-database';
-import type { WalletTransaction, TransactionInsertOptions } from '../types/wallet.js';
+import { prisma } from "@tripalfa/shared-database";
+import type {
+  WalletTransaction,
+  TransactionInsertOptions,
+} from "../types/wallet.js";
 
-export async function insertTransactionRecord(opts: TransactionInsertOptions): Promise<WalletTransaction> {
+export async function insertTransactionRecord(
+  opts: TransactionInsertOptions,
+): Promise<WalletTransaction> {
   const {
     walletId,
     type,
@@ -16,7 +21,7 @@ export async function insertTransactionRecord(opts: TransactionInsertOptions): P
     bookingId,
     paymentId,
     idempotencyKey,
-    status = 'completed',
+    status = "completed",
   } = opts;
 
   const transaction = await prisma.walletTransaction.create({

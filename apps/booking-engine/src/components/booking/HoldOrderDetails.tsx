@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import './HoldOrderDetails.css';
+import React, { useState, useEffect } from "react";
+import "./HoldOrderDetails.css";
 
 interface HoldOrder {
   id: string;
   orderId: string;
   reference: string;
-  status: 'active' | 'expired' | 'paid' | 'cancelled';
+  status: "active" | "expired" | "paid" | "cancelled";
   totalAmount: number;
   currency: string;
   paymentStatus: string;
@@ -26,9 +26,9 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
   holdOrder,
   onCancelClick,
   onCheckPriceClick,
-  loading = false
+  loading = false,
 }) => {
-  const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [isPriceGuaranteeExpired, setIsPriceGuaranteeExpired] = useState(false);
 
   useEffect(() => {
@@ -38,12 +38,14 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
       const diff = deadline.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining('Expired');
+        setTimeRemaining("Expired");
         return;
       }
 
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const hours = Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      );
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
       setTimeRemaining(`${days}d ${hours}h ${minutes}m`);
@@ -65,40 +67,40 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
   }, [holdOrder]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'badge-active';
-      case 'paid':
-        return 'badge-paid';
-      case 'expired':
-        return 'badge-expired';
-      case 'cancelled':
-        return 'badge-cancelled';
+      case "active":
+        return "badge-active";
+      case "paid":
+        return "badge-paid";
+      case "expired":
+        return "badge-expired";
+      case "cancelled":
+        return "badge-cancelled";
       default:
-        return 'badge-default';
+        return "badge-default";
     }
   };
 
   const getPaymentStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'awaiting_payment':
-        return 'badge-warning';
-      case 'completed':
-        return 'badge-success';
-      case 'failed':
-        return 'badge-error';
+      case "awaiting_payment":
+        return "badge-warning";
+      case "completed":
+        return "badge-success";
+      case "failed":
+        return "badge-error";
       default:
-        return 'badge-default';
+        return "badge-default";
     }
   };
 
@@ -113,13 +115,15 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
           <span className={`badge ${getStatusBadgeClass(holdOrder.status)}`}>
             {holdOrder.status.toUpperCase()}
           </span>
-          <span className={`badge ${getPaymentStatusBadgeClass(holdOrder.paymentStatus)}`}>
-            {holdOrder.paymentStatus.replace('_', ' ').toUpperCase()}
+          <span
+            className={`badge ${getPaymentStatusBadgeClass(holdOrder.paymentStatus)}`}
+          >
+            {holdOrder.paymentStatus.replace("_", " ").toUpperCase()}
           </span>
         </div>
       </div>
 
-      <div className="details-grid">
+      <div className="details-grid gap-4">
         {/* Pricing Section */}
         <section className="detail-section pricing">
           <h3>Pricing</h3>
@@ -142,7 +146,9 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
           </div>
           <div className="detail-item">
             <span className="label">Time Remaining:</span>
-            <span className={`value time-remaining ${timeRemaining === 'Expired' ? 'expired' : ''}`}>
+            <span
+              className={`value time-remaining ${timeRemaining === "Expired" ? "expired" : ""}`}
+            >
               {timeRemaining}
             </span>
           </div>
@@ -154,7 +160,9 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
             <h3>Price Guarantee</h3>
             <div className="detail-item">
               <span className="label">Expires:</span>
-              <span className={`value date ${isPriceGuaranteeExpired ? 'expired' : ''}`}>
+              <span
+                className={`value date ${isPriceGuaranteeExpired ? "expired" : ""}`}
+              >
                 {formatDate(holdOrder.priceGuaranteeExpiresAt)}
               </span>
             </div>
@@ -171,57 +179,73 @@ const HoldOrderDetails: React.FC<HoldOrderDetailsProps> = ({
           <h3>Timeline</h3>
           <div className="detail-item">
             <span className="label">Created:</span>
-            <span className="value date">{formatDate(holdOrder.createdAt)}</span>
+            <span className="value date">
+              {formatDate(holdOrder.createdAt)}
+            </span>
           </div>
           <div className="detail-item">
             <span className="label">Last Updated:</span>
-            <span className="value date">{formatDate(holdOrder.updatedAt)}</span>
+            <span className="value date">
+              {formatDate(holdOrder.updatedAt)}
+            </span>
           </div>
         </section>
       </div>
 
       {/* Action Buttons */}
-      {holdOrder.status === 'active' && holdOrder.paymentStatus === 'awaiting_payment' && (
-        <div className="action-buttons">
-          <div className="hold-payment-info">
-            <h4>✓ Your hold is confirmed</h4>
-            <p>No payment has been deducted from your wallet. Complete payment anytime before the deadline to finalize your booking.</p>
+      {holdOrder.status === "active" &&
+        holdOrder.paymentStatus === "awaiting_payment" && (
+          <div className="action-buttons">
+            <div className="hold-payment-info">
+              <h4>✓ Your hold is confirmed</h4>
+              <p>
+                No payment has been deducted from your wallet. Complete payment
+                anytime before the deadline to finalize your booking.
+              </p>
+            </div>
+            <button
+              className="btn btn-secondary px-4 py-2 rounded-md text-sm font-medium"
+              onClick={onCheckPriceClick}
+              disabled={loading}
+            >
+              {loading ? "Checking..." : "Check Latest Price"}
+            </button>
+            <button
+              className="btn btn-outline px-4 py-2 rounded-md text-sm font-medium"
+              onClick={onCancelClick}
+              disabled={loading}
+            >
+              Cancel Hold
+            </button>
           </div>
-          <button
-            className="btn btn-secondary"
-            onClick={onCheckPriceClick}
-            disabled={loading}
-          >
-            {loading ? 'Checking...' : 'Check Latest Price'}
-          </button>
-          <button
-            className="btn btn-outline"
-            onClick={onCancelClick}
-            disabled={loading}
-          >
-            Cancel Hold
-          </button>
-        </div>
-      )}
+        )}
 
-      {holdOrder.status === 'paid' && (
+      {holdOrder.status === "paid" && (
         <div className="success-message">
-          <p>✓ Your booking has been confirmed and paid. Check your email for confirmations and booking documents.</p>
+          <p>
+            ✓ Your booking has been confirmed and paid. Check your email for
+            confirmations and booking documents.
+          </p>
         </div>
       )}
 
-      {holdOrder.status === 'expired' && (
+      {holdOrder.status === "expired" && (
         <div className="alert-error">
           <p>This hold order has expired. You need to create a new booking.</p>
         </div>
       )}
 
       {/* Warning for soon-to-expire */}
-      {holdOrder.status === 'active' && timeRemaining !== '' && !timeRemaining.includes('-') && (
-        <div className="alert-info">
-          <p>⏱ Payment must be completed by {formatDate(holdOrder.paymentRequiredBy)}</p>
-        </div>
-      )}
+      {holdOrder.status === "active" &&
+        timeRemaining !== "" &&
+        !timeRemaining.includes("-") && (
+          <div className="alert-info">
+            <p>
+              ⏱ Payment must be completed by{" "}
+              {formatDate(holdOrder.paymentRequiredBy)}
+            </p>
+          </div>
+        )}
     </div>
   );
 };

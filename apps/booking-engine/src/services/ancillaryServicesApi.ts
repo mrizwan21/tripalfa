@@ -1,13 +1,27 @@
 /**
  * Ancillary Services API Integration
  * Type-safe API client for ancillary services endpoints
- * 
+ *
  * Routes through centralized API Manager for consistency
  */
 
-import { api } from '../lib/api';
+import type { api as ApiClientInstance } from "../lib/api";
 
-export type ServiceType = 'baggage' | 'meal' | 'seat' | 'special_request' | 'lounge' | 'insurance';
+// Lazy import to avoid circular dependency
+type ApiClient = typeof ApiClientInstance;
+let api: ApiClient | undefined;
+function getApi() {
+  if (!api) api = require("../lib/api").api as ApiClient;
+  return api;
+}
+
+export type ServiceType =
+  | "baggage"
+  | "meal"
+  | "seat"
+  | "special_request"
+  | "lounge"
+  | "insurance";
 
 export interface Service {
   id: string;
@@ -32,8 +46,8 @@ export interface ServiceCategory {
   name: string;
   description: string;
   icon?: string;
-  applicableSegments: 'all' | 'outbound' | 'return' | 'specific';
-  applicablePassengers: 'all' | 'specific';
+  applicableSegments: "all" | "outbound" | "return" | "specific";
+  applicablePassengers: "all" | "specific";
   maxQuantityPerPassenger: number;
 }
 
@@ -73,10 +87,10 @@ class AncillaryServicesApi {
    */
   async getServicesForBooking(
     offerId: string,
-    serviceType?: ServiceType
+    serviceType?: ServiceType,
   ): Promise<AncillaryServiceResponse> {
     const result = await api.get<any>(
-      `/bookings/ancillary/services?offerId=${offerId}${serviceType ? `&serviceType=${serviceType}` : ''}`
+      `/bookings/ancillary/services?offerId=${offerId}${serviceType ? `&serviceType=${serviceType}` : ""}`,
     );
     return result;
   }
@@ -88,10 +102,10 @@ class AncillaryServicesApi {
    */
   async getServicesForOrder(
     orderId: string,
-    serviceType?: ServiceType
+    serviceType?: ServiceType,
   ): Promise<AncillaryServiceResponse & { currentServices: Service[] }> {
     const result = await api.get<any>(
-      `/bookings/ancillary/services?orderId=${orderId}${serviceType ? `&serviceType=${serviceType}` : ''}`
+      `/bookings/ancillary/services?orderId=${orderId}${serviceType ? `&serviceType=${serviceType}` : ""}`,
     );
     return result;
   }
@@ -103,7 +117,7 @@ class AncillaryServicesApi {
    */
   async selectServicesForBooking(
     offerId: string,
-    services: ServiceSelection[]
+    services: ServiceSelection[],
   ): Promise<{
     success: boolean;
     data: {
@@ -116,10 +130,10 @@ class AncillaryServicesApi {
     servicesCount: number;
     timestamp: string;
   }> {
-    const result = await api.post<any>(
-      '/bookings/ancillary/services/select',
-      { offerId, services }
-    );
+    const result = await api.post<any>("/bookings/ancillary/services/select", {
+      offerId,
+      services,
+    });
     return result;
   }
 
@@ -130,7 +144,7 @@ class AncillaryServicesApi {
    */
   async addServicesToOrder(
     orderId: string,
-    services: ServiceSelection[]
+    services: ServiceSelection[],
   ): Promise<{
     success: boolean;
     data: {
@@ -143,10 +157,10 @@ class AncillaryServicesApi {
     servicesCount: number;
     timestamp: string;
   }> {
-    const result = await api.post<any>(
-      '/bookings/ancillary/services/select',
-      { orderId, services }
-    );
+    const result = await api.post<any>("/bookings/ancillary/services/select", {
+      orderId,
+      services,
+    });
     return result;
   }
 
@@ -158,7 +172,9 @@ class AncillaryServicesApi {
     data: ServiceCategory[];
     timestamp: string;
   }> {
-    const result = await api.get<any>('/bookings/ancillary/services/categories');
+    const result = await api.get<any>(
+      "/bookings/ancillary/services/categories",
+    );
     return result;
   }
 
@@ -170,7 +186,9 @@ class AncillaryServicesApi {
     data: Service;
     timestamp: string;
   }> {
-    const result = await api.get<any>(`/bookings/ancillary/services/details/${serviceId}`);
+    const result = await api.get<any>(
+      `/bookings/ancillary/services/details/${serviceId}`,
+    );
     return result;
   }
 }
@@ -193,7 +211,7 @@ export async function getServiceDetails(serviceId: string): Promise<{
   timestamp: string;
 }> {
   const result = await api.get<any>(
-    `/api/bookings/ancillary/services/details?serviceId=${serviceId}`
+    `/api/bookings/ancillary/services/details?serviceId=${serviceId}`,
   );
   return result;
 }

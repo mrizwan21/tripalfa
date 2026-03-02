@@ -14,7 +14,9 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 ## Systems Consolidated
 
 ### System 1: Hotel Deals Analytics
+
 **Source Files**:
+
 - `/apps/b2b-admin/src/services/analytics-service/src/services/dealAnalyticsService.ts` (1,094 lines)
 - `/apps/b2b-admin/src/services/analytics-service/src/routes/dealAnalytics.ts` (662 lines)
 - `/apps/b2b-admin/src/services/analytics-service/src/jobs/dealAnalyticsCronJobs.ts`
@@ -22,7 +24,9 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 **Total Source**: 1,756+ lines
 
 ### System 2: Airline PLB Management
+
 **Source Files**:
+
 - `/apps/b2b-admin/src/services/analytics-service/src/services/airlinePlbService.ts` (306 lines)
 - `/apps/b2b-admin/src/services/analytics-service/src/routes/airlinePlb.ts` (76 lines)
 
@@ -35,9 +39,11 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 ## New Components Created
 
 ### 1. Analytics Types (`src/types/analytics.ts`)
+
 **Lines**: 238 lines
 
 **Type Definitions**:
+
 - `Period` - Period definition for analytics queries
 - `AnalyticsEvent` - Customer interaction events (search, view, apply, booking, cancellation, rejection)
 - `DealPerformance` - Comprehensive deal performance metrics
@@ -50,6 +56,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - `AnalyticsAlert` - Alert definitions
 
 **Type Enums**:
+
 - `PeriodType`: 4 types (daily, weekly, monthly, yearly)
 - `EventType`: 6 types (search, view, apply, booking, cancellation, rejection)
 - `CustomerType`: 2 types (b2c, b2b)
@@ -57,6 +64,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - `ProductType`: 2 types (flight, hotel)
 
 **Key Metrics Tracked**:
+
 - Conversion rates (search → booking)
 - Revenue and discount analysis
 - Customer segmentation (B2C vs B2B)
@@ -67,9 +75,11 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 ---
 
 ### 2. PLB (Performance Linked Bonus) Types (`src/types/plb.ts`)
+
 **Lines**: 316 lines
 
 **Type Definitions**:
+
 - `PLBProgram` & `PLBProgramCreate` - Airline bonus program definition
 - `PLBTier` & `PLBTierCreate` - Performance tier definitions with thresholds
 - `PLBSnapshot` & `PLBSnapshotCreate` - Period performance snapshot
@@ -80,12 +90,14 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - `PLBPayment` - Payment transaction record
 
 **Type Enums**:
+
 - `PLBType`: 4 types (volume_based, revenue_based, growth_based, mixed)
 - `PLBPeriodType`: 5 types (daily, weekly, monthly, quarterly, yearly)
 - `PLBStatus`: 5 statuses (pending, calculated, approved, paid, disputed)
 - `BookingStatus`: 5 statuses (booked, confirmed, flown, cancelled, no_show)
 
 **Key Features**:
+
 - Multi-tier qualification system
 - Growth-based and volume-based bonus calculations
 - Booking eligibility tracking
@@ -95,10 +107,12 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 ---
 
 ### 3. Analytics Service (`src/services/analyticsService.ts`)
+
 **Lines**: 420 lines  
 **Source Consolidation**: Consolidates dealAnalyticsService.ts (1,094 lines) logic
 
 **Core Methods**:
+
 - `trackEvent()` - Record customer interaction events
 - `getDashboardOverview()` - Get KPI dashboard for period
 - `getTrendData()` - Get trend data for charts
@@ -111,6 +125,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - `getActiveDeals()` - List active deals
 
 **Event Tracking**:
+
 - Supports 6 event types (search, view, apply, booking, cancellation, rejection)
 - Tracks customer attributes (B2C/B2B, company, loyalty tier)
 - Records channel attribution (web, mobile, API, portal)
@@ -118,6 +133,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - Stores session and device information
 
 **Analytics Dimensions**:
+
 - Time-based (daily, weekly, monthly trends)
 - Channel-based (web, mobile, API, B2B portal)
 - Route-based (origin/destination pairs)
@@ -125,6 +141,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - Company-based (B2B customer analytics)
 
 **Performance Metrics**:
+
 - Conversion rate (search → booking)
 - Revenue metrics (total, per booking, per channel)
 - Discount analysis (amount, percentage, ROI)
@@ -134,10 +151,12 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 ---
 
 ### 4. PLB Service (`src/services/plbService.ts`)
+
 **Lines**: 445 lines  
 **Source Consolidation**: Consolidates airlinePlbService.ts (306 lines) logic
 
 **Core Methods**:
+
 - `getPLBPrograms()` - List airline bonus programs
 - `createPLBProgram()` - Create new program
 - `getPLBTiers()` - List program tiers
@@ -151,6 +170,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - `processPLBPayment()` - Process payment
 
 **PLB Program Management**:
+
 - Support for 4 PLB types:
   - Volume-based (booking count)
   - Revenue-based (total fare)
@@ -164,6 +184,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
   - Minimum growth percentage
 
 **Bonus Calculation**:
+
 - Base percentage applied to all eligible bookings
 - Tiered bonus percentages
 - Max bonus cap per tier
@@ -171,12 +192,14 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - Period-specific snapshots (daily, weekly, monthly, quarterly, yearly)
 
 **Booking Tracking**:
+
 - Record booking details (fare, route)
 - Track flight status (booked, confirmed, flown, cancelled, no-show)
 - Mark PLB eligibility
 - Filter to counted bookings
 
 **Snapshot Features**:
+
 - Automatic tier achievement matching
 - Bonus calculation per period
 - Status tracking (pending, calculated, approved, paid)
@@ -188,6 +211,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 ## Package Statistics (After Analytics & PLB)
 
 **Updated Component Counts**:
+
 - Type files: 7 (added analytics.ts, plb.ts)
 - Service files: 7 (added analyticsService.ts, plbService.ts)
 - Middleware: 1 (unchanged)
@@ -195,6 +219,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 - Utils: 1 (unchanged)
 
 **Line Distribution**:
+
 - Type definitions: 2,685+ lines (was 2,131, +554 lines)
 - Service implementations: 2,399+ lines (was 1,559, +840 lines)
 - Middleware: 150 lines
@@ -205,6 +230,7 @@ Successfully consolidated **Hotel Deals Analytics** and **Airline PLB (Performan
 **Total TypeScript**: 3,378 lines (+800 lines from previous)
 
 **New Export Coverage**:
+
 - 15 new interfaces exported from analytics types
 - 14 new interfaces exported from PLB types
 - 2 new service classes exported
@@ -370,6 +396,7 @@ model AirlinePLBSnapshots {
 ```
 
 **Total Metrics**:
+
 - TypeScript: 3,378 lines (+2,138 from consolidation)
 - Type definitions: 2,685+ lines
 - Service implementations: 2,399+ lines
@@ -383,91 +410,98 @@ model AirlinePLBSnapshots {
 ## Use Case Examples
 
 ### Analytics Example
+
 ```typescript
-import { AnalyticsService, AnalyticsEvent, DashboardOverview } from '@tripalfa/rules';
+import {
+  AnalyticsService,
+  AnalyticsEvent,
+  DashboardOverview,
+} from "@tripalfa/rules";
 
 const analyticsService = new AnalyticsService();
 
 // Track customer interaction
 const event: AnalyticsEvent = {
-  dealId: 'deal123',
-  eventType: 'booking',
-  customerId: 'cust456',
-  customerType: 'b2b',
-  channel: 'web',
-  productType: 'hotel',
+  dealId: "deal123",
+  eventType: "booking",
+  customerId: "cust456",
+  customerType: "b2b",
+  channel: "web",
+  productType: "hotel",
   originalPrice: 5000,
   dealPrice: 4250,
   discountAmount: 750,
-  discountPercentage: 15
+  discountPercentage: 15,
 };
 
 await analyticsService.trackEvent(event);
 
 // Get dashboard overview
-const overview: DashboardOverview = await analyticsService.getDashboardOverview(30);
+const overview: DashboardOverview =
+  await analyticsService.getDashboardOverview(30);
 
 // Get deal performance
-const performance = await analyticsService.getDealPerformance('deal123', {
-  start: new Date('2025-01-01'),
-  end: new Date('2025-01-31'),
-  type: 'monthly'
+const performance = await analyticsService.getDealPerformance("deal123", {
+  start: new Date("2025-01-01"),
+  end: new Date("2025-01-31"),
+  type: "monthly",
 });
 ```
 
 ### PLB Example
+
 ```typescript
-import { PLBService, PLBProgramCreate, PLBTierCreate } from '@tripalfa/rules';
+import { PLBService, PLBProgramCreate, PLBTierCreate } from "@tripalfa/rules";
 
 const plbService = new PLBService();
 
 // Create PLB program
 const program = await plbService.createPLBProgram({
   airlineId: 123,
-  airlineCode: 'EK',
-  name: 'Emirates Performance Bonus 2025',
-  code: 'EK-PLB-2025',
-  plbType: 'revenue_based',
+  airlineCode: "EK",
+  name: "Emirates Performance Bonus 2025",
+  code: "EK-PLB-2025",
+  plbType: "revenue_based",
   basePercentage: 2,
-  validFrom: new Date('2025-01-01'),
-  validTo: new Date('2025-12-31')
+  validFrom: new Date("2025-01-01"),
+  validTo: new Date("2025-12-31"),
 });
 
 // Add tier
 await plbService.addPLBTier(program.id, {
-  tierName: 'Gold',
+  tierName: "Gold",
   tierLevel: 2,
   minRevenue: 500000,
   bonusPercentage: 5,
-  maxBonusAmount: 50000
+  maxBonusAmount: 50000,
 });
 
 // Track booking
 await plbService.trackBooking({
-  bookingId: 'BK123',
+  bookingId: "BK123",
   airlineId: 123,
-  airlineCode: 'EK',
+  airlineCode: "EK",
   totalFare: 25000,
   baseFare: 20000,
-  route: 'DXB-LHR',
-  status: 'confirmed'
+  route: "DXB-LHR",
+  status: "confirmed",
 });
 
 // Generate snapshot
 const snapshot = await plbService.generateSnapshot({
   plbProgramId: program.id,
   airlineId: 123,
-  airlineCode: 'EK',
-  periodType: 'monthly',
-  periodStart: new Date('2025-01-01'),
-  periodEnd: new Date('2025-01-31'),
+  airlineCode: "EK",
+  periodType: "monthly",
+  periodStart: new Date("2025-01-01"),
+  periodEnd: new Date("2025-01-31"),
   totalBookings: 1500,
   totalRevenue: 2500000,
-  totalPassengers: 3500
+  totalPassengers: 3500,
 });
 
 // Get overview
-const overview = await plbService.getDashboardOverview('monthly');
+const overview = await plbService.getDashboardOverview("monthly");
 ```
 
 ---
@@ -488,10 +522,12 @@ const overview = await plbService.getDashboardOverview('monthly');
 ## Files Consolidated
 
 **Total Source Lines Consolidated**: 2,138 lines
+
 - Hotel Deals Analytics: 1,756 lines
 - Airline PLB: 382 lines
 
 **Source Files**:
+
 1. `/apps/b2b-admin/.../analytics-service/src/services/dealAnalyticsService.ts` (1,094 lines)
 2. `/apps/b2b-admin/.../analytics-service/src/routes/dealAnalytics.ts` (662 lines)
 3. `/apps/b2b-admin/.../analytics-service/src/services/airlinePlbService.ts` (306 lines)
@@ -509,7 +545,7 @@ const overview = await plbService.getDashboardOverview('monthly');
 ✅ **Service Exports**: All 7 service classes exported  
 ✅ **Database Integration**: Ready for Prisma models  
 ✅ **Backward Compatibility**: Existing deals/commission APIs unchanged  
-✅ **Error Handling**: Comprehensive error messages  
+✅ **Error Handling**: Comprehensive error messages
 
 ---
 

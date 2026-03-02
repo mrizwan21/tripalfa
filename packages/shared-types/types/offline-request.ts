@@ -8,54 +8,54 @@
 // ============================================================================
 
 export enum OfflineRequestType {
-  FLIGHT_CHANGE = 'flight_change',
-  HOTEL_CHANGE = 'hotel_change',
-  DATE_CHANGE = 'date_change',
-  PASSENGER_CHANGE = 'passenger_change',
-  OTHER = 'other',
+  FLIGHT_CHANGE = "flight_change",
+  HOTEL_CHANGE = "hotel_change",
+  DATE_CHANGE = "date_change",
+  PASSENGER_CHANGE = "passenger_change",
+  OTHER = "other",
 }
 
 export enum OfflineRequestStatus {
-  PENDING_STAFF = 'pending_staff',           // Waiting for staff to provide pricing
-  PRICING_SUBMITTED = 'pricing_submitted',   // Staff has submitted pricing
-  PENDING_CUSTOMER_APPROVAL = 'pending_customer_approval', // Waiting for customer approval
-  APPROVED = 'approved',                     // Customer approved the changes
-  PAYMENT_PENDING = 'payment_pending',       // Waiting for payment
-  COMPLETED = 'completed',                   // Request completed successfully
-  REJECTED = 'rejected',                     // Customer rejected the changes
-  CANCELLED = 'cancelled',                   // Request cancelled
+  PENDING_STAFF = "pending_staff", // Waiting for staff to provide pricing
+  PRICING_SUBMITTED = "pricing_submitted", // Staff has submitted pricing
+  PENDING_CUSTOMER_APPROVAL = "pending_customer_approval", // Waiting for customer approval
+  APPROVED = "approved", // Customer approved the changes
+  PAYMENT_PENDING = "payment_pending", // Waiting for payment
+  COMPLETED = "completed", // Request completed successfully
+  REJECTED = "rejected", // Customer rejected the changes
+  CANCELLED = "cancelled", // Request cancelled
 }
 
 export enum OfflineRequestPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent',
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  URGENT = "urgent",
 }
 
 export enum OfflineRequestAuditAction {
-  CREATED = 'created',
-  PRICING_SUBMITTED = 'pricing_submitted',
-  PRICING_UPDATED = 'pricing_updated',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  PAYMENT_PROCESSED = 'payment_processed',
-  DOCUMENTS_ISSUED = 'documents_issued',
-  CANCELLED = 'cancelled',
-  NOTE_ADDED = 'note_added',
-  ASSIGNED_TO_STAFF = 'assigned_to_staff',
+  CREATED = "created",
+  PRICING_SUBMITTED = "pricing_submitted",
+  PRICING_UPDATED = "pricing_updated",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  PAYMENT_PROCESSED = "payment_processed",
+  DOCUMENTS_ISSUED = "documents_issued",
+  CANCELLED = "cancelled",
+  NOTE_ADDED = "note_added",
+  ASSIGNED_TO_STAFF = "assigned_to_staff",
 }
 
 export enum OfflinePaymentMethod {
-  WALLET = 'wallet',
-  CREDIT_CARD = 'credit_card',
-  SUPPLIER_CREDIT = 'supplier_credit',
+  WALLET = "wallet",
+  CREDIT_CARD = "credit_card",
+  SUPPLIER_CREDIT = "supplier_credit",
 }
 
 export enum OfflinePaymentStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
+  PENDING = "pending",
+  COMPLETED = "completed",
+  FAILED = "failed",
 }
 
 // ============================================================================
@@ -66,21 +66,21 @@ export interface FlightSegment {
   origin: string;
   destination: string;
   departureDate: string; // ISO 8601
-  arrivalDate: string;   // ISO 8601
+  arrivalDate: string; // ISO 8601
   airline?: string;
   flightNumber?: string;
-  cabinClass?: 'economy' | 'premium_economy' | 'business' | 'first';
+  cabinClass?: "economy" | "premium_economy" | "business" | "first";
 }
 
 export interface FlightPassenger {
   firstName: string;
   lastName: string;
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
   dateOfBirth?: string;
 }
 
 export interface FlightItinerary {
-  type: 'flight';
+  type: "flight";
   segments: FlightSegment[];
   passengers: FlightPassenger[];
 }
@@ -98,11 +98,11 @@ export interface HotelRoom {
 }
 
 export interface HotelItinerary {
-  type: 'hotel';
+  type: "hotel";
   hotelName: string;
   location: string;
-  checkIn: string;      // ISO 8601
-  checkOut: string;     // ISO 8601
+  checkIn: string; // ISO 8601
+  checkOut: string; // ISO 8601
   rooms: HotelRoom[];
   guestName: string;
 }
@@ -136,7 +136,7 @@ export interface PriceDifference {
   baseFareDiff: number;
   taxesDiff: number;
   markupDiff: number;
-  totalDiff: number;   // Can be positive (additional payment) or negative (refund)
+  totalDiff: number; // Can be positive (additional payment) or negative (refund)
   currency: string;
 }
 
@@ -199,7 +199,7 @@ export interface OfflineRequestTimeline {
 // ============================================================================
 
 export interface OriginalBookingDetails {
-  serviceType: 'flight' | 'hotel';
+  serviceType: "flight" | "hotel";
   itinerary: FlightItinerary | HotelItinerary;
   pricing: PricingBreakdown;
   documents: {
@@ -214,7 +214,7 @@ export interface OriginalBookingDetails {
 // ============================================================================
 
 export interface RequestedChange {
-  serviceType: 'flight' | 'hotel';
+  serviceType: "flight" | "hotel";
   newItinerary: FlightItinerary | HotelItinerary;
   changeReason: string;
   customerNotes?: string;
@@ -279,7 +279,7 @@ export interface OfflineRequestAuditLog {
   // Audit details
   action: OfflineRequestAuditAction;
   actorId: string;
-  actorType: 'customer' | 'staff' | 'system';
+  actorType: "customer" | "staff" | "system";
 
   // Change details
   oldValues?: Record<string, unknown>;
@@ -300,8 +300,11 @@ export interface OfflineRequestNotification {
   offlineRequestRef: string;
 
   // Notification type
-  type: 'offline_request_created' | 'offline_request_priced' 
-      | 'offline_request_approved' | 'offline_request_completed';
+  type:
+    | "offline_request_created"
+    | "offline_request_priced"
+    | "offline_request_approved"
+    | "offline_request_completed";
 
   // Recipients
   recipientIds: string[];

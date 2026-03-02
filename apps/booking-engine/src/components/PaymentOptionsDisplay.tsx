@@ -1,7 +1,7 @@
 /**
  * Payment Options Display Component
  * Shows available wallet balance, airline credits, and calculates card required amount
- * 
+ *
  * Features:
  * - Real-time wallet balance display
  * - List of available airline credits with expiration dates
@@ -10,8 +10,9 @@
  * - Multi-currency support
  */
 
-import React, { useEffect, useState } from 'react';
-import type { FC } from 'react';
+import React, { useEffect, useState } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
 
 interface AirlineCredit {
   id: string;
@@ -46,11 +47,13 @@ interface PaymentOptions {
 const PaymentOptionsDisplay: FC<PaymentOptionsDisplayProps> = ({
   customerId,
   totalAmount,
-  currency = 'USD',
+  currency = "USD",
   onLoadingChange,
   onErrorChange,
 }) => {
-  const [paymentOptions, setPaymentOptions] = useState<PaymentOptions | null>(null);
+  const [paymentOptions, setPaymentOptions] = useState<PaymentOptions | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,22 +68,25 @@ const PaymentOptionsDisplay: FC<PaymentOptionsDisplayProps> = ({
         const response = await fetch(
           `/api/bookings/${customerId}/payment-options?totalAmount=${totalAmount}&currency=${currency}`,
           {
-            method: 'GET',
+            method: "GET",
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-              'Content-Type': 'application/json',
+              Authorization: `Bearer ${getStoredAuthToken()}`,
+              "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch payment options: ${response.statusText}`);
+          throw new Error(
+            `Failed to fetch payment options: ${response.statusText}`,
+          );
         }
 
         const data = await response.json();
         setPaymentOptions(data.data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error";
         setError(errorMessage);
         onErrorChange?.(errorMessage);
       } finally {
@@ -142,7 +148,9 @@ const PaymentOptionsDisplay: FC<PaymentOptionsDisplayProps> = ({
           <div className="option-header">
             <span className="option-icon">✈️</span>
             <span className="option-name">Airline Credits</span>
-            <span className="credit-badge">{paymentOptions.availableCredits.length}</span>
+            <span className="credit-badge">
+              {paymentOptions.availableCredits.length}
+            </span>
           </div>
           <div className="credits-list">
             {paymentOptions.availableCredits.map((credit) => (
@@ -161,7 +169,8 @@ const PaymentOptionsDisplay: FC<PaymentOptionsDisplayProps> = ({
             ))}
           </div>
           <p className="total-credits">
-            Total Credits: {currency} {paymentOptions.totalCreditAvailable.toFixed(2)}
+            Total Credits: {currency}{" "}
+            {paymentOptions.totalCreditAvailable.toFixed(2)}
           </p>
         </div>
       )}
@@ -191,23 +200,28 @@ const PaymentOptionsDisplay: FC<PaymentOptionsDisplayProps> = ({
       {/* Recommended Breakdown */}
       <div className="recommended-breakdown">
         <h4>Recommended Payment Breakdown</h4>
-        <div className="breakdown-grid">
+        <div className="breakdown-grid gap-4">
           <div className="breakdown-item-detail">
             <span className="label">From Wallet</span>
             <span className="value">
-              {currency} {paymentOptions.recommendedPaymentBreakdown.fromWallet.toFixed(2)}
+              {currency}{" "}
+              {paymentOptions.recommendedPaymentBreakdown.fromWallet.toFixed(2)}
             </span>
           </div>
           <div className="breakdown-item-detail">
             <span className="label">From Credits</span>
             <span className="value">
-              {currency} {paymentOptions.recommendedPaymentBreakdown.fromCredits.toFixed(2)}
+              {currency}{" "}
+              {paymentOptions.recommendedPaymentBreakdown.fromCredits.toFixed(
+                2,
+              )}
             </span>
           </div>
           <div className="breakdown-item-detail">
             <span className="label">From Card</span>
             <span className="value">
-              {currency} {paymentOptions.recommendedPaymentBreakdown.fromCard.toFixed(2)}
+              {currency}{" "}
+              {paymentOptions.recommendedPaymentBreakdown.fromCard.toFixed(2)}
             </span>
           </div>
         </div>
@@ -222,7 +236,7 @@ export default PaymentOptionsDisplay;
 
 const styles = `
 .payment-options-container {
-  background: white;
+  background: hsl(var(--background));
   border-radius: 12px;
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -232,11 +246,11 @@ const styles = `
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 20px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .payment-option-section {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
@@ -256,8 +270,8 @@ const styles = `
 }
 
 .credit-badge {
-  background: #007bff;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   border-radius: 20px;
   padding: 2px 8px;
   font-size: 12px;
@@ -273,12 +287,12 @@ const styles = `
 .amount {
   font-size: 20px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .option-description {
   font-size: 13px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin: 0;
 }
 
@@ -294,7 +308,7 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 6px;
   font-size: 13px;
 }
@@ -306,36 +320,36 @@ const styles = `
 }
 
 .airline-code {
-  background: #e8f4f8;
+  background: hsl(var(--accent));
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 600;
 }
 
 .credit-code {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-family: monospace;
 }
 
 .credit-amount {
   font-weight: 600;
-  color: #28a745;
+  color: hsl(var(--primary));
 }
 
 .credit-expiry {
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-size: 12px;
 }
 
 .total-credits {
   text-align: right;
   font-weight: 600;
-  color: #28a745;
+  color: hsl(var(--primary));
   margin: 8px 0 0 0;
 }
 
 .payment-breakdown {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
@@ -347,7 +361,7 @@ const styles = `
   align-items: center;
   padding: 8px 0;
   font-size: 14px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .breakdown-item:last-child {
@@ -355,19 +369,19 @@ const styles = `
 }
 
 .breakdown-item.card-required {
-  background: #fffbf0;
+  background: hsl(var(--accent));
   padding: 12px 8px;
   margin: 8px -8px -8px -8px;
 }
 
 .breakdown-item.card-required .amount.highlight {
-  color: #ff9800;
+  color: hsl(var(--accent-foreground));
   font-weight: 700;
 }
 
 .recommended-breakdown {
-  background: #f0f7ff;
-  border: 1px solid #d0e8ff;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
 }
@@ -376,7 +390,7 @@ const styles = `
   margin: 0 0 12px 0;
   font-size: 14px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .breakdown-grid {
@@ -390,26 +404,26 @@ const styles = `
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  background: white;
+  background: hsl(var(--background));
   border-radius: 6px;
   text-align: center;
 }
 
 .breakdown-item-detail .label {
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 500;
 }
 
 .breakdown-item-detail .value {
   font-size: 16px;
   font-weight: 700;
-  color: #007bff;
+  color: hsl(var(--primary));
 }
 
 .payment-options-loading,
 .payment-options-error {
-  background: white;
+  background: hsl(var(--background));
   border-radius: 12px;
   padding: 24px;
   text-align: center;
@@ -420,20 +434,20 @@ const styles = `
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #d32f2f;
+  color: hsl(var(--destructive));
 }
 
 .error-message {
   font-size: 14px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin: 0;
 }
 
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #f0f0f0;
-  border-top: 4px solid #007bff;
+  border: 4px solid hsl(var(--border));
+  border-top: 4px solid hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 12px;

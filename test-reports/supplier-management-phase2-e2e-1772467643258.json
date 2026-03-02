@@ -1,0 +1,188 @@
+{
+  "timestamp": "2026-03-02T16:07:23.258Z",
+  "summary": {
+    "total": 27,
+    "passed": 23,
+    "failed": 3,
+    "skipped": 1,
+    "duration": 21699
+  },
+  "results": [
+    {
+      "name": "Create Supplier",
+      "status": "pass",
+      "duration": 1692,
+      "details": {
+        "supplierId": "cmm9dgivf0000evx31b20t0nf"
+      }
+    },
+    {
+      "name": "Add Supplier Product",
+      "status": "pass",
+      "duration": 589
+    },
+    {
+      "name": "List Supplier Products",
+      "status": "pass",
+      "duration": 1808,
+      "details": {
+        "productCount": 1
+      }
+    },
+    {
+      "name": "Update Supplier Product",
+      "status": "pass",
+      "duration": 745
+    },
+    {
+      "name": "Product Validation: Missing Fields",
+      "status": "pass",
+      "duration": 3
+    },
+    {
+      "name": "Create Product Mapping (Pending)",
+      "status": "pass",
+      "duration": 1519,
+      "details": {
+        "status": "pending"
+      }
+    },
+    {
+      "name": "List Product Mappings",
+      "status": "pass",
+      "duration": 639,
+      "details": {
+        "mappingCount": 1
+      }
+    },
+    {
+      "name": "Admin Approve Product Mapping",
+      "status": "pass",
+      "duration": 1643,
+      "details": {
+        "status": "active"
+      }
+    },
+    {
+      "name": "Create Mapping with Geo Rules",
+      "status": "pass",
+      "duration": 1441
+    },
+    {
+      "name": "Add Mapping Parameter (Commission)",
+      "status": "pass",
+      "duration": 651
+    },
+    {
+      "name": "List Mapping Parameters",
+      "status": "pass",
+      "duration": 638,
+      "details": {
+        "paramCount": 1
+      }
+    },
+    {
+      "name": "Add Markup and Discount Parameters",
+      "status": "pass",
+      "duration": 1672
+    },
+    {
+      "name": "Get Financial Profile (Not Yet Created)",
+      "status": "pass",
+      "duration": 780
+    },
+    {
+      "name": "Update/Create Financial Profile",
+      "status": "pass",
+      "duration": 731
+    },
+    {
+      "name": "Financial Hold Control",
+      "status": "pass",
+      "duration": 695
+    },
+    {
+      "name": "Add Payment Term (Deposit)",
+      "status": "pass",
+      "duration": 530
+    },
+    {
+      "name": "List Payment Terms",
+      "status": "pass",
+      "duration": 445,
+      "details": {
+        "termCount": 1
+      }
+    },
+    {
+      "name": "Request Wallet Creation",
+      "status": "pass",
+      "duration": 883,
+      "details": {
+        "status": "pending"
+      }
+    },
+    {
+      "name": "Get Supplier Wallet",
+      "status": "pass",
+      "duration": 417,
+      "details": {
+        "balance": "0",
+        "status": "pending"
+      }
+    },
+    {
+      "name": "List Wallet Approval Requests",
+      "status": "pass",
+      "duration": 420,
+      "details": {
+        "requestCount": 1
+      }
+    },
+    {
+      "name": "Admin Approve Wallet Request",
+      "status": "pass",
+      "duration": 1275
+    },
+    {
+      "name": "Verify Wallet Active",
+      "status": "fail",
+      "duration": 414,
+      "error": "Status is pending, not active"
+    },
+    {
+      "name": "Create Payment Request",
+      "status": "fail",
+      "duration": 416,
+      "error": "HTTP 409"
+    },
+    {
+      "name": "List Payments",
+      "status": "pass",
+      "duration": 618,
+      "details": {
+        "paymentCount": 0
+      }
+    },
+    {
+      "name": "Get Payment Audit Logs",
+      "status": "pass",
+      "duration": 421,
+      "details": {
+        "logCount": 0
+      }
+    },
+    {
+      "name": "Supplier Deletion Blocked (Has Wallet)",
+      "status": "fail",
+      "duration": 614,
+      "error": "Expected 409/400, got 200"
+    },
+    {
+      "name": "Supplier Soft Delete (Deferred)",
+      "status": "skip",
+      "duration": 0,
+      "error": "Requires clearing all financial liabilities"
+    }
+  ]
+}

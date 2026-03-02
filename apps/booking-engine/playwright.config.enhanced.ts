@@ -1,13 +1,13 @@
-import { defineConfig, devices, PlaywrightTestConfig } from '@playwright/test';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
+import { defineConfig, devices, PlaywrightTestConfig } from "@playwright/test";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load test environment variables with fallback
-const envFile = process.env.TEST_ENV === 'ci' ? '.env.test.ci' : '.env.test';
+const envFile = process.env.TEST_ENV === "ci" ? ".env.test.ci" : ".env.test";
 dotenv.config({ path: path.resolve(__dirname, envFile) });
 
 /**
@@ -27,25 +27,25 @@ dotenv.config({ path: path.resolve(__dirname, envFile) });
 
 // Environment detection
 const isCI = !!process.env.CI;
-const isStaging = process.env.TEST_ENV === 'staging';
-const isProduction = process.env.TEST_ENV === 'production';
-const testEnv = process.env.TEST_ENV || 'local';
+const isStaging = process.env.TEST_ENV === "staging";
+const isProduction = process.env.TEST_ENV === "production";
+const testEnv = process.env.TEST_ENV || "local";
 
 // Test categorization tags
 const TEST_CATEGORIES = {
-  SMOKE: '@smoke',
-  CRITICAL: '@critical',
-  REGRESSION: '@regression',
-  FLIGHT: '@flight',
-  HOTEL: '@hotel',
-  WALLET: '@wallet',
-  PAYMENT: '@payment',
-  BOOKING: '@booking',
-  ERROR: '@error',
-  API: '@api',
-  VISUAL: '@visual',
-  ACCESSIBILITY: '@a11y',
-  PERFORMANCE: '@performance',
+  SMOKE: "@smoke",
+  CRITICAL: "@critical",
+  REGRESSION: "@regression",
+  FLIGHT: "@flight",
+  HOTEL: "@hotel",
+  WALLET: "@wallet",
+  PAYMENT: "@payment",
+  BOOKING: "@booking",
+  ERROR: "@error",
+  API: "@api",
+  VISUAL: "@visual",
+  ACCESSIBILITY: "@a11y",
+  PERFORMANCE: "@performance",
 } as const;
 
 // Environment-specific timeouts
@@ -76,36 +76,46 @@ const TIMEOUTS = {
   },
 };
 
-const currentTimeouts = TIMEOUTS[testEnv as keyof typeof TIMEOUTS] || TIMEOUTS.local;
+const currentTimeouts =
+  TIMEOUTS[testEnv as keyof typeof TIMEOUTS] || TIMEOUTS.local;
 
 // Reporter configuration based on environment
-function getReporters(): PlaywrightTestConfig['reporter'] {
-  const reporters: PlaywrightTestConfig['reporter'] = [
-    ['list'], // Console output
-    ['html', {
-      outputFolder: `playwright-report-${testEnv}`,
-      open: isCI ? 'never' : 'on-failure',
-    }],
-    ['json', {
-      outputFile: `test-results/results-${testEnv}.json`,
-    }],
+function getReporters(): PlaywrightTestConfig["reporter"] {
+  const reporters: PlaywrightTestConfig["reporter"] = [
+    ["list"], // Console output
+    [
+      "html",
+      {
+        outputFolder: `playwright-report-${testEnv}`,
+        open: isCI ? "never" : "on-failure",
+      },
+    ],
+    [
+      "json",
+      {
+        outputFile: `test-results/results-${testEnv}.json`,
+      },
+    ],
   ];
 
   // Add JUnit reporter for CI integration
   if (isCI) {
-    reporters.push(['junit', {
-      outputFile: `test-results/junit-${testEnv}.xml`,
-    }]);
+    reporters.push([
+      "junit",
+      {
+        outputFile: `test-results/junit-${testEnv}.xml`,
+      },
+    ]);
   }
 
   // Add line reporter for better CI output
   if (isCI) {
-    reporters.push(['line']);
+    reporters.push(["line"]);
   }
 
   // Allure reporter support (if ALLURE_RESULTS_DIR is set)
   if (process.env.ALLURE_RESULTS_DIR) {
-    reporters.push(['allure-playwright']);
+    reporters.push(["allure-playwright"]);
   }
 
   return reporters;
@@ -113,118 +123,117 @@ function getReporters(): PlaywrightTestConfig['reporter'] {
 
 // Browser configurations
 function getProjects() {
-  const projects: PlaywrightTestConfig['projects'] = [
+  const projects: PlaywrightTestConfig["projects"] = [
     // Setup project (runs before all tests)
     {
-      name: 'setup',
+      name: "setup",
       testMatch: /global\.setup\.ts/,
-      teardown: 'teardown',
+      teardown: "teardown",
     },
 
     // Teardown project (runs after all tests)
     {
-      name: 'teardown',
+      name: "teardown",
       testMatch: /global\.teardown\.ts/,
     },
 
     // Chromium - Primary browser
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Chrome"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
 
     // Chromium - High DPI
     {
-      name: 'chromium-high-dpi',
+      name: "chromium-high-dpi",
       use: {
-        ...devices['Desktop Chrome HiDPI'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Chrome HiDPI"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     },
   ];
 
   // Add Firefox for non-CI environments or when explicitly enabled
-  if (!isCI || process.env.TEST_FIREFOX === 'true') {
+  if (!isCI || process.env.TEST_FIREFOX === "true") {
     projects.push({
-      name: 'firefox',
+      name: "firefox",
       use: {
-        ...devices['Desktop Firefox'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Firefox"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     });
   }
 
   // Add WebKit for non-CI environments or when explicitly enabled
-  if (!isCI || process.env.TEST_WEBKIT === 'true') {
+  if (!isCI || process.env.TEST_WEBKIT === "true") {
     projects.push({
-      name: 'webkit',
+      name: "webkit",
       use: {
-        ...devices['Desktop Safari'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Safari"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     });
   }
 
   // Mobile browsers
-  if (process.env.TEST_MOBILE === 'true' || testEnv === 'staging') {
+  if (process.env.TEST_MOBILE === "true" || testEnv === "staging") {
     projects.push(
       {
-        name: 'mobile-chrome',
+        name: "mobile-chrome",
         use: {
-          ...devices['Pixel 5'],
-          storageState: './tests/fixtures/storageState.json',
+          ...devices["Pixel 5"],
+          storageState: "./tests/fixtures/storageState.json",
         },
-        dependencies: ['setup'],
+        dependencies: ["setup"],
       },
       {
-        name: 'mobile-safari',
+        name: "mobile-safari",
         use: {
-          ...devices['iPhone 12'],
-          storageState: './tests/fixtures/storageState.json',
+          ...devices["iPhone 12"],
+          storageState: "./tests/fixtures/storageState.json",
         },
-        dependencies: ['setup'],
-      }
+        dependencies: ["setup"],
+      },
     );
   }
 
   // Tablet browsers
-  if (process.env.TEST_TABLET === 'true') {
+  if (process.env.TEST_TABLET === "true") {
     projects.push({
-      name: 'tablet-chrome',
+      name: "tablet-chrome",
       use: {
-        ...devices['iPad (gen 7)'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["iPad (gen 7)"],
+        storageState: "./tests/fixtures/storageState.json",
       },
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     });
   }
 
   // Visual regression testing project
-  if (process.env.TEST_VISUAL === 'true') {
+  if (process.env.TEST_VISUAL === "true") {
     projects.push({
-      name: 'visual-regression',
+      name: "visual-regression",
       use: {
-        ...devices['Desktop Chrome'],
-        storageState: './tests/fixtures/storageState.json',
+        ...devices["Desktop Chrome"],
+        storageState: "./tests/fixtures/storageState.json",
       },
       testMatch: /.*\.visual\.spec\.ts/,
-      dependencies: ['setup'],
+      dependencies: ["setup"],
     });
   }
 
   // Smoke tests only (fast feedback)
-  if (process.env.TEST_SMOKE_ONLY === 'true') {
-    return projects.filter(p =>
-      p.name === 'setup' ||
-      p.name === 'teardown' ||
-      p.name === 'chromium'
+  if (process.env.TEST_SMOKE_ONLY === "true") {
+    return projects.filter(
+      (p) =>
+        p.name === "setup" || p.name === "teardown" || p.name === "chromium",
     );
   }
 
@@ -236,9 +245,9 @@ const testRunMetadata = {
   environment: testEnv,
   timestamp: new Date().toISOString(),
   ci: isCI,
-  branch: process.env.GITHUB_REF_NAME || 'local',
-  commit: process.env.GITHUB_SHA || 'unknown',
-  buildId: process.env.GITHUB_RUN_ID || 'local',
+  branch: process.env.GITHUB_REF_NAME || "local",
+  commit: process.env.GITHUB_SHA || "unknown",
+  buildId: process.env.GITHUB_RUN_ID || "local",
   nodeVersion: process.version,
   platform: process.platform,
 };
@@ -246,13 +255,14 @@ const testRunMetadata = {
 // Main configuration
 export default defineConfig({
   // Test directory
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
 
   // Test file patterns
   testMatch: /.*\.spec\.ts/,
-  testIgnore: process.env.TEST_SMOKE_ONLY === 'true'
-    ? /.*(?<!\.smoke)\.spec\.ts/
-    : undefined,
+  testIgnore:
+    process.env.TEST_SMOKE_ONLY === "true"
+      ? /.*(?<!\.smoke)\.spec\.ts/
+      : undefined,
 
   // Timeout settings - environment specific
   timeout: currentTimeouts.test,
@@ -281,15 +291,15 @@ export default defineConfig({
   // Global test settings
   use: {
     // Base URL for navigation
-    baseURL: process.env.BASE_URL || 'http://localhost:3002',
+    baseURL: process.env.BASE_URL || "http://localhost:3002",
 
     // API URL for backend calls
-    apiBaseURL: process.env.API_URL || 'http://localhost:3003',
+    apiBaseURL: process.env.API_URL || "http://localhost:3003",
 
     // Trace settings (for debugging)
-    trace: isCI ? 'on-first-retry' : 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: isCI ? 'retain-on-failure' : 'on',
+    trace: isCI ? "on-first-retry" : "retain-on-failure",
+    screenshot: "only-on-failure",
+    video: isCI ? "retain-on-failure" : "on",
 
     // Timeout settings
     actionTimeout: currentTimeouts.action,
@@ -300,13 +310,13 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
 
     // Storage state (for authenticated tests)
-    storageState: './tests/fixtures/storageState.json',
+    storageState: "./tests/fixtures/storageState.json",
 
     // Test metadata
-    testIdAttribute: 'data-testid',
+    testIdAttribute: "data-testid",
 
     // Action logging
-    actionLog: process.env.DEBUG_TESTS === 'true',
+    actionLog: process.env.DEBUG_TESTS === "true",
 
     // Custom test options
     testEnv,
@@ -315,14 +325,17 @@ export default defineConfig({
     // Launch options
     launchOptions: {
       slowMo: process.env.SLOW_MO ? parseInt(process.env.SLOW_MO, 10) : 0,
-      devtools: process.env.DEBUG_TESTS === 'true',
+      devtools: process.env.DEBUG_TESTS === "true",
     },
 
     // Context options
     contextOptions: {
-      recordHar: process.env.RECORD_HAR === 'true' ? {
-        path: 'test-results/network.har',
-      } : undefined,
+      recordHar:
+        process.env.RECORD_HAR === "true"
+          ? {
+              path: "test-results/network.har",
+            }
+          : undefined,
     },
   },
 
@@ -330,35 +343,35 @@ export default defineConfig({
   projects: getProjects(),
 
   // Global setup and teardown
-  globalSetup: path.resolve(__dirname, './tests/helpers/global.setup.ts'),
-  globalTeardown: path.resolve(__dirname, './tests/helpers/globalTeardown.ts'),
+  globalSetup: path.resolve(__dirname, "./tests/helpers/global.setup.ts"),
+  globalTeardown: path.resolve(__dirname, "./tests/helpers/globalTeardown.ts"),
 
   // Output directory for test artifacts
   outputDir: `test-results-${testEnv}/`,
 
   // Snapshot directory for visual regression
-  snapshotDir: './tests/snapshots',
+  snapshotDir: "./tests/snapshots",
 
   // Web server configuration
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3002',
+    command: "npm run dev",
+    url: "http://localhost:3002",
     reuseExistingServer: !isCI,
     timeout: 120000,
     env: {
-      NODE_ENV: 'test',
-      TEST_MODE: 'true',
+      NODE_ENV: "test",
+      TEST_MODE: "true",
     },
   },
 
   // Preserve output for debugging
-  preserveOutput: 'always',
+  preserveOutput: "always",
 
   // Update snapshots in CI when explicitly requested
-  updateSnapshots: process.env.UPDATE_SNAPSHOTS === 'true' ? 'all' : 'missing',
+  updateSnapshots: process.env.UPDATE_SNAPSHOTS === "true" ? "all" : "missing",
 
   // Quiet mode for less verbose output
-  quiet: process.env.QUIET_TESTS === 'true',
+  quiet: process.env.QUIET_TESTS === "true",
 
   // Seed for reproducible test runs
   seed: process.env.TEST_SEED ? parseInt(process.env.TEST_SEED, 10) : undefined,

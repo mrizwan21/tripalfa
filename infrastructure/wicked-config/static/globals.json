@@ -47,9 +47,7 @@
       "email": "admin@foo.com",
       "password": "$PORTAL_INITIALUSERS0_PASSWORD",
       "validated": true,
-      "groups": [
-        "admin"
-      ]
+      "groups": ["admin"]
     },
     {
       "id": "2",
@@ -58,9 +56,7 @@
       "email": "technocense@gmail.com",
       "password": "1974@Rizwan",
       "validated": true,
-      "groups": [
-        "admin"
-      ]
+      "groups": ["admin"]
     }
   ],
   "recaptcha": {
@@ -70,9 +66,7 @@
   },
   "kongAdapter": {
     "useKongAdapter": true,
-    "ignoreList": [
-      "plugin-name"
-    ]
+    "ignoreList": ["plugin-name"]
   },
   "mailer": {
     "useMailer": false,

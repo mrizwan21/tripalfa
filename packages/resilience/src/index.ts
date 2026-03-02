@@ -1,6 +1,6 @@
 /**
  * @tripalfa/resilience
- * 
+ *
  * Resilience patterns for fault-tolerant microservices
  */
 
@@ -12,7 +12,7 @@ export {
   type CircuitBreakerOptions,
   type CircuitState,
   type CircuitStats,
-} from './circuit-breaker'
+} from "./circuit-breaker";
 
 // Retry
 export {
@@ -23,7 +23,7 @@ export {
   type RetryOptions,
   type RetryResult,
   type RetryError,
-} from './retry'
+} from "./retry";
 
 // Service Registry
 export {
@@ -35,7 +35,7 @@ export {
   type HealthCheckResult,
   type ServiceRegistryOptions,
   type ServiceRegistryStats,
-} from './service-registry'
+} from "./service-registry";
 
 // Resilient Client
 export {
@@ -44,7 +44,7 @@ export {
   type ResilientClientOptions,
   type RequestOptions,
   type Response as ResilientResponse,
-} from './resilient-client'
+} from "./resilient-client";
 
 // Re-export event emitter for convenience
-export { EventEmitter } from 'eventemitter3'
+export { EventEmitter } from "eventemitter3";

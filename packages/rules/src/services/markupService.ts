@@ -1,12 +1,12 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 import {
   MarkupRule,
   MarkupRuleCreate,
   MarkupRuleUpdate,
   RuleMatchContext,
-  ValidationResult
-} from '../types';
+  ValidationResult,
+} from "../types";
 
 /**
  * Markup Service
@@ -30,7 +30,9 @@ export class MarkupService {
       // Validate rule data
       const validation = await this.validateMarkupRuleCreation(ruleData);
       if (!validation.isValid) {
-        throw new Error(`Markup rule validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Markup rule validation failed: ${validation.errors.join(", ")}`,
+        );
       }
 
       const result = await this.prisma.markupRule.create({
@@ -52,20 +54,25 @@ export class MarkupService {
           validFrom: new Date(ruleData.validFrom),
           validTo: ruleData.validTo ? new Date(ruleData.validTo) : null,
           isActive: true,
-          metadata: ruleData.metadata || {}
-        }
+          metadata: ruleData.metadata || {},
+        },
       });
 
       return this.mapPrismaToMarkupRule(result);
     } catch (error) {
-      throw new Error(`Failed to create markup rule: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to create markup rule: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Update an existing markup rule
    */
-  async updateMarkupRule(id: string, updates: MarkupRuleUpdate): Promise<MarkupRule> {
+  async updateMarkupRule(
+    id: string,
+    updates: MarkupRuleUpdate,
+  ): Promise<MarkupRule> {
     try {
       const result = await this.prisma.markupRule.update({
         where: { id },
@@ -75,9 +82,15 @@ export class MarkupService {
           ...(updates.applicableTo && { applicableTo: updates.applicableTo }),
           ...(updates.serviceTypes && { serviceTypes: updates.serviceTypes }),
           ...(updates.markupType && { markupType: updates.markupType }),
-          ...(updates.markupValue !== undefined && { markupValue: updates.markupValue }),
-          ...(updates.minMarkup !== undefined && { minMarkup: updates.minMarkup }),
-          ...(updates.maxMarkup !== undefined && { maxMarkup: updates.maxMarkup }),
+          ...(updates.markupValue !== undefined && {
+            markupValue: updates.markupValue,
+          }),
+          ...(updates.minMarkup !== undefined && {
+            minMarkup: updates.minMarkup,
+          }),
+          ...(updates.maxMarkup !== undefined && {
+            maxMarkup: updates.maxMarkup,
+          }),
           ...(updates.conditions && { conditions: updates.conditions }),
           ...(updates.supplierIds && { supplierIds: updates.supplierIds }),
           ...(updates.branchIds && { branchIds: updates.branchIds }),
@@ -85,13 +98,15 @@ export class MarkupService {
           ...(updates.validFrom && { validFrom: new Date(updates.validFrom) }),
           ...(updates.validTo && { validTo: new Date(updates.validTo) }),
           ...(updates.metadata && { metadata: updates.metadata }),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return this.mapPrismaToMarkupRule(result);
     } catch (error) {
-      throw new Error(`Failed to update markup rule: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to update markup rule: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -101,49 +116,61 @@ export class MarkupService {
   async getMarkupRule(id: string): Promise<MarkupRule | null> {
     try {
       const rule = await this.prisma.markupRule.findUnique({
-        where: { id }
+        where: { id },
       });
 
       return rule ? this.mapPrismaToMarkupRule(rule) : null;
     } catch (error) {
-      throw new Error(`Failed to get markup rule: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get markup rule: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * List markup rules with optional filters
    */
-  async listMarkupRules(filters?: {
-    companyId?: string;
-    serviceType?: string;
-    isActive?: boolean;
-    supplierId?: string;
-  }, skip: number = 0, take: number = 50): Promise<MarkupRule[]> {
+  async listMarkupRules(
+    filters?: {
+      companyId?: string;
+      serviceType?: string;
+      isActive?: boolean;
+      supplierId?: string;
+    },
+    skip: number = 0,
+    take: number = 50,
+  ): Promise<MarkupRule[]> {
     try {
       const where: any = {};
 
       if (filters?.companyId) where.companyId = filters.companyId;
-      if (filters?.serviceType) where.serviceTypes = { hasSome: [filters.serviceType] };
+      if (filters?.serviceType)
+        where.serviceTypes = { hasSome: [filters.serviceType] };
       if (filters?.isActive !== undefined) where.isActive = filters.isActive;
-      if (filters?.supplierId) where.supplierIds = { hasSome: [filters.supplierId] };
+      if (filters?.supplierId)
+        where.supplierIds = { hasSome: [filters.supplierId] };
 
       const rules = await this.prisma.markupRule.findMany({
         where,
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
         skip,
-        take
+        take,
       });
 
       return rules.map((rule: any) => this.mapPrismaToMarkupRule(rule));
     } catch (error) {
-      throw new Error(`Failed to list markup rules: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to list markup rules: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get applicable markup rules for a context
    */
-  async getApplicableMarkupRules(context: RuleMatchContext): Promise<MarkupRule[]> {
+  async getApplicableMarkupRules(
+    context: RuleMatchContext,
+  ): Promise<MarkupRule[]> {
     try {
       // Get all active rules that match the service type
       const rules = await this.prisma.markupRule.findMany({
@@ -156,17 +183,19 @@ export class MarkupService {
             {
               AND: [
                 { validFrom: { lte: new Date() } },
-                { OR: [{ validTo: null }, { validTo: { gte: new Date() } }] }
-              ]
-            }
-          ]
+                { OR: [{ validTo: null }, { validTo: { gte: new Date() } }] },
+              ],
+            },
+          ],
         },
-        orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }]
+        orderBy: [{ priority: "desc" }, { createdAt: "desc" }],
       });
 
       return rules.map((rule: any) => this.mapPrismaToMarkupRule(rule));
     } catch (error) {
-      throw new Error(`Failed to get applicable markup rules: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get applicable markup rules: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -179,11 +208,13 @@ export class MarkupService {
         where: { id },
         data: {
           isActive: false,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } catch (error) {
-      throw new Error(`Failed to delete markup rule: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to delete markup rule: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -196,13 +227,15 @@ export class MarkupService {
         where: { id },
         data: {
           isActive: true,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return this.mapPrismaToMarkupRule(rule);
     } catch (error) {
-      throw new Error(`Failed to activate markup rule: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to activate markup rule: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -215,13 +248,15 @@ export class MarkupService {
         where: { id },
         data: {
           isActive: false,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return this.mapPrismaToMarkupRule(rule);
     } catch (error) {
-      throw new Error(`Failed to deactivate markup rule: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to deactivate markup rule: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -237,46 +272,52 @@ export class MarkupService {
       const where: any = {};
 
       if (filters?.companyId) where.companyId = filters.companyId;
-      if (filters?.serviceType) where.serviceTypes = { hasSome: [filters.serviceType] };
+      if (filters?.serviceType)
+        where.serviceTypes = { hasSome: [filters.serviceType] };
       if (filters?.isActive !== undefined) where.isActive = filters.isActive;
 
       return await this.prisma.markupRule.count({ where });
     } catch (error) {
-      throw new Error(`Failed to count markup rules: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to count markup rules: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Validate markup rule creation
    */
-  private async validateMarkupRuleCreation(ruleData: MarkupRuleCreate): Promise<ValidationResult> {
+  private async validateMarkupRuleCreation(
+    ruleData: MarkupRuleCreate,
+  ): Promise<ValidationResult> {
     const errors: string[] = [];
 
-    if (!ruleData.name) errors.push('Rule name is required');
-    if (!ruleData.code) errors.push('Rule code is required');
+    if (!ruleData.name) errors.push("Rule name is required");
+    if (!ruleData.code) errors.push("Rule code is required");
     if (!ruleData.applicableTo || ruleData.applicableTo.length === 0) {
-      errors.push('Applicable to must have at least one value');
+      errors.push("Applicable to must have at least one value");
     }
-    if (!ruleData.markupType) errors.push('Markup type is required');
+    if (!ruleData.markupType) errors.push("Markup type is required");
     if (ruleData.markupValue === undefined || ruleData.markupValue < 0) {
-      errors.push('Markup value must be >= 0');
+      errors.push("Markup value must be >= 0");
     }
 
     // Validate date ranges
     if (ruleData.validFrom && ruleData.validTo) {
       const from = new Date(ruleData.validFrom);
       const to = new Date(ruleData.validTo);
-      if (from >= to) errors.push('Valid to date must be after valid from date');
+      if (from >= to)
+        errors.push("Valid to date must be after valid from date");
     }
 
     // Validate markup value based on type
-    if (ruleData.markupType === 'percentage' && ruleData.markupValue > 1000) {
-      errors.push('Percentage markup value must be <= 1000%');
+    if (ruleData.markupType === "percentage" && ruleData.markupValue > 1000) {
+      errors.push("Percentage markup value must be <= 1000%");
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -294,18 +335,24 @@ export class MarkupService {
       serviceTypes: prismaRule.serviceTypes,
       markupType: prismaRule.markupType,
       markupValue: Number(prismaRule.markupValue),
-      minMarkup: prismaRule.minMarkup ? Number(prismaRule.minMarkup) : undefined,
-      maxMarkup: prismaRule.maxMarkup ? Number(prismaRule.maxMarkup) : undefined,
+      minMarkup: prismaRule.minMarkup
+        ? Number(prismaRule.minMarkup)
+        : undefined,
+      maxMarkup: prismaRule.maxMarkup
+        ? Number(prismaRule.maxMarkup)
+        : undefined,
       conditions: prismaRule.conditions,
       supplierIds: prismaRule.supplierIds,
       branchIds: prismaRule.branchIds,
       userIds: prismaRule.userIds,
       isActive: prismaRule.isActive,
-      validFrom: prismaRule.validFrom ? prismaRule.validFrom.toISOString() : '',
-      validTo: prismaRule.validTo ? prismaRule.validTo.toISOString() : undefined,
+      validFrom: prismaRule.validFrom ? prismaRule.validFrom.toISOString() : "",
+      validTo: prismaRule.validTo
+        ? prismaRule.validTo.toISOString()
+        : undefined,
       metadata: prismaRule.metadata,
       createdAt: prismaRule.createdAt.toISOString(),
-      updatedAt: prismaRule.updatedAt.toISOString()
+      updatedAt: prismaRule.updatedAt.toISOString(),
     };
   }
 

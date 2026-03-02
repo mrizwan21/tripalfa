@@ -16,7 +16,7 @@ import {
   QueueStatus,
   RemarkType,
   Gender,
-} from './enums';
+} from "./enums";
 
 // ============================================================================
 // Booking Types
@@ -39,17 +39,17 @@ export interface Booking {
   type: BookingType;
   status: BookingStatus;
   paymentStatus: PaymentStatus;
-  
+
   // Booking Data
   bookingData: FlightBookingData | HotelBookingData | CarBookingData | unknown;
   searchCriteria?: unknown;
   supplierResponse?: unknown;
-  
+
   // Supplier References
   pnr?: string;
   supplierRef?: string;
   confirmationNo?: string;
-  
+
   // Pricing
   currency: string;
   baseFare: number;
@@ -60,33 +60,33 @@ export interface Booking {
   commission: number;
   totalAmount: number;
   paidAmount: number;
-  
+
   // Tax breakdown
   taxBreakdown?: TaxBreakdownItem[];
-  
+
   // Pricing rules
   markupRuleId?: string;
   commissionRuleId?: string;
   discountCouponId?: string;
-  
+
   // Dates
   bookingDate: string;
   ticketingDeadline?: string;
   travelStartDate?: string;
   travelEndDate?: string;
   cancelledAt?: string;
-  
+
   // Approval
   requiresApproval: boolean;
   approvalStatus?: ApprovalStatus;
   approvedBy?: string;
   approvedAt?: string;
-  
+
   // Source
   source: BookingSource;
   ipAddress?: string;
   userAgent?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -106,18 +106,18 @@ export interface FlightSegment {
   departureTime: string;
   arrivalTime: string;
   duration: number; // minutes
-  cabinClass: 'ECONOMY' | 'PREMIUM_ECONOMY' | 'BUSINESS' | 'FIRST';
+  cabinClass: "ECONOMY" | "PREMIUM_ECONOMY" | "BUSINESS" | "FIRST";
   fareClass: string;
   baggageAllowance?: {
     weight?: number;
-    unit?: 'KG' | 'LB';
+    unit?: "KG" | "LB";
     pieces?: number;
   };
   status: string;
 }
 
 export interface FlightBookingData {
-  tripType: 'ONE_WAY' | 'ROUND_TRIP' | 'MULTI_CITY';
+  tripType: "ONE_WAY" | "ROUND_TRIP" | "MULTI_CITY";
   segments: FlightSegment[];
   fareRules?: {
     changeFee?: number;
@@ -256,28 +256,28 @@ export interface Passenger {
   nationality: string;
   email?: string;
   phone?: string;
-  
+
   // Travel Documents
   passportNumber?: string;
   passportExpiry?: string;
   passportCountry?: string;
-  
+
   // Ticket info
   ticketNumber?: string;
   ticketStatus?: TicketStatus;
   ticketedAt?: string;
-  
+
   // Pricing
   baseFare: number;
   taxes: number;
   totalAmount: number;
-  
+
   // Extras
   ancillaries?: Ancillary[];
   seatAssignments?: SeatAssignment[];
   specialRequests: string[];
   frequentFlyer?: FrequentFlyer;
-  
+
   isPrimary: boolean;
   metadata?: Record<string, unknown>;
   createdAt: string;
@@ -418,8 +418,8 @@ export interface BookingListParams {
   toDate?: string;
   travelFromDate?: string;
   travelToDate?: string;
-  sortBy?: 'bookingDate' | 'travelStartDate' | 'totalAmount' | 'bookingRef';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "bookingDate" | "travelStartDate" | "totalAmount" | "bookingRef";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface BookingListResponse {

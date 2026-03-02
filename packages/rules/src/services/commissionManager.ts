@@ -1,6 +1,6 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
-import { CommissionSettlement, CommissionCalculationType } from '../types';
+import { PrismaClient } from "@prisma/client";
+import { CommissionSettlement, CommissionCalculationType } from "../types";
 
 /**
  * Commission calculation input
@@ -41,37 +41,48 @@ export class CommissionManager {
    */
   calculateCommission(input: CommissionCalculationInput): CommissionSettlement {
     let commissionAmount = 0;
-    let calculationType: CommissionCalculationType = 'percentage';
+    let calculationType: CommissionCalculationType = "percentage";
 
     if (input.commissionTiers && input.commissionTiers.length > 0) {
-      commissionAmount = this.calculateTieredCommission(input.totalAmount, input.commissionTiers);
-      calculationType = 'tiered';
-    } else if (input.commissionPercent !== undefined && input.commissionPercent > 0) {
+      commissionAmount = this.calculateTieredCommission(
+        input.totalAmount,
+        input.commissionTiers,
+      );
+      calculationType = "tiered";
+    } else if (
+      input.commissionPercent !== undefined &&
+      input.commissionPercent > 0
+    ) {
       commissionAmount = (input.totalAmount * input.commissionPercent) / 100;
-      calculationType = 'percentage';
-    } else if (input.commissionFixed !== undefined && input.commissionFixed > 0) {
+      calculationType = "percentage";
+    } else if (
+      input.commissionFixed !== undefined &&
+      input.commissionFixed > 0
+    ) {
       commissionAmount = input.commissionFixed;
-      calculationType = 'fixed';
+      calculationType = "fixed";
     }
 
     return {
-      id: '',
+      id: "",
       bookingId: input.bookingId,
       supplierId: input.supplierId,
       bookingAmount: input.totalAmount,
       commissionAmount,
       calculationType,
-      status: 'pending',
-      notes: '',
+      status: "pending",
+      notes: "",
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
   }
 
   /**
    * Create settlement record
    */
-  async createSettlement(settlement: CommissionSettlement): Promise<CommissionSettlement> {
+  async createSettlement(
+    settlement: CommissionSettlement,
+  ): Promise<CommissionSettlement> {
     try {
       const created = await this.prisma.commissionSettlement.create({
         data: {
@@ -80,76 +91,92 @@ export class CommissionManager {
           bookingAmount: settlement.bookingAmount,
           commissionAmount: settlement.commissionAmount,
           calculationType: settlement.calculationType,
-          status: 'pending',
-          notes: settlement.notes || '',
+          status: "pending",
+          notes: settlement.notes || "",
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return this.mapPrismaToSettlement(created);
     } catch (error) {
-      throw new Error(`Failed to create settlement: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to create settlement: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Update settlement status
    */
-  async updateSettlementStatus(id: string, status: 'pending' | 'paid' | 'cancelled'): Promise<CommissionSettlement> {
+  async updateSettlementStatus(
+    id: string,
+    status: "pending" | "paid" | "cancelled",
+  ): Promise<CommissionSettlement> {
     try {
       const updated = await this.prisma.commissionSettlement.update({
         where: { id },
         data: {
           status,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return this.mapPrismaToSettlement(updated);
     } catch (error) {
-      throw new Error(`Failed to update settlement status: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to update settlement status: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get pending settlements for date range
    */
-  async getPendingSettlements(startDate: Date, endDate: Date): Promise<CommissionSettlement[]> {
+  async getPendingSettlements(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CommissionSettlement[]> {
     try {
       const settlements = await this.prisma.commissionSettlement.findMany({
         where: {
-          status: 'pending',
+          status: "pending",
           createdAt: {
             gte: startDate,
-            lte: endDate
-          }
+            lte: endDate,
+          },
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       return settlements.map((s: any) => this.mapPrismaToSettlement(s));
     } catch (error) {
-      throw new Error(`Failed to get pending settlements: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get pending settlements: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get pending settlements by supplier
    */
-  async getPendingSettlementsBySupplier(supplierId: string): Promise<CommissionSettlement[]> {
+  async getPendingSettlementsBySupplier(
+    supplierId: string,
+  ): Promise<CommissionSettlement[]> {
     try {
       const settlements = await this.prisma.commissionSettlement.findMany({
         where: {
           supplierId,
-          status: 'pending'
+          status: "pending",
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       return settlements.map((s: any) => this.mapPrismaToSettlement(s));
     } catch (error) {
-      throw new Error(`Failed to get supplier settlements: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get supplier settlements: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -161,16 +188,20 @@ export class CommissionManager {
       const result = await this.prisma.commissionSettlement.aggregate({
         where: {
           supplierId,
-          status: 'pending'
+          status: "pending",
         },
         _sum: {
-          commissionAmount: true
-        }
+          commissionAmount: true,
+        },
       });
 
-      return result._sum.commissionAmount ? Number(result._sum.commissionAmount) : 0;
+      return result._sum.commissionAmount
+        ? Number(result._sum.commissionAmount)
+        : 0;
     } catch (error) {
-      throw new Error(`Failed to calculate total pending commission: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to calculate total pending commission: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -180,52 +211,67 @@ export class CommissionManager {
   async getTotalPendingCommissionAll(): Promise<number> {
     try {
       const result = await this.prisma.commissionSettlement.aggregate({
-        where: { status: 'pending' },
-        _sum: { commissionAmount: true }
+        where: { status: "pending" },
+        _sum: { commissionAmount: true },
       });
 
-      return result._sum.commissionAmount ? Number(result._sum.commissionAmount) : 0;
+      return result._sum.commissionAmount
+        ? Number(result._sum.commissionAmount)
+        : 0;
     } catch (error) {
-      throw new Error(`Failed to calculate total pending commission: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to calculate total pending commission: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Process settlement payment
    */
-  async processSettlementPayment(settlementIds: string[], paymentReference: string): Promise<number> {
+  async processSettlementPayment(
+    settlementIds: string[],
+    paymentReference: string,
+  ): Promise<number> {
     try {
       const updated = await this.prisma.commissionSettlement.updateMany({
         where: {
           id: { in: settlementIds },
-          status: 'pending'
+          status: "pending",
         },
         data: {
-          status: 'paid',
+          status: "paid",
           notes: `Paid via ${paymentReference}`,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return updated.count;
     } catch (error) {
-      throw new Error(`Failed to process settlement payment: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to process settlement payment: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Process bulk payment for supplier
    */
-  async processSupplierPayment(supplierId: string, paymentReference: string): Promise<number> {
+  async processSupplierPayment(
+    supplierId: string,
+    paymentReference: string,
+  ): Promise<number> {
     try {
-      const settlements = await this.getPendingSettlementsBySupplier(supplierId);
-      const ids = settlements.map(s => s.id);
+      const settlements =
+        await this.getPendingSettlementsBySupplier(supplierId);
+      const ids = settlements.map((s) => s.id);
 
       if (ids.length === 0) return 0;
 
       return this.processSettlementPayment(ids, paymentReference);
     } catch (error) {
-      throw new Error(`Failed to process supplier payment: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to process supplier payment: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -235,34 +281,43 @@ export class CommissionManager {
   async getSettlement(id: string): Promise<CommissionSettlement | null> {
     try {
       const settlement = await this.prisma.commissionSettlement.findUnique({
-        where: { id }
+        where: { id },
       });
 
       return settlement ? this.mapPrismaToSettlement(settlement) : null;
     } catch (error) {
-      throw new Error(`Failed to get settlement: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get settlement: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get settlement by booking
    */
-  async getSettlementByBooking(bookingId: string): Promise<CommissionSettlement | null> {
+  async getSettlementByBooking(
+    bookingId: string,
+  ): Promise<CommissionSettlement | null> {
     try {
       const settlement = await this.prisma.commissionSettlement.findFirst({
-        where: { bookingId }
+        where: { bookingId },
       });
 
       return settlement ? this.mapPrismaToSettlement(settlement) : null;
     } catch (error) {
-      throw new Error(`Failed to get booking settlement: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get booking settlement: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Calculate tiered commission
    */
-  private calculateTieredCommission(amount: number, tiers: CommissionTier[]): number {
+  private calculateTieredCommission(
+    amount: number,
+    tiers: CommissionTier[],
+  ): number {
     // Sort tiers by minAmount
     const sorted = [...tiers].sort((a, b) => a.minAmount - b.minAmount);
 
@@ -294,9 +349,9 @@ export class CommissionManager {
       commissionAmount: Number(prismaSettlement.commissionAmount),
       calculationType: prismaSettlement.calculationType,
       status: prismaSettlement.status,
-      notes: prismaSettlement.notes || '',
+      notes: prismaSettlement.notes || "",
       createdAt: prismaSettlement.createdAt.toISOString(),
-      updatedAt: prismaSettlement.updatedAt.toISOString()
+      updatedAt: prismaSettlement.updatedAt.toISOString(),
     };
   }
 

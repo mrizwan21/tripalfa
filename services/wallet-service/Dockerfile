@@ -29,38 +29,41 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # Generate Prisma client
 RUN pnpm --filter @tripalfa/shared-database generate
 
-# Clean up build info files from the host
-RUN find . -name "*.tsbuildinfo" -delete
+# Build all packages including shared-database
+RUN pnpm --filter @tripalfa/shared-database build
+RUN pnpm --filter @tripalfa/shared-types build
 
 # Build the service
 RUN pnpm --filter wallet-service build
 
+# Clean up build info files from the host (AFTER building everything)
+RUN find . -name "*.tsbuildinfo" -delete
+
 # Production stage
 FROM node:20-alpine
 
-# Install dumb-init, curl for health checks, and enable corepack/pnpm for production stage
-RUN apk add --no-cache dumb-init curl \
-    && corepack enable && corepack prepare pnpm@latest --activate
+# Install dumb-init and curl for health checks
+RUN apk add --no-cache dumb-init curl
 
 WORKDIR /app
 
-# Copy npm configuration for network retry settings
-COPY .npmrc ./
+# Copy entire node_modules from builder with all symlinks and .pnpm structure
+COPY --from=builder /app/node_modules ./node_modules/
 
-# Copy essential files for pnpm production install
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+# Copy service package.json for reference
 COPY services/wallet-service/package.json ./services/wallet-service/
-COPY packages ./packages/
-COPY database ./database/
-COPY scripts ./scripts/
-
-# Install production dependencies only with cache mount
-# Using --fetch-timeout for better handling of slow connections
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile --prod --ignore-scripts --fetch-timeout=300000
 
 # Copy built dist from builder
 COPY --from=builder /app/services/wallet-service/dist ./services/wallet-service/dist
+
+# Since Docker builder doesn't create shared-database dist properly, copy from the build context
+# This copies the locally pre-built shared-database dist files
+COPY packages/shared-database/dist/ ./packages/shared-database/dist/
+
+# Create workspace package node_modules directories with symlinks to shared packages and remove source files
+RUN mkdir -p services/wallet-service/node_modules/@tripalfa && \
+    ln -s ../../../../packages/shared-database services/wallet-service/node_modules/@tripalfa/shared-database && \
+    find /app/packages -type d -name "src" ! -path "*/node_modules/*" -exec rm -rf {} + 2>/dev/null || true
 
 WORKDIR /app/services/wallet-service
 

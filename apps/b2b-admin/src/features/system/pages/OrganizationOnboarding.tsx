@@ -1,55 +1,81 @@
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tripalfa/ui-components/ui/card"
-import { Button } from "@tripalfa/ui-components/ui/button"
-import { Badge } from "@tripalfa/ui-components/ui/badge"
-import { Plus, Trash2, Edit, MapPin, FileText } from "lucide-react"
-import { Label } from "@tripalfa/ui-components/ui/label"
-import { Input } from "@tripalfa/ui-components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@tripalfa/ui-components/ui/form"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@tripalfa/ui-components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@tripalfa/ui-components/ui/tabs"
-import { Textarea } from "@tripalfa/ui-components/ui/textarea"
-import api from "@/shared/lib/api"
-import { toast } from "sonner"
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@tripalfa/ui-components/ui/card";
+import { Button } from "@tripalfa/ui-components/ui/button";
+import { Badge } from "@tripalfa/ui-components/ui/badge";
+import { Plus, Trash2, Edit, MapPin, FileText } from "lucide-react";
+import { Label } from "@tripalfa/ui-components/ui/label";
+import { Input } from "@tripalfa/ui-components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@tripalfa/ui-components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@tripalfa/ui-components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@tripalfa/ui-components/ui/tabs";
+import { Textarea } from "@tripalfa/ui-components/ui/textarea";
+import api from "@/shared/lib/api";
+import { toast } from "sonner";
 
 type CompanyProfile = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  website: string
-  industry: string
-  registrationNumber: string
-  taxNumber: string
-  logo?: string
-  coverImage?: string
-}
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  website: string;
+  industry: string;
+  registrationNumber: string;
+  taxNumber: string;
+  logo?: string;
+  coverImage?: string;
+};
 
 type Branch = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  city: string
-  state: string
-  country: string
-  zipCode: string
-  address: string
-  status: "active" | "inactive"
-}
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  state: string;
+  country: string;
+  zipCode: string;
+  address: string;
+  status: "active" | "inactive";
+};
 
 type MediaItem = {
-  id: string
-  name: string
-  type: "logo" | "header" | "footer" | "banner"
-  url: string
-  uploadedAt: string
-  size: string
-  status: "pending" | "approved" | "rejected"
-}
+  id: string;
+  name: string;
+  type: "logo" | "header" | "footer" | "banner";
+  url: string;
+  uploadedAt: string;
+  size: string;
+  status: "pending" | "approved" | "rejected";
+};
 
 const profileSchema = z.object({
   name: z.string().min(2, "Company name is required"),
@@ -59,7 +85,7 @@ const profileSchema = z.object({
   industry: z.string().min(2, "Industry is required"),
   registrationNumber: z.string().min(5, "Registration number is required"),
   taxNumber: z.string().min(5, "Tax number is required"),
-})
+});
 
 const branchSchema = z.object({
   name: z.string().min(2, "Branch name is required"),
@@ -70,7 +96,7 @@ const branchSchema = z.object({
   country: z.string().min(2, "Country is required"),
   zipCode: z.string().min(3, "ZIP code is required"),
   address: z.string().min(5, "Address is required"),
-})
+});
 
 const headersFooterSchema = z.object({
   headerTitle: z.string().min(2, "Header title is required"),
@@ -79,27 +105,27 @@ const headersFooterSchema = z.object({
   footerText: z.string().min(2, "Footer text is required"),
   footerLinks: z.string().optional(),
   copyrightText: z.string().optional(),
-})
+});
 
 interface OrganizationOnboardingProps {
-  organizationId?: string
-  onSubmit?: () => Promise<void>
-  onCancel?: () => void
-  isSubmitting?: boolean
+  organizationId?: string;
+  onSubmit?: () => Promise<void>;
+  onCancel?: () => void;
+  isSubmitting?: boolean;
 }
 
 export default function OrganizationOnboarding({
   organizationId,
   onSubmit,
   onCancel,
-  isSubmitting
+  isSubmitting,
 }: OrganizationOnboardingProps = {}) {
-  const [branches, setBranches] = useState<Branch[]>([])
-  const [mediaItems, setMediaItems] = useState<MediaItem[]>([])
-  const [profile, setProfile] = useState<CompanyProfile | null>(null)
-  const [openBranchDialog, setOpenBranchDialog] = useState(false)
-  const [editingBranch, setEditingBranch] = useState<Branch | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [profile, setProfile] = useState<CompanyProfile | null>(null);
+  const [openBranchDialog, setOpenBranchDialog] = useState(false);
+  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -112,7 +138,7 @@ export default function OrganizationOnboarding({
       registrationNumber: "",
       taxNumber: "",
     },
-  })
+  });
 
   const branchForm = useForm<z.infer<typeof branchSchema>>({
     resolver: zodResolver(branchSchema),
@@ -126,7 +152,7 @@ export default function OrganizationOnboarding({
       zipCode: "",
       address: "",
     },
-  })
+  });
 
   const headersFooterForm = useForm<z.infer<typeof headersFooterSchema>>({
     resolver: zodResolver(headersFooterSchema),
@@ -138,162 +164,177 @@ export default function OrganizationOnboarding({
       footerLinks: "",
       copyrightText: "",
     },
-  })
+  });
 
   // Load organization data
   useEffect(() => {
     const loadOrganizationData = async () => {
       try {
-        setLoading(true)
-        const [profileRes, branchesRes, mediaRes, headersRes] = await Promise.all([
-          api.get("/organization"),
-          api.get("/branches"),
-          api.get("/branding/media"),
-          api.get("/branding/headers"),
-        ])
+        setLoading(true);
+        const [profileRes, branchesRes, mediaRes, headersRes] =
+          await Promise.all([
+            api.get("/organization"),
+            api.get("/branches"),
+            api.get("/branding/media"),
+            api.get("/branding/headers"),
+          ]);
 
-        const profileData = profileRes.data?.data || profileRes.data
+        const profileData = profileRes.data?.data || profileRes.data;
         if (profileData) {
-          setProfile(profileData)
-          profileForm.reset(profileData)
+          setProfile(profileData);
+          profileForm.reset(profileData);
         }
 
-        const branchesData = Array.isArray(branchesRes.data) ? branchesRes.data : branchesRes.data?.data || []
-        setBranches(branchesData)
+        const branchesData = Array.isArray(branchesRes.data)
+          ? branchesRes.data
+          : branchesRes.data?.data || [];
+        setBranches(branchesData);
 
-        const mediaData = Array.isArray(mediaRes.data) ? mediaRes.data : mediaRes.data?.data || []
-        setMediaItems(mediaData)
+        const mediaData = Array.isArray(mediaRes.data)
+          ? mediaRes.data
+          : mediaRes.data?.data || [];
+        setMediaItems(mediaData);
 
-        const headersData = headersRes.data?.data || headersRes.data
+        const headersData = headersRes.data?.data || headersRes.data;
         if (headersData) {
-          headersFooterForm.reset(headersData)
+          headersFooterForm.reset(headersData);
         }
       } catch (error) {
-        console.error("Failed to load organization data", error)
-        toast.error("Failed to load organization data")
+        console.error("Failed to load organization data", error);
+        toast.error("Failed to load organization data");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadOrganizationData()
-  }, [])
+    loadOrganizationData();
+  }, []);
 
   const handleSaveProfile = profileForm.handleSubmit(async (values) => {
     try {
-      await api.post("/organization/profile", values)
-      toast.success("Organization profile updated successfully")
-      profileForm.reset()
+      await api.post("/organization/profile", values);
+      toast.success("Organization profile updated successfully");
+      profileForm.reset();
     } catch (error) {
-      console.error("Failed to save profile", error)
-      toast.error("Failed to save organization profile")
+      console.error("Failed to save profile", error);
+      toast.error("Failed to save organization profile");
     }
-  })
+  });
 
   const handleAddBranch = branchForm.handleSubmit(async (values) => {
     try {
       const endpoint = editingBranch
         ? `/branches/${editingBranch.id}`
-        : "/branches"
+        : "/branches";
 
       if (editingBranch) {
-        await api.put(endpoint, values)
-        toast.success("Branch updated successfully")
+        await api.put(endpoint, values);
+        toast.success("Branch updated successfully");
       } else {
-        await api.post(endpoint, values)
-        toast.success("Branch added successfully")
+        await api.post(endpoint, values);
+        toast.success("Branch added successfully");
       }
 
       // Reload branches
-      const res = await api.get("/branches")
-      const branchesData = Array.isArray(res.data) ? res.data : res.data?.data || []
-      setBranches(branchesData)
+      const res = await api.get("/branches");
+      const branchesData = Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+      setBranches(branchesData);
 
-      branchForm.reset()
-      setOpenBranchDialog(false)
-      setEditingBranch(null)
+      branchForm.reset();
+      setOpenBranchDialog(false);
+      setEditingBranch(null);
     } catch (error) {
-      console.error("Failed to add/update branch", error)
-      toast.error(editingBranch ? "Failed to update branch" : "Failed to add branch")
+      console.error("Failed to add/update branch", error);
+      toast.error(
+        editingBranch ? "Failed to update branch" : "Failed to add branch",
+      );
     }
-  })
+  });
 
   const handleDeleteBranch = async (branchId: string) => {
     try {
-      await api.delete(`/branches/${branchId}`)
-      setBranches(branches.filter((b) => b.id !== branchId))
-      toast.success("Branch deleted successfully")
+      await api.delete(`/branches/${branchId}`);
+      setBranches(branches.filter((b) => b.id !== branchId));
+      toast.success("Branch deleted successfully");
     } catch (error) {
-      console.error("Failed to delete branch", error)
-      toast.error("Failed to delete branch")
+      console.error("Failed to delete branch", error);
+      toast.error("Failed to delete branch");
     }
-  }
+  };
 
   const handleEditBranch = (branch: Branch) => {
-    setEditingBranch(branch)
-    branchForm.reset(branch)
-    setOpenBranchDialog(true)
-  }
+    setEditingBranch(branch);
+    branchForm.reset(branch);
+    setOpenBranchDialog(true);
+  };
 
   const handleCloseBranchDialog = () => {
-    setOpenBranchDialog(false)
-    setEditingBranch(null)
-    branchForm.reset()
-  }
+    setOpenBranchDialog(false);
+    setEditingBranch(null);
+    branchForm.reset();
+  };
 
-  const handleSaveHeadersFooter = headersFooterForm.handleSubmit(async (values) => {
-    try {
-      await api.post("/branding/headers", values)
-      toast.success("Headers & footer updated successfully")
-    } catch (error) {
-      console.error("Failed to save headers/footer", error)
-      toast.error("Failed to save headers & footer")
-    }
-  })
+  const handleSaveHeadersFooter = headersFooterForm.handleSubmit(
+    async (values) => {
+      try {
+        await api.post("/branding/headers", values);
+        toast.success("Headers & footer updated successfully");
+      } catch (error) {
+        console.error("Failed to save headers/footer", error);
+        toast.error("Failed to save headers & footer");
+      }
+    },
+  );
 
   const handleUploadMedia = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || !files[0]) return
+    const files = e.target.files;
+    if (!files || !files[0]) return;
 
     try {
-      const formData = new FormData()
-      formData.append("file", files[0])
+      const formData = new FormData();
+      formData.append("file", files[0]);
 
       const res = await api.post("/branding/media/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-      })
+      });
 
-      const newMedia = res.data?.data || res.data
-      setMediaItems([...mediaItems, newMedia])
-      toast.success("Media uploaded successfully")
+      const newMedia = res.data?.data || res.data;
+      setMediaItems([...mediaItems, newMedia]);
+      toast.success("Media uploaded successfully");
     } catch (error) {
-      console.error("Failed to upload media", error)
-      toast.error("Failed to upload media")
+      console.error("Failed to upload media", error);
+      toast.error("Failed to upload media");
     }
-  }
+  };
 
   const handleDeleteMedia = async (mediaId: string) => {
     try {
-      await api.delete(`/branding/media/${mediaId}`)
-      setMediaItems(mediaItems.filter((m) => m.id !== mediaId))
-      toast.success("Media deleted successfully")
+      await api.delete(`/branding/media/${mediaId}`);
+      setMediaItems(mediaItems.filter((m) => m.id !== mediaId));
+      toast.success("Media deleted successfully");
     } catch (error) {
-      console.error("Failed to delete media", error)
-      toast.error("Failed to delete media")
+      console.error("Failed to delete media", error);
+      toast.error("Failed to delete media");
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Organization Settings</h1>
-          <p className="mt-2 text-slate-600">Configure your organization's profile, branches, and branding</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            Organization Settings
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Configure your organization's profile, branches, and branding
+          </p>
         </div>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto gap-4">
           <TabsTrigger value="profile">Company Profile</TabsTrigger>
           <TabsTrigger value="branches">Manage Branches</TabsTrigger>
           <TabsTrigger value="headers">Headers & Footer</TabsTrigger>
@@ -303,13 +344,18 @@ export default function OrganizationOnboarding({
         {/* Company Profile Tab */}
         <TabsContent value="profile">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 gap-2">
               <CardTitle>Company Profile</CardTitle>
-              <CardDescription>Manage your organization's basic information and registration details</CardDescription>
+              <CardDescription>
+                Manage your organization's basic information and registration
+                details
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {loading ? (
-                <div className="py-8 text-center text-slate-500">Loading profile data...</div>
+                <div className="py-8 text-center text-muted-foreground">
+                  Loading profile data...
+                </div>
               ) : (
                 <Form {...profileForm}>
                   <form onSubmit={handleSaveProfile} className="space-y-6">
@@ -321,7 +367,10 @@ export default function OrganizationOnboarding({
                           <FormItem>
                             <FormLabel>Company Name</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter company name" {...field} />
+                              <Input
+                                placeholder="Enter company name"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -334,7 +383,11 @@ export default function OrganizationOnboarding({
                           <FormItem>
                             <FormLabel>Email Address</FormLabel>
                             <FormControl>
-                              <Input placeholder="company@example.com" type="email" {...field} />
+                              <Input
+                                placeholder="company@example.com"
+                                type="email"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -350,7 +403,10 @@ export default function OrganizationOnboarding({
                           <FormItem>
                             <FormLabel>Phone Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="+1 (555) 000-0000" {...field} />
+                              <Input
+                                placeholder="+1 (555) 000-0000"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -363,7 +419,10 @@ export default function OrganizationOnboarding({
                           <FormItem>
                             <FormLabel>Website URL</FormLabel>
                             <FormControl>
-                              <Input placeholder="https://example.com" {...field} />
+                              <Input
+                                placeholder="https://example.com"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -379,7 +438,10 @@ export default function OrganizationOnboarding({
                           <FormItem>
                             <FormLabel>Industry</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Travel, Technology" {...field} />
+                              <Input
+                                placeholder="e.g., Travel, Technology"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -392,7 +454,10 @@ export default function OrganizationOnboarding({
                           <FormItem>
                             <FormLabel>Registration Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="Enter registration number" {...field} />
+                              <Input
+                                placeholder="Enter registration number"
+                                {...field}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -407,7 +472,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Tax/VAT Number</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter tax/VAT number" {...field} />
+                            <Input
+                              placeholder="Enter tax/VAT number"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -415,8 +483,13 @@ export default function OrganizationOnboarding({
                     />
 
                     <div className="flex gap-2">
-                      <Button type="submit" disabled={profileForm.formState.isSubmitting}>
-                        {profileForm.formState.isSubmitting ? "Saving..." : "Save Profile"}
+                      <Button
+                        type="submit"
+                        disabled={profileForm.formState.isSubmitting}
+                      >
+                        {profileForm.formState.isSubmitting
+                          ? "Saving..."
+                          : "Save Profile"}
                       </Button>
                     </div>
                   </form>
@@ -429,12 +502,17 @@ export default function OrganizationOnboarding({
         {/* Manage Branches Tab */}
         <TabsContent value="branches">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle>Manage Branches</CardTitle>
-                <CardDescription>Add and manage your organization's branch locations</CardDescription>
+                <CardDescription>
+                  Add and manage your organization's branch locations
+                </CardDescription>
               </div>
-              <Dialog open={openBranchDialog} onOpenChange={setOpenBranchDialog}>
+              <Dialog
+                open={openBranchDialog}
+                onOpenChange={setOpenBranchDialog}
+              >
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
@@ -443,9 +521,13 @@ export default function OrganizationOnboarding({
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>{editingBranch ? "Edit Branch" : "Add New Branch"}</DialogTitle>
+                    <DialogTitle>
+                      {editingBranch ? "Edit Branch" : "Add New Branch"}
+                    </DialogTitle>
                     <DialogDescription>
-                      {editingBranch ? "Update branch information" : "Enter the details for a new branch location"}
+                      {editingBranch
+                        ? "Update branch information"
+                        : "Enter the details for a new branch location"}
                     </DialogDescription>
                   </DialogHeader>
 
@@ -459,7 +541,10 @@ export default function OrganizationOnboarding({
                             <FormItem>
                               <FormLabel>Branch Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="e.g., Dubai HQ" {...field} />
+                                <Input
+                                  placeholder="e.g., Dubai HQ"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -472,7 +557,11 @@ export default function OrganizationOnboarding({
                             <FormItem>
                               <FormLabel>Email</FormLabel>
                               <FormControl>
-                                <Input placeholder="branch@example.com" type="email" {...field} />
+                                <Input
+                                  placeholder="branch@example.com"
+                                  type="email"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -488,7 +577,10 @@ export default function OrganizationOnboarding({
                             <FormItem>
                               <FormLabel>Phone</FormLabel>
                               <FormControl>
-                                <Input placeholder="+1 (555) 000-0000" {...field} />
+                                <Input
+                                  placeholder="+1 (555) 000-0000"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -501,7 +593,10 @@ export default function OrganizationOnboarding({
                             <FormItem>
                               <FormLabel>Street Address</FormLabel>
                               <FormControl>
-                                <Input placeholder="123 Main Street" {...field} />
+                                <Input
+                                  placeholder="123 Main Street"
+                                  {...field}
+                                />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -568,11 +663,22 @@ export default function OrganizationOnboarding({
                       </div>
 
                       <DialogFooter>
-                        <Button variant="outline" type="button" onClick={handleCloseBranchDialog}>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={handleCloseBranchDialog}
+                        >
                           Cancel
                         </Button>
-                        <Button type="submit" disabled={branchForm.formState.isSubmitting}>
-                          {branchForm.formState.isSubmitting ? "Saving..." : editingBranch ? "Update Branch" : "Add Branch"}
+                        <Button
+                          type="submit"
+                          disabled={branchForm.formState.isSubmitting}
+                        >
+                          {branchForm.formState.isSubmitting
+                            ? "Saving..."
+                            : editingBranch
+                              ? "Update Branch"
+                              : "Add Branch"}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -583,22 +689,36 @@ export default function OrganizationOnboarding({
             <CardContent>
               {branches.length === 0 ? (
                 <div className="py-8 text-center">
-                  <MapPin className="mx-auto h-8 w-8 text-slate-400" />
-                  <p className="mt-2 text-sm text-slate-500">No branches added yet</p>
+                  <MapPin className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No branches added yet
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {branches.map((branch) => (
-                    <div key={branch.id} className="flex items-center justify-between rounded-lg border p-4">
-                      <div className="flex-1">
-                        <div className="font-semibold text-slate-900">{branch.name}</div>
-                        <div className="mt-1 text-sm text-slate-600">
-                          {branch.address}, {branch.city}, {branch.state} {branch.zipCode}
+                    <div
+                      key={branch.id}
+                      className="flex items-center justify-between rounded-lg border p-4 gap-2"
+                    >
+                      <div className="flex-1 gap-4">
+                        <div className="font-semibold text-foreground">
+                          {branch.name}
                         </div>
-                        <div className="mt-1 text-sm text-slate-500">{branch.email} · {branch.phone}</div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {branch.address}, {branch.city}, {branch.state}{" "}
+                          {branch.zipCode}
+                        </div>
+                        <div className="mt-1 text-sm text-muted-foreground">
+                          {branch.email} · {branch.phone}
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant={branch.status === "active" ? "default" : "secondary"}>
+                        <Badge
+                          variant={
+                            branch.status === "active" ? "default" : "secondary"
+                          }
+                        >
                           {branch.status}
                         </Badge>
                         <Button
@@ -627,9 +747,11 @@ export default function OrganizationOnboarding({
         {/* Headers & Footer Tab */}
         <TabsContent value="headers">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 gap-2">
               <CardTitle>Headers & Footer</CardTitle>
-              <CardDescription>Customize headers and footer content for your organization</CardDescription>
+              <CardDescription>
+                Customize headers and footer content for your organization
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...headersFooterForm}>
@@ -643,7 +765,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Header Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Welcome to Our Organization" {...field} />
+                            <Input
+                              placeholder="e.g., Welcome to Our Organization"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -657,7 +782,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Header Subtitle</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Your journey starts here" {...field} />
+                            <Input
+                              placeholder="e.g., Your journey starts here"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -671,7 +799,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Header Content</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Additional header content" {...field} />
+                            <Textarea
+                              placeholder="Additional header content"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -688,7 +819,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Footer Text</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="e.g., Contact us at support@example.com" {...field} />
+                            <Textarea
+                              placeholder="e.g., Contact us at support@example.com"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -702,7 +836,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Footer Links (comma-separated)</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., Privacy Policy, Terms of Service, Contact" {...field} />
+                            <Input
+                              placeholder="e.g., Privacy Policy, Terms of Service, Contact"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -716,7 +853,10 @@ export default function OrganizationOnboarding({
                         <FormItem>
                           <FormLabel>Copyright Text</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g., © 2024 Your Company. All rights reserved." {...field} />
+                            <Input
+                              placeholder="e.g., © 2024 Your Company. All rights reserved."
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -725,8 +865,13 @@ export default function OrganizationOnboarding({
                   </div>
 
                   <div className="flex gap-2">
-                    <Button type="submit" disabled={headersFooterForm.formState.isSubmitting}>
-                      {headersFooterForm.formState.isSubmitting ? "Saving..." : "Save Settings"}
+                    <Button
+                      type="submit"
+                      disabled={headersFooterForm.formState.isSubmitting}
+                    >
+                      {headersFooterForm.formState.isSubmitting
+                        ? "Saving..."
+                        : "Save Settings"}
                     </Button>
                   </div>
                 </form>
@@ -738,10 +883,12 @@ export default function OrganizationOnboarding({
         {/* Download Media Tab */}
         <TabsContent value="media">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle>Download Media</CardTitle>
-                <CardDescription>Upload and manage media files for your organization</CardDescription>
+                <CardDescription>
+                  Upload and manage media files for your organization
+                </CardDescription>
               </div>
               <label htmlFor="media-upload">
                 <Button type="button">
@@ -762,20 +909,34 @@ export default function OrganizationOnboarding({
             <CardContent>
               {mediaItems.length === 0 ? (
                 <div className="py-8 text-center">
-                  <FileText className="mx-auto h-8 w-8 text-slate-400" />
-                  <p className="mt-2 text-sm text-slate-500">No media files uploaded yet</p>
+                  <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No media files uploaded yet
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="border-b bg-slate-50">
+                    <thead className="border-b bg-muted/40">
                       <tr>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">File Name</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Type</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Size</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Uploaded</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Status</th>
-                        <th className="px-4 py-3 text-left font-semibold text-slate-700">Action</th>
+                        <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                          File Name
+                        </th>
+                        <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                          Type
+                        </th>
+                        <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                          Size
+                        </th>
+                        <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                          Uploaded
+                        </th>
+                        <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-left font-semibold text-muted-foreground">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -785,8 +946,10 @@ export default function OrganizationOnboarding({
                           <td className="px-4 py-3">
                             <Badge variant="outline">{item.type}</Badge>
                           </td>
-                          <td className="px-4 py-3 text-slate-600">{item.size}</td>
-                          <td className="px-4 py-3 text-slate-600">
+                          <td className="px-4 py-3 text-muted-foreground">
+                            {item.size}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
                             {new Date(item.uploadedAt).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3">
@@ -822,5 +985,5 @@ export default function OrganizationOnboarding({
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }

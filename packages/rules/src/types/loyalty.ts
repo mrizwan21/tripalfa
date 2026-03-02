@@ -46,7 +46,7 @@ export interface LoyaltyTransaction {
   id: string;
   userId: string;
   bookingId?: string;
-  transactionType: 'earn' | 'redeem' | 'expire' | 'bonus' | 'adjustment';
+  transactionType: "earn" | "redeem" | "expire" | "bonus" | "adjustment";
   points: number;
   description: string;
   balanceAfter: number;
@@ -58,7 +58,7 @@ export interface LoyaltyTransaction {
 export interface LoyaltyTransactionCreate {
   userId: string;
   bookingId?: string;
-  transactionType: 'earn' | 'redeem' | 'expire' | 'bonus' | 'adjustment';
+  transactionType: "earn" | "redeem" | "expire" | "bonus" | "adjustment";
   points: number;
   description: string;
   expiresAt?: string;

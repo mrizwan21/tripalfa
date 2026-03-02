@@ -1,13 +1,13 @@
-import { http, HttpResponse } from 'msw';
-import type { NotificationItem } from '../../../lib/notification-types';
-import { MOCK_NOTIFICATION_LIST } from './fixtures';
+import { http, HttpResponse } from "msw";
+import type { NotificationItem } from "../../../lib/notification-types";
+import { MOCK_NOTIFICATION_LIST } from "./fixtures";
 
 /**
  * MSW (Mock Service Worker) handlers for notification API endpoints
  * Provides mocked HTTP responses for API integration tests
  */
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = "http://localhost:3000";
 
 // Store for managing notification state during tests
 let notificationsStore: Map<string, NotificationItem> = new Map();
@@ -15,9 +15,11 @@ let notificationsStore: Map<string, NotificationItem> = new Map();
 /**
  * Initialize the notifications store with mock data
  */
-export const initializeNotificationsStore = (initialNotifications: NotificationItem[] = MOCK_NOTIFICATION_LIST) => {
+export const initializeNotificationsStore = (
+  initialNotifications: NotificationItem[] = MOCK_NOTIFICATION_LIST,
+) => {
   notificationsStore.clear();
-  initialNotifications.forEach(notif => {
+  initialNotifications.forEach((notif) => {
     notificationsStore.set(notif.id, notif);
   });
 };
@@ -59,28 +61,30 @@ export const handlers = [
   http.get(`${API_BASE_URL}/api/notifications`, ({ request }) => {
     try {
       const url = new URL(request.url);
-      const page = parseInt(url.searchParams.get('page') || '1');
-      const limit = parseInt(url.searchParams.get('limit') || '20');
-      const type = url.searchParams.get('type');
-      const status = url.searchParams.get('status');
-      const read = url.searchParams.get('read');
+      const page = parseInt(url.searchParams.get("page") || "1");
+      const limit = parseInt(url.searchParams.get("limit") || "20");
+      const type = url.searchParams.get("type");
+      const status = url.searchParams.get("status");
+      const read = url.searchParams.get("read");
 
       let results = getNotificationsFromStore();
 
       // Apply filters
       if (type) {
-        results = results.filter(n => n.type === type);
+        results = results.filter((n) => n.type === type);
       }
       if (status) {
-        results = results.filter(n => n.status === status);
+        results = results.filter((n) => n.status === status);
       }
       if (read !== null) {
-        const isRead = read === 'true';
-        results = results.filter(n => n.read === isRead);
+        const isRead = read === "true";
+        results = results.filter((n) => n.read === isRead);
       }
 
       // Sort by date (newest first)
-      results.sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime());
+      results.sort(
+        (a, b) => new Date(b.when).getTime() - new Date(a.when).getTime(),
+      );
 
       // Paginate
       const total = results.length;
@@ -101,9 +105,9 @@ export const handlers = [
       return HttpResponse.json(
         {
           success: false,
-          error: 'Failed to fetch notifications',
+          error: "Failed to fetch notifications",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),
@@ -120,9 +124,9 @@ export const handlers = [
         return HttpResponse.json(
           {
             success: false,
-            error: 'Notification not found',
+            error: "Notification not found",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -134,9 +138,9 @@ export const handlers = [
       return HttpResponse.json(
         {
           success: false,
-          error: 'Failed to fetch notification',
+          error: "Failed to fetch notification",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),
@@ -153,9 +157,9 @@ export const handlers = [
         return HttpResponse.json(
           {
             success: false,
-            error: 'Notification not found',
+            error: "Notification not found",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -170,9 +174,9 @@ export const handlers = [
       return HttpResponse.json(
         {
           success: false,
-          error: 'Failed to mark notification as read',
+          error: "Failed to mark notification as read",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),
@@ -189,9 +193,9 @@ export const handlers = [
         return HttpResponse.json(
           {
             success: false,
-            error: 'Notification not found',
+            error: "Notification not found",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -206,9 +210,9 @@ export const handlers = [
       return HttpResponse.json(
         {
           success: false,
-          error: 'Failed to mark notification as unread',
+          error: "Failed to mark notification as unread",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),
@@ -219,25 +223,25 @@ export const handlers = [
    */
   http.post(`${API_BASE_URL}/api/notifications/search`, async ({ request }) => {
     try {
-      const body = await request.json() as { query: string };
-      const query = body.query?.toLowerCase() || '';
+      const body = (await request.json()) as { query: string };
+      const query = body.query?.toLowerCase() || "";
 
       if (!query) {
         return HttpResponse.json(
           {
             success: false,
-            error: 'Search query is required',
+            error: "Search query is required",
           },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const results = getNotificationsFromStore().filter(
-        n =>
+        (n) =>
           n.title.toLowerCase().includes(query) ||
           n.description.toLowerCase().includes(query) ||
           (n.passengerName?.toLowerCase().includes(query) ?? false) ||
-          (n.remarks?.toLowerCase().includes(query) ?? false)
+          (n.remarks?.toLowerCase().includes(query) ?? false),
       );
 
       return HttpResponse.json({
@@ -248,9 +252,9 @@ export const handlers = [
       return HttpResponse.json(
         {
           success: false,
-          error: 'Failed to search notifications',
+          error: "Failed to search notifications",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),
@@ -259,46 +263,49 @@ export const handlers = [
    * PATCH /api/notifications/bulk-read - Mark multiple notifications as read
    * Request body: { ids: string[] }
    */
-  http.patch(`${API_BASE_URL}/api/notifications/bulk-read`, async ({ request }) => {
-    try {
-      const body = await request.json() as { ids: string[] };
-      const ids = body.ids || [];
+  http.patch(
+    `${API_BASE_URL}/api/notifications/bulk-read`,
+    async ({ request }) => {
+      try {
+        const body = (await request.json()) as { ids: string[] };
+        const ids = body.ids || [];
 
-      if (!Array.isArray(ids) || ids.length === 0) {
+        if (!Array.isArray(ids) || ids.length === 0) {
+          return HttpResponse.json(
+            {
+              success: false,
+              error: "IDs array is required and must not be empty",
+            },
+            { status: 400 },
+          );
+        }
+
+        const updatedNotifications: NotificationItem[] = [];
+
+        ids.forEach((id) => {
+          const notification = notificationsStore.get(id);
+          if (notification) {
+            const updated = { ...notification, read: true };
+            notificationsStore.set(id, updated);
+            updatedNotifications.push(updated);
+          }
+        });
+
+        return HttpResponse.json({
+          success: true,
+          data: updatedNotifications,
+        });
+      } catch (error) {
         return HttpResponse.json(
           {
             success: false,
-            error: 'IDs array is required and must not be empty',
+            error: "Failed to update notifications",
           },
-          { status: 400 }
+          { status: 500 },
         );
       }
-
-      const updatedNotifications: NotificationItem[] = [];
-
-      ids.forEach(id => {
-        const notification = notificationsStore.get(id);
-        if (notification) {
-          const updated = { ...notification, read: true };
-          notificationsStore.set(id, updated);
-          updatedNotifications.push(updated);
-        }
-      });
-
-      return HttpResponse.json({
-        success: true,
-        data: updatedNotifications,
-      });
-    } catch (error) {
-      return HttpResponse.json(
-        {
-          success: false,
-          error: 'Failed to update notifications',
-        },
-        { status: 500 }
-      );
-    }
-  }),
+    },
+  ),
 
   /**
    * DELETE /api/notifications/:id - Delete a notification
@@ -312,9 +319,9 @@ export const handlers = [
         return HttpResponse.json(
           {
             success: false,
-            error: 'Notification not found',
+            error: "Notification not found",
           },
-          { status: 404 }
+          { status: 404 },
         );
       }
 
@@ -322,15 +329,15 @@ export const handlers = [
 
       return HttpResponse.json({
         success: true,
-        message: 'Notification deleted successfully',
+        message: "Notification deleted successfully",
       });
     } catch (error) {
       return HttpResponse.json(
         {
           success: false,
-          error: 'Failed to delete notification',
+          error: "Failed to delete notification",
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   }),
@@ -342,9 +349,9 @@ export const handlers = [
     return HttpResponse.json(
       {
         success: false,
-        error: 'Test error response',
+        error: "Test error response",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }),
 ];
@@ -355,9 +362,9 @@ export const errorHandlers = [
     return HttpResponse.json(
       {
         success: false,
-        error: 'Internal server error',
+        error: "Internal server error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }),
 
@@ -365,9 +372,9 @@ export const errorHandlers = [
     return HttpResponse.json(
       {
         success: false,
-        error: 'Failed to update notification',
+        error: "Failed to update notification",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }),
 ];

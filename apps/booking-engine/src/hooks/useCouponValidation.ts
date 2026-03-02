@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { pricingApi } from '@/api/pricingApi';
-import type { CouponValidationResult } from '@/api/pricingApi';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { pricingApi } from "@/api/pricingApi";
+import type { CouponValidationResult } from "@/api/pricingApi";
 
 interface UseCouponValidationOptions {
   debounceDelay?: number;
@@ -11,17 +11,22 @@ interface UseCouponValidationReturn {
   isValidating: boolean;
   validationResult: CouponValidationResult | null;
   error: string | null;
-  validateCoupon: (code: string, amount: number, serviceType?: string) => Promise<CouponValidationResult | null>;
+  validateCoupon: (
+    code: string,
+    amount: number,
+    serviceType?: string,
+  ) => Promise<CouponValidationResult | null>;
   clearValidation: () => void;
 }
 
 export function useCouponValidation(
-  options: UseCouponValidationOptions = {}
+  options: UseCouponValidationOptions = {},
 ): UseCouponValidationReturn {
   const { debounceDelay = 300, onValidationChange } = options;
 
   const [isValidating, setIsValidating] = useState(false);
-  const [validationResult, setValidationResult] = useState<CouponValidationResult | null>(null);
+  const [validationResult, setValidationResult] =
+    useState<CouponValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -33,7 +38,7 @@ export function useCouponValidation(
       setError(null);
 
       // Check cache
-      const cacheKey = `${code}:${amount}:${serviceType || ''}`;
+      const cacheKey = `${code}:${amount}:${serviceType || ""}`;
       if (cacheRef.current.has(cacheKey)) {
         const cached = cacheRef.current.get(cacheKey)!;
         setValidationResult(cached);
@@ -51,14 +56,18 @@ export function useCouponValidation(
       return new Promise<CouponValidationResult | null>((resolve) => {
         debounceTimerRef.current = setTimeout(async () => {
           try {
-            const result = await pricingApi.validateCoupon(code, amount, serviceType);
+            const result = await pricingApi.validateCoupon(
+              code,
+              amount,
+              serviceType,
+            );
             cacheRef.current.set(cacheKey, result);
             setValidationResult(result);
             onValidationChange?.(result);
             resolve(result);
           } catch (err) {
             const errorMessage =
-              err instanceof Error ? err.message : 'Failed to validate coupon';
+              err instanceof Error ? err.message : "Failed to validate coupon";
             setError(errorMessage);
             setValidationResult(null);
             resolve(null);
@@ -68,7 +77,7 @@ export function useCouponValidation(
         }, debounceDelay);
       });
     },
-    [debounceDelay, onValidationChange]
+    [debounceDelay, onValidationChange],
   );
 
   const clearValidation = useCallback(() => {

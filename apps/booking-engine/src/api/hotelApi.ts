@@ -1,4 +1,4 @@
-import { api } from '../lib/api';
+import { api } from "../lib/api.js";
 
 // ============================================================================
 // Types
@@ -9,13 +9,13 @@ export interface HotelSearchParams {
   location?: string;
   checkin: string;
   checkout: string;
-  
+
   // Guest configuration
   adults?: number;
   children?: number[];
   rooms?: number;
-  occupancies?: Occupancy[];  // LiteAPI format: [{ adults: 2, children: [{ age: 5 }] }]
-  
+  occupancies?: Occupancy[]; // LiteAPI format: [{ adults: 2, children: [{ age: 5 }] }]
+
   // Location filters
   countryCode?: string;
   cityName?: string;
@@ -24,57 +24,57 @@ export interface HotelSearchParams {
   longitude?: number;
   radius?: number;
   hotelIds?: string[];
-  
+
   // Pagination
   limit?: number;
   offset?: number;
-  
+
   // Price filters
   minPrice?: number;
   maxPrice?: number;
-  
+
   // Rating filters
   minRating?: number;
   minReviewsCount?: number;
-  
+
   // Star rating filter (array of star ratings)
   starRating?: number[];
-  
+
   // Facility/Amenity filters
   amenities?: string[];
-  facilityIds?: number[];  // LiteAPI facility IDs from GET /data/facilities
-  strictFacilitiesFiltering?: boolean;  // true = AND (all facilities), false = OR (any facility)
-  strictFacilityFiltering?: boolean;  // Alternative param name for some endpoints
-  
+  facilityIds?: number[]; // LiteAPI facility IDs from GET /data/facilities
+  strictFacilitiesFiltering?: boolean; // true = AND (all facilities), false = OR (any facility)
+  strictFacilityFiltering?: boolean; // Alternative param name for some endpoints
+
   // Hotel type filters
   hotelTypeIds?: number[];
   chainIds?: number[];
-  
+
   // Board type filter
-  boardType?: 'RO' | 'BB' | 'HB' | 'FB' | 'AI';
-  
+  boardType?: "RO" | "BB" | "HB" | "FB" | "AI";
+
   // Refundable rates only
   refundableRatesOnly?: boolean;
-  
+
   // Accessibility
   advancedAccessibilityOnly?: boolean;
-  
+
   // Sorting
-  sortBy?: 'top_picks' | 'price' | 'rating' | 'name';
-  sortOrder?: 'asc' | 'desc';
-  sort?: string;  // LiteAPI sort parameter
-  
+  sortBy?: "top_picks" | "price" | "rating" | "name";
+  sortOrder?: "asc" | "desc";
+  sort?: string; // LiteAPI sort parameter
+
   // Currency
   currency?: string;
   guestNationality?: string;
-  
+
   // Performance options
   maxRatesPerHotel?: number;
   timeout?: number;
   stream?: boolean;
   includeHotelData?: boolean;
   roomMapping?: boolean;
-  
+
   // AI Search (beta)
   aiSearch?: string;
 }
@@ -228,7 +228,7 @@ export interface VoucherUpdateRequest {
 }
 
 export interface VoucherStatusUpdate {
-  status: 'active' | 'used' | 'cancelled' | 'expired';
+  status: "active" | "used" | "cancelled" | "expired";
 }
 
 export interface VoucherHistoryParams {
@@ -243,7 +243,7 @@ export interface VoucherHistoryParams {
 
 /**
  * HotelApi class - Uses centralized API manager for all requests
- * 
+ *
  * This class routes all API calls through the centralized `api` object from lib/api.ts
  * which provides:
  * - Consistent authentication token handling
@@ -259,27 +259,31 @@ class HotelApi {
   /**
    * Search for hotels - Hybrid (Static DB + Live Rates)
    * POST /api/hotels/search
-   * 
+   *
    * Strategy:
    * - Static data (95%) from Postgres DB
    * - Live rates from LITEAPI
    * - Fallback to LITEAPI if no static data
    */
-  async search(params: HotelSearchParams): Promise<{ 
-    results: HotelSearchResult[]; 
+  async search(params: HotelSearchParams): Promise<{
+    results: HotelSearchResult[];
     total: number;
-    source?: string;  // 'static-db' | 'liteapi-fallback' | 'cache'
+    source?: string; // 'static-db' | 'liteapi-fallback' | 'cache'
   }> {
     try {
-      const response = await api.post<{ 
+      const response = await api.post<{
         success: boolean;
-        results: HotelSearchResult[]; 
+        results: HotelSearchResult[];
         total: number;
         source?: string;
-      }>('/hotels/search', params);
+      }>("/hotels/search", params);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to search hotels');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to search hotels",
+      );
     }
   }
 
@@ -292,7 +296,11 @@ class HotelApi {
       const response = await api.get<HotelDetails>(`/hotels/${hotelId}`);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get hotel details');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get hotel details",
+      );
     }
   }
 
@@ -312,10 +320,14 @@ class HotelApi {
     limit?: number;
   }): Promise<any> {
     try {
-      const response = await api.post<any>('/hotels/rates', params);
+      const response = await api.post<any>("/hotels/rates", params);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get room rates');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get room rates",
+      );
     }
   }
 
@@ -325,10 +337,15 @@ class HotelApi {
    */
   async prebook(request: PrebookRequest): Promise<PrebookResponse> {
     try {
-      const response = await api.post<PrebookResponse>('/liteapi/rates/prebook', request);
+      const response = await api.post<PrebookResponse>(
+        "/liteapi/rates/prebook",
+        request,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to prebook');
+      throw new Error(
+        error.response?.data?.message || error.message || "Failed to prebook",
+      );
     }
   }
 
@@ -338,10 +355,15 @@ class HotelApi {
    */
   async book(request: BookRequest): Promise<BookResponse> {
     try {
-      const response = await api.post<BookResponse>('/liteapi/rates/book', request);
+      const response = await api.post<BookResponse>(
+        "/liteapi/rates/book",
+        request,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to book');
+      throw new Error(
+        error.response?.data?.message || error.message || "Failed to book",
+      );
     }
   }
 
@@ -354,7 +376,11 @@ class HotelApi {
       const response = await api.get<any>(`/liteapi/bookings/${bookingId}`);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get booking');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get booking",
+      );
     }
   }
 
@@ -365,12 +391,16 @@ class HotelApi {
   async cancelBooking(bookingId: string, reason?: string): Promise<any> {
     try {
       const response = await api.put<any>(`/liteapi/bookings/${bookingId}`, {
-        status: 'cancelled',
-        cancellationReason: reason
+        status: "cancelled",
+        cancellationReason: reason,
       });
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to cancel booking');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to cancel booking",
+      );
     }
   }
 
@@ -382,16 +412,26 @@ class HotelApi {
    * Get all vouchers
    * GET /api/liteapi/vouchers
    */
-  async getVouchers(params?: { limit?: number; offset?: number }): Promise<any> {
+  async getVouchers(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<any> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-      
-      const response = await api.get<any>(`/liteapi/vouchers?${queryParams.toString()}`);
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.offset)
+        queryParams.append("offset", params.offset.toString());
+
+      const response = await api.get<any>(
+        `/liteapi/vouchers?${queryParams.toString()}`,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get vouchers');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get vouchers",
+      );
     }
   }
 
@@ -404,7 +444,11 @@ class HotelApi {
       const response = await api.get<Voucher>(`/liteapi/vouchers/${voucherId}`);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get voucher');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get voucher",
+      );
     }
   }
 
@@ -414,10 +458,14 @@ class HotelApi {
    */
   async createVoucher(request: VoucherCreateRequest): Promise<Voucher> {
     try {
-      const response = await api.post<Voucher>('/liteapi/vouchers', request);
+      const response = await api.post<Voucher>("/liteapi/vouchers", request);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to create voucher');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to create voucher",
+      );
     }
   }
 
@@ -425,12 +473,22 @@ class HotelApi {
    * Update a voucher (Admin)
    * PUT /api/liteapi/vouchers/:voucherId
    */
-  async updateVoucher(voucherId: string, request: VoucherUpdateRequest): Promise<Voucher> {
+  async updateVoucher(
+    voucherId: string,
+    request: VoucherUpdateRequest,
+  ): Promise<Voucher> {
     try {
-      const response = await api.put<Voucher>(`/liteapi/vouchers/${voucherId}`, request);
+      const response = await api.put<Voucher>(
+        `/liteapi/vouchers/${voucherId}`,
+        request,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to update voucher');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update voucher",
+      );
     }
   }
 
@@ -438,12 +496,22 @@ class HotelApi {
    * Update voucher status (Admin)
    * PUT /api/liteapi/vouchers/:voucherId/status
    */
-  async updateVoucherStatus(voucherId: string, status: VoucherStatusUpdate['status']): Promise<Voucher> {
+  async updateVoucherStatus(
+    voucherId: string,
+    status: VoucherStatusUpdate["status"],
+  ): Promise<Voucher> {
     try {
-      const response = await api.put<Voucher>(`/liteapi/vouchers/${voucherId}/status`, { status });
+      const response = await api.put<Voucher>(
+        `/liteapi/vouchers/${voucherId}/status`,
+        { status },
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to update voucher status');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to update voucher status",
+      );
     }
   }
 
@@ -454,14 +522,21 @@ class HotelApi {
   async getVoucherHistory(params?: VoucherHistoryParams): Promise<any> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.voucherId) queryParams.append('voucherId', params.voucherId);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-      
-      const response = await api.get<any>(`/liteapi/vouchers/history?${queryParams.toString()}`);
+      if (params?.voucherId) queryParams.append("voucherId", params.voucherId);
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.offset)
+        queryParams.append("offset", params.offset.toString());
+
+      const response = await api.get<any>(
+        `/liteapi/vouchers/history?${queryParams.toString()}`,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get voucher history');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get voucher history",
+      );
     }
   }
 
@@ -471,10 +546,16 @@ class HotelApi {
    */
   async deleteVoucher(voucherId: string): Promise<{ success: boolean }> {
     try {
-      const response = await api.delete<{ success: boolean }>(`/liteapi/vouchers/${voucherId}`);
+      const response = await api.delete<{ success: boolean }>(
+        `/liteapi/vouchers/${voucherId}`,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to delete voucher');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to delete voucher",
+      );
     }
   }
 
@@ -491,7 +572,11 @@ class HotelApi {
       const response = await api.get<any>(`/liteapi/loyalty/user/${userId}`);
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get loyalty points');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get loyalty points",
+      );
     }
   }
 
@@ -499,17 +584,27 @@ class HotelApi {
    * Get loyalty transactions
    * GET /api/liteapi/loyalty/transactions/:userId
    */
-  async getLoyaltyTransactions(userId: string, params?: { limit?: number; offset?: number; type?: string }): Promise<any> {
+  async getLoyaltyTransactions(
+    userId: string,
+    params?: { limit?: number; offset?: number; type?: string },
+  ): Promise<any> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-      if (params?.type) queryParams.append('type', params.type);
-      
-      const response = await api.get<any>(`/liteapi/loyalty/transactions/${userId}?${queryParams.toString()}`);
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.offset)
+        queryParams.append("offset", params.offset.toString());
+      if (params?.type) queryParams.append("type", params.type);
+
+      const response = await api.get<any>(
+        `/liteapi/loyalty/transactions/${userId}?${queryParams.toString()}`,
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get transactions');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to get transactions",
+      );
     }
   }
 
@@ -519,10 +614,17 @@ class HotelApi {
    */
   async redeemPoints(userId: string, points: number): Promise<any> {
     try {
-      const response = await api.post<any>(`/liteapi/loyalty/user/${userId}/redeem-points`, { points });
+      const response = await api.post<any>(
+        `/liteapi/loyalty/user/${userId}/redeem-points`,
+        { points },
+      );
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to redeem points');
+      throw new Error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to redeem points",
+      );
     }
   }
 
@@ -532,10 +634,12 @@ class HotelApi {
    */
   async getLoyaltyTiers(): Promise<any[]> {
     try {
-      const response = await api.get<any[]>('/liteapi/loyalty/tiers');
+      const response = await api.get<any[]>("/liteapi/loyalty/tiers");
       return response;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || error.message || 'Failed to get tiers');
+      throw new Error(
+        error.response?.data?.message || error.message || "Failed to get tiers",
+      );
     }
   }
 
@@ -546,7 +650,7 @@ class HotelApi {
   /**
    * Get hotel facilities (amenities) - Hybrid
    * GET /api/hotels/facilities/list
-   * 
+   *
    * Strategy:
    * - First from Postgres static DB
    * - Fallback to LITEAPI if empty
@@ -554,15 +658,24 @@ class HotelApi {
   async getFacilities(): Promise<HotelFacility[]> {
     try {
       // Try the new hybrid endpoint first
-      const response = await api.get<{ success: boolean; facilities: HotelFacility[] }>('/hotels/facilities/list');
+      const response = await api.get<{
+        success: boolean;
+        facilities: HotelFacility[];
+      }>("/hotels/facilities/list");
       return response?.facilities || [];
     } catch (error: any) {
       // Fallback to LiteAPI endpoint
       try {
-        const response = await api.get<HotelFacility[]>('/liteapi/data/facilities');
+        const response = await api.get<HotelFacility[]>(
+          "/liteapi/data/facilities",
+        );
         return response || [];
       } catch (fallbackError: any) {
-        throw new Error(fallbackError.response?.data?.message || fallbackError.message || 'Failed to get facilities');
+        throw new Error(
+          fallbackError.response?.data?.message ||
+            fallbackError.message ||
+            "Failed to get facilities",
+        );
       }
     }
   }
@@ -570,7 +683,7 @@ class HotelApi {
   /**
    * Get filter options for hotel search UI
    * GET /api/hotels/filters/options
-   * 
+   *
    * Returns pre-configured filter options for:
    * - Star ratings
    * - Price range
@@ -584,47 +697,53 @@ class HotelApi {
     sortOptions: Array<{ value: string; label: string; defaultOrder: string }>;
   }> {
     try {
-      const response = await api.get<{ 
-        success: boolean; 
+      const response = await api.get<{
+        success: boolean;
         filters: {
           starRating: Array<{ value: number; label: string }>;
           priceRange: { min: number; max: number; step: number };
           facilities: Array<{ value: number; label: string }>;
-          sortOptions: Array<{ value: string; label: string; defaultOrder: string }>;
+          sortOptions: Array<{
+            value: string;
+            label: string;
+            defaultOrder: string;
+          }>;
+        };
+      }>("/hotels/filters/options");
+      return (
+        response?.filters || {
+          starRating: [
+            { value: 5, label: "5 Stars" },
+            { value: 4, label: "4 Stars" },
+            { value: 3, label: "3 Stars" },
+            { value: 2, label: "2 Stars" },
+            { value: 1, label: "1 Star" },
+          ],
+          priceRange: { min: 0, max: 10000, step: 50 },
+          facilities: [],
+          sortOptions: [
+            { value: "price", label: "Price", defaultOrder: "asc" },
+            { value: "rating", label: "Rating", defaultOrder: "desc" },
+            { value: "name", label: "Name", defaultOrder: "asc" },
+          ],
         }
-      }>('/hotels/filters/options');
-      return response?.filters || {
-        starRating: [
-          { value: 5, label: '5 Stars' },
-          { value: 4, label: '4 Stars' },
-          { value: 3, label: '3 Stars' },
-          { value: 2, label: '2 Stars' },
-          { value: 1, label: '1 Star' },
-        ],
-        priceRange: { min: 0, max: 10000, step: 50 },
-        facilities: [],
-        sortOptions: [
-          { value: 'price', label: 'Price', defaultOrder: 'asc' },
-          { value: 'rating', label: 'Rating', defaultOrder: 'desc' },
-          { value: 'name', label: 'Name', defaultOrder: 'asc' },
-        ],
-      };
+      );
     } catch (error: any) {
       // Return defaults on error
       return {
         starRating: [
-          { value: 5, label: '5 Stars' },
-          { value: 4, label: '4 Stars' },
-          { value: 3, label: '3 Stars' },
-          { value: 2, label: '2 Stars' },
-          { value: 1, label: '1 Star' },
+          { value: 5, label: "5 Stars" },
+          { value: 4, label: "4 Stars" },
+          { value: 3, label: "3 Stars" },
+          { value: 2, label: "2 Stars" },
+          { value: 1, label: "1 Star" },
         ],
         priceRange: { min: 0, max: 10000, step: 50 },
         facilities: [],
         sortOptions: [
-          { value: 'price', label: 'Price', defaultOrder: 'asc' },
-          { value: 'rating', label: 'Rating', defaultOrder: 'desc' },
-          { value: 'name', label: 'Name', defaultOrder: 'asc' },
+          { value: "price", label: "Price", defaultOrder: "asc" },
+          { value: "rating", label: "Rating", defaultOrder: "desc" },
+          { value: "name", label: "Name", defaultOrder: "asc" },
         ],
       };
     }

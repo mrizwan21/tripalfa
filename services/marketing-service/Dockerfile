@@ -1,4 +1,4 @@
-# Dockerfile for marketing-service - NEON Database Support
+# Dockerfile for marketing-service - Neon Database Support
 # This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
 # Parameters: SERVICE_NAME=marketing-service, WORKSPACE_NAME=@tripalfa/marketing-service, PORT=3012, HEALTH_PATH=health
 

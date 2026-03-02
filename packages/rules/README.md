@@ -15,12 +15,14 @@ The `@tripalfa/rules` package consolidates rule management across multiple servi
 ## Features
 
 ### ✅ Rule Matching
+
 - Context-based rule matching with caching support
 - Priority-based rule evaluation
 - Validity period checking
 - Entity-specific restrictions (supplier, branch, user)
 
 ### ✅ Pricing Calculations
+
 - Multi-step pricing with markup application
 - Commission calculations
 - Coupon and loyalty discount integration
@@ -28,6 +30,7 @@ The `@tripalfa/rules` package consolidates rule management across multiple servi
 - Comprehensive price breakdown
 
 ### ✅ Coupon System
+
 - Usage limit tracking (total and per-user)
 - Date-based validity validation
 - Amount-based restrictions
@@ -35,12 +38,14 @@ The `@tripalfa/rules` package consolidates rule management across multiple servi
 - Redemption recording
 
 ### ✅ Loyalty Management
+
 - Points earning and redemption
 - Tier-based benefits
 - Automatic tier upgrades
 - Transaction history tracking
 
 ### ✅ Type Safety
+
 - 40+ TypeScript interfaces
 - Full type coverage for all operations
 - Zod-based validation
@@ -58,40 +63,42 @@ The package is automatically available in this monorepo via npm workspaces.
 ### RuleMatchingEngine
 
 ```typescript
-import { RuleMatchingEngine } from '@tripalfa/rules';
+import { RuleMatchingEngine } from "@tripalfa/rules";
 
 const ruleEngine = new RuleMatchingEngine(true); // Enable caching
 
 // Find applicable markup rules
 const markupRules = await ruleEngine.findApplicableMarkupRules({
-  bookingType: 'flight',
-  companyId: 'company-123',
-  supplierId: 'supplier-456',
-  serviceDetails: { /* ... */ }
+  bookingType: "flight",
+  companyId: "company-123",
+  supplierId: "supplier-456",
+  serviceDetails: {
+    /* ... */
+  },
 });
 
 // Find first applicable commission rule
 const commissionRule = await ruleEngine.findFirstApplicableCommissionRule({
-  bookingType: 'hotel',
-  companyId: 'company-123'
+  bookingType: "hotel",
+  companyId: "company-123",
 });
 ```
 
 ### PricingEngine
 
 ```typescript
-import { PricingEngine } from '@tripalfa/rules';
+import { PricingEngine } from "@tripalfa/rules";
 
 const pricingEngine = new PricingEngine();
 
 // Calculate comprehensive pricing
 const pricing = await pricingEngine.calculatePricing({
-  bookingType: 'flight',
+  bookingType: "flight",
   baseAmount: 1000,
-  currency: 'USD',
-  companyId: 'company-123',
-  userId: 'user-456',
-  couponCode: 'SUMMER2024'
+  currency: "USD",
+  companyId: "company-123",
+  userId: "user-456",
+  couponCode: "SUMMER2024",
 });
 
 console.log({
@@ -100,7 +107,7 @@ console.log({
   discount: pricing.discount,
   commission: pricing.commission,
   totalAmount: pricing.totalAmount,
-  breakdown: pricing.breakdown
+  breakdown: pricing.breakdown,
 });
 ```
 
@@ -109,10 +116,10 @@ console.log({
 ```typescript
 // Validate and apply coupon
 const result = await pricingEngine.validateAndApplyCoupon(
-  'SUMMER2024',
-  'user-456',
+  "SUMMER2024",
+  "user-456",
   1500,
-  'USD'
+  "USD",
 );
 
 if (result.valid) {
@@ -120,12 +127,12 @@ if (result.valid) {
   // Record redemption
   await pricingEngine.recordCouponRedemption({
     couponId: result.coupon.id,
-    userId: 'user-456',
-    bookingId: 'booking-789',
+    userId: "user-456",
+    bookingId: "booking-789",
     originalAmount: 1500,
     discountAmount: result.discountAmount,
     finalAmount: 1500 - result.discountAmount,
-    currency: 'USD'
+    currency: "USD",
   });
 } else {
   console.log(`Error: ${result.errorMessage}`);
@@ -137,47 +144,48 @@ if (result.valid) {
 ```typescript
 // Award loyalty points
 await pricingEngine.awardLoyaltyPoints({
-  userId: 'user-456',
-  bookingId: 'booking-789',
-  transactionType: 'earn',
+  userId: "user-456",
+  bookingId: "booking-789",
+  transactionType: "earn",
   points: 100,
-  description: 'Points earned from flight booking'
+  description: "Points earned from flight booking",
 });
 
 // Get customer loyalty
-const loyalty = await pricingEngine.getCustomerLoyalty('user-456');
+const loyalty = await pricingEngine.getCustomerLoyalty("user-456");
 console.log({
   totalPoints: loyalty.totalPoints,
   currentTier: loyalty.currentTier.name,
-  availablePoints: loyalty.availablePoints
+  availablePoints: loyalty.availablePoints,
 });
 ```
 
 ### Express Middleware
 
 ```typescript
-import express from 'express';
-import { PricingEngine, createPricingCalculationMiddleware } from '@tripalfa/rules';
+import express from "express";
+import {
+  PricingEngine,
+  createPricingCalculationMiddleware,
+} from "@tripalfa/rules";
 
 const app = express();
 const pricingEngine = new PricingEngine();
 
 // Use pricing middleware
-app.post('/calculate-price', 
+app.post(
+  "/calculate-price",
   createPricingCalculationMiddleware(pricingEngine),
   (req, res) => {
     res.json(req.pricing);
-  }
+  },
 );
 
 // Use rule validation middleware
-app.post('/rules/create',
-  createRuleValidationMiddleware(),
-  (req, res) => {
-    // Create rule logic here
-    res.json({ success: true });
-  }
-);
+app.post("/rules/create", createRuleValidationMiddleware(), (req, res) => {
+  // Create rule logic here
+  res.json({ success: true });
+});
 ```
 
 ## Type Definitions
@@ -191,7 +199,7 @@ interface MarkupRule {
   name: string;
   code: string;
   priority: number;
-  markupType: 'percentage' | 'fixed' | 'multiplier';
+  markupType: "percentage" | "fixed" | "multiplier";
   markupValue: number;
   applicableTo: string[];
   // ... more fields
@@ -218,7 +226,7 @@ interface PricingCalculationResponse {
 // Coupon types
 interface DiscountCoupon {
   code: string;
-  discountType: 'percentage' | 'fixed';
+  discountType: "percentage" | "fixed";
   discountValue: number;
   validFrom: string;
   validTo: string;
@@ -242,7 +250,7 @@ See [src/types/](src/types/) for complete type definitions.
 
 ### RuleMatchingEngine
 
-#### Methods
+#### RuleMatchingEngine Methods
 
 - `findApplicableMarkupRules(context: RuleMatchContext): Promise<MarkupRule[]>`
 - `findApplicableCommissionRules(context: RuleMatchContext): Promise<CommissionRule[]>`
@@ -254,7 +262,7 @@ See [src/types/](src/types/) for complete type definitions.
 
 ### PricingEngine
 
-#### Methods
+#### PricingEngine Methods
 
 - `calculatePricing(request: PricingCalculationRequest): Promise<PricingCalculationResponse>`
 - `validateAndApplyCoupon(code, userId, amount, currency): Promise<CouponValidationResult>`
@@ -273,11 +281,11 @@ import {
   RuleNotFoundError,
   InvalidCouponError,
   PricingCalculationError,
-  LoyaltyError
-} from '@tripalfa/rules';
+  LoyaltyError,
+} from "@tripalfa/rules";
 
 try {
-  await pricingEngine.validateAndApplyCoupon('INVALID', 'user-1', 100, 'USD');
+  await pricingEngine.validateAndApplyCoupon("INVALID", "user-1", 100, "USD");
 } catch (error) {
   if (error instanceof InvalidCouponError) {
     console.error(`Invalid coupon: ${error.message}`);
@@ -316,17 +324,20 @@ This package consolidates rule management code from:
 ## Best Practices
 
 1. **Reuse Engine Instances**: Create pricing and rule engines once and reuse
+
    ```typescript
    const pricingEngine = new PricingEngine();
    // Use across requests
    ```
 
 2. **Enable Caching**: For high-traffic scenarios, enable rule caching
+
    ```typescript
    const ruleEngine = new RuleMatchingEngine(true);
    ```
 
 3. **Handle Errors**: Use specific error types for better error handling
+
    ```typescript
    catch (error) {
      if (error instanceof InvalidCouponError) {
@@ -337,7 +348,7 @@ This package consolidates rule management code from:
 
 4. **Disconnect Gracefully**: Close database connections on shutdown
    ```typescript
-   process.on('SIGTERM', async () => {
+   process.on("SIGTERM", async () => {
      await pricingEngine.disconnect();
    });
    ```
@@ -351,12 +362,13 @@ The package is fully typed and integrates with the existing Prisma schema. Test 
 If migrating from previous rule implementations:
 
 1. Replace imports:
+
    ```typescript
    // Before
-   import { RuleMatchingEngine } from 'apps/b2b-admin/...';
+   import { RuleMatchingEngine } from "apps/b2b-admin/...";
 
-   // After  
-   import { RuleMatchingEngine } from '@tripalfa/rules';
+   // After
+   import { RuleMatchingEngine } from "@tripalfa/rules";
    ```
 
 2. Update Prisma dependencies - ensure Prisma client is available

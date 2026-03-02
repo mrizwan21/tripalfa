@@ -1,4 +1,4 @@
-import { test as base, Page } from '@playwright/test';
+import { test as base, Page } from "@playwright/test";
 
 /**
  * Fixture that automatically unhides Tailwind hidden elements
@@ -46,4 +46,4 @@ export const test = base.extend<{
   },
 });
 
-export { expect } from '@playwright/test';
+export { expect } from "@playwright/test";

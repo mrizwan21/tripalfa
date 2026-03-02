@@ -1,9 +1,9 @@
-import axios from 'axios';
+import axios from "axios";
 
 export interface KYCVerification {
   id: string;
   userId: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   documents: string[];
   submittedAt: string;
   reviewedAt?: string;
@@ -11,16 +11,20 @@ export interface KYCVerification {
 }
 
 export class KYCService {
-  private static baseURL = process.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  private static baseURL =
+    process.env.VITE_API_BASE_URL || "http://localhost:3000";
 
   /**
    * Submit KYC verification
    */
-  static async submitVerification(userId: string, documents: string[]): Promise<KYCVerification> {
+  static async submitVerification(
+    userId: string,
+    documents: string[],
+  ): Promise<KYCVerification> {
     try {
       const response = await axios.post<KYCVerification>(
         `${this.baseURL}/api/kyc/submit`,
-        { userId, documents }
+        { userId, documents },
       );
 
       return response.data;
@@ -32,10 +36,12 @@ export class KYCService {
   /**
    * Get KYC status for user
    */
-  static async getVerificationStatus(userId: string): Promise<KYCVerification | null> {
+  static async getVerificationStatus(
+    userId: string,
+  ): Promise<KYCVerification | null> {
     try {
       const response = await axios.get<KYCVerification>(
-        `${this.baseURL}/api/kyc/status/${userId}`
+        `${this.baseURL}/api/kyc/status/${userId}`,
       );
 
       return response.data;
@@ -50,11 +56,14 @@ export class KYCService {
   /**
    * Approve KYC verification
    */
-  static async approveVerification(userId: string, status: string = 'verified'): Promise<KYCVerification> {
+  static async approveVerification(
+    userId: string,
+    status: string = "verified",
+  ): Promise<KYCVerification> {
     try {
       const response = await axios.put<KYCVerification>(
         `${this.baseURL}/api/kyc/verify/${userId}`,
-        { status }
+        { status },
       );
 
       return response.data;

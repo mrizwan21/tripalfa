@@ -1,17 +1,25 @@
 /**
  * Order Change Management API Service
- * 
+ *
  * Handles all order modification operations:
  * - Eligibility checking for changes
  * - Creating change requests
  * - Retrieving available alternatives
  * - Managing pending changes
  * - Confirming or rejecting changes
- * 
+ *
  * Routes through centralized API Manager for consistency
  */
 
-import { api } from '../lib/api';
+import type { api as ApiClientInstance } from "../lib/api";
+
+// Lazy import to avoid circular dependency
+type ApiClient = typeof ApiClientInstance;
+let api: ApiClient | undefined;
+function getApi() {
+  if (!api) api = require("../lib/api").api as ApiClient;
+  return api;
+}
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -21,7 +29,7 @@ export interface ChangeEligibility {
   orderId: string;
   isEligible: boolean;
   eligiblePassengers?: string[];
-  allowedChangeTypes?: ('flight' | 'date' | 'time')[];
+  allowedChangeTypes?: ("flight" | "date" | "time")[];
   restrictions?: string[];
   fee?: number;
   feeCurrency?: string;
@@ -31,8 +39,8 @@ export interface ChangeEligibility {
 export interface OrderChangeRequest {
   id: string;
   orderId: string;
-  status: 'pending' | 'offered' | 'confirmed' | 'rejected';
-  changeType: 'flight' | 'date' | 'time';
+  status: "pending" | "offered" | "confirmed" | "rejected";
+  changeType: "flight" | "date" | "time";
   affectedPassengers: string[];
   originalSlices: Array<{
     departureAirport: string;
@@ -64,7 +72,7 @@ export interface PendingOrderChange {
   orderId: string;
   changeRequestId: string;
   offer: OrderChangeOffer;
-  status: 'pending_confirmation' | 'confirmed' | 'rejected';
+  status: "pending_confirmation" | "confirmed" | "rejected";
   createdAt: string;
 }
 
@@ -74,13 +82,13 @@ export interface PendingOrderChange {
 
 /**
  * Check if an order is eligible for changes
- * 
+ *
  * Verifies:
  * - Airline change policies
  * - Time windows (change must be made within allowed period)
  * - Selected passengers (may not all be eligible)
  * - Type of changes allowed
- * 
+ *
  * @param orderId - Duffel order ID
  * @param changeType - Type of change requested
  * @param passengers - Passenger IDs to change (optional)
@@ -88,21 +96,25 @@ export interface PendingOrderChange {
  */
 export async function checkOrderChangeEligibility(
   orderId: string,
-  changeType: 'flight' | 'date' | 'time' = 'flight',
-  passengers?: string[]
+  changeType: "flight" | "date" | "time" = "flight",
+  passengers?: string[],
 ): Promise<ChangeEligibility> {
   try {
-    console.log('[OrderChange] Checking eligibility for:', { orderId, changeType });
+    console.log("[OrderChange] Checking eligibility for:", {
+      orderId,
+      changeType,
+    });
 
-    const result = await api.post<any>(
-      '/api/admin/orders/change/eligibility',
-      { orderId, changeType, passengers: passengers || [] }
-    );
+    const result = await api.post<any>("/api/admin/orders/change/eligibility", {
+      orderId,
+      changeType,
+      passengers: passengers || [],
+    });
 
-    console.log('[OrderChange] Eligibility check complete:', result);
+    console.log("[OrderChange] Eligibility check complete:", result);
     return result.data || result;
   } catch (error) {
-    console.error('[OrderChange] Eligibility check error:', error);
+    console.error("[OrderChange] Eligibility check error:", error);
     throw error;
   }
 }
@@ -113,12 +125,12 @@ export async function checkOrderChangeEligibility(
 
 /**
  * Create a change request for an order
- * 
+ *
  * Initiates the change process for:
  * - Single or multiple passengers
  * - Specific flight segments
  * - Specific change type (flight, date, time)
- * 
+ *
  * @param orderId - Duffel order ID
  * @param changeType - Type of change
  * @param affectedPassengers - Passenger IDs to change
@@ -127,26 +139,28 @@ export async function checkOrderChangeEligibility(
  */
 export async function createOrderChangeRequest(
   orderId: string,
-  changeType: 'flight' | 'date' | 'time',
+  changeType: "flight" | "date" | "time",
   affectedPassengers: string[],
-  sliceIndex: number = 0
+  sliceIndex: number = 0,
 ): Promise<OrderChangeRequest> {
   try {
-    console.log('[OrderChange] Creating change request:', {
+    console.log("[OrderChange] Creating change request:", {
       orderId,
       changeType,
-      passengers: affectedPassengers
+      passengers: affectedPassengers,
     });
 
-    const result = await api.post<any>(
-      '/api/admin/orders/change/request',
-      { orderId, changeType, affectedPassengers, sliceIndex }
-    );
+    const result = await api.post<any>("/api/admin/orders/change/request", {
+      orderId,
+      changeType,
+      affectedPassengers,
+      sliceIndex,
+    });
 
-    console.log('[OrderChange] Change request created:', result);
+    console.log("[OrderChange] Change request created:", result);
     return result.data || result;
   } catch (error) {
-    console.error('[OrderChange] Create request error:', error);
+    console.error("[OrderChange] Create request error:", error);
     throw error;
   }
 }
@@ -157,31 +171,34 @@ export async function createOrderChangeRequest(
 
 /**
  * Retrieve available change alternatives for a request
- * 
+ *
  * Returns list of:
  * - Available flights matching criteria
  * - Price differences (may include rebates or fees)
  * - Expiration times for each offer
- * 
+ *
  * @param changeRequestId - Change request ID (from createOrderChangeRequest)
  * @returns Available alternatives with pricing
  */
 export async function getOrderChangeOffers(
-  changeRequestId: string
+  changeRequestId: string,
 ): Promise<OrderChangeOffer[]> {
   try {
-    console.log('[OrderChange] Fetching offers for change request:', changeRequestId);
+    console.log(
+      "[OrderChange] Fetching offers for change request:",
+      changeRequestId,
+    );
 
     const result = await api.get<any>(
-      `/api/admin/orders/change/offers?changeRequestId=${changeRequestId}`
+      `/api/admin/orders/change/offers?changeRequestId=${changeRequestId}`,
     );
 
     const offers = Array.isArray(result.data) ? result.data : result;
-    
-    console.log('[OrderChange] Offers retrieved:', offers.length);
+
+    console.log("[OrderChange] Offers retrieved:", offers.length);
     return offers;
   } catch (error) {
-    console.error('[OrderChange] Get offers error:', error);
+    console.error("[OrderChange] Get offers error:", error);
     throw error;
   }
 }
@@ -192,35 +209,35 @@ export async function getOrderChangeOffers(
 
 /**
  * Create a pending order change with a selected offer
- * 
+ *
  * This step:
  * - Holds the offer for a temporary period
  * - Blocks other change requests on the order
  * - Prepares for final confirmation
- * 
+ *
  * @param changeRequestId - Change request ID
  * @param selectedOfferId - Selected offer ID
  * @returns Pending change with confirmation token
  */
 export async function createPendingOrderChange(
   changeRequestId: string,
-  selectedOfferId: string
+  selectedOfferId: string,
 ): Promise<PendingOrderChange> {
   try {
-    console.log('[OrderChange] Creating pending change:', {
+    console.log("[OrderChange] Creating pending change:", {
       changeRequestId,
-      selectedOfferId
+      selectedOfferId,
     });
 
-    const result = await api.post<any>(
-      '/api/admin/orders/change/pending',
-      { changeRequestId, selectedOfferId }
-    );
+    const result = await api.post<any>("/api/admin/orders/change/pending", {
+      changeRequestId,
+      selectedOfferId,
+    });
 
-    console.log('[OrderChange] Pending change created:', result);
+    console.log("[OrderChange] Pending change created:", result);
     return result.data || result;
   } catch (error) {
-    console.error('[OrderChange] Create pending change error:', error);
+    console.error("[OrderChange] Create pending change error:", error);
     throw error;
   }
 }
@@ -231,66 +248,66 @@ export async function createPendingOrderChange(
 
 /**
  * Confirm and finalize a pending order change
- * 
+ *
  * This action:
  * - Commits the new flight assignment
  * - Processes any price differences
  * - Generates new order confirmation
  * - Sends updated itinerary to customer
- * 
+ *
  * @param pendingChangeId - Pending change ID
  * @param paymentMethod - How to handle price difference (optional)
  * @returns Confirmed change with new order details
  */
 export async function confirmOrderChange(
   pendingChangeId: string,
-  paymentMethod?: 'credit_card' | 'airline_credit' | 'refund'
+  paymentMethod?: "credit_card" | "airline_credit" | "refund",
 ): Promise<{
   id: string;
-  status: 'confirmed';
+  status: "confirmed";
   newOrderId: string;
   priceAdjustment: number;
   currency: string;
   confirmationTime: string;
 }> {
   try {
-    console.log('[OrderChange] Confirming order change:', pendingChangeId);
+    console.log("[OrderChange] Confirming order change:", pendingChangeId);
 
-    const result = await api.post<any>(
-      '/api/admin/orders/change/confirm',
-      { pendingChangeId, paymentMethod: paymentMethod || 'credit_card' }
-    );
+    const result = await api.post<any>("/api/admin/orders/change/confirm", {
+      pendingChangeId,
+      paymentMethod: paymentMethod || "credit_card",
+    });
 
-    console.log('[OrderChange] Order change confirmed:', result);
+    console.log("[OrderChange] Order change confirmed:", result);
     return result.data || result;
   } catch (error) {
-    console.error('[OrderChange] Confirm change error:', error);
+    console.error("[OrderChange] Confirm change error:", error);
     throw error;
   }
 }
 
 /**
  * Reject a pending order change
- * 
+ *
  * @param pendingChangeId - Pending change ID
  * @returns Rejection confirmation
  */
 export async function rejectOrderChange(
   pendingChangeId: string,
-  reason?: string
-): Promise<{ id: string; status: 'rejected' }> {
+  reason?: string,
+): Promise<{ id: string; status: "rejected" }> {
   try {
-    console.log('[OrderChange] Rejecting order change:', pendingChangeId);
+    console.log("[OrderChange] Rejecting order change:", pendingChangeId);
 
-    const result = await api.post<any>(
-      '/api/admin/orders/change/reject',
-      { pendingChangeId, reason }
-    );
+    const result = await api.post<any>("/api/admin/orders/change/reject", {
+      pendingChangeId,
+      reason,
+    });
 
-    console.log('[OrderChange] Order change rejected');
+    console.log("[OrderChange] Order change rejected");
     return result.data || result;
   } catch (error) {
-    console.error('[OrderChange] Reject change error:', error);
+    console.error("[OrderChange] Reject change error:", error);
     throw error;
   }
 }

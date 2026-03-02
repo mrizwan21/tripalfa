@@ -1,16 +1,16 @@
 /**
  * @tripalfa/notifications
  * Centralized notification management module for TripAlfa
- * 
+ *
  * Usage:
  * import { NotificationManager, EmailChannel, SMSChannel, InAppNotificationChannel } from '@tripalfa/notifications';
- * 
+ *
  * const notificationManager = new NotificationManager();
- * 
+ *
  * notificationManager.registerChannel(new EmailChannel(emailConfig));
  * notificationManager.registerChannel(new SMSChannel(smsConfig));
  * notificationManager.registerChannel(new InAppNotificationChannel());
- * 
+ *
  * await notificationManager.sendNotification({
  *   userId: 'user-123',
  *   type: 'booking_confirmed',
@@ -21,11 +21,16 @@
  */
 
 // Export types
-export * from './types';
-export { BrevoEmailConfig, SMTPEmailConfig, isBrevoConfig, isSMTPConfig } from './types';
+export * from "./types";
+export {
+  BrevoEmailConfig,
+  SMTPEmailConfig,
+  isBrevoConfig,
+  isSMTPConfig,
+} from "./types";
 
 // Export services
-export { NotificationManager, BaseNotificationService } from './services';
+export { NotificationManager, BaseNotificationService } from "./services";
 
 // Export channels
 export {
@@ -35,7 +40,7 @@ export {
   PushNotificationChannel,
   InAppNotificationChannel,
   NullChannel,
-} from './channels/index';
+} from "./channels/index";
 
 // Export middleware
 export {
@@ -46,18 +51,23 @@ export {
   validateNotificationPayload,
   createRateLimitMiddleware,
   corsConfig,
-} from './middleware';
+} from "./middleware";
 
 // Export logging utilities
-export { createLogger, LoggerConfig } from '@tripalfa/shared-utils/logger';
+export { createLogger, LoggerConfig } from "@tripalfa/shared-utils/logger";
 
 // Export version
-export const VERSION = '1.0.0';
+export const VERSION = "1.0.0";
 
-import { createLogger, Logger } from '@tripalfa/shared-utils/logger';
-import { NotificationManager } from './services';
-import { EmailChannel, SMSChannel, PushNotificationChannel, InAppNotificationChannel } from './channels/index';
-import { EmailConfig, SMSConfig, PushConfig } from './types';
+import { createLogger, Logger } from "@tripalfa/shared-utils/logger";
+import { NotificationManager } from "./services";
+import {
+  EmailChannel,
+  SMSChannel,
+  PushNotificationChannel,
+  InAppNotificationChannel,
+} from "./channels/index";
+import { EmailConfig, SMSConfig, PushConfig } from "./types";
 
 /**
  * Helper function to create a fully configured notification manager
@@ -69,8 +79,11 @@ export interface NotificationManagerConfig {
   push?: PushConfig;
 }
 
-export function initializeNotificationManager(config: NotificationManagerConfig): NotificationManager {
-  const logger = config.logger || createLogger({ serviceName: 'notifications' });
+export function initializeNotificationManager(
+  config: NotificationManagerConfig,
+): NotificationManager {
+  const logger =
+    config.logger || createLogger({ serviceName: "notifications" });
   const manager = new NotificationManager(logger);
 
   // Register channels if configured

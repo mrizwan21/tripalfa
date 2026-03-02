@@ -6,14 +6,14 @@
 // ============================================================================
 // ID Types (Branded/Nominal)
 // ============================================================================
-export type CompanyId = string & { readonly __brand: 'CompanyId' };
-export type UserId = string & { readonly __brand: 'UserId' };
-export type BookingId = string & { readonly __brand: 'BookingId' };
-export type SupplierId = string & { readonly __brand: 'SupplierId' };
-export type TransactionId = string & { readonly __brand: 'TransactionId' };
-export type WalletId = string & { readonly __brand: 'WalletId' };
-export type RoleId = string & { readonly __brand: 'RoleId' };
-export type PermissionId = string & { readonly __brand: 'PermissionId' };
+export type CompanyId = string & { readonly __brand: "CompanyId" };
+export type UserId = string & { readonly __brand: "UserId" };
+export type BookingId = string & { readonly __brand: "BookingId" };
+export type SupplierId = string & { readonly __brand: "SupplierId" };
+export type TransactionId = string & { readonly __brand: "TransactionId" };
+export type WalletId = string & { readonly __brand: "WalletId" };
+export type RoleId = string & { readonly __brand: "RoleId" };
+export type PermissionId = string & { readonly __brand: "PermissionId" };
 
 // ============================================================================
 // JSON Types
@@ -150,12 +150,23 @@ export interface TreeNode<T = unknown> {
 // ============================================================================
 export interface SortConfig {
   field: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
 export interface FilterConfig {
   field: string;
-  operator: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'startsWith' | 'endsWith' | 'in' | 'between';
+  operator:
+    | "eq"
+    | "ne"
+    | "gt"
+    | "gte"
+    | "lt"
+    | "lte"
+    | "contains"
+    | "startsWith"
+    | "endsWith"
+    | "in"
+    | "between";
   value: unknown;
 }
 
@@ -216,20 +227,26 @@ export interface FullAuditFields extends AuditFields, SoftDelete {
 export interface StatusInfo {
   status: string;
   statusText?: string;
-  statusColor?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  statusColor?:
+    | "default"
+    | "primary"
+    | "success"
+    | "warning"
+    | "error"
+    | "info";
 }
 
 export interface ProgressInfo {
   current: number;
   total: number;
   percentage: number;
-  status?: 'pending' | 'in_progress' | 'completed' | 'failed';
+  status?: "pending" | "in_progress" | "completed" | "failed";
 }
 
 // ============================================================================
 // Async Operation Types
 // ============================================================================
-export type AsyncStatus = 'idle' | 'loading' | 'success' | 'error';
+export type AsyncStatus = "idle" | "loading" | "success" | "error";
 
 export interface AsyncState<T> {
   status: AsyncStatus;
@@ -245,11 +262,22 @@ export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 export type Maybe<T> = T | null | undefined;
 
-export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
-  { [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>> }[Keys];
+export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
+  }[Keys];
 
-export type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<T, Exclude<keyof T, Keys>> &
-  { [K in Keys]-?: Required<Pick<T, K>> & Partial<Record<Exclude<Keys, K>, undefined>> }[Keys];
+export type RequireOnlyOne<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> &
+      Partial<Record<Exclude<Keys, K>, undefined>>;
+  }[Keys];
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
@@ -322,7 +350,7 @@ export interface SearchResult<T> {
 // ============================================================================
 // Notification/Toast Types
 // ============================================================================
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export type ToastType = "success" | "error" | "warning" | "info";
 
 export interface ToastMessage {
   id?: string;
@@ -355,7 +383,7 @@ export interface MetricValue {
   previous?: number;
   change?: number;
   changePercentage?: number;
-  trend?: 'up' | 'down' | 'stable';
+  trend?: "up" | "down" | "stable";
 }
 
 export interface DashboardMetric {

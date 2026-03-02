@@ -1,7 +1,7 @@
 /**
  * usePaymentFlow Hook
  * Custom React hook for managing the complete payment flow
- * 
+ *
  * Features:
  * - State management for multi-step payment process
  * - API integration with error handling
@@ -10,19 +10,27 @@
  * - Success/failure handling
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { getPaymentApiClient, handlePaymentError } from '../api/paymentApi';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { getPaymentApiClient, handlePaymentError } from "../api/paymentApi";
 import type {
   PaymentOptionsResponse,
   PaymentRequest,
   PaymentResponse,
   RefundResponse,
-} from '../api/paymentApi';
+} from "../api/paymentApi";
 
 // ===== TYPE DEFINITIONS =====
 
 export interface PaymentFlowState {
-  step: 'initial' | 'loading' | 'options' | 'selection' | 'confirmation' | 'processing' | 'success' | 'error';
+  step:
+    | "initial"
+    | "loading"
+    | "options"
+    | "selection"
+    | "confirmation"
+    | "processing"
+    | "success"
+    | "error";
   paymentOptions: PaymentOptionsResponse | null;
   paymentResult: PaymentResponse | null;
   error: string | null;
@@ -49,7 +57,7 @@ export interface PaymentFlowActions {
   cancelPayment: () => Promise<void>;
   retryPayment: () => Promise<void>;
   reset: () => void;
-  goToStep: (step: PaymentFlowState['step']) => void;
+  goToStep: (step: PaymentFlowState["step"]) => void;
 }
 
 // ===== HOOK IMPLEMENTATION =====
@@ -66,7 +74,7 @@ export function usePaymentFlow({
   maxRetries = 3,
 }: UsePaymentFlowProps): [PaymentFlowState, PaymentFlowActions] {
   const [state, setState] = useState<PaymentFlowState>({
-    step: 'initial',
+    step: "initial",
     paymentOptions: null,
     paymentResult: null,
     error: null,
@@ -79,31 +87,38 @@ export function usePaymentFlow({
   const lastPaymentRequestRef = useRef<PaymentRequest | null>(null);
 
   // Utility to update state
-  const updateState = useCallback((updates: Partial<PaymentFlowState>) => {
-    setState((prev) => {
-      const newState = { ...prev, ...updates };
-      onStateChange?.(newState);
-      return newState;
-    });
-  }, [onStateChange]);
+  const updateState = useCallback(
+    (updates: Partial<PaymentFlowState>) => {
+      setState((prev) => {
+        const newState = { ...prev, ...updates };
+        onStateChange?.(newState);
+        return newState;
+      });
+    },
+    [onStateChange],
+  );
 
   // Fetch payment options
   const fetchPaymentOptions = useCallback(async () => {
-    updateState({ step: 'loading', isLoading: true, error: null });
+    updateState({ step: "loading", isLoading: true, error: null });
 
     try {
       const apiClient = getPaymentApiClient();
-      const options = await apiClient.getPaymentOptions(customerId, totalAmount, currency);
+      const options = await apiClient.getPaymentOptions(
+        customerId,
+        totalAmount,
+        currency,
+      );
 
       updateState({
-        step: 'options',
+        step: "options",
         paymentOptions: options,
         isLoading: false,
       });
     } catch (error) {
       const errorMessage = handlePaymentError(error);
       updateState({
-        step: 'error',
+        step: "error",
         error: errorMessage,
         isLoading: false,
       });
@@ -114,7 +129,7 @@ export function usePaymentFlow({
   // Process payment
   const processPayment = useCallback(
     async (request: PaymentRequest) => {
-      updateState({ step: 'processing', isLoading: true, error: null });
+      updateState({ step: "processing", isLoading: true, error: null });
       lastPaymentRequestRef.current = request;
 
       try {
@@ -122,7 +137,7 @@ export function usePaymentFlow({
         const result = await apiClient.processPayment(bookingId, request);
 
         updateState({
-          step: 'success',
+          step: "success",
           paymentResult: result,
           transactionId: result.transactionId,
           isLoading: false,
@@ -141,13 +156,13 @@ export function usePaymentFlow({
           retryTimeoutRef.current = setTimeout(() => {
             updateState({
               retryCount: newRetryCount,
-              step: 'processing',
+              step: "processing",
             });
             processPayment(request);
           }, backoffDelay);
         } else {
           updateState({
-            step: 'error',
+            step: "error",
             error: errorMessage,
             isLoading: false,
             retryCount: newRetryCount,
@@ -156,7 +171,15 @@ export function usePaymentFlow({
         }
       }
     },
-    [bookingId, autoRetry, maxRetries, onSuccess, onError, state.retryCount, updateState]
+    [
+      bookingId,
+      autoRetry,
+      maxRetries,
+      onSuccess,
+      onError,
+      state.retryCount,
+      updateState,
+    ],
   );
 
   // Cancel payment
@@ -166,7 +189,7 @@ export function usePaymentFlow({
       await apiClient.cancelPayment(bookingId);
 
       updateState({
-        step: 'initial',
+        step: "initial",
         paymentResult: null,
         transactionId: null,
         error: null,
@@ -180,7 +203,7 @@ export function usePaymentFlow({
   // Retry payment
   const retryPayment = useCallback(async () => {
     if (!lastPaymentRequestRef.current) {
-      updateState({ error: 'No previous payment request to retry' });
+      updateState({ error: "No previous payment request to retry" });
       return;
     }
 
@@ -194,7 +217,7 @@ export function usePaymentFlow({
     }
 
     setState({
-      step: 'initial',
+      step: "initial",
       paymentOptions: null,
       paymentResult: null,
       error: null,
@@ -208,10 +231,10 @@ export function usePaymentFlow({
 
   // Go to specific step
   const goToStep = useCallback(
-    (step: PaymentFlowState['step']) => {
+    (step: PaymentFlowState["step"]) => {
       updateState({ step });
     },
-    [updateState]
+    [updateState],
   );
 
   // Cleanup on unmount
@@ -241,7 +264,7 @@ export function usePaymentFlow({
  * Hook to manage payment flow with auto-load
  */
 export function usePaymentFlowAuto(
-  props: UsePaymentFlowProps
+  props: UsePaymentFlowProps,
 ): [PaymentFlowState, PaymentFlowActions] {
   const [state, actions] = usePaymentFlow(props);
 
@@ -257,10 +280,12 @@ export function usePaymentFlowAuto(
  */
 export function usePaymentConfirmation(state: PaymentFlowState) {
   const [isConfirmed, setIsConfirmed] = useState(false);
-  const [confirmationNumber, setConfirmationNumber] = useState<string | null>(null);
+  const [confirmationNumber, setConfirmationNumber] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
-    if (state.step === 'success' && state.paymentResult) {
+    if (state.step === "success" && state.paymentResult) {
       setIsConfirmed(true);
       setConfirmationNumber(state.paymentResult.confirmationNumber);
     } else {
@@ -277,7 +302,9 @@ export function usePaymentConfirmation(state: PaymentFlowState) {
  */
 export function usePaymentErrorRecovery(error: string | null) {
   const [suggestion, setSuggestion] = useState<string | null>(null);
-  const [recoveryAction, setRecoveryAction] = useState<(() => void) | null>(null);
+  const [recoveryAction, setRecoveryAction] = useState<(() => void) | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!error) {
@@ -286,20 +313,24 @@ export function usePaymentErrorRecovery(error: string | null) {
       return;
     }
 
-    if (error.includes('network') || error.includes('connection')) {
-      setSuggestion('Check your internet connection and try again.');
+    if (error.includes("network") || error.includes("connection")) {
+      setSuggestion("Check your internet connection and try again.");
       setRecoveryAction(() => window.location.reload);
-    } else if (error.includes('session') || error.includes('expired')) {
-      setSuggestion('Your session has expired. Please login again.');
-      setRecoveryAction(() => () => window.location.href = '/login');
-    } else if (error.includes('card')) {
-      setSuggestion('Please check your card details and try again.');
-    } else if (error.includes('insufficient')) {
-      setSuggestion('You have insufficient funds. Please add funds or use another payment method.');
-    } else if (error.includes('declined')) {
-      setSuggestion('Your payment was declined. Please try another card or contact your bank.');
+    } else if (error.includes("session") || error.includes("expired")) {
+      setSuggestion("Your session has expired. Please login again.");
+      setRecoveryAction(() => () => (window.location.href = "/login"));
+    } else if (error.includes("card")) {
+      setSuggestion("Please check your card details and try again.");
+    } else if (error.includes("insufficient")) {
+      setSuggestion(
+        "You have insufficient funds. Please add funds or use another payment method.",
+      );
+    } else if (error.includes("declined")) {
+      setSuggestion(
+        "Your payment was declined. Please try another card or contact your bank.",
+      );
     } else {
-      setSuggestion('An error occurred. Please try again or contact support.');
+      setSuggestion("An error occurred. Please try again or contact support.");
     }
   }, [error]);
 
@@ -311,7 +342,7 @@ export function usePaymentErrorRecovery(error: string | null) {
  */
 export function usePaymentRetry(
   initialDelay: number = 1000,
-  maxAttempts: number = 3
+  maxAttempts: number = 3,
 ) {
   const [attempts, setAttempts] = useState(0);
   const [canRetry, setCanRetry] = useState(true);

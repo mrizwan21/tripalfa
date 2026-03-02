@@ -9,7 +9,7 @@ import {
   LedgerEntryType,
   LedgerDirection,
   MojaloopStatus,
-} from './enums';
+} from "./enums";
 
 // ============================================================================
 // Common Financial Types
@@ -200,7 +200,7 @@ export interface WalletHold {
 
 export interface WalletHoldRelease {
   holdId: string;
-  releaseType: 'capture' | 'release';
+  releaseType: "capture" | "release";
   captureAmount?: number;
 }
 
@@ -230,8 +230,8 @@ export interface WalletListParams {
   type?: WalletType;
   status?: WalletStatus;
   currency?: string;
-  sortBy?: 'balance' | 'createdAt' | 'lastTransactionAt';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "balance" | "createdAt" | "lastTransactionAt";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface WalletListResponse {
@@ -254,8 +254,8 @@ export interface LedgerEntryListParams {
   toDate?: string;
   minAmount?: number;
   maxAmount?: number;
-  sortBy?: 'createdAt' | 'amount';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "createdAt" | "amount";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface LedgerEntryListResponse {

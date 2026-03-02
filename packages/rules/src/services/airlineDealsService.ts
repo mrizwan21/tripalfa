@@ -1,13 +1,13 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 import {
   SupplierDeal,
   SupplierDealCreate,
   SupplierDealUpdate,
   DealFilters,
   JourneyType,
-  ValidationResult
-} from '../types';
+  ValidationResult,
+} from "../types";
 
 /**
  * Airline Deals Service
@@ -31,29 +31,38 @@ export class AirlineDealsService {
   /**
    * Create an airline-specific deal with NDC support
    */
-  async createAirlineDeal(dealData: SupplierDealCreate & {
-    airlineCode: string;
-    dealCategory: 'private_fare' | 'ndc_special' | 'route_specific' | 'contract';
-    cabinClasses?: string[];
-    aircraftTypes?: string[];
-    fareBasis?: string;
-    ancillaryIncluded?: string[];
-    apbEligible?: boolean;
-  }): Promise<SupplierDeal> {
+  async createAirlineDeal(
+    dealData: SupplierDealCreate & {
+      airlineCode: string;
+      dealCategory:
+        | "private_fare"
+        | "ndc_special"
+        | "route_specific"
+        | "contract";
+      cabinClasses?: string[];
+      aircraftTypes?: string[];
+      fareBasis?: string;
+      ancillaryIncluded?: string[];
+      apbEligible?: boolean;
+    },
+  ): Promise<SupplierDeal> {
     try {
       // Validate airline deal data
       const validation = await this.validateAirlineDealCreation(dealData);
       if (!validation.isValid) {
-        throw new Error(`Airline deal validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Airline deal validation failed: ${validation.errors.join(", ")}`,
+        );
       }
 
       // Create deal with airline-specific metadata
       // @ts-ignore
-      const result = await this.prisma.supplierDeal.create({
+      const result = await this.prisma.supplierDeals.create({
         data: {
           name: dealData.name,
           code: dealData.code,
-          productType: 'flight', // Force flight product type
+          supplier: dealData.airlineCode,
+          productType: "flight", // Force flight product type
           supplierCodes: [dealData.airlineCode], // Store airline code as supplier
           dealType: dealData.dealType,
           discountType: dealData.discountType,
@@ -72,14 +81,16 @@ export class AirlineDealsService {
             fareBasis: dealData.fareBasis,
             ancillaryIncluded: dealData.ancillaryIncluded || [],
             apbEligible: dealData.apbEligible || false,
-            createdAt: new Date().toISOString()
-          }
-        }
+            createdAt: new Date().toISOString(),
+          },
+        },
       });
 
       return this.mapPrismaToDeal(result);
     } catch (error) {
-      throw new Error(`Failed to create airline deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to create airline deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -90,17 +101,17 @@ export class AirlineDealsService {
     airlineCode: string,
     origin: string,
     destination: string,
-    journeyType: JourneyType = 'all'
+    journeyType: JourneyType = "all",
   ): Promise<SupplierDeal | null> {
     try {
-      const deal = await this.prisma.supplierDeal.findFirst({
+      const deal = await this.prisma.supplierDeals.findFirst({
         where: {
-          productType: 'flight',
+          productType: "flight",
           supplierCodes: { hasSome: [airlineCode] },
           metadata: {
-            path: ['dealCategory'],
-            equals: 'private_fare'
-          }
+            path: ["dealCategory"],
+            equals: "private_fare",
+          },
         },
         include: {
           dealMappingRules: {
@@ -108,21 +119,23 @@ export class AirlineDealsService {
               OR: [
                 {
                   originCities: { hasSome: [origin] },
-                  destinationCities: { hasSome: [destination] }
+                  destinationCities: { hasSome: [destination] },
                 },
                 {
                   originCountries: { hasSome: [origin] },
-                  destinationCountries: { hasSome: [destination] }
-                }
-              ]
-            }
-          }
-        }
+                  destinationCountries: { hasSome: [destination] },
+                },
+              ],
+            },
+          },
+        },
       });
 
       return deal ? this.mapPrismaToDeal(deal) : null;
     } catch (error) {
-      throw new Error(`Failed to get private fare: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get private fare: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -136,26 +149,28 @@ export class AirlineDealsService {
       cabinClass?: string;
       skip?: number;
       take?: number;
-    }
+    },
   ): Promise<SupplierDeal[]> {
     try {
-      const deals = await this.prisma.supplierDeal.findMany({
+      const deals = await this.prisma.supplierDeals.findMany({
         where: {
-          productType: 'flight',
+          productType: "flight",
           supplierCodes: { hasSome: [airlineCode] },
           metadata: {
-            path: ['dealCategory'],
-            equals: 'ndc_special'
-          }
+            path: ["dealCategory"],
+            equals: "ndc_special",
+          },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip: options?.skip || 0,
-        take: options?.take || 50
+        take: options?.take || 50,
       });
 
       return deals.map((deal: any) => this.mapPrismaToDeal(deal));
     } catch (error) {
-      throw new Error(`Failed to get NDC deals: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get NDC deals: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -165,17 +180,17 @@ export class AirlineDealsService {
   async getRouteSpecificDeals(
     airlineCode: string,
     origin?: string,
-    destination?: string
+    destination?: string,
   ): Promise<SupplierDeal[]> {
     try {
-      const deals = await this.prisma.supplierDeal.findMany({
+      const deals = await this.prisma.supplierDeals.findMany({
         where: {
-          productType: 'flight',
+          productType: "flight",
           supplierCodes: { hasSome: [airlineCode] },
           metadata: {
-            path: ['dealCategory'],
-            equals: 'route_specific'
-          }
+            path: ["dealCategory"],
+            equals: "route_specific",
+          },
         },
         include: {
           dealMappingRules:
@@ -186,27 +201,27 @@ export class AirlineDealsService {
                       {
                         OR: [
                           { originCities: { hasSome: [origin] } },
-                          { originCountries: { hasSome: [origin] } }
-                        ]
+                          { originCountries: { hasSome: [origin] } },
+                        ],
                       },
                       {
                         OR: [
                           { destinationCities: { hasSome: [destination] } },
-                          { destinationCountries: { hasSome: [destination] } }
-                        ]
-                      }
-                    ]
-                  }
+                          { destinationCountries: { hasSome: [destination] } },
+                        ],
+                      },
+                    ],
+                  },
                 }
-              : true
+              : true,
         },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       return deals.map((deal: any) => this.mapPrismaToDeal(deal));
     } catch (error) {
       throw new Error(
-        `Failed to get route-specific deals: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to get route-specific deals: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -214,50 +229,62 @@ export class AirlineDealsService {
   /**
    * Get airline contracts
    */
-  async getAirlineContracts(airlineCode: string, skip: number = 0, take: number = 50): Promise<SupplierDeal[]> {
+  async getAirlineContracts(
+    airlineCode: string,
+    skip: number = 0,
+    take: number = 50,
+  ): Promise<SupplierDeal[]> {
     try {
-      const contracts = await this.prisma.supplierDeal.findMany({
+      const contracts = await this.prisma.supplierDeals.findMany({
         where: {
-          productType: 'flight',
+          productType: "flight",
           supplierCodes: { hasSome: [airlineCode] },
           metadata: {
-            path: ['dealCategory'],
-            equals: 'contract'
-          }
+            path: ["dealCategory"],
+            equals: "contract",
+          },
         },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updatedAt: "desc" },
         skip,
-        take
+        take,
       });
 
       return contracts.map((deal: any) => this.mapPrismaToDeal(deal));
     } catch (error) {
-      throw new Error(`Failed to get airline contracts: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get airline contracts: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get APB-eligible deals for an airline
    */
-  async getAPBEligibleDeals(airlineCode: string, skip: number = 0, take: number = 50): Promise<SupplierDeal[]> {
+  async getAPBEligibleDeals(
+    airlineCode: string,
+    skip: number = 0,
+    take: number = 50,
+  ): Promise<SupplierDeal[]> {
     try {
-      const deals = await this.prisma.supplierDeal.findMany({
+      const deals = await this.prisma.supplierDeals.findMany({
         where: {
-          productType: 'flight',
+          productType: "flight",
           supplierCodes: { hasSome: [airlineCode] },
           metadata: {
-            path: ['apbEligible'],
-            equals: true
-          }
+            path: ["apbEligible"],
+            equals: true,
+          },
         },
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updatedAt: "desc" },
         skip,
-        take
+        take,
       });
 
       return deals.map((deal: any) => this.mapPrismaToDeal(deal));
     } catch (error) {
-      throw new Error(`Failed to get APB-eligible deals: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get APB-eligible deals: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -272,50 +299,66 @@ export class AirlineDealsService {
       fareBasis?: string;
       ancillaryIncluded?: string[];
       apbEligible?: boolean;
-    }
+    },
   ): Promise<SupplierDeal> {
     try {
       // Get current deal to preserve airline-specific metadata
-      const current = await this.prisma.supplierDeal.findUnique({ where: { id } });
+      const current = await this.prisma.supplierDeals.findUnique({
+        where: { id },
+      });
       if (!current) {
-        throw new Error('Deal not found');
+        throw new Error("Deal not found");
       }
 
       const currentMetadata = current.metadata as Record<string, unknown>;
 
-      const result = await this.prisma.supplierDeal.update({
+      const result = await this.prisma.supplierDeals.update({
         where: { id },
         data: {
           ...(updates.name && { name: updates.name }),
           ...(updates.code && { code: updates.code }),
           ...(updates.dealType && { dealType: updates.dealType }),
           ...(updates.discountType && { discountType: updates.discountType }),
-          ...(updates.discountValue !== undefined && { discountValue: updates.discountValue }),
-          ...(updates.maxDiscount !== undefined && { maxDiscount: updates.maxDiscount }),
-          ...(updates.minOrderAmount !== undefined && { minOrderAmount: updates.minOrderAmount }),
+          ...(updates.discountValue !== undefined && {
+            discountValue: updates.discountValue,
+          }),
+          ...(updates.maxDiscount !== undefined && {
+            maxDiscount: updates.maxDiscount,
+          }),
+          ...(updates.minOrderAmount !== undefined && {
+            minOrderAmount: updates.minOrderAmount,
+          }),
           ...(updates.status && { status: updates.status }),
           ...(updates.priority !== undefined && { priority: updates.priority }),
           ...(updates.isCombinableWithCoupons !== undefined && {
-            isCombinableWithCoupons: updates.isCombinableWithCoupons
+            isCombinableWithCoupons: updates.isCombinableWithCoupons,
           }),
           ...(updates.validFrom && { validFrom: new Date(updates.validFrom) }),
           ...(updates.validTo && { validTo: new Date(updates.validTo) }),
           metadata: {
             ...currentMetadata,
             ...(updates.cabinClasses && { cabinClasses: updates.cabinClasses }),
-            ...(updates.aircraftTypes && { aircraftTypes: updates.aircraftTypes }),
+            ...(updates.aircraftTypes && {
+              aircraftTypes: updates.aircraftTypes,
+            }),
             ...(updates.fareBasis && { fareBasis: updates.fareBasis }),
-            ...(updates.ancillaryIncluded && { ancillaryIncluded: updates.ancillaryIncluded }),
-            ...(updates.apbEligible !== undefined && { apbEligible: updates.apbEligible }),
-            updatedAt: new Date().toISOString()
+            ...(updates.ancillaryIncluded && {
+              ancillaryIncluded: updates.ancillaryIncluded,
+            }),
+            ...(updates.apbEligible !== undefined && {
+              apbEligible: updates.apbEligible,
+            }),
+            updatedAt: new Date().toISOString(),
           },
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return this.mapPrismaToDeal(result);
     } catch (error) {
-      throw new Error(`Failed to update airline deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to update airline deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -325,23 +368,27 @@ export class AirlineDealsService {
   async listAirlineDeals(
     airlineCode: string,
     filters?: {
-      dealCategory?: 'private_fare' | 'ndc_special' | 'route_specific' | 'contract';
+      dealCategory?:
+        | "private_fare"
+        | "ndc_special"
+        | "route_specific"
+        | "contract";
       status?: string;
       apbEligibleOnly?: boolean;
     },
     skip: number = 0,
-    take: number = 50
+    take: number = 50,
   ): Promise<SupplierDeal[]> {
     try {
       const where: any = {
-        productType: 'flight',
-        supplierCodes: { hasSome: [airlineCode] }
+        productType: "flight",
+        supplierCodes: { hasSome: [airlineCode] },
       };
 
       if (filters?.dealCategory) {
         where.metadata = {
-          path: ['dealCategory'],
-          equals: filters.dealCategory
+          path: ["dealCategory"],
+          equals: filters.dealCategory,
         };
       }
 
@@ -351,21 +398,23 @@ export class AirlineDealsService {
 
       if (filters?.apbEligibleOnly) {
         where.metadata = {
-          path: ['apbEligible'],
-          equals: true
+          path: ["apbEligible"],
+          equals: true,
         };
       }
 
-      const deals = await this.prisma.supplierDeal.findMany({
+      const deals = await this.prisma.supplierDeals.findMany({
         where,
-        orderBy: { updatedAt: 'desc' },
+        orderBy: { updatedAt: "desc" },
         skip,
-        take
+        take,
       });
 
       return deals.map((deal: any) => this.mapPrismaToDeal(deal));
     } catch (error) {
-      throw new Error(`Failed to list airline deals: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to list airline deals: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -374,12 +423,14 @@ export class AirlineDealsService {
    */
   async deleteAirlineDeal(id: string): Promise<void> {
     try {
-      await this.prisma.supplierDeal.update({
+      await this.prisma.supplierDeals.update({
         where: { id },
-        data: { status: 'archived', updatedAt: new Date() }
+        data: { status: "archived", updatedAt: new Date() },
       });
     } catch (error) {
-      throw new Error(`Failed to delete airline deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to delete airline deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -388,14 +439,16 @@ export class AirlineDealsService {
    */
   async activateAirlineDeal(id: string): Promise<SupplierDeal> {
     try {
-      const deal = await this.prisma.supplierDeal.update({
+      const deal = await this.prisma.supplierDeals.update({
         where: { id },
-        data: { status: 'active', updatedAt: new Date() }
+        data: { status: "active", updatedAt: new Date() },
       });
 
       return this.mapPrismaToDeal(deal);
     } catch (error) {
-      throw new Error(`Failed to activate airline deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to activate airline deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -404,69 +457,85 @@ export class AirlineDealsService {
    */
   async pauseAirlineDeal(id: string): Promise<SupplierDeal> {
     try {
-      const deal = await this.prisma.supplierDeal.update({
+      const deal = await this.prisma.supplierDeals.update({
         where: { id },
-        data: { status: 'paused', updatedAt: new Date() }
+        data: { status: "paused", updatedAt: new Date() },
       });
 
       return this.mapPrismaToDeal(deal);
     } catch (error) {
-      throw new Error(`Failed to pause airline deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to pause airline deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Count airline deals by category
    */
-  async countAirlineDeals(airlineCode: string, dealCategory?: string): Promise<number> {
+  async countAirlineDeals(
+    airlineCode: string,
+    dealCategory?: string,
+  ): Promise<number> {
     try {
       const where: any = {
-        productType: 'flight',
-        supplierCodes: { hasSome: [airlineCode] }
+        productType: "flight",
+        supplierCodes: { hasSome: [airlineCode] },
       };
 
       if (dealCategory) {
         where.metadata = {
-          path: ['dealCategory'],
-          equals: dealCategory
+          path: ["dealCategory"],
+          equals: dealCategory,
         };
       }
 
-      return await this.prisma.supplierDeal.count({ where });
+      return await this.prisma.supplierDeals.count({ where });
     } catch (error) {
-      throw new Error(`Failed to count airline deals: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to count airline deals: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Validate airline deal creation
    */
-  private async validateAirlineDealCreation(dealData: any): Promise<ValidationResult> {
+  private async validateAirlineDealCreation(
+    dealData: any,
+  ): Promise<ValidationResult> {
     const errors: string[] = [];
 
-    if (!dealData.name) errors.push('Deal name is required');
-    if (!dealData.code) errors.push('Deal code is required');
-    if (!dealData.airlineCode) errors.push('Airline code is required');
-    if (!dealData.dealCategory) errors.push('Deal category is required');
-    if (!dealData.dealType) errors.push('Deal type is required');
+    if (!dealData.name) errors.push("Deal name is required");
+    if (!dealData.code) errors.push("Deal code is required");
+    if (!dealData.airlineCode) errors.push("Airline code is required");
+    if (!dealData.dealCategory) errors.push("Deal category is required");
+    if (!dealData.dealType) errors.push("Deal type is required");
     if (dealData.discountValue === undefined || dealData.discountValue < 0) {
-      errors.push('Discount value must be >= 0');
+      errors.push("Discount value must be >= 0");
     }
-    if (!dealData.validFrom) errors.push('Valid from date is required');
-    if (!dealData.validTo) errors.push('Valid to date is required');
+    if (!dealData.validFrom) errors.push("Valid from date is required");
+    if (!dealData.validTo) errors.push("Valid to date is required");
     if (new Date(dealData.validFrom) >= new Date(dealData.validTo)) {
-      errors.push('Valid to date must be after valid from date');
+      errors.push("Valid to date must be after valid from date");
     }
 
     // Validate deal category
-    const validCategories = ['private_fare', 'ndc_special', 'route_specific', 'contract'];
+    const validCategories = [
+      "private_fare",
+      "ndc_special",
+      "route_specific",
+      "contract",
+    ];
     if (!validCategories.includes(dealData.dealCategory)) {
-      errors.push(`Invalid deal category. Must be one of: ${validCategories.join(', ')}`);
+      errors.push(
+        `Invalid deal category. Must be one of: ${validCategories.join(", ")}`,
+      );
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -484,15 +553,19 @@ export class AirlineDealsService {
       supplierCodes: prismaDeal.supplierCodes,
       discountType: prismaDeal.discountType,
       discountValue: Number(prismaDeal.discountValue),
-      maxDiscount: prismaDeal.maxDiscount ? Number(prismaDeal.maxDiscount) : undefined,
-      minOrderAmount: prismaDeal.minOrderAmount ? Number(prismaDeal.minOrderAmount) : undefined,
+      maxDiscount: prismaDeal.maxDiscount
+        ? Number(prismaDeal.maxDiscount)
+        : undefined,
+      minOrderAmount: prismaDeal.minOrderAmount
+        ? Number(prismaDeal.minOrderAmount)
+        : undefined,
       priority: prismaDeal.priority,
       isCombinableWithCoupons: prismaDeal.isCombinableWithCoupons,
       validFrom: prismaDeal.validFrom.toISOString(),
       validTo: prismaDeal.validTo.toISOString(),
       metadata: prismaDeal.metadata,
       createdAt: prismaDeal.createdAt.toISOString(),
-      updatedAt: prismaDeal.updatedAt.toISOString()
+      updatedAt: prismaDeal.updatedAt.toISOString(),
     };
   }
 

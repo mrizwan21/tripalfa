@@ -5,6 +5,7 @@ Comprehensive test suite for the Booking Engine notification system using React 
 ## Overview
 
 This test suite provides complete coverage for notification functionality including:
+
 - **Notifications Page Component** - Display, filtering, searching, and sorting notifications
 - **Notification Details Popup** - Viewing detailed notification information
 - **Toast Notifications** - Real-time toast alerts and auto-dismiss
@@ -48,6 +49,7 @@ Tests for the main Notifications page component:
 - **Test 16**: Real-time polling updates
 
 Plus additional tests for:
+
 - Unread badge display
 - Keyboard navigation
 - Passenger information display
@@ -73,6 +75,7 @@ Tests for the notification details popup component:
 - **Test 11**: Responsive design
 
 Plus additional tests for:
+
 - Does not render when isOpen is false
 - Does not render when notification is null
 - Minimal data notification rendering
@@ -92,6 +95,7 @@ Tests for the Toast notification component:
 - **Test 7**: Click action for navigation
 
 Plus additional tests for:
+
 - Toast without message
 - Long message handling
 - Multiple independent dismissals
@@ -117,11 +121,12 @@ Tests for notification types and validation:
 - **Test 15**: Maintain data consistency
 - **Test 16**: Handle edge cases
 
-### 5. Fixtures (__mocks__/fixtures.ts)
+### 5. Fixtures (**mocks**/fixtures.ts)
 
 Comprehensive mock data and utilities:
 
 **Mock Notifications:**
+
 - `MOCK_SSR_NOTIFICATION` - Special Service Request
 - `MOCK_ITINERARY_CHANGE_NOTIFICATION` - Flight schedule change
 - `MOCK_CONFIRMATION_NOTIFICATION` - Booking confirmation
@@ -135,6 +140,7 @@ Comprehensive mock data and utilities:
 - `MOCK_NOTIFICATION_LIST` - Complete list
 
 **Utility Functions:**
+
 - `createMockNotification()` - Factory function with overrides
 - `getUnreadNotifications()` - Filter unread
 - `getNotificationCountByStatus()` - Count by status
@@ -157,11 +163,12 @@ Comprehensive mock data and utilities:
 - `createMockSingleNotificationResponse()` - Single response
 - `createMockErrorResponse()` - Error response
 
-### 6. Handlers (__mocks__/handlers.ts)
+### 6. Handlers (**mocks**/handlers.ts)
 
 MSW API handlers for mocking HTTP requests:
 
 **Endpoints:**
+
 - `GET /api/notifications` - List notifications with filtering
 - `GET /api/notifications/:id` - Get single notification
 - `PATCH /api/notifications/:id/read` - Mark as read
@@ -171,6 +178,7 @@ MSW API handlers for mocking HTTP requests:
 - `DELETE /api/notifications/:id` - Delete notification
 
 **Store Management:**
+
 - `initializeNotificationsStore()` - Initialize with data
 - `resetNotificationsStore()` - Clear store
 - `getNotificationsFromStore()` - Get all
@@ -213,16 +221,16 @@ npm test -- --ui
 2. Follow the pattern:
 
 ```typescript
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { initializeMSWServer } from '../setup';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { initializeMSWServer } from "../setup";
 
-describe('Feature Name', () => {
+describe("Feature Name", () => {
   beforeEach(() => {
     initializeMSWServer(); // Initialize if using API mocking
   });
 
-  it('should do something', () => {
+  it("should do something", () => {
     // Test implementation
   });
 });
@@ -278,28 +286,28 @@ Use `data-testid` for elements that are hard to query semantically:
 
 ```tsx
 // Component
-<div data-testid="notification-list">...</div>
+<div data-testid="notification-list">...</div>;
 
 // Test
-const list = screen.getByTestId('notification-list');
+const list = screen.getByTestId("notification-list");
 ```
 
 ## Notification Data Structure
 
 ```typescript
 interface NotificationItem {
-  id: string;                    // Unique identifier
-  type: 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR';
-  title: string;                 // Notification title
-  description: string;           // Main message
-  when: string;                  // ISO date string
-  read: boolean;                 // Read status
-  status?: 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED';
-  passengerName?: string;        // Optional passenger
-  segment?: string;              // Flight segment
-  price?: number;                // Optional price
-  currency?: string;             // Currency code
-  remarks?: string;              // Additional remarks
+  id: string; // Unique identifier
+  type: "SUCCESS" | "INFO" | "WARNING" | "ERROR";
+  title: string; // Notification title
+  description: string; // Main message
+  when: string; // ISO date string
+  read: boolean; // Read status
+  status?: "PENDING" | "CONFIRMED" | "REJECTED" | "INFO" | "CANCELLED";
+  passengerName?: string; // Optional passenger
+  segment?: string; // Flight segment
+  price?: number; // Optional price
+  currency?: string; // Currency code
+  remarks?: string; // Additional remarks
 }
 ```
 
@@ -308,12 +316,13 @@ interface NotificationItem {
 ### Tests fail with "Cannot find module"
 
 Ensure paths in imports match actual file structure:
+
 ```typescript
 // Correct
-import { MOCK_NOTIFICATIONS } from '../__mocks__/fixtures';
+import { MOCK_NOTIFICATIONS } from "../__mocks__/fixtures";
 
 // Incorrect
-import { MOCK_NOTIFICATIONS } from '../mocks/fixtures';
+import { MOCK_NOTIFICATIONS } from "../mocks/fixtures";
 ```
 
 ### MSW handlers not intercepting
@@ -325,15 +334,20 @@ import { MOCK_NOTIFICATIONS } from '../mocks/fixtures';
 ### Async test timeouts
 
 Use `waitFor` with proper timeout and condition:
+
 ```typescript
-await waitFor(() => {
-  expect(screen.getByText('Content')).toBeInTheDocument();
-}, { timeout: 3000 });
+await waitFor(
+  () => {
+    expect(screen.getByText("Content")).toBeInTheDocument();
+  },
+  { timeout: 3000 },
+);
 ```
 
 ### Timer-related errors
 
 Wrap timer operations in `act`:
+
 ```typescript
 act(() => {
   vi.advanceTimersByTime(3000);
@@ -350,6 +364,7 @@ act(() => {
 ## Coverage Goals
 
 Current coverage:
+
 - **Notifications Page**: ~95%
 - **Details Popup**: ~90%
 - **Toast Component**: ~85%
@@ -361,6 +376,7 @@ Current coverage:
 ### Updating Mock Fixtures
 
 Edit `__mocks__/fixtures.ts`:
+
 1. Add new mock data if needed
 2. Update utility functions if behavior changes
 3. Ensure backward compatibility
@@ -368,6 +384,7 @@ Edit `__mocks__/fixtures.ts`:
 ### Adding API Endpoints
 
 Update `__mocks__/handlers.ts`:
+
 1. Add new `http.*` handler
 2. Implement response logic
 3. Update store if needed
@@ -376,11 +393,13 @@ Update `__mocks__/handlers.ts`:
 ### Debugging Tests
 
 Enable verbose output:
+
 ```bash
 npm test -- --reporter=verbose
 ```
 
 View test UI:
+
 ```bash
 npm test -- --ui
 ```
@@ -395,6 +414,7 @@ npm test -- --ui
 ## Contributing
 
 When adding new notification features:
+
 1. Add corresponding tests
 2. Update mock data if needed
 3. Document new test cases

@@ -6,7 +6,7 @@ Dynamic form components for configuring API gateways with product-specific endpo
 
 ## Component Architecture
 
-```
+```text
 SupplierDetail
 └── API Gateway Tab
     ├── EnvironmentSelector
@@ -54,26 +54,28 @@ SupplierDetail
 **Purpose**: Switch between development, staging, and production environments
 
 **Props**:
+
 ```typescript
 interface EnvironmentSelectorProps {
-  currentEnvironment: Environment
-  availableEnvironments: Environment[]
-  onEnvironmentChange: (env: Environment) => Promise<void>
-  loading?: boolean
+  currentEnvironment: Environment;
+  availableEnvironments: Environment[];
+  onEnvironmentChange: (env: Environment) => Promise<void>;
+  loading?: boolean;
   gatewayStatus: {
-    development?: { status: GatewayStatus; lastTest?: Date }
-    staging?: { status: GatewayStatus; lastTest?: Date }
-    production?: { status: GatewayStatus; lastTest?: Date }
-  }
+    development?: { status: GatewayStatus; lastTest?: Date };
+    staging?: { status: GatewayStatus; lastTest?: Date };
+    production?: { status: GatewayStatus; lastTest?: Date };
+  };
 }
 ```
 
 **Design**:
-```
+
+```text
 ┌──────────────────────────────────────────────────┐
 │ Environment:                                     │
 ├──────────────────────────────────────────────────┤
-│ 
+│
 │  [Development]  [Staging]  [Production]
 │   ✓ Ready      🟡 Ready    🔴 Locked
 │   Live config  Live config Config changes
@@ -86,18 +88,19 @@ interface EnvironmentSelectorProps {
 
 ```typescript
 interface EnvironmentStatus {
-  environment: Environment
-  isActive: boolean
-  status: 'active' | 'inactive' | 'testing' | 'pending'
-  lastTestDate?: Date
-  lastTestSuccess?: boolean
-  requiresApproval: boolean
-  canEdit: boolean
-  canDeploy: boolean
+  environment: Environment;
+  isActive: boolean;
+  status: "active" | "inactive" | "testing" | "pending";
+  lastTestDate?: Date;
+  lastTestSuccess?: boolean;
+  requiresApproval: boolean;
+  canEdit: boolean;
+  canDeploy: boolean;
 }
 ```
 
 **Behavior**:
+
 - Click environment → Fetch configuration for that environment
 - Show spinner while loading
 - Display status badge (Ready/Testing/Error)
@@ -111,18 +114,20 @@ interface EnvironmentStatus {
 **Purpose**: Select product to configure, triggers dynamic form updates
 
 **Props**:
+
 ```typescript
 interface ProductSelectorProps {
-  availableProducts: SupplierProduct[]
-  selectedProduct?: SupplierProduct
-  onProductChange: (product: SupplierProduct) => Promise<void>
-  loading?: boolean
-  gatewayConfig?: SupplierAPIGateway
+  availableProducts: SupplierProduct[];
+  selectedProduct?: SupplierProduct;
+  onProductChange: (product: SupplierProduct) => Promise<void>;
+  loading?: boolean;
+  gatewayConfig?: SupplierAPIGateway;
 }
 ```
 
 **Design**:
-```
+
+```text
 ┌──────────────────────────────────────────────┐
 │ Select Product:                              │
 ├──────────────────────────────────────────────┤
@@ -132,13 +137,14 @@ interface ProductSelectorProps {
 │ ─────────────────────────────────            │
 │ Type: Commissionable                         │
 │ Commission: 8%                               │
-│ Presence: Online                             │
+│ Presence: Online                           │
 │ Contact: John Doe                            │
 │ Status: ✓ Active                             │
 └──────────────────────────────────────────────┘
 ```
 
 **On Product Change**:
+
 ```typescript
 // Triggers these actions:
 1. Fetch product-specific endpoint schema
@@ -159,7 +165,7 @@ The form **dynamically changes** based on selected authentication type.
 
 ### Type 1: API Key
 
-```
+```text
 ┌────────────────────────────────────┐
 │ Authentication: API Key            │
 ├────────────────────────────────────┤
@@ -179,7 +185,7 @@ The form **dynamically changes** based on selected authentication type.
 
 ### Type 2: OAuth2
 
-```
+```text
 ┌────────────────────────────────────┐
 │ Authentication: OAuth2             │
 ├────────────────────────────────────┤
@@ -205,7 +211,7 @@ The form **dynamically changes** based on selected authentication type.
 
 ### Type 3: JWT (Bearer)
 
-```
+```text
 ┌────────────────────────────────────┐
 │ Authentication: JWT Bearer         │
 ├────────────────────────────────────┤
@@ -229,7 +235,7 @@ The form **dynamically changes** based on selected authentication type.
 
 ### Type 4: Basic Auth
 
-```
+```text
 ┌────────────────────────────────────┐
 │ Authentication: Basic Auth         │
 ├────────────────────────────────────┤
@@ -253,23 +259,24 @@ The form **dynamically changes** based on selected authentication type.
 **Purpose**: Configure product-specific API endpoints
 
 **Props**:
+
 ```typescript
 interface EndpointConfiguratorProps {
-  productId: string
-  environment: Environment
-  endpoints: APIEndpoint[]
-  onEndpointAdd: (endpoint: Omit<APIEndpoint, 'id'>) => Promise<APIEndpoint>
-  onEndpointUpdate: (id: string, data: Partial<APIEndpoint>) => Promise<void>
-  onEndpointDelete: (id: string) => Promise<void>
-  onEndpointTest: (id: string) => Promise<GatewayTestResponse>
-  loading?: boolean
-  schema?: ProductEndpointSchema
+  productId: string;
+  environment: Environment;
+  endpoints: APIEndpoint[];
+  onEndpointAdd: (endpoint: Omit<APIEndpoint, "id">) => Promise<APIEndpoint>;
+  onEndpointUpdate: (id: string, data: Partial<APIEndpoint>) => Promise<void>;
+  onEndpointDelete: (id: string) => Promise<void>;
+  onEndpointTest: (id: string) => Promise<GatewayTestResponse>;
+  loading?: boolean;
+  schema?: ProductEndpointSchema;
 }
 ```
 
 **Design** - List View:
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │ Endpoints - Hotel Product / Development                 │
 ├──────────────────────────────────────────────────────────┤
@@ -296,7 +303,7 @@ interface EndpointConfiguratorProps {
 
 **Design** - Edit Detail Modal:
 
-```
+```text
 ┌────────────────────────────────────────────────────────┐
 │ Edit Endpoint: GET /hotels/search                      │
 ├────────────────────────────────────────────────────────┤
@@ -339,21 +346,25 @@ interface EndpointConfiguratorProps {
 **Purpose**: Configure geography and channel-based routing
 
 **Props**:
+
 ```typescript
 interface RoutingConfiguratorProps {
-  geographyRoutings: GeographyRouting[]
-  channelRoutings: ChannelRouting[]
-  availableEndpoints: APIEndpoint[]
-  onGeographyAdd: (routing: GeographyRouting) => void
-  onChannelAdd: (routing: ChannelRouting) => void
-  onRoutingUpdate: (id: string, data: Partial<GeographyRouting | ChannelRouting>) => void
-  onRoutingDelete: (id: string) => void
+  geographyRoutings: GeographyRouting[];
+  channelRoutings: ChannelRouting[];
+  availableEndpoints: APIEndpoint[];
+  onGeographyAdd: (routing: GeographyRouting) => void;
+  onChannelAdd: (routing: ChannelRouting) => void;
+  onRoutingUpdate: (
+    id: string,
+    data: Partial<GeographyRouting | ChannelRouting>,
+  ) => void;
+  onRoutingDelete: (id: string) => void;
 }
 ```
 
 **Design** - Geography Routing:
 
-```
+```text
 ┌────────────────────────────────────────────────────────┐
 │ Geography Routing                                      │
 ├────────────────────────────────────────────────────────┤
@@ -384,7 +395,7 @@ interface RoutingConfiguratorProps {
 
 **Design** - Channel Routing:
 
-```
+```text
 ┌────────────────────────────────────────────────────────┐
 │ Channel Routing                                        │
 ├────────────────────────────────────────────────────────┤
@@ -420,18 +431,19 @@ interface RoutingConfiguratorProps {
 **Purpose**: Test individual endpoints with sample data
 
 **Props**:
+
 ```typescript
 interface EndpointTesterProps {
-  endpoint: APIEndpoint
-  environment: Environment
-  onTest: (testData: any) => Promise<GatewayTestResponse>
-  loading?: boolean
+  endpoint: APIEndpoint;
+  environment: Environment;
+  onTest: (testData: any) => Promise<GatewayTestResponse>;
+  loading?: boolean;
 }
 ```
 
 **Design**:
 
-```
+```text
 ┌────────────────────────────────────────────────────────┐
 │ Test Endpoint: GET /hotels/search                      │
 ├────────────────────────────────────────────────────────┤
@@ -464,7 +476,7 @@ interface EndpointTesterProps {
 │ │       "price": 89.99                 │              │
 │ │     },                               │              │
 │ │     ...                              │              │
-│ │   ],                                 │              │
+│ │   ],                                 │
 │ │   "totalResults": 45                 │              │
 │ │ }                                    │              │
 │ └──────────────────────────────────────┘             │
@@ -481,6 +493,7 @@ interface EndpointTesterProps {
 **Purpose**: Display real-time health status of gateway
 
 **Props**:
+
 ```typescript
 interface GatewayHealthStatusProps {
   gatewaySupplierId: string
@@ -492,7 +505,7 @@ interface GatewayHealthStatusProps {
 
 **Design**:
 
-```
+```text
 ┌────────────────────────────────────────────┐
 │ Gateway Health: Production                 │
 ├────────────────────────────────────────────┤
@@ -552,14 +565,14 @@ interface GatewayHealthStatusProps {
 
 ```typescript
 interface GatewayFormState {
-  currentEnvironment: Environment
-  selectedProduct?: SupplierProduct
-  formData: SupplierAPIGatewayFormData
-  isValidating: boolean
-  isSaving: boolean
-  validationErrors: Record<string, string>
-  changedFields: Set<string>
-  hasUnsavedChanges: boolean
+  currentEnvironment: Environment;
+  selectedProduct?: SupplierProduct;
+  formData: SupplierAPIGatewayFormData;
+  isValidating: boolean;
+  isSaving: boolean;
+  validationErrors: Record<string, string>;
+  changedFields: Set<string>;
+  hasUnsavedChanges: boolean;
 }
 ```
 

@@ -1,0 +1,226 @@
+{
+  "testSuite": "Payment Gateway Integration E2E",
+  "timestamp": "2026-03-02T07:14:23.238Z",
+  "scenarios": [
+    {
+      "scenario": "Stripe Payment Processing",
+      "tests": [
+        {
+          "name": "Basic Stripe payment processing",
+          "status": "PASS",
+          "duration": 1,
+          "details": "Transaction: pi_8f0555687e54eefa903be4e3"
+        },
+        {
+          "name": "Stripe payment in EUR",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction: pi_f9b38887e07a987794ccfe8f"
+        },
+        {
+          "name": "Stripe payment in AED",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction: pi_67612ab405b8e39a9d9cb936"
+        },
+        {
+          "name": "Large Stripe payment ($5000)",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction: pi_721103a6e8a10f0b08b4cae3"
+        },
+        {
+          "name": "Stripe refund processing",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Refund: re_a5725cf999d6ca140018e342"
+        }
+      ],
+      "totalTests": 5,
+      "passedTests": 5,
+      "failedTests": 0,
+      "duration": 2
+    },
+    {
+      "scenario": "PayPal Payment Processing",
+      "tests": [
+        {
+          "name": "Basic PayPal payment processing",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction: PAYID-8d4c41a664f0063ef51a2ec8"
+        },
+        {
+          "name": "PayPal payment in GBP",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction: PAYID-88a3d67fa4b404e9912e27a7"
+        },
+        {
+          "name": "PayPal bank transfer payment",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction: PAYID-ee7f5312dd48bec548a23b8e"
+        },
+        {
+          "name": "PayPal refund processing",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Refund: REF-473435278fcf726b1e2493d8"
+        }
+      ],
+      "totalTests": 4,
+      "passedTests": 4,
+      "failedTests": 0,
+      "duration": 0
+    },
+    {
+      "scenario": "Multi-Currency Support",
+      "tests": [
+        {
+          "name": "Stripe payments in 7 currencies",
+          "status": "PASS",
+          "duration": 0,
+          "details": "All 7 currencies processed successfully"
+        },
+        {
+          "name": "PayPal payments in 7 currencies",
+          "status": "PASS",
+          "duration": 0,
+          "details": "All 7 currencies processed successfully"
+        },
+        {
+          "name": "Verify currency isolation",
+          "status": "PASS",
+          "duration": 0,
+          "details": "All currencies properly isolated: 7 currencies tracked"
+        }
+      ],
+      "totalTests": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "duration": 0
+    },
+    {
+      "scenario": "Webhook Handling",
+      "tests": [
+        {
+          "name": "Stripe webhook: payment.intent.succeeded",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Webhook processed successfully"
+        },
+        {
+          "name": "Stripe webhook: payment_intent.payment_failed",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Webhook processed successfully"
+        },
+        {
+          "name": "PayPal webhook: PAYMENT.CAPTURE.COMPLETED",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Webhook processed successfully"
+        },
+        {
+          "name": "PayPal webhook: PAYMENT.CAPTURE.DENIED",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Webhook processed successfully"
+        }
+      ],
+      "totalTests": 4,
+      "passedTests": 4,
+      "failedTests": 0,
+      "duration": 0
+    },
+    {
+      "scenario": "Idempotency Verification",
+      "tests": [
+        {
+          "name": "Stripe idempotency: duplicate payment",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Same transaction returned: txn_idempotent_stripe_1772435663238"
+        },
+        {
+          "name": "PayPal idempotency: duplicate payment",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Same transaction returned: txn_idempotent_paypal_1772435663238"
+        }
+      ],
+      "totalTests": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "duration": 0
+    },
+    {
+      "scenario": "Error Recovery & Retry Logic",
+      "tests": [
+        {
+          "name": "Verify retry logic for failed payments",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction retry tracking active: 0 retries tracked"
+        },
+        {
+          "name": "Transaction status tracking across lifecycle",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction tracked: txn_lifecycle_1772435663238 → captured"
+        }
+      ],
+      "totalTests": 2,
+      "passedTests": 2,
+      "failedTests": 0,
+      "duration": 0
+    },
+    {
+      "scenario": "Transaction Metrics & Reporting",
+      "tests": [
+        {
+          "name": "Calculate payment gateway metrics",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Metrics calculated: 26 transactions, $28510.50 volume"
+        },
+        {
+          "name": "Verify Stripe/PayPal breakdown",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Processor breakdown: Stripe 14 | PayPal 12"
+        },
+        {
+          "name": "Verify transaction status distribution",
+          "status": "PASS",
+          "duration": 0,
+          "details": "Transaction statuses: captured, refunded"
+        }
+      ],
+      "totalTests": 3,
+      "passedTests": 3,
+      "failedTests": 0,
+      "duration": 0
+    }
+  ],
+  "summary": {
+    "totalScenarios": 7,
+    "totalTests": 23,
+    "passedTests": 23,
+    "failedTests": 0,
+    "totalDuration": 2
+  },
+  "metrics": {
+    "totalTransactions": 26,
+    "totalVolume": 28180.5,
+    "byProcessor": {
+      "stripe": 14,
+      "paypal": 12
+    },
+    "byStatus": {
+      "captured": 24,
+      "refunded": 2
+    }
+  }
+}

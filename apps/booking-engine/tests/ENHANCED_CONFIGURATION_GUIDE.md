@@ -13,6 +13,7 @@ This enhanced Playwright configuration provides a comprehensive testing infrastr
 ## Files Created
 
 ### 1. Enhanced Configuration
+
 - **`playwright.config.enhanced.ts`** - Main enhanced configuration file
   - Environment-specific timeouts (local, CI, staging, production)
   - Advanced reporting (HTML, JSON, JUnit, Allure-ready)
@@ -23,14 +24,17 @@ This enhanced Playwright configuration provides a comprehensive testing infrastr
   - Enhanced debugging capabilities
 
 ### 2. Environment Configuration Files
+
 - **`.env.test.ci`** - CI/CD environment settings
 - **`.env.test.staging`** - Staging environment settings
 
 ### 3. Test Utilities
+
 - **`tests/helpers/test-categories.ts`** - Test categorization and tagging utilities
 - **`tests/helpers/enhanced-test-utils.ts`** - Enhanced test utilities
 
 ### 4. Updated Package.json
+
 - Added 12 new test scripts for enhanced testing workflows
 
 ---
@@ -38,6 +42,7 @@ This enhanced Playwright configuration provides a comprehensive testing infrastr
 ## New Test Scripts
 
 ### Basic Enhanced Testing
+
 ```bash
 # Run tests with enhanced configuration (local environment)
 npm run test:e2e:enhanced
@@ -52,6 +57,7 @@ npm run test:e2e:tagged -- "@critical"
 ```
 
 ### Environment-Specific Testing
+
 ```bash
 # Run tests in CI environment
 npm run test:e2e:ci
@@ -61,6 +67,7 @@ npm run test:e2e:staging
 ```
 
 ### Cross-Browser Testing
+
 ```bash
 # Run tests in Firefox
 npm run test:e2e:firefox
@@ -73,6 +80,7 @@ npm run test:e2e:cross-browser
 ```
 
 ### Mobile and Tablet Testing
+
 ```bash
 # Run tests on mobile devices (Pixel 5, iPhone 12)
 npm run test:e2e:mobile
@@ -82,12 +90,14 @@ npm run test:e2e:tablet
 ```
 
 ### Visual Regression Testing
+
 ```bash
 # Run visual regression tests
 npm run test:e2e:visual
 ```
 
 ### Enhanced Reports
+
 ```bash
 # View enhanced local report
 npm run test:e2e:report:enhanced
@@ -106,17 +116,20 @@ npm run test:e2e:report:staging
 ### Available Tags
 
 #### Priority Levels
+
 - `@P0` - Critical (must pass)
 - `@P1` - High (should pass)
 - `@P2` - Medium (nice to have)
 - `@P3` - Low (future consideration)
 
 #### Test Categories
+
 - `@smoke` - Smoke tests
 - `@critical` - Critical path tests
 - `@regression` - Regression tests
 
 #### Feature Areas
+
 - `@flight` - Flight booking tests
 - `@hotel` - Hotel booking tests
 - `@wallet` - Wallet operation tests
@@ -126,6 +139,7 @@ npm run test:e2e:report:staging
 - `@auth` - Authentication tests
 
 #### Test Types
+
 - `@error` - Error scenario tests
 - `@validation` - Validation tests
 - `@timeout` - Timeout tests
@@ -134,18 +148,21 @@ npm run test:e2e:report:staging
 - `@e2e` - End-to-end tests
 
 #### Special Testing
+
 - `@visual` - Visual regression tests
 - `@a11y` - Accessibility tests
 - `@performance` - Performance tests
 - `@security` - Security tests
 
 #### Environment
+
 - `@local` - Local environment tests
 - `@ci` - CI environment tests
 - `@staging` - Staging environment tests
 - `@prod` - Production environment tests
 
 #### Browser
+
 - `@chromium` - Chrome/Chromium tests
 - `@firefox` - Firefox tests
 - `@webkit` - Safari/WebKit tests
@@ -157,35 +174,44 @@ npm run test:e2e:report:staging
 ## Using Test Categories in Tests
 
 ### Example: Tagged Test
-```typescript
-import { test, expect } from '@playwright/test';
-import { TEST_CATEGORIES, TEST_PRIORITY } from '../helpers/test-categories';
 
-test(`FB-001: Complete flight booking @smoke @flight @P0 @critical`, async ({ page }) => {
+```typescript
+import { test, expect } from "@playwright/test";
+import { TEST_CATEGORIES, TEST_PRIORITY } from "../helpers/test-categories";
+
+test(`FB-001: Complete flight booking @smoke @flight @P0 @critical`, async ({
+  page,
+}) => {
   // Test implementation
 });
 ```
 
 ### Example: Using Enhanced Test Utilities
-```typescript
-import { test, expect } from '@playwright/test';
-import { EnhancedTestContext, TestDataGenerator } from '../helpers/enhanced-test-utils';
 
-test('enhanced test with performance monitoring', async ({ page }, testInfo) => {
+```typescript
+import { test, expect } from "@playwright/test";
+import {
+  EnhancedTestContext,
+  TestDataGenerator,
+} from "../helpers/enhanced-test-utils";
+
+test("enhanced test with performance monitoring", async ({
+  page,
+}, testInfo) => {
   const context = new EnhancedTestContext(page, testInfo);
-  
+
   // Record action with timing
-  await context.recordAction('Navigate to flights', async () => {
-    await page.goto('/flights');
+  await context.recordAction("Navigate to flights", async () => {
+    await page.goto("/flights");
   });
-  
+
   // Generate test data
-  const email = TestDataGenerator.generateEmail('flight');
+  const email = TestDataGenerator.generateEmail("flight");
   const bookingRef = TestDataGenerator.generateBookingReference();
-  
+
   // Collect memory usage
   await context.collectMemoryUsage();
-  
+
   // Attach metrics to report
   await context.attachMetrics();
 });
@@ -196,18 +222,21 @@ test('enhanced test with performance monitoring', async ({ page }, testInfo) => 
 ## Environment-Specific Configuration
 
 ### Local Development
+
 ```bash
 # Uses .env.test by default
 npm run test:e2e:enhanced
 ```
 
 ### CI/CD Pipeline
+
 ```bash
 # Uses .env.test.ci
 TEST_ENV=ci npm run test:e2e:ci
 ```
 
 Features:
+
 - Longer timeouts (90s per test)
 - JUnit XML reporting
 - 2 retries for flaky tests
@@ -215,12 +244,14 @@ Features:
 - Max 5 failures before stopping
 
 ### Staging Environment
+
 ```bash
 # Uses .env.test.staging
 TEST_ENV=staging npm run test:e2e:staging
 ```
 
 Features:
+
 - Extended timeouts (120s per test)
 - Mobile device testing enabled
 - Real API endpoints (no mocks)
@@ -233,21 +264,25 @@ Features:
 The enhanced configuration includes automatic performance monitoring:
 
 ### Navigation Timings
+
 - Tracks page load times
 - Records navigation duration
 - Identifies slow pages
 
 ### Action Timings
+
 - Records action execution times
 - Identifies slow interactions
 - Helps optimize test performance
 
 ### Memory Usage
+
 - Monitors JavaScript heap size
 - Detects memory leaks
 - Tracks memory consumption
 
 ### Viewing Performance Data
+
 Performance metrics are automatically attached to test reports as JSON files.
 
 ---
@@ -279,6 +314,7 @@ Performance metrics are automatically attached to test reports as JSON files.
 ## Cross-Browser Testing
 
 ### Supported Browsers
+
 - **Chromium** (Desktop Chrome) - Primary browser
 - **Chromium High DPI** - High resolution displays
 - **Firefox** - Mozilla Firefox
@@ -288,6 +324,7 @@ Performance metrics are automatically attached to test reports as JSON files.
 - **Tablet Chrome** - iPad (gen 7)
 
 ### Running Cross-Browser Tests
+
 ```bash
 # All browsers
 npm run test:e2e:cross-browser
@@ -303,6 +340,7 @@ npm run test:e2e:mobile
 ## Visual Regression Testing
 
 ### Setup
+
 ```bash
 # Run visual tests
 TEST_VISUAL=true npm run test:e2e:visual
@@ -312,6 +350,7 @@ UPDATE_SNAPSHOTS=true npm run test:e2e:visual
 ```
 
 ### Configuration
+
 - Threshold: 0.2 (20% pixel difference allowed)
 - Max diff pixels: 100
 - Snapshots stored in: `tests/snapshots/`
@@ -321,6 +360,7 @@ UPDATE_SNAPSHOTS=true npm run test:e2e:visual
 ## Debugging Features
 
 ### Enhanced Debugging
+
 ```bash
 # Debug mode with devtools
 DEBUG_TESTS=true npm run test:e2e:enhanced
@@ -333,7 +373,9 @@ RECORD_HAR=true npm run test:e2e:enhanced
 ```
 
 ### Console and Network Monitoring
+
 The enhanced utilities automatically collect:
+
 - Console logs (errors, warnings)
 - Network requests and responses
 - Failed request tracking
@@ -343,31 +385,39 @@ The enhanced utilities automatically collect:
 ## Best Practices
 
 ### 1. Use Test Tags
+
 Always tag tests with appropriate categories:
+
 ```typescript
-test('test name @smoke @flight @P0', async () => {
+test("test name @smoke @flight @P0", async () => {
   // Test implementation
 });
 ```
 
 ### 2. Use Enhanced Test Context
+
 For performance-critical tests:
+
 ```typescript
 const context = new EnhancedTestContext(page, testInfo);
-await context.recordAction('action name', async () => {
+await context.recordAction("action name", async () => {
   // Action
 });
 ```
 
 ### 3. Generate Test Data
+
 Use the test data generator for unique data:
+
 ```typescript
 const email = TestDataGenerator.generateEmail();
 const bookingRef = TestDataGenerator.generateBookingReference();
 ```
 
 ### 4. Environment-Specific Testing
+
 Run tests in appropriate environments:
+
 - Local: Development and debugging
 - CI: Automated testing
 - Staging: Pre-production validation
@@ -399,24 +449,28 @@ The original `playwright.config.ts` remains unchanged. The enhanced configuratio
 ### Common Issues
 
 #### Tests timeout in CI
+
 ```bash
 # Increase CI timeout
 TEST_TIMEOUT=120000 npm run test:e2e:ci
 ```
 
 #### Mobile tests fail
+
 ```bash
 # Check mobile emulation
 TEST_MOBILE=true npm run test:e2e:mobile -- --project=mobile-chrome
 ```
 
 #### Visual regression fails
+
 ```bash
 # Update baselines
 UPDATE_SNAPSHOTS=true npm run test:e2e:visual
 ```
 
 #### Environment variables not loading
+
 ```bash
 # Verify .env file exists
 ls -la .env.test.ci
@@ -439,7 +493,7 @@ The enhanced Playwright configuration provides:
 ✅ **Visual regression** - Screenshot comparison  
 ✅ **Performance monitoring** - Navigation and action timings  
 ✅ **Enhanced debugging** - Network HAR, console logs  
-✅ **Test utilities** - Data generation, retry analysis  
+✅ **Test utilities** - Data generation, retry analysis
 
 ---
 

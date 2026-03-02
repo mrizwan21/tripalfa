@@ -2,58 +2,71 @@
 // RULE ENGINE TYPES - Aligned with b2b-admin feature types
 // ============================================================================
 
-import axios from 'axios';
+import axios from "axios";
 
-export type RuleStatus = 'draft' | 'active' | 'paused' | 'archived' | 'disabled';
-export type RulePriority = 'low' | 'medium' | 'high' | 'critical';
-export type RuleTrigger = 'event' | 'schedule' | 'api' | 'webhook' | 'manual';
+export type RuleStatus =
+  | "draft"
+  | "active"
+  | "paused"
+  | "archived"
+  | "disabled";
+export type RulePriority = "low" | "medium" | "high" | "critical";
+export type RuleTrigger = "event" | "schedule" | "api" | "webhook" | "manual";
 export type ConditionOperator =
-  | 'equals'
-  | 'not_equals'
-  | 'contains'
-  | 'not_contains'
-  | 'starts_with'
-  | 'ends_with'
-  | 'greater_than'
-  | 'less_than'
-  | 'greater_equal'
-  | 'less_equal'
-  | 'in'
-  | 'not_in'
-  | 'exists'
-  | 'not_exists'
-  | 'regex'
-  | 'between'
-  | 'matches'
-  | 'any_of'
-  | 'all_of';
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "ends_with"
+  | "greater_than"
+  | "less_than"
+  | "greater_equal"
+  | "less_equal"
+  | "in"
+  | "not_in"
+  | "exists"
+  | "not_exists"
+  | "regex"
+  | "between"
+  | "matches"
+  | "any_of"
+  | "all_of";
 
 export type ActionType =
-  | 'send_notification'
-  | 'create_ticket'
-  | 'update_record'
-  | 'call_webhook'
-  | 'send_email'
-  | 'send_sms'
-  | 'assign_user'
-  | 'change_status'
-  | 'add_tag'
-  | 'trigger_workflow'
-  | 'execute_sql'
-  | 'log_event'
-  | 'create_alert'
-  | 'custom';
+  | "send_notification"
+  | "create_ticket"
+  | "update_record"
+  | "call_webhook"
+  | "send_email"
+  | "send_sms"
+  | "assign_user"
+  | "change_status"
+  | "add_tag"
+  | "trigger_workflow"
+  | "execute_sql"
+  | "log_event"
+  | "create_alert"
+  | "custom";
 
-export type DataType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'array' | 'object' | 'json';
+export type DataType =
+  | "string"
+  | "number"
+  | "boolean"
+  | "date"
+  | "datetime"
+  | "array"
+  | "object"
+  | "json";
 export type FieldPath = string;
 
 export interface RuleCondition {
   id: string;
-  type: 'simple' | 'group' | 'complex';
+  type: "simple" | "group" | "complex";
   field?: FieldPath;
   operator?: ConditionOperator;
   value?: any;
-  logic?: 'AND' | 'OR' | 'XOR';
+  logic?: "AND" | "OR" | "XOR";
   conditions?: RuleCondition[];
   expression?: string;
   variables?: Record<string, any>;
@@ -75,7 +88,7 @@ export interface RuleAction {
 }
 
 export interface RuleSchedule {
-  frequency: 'once' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom_cron';
+  frequency: "once" | "hourly" | "daily" | "weekly" | "monthly" | "custom_cron";
   nextRun?: string;
   lastRun?: string;
   cronExpression?: string;
@@ -102,7 +115,7 @@ export interface RuleRetryPolicy {
 }
 
 export interface ExecutionContext {
-  environment: 'production' | 'staging' | 'development';
+  environment: "production" | "staging" | "development";
   timezone: string;
   timestamp: string;
   userId?: string;
@@ -115,7 +128,7 @@ export interface Rule {
   name: string;
   description?: string;
   category: string;
-  type: 'simple' | 'composite';
+  type: "simple" | "composite";
   tags: string[];
   trigger: RuleTrigger;
   triggerEvent?: string;
@@ -142,7 +155,7 @@ export interface CreateRuleRequest {
   name: string;
   description?: string;
   category: string;
-  type?: 'simple' | 'composite';
+  type?: "simple" | "composite";
   tags?: string[];
   trigger: RuleTrigger;
   triggerEvent?: string;
@@ -171,14 +184,14 @@ export interface ExecuteRuleRequest {
 export interface ExecuteRuleResponse {
   executionId: string;
   ruleId: string;
-  status: 'success' | 'failed' | 'timeout' | 'skipped';
+  status: "success" | "failed" | "timeout" | "skipped";
   conditionMet: boolean;
   actionsExecuted: number;
   actionsFailed: number;
   duration: number;
   outputs: Array<{
     actionId: string;
-    status: 'success' | 'failed';
+    status: "success" | "failed";
     result?: any;
     error?: string;
   }>;
@@ -207,7 +220,7 @@ export interface DebugRuleResponse {
     simulatedOutput?: any;
   }>;
   logs: Array<{
-    level: 'info' | 'warn' | 'error';
+    level: "info" | "warn" | "error";
     timestamp: Date;
     message: string;
   }>;
@@ -215,7 +228,7 @@ export interface DebugRuleResponse {
 
 export interface RuleAnalysisResponse {
   ruleId: string;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskLevel: "low" | "medium" | "high" | "critical";
   impactAnalysis: any;
   conflictAnalysis: any;
   performance: {
@@ -230,7 +243,7 @@ export interface RuleExecutionHistory {
   executionId: string;
   ruleId: string;
   ruleName: string;
-  status: 'pending' | 'running' | 'success' | 'failed' | 'timeout' | 'skipped';
+  status: "pending" | "running" | "success" | "failed" | "timeout" | "skipped";
   conditionMet: boolean;
   actionsExecuted: number;
   actionsFailed: number;
@@ -247,8 +260,8 @@ export interface RuleConflictCheckResponse {
   conflicts: Array<{
     conflictingRuleId: string;
     conflictingRuleName: string;
-    conflictType: 'condition' | 'action' | 'trigger';
-    severity: 'low' | 'medium' | 'high';
+    conflictType: "condition" | "action" | "trigger";
+    severity: "low" | "medium" | "high";
     description: string;
   }>;
 }
@@ -267,8 +280,8 @@ export interface RuleStats {
   actionsFailedTotal: number;
   periodStart: string;
   periodEnd: string;
-  trend: 'up' | 'down' | 'stable';
-  errorTrend: 'increasing' | 'decreasing' | 'stable';
+  trend: "up" | "down" | "stable";
+  errorTrend: "increasing" | "decreasing" | "stable";
 }
 
 export interface RuleExecution {
@@ -280,7 +293,7 @@ export interface RuleExecution {
   startedAt: string;
   completedAt?: string;
   duration: number;
-  status: 'pending' | 'running' | 'success' | 'failed' | 'timeout' | 'skipped';
+  status: "pending" | "running" | "success" | "failed" | "timeout" | "skipped";
   errorMessage?: string;
   errorCode?: string;
   conditionMet: boolean;
@@ -293,13 +306,13 @@ export interface RuleExecution {
   entityId?: string;
   entityType?: string;
   userId?: string;
-  executedBy: 'system' | 'user' | 'api' | 'schedule';
+  executedBy: "system" | "user" | "api" | "schedule";
 }
 
 export interface ExecutionOutput {
   actionId: string;
   actionType: ActionType;
-  status: 'pending' | 'success' | 'failed';
+  status: "pending" | "success" | "failed";
   result?: any;
   error?: string;
   duration: number;
@@ -316,15 +329,15 @@ export interface RuleImpactAnalysis {
   dependedByRules: string[];
   usedByWorkbenches: string[];
   recommendations: string[];
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskLevel: "low" | "medium" | "high" | "critical";
   risks: string[];
 }
 
 export interface RuleConflict {
   ruleId1: string;
   ruleId2: string;
-  conflictType: 'same_trigger' | 'same_action' | 'contradictory_conditions';
-  severity: 'low' | 'high';
+  conflictType: "same_trigger" | "same_action" | "contradictory_conditions";
+  severity: "low" | "high";
   description: string;
 }
 
@@ -359,7 +372,7 @@ export interface ActionSimulation {
 
 export interface DebugLog {
   timestamp: string;
-  level: 'debug' | 'info' | 'warning' | 'error';
+  level: "debug" | "info" | "warning" | "error";
   message: string;
   context?: Record<string, any>;
 }
@@ -380,7 +393,8 @@ export interface RuleDebugSession {
 // Note: RuleStats is already exported above, RuleExecutionHistory is separate interface
 
 export class RuleEngineService {
-  private static baseURL = process.env.VITE_RULE_ENGINE_SERVICE_URL || 'http://localhost:3005';
+  private static baseURL =
+    process.env.VITE_RULE_ENGINE_SERVICE_URL || "http://localhost:3005";
 
   /**
    * Create a new rule
@@ -389,7 +403,7 @@ export class RuleEngineService {
     try {
       const response = await axios.post<Rule>(
         `${this.baseURL}/api/rules`,
-        request
+        request,
       );
 
       return response.data;
@@ -404,7 +418,7 @@ export class RuleEngineService {
   static async getRule(ruleId: string): Promise<Rule> {
     try {
       const response = await axios.get<Rule>(
-        `${this.baseURL}/api/rules/${ruleId}`
+        `${this.baseURL}/api/rules/${ruleId}`,
       );
 
       return response.data;
@@ -417,23 +431,20 @@ export class RuleEngineService {
    * List all rules with filtering
    */
   static async listRules(
-    status?: Rule['status'],
+    status?: Rule["status"],
     category?: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<Rule[]> {
     try {
-      const response = await axios.get<Rule[]>(
-        `${this.baseURL}/api/rules`,
-        {
-          params: {
-            ...(status && { status }),
-            ...(category && { category }),
-            limit,
-            offset,
-          },
-        }
-      );
+      const response = await axios.get<Rule[]>(`${this.baseURL}/api/rules`, {
+        params: {
+          ...(status && { status }),
+          ...(category && { category }),
+          limit,
+          offset,
+        },
+      });
 
       return response.data;
     } catch (error) {
@@ -444,11 +455,14 @@ export class RuleEngineService {
   /**
    * Update a rule
    */
-  static async updateRule(ruleId: string, updates: UpdateRuleRequest): Promise<Rule> {
+  static async updateRule(
+    ruleId: string,
+    updates: UpdateRuleRequest,
+  ): Promise<Rule> {
     try {
       const response = await axios.patch<Rule>(
         `${this.baseURL}/api/rules/${ruleId}`,
-        updates
+        updates,
       );
 
       return response.data;
@@ -471,7 +485,9 @@ export class RuleEngineService {
   /**
    * Execute a rule with test data
    */
-  static async executeRule(request: ExecuteRuleRequest): Promise<ExecuteRuleResponse> {
+  static async executeRule(
+    request: ExecuteRuleRequest,
+  ): Promise<ExecuteRuleResponse> {
     try {
       const response = await axios.post<ExecuteRuleResponse>(
         `${this.baseURL}/api/rules/${request.ruleId}/execute`,
@@ -479,7 +495,7 @@ export class RuleEngineService {
           data: request.data,
           userId: request.userId,
           testMode: request.testMode,
-        }
+        },
       );
 
       return response.data;
@@ -491,7 +507,9 @@ export class RuleEngineService {
   /**
    * Debug a rule with sample data
    */
-  static async debugRule(request: DebugRuleRequest): Promise<DebugRuleResponse> {
+  static async debugRule(
+    request: DebugRuleRequest,
+  ): Promise<DebugRuleResponse> {
     try {
       const response = await axios.post<DebugRuleResponse>(
         `${this.baseURL}/api/rules/${request.ruleId}/debug`,
@@ -499,7 +517,7 @@ export class RuleEngineService {
           condition: request.condition,
           sampleData: request.sampleData,
           includeActions: request.includeActions,
-        }
+        },
       );
 
       return response.data;
@@ -514,7 +532,7 @@ export class RuleEngineService {
   static async analyzeRule(ruleId: string): Promise<RuleAnalysisResponse> {
     try {
       const response = await axios.get<RuleAnalysisResponse>(
-        `${this.baseURL}/api/rules/${ruleId}/analyze`
+        `${this.baseURL}/api/rules/${ruleId}/analyze`,
       );
 
       return response.data;
@@ -526,10 +544,12 @@ export class RuleEngineService {
   /**
    * Check for conflicts with other rules
    */
-  static async checkConflicts(ruleId: string): Promise<RuleConflictCheckResponse> {
+  static async checkConflicts(
+    ruleId: string,
+  ): Promise<RuleConflictCheckResponse> {
     try {
       const response = await axios.get<RuleConflictCheckResponse>(
-        `${this.baseURL}/api/rules/${ruleId}/conflicts`
+        `${this.baseURL}/api/rules/${ruleId}/conflicts`,
       );
 
       return response.data;
@@ -544,12 +564,12 @@ export class RuleEngineService {
   static async getExecutionHistory(
     ruleId: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<RuleExecutionHistory[]> {
     try {
       const response = await axios.get<RuleExecutionHistory[]>(
         `${this.baseURL}/api/rules/${ruleId}/executions`,
-        { params: { limit, offset } }
+        { params: { limit, offset } },
       );
 
       return response.data;
@@ -561,10 +581,12 @@ export class RuleEngineService {
   /**
    * Get a specific execution
    */
-  static async getExecution(executionId: string): Promise<RuleExecutionHistory> {
+  static async getExecution(
+    executionId: string,
+  ): Promise<RuleExecutionHistory> {
     try {
       const response = await axios.get<RuleExecutionHistory>(
-        `${this.baseURL}/api/executions/${executionId}`
+        `${this.baseURL}/api/executions/${executionId}`,
       );
 
       return response.data;
@@ -580,7 +602,7 @@ export class RuleEngineService {
     try {
       const response = await axios.post<Rule>(
         `${this.baseURL}/api/rules/${ruleId}/duplicate`,
-        { newName }
+        { newName },
       );
 
       return response.data;
@@ -595,7 +617,7 @@ export class RuleEngineService {
   static async enableRule(ruleId: string): Promise<Rule> {
     try {
       const response = await axios.post<Rule>(
-        `${this.baseURL}/api/rules/${ruleId}/enable`
+        `${this.baseURL}/api/rules/${ruleId}/enable`,
       );
 
       return response.data;
@@ -610,7 +632,7 @@ export class RuleEngineService {
   static async disableRule(ruleId: string): Promise<Rule> {
     try {
       const response = await axios.post<Rule>(
-        `${this.baseURL}/api/rules/${ruleId}/disable`
+        `${this.baseURL}/api/rules/${ruleId}/disable`,
       );
 
       return response.data;

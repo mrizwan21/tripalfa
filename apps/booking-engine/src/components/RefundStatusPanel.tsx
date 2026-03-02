@@ -1,7 +1,7 @@
 /**
  * Refund Status Panel
  * Displays pending refunds and their processing status
- * 
+ *
  * Features:
  * - List all refunds with status
  * - Show timeline of refund processing
@@ -9,8 +9,10 @@
  * - Contact support for issues
  */
 
-import React, { useState, useEffect } from 'react';
-import type { FC } from 'react';
+import React, { useState, useEffect } from "react";
+import type { FC } from "react";
+import { getStoredAuthToken } from "../lib/authToken";
+import { Button } from "@/components/ui/button";
 
 interface RefundRecord {
   id: string;
@@ -18,14 +20,14 @@ interface RefundRecord {
   bookingReference: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'processing' | 'in-transit' | 'completed' | 'failed';
+  status: "pending" | "processing" | "in-transit" | "completed" | "failed";
   refundReason: string;
   requestDate: string;
   expectedArrivalDate: string;
   completedDate?: string;
-  refundMethod: 'original_payment' | 'wallet' | 'bank_transfer';
+  refundMethod: "original_payment" | "wallet" | "bank_transfer";
   timeline: Array<{
-    status: RefundRecord['status'];
+    status: RefundRecord["status"];
     date: string;
     description: string;
   }>;
@@ -42,13 +44,13 @@ interface RefundStatusPanelProps {
   customerId: string;
 }
 
-type StatusFilter = 'all' | 'pending' | 'processing' | 'completed' | 'failed';
+type StatusFilter = "all" | "pending" | "processing" | "completed" | "failed";
 
 const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
   const [data, setData] = useState<RefundStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>("all");
   const [expandedRefund, setExpandedRefund] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,54 +62,81 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/customers/${customerId}/refunds`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
-        }
-      );
+      const response = await fetch(`/api/customers/${customerId}/refunds`, {
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
+        },
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch refund status');
+        throw new Error("Failed to fetch refund status");
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
+      const message = err instanceof Error ? err.message : "Unknown error";
       setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusConfig = (status: RefundRecord['status']) => {
+  const getStatusConfig = (status: RefundRecord["status"]) => {
     const config = {
-      pending: { label: '⏳ Pending', color: '#ff9800', icon: '⏳', step: 1 },
-      processing: { label: '🔄 Processing', color: '#2196f3', icon: '🔄', step: 2 },
-      'in-transit': { label: '📤 In Transit', color: '#673ab7', icon: '📤', step: 3 },
-      completed: { label: '✓ Completed', color: '#4caf50', icon: '✓', step: 4 },
-      failed: { label: '✕ Failed', color: '#f44336', icon: '✕', step: 0 },
+      pending: {
+        label: "⏳ Pending",
+        color: "hsl(var(--secondary))",
+        bgColor: "hsl(var(--secondary) / 0.14)",
+        icon: "⏳",
+        step: 1,
+      },
+      processing: {
+        label: "🔄 Processing",
+        color: "hsl(var(--primary))",
+        bgColor: "hsl(var(--primary) / 0.14)",
+        icon: "🔄",
+        step: 2,
+      },
+      "in-transit": {
+        label: "📤 In Transit",
+        color: "hsl(var(--accent))",
+        bgColor: "hsl(var(--accent) / 0.16)",
+        icon: "📤",
+        step: 3,
+      },
+      completed: {
+        label: "✓ Completed",
+        color: "hsl(var(--secondary))",
+        bgColor: "hsl(var(--secondary) / 0.14)",
+        icon: "✓",
+        step: 4,
+      },
+      failed: {
+        label: "✕ Failed",
+        color: "hsl(var(--destructive))",
+        bgColor: "hsl(var(--destructive) / 0.14)",
+        icon: "✕",
+        step: 0,
+      },
     };
     return config[status];
   };
 
-  const getRefundMethodLabel = (method: RefundRecord['refundMethod']) => {
+  const getRefundMethodLabel = (method: RefundRecord["refundMethod"]) => {
     const labels = {
-      original_payment: '💳 Original Payment Method',
-      wallet: '💰 Your Wallet',
-      bank_transfer: '🏦 Bank Transfer',
+      original_payment: "💳 Original Payment Method",
+      wallet: "💰 Your Wallet",
+      bank_transfer: "🏦 Bank Transfer",
     };
     return labels[method];
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -119,10 +148,11 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
     return days > 0 ? days : 0;
   };
 
-  const filteredRefunds = data?.refunds.filter((refund) => {
-    if (filterStatus === 'all') return true;
-    return refund.status === filterStatus;
-  }) || [];
+  const filteredRefunds =
+    data?.refunds.filter((refund) => {
+      if (filterStatus === "all") return true;
+      return refund.status === filterStatus;
+    }) || [];
 
   return (
     <div className="refund-status-panel">
@@ -130,7 +160,9 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <button onClick={fetchRefundStatus}>Retry</button>
+          <Button variant="outline" size="default" onClick={fetchRefundStatus}>
+            Retry
+          </Button>
         </div>
       )}
 
@@ -164,7 +196,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
               <div className="summary-content">
                 <p className="summary-label">Completed</p>
                 <p className="summary-value">
-                  {data.refunds.filter((r) => r.status === 'completed').length}
+                  {data.refunds.filter((r) => r.status === "completed").length}
                 </p>
               </div>
             </div>
@@ -174,7 +206,13 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
               <div className="summary-content">
                 <p className="summary-label">In Progress</p>
                 <p className="summary-value">
-                  {data.refunds.filter((r) => ['pending', 'processing', 'in-transit'].includes(r.status)).length}
+                  {
+                    data.refunds.filter((r) =>
+                      ["pending", "processing", "in-transit"].includes(
+                        r.status,
+                      ),
+                    ).length
+                  }
                 </p>
               </div>
             </div>
@@ -182,50 +220,69 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
 
           {/* Filters */}
           <div className="refund-filters">
-            <button
-              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('all')}
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "all" ? "active" : ""}`}
+              onClick={() => setFilterStatus("all")}
             >
               All ({data.refunds.length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('pending')}
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "pending" ? "active" : ""}`}
+              onClick={() => setFilterStatus("pending")}
             >
-              Pending ({data.refunds.filter((r) => r.status === 'pending').length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'processing' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('processing')}
+              Pending (
+              {data.refunds.filter((r) => r.status === "pending").length})
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "processing" ? "active" : ""}`}
+              onClick={() => setFilterStatus("processing")}
             >
-              Processing ({data.refunds.filter((r) => r.status === 'processing').length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'completed' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('completed')}
+              Processing (
+              {data.refunds.filter((r) => r.status === "processing").length})
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "completed" ? "active" : ""}`}
+              onClick={() => setFilterStatus("completed")}
             >
-              Completed ({data.refunds.filter((r) => r.status === 'completed').length})
-            </button>
-            <button
-              className={`filter-btn ${filterStatus === 'failed' ? 'active' : ''}`}
-              onClick={() => setFilterStatus('failed')}
+              Completed (
+              {data.refunds.filter((r) => r.status === "completed").length})
+            </Button>
+            <Button
+              variant="outline"
+              size="default"
+              className={`filter-btn ${filterStatus === "failed" ? "active" : ""}`}
+              onClick={() => setFilterStatus("failed")}
             >
-              Failed ({data.refunds.filter((r) => r.status === 'failed').length})
-            </button>
+              Failed ({data.refunds.filter((r) => r.status === "failed").length}
+              )
+            </Button>
           </div>
 
           {/* Refunds List */}
           {filteredRefunds.length === 0 ? (
             <div className="empty-state">
               <p>✨</p>
-              <p>No refunds {filterStatus !== 'all' ? `found in this status` : 'found'}</p>
+              <p>
+                No refunds{" "}
+                {filterStatus !== "all" ? `found in this status` : "found"}
+              </p>
               <p className="empty-subtext">Good news! No refunds to track.</p>
             </div>
           ) : (
             <div className="refunds-list">
               {filteredRefunds.map((refund) => {
                 const statusConfig = getStatusConfig(refund.status);
-                const daysUntilArrival = getDaysUntilArrival(refund.expectedArrivalDate);
+                const daysUntilArrival = getDaysUntilArrival(
+                  refund.expectedArrivalDate,
+                );
 
                 return (
                   <div
@@ -256,7 +313,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                       <div
                         className="status-badge"
                         style={{
-                          backgroundColor: statusConfig.color + '20',
+                          backgroundColor: statusConfig.bgColor,
                           color: statusConfig.color,
                         }}
                       >
@@ -264,10 +321,12 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                         <span>{statusConfig.label}</span>
                       </div>
 
-                      {refund.status === 'failed' && (
+                      {refund.status === "failed" && (
                         <div className="failed-notice">
                           <span>⚠️</span>
-                          <span>Refund processing failed. Please contact support.</span>
+                          <span>
+                            Refund processing failed. Please contact support.
+                          </span>
                         </div>
                       )}
                     </div>
@@ -276,22 +335,29 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                     <div className="refund-dates">
                       <div className="date-item">
                         <span className="date-label">Requested:</span>
-                        <span className="date-value">{formatDate(refund.requestDate)}</span>
+                        <span className="date-value">
+                          {formatDate(refund.requestDate)}
+                        </span>
                       </div>
 
-                      {refund.status === 'completed' ? (
+                      {refund.status === "completed" ? (
                         <div className="date-item">
                           <span className="date-label">Completed:</span>
                           <span className="date-value completed">
-                            {refund.completedDate ? formatDate(refund.completedDate) : 'N/A'}
+                            {refund.completedDate
+                              ? formatDate(refund.completedDate)
+                              : "N/A"}
                           </span>
                         </div>
                       ) : (
                         <div className="date-item">
                           <span className="date-label">Expected Arrival:</span>
-                          <span className={`date-value ${daysUntilArrival <= 3 ? 'soon' : ''}`}>
+                          <span
+                            className={`date-value ${daysUntilArrival <= 3 ? "soon" : ""}`}
+                          >
                             {formatDate(refund.expectedArrivalDate)}
-                            {daysUntilArrival > 0 && ` (in ${daysUntilArrival} day${daysUntilArrival !== 1 ? 's' : ''})`}
+                            {daysUntilArrival > 0 &&
+                              ` (in ${daysUntilArrival} day${daysUntilArrival !== 1 ? "s" : ""})`}
                           </span>
                         </div>
                       )}
@@ -300,17 +366,20 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                     {/* Timeline */}
                     {refund.timeline && refund.timeline.length > 0 && (
                       <div className="refund-timeline">
-                        <button
+                        <Button
+                          variant="outline"
+                          size="default"
                           className="expand-timeline-btn"
                           onClick={() =>
                             setExpandedRefund(
-                              expandedRefund === refund.id ? null : refund.id
+                              expandedRefund === refund.id ? null : refund.id,
                             )
                           }
                         >
-                          {expandedRefund === refund.id ? 'Hide' : 'Show'} Timeline
-                          {expandedRefund === refund.id ? ' ▼' : ' ▶'}
-                        </button>
+                          {expandedRefund === refund.id ? "Hide" : "Show"}{" "}
+                          Timeline
+                          {expandedRefund === refund.id ? " ▼" : " ▶"}
+                        </Button>
 
                         {expandedRefund === refund.id && (
                           <div className="timeline-content">
@@ -321,18 +390,30 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                                   key={idx}
                                   className="timeline-item"
                                   style={{
-                                    borderLeftColor: idx === refund.timeline.length - 1 
-                                      ? 'transparent' 
-                                      : eventConfig.color,
+                                    borderLeftColor:
+                                      idx === refund.timeline.length - 1
+                                        ? "transparent"
+                                        : eventConfig.color,
                                   }}
                                 >
-                                  <div className="timeline-dot" style={{ backgroundColor: eventConfig.color }}>
+                                  <div
+                                    className="timeline-dot"
+                                    style={{
+                                      backgroundColor: eventConfig.color,
+                                    }}
+                                  >
                                     {eventConfig.icon}
                                   </div>
                                   <div className="timeline-content-inner">
-                                    <p className="timeline-date">{formatDate(event.date)}</p>
-                                    <p className="timeline-status">{event.status}</p>
-                                    <p className="timeline-description">{event.description}</p>
+                                    <p className="timeline-date">
+                                      {formatDate(event.date)}
+                                    </p>
+                                    <p className="timeline-status">
+                                      {event.status}
+                                    </p>
+                                    <p className="timeline-description">
+                                      {event.description}
+                                    </p>
                                   </div>
                                 </div>
                               );
@@ -344,19 +425,33 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
 
                     {/* Actions */}
                     <div className="refund-actions">
-                      {refund.status === 'failed' && (
-                        <button className="action-btn warning">
+                      {refund.status === "failed" && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="action-btn warning"
+                        >
                           Contact Support
-                        </button>
+                        </Button>
                       )}
-                      {['pending', 'processing', 'in-transit'].includes(refund.status) && (
-                        <button className="action-btn secondary">
+                      {["pending", "processing", "in-transit"].includes(
+                        refund.status,
+                      ) && (
+                        <Button
+                          variant="outline"
+                          size="default"
+                          className="action-btn secondary"
+                        >
                           Track Status
-                        </button>
+                        </Button>
                       )}
-                      <button className="action-btn secondary">
+                      <Button
+                        variant="outline"
+                        size="default"
+                        className="action-btn secondary"
+                      >
                         View Booking
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );
@@ -371,19 +466,25 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
               <div className="faq-item">
                 <p className="faq-question">How long do refunds take?</p>
                 <p className="faq-answer">
-                  Most refunds are processed within 5-7 business days, depending on your bank and payment method.
+                  Most refunds are processed within 5-7 business days, depending
+                  on your bank and payment method.
                 </p>
               </div>
               <div className="faq-item">
                 <p className="faq-question">Can I cancel my refund?</p>
                 <p className="faq-answer">
-                  Refunds can only be cancelled if they haven't been processed yet. Contact support immediately.
+                  Refunds can only be cancelled if they haven't been processed
+                  yet. Contact support immediately.
                 </p>
               </div>
               <div className="faq-item">
-                <p className="faq-question">What if my refund doesn't arrive?</p>
+                <p className="faq-question">
+                  What if my refund doesn't arrive?
+                </p>
                 <p className="faq-answer">
-                  If your refund doesn't arrive within the expected timeframe, please contact support with your booking reference and transaction ID.
+                  If your refund doesn't arrive within the expected timeframe,
+                  please contact support with your booking reference and
+                  transaction ID.
                 </p>
               </div>
             </div>
@@ -410,8 +511,8 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  background: #ffebee;
-  border-left: 4px solid #c62828;
+  background: hsl(var(--destructive) / 0.12);
+  border-left: 4px solid hsl(var(--destructive));
   border-radius: 8px;
   margin-bottom: 20px;
 }
@@ -419,15 +520,15 @@ const styles = `
 .error-alert p {
   margin: 0;
   flex: 1;
-  color: #c62828;
+  color: hsl(var(--destructive));
 }
 
 .error-alert button {
   padding: 6px 12px;
   background: white;
-  border: 1px solid #c62828;
+  border: 1px solid hsl(var(--destructive));
   border-radius: 4px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   cursor: pointer;
   font-size: 12px;
 }
@@ -443,8 +544,8 @@ const styles = `
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid #f0f0f0;
-  border-top-color: #007bff;
+  border: 3px solid hsl(var(--muted));
+  border-top-color: hsl(var(--primary));
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 12px;
@@ -467,8 +568,8 @@ const styles = `
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: linear-gradient(135deg, #f5f5f5, #fafafa);
-  border: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, hsl(var(--muted)), hsl(var(--background)));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
 }
 
@@ -484,7 +585,7 @@ const styles = `
 .summary-label {
   margin: 0 0 2px 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   text-transform: uppercase;
   font-weight: 600;
 }
@@ -493,7 +594,7 @@ const styles = `
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 /* Filters */
@@ -507,8 +608,8 @@ const styles = `
 
 .filter-btn {
   padding: 8px 14px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
   border-radius: 20px;
   cursor: pointer;
   font-size: 12px;
@@ -518,13 +619,13 @@ const styles = `
 }
 
 .filter-btn:hover {
-  background: #e0e0e0;
+  background: hsl(var(--border));
 }
 
 .filter-btn.active {
-  background: #007bff;
+  background: hsl(var(--primary));
   color: white;
-  border-color: #007bff;
+  border-color: hsl(var(--primary));
 }
 
 /* Empty State */
@@ -540,13 +641,13 @@ const styles = `
 
 .empty-state p {
   margin: 0;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-size: 14px;
 }
 
 .empty-subtext {
   font-size: 12px !important;
-  color: #bbb !important;
+  color: hsl(var(--muted-foreground) / 0.75) !important;
   margin-top: 8px !important;
 }
 
@@ -557,37 +658,37 @@ const styles = `
 }
 
 .refund-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid hsl(var(--border));
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s;
 }
 
 .refund-card:hover {
-  border-color: #bbb;
+  border-color: hsl(var(--muted-foreground) / 0.75);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .refund-card.completed {
-  background: #f1f8f4;
-  border-left: 4px solid #4caf50;
+  background: hsl(var(--secondary) / 0.12);
+  border-left: 4px solid hsl(var(--secondary));
 }
 
 .refund-card.pending {
-  border-left: 4px solid #ff9800;
+  border-left: 4px solid hsl(var(--secondary));
 }
 
 .refund-card.processing {
-  border-left: 4px solid #2196f3;
+  border-left: 4px solid hsl(var(--primary));
 }
 
 .refund-card.full {
-  border-left: 4px solid #673ab7;
+  border-left: 4px solid hsl(var(--accent));
 }
 
 .refund-card.failed {
-  background: #fef5f5;
-  border-left: 4px solid #f44336;
+  background: hsl(var(--destructive) / 0.08);
+  border-left: 4px solid hsl(var(--destructive));
 }
 
 /* Refund Header */
@@ -605,13 +706,13 @@ const styles = `
 .refund-ref {
   margin: 0 0 4px 0;
   font-size: 13px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .refund-reason {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-style: italic;
 }
 
@@ -623,13 +724,13 @@ const styles = `
   margin: 0;
   font-size: 16px;
   font-weight: 700;
-  color: #4caf50;
+  color: hsl(var(--secondary));
 }
 
 .amount-method {
   margin: 2px 0 0 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Status Section */
@@ -656,10 +757,10 @@ const styles = `
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #ffebee;
+  background: hsl(var(--destructive) / 0.12);
   border-radius: 6px;
   font-size: 12px;
-  color: #c62828;
+  color: hsl(var(--destructive));
   font-weight: 600;
 }
 
@@ -669,7 +770,7 @@ const styles = `
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
   margin-bottom: 12px;
 }
@@ -682,22 +783,22 @@ const styles = `
 
 .date-label {
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-weight: 600;
 }
 
 .date-value {
   font-size: 13px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .date-value.completed {
-  color: #4caf50;
+  color: hsl(var(--secondary));
 }
 
 .date-value.soon {
-  color: #ff9800;
+  color: hsl(var(--secondary));
 }
 
 /* Timeline */
@@ -708,23 +809,23 @@ const styles = `
 .expand-timeline-btn {
   padding: 6px 12px;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  color: #007bff;
+  color: hsl(var(--primary));
   transition: all 0.2s;
 }
 
 .expand-timeline-btn:hover {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 .timeline-content {
   margin-top: 12px;
   padding: 12px;
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
 }
 
@@ -734,7 +835,7 @@ const styles = `
   gap: 12px;
   padding-bottom: 12px;
   margin-bottom: 12px;
-  border-left: 2px solid #ddd;
+  border-left: 2px solid hsl(var(--border));
   padding-left: 12px;
 }
 
@@ -765,7 +866,7 @@ const styles = `
 .timeline-date {
   margin: 0;
   font-size: 11px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   font-weight: 600;
 }
 
@@ -773,14 +874,14 @@ const styles = `
   margin: 0;
   font-size: 12px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   text-transform: uppercase;
 }
 
 .timeline-description {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 /* Refund Actions */
@@ -788,51 +889,51 @@ const styles = `
   display: flex;
   gap: 8px;
   padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid hsl(var(--border));
   flex-wrap: wrap;
 }
 
 .action-btn {
   padding: 8px 14px;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid hsl(var(--border));
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 .action-btn.warning {
-  background: #ffebee;
-  border-color: #f44336;
-  color: #f44336;
+  background: hsl(var(--destructive) / 0.12);
+  border-color: hsl(var(--destructive));
+  color: hsl(var(--destructive));
 }
 
 .action-btn.warning:hover {
-  background: #ffcdd2;
+  background: hsl(var(--destructive) / 0.2);
 }
 
 .action-btn.secondary {
-  background: #e3f2fd;
-  border-color: #2196f3;
-  color: #2196f3;
+  background: hsl(var(--primary) / 0.12);
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
 }
 
 .action-btn.secondary:hover {
-  background: #bbdefb;
+  background: hsl(var(--primary) / 0.2);
 }
 
 /* FAQ Section */
 .refund-faq {
   margin-top: 32px;
   padding: 20px;
-  background: #f3e5f5;
+  background: hsl(var(--accent) / 0.16);
   border-radius: 12px;
 }
 
@@ -840,7 +941,7 @@ const styles = `
   margin: 0 0 16px 0;
   font-size: 14px;
   font-weight: 700;
-  color: #6a1b9a;
+  color: hsl(var(--primary));
 }
 
 .faq-items {
@@ -858,13 +959,13 @@ const styles = `
   margin: 0 0 6px 0;
   font-size: 12px;
   font-weight: 700;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .faq-answer {
   margin: 0;
   font-size: 12px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   line-height: 1.5;
 }
 

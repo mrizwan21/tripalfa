@@ -1,10 +1,10 @@
 // jobs/reconciliationJob.ts
 // Daily reconciliation: match settlements to transactions, record FX P&L, handle chargebacks
 
-import { prisma } from '../config/db.js';
-import { logger } from '../utils/logger.js';
-import cron from 'node-cron';
-import { v4 as uuidv4 } from 'uuid';
+import { prisma } from "../config/db.js";
+import { logger } from "../utils/logger.js";
+import cron from "node-cron";
+import { v4 as uuidv4 } from "uuid";
 
 // For backward compatibility - create a pool-like interface using Prisma
 const pool = {
@@ -19,7 +19,7 @@ const pool = {
   },
 };
 
-const SERVICE_NAME = 'reconciliationJob';
+const SERVICE_NAME = "reconciliationJob";
 
 interface ReconciliationResult {
   success: boolean;
@@ -56,15 +56,19 @@ async function runReconciliation(): Promise<ReconciliationResult> {
   const client = await pool.connect();
 
   try {
-    await client.query('BEGIN');
+    await client.query("BEGIN");
 
     // 1. Auto-match settlements to transactions
     const matchedCount = await autoMatchSettlements(client);
-    logger.info(`${SERVICE_NAME}: Matched ${matchedCount} settlements to transactions`);
+    logger.info(
+      `${SERVICE_NAME}: Matched ${matchedCount} settlements to transactions`,
+    );
 
     // 2. Calculate and record FX adjustments
     const fxAdjustmentCount = await processFxAdjustments(client);
-    logger.info(`${SERVICE_NAME}: Recorded ${fxAdjustmentCount} FX adjustments`);
+    logger.info(
+      `${SERVICE_NAME}: Recorded ${fxAdjustmentCount} FX adjustments`,
+    );
 
     // 3. Process chargebacks
     const chargebackCount = await processChargebacks(client);
@@ -72,9 +76,11 @@ async function runReconciliation(): Promise<ReconciliationResult> {
 
     // 4. Flag unreconciled items for manual review
     const unreconciledCount = await flagUnreconciled(client);
-    logger.info(`${SERVICE_NAME}: Flagged ${unreconciledCount} items for manual review`);
+    logger.info(
+      `${SERVICE_NAME}: Flagged ${unreconciledCount} items for manual review`,
+    );
 
-    await client.query('COMMIT');
+    await client.query("COMMIT");
 
     const duration = Date.now() - startTime;
     logger.info(`${SERVICE_NAME}: Reconciliation completed in ${duration}ms`, {
@@ -92,7 +98,7 @@ async function runReconciliation(): Promise<ReconciliationResult> {
       unreconciled: unreconciledCount,
     };
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     logger.error(`${SERVICE_NAME}: Reconciliation failed`, err);
     throw err;
   } finally {
@@ -119,7 +125,7 @@ async function autoMatchSettlements(client: any): Promise<number> {
          )
          WHERE s.reconciliation_status = 'unmatched'
        )
-       RETURNING id`
+       RETURNING id`,
     );
 
     // Create mapping records
@@ -139,7 +145,7 @@ async function autoMatchSettlements(client: any): Promise<number> {
            SELECT 1 FROM settlement_transaction_mappings
            WHERE settlement_id = s.id AND transaction_id = t.id
          )`,
-        [settlement.id]
+        [settlement.id],
       );
     }
 
@@ -169,16 +175,16 @@ async function processFxAdjustments(client: any): Promise<number> {
        WHERE s.reconciliation_status = 'matched'
        AND s.status = 'completed'
        GROUP BY s.id, s.amount, s.currency
-       HAVING ABS(s.amount - SUM(t.base_amount)) > 0.01`
+       HAVING ABS(s.amount - SUM(t.base_amount)) > 0.01`,
     );
 
     for (const row of result.rows) {
       const variance = parseFloat(row.variance);
-      const adjustmentType = variance > 0 ? 'gain' : 'loss';
+      const adjustmentType = variance > 0 ? "gain" : "loss";
       const adjustmentAmount = Math.abs(variance);
 
       logger.info(
-        `${SERVICE_NAME}: Recording FX ${adjustmentType} for settlement ${row.id}: ${adjustmentAmount} ${row.currency}`
+        `${SERVICE_NAME}: Recording FX ${adjustmentType} for settlement ${row.id}: ${adjustmentAmount} ${row.currency}`,
       );
 
       // Create FX adjustment ledger entry
@@ -194,7 +200,7 @@ async function processFxAdjustments(client: any): Promise<number> {
           adjustmentAmount,
           row.currency,
           `FX ${adjustmentType}: settlement variance`,
-        ]
+        ],
       );
     }
 
@@ -217,12 +223,12 @@ async function processChargebacks(client: any): Promise<number> {
        JOIN transactions t ON d.transaction_id = t.id
        WHERE d.status = 'lost'
        AND NOT d.processed_at
-       ORDER BY d.created_at ASC`
+       ORDER BY d.created_at ASC`,
     );
 
     for (const dispute of result.rows) {
       logger.info(
-        `${SERVICE_NAME}: Processing lost chargeback ${dispute.id} for transaction ${dispute.transaction_id}`
+        `${SERVICE_NAME}: Processing lost chargeback ${dispute.id} for transaction ${dispute.transaction_id}`,
       );
 
       // 1. Reverse the original transaction
@@ -236,18 +242,18 @@ async function processChargebacks(client: any): Promise<number> {
         [
           reversalTxId,
           dispute.wallet_id,
-          'reversal',
+          "reversal",
           parseFloat(dispute.amount),
           dispute.currency,
-          'completed',
-        ]
+          "completed",
+        ],
       );
 
       // 2. Debit wallet for chargeback amount
       await client.query(
         `UPDATE wallets SET balance = balance - $1, updated_at = now()
          WHERE id = $2`,
-        [parseFloat(dispute.amount), dispute.wallet_id]
+        [parseFloat(dispute.amount), dispute.wallet_id],
       );
 
       // 3. Create ledger entries for chargeback
@@ -264,13 +270,13 @@ async function processChargebacks(client: any): Promise<number> {
           0,
           dispute.currency,
           `Chargeback: ${dispute.reason_code}`,
-        ]
+        ],
       );
 
       // 4. Mark dispute as processed
       await client.query(
         `UPDATE disputes SET processed_at = now() WHERE id = $1`,
-        [dispute.id]
+        [dispute.id],
       );
     }
 
@@ -291,12 +297,12 @@ async function flagUnreconciled(client: any): Promise<number> {
        SET reconciliation_status = 'disputed'
        WHERE reconciliation_status = 'unmatched'
        AND created_at < now() - INTERVAL '3 days'
-       RETURNING id`
+       RETURNING id`,
     );
 
     if (result.rows.length) {
       logger.warn(
-        `${SERVICE_NAME}: ${result.rows.length} unreconciled settlements flagged for manual review`
+        `${SERVICE_NAME}: ${result.rows.length} unreconciled settlements flagged for manual review`,
       );
     }
 
@@ -313,7 +319,7 @@ async function flagUnreconciled(client: any): Promise<number> {
 function scheduleReconciliation(): void {
   logger.info(`${SERVICE_NAME}: Scheduling daily reconciliation at 02:00 UTC`);
 
-  cron.schedule('0 2 * * *', async () => {
+  cron.schedule("0 2 * * *", async () => {
     try {
       await runReconciliation();
     } catch (err) {
@@ -331,10 +337,10 @@ function scheduleReconciliation(): void {
 async function triggerNow(): Promise<void> {
   try {
     const result = await runReconciliation();
-    console.log('✓ Reconciliation completed:', result);
+    console.log("✓ Reconciliation completed:", result);
     process.exit(0);
   } catch (err) {
-    console.error('✗ Reconciliation failed:', err);
+    console.error("✗ Reconciliation failed:", err);
     process.exit(1);
   }
 }
@@ -343,7 +349,7 @@ async function triggerNow(): Promise<void> {
 // ENTRY POINT
 // ============================================================================
 
-if (process.argv[2] === '--now') {
+if (process.argv[2] === "--now") {
   triggerNow();
 } else {
   scheduleReconciliation();

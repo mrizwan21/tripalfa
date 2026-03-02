@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
 // @ts-ignore
- // @ts-ignore
-import * as React from "react"
+// @ts-ignore
+import * as React from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -12,16 +12,23 @@ import {
   getFilteredRowModel,
   type ColumnDef,
   type Table as TanStackTable,
-} from "@tanstack/react-table"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table"
-import { Button } from "./button"
-import { Input } from "./input"
-import { ChevronLeft, ChevronRight, Search } from "lucide-react"
+} from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./table";
+import { Button } from "./button";
+import { Input } from "./input";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  searchKey: string
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  searchKey: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -29,10 +36,8 @@ export function DataTable<TData, TValue>({
   data,
   searchKey,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<any[]>([])
-  const [columnFilters, setColumnFilters] = React.useState<any[]>(
-    []
-  )
+  const [sorting, setSorting] = React.useState<any[]>([]);
+  const [columnFilters, setColumnFilters] = React.useState<any[]>([]);
 
   const table = useReactTable({
     data,
@@ -47,7 +52,7 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
     },
-  })
+  });
 
   return (
     <div className="space-y-4">
@@ -57,8 +62,10 @@ export function DataTable<TData, TValue>({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder={`Filter by ${searchKey}...`}
-          value={(table.getColumn?.(searchKey)?.getFilterValue?.() as string) ?? ""}
-          onChange={(event) =>
+            value={
+              (table.getColumn?.(searchKey)?.getFilterValue?.() as string) ?? ""
+            }
+            onChange={(event) =>
               table.getColumn?.(searchKey)?.setFilterValue?.(event.target.value)
             }
             className="pl-10 max-w-sm"
@@ -79,10 +86,10 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender?.(
                             header.column.columnDef.header,
-                            header.getContext?.() ?? {}
+                            header.getContext?.() ?? {},
                           )}
                     </TableHead>
-                  )
+                  );
                 })}
               </TableRow>
             ))}
@@ -98,7 +105,7 @@ export function DataTable<TData, TValue>({
                     <TableCell key={cell.id}>
                       {flexRender?.(
                         cell.column.columnDef.cell,
-                        cell.getContext?.() ?? {}
+                        cell.getContext?.() ?? {},
                       )}
                     </TableCell>
                   ))}
@@ -125,17 +132,20 @@ export function DataTable<TData, TValue>({
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-slate-500">
-          Showing {" "}
+          Showing{" "}
           <span className="font-medium text-slate-700">
-            {table.getRowModel().rows.length > 0 
-              ? table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 
+            {table.getRowModel().rows.length > 0
+              ? table.getState().pagination.pageIndex *
+                  table.getState().pagination.pageSize +
+                1
               : 0}
           </span>{" "}
           to{" "}
           <span className="font-medium text-slate-700">
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
+              table.getFilteredRowModel().rows.length,
             )}
           </span>{" "}
           of{" "}
@@ -144,7 +154,7 @@ export function DataTable<TData, TValue>({
           </span>{" "}
           results
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -169,5 +179,5 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
     </div>
-  )
+  );
 }

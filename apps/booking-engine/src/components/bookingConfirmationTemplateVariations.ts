@@ -3,13 +3,17 @@
  * Multiple design styles for booking confirmation emails
  */
 
-import type { OrderDetails } from './bookingConfirmationEmailTemplate';
-import type { TemplateOptions } from './emailTemplateManager';
+import type { OrderDetails } from "./bookingConfirmationEmailTemplate";
+import type { TemplateOptions } from "./emailTemplateManager";
+import { COLORS } from "../lib/constants/theme";
 
 /**
  * Modern Minimal Template - Clean, minimalist design
  */
-export function generateModernMinimalTemplate(order: OrderDetails, options: TemplateOptions = {}): string {
+export function generateModernMinimalTemplate(
+  order: OrderDetails,
+  options: TemplateOptions = {},
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -18,29 +22,29 @@ export function generateModernMinimalTemplate(order: OrderDetails, options: Temp
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking Confirmed - ${order.bookingReference}</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #f8f9fa; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: ${COLORS.slate[50]}; margin: 0; padding: 0; }
     .container { max-width: 580px; margin: 0 auto; background: white; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 20px; text-align: center; }
+    .header { background: linear-gradient(135deg, ${COLORS.info} 0%, ${COLORS.primary} 100%); color: ${COLORS.white}; padding: 40px 20px; text-align: center; }
     .header h1 { margin: 0; font-size: 32px; font-weight: 300; letter-spacing: 1px; }
     .content { padding: 40px 20px; }
-    .reference-card { background: #f0f4ff; border-left: 4px solid #667eea; padding: 20px; margin: 30px 0; text-align: center; }
-    .reference-code { font-size: 28px; font-weight: bold; color: #333; letter-spacing: 2px; font-family: monospace; }
-    .flight-block { margin: 30px 0; padding-bottom: 30px; border-bottom: 1px solid #eee; }
-    .flight-header { font-size: 13px; text-transform: uppercase; color: #999; margin-bottom: 15px; font-weight: 600; }
+    .reference-card { background: ${COLORS.slate[100]}; border-left: 4px solid ${COLORS.info}; padding: 20px; margin: 30px 0; text-align: center; }
+    .reference-code { font-size: 28px; font-weight: bold; color: ${COLORS.slate[700]}; letter-spacing: 2px; font-family: monospace; }
+    .flight-block { margin: 30px 0; padding-bottom: 30px; border-bottom: 1px solid ${COLORS.slate[200]}; }
+    .flight-header { font-size: 13px; text-transform: uppercase; color: ${COLORS.slate[400]}; margin-bottom: 15px; font-weight: 600; }
     .route { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin: 20px 0; }
     .airport { text-align: center; }
-    .airport-code { font-size: 20px; font-weight: bold; color: #333; }
-    .airport-city { font-size: 12px; color: #666; margin-top: 5px; }
-    .time-container { font-size: 24px; font-weight: bold; color: #667eea; }
-    .arrow { color: #ddd; font-size: 28px; }
-    .flight-info { font-size: 12px; color: #666; margin-top: 15px; }
+    .airport-code { font-size: 20px; font-weight: bold; color: ${COLORS.slate[700]}; }
+    .airport-city { font-size: 12px; color: ${COLORS.slate[500]}; margin-top: 5px; }
+    .time-container { font-size: 24px; font-weight: bold; color: ${COLORS.info}; }
+    .arrow { color: ${COLORS.slate[300]}; font-size: 28px; }
+    .flight-info { font-size: 12px; color: ${COLORS.slate[500]}; margin-top: 15px; }
     .passenger-list { margin: 20px 0; }
-    .passenger-item { padding: 10px 0; font-size: 13px; color: #333; }
-    .price-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center; }
-    .price-total { font-size: 32px; font-weight: bold; color: #333; margin: 10px 0; }
-    .price-currency { font-size: 14px; color: #999; }
-    .button { display: inline-block; background: #667eea; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600; margin: 20px 5px; }
-    .footer { background: #f8f9fa; padding: 30px 20px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; }
+    .passenger-item { padding: 10px 0; font-size: 13px; color: ${COLORS.slate[700]}; }
+    .price-section { background: ${COLORS.slate[50]}; padding: 20px; border-radius: 8px; margin: 30px 0; text-align: center; }
+    .price-total { font-size: 32px; font-weight: bold; color: ${COLORS.slate[700]}; margin: 10px 0; }
+    .price-currency { font-size: 14px; color: ${COLORS.slate[400]}; }
+    .button { display: inline-block; background: ${COLORS.info}; color: ${COLORS.white}; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600; margin: 20px 5px; }
+    .footer { background: ${COLORS.slate[50]}; padding: 30px 20px; text-align: center; font-size: 12px; color: ${COLORS.slate[400]}; border-top: 1px solid ${COLORS.slate[200]}; }
     @media (max-width: 600px) { .content { padding: 20px; } .route { gap: 10px; } }
   </style>
 </head>
@@ -52,10 +56,10 @@ export function generateModernMinimalTemplate(order: OrderDetails, options: Temp
     </div>
 
     <div class="content">
-      <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Hello <strong>${order.customerName}</strong>,</p>
+      <p style="margin: 0 0 20px 0; color: ${COLORS.slate[500]}; font-size: 14px;">Hello <strong>${order.customerName}</strong>,</p>
 
       <div class="reference-card">
-        <p style="margin: 0 0 10px 0; font-size: 12px; color: #999; text-transform: uppercase;">Reference</p>
+        <p style="margin: 0 0 10px 0; font-size: 12px; color: ${COLORS.slate[400]}; text-transform: uppercase;">Reference</p>
         <div class="reference-code">${order.bookingReference}</div>
       </div>
 
@@ -66,7 +70,7 @@ export function generateModernMinimalTemplate(order: OrderDetails, options: Temp
           <div class="flight-header">Flight ${i + 1}</div>
           <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: 600;">
             ${segment.flightNumber} • ${segment.airline}
-            ${options.includeDuration && segment.duration ? ` • ${segment.duration}` : ''}
+            ${options.includeDuration && segment.duration ? ` • ${segment.duration}` : ""}
           </p>
           <div class="route">
             <div class="airport">
@@ -81,44 +85,44 @@ export function generateModernMinimalTemplate(order: OrderDetails, options: Temp
               <div class="airport-city">${segment.arrivalCity}</div>
             </div>
           </div>
-          <div class="flight-info">${segment.departureDate}${options.includeOperatingAirline && segment.operatingAirline ? ` • Operated by ${segment.operatingAirline}` : ''}</div>
+          <div class="flight-info">${segment.departureDate}${options.includeOperatingAirline && segment.operatingAirline ? ` • Operated by ${segment.operatingAirline}` : ""}</div>
         </div>
-      `
+      `,
         )
-        .join('')}
+        .join("")}
 
-      <div style="margin: 30px 0; padding-top: 30px; border-top: 1px solid #eee;">
-        <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #333; text-transform: uppercase;">Passengers</h3>
+      <div style="margin: 30px 0; padding-top: 30px; border-top: 1px solid ${COLORS.slate[200]};">
+        <h3 style="margin: 0 0 15px 0; font-size: 14px; color: ${COLORS.slate[700]}; text-transform: uppercase;">Passengers</h3>
         <div class="passenger-list">
           ${order.passengers
             .map(
               (p) => `
             <div class="passenger-item">
               ${p.name}
-              ${options.includeSeatInfo && p.seatNumber ? ` • Seat ${p.seatNumber}` : ''}
-              ${options.includeSeatInfo && p.cabinClass ? ` • ${p.cabinClass}` : ''}
+              ${options.includeSeatInfo && p.seatNumber ? ` • Seat ${p.seatNumber}` : ""}
+              ${options.includeSeatInfo && p.cabinClass ? ` • ${p.cabinClass}` : ""}
             </div>
-          `
+          `,
             )
-            .join('')}
+            .join("")}
         </div>
       </div>
 
       <div class="price-section">
-        <span class="price-currency">${options.includePricingBreakdown && order.basePrice ? 'Your total' : 'Total amount'}</span>
+        <span class="price-currency">${options.includePricingBreakdown && order.basePrice ? "Your total" : "Total amount"}</span>
         <div class="price-total">${order.currency} ${order.totalPrice.toFixed(2)}</div>
-        ${options.includePricingBreakdown && order.basePrice ? `<p style="margin: 10px 0 0 0; font-size: 11px; color: #999;">Fare: ${order.currency} ${order.basePrice.toFixed(2)} + ${order.currency} ${(order.taxPrice || 0).toFixed(2)} taxes</p>` : ''}
+        ${options.includePricingBreakdown && order.basePrice ? `<p style="margin: 10px 0 0 0; font-size: 11px; color: ${COLORS.slate[400]};">Fare: ${order.currency} ${order.basePrice.toFixed(2)} + ${order.currency} ${(order.taxPrice || 0).toFixed(2)} taxes</p>` : ""}
       </div>
 
       <div style="text-align: center;">
         <a href="https://tripalfa.com/bookings/${order.bookingReference}" class="button">View Booking</a>
-        <a href="https://tripalfa.com/support" class="button" style="background: #ccc;">Get Help</a>
+        <a href="https://tripalfa.com/support" class="button" style="background: ${COLORS.slate[300]};">Get Help</a>
       </div>
     </div>
 
     <div class="footer">
       <p style="margin: 0;">© 2026 TripAlfa. All rights reserved.</p>
-      <p style="margin: 5px 0 0 0;">This is a transactional email. <a href="#" style="color: #667eea; text-decoration: none;">Manage preferences</a></p>
+      <p style="margin: 5px 0 0 0;">This is a transactional email. <a href="#" style="color: ${COLORS.info}; text-decoration: none;">Manage preferences</a></p>
     </div>
   </div>
 </body>
@@ -129,7 +133,10 @@ export function generateModernMinimalTemplate(order: OrderDetails, options: Temp
 /**
  * Compact Template - Space-efficient for quick scanning
  */
-export function generateCompactTemplate(order: OrderDetails, options: TemplateOptions = {}): string {
+export function generateCompactTemplate(
+  order: OrderDetails,
+  options: TemplateOptions = {},
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -138,62 +145,62 @@ export function generateCompactTemplate(order: OrderDetails, options: TemplateOp
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking Confirmed</title>
 </head>
-<body style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: #f5f5f5; margin: 0; padding: 15px;">
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: ${COLORS.slate[100]}; margin: 0; padding: 15px;">
   <div style="max-width: 520px; margin: 0 auto; background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
     
     <!-- Compact Header -->
-    <div style="background: #2c3e50; color: white; padding: 25px 20px; text-align: center;">
+    <div style="background: ${COLORS.primary}; color: ${COLORS.white}; padding: 25px 20px; text-align: center;">
       <h1 style="margin: 0; font-size: 24px;">✓ Booking Confirmed</h1>
-      <p style="margin: 5px 0 0 0; font-size: 13px; color: #bbb;">${order.bookingReference}</p>
+      <p style="margin: 5px 0 0 0; font-size: 13px; color: ${COLORS.slate[300]};">${order.bookingReference}</p>
     </div>
 
     <div style="padding: 25px 20px;">
       <!-- Quick Reference -->
       <table style="width: 100%; margin-bottom: 20px; font-size: 12px;">
         <tr>
-          <td style="padding: 5px 0; color: #999;">Name:</td>
+          <td style="padding: 5px 0; color: ${COLORS.slate[400]};">Name:</td>
           <td style="padding: 5px 0; text-align: right; font-weight: 600;">${order.customerName}</td>
         </tr>
         <tr>
-          <td style="padding: 5px 0; color: #999;">Total:</td>
+          <td style="padding: 5px 0; color: ${COLORS.slate[400]};">Total:</td>
           <td style="padding: 5px 0; text-align: right; font-weight: 600;">${order.currency} ${order.totalPrice.toFixed(2)}</td>
         </tr>
       </table>
 
       <!-- Flights in compact format -->
-      <div style="margin: 20px 0; padding-top: 20px; border-top: 1px solid #eee;">
+      <div style="margin: 20px 0; padding-top: 20px; border-top: 1px solid ${COLORS.slate[200]};">
         ${order.segments
           .map(
             (s, i) => `
-          <div style="margin-bottom: 12px; padding: 10px; background: #f9f9f9; border-radius: 4px; font-size: 12px;">
+          <div style="margin-bottom: 12px; padding: 10px; background: ${COLORS.slate[50]}; border-radius: 4px; font-size: 12px;">
             <strong>${i + 1}. ${s.flightNumber}</strong> ${s.airline}
             <br/>
-            <span style="color: #0066cc; font-weight: 600;">${s.departureAirport}</span> 
+            <span style="color: ${COLORS.info}; font-weight: 600;">${s.departureAirport}</span> 
             ${s.departureTime} → 
-            <span style="color: #0066cc; font-weight: 600;">${s.arrivalAirport}</span> 
+            <span style="color: ${COLORS.info}; font-weight: 600;">${s.arrivalAirport}</span> 
             ${s.arrivalTime}
-            ${options.includeSeatInfo && s.cabinClass ? `<br/><span style="color: #999;">${s.cabinClass}</span>` : ''}
+            ${options.includeSeatInfo && s.cabinClass ? `<br/><span style="color: ${COLORS.slate[400]};">${s.cabinClass}</span>` : ""}
           </div>
-        `
+        `,
           )
-          .join('')}
+          .join("")}
       </div>
 
       <!-- Passengers -->
-      <div style="font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+      <div style="font-size: 12px; margin-top: 15px; padding-top: 15px; border-top: 1px solid ${COLORS.slate[200]};">
         <strong>Passengers (${order.passengers.length})</strong>
-        <ul style="margin: 5px 0; padding-left: 16px; color: #666;">
-          ${order.passengers.map((p) => `<li>${p.name}${options.includeSeatInfo && p.seatNumber ? ` • ${p.seatNumber}` : ''}</li>`).join('')}
+        <ul style="margin: 5px 0; padding-left: 16px; color: ${COLORS.slate[500]};">
+          ${order.passengers.map((p) => `<li>${p.name}${options.includeSeatInfo && p.seatNumber ? ` • ${p.seatNumber}` : ""}</li>`).join("")}
         </ul>
       </div>
 
       <!-- Actions -->
       <div style="text-align: center; margin-top: 20px;">
-        <a href="https://tripalfa.com/bookings/${order.bookingReference}" style="display: inline-block; background: #2c3e50; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 600;">View Booking</a>
+        <a href="https://tripalfa.com/bookings/${order.bookingReference}" style="display: inline-block; background: ${COLORS.primary}; color: ${COLORS.white}; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 600;">View Booking</a>
       </div>
     </div>
 
-    <div style="background: #f9f9f9; padding: 15px 20px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee;">
+    <div style="background: ${COLORS.slate[50]}; padding: 15px 20px; text-align: center; font-size: 11px; color: ${COLORS.slate[400]}; border-top: 1px solid ${COLORS.slate[200]};">
       <p style="margin: 0;">© 2026 TripAlfa</p>
     </div>
   </div>
@@ -205,7 +212,10 @@ export function generateCompactTemplate(order: OrderDetails, options: TemplateOp
 /**
  * Detailed Template - Comprehensive with all information
  */
-export function generateDetailedTemplate(order: OrderDetails, options: TemplateOptions = {}): string {
+export function generateDetailedTemplate(
+  order: OrderDetails,
+  options: TemplateOptions = {},
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -214,11 +224,11 @@ export function generateDetailedTemplate(order: OrderDetails, options: TemplateO
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking Confirmation</title>
 </head>
-<body style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: #f5f5f5; margin: 0; padding: 20px;">
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; background: ${COLORS.slate[100]}; margin: 0; padding: 20px;">
   <div style="max-width: 640px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     
     <!-- Header -->
-    <div style="background: linear-gradient(to right, #1e90ff 0%, #4169e1 100%); color: white; padding: 40px 20px; text-align: center;">
+    <div style="background: linear-gradient(to right, ${COLORS.info} 0%, ${COLORS.primary} 100%); color: ${COLORS.white}; padding: 40px 20px; text-align: center;">
       <h1 style="margin: 0; font-size: 28px; font-weight: 300;">Flight Booking Confirmation</h1>
       <p style="margin: 15px 0 0 0; font-size: 14px; opacity: 0.9;">Reference: <strong>${order.bookingReference}</strong></p>
     </div>
@@ -226,14 +236,14 @@ export function generateDetailedTemplate(order: OrderDetails, options: TemplateO
     <div style="padding: 30px 20px;">
       
       <!-- Booking Details Card -->
-      <div style="background: #f0f7ff; border: 1px solid #1e90ff; padding: 20px; border-radius: 6px; margin-bottom: 30px;">
+      <div style="background: ${COLORS.slate[100]}; border: 1px solid ${COLORS.info}; padding: 20px; border-radius: 6px; margin-bottom: 30px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px;">
           <div>
-            <p style="margin: 0 0 5px 0; color: #666; text-transform: uppercase; font-size: 11px;">Passenger</p>
+            <p style="margin: 0 0 5px 0; color: ${COLORS.slate[500]}; text-transform: uppercase; font-size: 11px;">Passenger</p>
             <p style="margin: 0; font-weight: 600;">${order.customerName}</p>
           </div>
           <div>
-            <p style="margin: 0 0 5px 0; color: #666; text-transform: uppercase; font-size: 11px;">Booking Date</p>
+            <p style="margin: 0 0 5px 0; color: ${COLORS.slate[500]}; text-transform: uppercase; font-size: 11px;">Booking Date</p>
             <p style="margin: 0; font-weight: 600;">${order.bookingDate || new Date().toLocaleDateString()}</p>
           </div>
         </div>
@@ -243,102 +253,115 @@ export function generateDetailedTemplate(order: OrderDetails, options: TemplateO
       ${order.segments
         .map(
           (segment, index) => `
-        <div style="margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid #eee;">
-          <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #333; text-transform: uppercase;">Flight ${index + 1}</h3>
+        <div style="margin-bottom: 25px; padding-bottom: 25px; border-bottom: 1px solid ${COLORS.slate[200]};">
+          <h3 style="margin: 0 0 15px 0; font-size: 14px; color: ${COLORS.slate[700]}; text-transform: uppercase;">Flight ${index + 1}</h3>
           
           <table style="width: 100%; font-size: 12px; margin-bottom: 15px;">
             <tr>
-              <td style="padding: 8px 0; color: #666;">Flight Number</td>
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Flight Number</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">${segment.flightNumber}</td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #666;">Airline</td>
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Airline</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">
                 ${segment.airline}
-                ${options.includeOperatingAirline && segment.operatingAirline ? ` <br/><span style="font-size: 11px; color: #999;">(Operated by ${segment.operatingAirline})</span>` : ''}
+                ${options.includeOperatingAirline && segment.operatingAirline ? ` <br/><span style="font-size: 11px; color: ${COLORS.slate[400]};">(Operated by ${segment.operatingAirline})</span>` : ""}
               </td>
             </tr>
-            <tr style="border-top: 1px solid #eee;">
-              <td style="padding: 8px 0; color: #666;">Departure</td>
+            <tr style="border-top: 1px solid ${COLORS.slate[200]};">
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Departure</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">
                 ${segment.departureTime} - ${segment.departureAirport}
-                ${options.includeTerminals && segment.departureTerminal ? ` (T${segment.departureTerminal})` : ''}
+                ${options.includeTerminals && segment.departureTerminal ? ` (T${segment.departureTerminal})` : ""}
               </td>
             </tr>
             <tr>
-              <td style="padding: 8px 0; color: #666;">Arrival</td>
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Arrival</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">
                 ${segment.arrivalTime} - ${segment.arrivalAirport}
-                ${options.includeTerminals && segment.arrivalTerminal ? ` (T${segment.arrivalTerminal})` : ''}
+                ${options.includeTerminals && segment.arrivalTerminal ? ` (T${segment.arrivalTerminal})` : ""}
               </td>
             </tr>
-            ${options.includeDuration && segment.duration ? `
+            ${
+              options.includeDuration && segment.duration
+                ? `
             <tr>
-              <td style="padding: 8px 0; color: #666;">Duration</td>
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Duration</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">${segment.duration}</td>
             </tr>
-            ` : ''}
-            ${segment.aircraftType ? `
+            `
+                : ""
+            }
+            ${
+              segment.aircraftType
+                ? `
             <tr>
-              <td style="padding: 8px 0; color: #666;">Aircraft</td>
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Aircraft</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">${segment.aircraftType}</td>
             </tr>
-            ` : ''}
-            ${segment.cabinClass ? `
+            `
+                : ""
+            }
+            ${
+              segment.cabinClass
+                ? `
             <tr>
-              <td style="padding: 8px 0; color: #666;">Class</td>
+              <td style="padding: 8px 0; color: ${COLORS.slate[500]};">Class</td>
               <td style="padding: 8px 0; text-align: right; font-weight: 600;">${segment.cabinClass}</td>
             </tr>
-            ` : ''}
+            `
+                : ""
+            }
           </table>
         </div>
-      `
+      `,
         )
-        .join('')}
+        .join("")}
 
       <!-- Passenger Details -->
       <div style="margin-bottom: 25px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #333; text-transform: uppercase;">Passengers</h3>
+        <h3 style="margin: 0 0 15px 0; font-size: 14px; color: ${COLORS.slate[700]}; text-transform: uppercase;">Passengers</h3>
         <table style="width: 100%; font-size: 12px;">
           ${order.passengers
             .map(
               (p) => `
-            <tr style="border-bottom: 1px solid #eee;">
-              <td style="padding: 10px 0; color: #333;">${p.name}</td>
-              <td style="padding: 10px 0; text-align: right; color: #999;">
-                ${options.includeSeatInfo && p.cabinClass ? `${p.cabinClass}` : ''}
-                ${options.includeSeatInfo && p.seatNumber ? ` • Seat ${p.seatNumber}` : ''}
+            <tr style="border-bottom: 1px solid ${COLORS.slate[200]};">
+              <td style="padding: 10px 0; color: ${COLORS.slate[700]};">${p.name}</td>
+              <td style="padding: 10px 0; text-align: right; color: ${COLORS.slate[400]};">
+                ${options.includeSeatInfo && p.cabinClass ? `${p.cabinClass}` : ""}
+                ${options.includeSeatInfo && p.seatNumber ? ` • Seat ${p.seatNumber}` : ""}
               </td>
             </tr>
-          `
+          `,
             )
-            .join('')}
+            .join("")}
         </table>
       </div>
 
       <!-- Price Breakdown -->
-      <div style="background: #f0f7ff; padding: 20px; border-radius: 6px; margin-bottom: 25px;">
-        <h3 style="margin: 0 0 15px 0; font-size: 13px; color: #333; text-transform: uppercase;">Your Trip Receipt</h3>
+      <div style="background: ${COLORS.slate[100]}; padding: 20px; border-radius: 6px; margin-bottom: 25px;">
+        <h3 style="margin: 0 0 15px 0; font-size: 13px; color: ${COLORS.slate[700]}; text-transform: uppercase;">Your Trip Receipt</h3>
         <table style="width: 100%; font-size: 12px;">
-          ${options.includePricingBreakdown && order.basePrice
-            ? `
+          ${
+            options.includePricingBreakdown && order.basePrice
+              ? `
             <tr>
-              <td style="padding: 5px 0; color: #666;">Fare</td>
+              <td style="padding: 5px 0; color: ${COLORS.slate[500]};">Fare</td>
               <td style="padding: 5px 0; text-align: right;">${order.currency} ${order.basePrice.toFixed(2)}</td>
             </tr>
             <tr>
-              <td style="padding: 5px 0; color: #666;">Taxes & Fees</td>
+              <td style="padding: 5px 0; color: ${COLORS.slate[500]};">Taxes & Fees</td>
               <td style="padding: 5px 0; text-align: right;">+ ${order.currency} ${(order.taxPrice || 0).toFixed(2)}</td>
             </tr>
-            <tr style="border-top: 2px solid #1e90ff; font-weight: bold; font-size: 13px;">
+            <tr style="border-top: 2px solid ${COLORS.info}; font-weight: bold; font-size: 13px;">
               <td style="padding: 8px 0;">TOTAL</td>
-              <td style="padding: 8px 0; text-align: right; color: #1e90ff;">${order.currency} ${order.totalPrice.toFixed(2)}</td>
+              <td style="padding: 8px 0; text-align: right; color: ${COLORS.info};">${order.currency} ${order.totalPrice.toFixed(2)}</td>
             </tr>
           `
-            : `
-            <tr style="border-top: 2px solid #1e90ff; font-weight: bold; font-size: 13px;">
+              : `
+            <tr style="border-top: 2px solid ${COLORS.info}; font-weight: bold; font-size: 13px;">
               <td style="padding: 8px 0;">TOTAL PAID</td>
-              <td style="padding: 8px 0; text-align: right; color: #1e90ff;">${order.currency} ${order.totalPrice.toFixed(2)}</td>
+              <td style="padding: 8px 0; text-align: right; color: ${COLORS.info};">${order.currency} ${order.totalPrice.toFixed(2)}</td>
             </tr>
           `
           }
@@ -346,8 +369,8 @@ export function generateDetailedTemplate(order: OrderDetails, options: TemplateO
       </div>
 
       <!-- Important Info -->
-      <div style="background: #fffbf0; border-left: 4px solid #ff9900; padding: 15px; border-radius: 4px; margin-bottom: 25px; font-size: 12px; color: #666;">
-        <strong style="color: #ff6600;">📌 Important Information</strong>
+      <div style="background: rgba(245, 158, 11, 0.12); border-left: 4px solid ${COLORS.warning}; padding: 15px; border-radius: 4px; margin-bottom: 25px; font-size: 12px; color: ${COLORS.slate[500]};">
+        <strong style="color: ${COLORS.warning};">📌 Important Information</strong>
         <ul style="margin: 8px 0 0 0; padding-left: 18px;">
           <li>Arrive at airport 3 hours before international flights</li>
           <li>Keep your booking reference: <strong>${order.bookingReference}</strong></li>
@@ -357,18 +380,18 @@ export function generateDetailedTemplate(order: OrderDetails, options: TemplateO
 
       <!-- Action Buttons -->
       <div style="text-align: center;">
-        <a href="https://tripalfa.com/bookings/${order.bookingReference}" style="display: inline-block; background: #1e90ff; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600; margin: 5px;">View Booking</a>
-        <a href="https://tripalfa.com/support" style="display: inline-block; background: #e0e0e0; color: #333; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600; margin: 5px;">Get Support</a>
+        <a href="https://tripalfa.com/bookings/${order.bookingReference}" style="display: inline-block; background: ${COLORS.info}; color: ${COLORS.white}; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600; margin: 5px;">View Booking</a>
+        <a href="https://tripalfa.com/support" style="display: inline-block; background: ${COLORS.slate[200]}; color: ${COLORS.slate[700]}; padding: 12px 30px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 600; margin: 5px;">Get Support</a>
       </div>
     </div>
 
     <!-- Footer -->
-    <div style="background: #f9f9f9; padding: 20px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee;">
+    <div style="background: ${COLORS.slate[50]}; padding: 20px; text-align: center; font-size: 11px; color: ${COLORS.slate[400]}; border-top: 1px solid ${COLORS.slate[200]};">
       <p style="margin: 0;">© 2026 TripAlfa Bookings</p>
       <p style="margin: 5px 0 0 0;">
-        <a href="#" style="color: #1e90ff; text-decoration: none;">Privacy</a> • 
-        <a href="#" style="color: #1e90ff; text-decoration: none;">Terms</a> • 
-        <a href="#" style="color: #1e90ff; text-decoration: none;">Manage Preferences</a>
+        <a href="#" style="color: ${COLORS.info}; text-decoration: none;">Privacy</a> • 
+        <a href="#" style="color: ${COLORS.info}; text-decoration: none;">Terms</a> • 
+        <a href="#" style="color: ${COLORS.info}; text-decoration: none;">Manage Preferences</a>
       </p>
     </div>
   </div>

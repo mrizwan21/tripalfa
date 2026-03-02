@@ -1,8 +1,12 @@
 /**
  * React hooks for fetching Wikivoyage travel content
  */
-import { useState, useEffect, useCallback } from 'react';
-import { wikivoyageApi, DestinationContent, WikivoyageSearchResult } from '../api/wikivoyageApi';
+import { useState, useEffect, useCallback } from "react";
+import {
+  wikivoyageApi,
+  type DestinationContent,
+  type WikivoyageSearchResult,
+} from "../api/wikivoyageApi";
 
 /**
  * Hook to fetch a single destination guide from Wikivoyage
@@ -31,7 +35,9 @@ export function useWikivoyageGuide(destination: string | null) {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err : new Error('Failed to fetch guide'));
+          setError(
+            err instanceof Error ? err : new Error("Failed to fetch guide"),
+          );
         }
       } finally {
         if (!cancelled) {
@@ -77,7 +83,9 @@ export function useWikivoyageGuides(destinations: string[]) {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err : new Error('Failed to fetch guides'));
+          setError(
+            err instanceof Error ? err : new Error("Failed to fetch guides"),
+          );
         }
       } finally {
         if (!cancelled) {
@@ -91,7 +99,7 @@ export function useWikivoyageGuides(destinations: string[]) {
     return () => {
       cancelled = true;
     };
-  }, [destinations.join(',')]);
+  }, [destinations.join(",")]);
 
   return { data, isLoading, error };
 }
@@ -122,7 +130,7 @@ export function useWikivoyageSearch(query: string, limit: number = 5) {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err : new Error('Search failed'));
+          setError(err instanceof Error ? err : new Error("Search failed"));
         }
       } finally {
         if (!cancelled) {
@@ -143,7 +151,10 @@ export function useWikivoyageSearch(query: string, limit: number = 5) {
 /**
  * Hook to fetch a specific section of a destination guide
  */
-export function useWikivoyageSection(destination: string | null, section: string) {
+export function useWikivoyageSection(
+  destination: string | null,
+  section: string,
+) {
   const [data, setData] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -167,7 +178,9 @@ export function useWikivoyageSection(destination: string | null, section: string
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err : new Error('Failed to fetch section'));
+          setError(
+            err instanceof Error ? err : new Error("Failed to fetch section"),
+          );
         }
       } finally {
         if (!cancelled) {
@@ -190,7 +203,9 @@ export function useWikivoyageSection(destination: string | null, section: string
  * Hook for popular destination content - fetches guides for a list of popular destinations
  */
 export function usePopularDestinationGuides(destinationNames: string[]) {
-  const [guides, setGuides] = useState<Map<string, DestinationContent>>(new Map());
+  const [guides, setGuides] = useState<Map<string, DestinationContent>>(
+    new Map(),
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -213,11 +228,13 @@ export function usePopularDestinationGuides(destinationNames: string[]) {
 
       setGuides(results);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch guides'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch guides"),
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [destinationNames.join(',')]);
+  }, [destinationNames.join(",")]);
 
   useEffect(() => {
     fetchGuides();

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from "axios";
 
 export interface AuditLog {
   id: string;
@@ -19,7 +19,8 @@ export interface ComplianceReport {
 }
 
 export class AuditService {
-  private static baseURL = process.env.VITE_AUDIT_SERVICE_URL || 'http://localhost:3012';
+  private static baseURL =
+    process.env.VITE_AUDIT_SERVICE_URL || "http://localhost:3012";
 
   /**
    * Get audit logs
@@ -31,12 +32,12 @@ export class AuditService {
   }): Promise<AuditLog[]> {
     try {
       const queryParams = new URLSearchParams();
-      if (params?.userId) queryParams.append('userId', params.userId);
-      if (params?.action) queryParams.append('action', params.action);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.userId) queryParams.append("userId", params.userId);
+      if (params?.action) queryParams.append("action", params.action);
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
 
       const response = await axios.get<AuditLog[]>(
-        `${this.baseURL}/api/audit/logs?${queryParams.toString()}`
+        `${this.baseURL}/api/audit/logs?${queryParams.toString()}`,
       );
 
       return response.data;
@@ -57,7 +58,7 @@ export class AuditService {
     try {
       const response = await axios.post<AuditLog>(
         `${this.baseURL}/api/audit/log`,
-        data
+        data,
       );
 
       return response.data;
@@ -72,7 +73,7 @@ export class AuditService {
   static async getComplianceReport(): Promise<ComplianceReport> {
     try {
       const response = await axios.get<ComplianceReport>(
-        `${this.baseURL}/api/audit/compliance`
+        `${this.baseURL}/api/audit/compliance`,
       );
 
       return response.data;

@@ -3,39 +3,70 @@ import { DataTable } from "@tripalfa/ui-components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@tripalfa/ui-components/ui/badge";
 import { Button } from "@tripalfa/ui-components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
-  DialogFooter 
+  DialogFooter,
 } from "@tripalfa/ui-components/ui/dialog";
 import { Input } from "@tripalfa/ui-components/ui/input";
 import { Label } from "@tripalfa/ui-components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@tripalfa/ui-components/ui/select";
 import { Switch } from "@tripalfa/ui-components/ui/switch";
-import { 
-  RefreshCw, 
-  Settings2, 
-  Star, 
+import {
+  RefreshCw,
+  Settings2,
+  Star,
   MoreHorizontal,
-  Pencil
+  Pencil,
 } from "lucide-react";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@tripalfa/ui-components/ui/dropdown-menu";
-import { Currency, currencyService, RoundingMode, UpdateCurrencyRequest } from "../../../services/CurrencyService";
+import { currencyService } from "../../../services/CurrencyService";
+
+type RoundingMode =
+  | "HALF_UP"
+  | "HALF_DOWN"
+  | "BANKERS"
+  | "HALF_ODD"
+  | "DOWN"
+  | "UP"
+  | "CEILING"
+  | "FLOOR";
+
+type Currency = {
+  id: string;
+  code: string;
+  name: string;
+  symbol: string | null;
+  exchangeRate: number | null;
+  bufferPercentage: number | null;
+  decimalPrecision: number;
+  roundingMode: RoundingMode;
+  isBaseCurrency: boolean;
+  isActive: boolean;
+};
+
+type UpdateCurrencyRequest = {
+  id: string;
+  bufferPercentage: number;
+  decimalPrecision: number;
+  roundingMode: RoundingMode;
+  isActive: boolean;
+};
 
 export interface CurrencyRecord {
   id: string;
@@ -59,10 +90,10 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
       const code = row.getValue("code") as string;
       const symbol = row.original.symbol;
       const isBase = row.original.isBaseCurrency;
-      
+
       return (
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-sm font-bold gap-4">
             {symbol || code.charAt(0)}
           </div>
           <div>
@@ -72,7 +103,9 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
                 <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
               )}
             </div>
-            <span className="text-xs text-slate-500">{row.original.name}</span>
+            <span className="text-xs text-muted-foreground">
+              {row.original.name}
+            </span>
           </div>
         </div>
       );
@@ -84,15 +117,15 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
     cell: ({ row }) => {
       const rate = row.getValue("exchangeRate") as number | null;
       const isBase = row.original.isBaseCurrency;
-      
+
       if (isBase) {
-        return <span className="text-slate-400">1.00</span>;
+        return <span className="text-muted-foreground">1.00</span>;
       }
-      
+
       return rate ? (
         <span className="font-mono">{rate.toFixed(6)}</span>
       ) : (
-        <span className="text-slate-400">N/A</span>
+        <span className="text-muted-foreground">N/A</span>
       );
     },
   },
@@ -102,17 +135,20 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
     cell: ({ row }) => {
       const buffer = row.getValue("bufferPercentage") as number | null;
       const isBase = row.original.isBaseCurrency;
-      
+
       if (isBase) {
-        return <span className="text-slate-400">-</span>;
+        return <span className="text-muted-foreground">-</span>;
       }
-      
+
       return buffer !== null && buffer > 0 ? (
-        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+        <Badge
+          variant="outline"
+          className="bg-amber-50 text-amber-700 border-amber-200"
+        >
           +{buffer}%
         </Badge>
       ) : (
-        <span className="text-slate-400">0%</span>
+        <span className="text-muted-foreground">0%</span>
       );
     },
   },
@@ -123,11 +159,11 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
       const rate = row.original.exchangeRate as number | null;
       const buffer = row.original.bufferPercentage as number | null;
       const isBase = row.original.isBaseCurrency;
-      
+
       if (isBase || !rate) {
-        return <span className="text-slate-400">1.00</span>;
+        return <span className="text-muted-foreground">1.00</span>;
       }
-      
+
       const effectiveRate = rate * (1 + (buffer || 0) / 100);
       return (
         <span className="font-mono font-semibold text-indigo-600">
@@ -141,10 +177,10 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
     header: "Precision",
     cell: ({ row }) => {
       const precision = row.getValue("decimalPrecision") as number;
-      
+
       return (
         <span className="text-sm">
-          {precision} decimal{precision !== 1 ? 's' : ''}
+          {precision} decimal{precision !== 1 ? "s" : ""}
         </span>
       );
     },
@@ -154,23 +190,19 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
     header: "Rounding",
     cell: ({ row }) => {
       const mode = row.getValue("roundingMode") as string;
-      
+
       const modeLabels: Record<string, string> = {
-        HALF_UP: 'Half Up',
-        HALF_DOWN: 'Half Down',
+        HALF_UP: "Half Up",
+        HALF_DOWN: "Half Down",
         BANKERS: "Banker's",
-        HALF_ODD: 'Half Odd',
-        DOWN: 'Round Down',
-        UP: 'Round Up',
-        CEILING: 'Ceiling',
-        FLOOR: 'Floor',
+        HALF_ODD: "Half Odd",
+        DOWN: "Round Down",
+        UP: "Round Up",
+        CEILING: "Ceiling",
+        FLOOR: "Floor",
       };
-      
-      return (
-        <Badge variant="secondary">
-          {modeLabels[mode] || mode}
-        </Badge>
-      );
+
+      return <Badge variant="secondary">{modeLabels[mode] || mode}</Badge>;
     },
   },
   {
@@ -178,7 +210,7 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
     header: "Status",
     cell: ({ row }) => {
       const isActive = row.getValue("isActive") as boolean;
-      
+
       return (
         <Badge variant={isActive ? "default" : "destructive"}>
           {isActive ? "Active" : "Inactive"}
@@ -190,7 +222,7 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
     id: "actions",
     cell: ({ row }) => {
       const currency = row.original;
-      
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -199,11 +231,13 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer"
               onClick={() => {
                 // Open edit dialog
-                const event = new CustomEvent('editCurrency', { detail: currency });
+                const event = new CustomEvent("editCurrency", {
+                  detail: currency,
+                });
                 window.dispatchEvent(event);
               }}
             >
@@ -211,10 +245,12 @@ export const columns: ColumnDef<CurrencyRecord>[] = [
               Edit Settings
             </DropdownMenuItem>
             {!currency.isBaseCurrency && (
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="cursor-pointer"
                 onClick={() => {
-                  const event = new CustomEvent('setBaseCurrency', { detail: currency.id });
+                  const event = new CustomEvent("setBaseCurrency", {
+                    detail: currency.id,
+                  });
                   window.dispatchEvent(event);
                 }}
               >
@@ -234,33 +270,47 @@ export default function CurrencyListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [editingCurrency, setEditingCurrency] = useState<CurrencyRecord | null>(null);
+  const [editingCurrency, setEditingCurrency] = useState<CurrencyRecord | null>(
+    null,
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Form state
   const [bufferPercentage, setBufferPercentage] = useState<number>(0);
   const [decimalPrecision, setDecimalPrecision] = useState<number>(2);
-  const [roundingMode, setRoundingMode] = useState<RoundingMode>('HALF_UP');
+  const [roundingMode, setRoundingMode] = useState<RoundingMode>("HALF_UP");
   const [isActive, setIsActive] = useState<boolean>(true);
 
   useEffect(() => {
     loadCurrencies();
-    
+
     // Listen for edit events
     const handleEditCurrency = (event: CustomEvent<CurrencyRecord>) => {
       openEditDialog(event.detail);
     };
-    
+
     const handleSetBaseCurrency = (event: CustomEvent<string>) => {
       handleSetBase(event.detail);
     };
-    
-    window.addEventListener('editCurrency', handleEditCurrency as EventListener);
-    window.addEventListener('setBaseCurrency', handleSetBaseCurrency as EventListener);
-    
+
+    window.addEventListener(
+      "editCurrency",
+      handleEditCurrency as EventListener,
+    );
+    window.addEventListener(
+      "setBaseCurrency",
+      handleSetBaseCurrency as EventListener,
+    );
+
     return () => {
-      window.removeEventListener('editCurrency', handleEditCurrency as EventListener);
-      window.removeEventListener('setBaseCurrency', handleSetBaseCurrency as EventListener);
+      window.removeEventListener(
+        "editCurrency",
+        handleEditCurrency as EventListener,
+      );
+      window.removeEventListener(
+        "setBaseCurrency",
+        handleSetBaseCurrency as EventListener,
+      );
     };
   }, []);
 
@@ -268,24 +318,26 @@ export default function CurrencyListPage() {
     try {
       setLoading(true);
       const currencies = await currencyService.getCurrencies();
-      
-      const transformedData: CurrencyRecord[] = currencies.map((c: Currency) => ({
-        id: c.id,
-        code: c.code,
-        name: c.name,
-        symbol: c.symbol,
-        exchangeRate: c.exchangeRate,
-        bufferPercentage: c.bufferPercentage,
-        decimalPrecision: c.decimalPrecision,
-        roundingMode: c.roundingMode,
-        isBaseCurrency: c.isBaseCurrency,
-        isActive: c.isActive,
-      }));
-      
+
+      const transformedData: CurrencyRecord[] = currencies.map(
+        (c: Currency) => ({
+          id: c.id,
+          code: c.code,
+          name: c.name,
+          symbol: c.symbol,
+          exchangeRate: c.exchangeRate,
+          bufferPercentage: c.bufferPercentage,
+          decimalPrecision: c.decimalPrecision,
+          roundingMode: c.roundingMode,
+          isBaseCurrency: c.isBaseCurrency,
+          isActive: c.isActive,
+        }),
+      );
+
       setData(transformedData);
     } catch (err) {
-      console.error('Error loading currencies:', err);
-      setError('Failed to load currencies');
+      console.error("Error loading currencies:", err);
+      setError("Failed to load currencies");
     } finally {
       setLoading(false);
     }
@@ -299,7 +351,7 @@ export default function CurrencyListPage() {
         await loadCurrencies();
       }
     } catch (err) {
-      console.error('Error refreshing rates:', err);
+      console.error("Error refreshing rates:", err);
     } finally {
       setRefreshing(false);
     }
@@ -316,7 +368,7 @@ export default function CurrencyListPage() {
 
   const handleSaveSettings = async () => {
     if (!editingCurrency) return;
-    
+
     try {
       const request: UpdateCurrencyRequest = {
         id: editingCurrency.id,
@@ -325,13 +377,13 @@ export default function CurrencyListPage() {
         roundingMode: roundingMode,
         isActive: isActive,
       };
-      
+
       await currencyService.updateCurrencySettings(request);
       await loadCurrencies();
       setDialogOpen(false);
       setEditingCurrency(null);
     } catch (err) {
-      console.error('Error saving currency settings:', err);
+      console.error("Error saving currency settings:", err);
     }
   };
 
@@ -340,7 +392,7 @@ export default function CurrencyListPage() {
       await currencyService.setBaseCurrency(id);
       await loadCurrencies();
     } catch (err) {
-      console.error('Error setting base currency:', err);
+      console.error("Error setting base currency:", err);
     }
   };
 
@@ -348,39 +400,43 @@ export default function CurrencyListPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-2">
         <div>
           <h1 className="text-3xl font-bold">Currency Management</h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-muted-foreground mt-1">
             Manage currencies, exchange rates, and rounding settings
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={handleRefreshRates}
           disabled={refreshing}
         >
-          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh Rates'}
+          <RefreshCw
+            className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+          />
+          {refreshing ? "Refreshing..." : "Refresh Rates"}
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 p-6 mb-6">
+      <div className="bg-card rounded-lg border border-border p-6 mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Settings2 className="h-5 w-5 text-indigo-600" />
-          <h2 className="text-lg font-semibold">Currency Settings</h2>
+          <h2 className="text-lg font-semibold text-2xl font-semibold tracking-tight">
+            Currency Settings
+          </h2>
         </div>
-        <p className="text-sm text-slate-600 mb-4">
-          Configure buffer percentages for ROE fluctuations, decimal precision, and rounding modes for each currency.
-          The effective rate is calculated as: <code className="bg-slate-100 px-1 py-0.5 rounded">Base Rate × (1 + Buffer %)</code>
+        <p className="text-sm text-muted-foreground mb-4">
+          Configure buffer percentages for ROE fluctuations, decimal precision,
+          and rounding modes for each currency. The effective rate is calculated
+          as:{" "}
+          <code className="bg-muted px-1 py-0.5 rounded">
+            Base Rate × (1 + Buffer %)
+          </code>
         </p>
       </div>
 
-      <DataTable 
-        columns={columns} 
-        data={data} 
-        searchKey="code"
-      />
+      <DataTable columns={columns} data={data} searchKey="code" />
 
       {/* Edit Currency Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -388,10 +444,11 @@ export default function CurrencyListPage() {
           <DialogHeader>
             <DialogTitle>Edit Currency Settings</DialogTitle>
             <DialogDescription>
-              Configure settings for {editingCurrency?.code} - {editingCurrency?.name}
+              Configure settings for {editingCurrency?.code} -{" "}
+              {editingCurrency?.name}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             {/* Buffer Percentage */}
             <div className="grid gap-2">
@@ -403,19 +460,22 @@ export default function CurrencyListPage() {
                 max={100}
                 step={0.01}
                 value={bufferPercentage}
-                onChange={(e) => setBufferPercentage(parseFloat(e.target.value) || 0)}
+                onChange={(e) =>
+                  setBufferPercentage(parseFloat(e.target.value) || 0)
+                }
                 placeholder="0.00"
               />
-              <p className="text-xs text-slate-500">
-                Additional percentage added to exchange rate for ROE fluctuations
+              <p className="text-xs text-muted-foreground">
+                Additional percentage added to exchange rate for ROE
+                fluctuations
               </p>
             </div>
 
             {/* Decimal Precision */}
             <div className="grid gap-2">
               <Label htmlFor="precision">Decimal Precision</Label>
-              <Select 
-                value={decimalPrecision.toString()} 
+              <Select
+                value={decimalPrecision.toString()}
                 onValueChange={(v) => setDecimalPrecision(parseInt(v))}
               >
                 <SelectTrigger>
@@ -424,12 +484,12 @@ export default function CurrencyListPage() {
                 <SelectContent>
                   {[0, 1, 2, 3, 4, 5, 6].map((p) => (
                     <SelectItem key={p} value={p.toString()}>
-                      {p} decimal{p !== 1 ? 's' : ''}
+                      {p} decimal{p !== 1 ? "s" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 Number of decimal places for this currency
               </p>
             </div>
@@ -437,8 +497,8 @@ export default function CurrencyListPage() {
             {/* Rounding Mode */}
             <div className="grid gap-2">
               <Label htmlFor="rounding">Rounding Mode</Label>
-              <Select 
-                value={roundingMode} 
+              <Select
+                value={roundingMode}
                 onValueChange={(v) => setRoundingMode(v as RoundingMode)}
               >
                 <SelectTrigger>
@@ -447,9 +507,11 @@ export default function CurrencyListPage() {
                 <SelectContent>
                   {roundingModes.map((mode) => (
                     <SelectItem key={mode.value} value={mode.value}>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-4">
                         <span>{mode.label}</span>
-                        <span className="text-xs text-slate-500">{mode.description}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {mode.description}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -458,7 +520,7 @@ export default function CurrencyListPage() {
             </div>
 
             {/* Active Toggle */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <Label htmlFor="active">Active</Label>
               <Switch
                 id="active"
@@ -472,9 +534,7 @@ export default function CurrencyListPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveSettings}>
-              Save Changes
-            </Button>
+            <Button onClick={handleSaveSettings}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

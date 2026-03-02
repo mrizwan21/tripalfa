@@ -8,57 +8,57 @@
 // ============================================
 
 export enum HotelDealType {
-  CONTRACTED_RATE = 'contracted_rate',
-  PACKAGE_DEAL = 'package_deal',
-  EARLY_BIRD = 'early_bird',
-  LAST_MINUTE = 'last_minute',
-  FREE_NIGHTS = 'free_nights',
-  SEASONAL = 'seasonal',
+  CONTRACTED_RATE = "contracted_rate",
+  PACKAGE_DEAL = "package_deal",
+  EARLY_BIRD = "early_bird",
+  LAST_MINUTE = "last_minute",
+  FREE_NIGHTS = "free_nights",
+  SEASONAL = "seasonal",
 }
 
 export enum PropertyType {
-  HOTEL = 'hotel',
-  RESORT = 'resort',
-  APARTMENT = 'apartment',
-  VILLA = 'villa',
-  BOUTIQUE = 'boutique',
-  MOTEL = 'motel',
-  GUEST_HOUSE = 'guest_house',
+  HOTEL = "hotel",
+  RESORT = "resort",
+  APARTMENT = "apartment",
+  VILLA = "villa",
+  BOUTIQUE = "boutique",
+  MOTEL = "motel",
+  GUEST_HOUSE = "guest_house",
 }
 
 export enum LocationType {
-  CITY_CENTER = 'city_center',
-  AIRPORT = 'airport',
-  BEACH = 'beach',
-  SUBURBAN = 'suburban',
-  DOWNTOWN = 'downtown',
-  MOUNTAIN = 'mountain',
+  CITY_CENTER = "city_center",
+  AIRPORT = "airport",
+  BEACH = "beach",
+  SUBURBAN = "suburban",
+  DOWNTOWN = "downtown",
+  MOUNTAIN = "mountain",
 }
 
 export enum MealPlan {
-  ROOM_ONLY = 'room_only',
-  BREAKFAST = 'breakfast',
-  HALF_BOARD = 'half_board',
-  FULL_BOARD = 'full_board',
-  ALL_INCLUSIVE = 'all_inclusive',
+  ROOM_ONLY = "room_only",
+  BREAKFAST = "breakfast",
+  HALF_BOARD = "half_board",
+  FULL_BOARD = "full_board",
+  ALL_INCLUSIVE = "all_inclusive",
 }
 
 export enum RoomType {
-  STANDARD = 'standard',
-  SUPERIOR = 'superior',
-  DELUXE = 'deluxe',
-  SUITE = 'suite',
-  VILLA = 'villa',
-  PENTHOUSE = 'penthouse',
+  STANDARD = "standard",
+  SUPERIOR = "superior",
+  DELUXE = "deluxe",
+  SUITE = "suite",
+  VILLA = "villa",
+  PENTHOUSE = "penthouse",
 }
 
 export enum BedType {
-  SINGLE = 'single',
-  DOUBLE = 'double',
-  TWIN = 'twin',
-  KING = 'king',
-  QUEEN = 'queen',
-  BUNK = 'bunk',
+  SINGLE = "single",
+  DOUBLE = "double",
+  TWIN = "twin",
+  KING = "king",
+  QUEEN = "queen",
+  BUNK = "bunk",
 }
 
 // ============================================
@@ -102,7 +102,7 @@ export interface LastMinuteTier {
 
 export interface FreeNightStructure {
   stay: number; // Total nights to stay
-  pay: number;  // Number of nights to pay for
+  pay: number; // Number of nights to pay for
 }
 
 // ============================================
@@ -129,7 +129,7 @@ export interface FreeNightResult {
 }
 
 export interface TimingDiscount {
-  type: 'early_bird' | 'last_minute' | 'standard';
+  type: "early_bird" | "last_minute" | "standard";
   discountPercentage: number;
   daysInAdvance: number;
 }
@@ -259,7 +259,7 @@ export interface HotelInfo {
 // ============================================
 
 export interface HotelCategoryMatch {
-  matchType: 'specific' | 'category' | 'none';
+  matchType: "specific" | "category" | "none";
   matchedPropertyIds?: string[];
   matchScore?: number;
 }
@@ -344,7 +344,7 @@ export interface HotelDealResponse {
   dealId: string;
   dealType: HotelDealType;
   configuration: HotelDealConfiguration;
-  status: 'active' | 'inactive' | 'scheduled';
+  status: "active" | "inactive" | "scheduled";
   validFrom: Date;
   validTo: Date;
 }

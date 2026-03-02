@@ -5,27 +5,32 @@ Centralized notification management module for TripAlfa. A comprehensive, multi-
 ## Features
 
 ✅ **Multi-Channel Delivery**
+
 - Email (Nodemailer)
 - SMS (Twilio)
 - Push Notifications (FCM/APNS)
 - In-App Notifications (In-Memory Storage)
 
 ✅ **User Preferences**
+
 - Configurable notification channels per user
 - Preference persistence
 - Smart channel selection based on user settings
 
 ✅ **Type Safety**
+
 - Full TypeScript support
 - Comprehensive type definitions
 - Runtime validation
 
 ✅ **Error Handling**
+
 - Circuit breaker pattern ready
 - Graceful failure handling
 - Detailed error logging
 
 ✅ **Monitoring**
+
 - Built-in statistics and metrics
 - Structured logging with Pino
 - Event tracking
@@ -41,8 +46,8 @@ npm install @tripalfa/notifications
 ### Basic Usage
 
 ```typescript
-import { initializeNotificationManager } from '@tripalfa/notifications';
-import pino from 'pino';
+import { initializeNotificationManager } from "@tripalfa/notifications";
+import pino from "pino";
 
 const logger = pino();
 
@@ -50,7 +55,7 @@ const logger = pino();
 const notificationManager = initializeNotificationManager({
   logger,
   email: {
-    from: 'noreply@tripalfa.com',
+    from: "noreply@tripalfa.com",
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.EMAIL_PORT),
     secure: true,
@@ -68,31 +73,31 @@ const notificationManager = initializeNotificationManager({
 
 // Send a notification
 const notificationId = await notificationManager.sendNotification({
-  userId: 'user-123',
-  type: 'booking_confirmed',
-  title: 'Booking Confirmed',
-  message: 'Your booking has been confirmed',
-  channels: ['email', 'push', 'in_app'],
-  priority: 'high',
+  userId: "user-123",
+  type: "booking_confirmed",
+  title: "Booking Confirmed",
+  message: "Your booking has been confirmed",
+  channels: ["email", "push", "in_app"],
+  priority: "high",
   data: {
-    bookingId: 'booking-456',
+    bookingId: "booking-456",
   },
 });
 
-console.log('Notification sent:', notificationId);
+console.log("Notification sent:", notificationId);
 ```
 
 ### Advanced Usage with Express
 
 ```typescript
-import express from 'express';
-import { 
+import express from "express";
+import {
   NotificationManager,
   EmailChannel,
   createAuthMiddleware,
   validateNotificationPayload,
-} from '@tripalfa/notifications';
-import pino from 'pino';
+} from "@tripalfa/notifications";
+import pino from "pino";
 
 const app = express();
 const logger = pino();
@@ -105,17 +110,19 @@ notificationManager.registerChannel(new EmailChannel(emailConfig, logger));
 app.use(express.json());
 
 app.post(
-  '/api/notifications',
+  "/api/notifications",
   createAuthMiddleware(logger),
   validateNotificationPayload,
   async (req, res) => {
     try {
-      const notificationId = await notificationManager.sendNotification(req.body);
+      const notificationId = await notificationManager.sendNotification(
+        req.body,
+      );
       res.status(201).json({ id: notificationId });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  }
+  },
 );
 ```
 
@@ -129,13 +136,13 @@ Sends a notification through configured channels.
 
 ```typescript
 const notificationId = await manager.sendNotification({
-  userId: 'user-123',
-  type: 'booking_confirmed',
-  title: 'Booking Confirmed',
-  message: 'Your flight booking is confirmed',
-  channels: ['email', 'push', 'in_app'],
-  priority: 'high',
-  actionUrl: '/bookings/123',
+  userId: "user-123",
+  type: "booking_confirmed",
+  title: "Booking Confirmed",
+  message: "Your flight booking is confirmed",
+  channels: ["email", "push", "in_app"],
+  priority: "high",
+  actionUrl: "/bookings/123",
 });
 ```
 
@@ -144,7 +151,7 @@ const notificationId = await manager.sendNotification({
 Retrieves user's notifications with pagination.
 
 ```typescript
-const notifications = await manager.getNotifications('user-123', 50, 0);
+const notifications = await manager.getNotifications("user-123", 50, 0);
 ```
 
 #### `markAsRead(notificationId: string): Promise<void>`
@@ -152,7 +159,7 @@ const notifications = await manager.getNotifications('user-123', 50, 0);
 Marks a notification as read.
 
 ```typescript
-await manager.markAsRead('notif-123');
+await manager.markAsRead("notif-123");
 ```
 
 #### `markAllAsRead(userId: string): Promise<void>`
@@ -160,7 +167,7 @@ await manager.markAsRead('notif-123');
 Marks all user notifications as read.
 
 ```typescript
-await manager.markAllAsRead('user-123');
+await manager.markAllAsRead("user-123");
 ```
 
 #### `deleteNotification(notificationId: string): Promise<void>`
@@ -168,7 +175,7 @@ await manager.markAllAsRead('user-123');
 Deletes a notification.
 
 ```typescript
-await manager.deleteNotification('notif-123');
+await manager.deleteNotification("notif-123");
 ```
 
 #### `getUnreadCount(userId: string): Promise<number>`
@@ -176,7 +183,7 @@ await manager.deleteNotification('notif-123');
 Gets the count of unread notifications.
 
 ```typescript
-const count = await manager.getUnreadCount('user-123');
+const count = await manager.getUnreadCount("user-123");
 ```
 
 #### `getPreferences(userId: string): Promise<NotificationPreferences>`
@@ -184,7 +191,7 @@ const count = await manager.getUnreadCount('user-123');
 Retrieves user's notification preferences.
 
 ```typescript
-const prefs = await manager.getPreferences('user-123');
+const prefs = await manager.getPreferences("user-123");
 ```
 
 #### `updatePreferences(userId: string, updates: Partial<NotificationPreferences>): Promise<void>`
@@ -192,7 +199,7 @@ const prefs = await manager.getPreferences('user-123');
 Updates user's notification preferences.
 
 ```typescript
-await manager.updatePreferences('user-123', {
+await manager.updatePreferences("user-123", {
   emailEnabled: true,
   smsEnabled: false,
   pushEnabled: true,
@@ -228,18 +235,18 @@ const stats = manager.getStats();
 
 ```typescript
 type NotificationType =
-  | 'booking_created'
-  | 'booking_confirmed'
-  | 'booking_cancelled'
-  | 'payment_received'
-  | 'payment_reminder'
-  | 'agent_assigned'
-  | 'booking_reminder'
-  | 'price_alert'
-  | 'itinerary_change'
-  | 'amendment'
-  | 'ssr_update'
-  | 'system';
+  | "booking_created"
+  | "booking_confirmed"
+  | "booking_cancelled"
+  | "payment_received"
+  | "payment_reminder"
+  | "agent_assigned"
+  | "booking_reminder"
+  | "price_alert"
+  | "itinerary_change"
+  | "amendment"
+  | "ssr_update"
+  | "system";
 ```
 
 ## Channels
@@ -249,18 +256,21 @@ type NotificationType =
 Sends emails via SMTP.
 
 ```typescript
-import { EmailChannel } from '@tripalfa/notifications';
+import { EmailChannel } from "@tripalfa/notifications";
 
-const emailChannel = new EmailChannel({
-  from: 'noreply@example.com',
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: 'your-email@gmail.com',
-    pass: 'your-password',
+const emailChannel = new EmailChannel(
+  {
+    from: "noreply@example.com",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: "your-email@gmail.com",
+      pass: "your-password",
+    },
   },
-}, logger);
+  logger,
+);
 
 manager.registerChannel(emailChannel);
 ```
@@ -270,13 +280,16 @@ manager.registerChannel(emailChannel);
 Sends SMS via Twilio.
 
 ```typescript
-import { SMSChannel } from '@tripalfa/notifications';
+import { SMSChannel } from "@tripalfa/notifications";
 
-const smsChannel = new SMSChannel({
-  accountSid: 'AC...',
-  authToken: '...',
-  fromNumber: '+1234567890',
-}, logger);
+const smsChannel = new SMSChannel(
+  {
+    accountSid: "AC...",
+    authToken: "...",
+    fromNumber: "+1234567890",
+  },
+  logger,
+);
 
 manager.registerChannel(smsChannel);
 ```
@@ -286,14 +299,17 @@ manager.registerChannel(smsChannel);
 Sends push notifications via FCM or APNS.
 
 ```typescript
-import { PushNotificationChannel } from '@tripalfa/notifications';
+import { PushNotificationChannel } from "@tripalfa/notifications";
 
-const pushChannel = new PushNotificationChannel({
-  fcmServerKey: 'AIza...',
-  // or
-  apnsCert: '...',
-  apnsKey: '...',
-}, logger);
+const pushChannel = new PushNotificationChannel(
+  {
+    fcmServerKey: "AIza...",
+    // or
+    apnsCert: "...",
+    apnsKey: "...",
+  },
+  logger,
+);
 
 manager.registerChannel(pushChannel);
 ```
@@ -303,7 +319,7 @@ manager.registerChannel(pushChannel);
 Stores notifications for in-app display.
 
 ```typescript
-import { InAppNotificationChannel } from '@tripalfa/notifications';
+import { InAppNotificationChannel } from "@tripalfa/notifications";
 
 const inAppChannel = new InAppNotificationChannel(logger);
 manager.registerChannel(inAppChannel);
@@ -314,42 +330,42 @@ manager.registerChannel(inAppChannel);
 ### Authentication Middleware
 
 ```typescript
-import { createAuthMiddleware } from '@tripalfa/notifications';
+import { createAuthMiddleware } from "@tripalfa/notifications";
 
-app.use('/api/notifications', createAuthMiddleware(logger));
+app.use("/api/notifications", createAuthMiddleware(logger));
 ```
 
 ### Authorization Middleware
 
 ```typescript
-import { createAuthorizationMiddleware } from '@tripalfa/notifications';
+import { createAuthorizationMiddleware } from "@tripalfa/notifications";
 
 app.use(
-  '/api/notifications/admin',
-  createAuthorizationMiddleware(['admin', 'staff'], logger)
+  "/api/notifications/admin",
+  createAuthorizationMiddleware(["admin", "staff"], logger),
 );
 ```
 
 ### Validation Middleware
 
 ```typescript
-import { validateNotificationPayload } from '@tripalfa/notifications';
+import { validateNotificationPayload } from "@tripalfa/notifications";
 
-app.post('/api/notifications', validateNotificationPayload, handler);
+app.post("/api/notifications", validateNotificationPayload, handler);
 ```
 
 ### Rate Limiting Middleware
 
 ```typescript
-import { createRateLimitMiddleware } from '@tripalfa/notifications';
+import { createRateLimitMiddleware } from "@tripalfa/notifications";
 
-app.use('/api/notifications', createRateLimitMiddleware(100, 60000, logger));
+app.use("/api/notifications", createRateLimitMiddleware(100, 60000, logger));
 ```
 
 ### Error Handler
 
 ```typescript
-import { createErrorHandler } from '@tripalfa/notifications';
+import { createErrorHandler } from "@tripalfa/notifications";
 
 app.use(createErrorHandler(logger));
 ```
@@ -359,18 +375,18 @@ app.use(createErrorHandler(logger));
 ### Initialize Logger
 
 ```typescript
-import { createLogger } from '@tripalfa/notifications';
+import { createLogger } from "@tripalfa/notifications";
 
 const logger = createLogger({
-  level: 'info',
-  serviceName: 'notifications',
+  level: "info",
+  serviceName: "notifications",
 });
 ```
 
 ### Child Logger
 
 ```typescript
-const childLogger = createChildLogger(logger, { userId: 'user-123' });
+const childLogger = createChildLogger(logger, { userId: "user-123" });
 ```
 
 ## Environment Variables
@@ -400,8 +416,8 @@ FRONTEND_URL=https://app.tripalfa.com
 ## Testing
 
 ```typescript
-import { NotificationManager, NullChannel } from '@tripalfa/notifications';
-import pino from 'pino';
+import { NotificationManager, NullChannel } from "@tripalfa/notifications";
+import pino from "pino";
 
 const logger = pino();
 const manager = new NotificationManager(logger);
@@ -410,11 +426,11 @@ const manager = new NotificationManager(logger);
 manager.registerChannel(new NullChannel(logger));
 
 const notificationId = await manager.sendNotification({
-  userId: 'test-user',
-  type: 'booking_confirmed',
-  title: 'Test',
-  message: 'Test notification',
-  channels: ['in_app'],
+  userId: "test-user",
+  type: "booking_confirmed",
+  title: "Test",
+  message: "Test notification",
+  channels: ["in_app"],
 });
 ```
 
@@ -429,7 +445,7 @@ import {
   ValidationError,
   NotFoundError,
   AuthorizationError,
-} from '@tripalfa/notifications';
+} from "@tripalfa/notifications";
 
 try {
   await manager.sendNotification(payload);
@@ -451,7 +467,7 @@ Monitor notification system statistics:
 ```typescript
 setInterval(() => {
   const stats = manager.getStats();
-  console.log('Notification Stats:', stats);
+  console.log("Notification Stats:", stats);
   // {
   //   totalNotifications: 1250,
   //   sentNotifications: 1200,
@@ -523,6 +539,7 @@ For issues, questions, or contributions, contact: dev-team@tripalfa.com
 ## Changelog
 
 ### v1.0.0 (2026-02-12)
+
 - Initial release
 - Multi-channel notification support
 - User preferences management

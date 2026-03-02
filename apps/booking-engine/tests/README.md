@@ -97,6 +97,7 @@ npm run test -- src/__tests__/components --watch
 ```
 
 **Coverage:** Toast component has 28 test suites with 60+ test cases covering:
+
 - Component appearance (4 types: success, error, info, warning)
 - Auto-dismiss functionality
 - Manual dismissal
@@ -123,6 +124,7 @@ npm run test -- src/__tests__/integration/NotificationsWithPopup.test.tsx
 ```
 
 **Coverage:** Integration tests have 31+ test cases covering:
+
 - Successful API responses (GET, POST, DELETE)
 - Error handling (500, 404, timeout, network errors)
 - Loading states and transitions
@@ -188,6 +190,7 @@ npm run test -- src/__tests__/performance/Notifications.perf.test.tsx
 ```
 
 **Metrics:**
+
 - Render 50 items: < 500ms
 - Render 100 items: < 3s
 - Render 500 items: < 10s
@@ -210,6 +213,7 @@ npm run test -- src/__tests__/pages --watch
 ```
 
 **Coverage:** 100+ test cases covering:
+
 - Notification list rendering
 - Filtering functionality
 - Search functionality
@@ -280,10 +284,10 @@ describe('Notifications with API', () => {
 ### E2E Tests with Playwright
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { NotificationsPage } from './pages/NotificationsPage';
+import { test, expect } from "@playwright/test";
+import { NotificationsPage } from "./pages/NotificationsPage";
 
-test('should display notification list', async ({ page }) => {
+test("should display notification list", async ({ page }) => {
   const notificationsPage = new NotificationsPage(page);
 
   await notificationsPage.goto();
@@ -298,12 +302,12 @@ test('should display notification list', async ({ page }) => {
 
 The project maintains strict coverage requirements to ensure code quality:
 
-| Metric | Threshold | Current |
-|--------|-----------|---------|
-| Statements | 80% | 85%+ |
-| Lines | 80% | 85%+ |
-| Branches | 75% | 80%+ |
-| Functions | 80% | 85%+ |
+| Metric     | Threshold | Current |
+| ---------- | --------- | ------- |
+| Statements | 80%       | 85%+    |
+| Lines      | 80%       | 85%+    |
+| Branches   | 75%       | 80%+    |
+| Functions  | 80%       | 85%+    |
 
 ### Generate Coverage Report
 
@@ -395,6 +399,7 @@ npm run test -- --reporter=verbose
 ### GitHub Actions Workflow
 
 Tests are automatically run on:
+
 - Every commit to pull requests
 - Every push to main branch
 - Scheduled daily runs
@@ -416,7 +421,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
       - run: npm install
       - run: npm run test -- --coverage
       - run: npm run test:e2e
@@ -453,15 +458,15 @@ npm run test -- -t "should render 100 items" --run
 
 Current performance benchmarks:
 
-| Operation | Target | Current |
-|-----------|--------|---------|
-| Render 50 items | < 500ms | 320ms |
-| Render 100 items | < 3s | 1.2s |
-| Filter 1000 items | < 100ms | 45ms |
-| Search 1000 items | < 100ms | 62ms |
-| Pagination | < 50ms | 18ms |
-| Memory growth | < 20% | 12% |
-| API batch (3 calls) | < 1s | 580ms |
+| Operation           | Target  | Current |
+| ------------------- | ------- | ------- |
+| Render 50 items     | < 500ms | 320ms   |
+| Render 100 items    | < 3s    | 1.2s    |
+| Filter 1000 items   | < 100ms | 45ms    |
+| Search 1000 items   | < 100ms | 62ms    |
+| Pagination          | < 50ms  | 18ms    |
+| Memory growth       | < 20%   | 12%     |
+| API batch (3 calls) | < 1s    | 580ms   |
 
 ### Monitoring Performance Regressions
 
@@ -479,16 +484,16 @@ npm run test -- src/__tests__/performance --json > perf_report.json
 
 ```typescript
 // ✅ Good: Clear, descriptive test names
-describe('NotificationsPage', () => {
-  describe('when loading notifications', () => {
-    it('should display loading spinner', () => {});
-    it('should fetch from correct API endpoint', () => {});
+describe("NotificationsPage", () => {
+  describe("when loading notifications", () => {
+    it("should display loading spinner", () => {});
+    it("should fetch from correct API endpoint", () => {});
   });
 });
 
 // ❌ Avoid: Vague test names
-describe('Tests', () => {
-  it('works', () => {});
+describe("Tests", () => {
+  it("works", () => {});
 });
 ```
 
@@ -515,7 +520,7 @@ it('second test', () => {
 
 ```typescript
 // ✅ Good: Use handlers from mocks/handlers.ts
-import { server } from '@/__tests__/mocks/handlers';
+import { server } from "@/__tests__/mocks/handlers";
 
 beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
@@ -529,21 +534,21 @@ const mockData = { notifications: [] };
 ```typescript
 // ✅ Good: Use waitFor for async operations
 await waitFor(() => {
-  expect(screen.getByText('Loaded')).toBeInTheDocument();
+  expect(screen.getByText("Loaded")).toBeInTheDocument();
 });
 
 // ❌ Avoid: Using setTimeout for waiting
-await new Promise(resolve => setTimeout(resolve, 1000));
+await new Promise((resolve) => setTimeout(resolve, 1000));
 ```
 
 ### 5. Accessibility Testing
 
 ```typescript
 // ✅ Good: Test accessible queries
-expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
+expect(screen.getByRole("button", { name: /close/i })).toBeInTheDocument();
 
 // ❌ Avoid: Testing implementation details
-expect(wrapper.find('.close-button')).toHaveLength(1);
+expect(wrapper.find(".close-button")).toHaveLength(1);
 ```
 
 ## Troubleshooting
@@ -557,10 +562,15 @@ Error: Test timeout. Consider increasing timeout
 ```
 
 **Solution:**
+
 ```typescript
-it('slow test', async () => {
-  // test code
-}, { timeout: 10000 }); // Increase timeout if needed
+it(
+  "slow test",
+  async () => {
+    // test code
+  },
+  { timeout: 10000 },
+); // Increase timeout if needed
 ```
 
 #### MSW Not Intercepting
@@ -570,6 +580,7 @@ Error: Failed to fetch from API
 ```
 
 **Solution:**
+
 ```typescript
 // Ensure server.listen() is called before tests
 beforeAll(() => {
@@ -577,8 +588,8 @@ beforeAll(() => {
 });
 
 // Check handler is registered
-import { handlers } from '@/__tests__/mocks/handlers';
-console.log('Handlers:', handlers.length);
+import { handlers } from "@/__tests__/mocks/handlers";
+console.log("Handlers:", handlers.length);
 ```
 
 #### E2E Tests Can't Find Elements
@@ -588,10 +599,11 @@ Error: Timeout waiting for locator
 ```
 
 **Solution:**
+
 ```typescript
 // Use more specific locators
-page.locator('[role="button"]:has-text("Close")')
-page.locator('button:has-text("Mark as Read")')
+page.locator('[role="button"]:has-text("Close")');
+page.locator('button:has-text("Mark as Read")');
 
 // Wait for element to appear
 await page.waitForSelector('[role="alert"]', { timeout: 5000 });
@@ -604,6 +616,7 @@ Error: Memory usage exceeded threshold
 ```
 
 **Solution:**
+
 ```typescript
 // Clean up in afterEach
 afterEach(() => {
@@ -624,16 +637,19 @@ it('test', () => {
 If tests run slowly:
 
 1. **Run tests in parallel:**
+
    ```bash
    npm run test -- --threads
    ```
 
 2. **Reduce test scope:**
+
    ```bash
    npm run test -- src/__tests__/components --run
    ```
 
 3. **Use selective testing:**
+
    ```bash
    npm run test -- -t "specific test" --watch
    ```
@@ -665,7 +681,9 @@ For questions or issues:
 **Last Updated:** 2024
 **Maintained By:** Development Team
 **Test Coverage:** 200+ cases (Unit: 100+, Integration: 35+, E2E: 50+, Performance: 18)
+
 ## Test Structure
+
 - `tests/e2e/` - End-to-end test specifications
 - `tests/helpers/` - Shared utilities and setup functions
 - `tests/fixtures/` - Test data and storage states

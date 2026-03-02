@@ -5,29 +5,29 @@
  */
 
 // Types
-export * from './types';
+export * from "./types";
 
 // Services
-export { RuleMatchingEngine } from './services/ruleMatchingEngine';
-export { PricingEngine } from './services/pricingEngine';
-export { DealService } from './services/dealService';
-export { DealMatchingEngine } from './services/dealMatchingEngine';
-export { CommissionManager } from './services/commissionManager';
-export { AnalyticsService } from './services/analyticsService';
-export { PLBService } from './services/plbService';
-export { MarkupService } from './services/markupService';
-export { AirlineDealsService } from './services/airlineDealsService';
+export { RuleMatchingEngine } from "./services/ruleMatchingEngine";
+export { PricingEngine } from "./services/pricingEngine";
+export { DealService } from "./services/dealService";
+export { DealMatchingEngine } from "./services/dealMatchingEngine";
+export { CommissionManager } from "./services/commissionManager";
+export { AnalyticsService } from "./services/analyticsService";
+export { PLBService } from "./services/plbService";
+export { MarkupService } from "./services/markupService";
+export { AirlineDealsService } from "./services/airlineDealsService";
 
 // Utilities
-export * from './utils';
+export * from "./utils";
 
 // Middleware
 export {
   createPricingCalculationMiddleware,
   createRuleValidationMiddleware,
   createCouponValidationMiddleware,
-  createRuleEngineErrorHandler
-} from './middleware';
+  createRuleEngineErrorHandler,
+} from "./middleware";
 
 // Re-export commonly used items for convenience
 export type {
@@ -62,8 +62,8 @@ export type {
   AirlineDealUpdate,
   PrivateFareConfig,
   NDCSpecialDeal,
-  AirlineContract
-} from './types';
+  AirlineContract,
+} from "./types";
 
 export {
   RuleEngineError,
@@ -74,5 +74,5 @@ export {
   PricingCalculationError,
   LoyaltyError,
   TaxCalculationError,
-  RuleMatchingError
-} from './errors';
+  RuleMatchingError,
+} from "./errors";

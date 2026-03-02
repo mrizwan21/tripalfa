@@ -27,7 +27,7 @@ The static data service has been restructured as part of the `restructure-phase1
 
 ```typescript
 // Direct fetch to static data service
-const response = await fetch('http://localhost:3002/airports');
+const response = await fetch("http://localhost:3002/airports");
 const airports = await response.json();
 ```
 
@@ -35,13 +35,13 @@ const airports = await response.json();
 
 ```typescript
 // Use React Query hooks from shared package
-import { useAirports, useAirlines, useHotels } from '@tripalfa/shared-hooks';
+import { useAirports, useAirlines, useHotels } from "@tripalfa/shared-hooks";
 
 function MyComponent() {
   const { data: airports, isLoading } = useAirports();
   const { data: airlines } = useAirlines();
-  const { data: hotels } = useHotels({ city: 'DXB' });
-  
+  const { data: hotels } = useHotels({ city: "DXB" });
+
   // ...
 }
 ```
@@ -52,18 +52,19 @@ function MyComponent() {
 
 ```typescript
 // Direct database connection
-import { Pool } from 'pg';
+import { Pool } from "pg";
 const pool = new Pool({
-  connectionString: 'postgresql://postgres:postgres@localhost:5433/staticdatabase'
+  connectionString:
+    "postgresql://postgres:postgres@localhost:5433/staticdatabase",
 });
-const result = await pool.query('SELECT * FROM airports');
+const result = await pool.query("SELECT * FROM airports");
 ```
 
 **After:**
 
 ```typescript
 // Use shared-database package
-import { prisma } from '@tripalfa/shared-database';
+import { prisma } from "@tripalfa/shared-database";
 
 // For static data, use the appropriate model
 const airports = await prisma.airport.findMany();
@@ -105,15 +106,15 @@ API_GATEWAY_URL=http://localhost:3000
 
 ## Available Static Data Endpoints
 
-| Endpoint   | Description               | New Path                  |
-| ---------- | ------------------------- | ------------------------- |
-| Airports   | Airport search and details| `/api/static/airports`    |
-| Airlines   | Airline information       | `/api/static/airlines`    |
-| Hotels     | Hotel properties          | `/api/static/hotels`      |
-| Cities     | City data                 | `/api/static/cities`      |
-| Countries  | Country reference         | `/api/static/countries`   |
-| Currencies | Currency exchange rates   | `/api/static/currencies`  |
-| Aircraft   | Aircraft types            | `/api/static/aircraft`    |
+| Endpoint   | Description                | New Path                 |
+| ---------- | -------------------------- | ------------------------ |
+| Airports   | Airport search and details | `/api/static/airports`   |
+| Airlines   | Airline information        | `/api/static/airlines`   |
+| Hotels     | Hotel properties           | `/api/static/hotels`     |
+| Cities     | City data                  | `/api/static/cities`     |
+| Countries  | Country reference          | `/api/static/countries`  |
+| Currencies | Currency exchange rates    | `/api/static/currencies` |
+| Aircraft   | Aircraft types             | `/api/static/aircraft`   |
 
 ## React Query Hooks Reference
 
@@ -121,9 +122,9 @@ API_GATEWAY_URL=http://localhost:3000
 
 ```typescript
 const { data, isLoading, error } = useAirports({
-  search: 'DXB',      // Optional: search by IATA code or name
-  country: 'AE',      // Optional: filter by country
-  enabled: true       // Optional: enable/disable query
+  search: "DXB", // Optional: search by IATA code or name
+  country: "AE", // Optional: filter by country
+  enabled: true, // Optional: enable/disable query
 });
 ```
 
@@ -131,8 +132,8 @@ const { data, isLoading, error } = useAirports({
 
 ```typescript
 const { data, isLoading } = useAirlines({
-  search: 'Emirates', // Optional: search by name or IATA code
-  active: true        // Optional: filter active airlines only
+  search: "Emirates", // Optional: search by name or IATA code
+  active: true, // Optional: filter active airlines only
 });
 ```
 
@@ -140,11 +141,11 @@ const { data, isLoading } = useAirlines({
 
 ```typescript
 const { data, isLoading } = useHotels({
-  city: 'DXB',        // Required: city IATA code
-  country: 'AE',      // Optional: country code
-  amenities: ['WIFI', 'POOL'], // Optional: filter by amenities
-  page: 1,            // Optional: pagination
-  limit: 20           // Optional: results per page
+  city: "DXB", // Required: city IATA code
+  country: "AE", // Optional: country code
+  amenities: ["WIFI", "POOL"], // Optional: filter by amenities
+  page: 1, // Optional: pagination
+  limit: 20, // Optional: results per page
 });
 ```
 

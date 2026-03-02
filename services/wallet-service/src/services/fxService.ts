@@ -1,10 +1,10 @@
 // src/services/fxService.ts
 // FX rate fetching, conversion, and snapshot management using Prisma
-import { prisma } from '../config/db.js';
-import { logger } from '../utils/logger.js';
-import type { FxConversionResult } from '../types/wallet.js';
+import { prisma } from "../config/db.js";
+import { logger } from "../utils/logger.js";
+import type { FxConversionResult } from "../types/wallet.js";
 
-const SERVICE_NAME = 'fxService';
+const SERVICE_NAME = "fxService";
 
 // Cache for latest rates
 let cachedRates: Record<string, number> = {};
@@ -26,7 +26,7 @@ async function getAllRates(): Promise<Record<string, number>> {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
         },
       },
-      orderBy: { fetchedAt: 'desc' },
+      orderBy: { fetchedAt: "desc" },
     });
 
     // Build rates map from targetCurrency
@@ -36,10 +36,10 @@ async function getAllRates(): Promise<Record<string, number>> {
         ratesMap[r.targetCurrency] = Number(r.rate);
       }
     }
-    
+
     cachedRates = ratesMap;
     cachedAt = new Date();
-    
+
     return ratesMap;
   } catch (err) {
     logger.error(`${SERVICE_NAME}: getAllRates failed`, err as Error);
@@ -61,7 +61,7 @@ export function isSnapshotStale(fetchedAt: Date): boolean {
 export async function convertAmount(
   amount: number,
   srcCurrency: string,
-  destCurrency: string
+  destCurrency: string,
 ): Promise<FxConversionResult> {
   // Short-circuit: same currency
   if (srcCurrency === destCurrency) {
@@ -77,13 +77,15 @@ export async function convertAmount(
 
   try {
     const rates = await getAllRates();
-    
+
     // Validate currency codes exist in rates
     if (!rates[srcCurrency]) {
       throw new Error(`Missing FX rate for source currency: ${srcCurrency}`);
     }
     if (!rates[destCurrency]) {
-      throw new Error(`Missing FX rate for destination currency: ${destCurrency}`);
+      throw new Error(
+        `Missing FX rate for destination currency: ${destCurrency}`,
+      );
     }
 
     const rateSrc = rates[srcCurrency];
@@ -96,7 +98,7 @@ export async function convertAmount(
     return {
       converted: Number(converted.toFixed(6)),
       fxRate: Number(fxRate.toFixed(12)),
-      baseCurrency: 'USD',
+      baseCurrency: "USD",
       baseAmount: Number(amountInBase.toFixed(6)),
       fetchedAt: cachedAt || new Date(),
       isStale: cachedAt ? isSnapshotStale(cachedAt) : true,
@@ -104,7 +106,7 @@ export async function convertAmount(
   } catch (err) {
     logger.error(
       `${SERVICE_NAME}: convertAmount(${amount}, ${srcCurrency}, ${destCurrency}) failed`,
-      err as Error
+      err as Error,
     );
     throw err;
   }
@@ -117,7 +119,7 @@ export async function saveSnapshot(
   source: string,
   baseCurrency: string,
   rates: Record<string, number>,
-  fetchedAt: Date
+  fetchedAt: Date,
 ): Promise<any> {
   try {
     // Save each rate as a separate record
@@ -162,7 +164,7 @@ export async function saveSnapshot(
 export async function getSnapshotHistory(
   startDate: Date,
   endDate: Date,
-  _currency?: string
+  _currency?: string,
 ): Promise<any[]> {
   try {
     const snapshots = await prisma.exchangeRate.findMany({
@@ -172,7 +174,7 @@ export async function getSnapshotHistory(
           lte: endDate,
         },
       },
-      orderBy: { fetchedAt: 'desc' },
+      orderBy: { fetchedAt: "desc" },
     });
 
     return snapshots;
@@ -204,12 +206,15 @@ export async function markSnapshotStale(_snapshotId: string): Promise<void> {
 /**
  * Get the most recent FX rate for a single currency pair
  */
-export async function getRate(srcCurrency: string, destCurrency: string): Promise<number> {
+export async function getRate(
+  srcCurrency: string,
+  destCurrency: string,
+): Promise<number> {
   if (srcCurrency === destCurrency) return 1.0;
 
   try {
     const rates = await getAllRates();
-    
+
     const rateSrc = rates[srcCurrency];
     const rateDest = rates[destCurrency];
 
@@ -219,7 +224,10 @@ export async function getRate(srcCurrency: string, destCurrency: string): Promis
 
     return rateDest / rateSrc;
   } catch (err) {
-    logger.error(`${SERVICE_NAME}: getRate(${srcCurrency}, ${destCurrency}) failed`, err as Error);
+    logger.error(
+      `${SERVICE_NAME}: getRate(${srcCurrency}, ${destCurrency}) failed`,
+      err as Error,
+    );
     throw err;
   }
 }
@@ -236,7 +244,7 @@ export async function getLatestSnapshot(): Promise<any> {
   return {
     rates,
     fetchedAt: cachedAt || new Date(),
-    baseCurrency: 'USD',
+    baseCurrency: "USD",
   };
 }
 

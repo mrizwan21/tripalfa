@@ -7,20 +7,24 @@ import {
   generateBookingConfirmationEmail,
   generateBookingConfirmationText,
   OrderDetails,
-} from './bookingConfirmationEmailTemplate';
+} from "./bookingConfirmationEmailTemplate";
 import {
   generateModernMinimalTemplate,
   generateCompactTemplate,
   generateDetailedTemplate,
-} from './bookingConfirmationTemplateVariations';
+} from "./bookingConfirmationTemplateVariations";
 import {
   generateDocumentDeliveryEmail,
   generateDocumentDeliveryText,
-} from './documentDeliveryEmailTemplate';
-import { createLogger } from '@tripalfa/shared-utils/logger';
-const logger = createLogger({ serviceName: 'booking-engine' });
+} from "./documentDeliveryEmailTemplate";
+import { createLogger } from "@tripalfa/shared-utils/logger";
+const logger = createLogger({ serviceName: "booking-engine" });
 
-export type EmailTemplateStyle = 'default' | 'modern-minimal' | 'compact' | 'detailed';
+export type EmailTemplateStyle =
+  | "default"
+  | "modern-minimal"
+  | "compact"
+  | "detailed";
 
 export interface TemplateOptions {
   style?: EmailTemplateStyle;
@@ -38,11 +42,11 @@ export interface TemplateOptions {
  */
 export function generateEmailTemplate(
   order: OrderDetails,
-  options: TemplateOptions = {}
+  options: TemplateOptions = {},
 ): { html: string; text: string } {
-  const style = options.style || 'default';
+  const style = options.style || "default";
 
-  logger.info('Generating email template', {
+  logger.info("Generating email template", {
     style,
     bookingReference: order.bookingReference,
   });
@@ -52,19 +56,19 @@ export function generateEmailTemplate(
     let text: string;
 
     switch (style) {
-      case 'modern-minimal':
+      case "modern-minimal":
         html = generateModernMinimalTemplate(order, options);
         break;
 
-      case 'compact':
+      case "compact":
         html = generateCompactTemplate(order, options);
         break;
 
-      case 'detailed':
+      case "detailed":
         html = generateDetailedTemplate(order, options);
         break;
 
-      case 'default':
+      case "default":
       default:
         html = generateBookingConfirmationEmail(order);
         break;
@@ -72,10 +76,13 @@ export function generateEmailTemplate(
 
     // Add tracking pixel if provided
     if (options.trackingPixel) {
-      html = html.replace('</body>', `<img src="${options.trackingPixel}" width="1" height="1" alt="" style="display:none;" /></body>`);
+      html = html.replace(
+        "</body>",
+        `<img src="${options.trackingPixel}" width="1" height="1" alt="" style="display:none;" /></body>`,
+      );
     }
 
-    if (style === ('document_delivery' as any)) {
+    if (style === ("document_delivery" as any)) {
       html = generateDocumentDeliveryEmail(order as any);
       text = generateDocumentDeliveryText(order as any);
       return { html, text };
@@ -85,7 +92,7 @@ export function generateEmailTemplate(
 
     return { html, text };
   } catch (error) {
-    logger.error('Error generating email template', {
+    logger.error("Error generating email template", {
       error: error instanceof Error ? error.message : String(error),
       style,
     });
@@ -101,27 +108,31 @@ export function generateEmailTemplate(
 /**
  * Get available template styles
  */
-export function getAvailableTemplates(): Array<{ style: EmailTemplateStyle; name: string; description: string }> {
+export function getAvailableTemplates(): Array<{
+  style: EmailTemplateStyle;
+  name: string;
+  description: string;
+}> {
   return [
     {
-      style: 'default',
-      name: 'Classic',
-      description: 'Professional classic design with full details',
+      style: "default",
+      name: "Classic",
+      description: "Professional classic design with full details",
     },
     {
-      style: 'modern-minimal',
-      name: 'Modern Minimal',
-      description: 'Clean, minimalist design for modern brands',
+      style: "modern-minimal",
+      name: "Modern Minimal",
+      description: "Clean, minimalist design for modern brands",
     },
     {
-      style: 'compact',
-      name: 'Compact',
-      description: 'Space-efficient design for quick scanning',
+      style: "compact",
+      name: "Compact",
+      description: "Space-efficient design for quick scanning",
     },
     {
-      style: 'detailed',
-      name: 'Detailed',
-      description: 'Comprehensive design with all available information',
+      style: "detailed",
+      name: "Detailed",
+      description: "Comprehensive design with all available information",
     },
   ];
 }

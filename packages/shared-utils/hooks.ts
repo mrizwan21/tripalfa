@@ -1,48 +1,64 @@
 // Admin Panel - React Query Hooks
-// @ts-ignore
-import { useQuery, useMutation, useQueryClient, UseQueryOptions, UseMutationOptions } from 'react-query';
-import { api, queryKeys } from './api';
-import { API_ENDPOINTS } from './constants';
-import { buildQueryString } from './utils';
-import type {
-  Company,
-  CompanyCreate,
-  CompanyUpdate,
-  User,
-  UserCreate,
-  UserUpdate,
-  Role,
-  RoleCreate,
-  RoleUpdate,
-  Booking,
-  Supplier,
-  SupplierCreate,
-  SupplierUpdate,
-  Wallet,
-  Transaction,
-  Invoice,
-  DashboardStats,
-  PaginatedResponse,
-  PaginationParams,
-} from './types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api, queryKeys } from "./api";
+import { API_ENDPOINTS } from "./constants";
+import { buildQueryString } from "./utils";
 
-// ============================================================================
-// Generic List Hook
-// ============================================================================
+// Type declaration for window object to fix TypeScript error
+declare global {
+  interface Window {
+    localStorage: Storage;
+  }
+}
 
-interface UseListOptions<T> extends Omit<UseQueryOptions<PaginatedResponse<T>>, 'queryKey' | 'queryFn'> {
-  params?: PaginationParams & Record<string, unknown>;
+// Ensure Storage interface is available
+interface Storage {
+  readonly length: number;
+  clear(): void;
+  getItem(key: string): string | null;
+  key(index: number): string | null;
+  removeItem(key: string): void;
+  setItem(key: string, value: string): void;
+}
+
+type Entity = Record<string, unknown>;
+type Company = Entity;
+type CompanyCreate = Entity;
+type CompanyUpdate = Entity;
+type User = Entity;
+type UserCreate = Entity;
+type UserUpdate = Entity;
+type Role = Entity;
+type RoleCreate = Entity;
+type RoleUpdate = Entity;
+type Booking = Entity;
+type Supplier = Entity;
+type SupplierCreate = Entity;
+type SupplierUpdate = Entity;
+type Wallet = Entity;
+type Transaction = Entity;
+type Invoice = Entity;
+type DashboardStats = Entity;
+type PaginatedResponse<T> = { data?: T[]; total?: number } & Entity;
+type PaginationParams = Record<string, unknown>;
+
+interface UseListOptions<T> {
+  params?: PaginationParams;
+  enabled?: boolean;
+  staleTime?: number;
 }
 
 function useList<T>(
   endpoint: string,
   queryKey: readonly unknown[],
-  options?: UseListOptions<T>
+  options?: UseListOptions<T>,
 ) {
   const { params, ...queryOptions } = options || {};
-  const queryString = params ? `?${buildQueryString(params)}` : '';
+  const queryString = params
+    ? `?${buildQueryString(params as Record<string, unknown>)}`
+    : "";
 
-  return useQuery<PaginatedResponse<T>>({
+  return useQuery({
     queryKey: [...queryKey, params],
     queryFn: () => api.get<PaginatedResponse<T>>(`${endpoint}${queryString}`),
     ...queryOptions,
@@ -68,12 +84,18 @@ export function useLogin() {
     mutationFn: (credentials: { email: string; password: string }) =>
       api.post<{ accessToken: string; refreshToken: string; user: User }>(
         API_ENDPOINTS.auth.login,
-        credentials
+        credentials,
       ),
-    onSuccess: (data: { accessToken: string; refreshToken: string; user: User }) => {
+    onSuccess: (data: {
+      accessToken: string;
+      refreshToken: string;
+      user: User;
+    }) => {
       api.setAccessToken(data.accessToken);
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
       queryClient.setQueryData(queryKeys.auth.me, data.user);
     },
   });
@@ -86,8 +108,10 @@ export function useLogout() {
     mutationFn: () => api.post(API_ENDPOINTS.auth.logout),
     onSuccess: () => {
       api.setAccessToken(null);
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      if (typeof window !== "undefined" && window.localStorage) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+      }
       queryClient.clear();
     },
   });
@@ -97,8 +121,14 @@ export function useLogout() {
 // Company Hooks
 // ============================================================================
 
-export function useCompanies(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Company>(API_ENDPOINTS.companies, queryKeys.companies.list(params), { params });
+export function useCompanies(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Company>(
+    API_ENDPOINTS.companies,
+    queryKeys.companies.list(params),
+    { params },
+  );
 }
 
 export function useCompany(id: string) {
@@ -113,7 +143,8 @@ export function useCreateCompany() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CompanyCreate) => api.post<Company>(API_ENDPOINTS.companies, data),
+    mutationFn: (data: CompanyCreate) =>
+      api.post<Company>(API_ENDPOINTS.companies, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
     },
@@ -127,7 +158,9 @@ export function useUpdateCompany() {
     mutationFn: ({ id, data }: { id: string; data: CompanyUpdate }) =>
       api.patch<Company>(`${API_ENDPOINTS.companies}/${id}`, data),
     onSuccess: (_: Company, variables: { id: string; data: CompanyUpdate }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.companies.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
     },
   });
@@ -149,7 +182,9 @@ export function useDeleteCompany() {
 // ============================================================================
 
 export function useUsers(params?: PaginationParams & Record<string, unknown>) {
-  return useList<User>(API_ENDPOINTS.users, queryKeys.users.list(params), { params });
+  return useList<User>(API_ENDPOINTS.users, queryKeys.users.list(params), {
+    params,
+  });
 }
 
 export function useUser(id: string) {
@@ -178,7 +213,9 @@ export function useUpdateUser() {
     mutationFn: ({ id, data }: { id: string; data: UserUpdate }) =>
       api.patch<User>(`${API_ENDPOINTS.users}/${id}`, data),
     onSuccess: (_: User, variables: { id: string; data: UserUpdate }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },
   });
@@ -200,7 +237,9 @@ export function useDeleteUser() {
 // ============================================================================
 
 export function useRoles(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Role>(API_ENDPOINTS.roles, queryKeys.roles.list(params), { params });
+  return useList<Role>(API_ENDPOINTS.roles, queryKeys.roles.list(params), {
+    params,
+  });
 }
 
 export function useRole(id: string) {
@@ -214,7 +253,10 @@ export function useRole(id: string) {
 export function usePermissions() {
   return useQuery({
     queryKey: queryKeys.roles.permissions,
-    queryFn: () => api.get<{ permissions: Record<string, string[]> }>(API_ENDPOINTS.permissions),
+    queryFn: () =>
+      api.get<{ permissions: Record<string, string[]> }>(
+        API_ENDPOINTS.permissions,
+      ),
     staleTime: Infinity,
   });
 }
@@ -237,7 +279,9 @@ export function useUpdateRole() {
     mutationFn: ({ id, data }: { id: string; data: RoleUpdate }) =>
       api.patch<Role>(`${API_ENDPOINTS.roles}/${id}`, data),
     onSuccess: (_: Role, variables: { id: string; data: RoleUpdate }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.roles.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.roles.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.all });
     },
   });
@@ -247,8 +291,14 @@ export function useUpdateRole() {
 // Booking Hooks
 // ============================================================================
 
-export function useBookings(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Booking>(API_ENDPOINTS.bookings, queryKeys.bookings.list(params), { params });
+export function useBookings(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Booking>(
+    API_ENDPOINTS.bookings,
+    queryKeys.bookings.list(params),
+    { params },
+  );
 }
 
 export function useBooking(id: string) {
@@ -259,18 +309,40 @@ export function useBooking(id: string) {
   });
 }
 
-export function useBookingQueue(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Booking>(API_ENDPOINTS.bookingQueue, queryKeys.bookings.queue(params), { params });
+export function useBookingQueue(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Booking>(
+    API_ENDPOINTS.bookingQueue,
+    queryKeys.bookings.queue(params),
+    { params },
+  );
 }
 
 export function useUpdateBookingStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status, remarks }: { id: string; status: string; remarks?: string }) =>
-      api.patch<Booking>(`${API_ENDPOINTS.bookings}/${id}/status`, { status, remarks }),
-    onSuccess: (_: Booking, variables: { id: string; status: string; remarks?: string }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.bookings.detail(variables.id) });
+    mutationFn: ({
+      id,
+      status,
+      remarks,
+    }: {
+      id: string;
+      status: string;
+      remarks?: string;
+    }) =>
+      api.patch<Booking>(`${API_ENDPOINTS.bookings}/${id}/status`, {
+        status,
+        remarks,
+      }),
+    onSuccess: (
+      _: Booking,
+      variables: { id: string; status: string; remarks?: string },
+    ) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.bookings.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.bookings.all });
     },
   });
@@ -280,8 +352,14 @@ export function useUpdateBookingStatus() {
 // Supplier Hooks
 // ============================================================================
 
-export function useSuppliers(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Supplier>(API_ENDPOINTS.suppliers, queryKeys.suppliers.list(params), { params });
+export function useSuppliers(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Supplier>(
+    API_ENDPOINTS.suppliers,
+    queryKeys.suppliers.list(params),
+    { params },
+  );
 }
 
 export function useSupplier(id: string) {
@@ -296,7 +374,8 @@ export function useCreateSupplier() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: SupplierCreate) => api.post<Supplier>(API_ENDPOINTS.suppliers, data),
+    mutationFn: (data: SupplierCreate) =>
+      api.post<Supplier>(API_ENDPOINTS.suppliers, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
     },
@@ -309,8 +388,13 @@ export function useUpdateSupplier() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: SupplierUpdate }) =>
       api.patch<Supplier>(`${API_ENDPOINTS.suppliers}/${id}`, data),
-    onSuccess: (_: Supplier, variables: { id: string; data: SupplierUpdate }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.detail(variables.id) });
+    onSuccess: (
+      _: Supplier,
+      variables: { id: string; data: SupplierUpdate },
+    ) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.suppliers.detail(variables.id),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.suppliers.all });
     },
   });
@@ -320,8 +404,14 @@ export function useUpdateSupplier() {
 // Finance Hooks
 // ============================================================================
 
-export function useWallets(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Wallet>(API_ENDPOINTS.wallets, queryKeys.finance.wallets(params), { params });
+export function useWallets(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Wallet>(
+    API_ENDPOINTS.wallets,
+    queryKeys.finance.wallets(params),
+    { params },
+  );
 }
 
 export function useWallet(id: string) {
@@ -332,12 +422,24 @@ export function useWallet(id: string) {
   });
 }
 
-export function useTransactions(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Transaction>(API_ENDPOINTS.transactions, queryKeys.finance.transactions(params), { params });
+export function useTransactions(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Transaction>(
+    API_ENDPOINTS.transactions,
+    queryKeys.finance.transactions(params),
+    { params },
+  );
 }
 
-export function useInvoices(params?: PaginationParams & Record<string, unknown>) {
-  return useList<Invoice>(API_ENDPOINTS.invoices, queryKeys.finance.invoices(params), { params });
+export function useInvoices(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<Invoice>(
+    API_ENDPOINTS.invoices,
+    queryKeys.finance.invoices(params),
+    { params },
+  );
 }
 
 // ============================================================================
@@ -347,24 +449,27 @@ export function useInvoices(params?: PaginationParams & Record<string, unknown>)
 export function useDashboardStats() {
   return useQuery({
     queryKey: queryKeys.dashboard.stats,
-    queryFn: () => api.get<DashboardStats>('/dashboard/stats'),
+    queryFn: () => api.get<DashboardStats>("/dashboard/stats"),
     staleTime: 60 * 1000, // 1 minute
   });
 }
 
-export function useRevenueChart(period: 'week' | 'month' | 'quarter' | 'year' = 'month') {
+export function useRevenueChart(
+  period: "week" | "month" | "quarter" | "year" = "month",
+) {
   return useQuery({
     queryKey: queryKeys.dashboard.revenue(period),
-    queryFn: () => api.get<{ data: { date: string; revenue: number; bookings: number }[] }>(
-      `/dashboard/revenue?period=${period}`
-    ),
+    queryFn: () =>
+      api.get<{ data: { date: string; revenue: number; bookings: number }[] }>(
+        `/dashboard/revenue?period=${period}`,
+      ),
   });
 }
 
 export function useRecentActivity() {
   return useQuery({
     queryKey: queryKeys.dashboard.activity,
-    queryFn: () => api.get<{ activities: unknown[] }>('/dashboard/activity'),
+    queryFn: () => api.get<{ activities: unknown[] }>("/dashboard/activity"),
     refetchInterval: 30 * 1000, // Refetch every 30 seconds
   });
 }
@@ -376,7 +481,10 @@ export function useRecentActivity() {
 export function useAirlines() {
   return useQuery({
     queryKey: queryKeys.reference.airlines,
-    queryFn: () => api.get<{ airlines: { code: string; name: string }[] }>(API_ENDPOINTS.airlines),
+    queryFn: () =>
+      api.get<{ airlines: { code: string; name: string }[] }>(
+        API_ENDPOINTS.airlines,
+      ),
     staleTime: Infinity,
   });
 }
@@ -384,9 +492,10 @@ export function useAirlines() {
 export function useAirports(search?: string) {
   return useQuery({
     queryKey: [...queryKeys.reference.airports, search],
-    queryFn: () => api.get<{ airports: { code: string; name: string; city: string }[] }>(
-      `${API_ENDPOINTS.airports}${search ? `?search=${search}` : ''}`
-    ),
+    queryFn: () =>
+      api.get<{ airports: { code: string; name: string; city: string }[] }>(
+        `${API_ENDPOINTS.airports}${search ? `?search=${search}` : ""}`,
+      ),
     enabled: !search || search.length >= 2,
     staleTime: search ? 5 * 60 * 1000 : Infinity,
   });
@@ -395,9 +504,10 @@ export function useAirports(search?: string) {
 export function useCurrencies() {
   return useQuery({
     queryKey: queryKeys.reference.currencies,
-    queryFn: () => api.get<{ currencies: { code: string; name: string; symbol: string }[] }>(
-      API_ENDPOINTS.admin.currencies
-    ),
+    queryFn: () =>
+      api.get<{ currencies: { code: string; name: string; symbol: string }[] }>(
+        API_ENDPOINTS.admin.currencies,
+      ),
     staleTime: Infinity,
   });
 }
@@ -406,6 +516,12 @@ export function useCurrencies() {
 // Audit Log Hooks
 // ============================================================================
 
-export function useAuditLogs(params?: PaginationParams & Record<string, unknown>) {
-  return useList<unknown>(API_ENDPOINTS.auditLogs.list, queryKeys.audit.logs(params), { params });
+export function useAuditLogs(
+  params?: PaginationParams & Record<string, unknown>,
+) {
+  return useList<unknown>(
+    API_ENDPOINTS.auditLogs.list,
+    queryKeys.audit.logs(params),
+    { params },
+  );
 }

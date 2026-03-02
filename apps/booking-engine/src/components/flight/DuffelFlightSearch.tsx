@@ -1,13 +1,13 @@
 /**
  * DuffelFlightSearch Component
- * 
+ *
  * A comprehensive flight search form integrated with Duffel API.
  * Supports one-way, round-trip, and multi-city searches.
  */
 
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import React, { useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
 import {
   MapPin,
   Calendar,
@@ -19,14 +19,14 @@ import {
   Plane,
   Search,
   Loader2,
-} from 'lucide-react';
-import { SearchAutocomplete, Suggestion } from '../ui/SearchAutocomplete';
-import { TravelerSelector } from '../ui/TravelerSelector';
-import { CabinSelector } from '../ui/CabinSelector';
-import { DualMonthCalendar } from '../ui/DualMonthCalendar';
-import { Button } from '../ui/button';
-import { useDuffelFlights } from '../../hooks/useDuffelFlights';
-import type { CabinClass } from '../../types/duffel';
+} from "lucide-react";
+import { SearchAutocomplete, Suggestion } from "../ui/SearchAutocomplete";
+import { TravelerSelector } from "../ui/TravelerSelector";
+import { CabinSelector } from "../ui/CabinSelector";
+import { DualMonthCalendar } from "../ui/DualMonthCalendar";
+import { Button } from "../ui/button";
+import { useDuffelFlights } from "../../hooks/useDuffelFlights";
+import type { CabinClass } from "../../types/duffel";
 
 // ============================================================================
 // TYPES
@@ -42,7 +42,7 @@ interface FlightLeg {
 
 interface DuffelFlightSearchProps {
   /** Initial trip type */
-  initialTripType?: 'roundTrip' | 'oneWay' | 'multiCity';
+  initialTripType?: "roundTrip" | "oneWay" | "multiCity";
   /** Initial cabin class */
   initialCabinClass?: CabinClass;
   /** Callback when search completes */
@@ -60,24 +60,26 @@ interface DuffelFlightSearchProps {
 // ============================================================================
 
 export function DuffelFlightSearch({
-  initialTripType = 'roundTrip',
-  initialCabinClass = 'economy',
+  initialTripType = "roundTrip",
+  initialCabinClass = "economy",
   onSearchComplete,
   onNavigate,
   compact = false,
-  className = '',
+  className = "",
 }: DuffelFlightSearchProps) {
   const navigate = useNavigate();
 
   // Trip configuration
-  const [tripType, setTripType] = useState<'roundTrip' | 'oneWay' | 'multiCity'>(initialTripType);
+  const [tripType, setTripType] = useState<
+    "roundTrip" | "oneWay" | "multiCity"
+  >(initialTripType);
   const [cabinClass, setCabinClass] = useState<CabinClass>(initialCabinClass);
 
   // Origin/Destination
-  const [from, setFrom] = useState('');
-  const [fromCode, setFromCode] = useState('');
-  const [to, setTo] = useState('');
-  const [toCode, setToCode] = useState('');
+  const [from, setFrom] = useState("");
+  const [fromCode, setFromCode] = useState("");
+  const [to, setTo] = useState("");
+  const [toCode, setToCode] = useState("");
 
   // Dates
   const [departureDate, setDepartureDate] = useState<Date | null>(null);
@@ -92,8 +94,8 @@ export function DuffelFlightSearch({
 
   // Multi-city legs
   const [multiCityLegs, setMultiCityLegs] = useState<FlightLeg[]>([
-    { from: '', fromCode: '', to: '', toCode: '', date: null },
-    { from: '', fromCode: '', to: '', toCode: '', date: null },
+    { from: "", fromCode: "", to: "", toCode: "", date: null },
+    { from: "", fromCode: "", to: "", toCode: "", date: null },
   ]);
 
   // Search hook
@@ -114,45 +116,52 @@ export function DuffelFlightSearch({
   // Add multi-city leg
   const addMultiCityLeg = useCallback(() => {
     if (multiCityLegs.length < 6) {
-      setMultiCityLegs(prev => [
+      setMultiCityLegs((prev) => [
         ...prev,
-        { from: '', fromCode: '', to: '', toCode: '', date: null },
+        { from: "", fromCode: "", to: "", toCode: "", date: null },
       ]);
     }
   }, [multiCityLegs.length]);
 
   // Remove multi-city leg
-  const removeMultiCityLeg = useCallback((idx: number) => {
-    if (multiCityLegs.length > 2) {
-      setMultiCityLegs(prev => prev.filter((_, i) => i !== idx));
-    }
-  }, [multiCityLegs.length]);
+  const removeMultiCityLeg = useCallback(
+    (idx: number) => {
+      if (multiCityLegs.length > 2) {
+        setMultiCityLegs((prev) => prev.filter((_, i) => i !== idx));
+      }
+    },
+    [multiCityLegs.length],
+  );
 
   // Update multi-city leg
-  const updateMultiCityLeg = useCallback((idx: number, field: string, value: any) => {
-    setMultiCityLegs(prev =>
-      prev.map((leg, i) => (i === idx ? { ...leg, [field]: value } : leg))
-    );
-  }, []);
+  const updateMultiCityLeg = useCallback(
+    (idx: number, field: string, value: any) => {
+      setMultiCityLegs((prev) =>
+        prev.map((leg, i) => (i === idx ? { ...leg, [field]: value } : leg)),
+      );
+    },
+    [],
+  );
 
   // Handle search
   const handleSearch = useCallback(async () => {
     // Build search params
     const params = new URLSearchParams();
-    params.set('tripType', tripType);
-    params.set('cabinClass', cabinClass);
-    params.set('adults', travelers.adults.toString());
-    params.set('children', travelers.children.toString());
-    params.set('infants', travelers.infants.toString());
+    params.set("tripType", tripType);
+    params.set("cabinClass", cabinClass);
+    params.set("adults", travelers.adults.toString());
+    params.set("children", travelers.children.toString());
+    params.set("infants", travelers.infants.toString());
 
-    if (tripType === 'multiCity') {
+    if (tripType === "multiCity") {
       // Multi-city search
       multiCityLegs.forEach((leg, i) => {
         if (leg.fromCode) params.set(`leg[${i}][origin]`, leg.fromCode);
         else if (leg.from) params.set(`leg[${i}][origin]`, leg.from);
         if (leg.toCode) params.set(`leg[${i}][destination]`, leg.toCode);
         else if (leg.to) params.set(`leg[${i}][destination]`, leg.to);
-        if (leg.date) params.set(`leg[${i}][date]`, format(leg.date, 'yyyy-MM-dd'));
+        if (leg.date)
+          params.set(`leg[${i}][date]`, format(leg.date, "yyyy-MM-dd"));
       });
 
       // Navigate to results page
@@ -163,13 +172,14 @@ export function DuffelFlightSearch({
       }
     } else {
       // One-way or round-trip
-      if (fromCode) params.set('origin', fromCode);
-      else if (from) params.set('origin', from);
-      if (toCode) params.set('destination', toCode);
-      else if (to) params.set('destination', to);
-      if (departureDate) params.set('departureDate', format(departureDate, 'yyyy-MM-dd'));
-      if (returnDate && tripType === 'roundTrip') {
-        params.set('returnDate', format(returnDate, 'yyyy-MM-dd'));
+      if (fromCode) params.set("origin", fromCode);
+      else if (from) params.set("origin", from);
+      if (toCode) params.set("destination", toCode);
+      else if (to) params.set("destination", to);
+      if (departureDate)
+        params.set("departureDate", format(departureDate, "yyyy-MM-dd"));
+      if (returnDate && tripType === "roundTrip") {
+        params.set("returnDate", format(returnDate, "yyyy-MM-dd"));
       }
 
       // Navigate to results page
@@ -196,7 +206,7 @@ export function DuffelFlightSearch({
 
   // Handle location selection
   const handleFromSelect = useCallback((loc: Suggestion) => {
-    if (loc.type === 'AIRPORT') {
+    if (loc.type === "AIRPORT") {
       setFrom(`${loc.title} (${loc.code})`);
       setFromCode(String(loc.code));
     } else {
@@ -206,7 +216,7 @@ export function DuffelFlightSearch({
   }, []);
 
   const handleToSelect = useCallback((loc: Suggestion) => {
-    if (loc.type === 'AIRPORT') {
+    if (loc.type === "AIRPORT") {
       setTo(`${loc.title} (${loc.code})`);
       setToCode(String(loc.code));
     } else {
@@ -217,21 +227,24 @@ export function DuffelFlightSearch({
 
   // Render multi-city leg
   const renderMultiCityLeg = (leg: FlightLeg, idx: number) => (
-    <div key={idx} className="grid grid-cols-12 gap-3 items-center bg-white/5 rounded-xl p-3">
+    <div
+      key={idx}
+      className="grid grid-cols-12 gap-3 items-center bg-white/5 rounded-xl p-3"
+    >
       <div className="col-span-3">
         <SearchAutocomplete
           type="flight"
           placeholder={`Leg ${idx + 1} From`}
           icon={<MapPin size={16} />}
           value={leg.from}
-          onChange={(v) => updateMultiCityLeg(idx, 'from', v)}
+          onChange={(v) => updateMultiCityLeg(idx, "from", v)}
           onSelect={(loc: Suggestion) => {
-            if (loc.type === 'AIRPORT') {
-              updateMultiCityLeg(idx, 'from', `${loc.title} (${loc.code})`);
-              updateMultiCityLeg(idx, 'fromCode', String(loc.code));
+            if (loc.type === "AIRPORT") {
+              updateMultiCityLeg(idx, "from", `${loc.title} (${loc.code})`);
+              updateMultiCityLeg(idx, "fromCode", String(loc.code));
             } else {
-              updateMultiCityLeg(idx, 'from', loc.title);
-              updateMultiCityLeg(idx, 'fromCode', loc.title);
+              updateMultiCityLeg(idx, "from", loc.title);
+              updateMultiCityLeg(idx, "fromCode", loc.title);
             }
           }}
         />
@@ -242,14 +255,14 @@ export function DuffelFlightSearch({
           placeholder={`Leg ${idx + 1} To`}
           icon={<MapPin size={16} />}
           value={leg.to}
-          onChange={(v) => updateMultiCityLeg(idx, 'to', v)}
+          onChange={(v) => updateMultiCityLeg(idx, "to", v)}
           onSelect={(loc: Suggestion) => {
-            if (loc.type === 'AIRPORT') {
-              updateMultiCityLeg(idx, 'to', `${loc.title} (${loc.code})`);
-              updateMultiCityLeg(idx, 'toCode', String(loc.code));
+            if (loc.type === "AIRPORT") {
+              updateMultiCityLeg(idx, "to", `${loc.title} (${loc.code})`);
+              updateMultiCityLeg(idx, "toCode", String(loc.code));
             } else {
-              updateMultiCityLeg(idx, 'to', loc.title);
-              updateMultiCityLeg(idx, 'toCode', loc.title);
+              updateMultiCityLeg(idx, "to", loc.title);
+              updateMultiCityLeg(idx, "toCode", loc.title);
             }
           }}
         />
@@ -257,12 +270,12 @@ export function DuffelFlightSearch({
       <div className="col-span-3">
         <input
           type="date"
-          value={leg.date ? format(leg.date, 'yyyy-MM-dd') : ''}
+          value={leg.date ? format(leg.date, "yyyy-MM-dd") : ""}
           onChange={(e) => {
             const d = e.target.value ? new Date(e.target.value) : null;
-            updateMultiCityLeg(idx, 'date', d);
+            updateMultiCityLeg(idx, "date", d);
           }}
-          className="w-full h-10 px-3 rounded-lg bg-white/90 text-gray-900 text-sm font-medium border-0 focus:ring-2 focus:ring-[#EC5C4C]"
+          className="w-full h-10 px-3 rounded-lg bg-white/90 text-gray-900 text-sm font-medium border-0 focus:ring-2 focus:ring-accent"
         />
       </div>
       <div className="col-span-3 flex items-center gap-2">
@@ -282,33 +295,33 @@ export function DuffelFlightSearch({
     <div className={`w-full ${className}`} data-testid="duffel-flight-search">
       {/* Trip Type Selection */}
       <div className="flex gap-4 mb-4 text-white text-xs font-bold px-2 items-center flex-wrap uppercase tracking-wider">
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           <input
             type="radio"
             name="trip"
-            checked={tripType === 'roundTrip'}
-            onChange={() => setTripType('roundTrip')}
-            className="accent-[#EC5C4C]"
+            checked={tripType === "roundTrip"}
+            onChange={() => setTripType("roundTrip")}
+            className="accent-accent"
           />
           Round Trip
         </label>
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           <input
             type="radio"
             name="trip"
-            checked={tripType === 'oneWay'}
-            onChange={() => setTripType('oneWay')}
-            className="accent-[#EC5C4C]"
+            checked={tripType === "oneWay"}
+            onChange={() => setTripType("oneWay")}
+            className="accent-accent"
           />
           One Way
         </label>
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           <input
             type="radio"
             name="trip"
-            checked={tripType === 'multiCity'}
-            onChange={() => setTripType('multiCity')}
-            className="accent-[#EC5C4C]"
+            checked={tripType === "multiCity"}
+            onChange={() => setTripType("multiCity")}
+            className="accent-accent"
           />
           Multi-City
         </label>
@@ -320,7 +333,7 @@ export function DuffelFlightSearch({
 
       {/* Search Form */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-        {tripType === 'multiCity' ? (
+        {tripType === "multiCity" ? (
           // Multi-city form
           <div className="col-span-12 space-y-3">
             {multiCityLegs.map((leg, idx) => renderMultiCityLeg(leg, idx))}
@@ -335,7 +348,7 @@ export function DuffelFlightSearch({
               <Button
                 onClick={handleSearch}
                 disabled={loading}
-                className="h-12 px-8 bg-[#EC5C4C] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                className="h-12 px-8 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -374,7 +387,7 @@ export function DuffelFlightSearch({
                 className="bg-white/20 p-2 rounded-full hover:bg-white/30 backdrop-blur-sm text-white transition-colors"
               >
                 <div className="bg-white rounded-full p-1 shadow-lg">
-                  <ArrowRightLeft size={16} className="text-[#003B95]" />
+                  <ArrowRightLeft size={16} className="text-primary" />
                 </div>
               </button>
             </div>
@@ -401,7 +414,7 @@ export function DuffelFlightSearch({
                 onReturnDateChange={setReturnDate}
                 mode="flight"
                 departureLabel="Departure"
-                returnLabel={tripType === 'roundTrip' ? 'Return' : undefined}
+                returnLabel={tripType === "roundTrip" ? "Return" : undefined}
               />
             </div>
 
@@ -410,7 +423,7 @@ export function DuffelFlightSearch({
               <Button
                 onClick={handleSearch}
                 disabled={loading}
-                className="w-full h-12 bg-[#EC5C4C] hover:bg-[#F4CE14] text-black font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
+                className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-bold text-base rounded-lg shadow-lg shadow-yellow-500/20 transition-all flex items-center justify-center gap-2"
                 data-testid="flight-search-submit"
               >
                 {loading ? (
@@ -418,7 +431,7 @@ export function DuffelFlightSearch({
                 ) : (
                   <Search size={18} />
                 )}
-                {loading ? 'Searching...' : 'Search'}
+                {loading ? "Searching..." : "Search"}
               </Button>
             </div>
           </>

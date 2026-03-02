@@ -1,7 +1,7 @@
 /**
  * Payment Confirmation Component
  * Displays final payment review and handles payment submission
- * 
+ *
  * Features:
  * - Booking details summary
  * - Payment breakdown review
@@ -11,8 +11,8 @@
  * - Loading states during processing
  */
 
-import React, { useState } from 'react';
-import type { FC } from 'react';
+import React, { useState } from "react";
+import type { FC } from "react";
 
 interface BookingDetails {
   bookingId: string;
@@ -27,7 +27,12 @@ interface PaymentBreakdown {
   walletAmount: number;
   creditsAmount: number;
   cardAmount: number;
-  creditsUsed: Array<{ id: string; code: string; amount: number; airline: string }>;
+  creditsUsed: Array<{
+    id: string;
+    code: string;
+    amount: number;
+    airline: string;
+  }>;
 }
 
 interface PaymentConfirmationProps {
@@ -59,7 +64,8 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
       }
       setSuccess(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Payment processing failed';
+      const errorMessage =
+        err instanceof Error ? err.message : "Payment processing failed";
       setError(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -75,7 +81,8 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
           Confirmation: <strong>{bookingDetails.reference}</strong>
         </p>
         <p className="success-message">
-          Your payment has been processed successfully. You will receive a confirmation email shortly.
+          Your payment has been processed successfully. You will receive a
+          confirmation email shortly.
         </p>
         <div className="success-details">
           <div className="detail-item">
@@ -84,7 +91,9 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
           </div>
           <div className="detail-item">
             <span>Total Amount:</span>
-            <span>{bookingDetails.currency} {bookingDetails.totalAmount.toFixed(2)}</span>
+            <span>
+              {bookingDetails.currency} {bookingDetails.totalAmount.toFixed(2)}
+            </span>
           </div>
         </div>
       </div>
@@ -125,7 +134,8 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
                 <span className="name">Wallet Payment</span>
               </div>
               <span className="amount">
-                {bookingDetails.currency} {paymentBreakdown.walletAmount.toFixed(2)}
+                {bookingDetails.currency}{" "}
+                {paymentBreakdown.walletAmount.toFixed(2)}
               </span>
             </div>
           )}
@@ -137,7 +147,8 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
                 <span className="name">Airline Credits</span>
               </div>
               <span className="amount">
-                {bookingDetails.currency} {paymentBreakdown.creditsAmount.toFixed(2)}
+                {bookingDetails.currency}{" "}
+                {paymentBreakdown.creditsAmount.toFixed(2)}
               </span>
             </div>
           )}
@@ -164,7 +175,8 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
                 <span className="name">Card Payment</span>
               </div>
               <span className="amount">
-                {bookingDetails.currency} {paymentBreakdown.cardAmount.toFixed(2)}
+                {bookingDetails.currency}{" "}
+                {paymentBreakdown.cardAmount.toFixed(2)}
               </span>
             </div>
           )}
@@ -188,7 +200,8 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
             <div className="info-box">
               <p className="info-title">💳 Card Payment</p>
               <p className="info-text">
-                Your card will be charged {bookingDetails.currency} {paymentBreakdown.cardAmount.toFixed(2)} at checkout.
+                Your card will be charged {bookingDetails.currency}{" "}
+                {paymentBreakdown.cardAmount.toFixed(2)} at checkout.
               </p>
               <p className="info-note">
                 All transactions are secured with 256-bit encryption.
@@ -200,7 +213,9 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
             <div className="info-box">
               <p className="info-title">💰 Wallet Deduction</p>
               <p className="info-text">
-                {bookingDetails.currency} {paymentBreakdown.walletAmount.toFixed(2)} will be deducted from your wallet.
+                {bookingDetails.currency}{" "}
+                {paymentBreakdown.walletAmount.toFixed(2)} will be deducted from
+                your wallet.
               </p>
             </div>
           )}
@@ -209,8 +224,9 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
             <div className="info-box">
               <p className="info-title">✈️ Credits Applied</p>
               <p className="info-text">
-                {paymentBreakdown.creditsUsed.length} airline credit(s) totaling{' '}
-                {bookingDetails.currency} {paymentBreakdown.creditsAmount.toFixed(2)} will be applied.
+                {paymentBreakdown.creditsUsed.length} airline credit(s) totaling{" "}
+                {bookingDetails.currency}{" "}
+                {paymentBreakdown.creditsAmount.toFixed(2)} will be applied.
               </p>
             </div>
           )}
@@ -230,14 +246,14 @@ const PaymentConfirmation: FC<PaymentConfirmationProps> = ({
         <button
           onClick={onCancel}
           disabled={isProcessing}
-          className="btn btn-secondary"
+          className="btn btn-secondary px-4 py-2 rounded-md text-sm font-medium"
         >
           Cancel
         </button>
         <button
           onClick={handleConfirmPayment}
           disabled={isProcessing}
-          className="btn btn-primary"
+          className="btn btn-primary px-4 py-2 rounded-md text-sm font-medium"
         >
           {isProcessing ? (
             <>
@@ -265,7 +281,7 @@ export default PaymentConfirmation;
 
 const styles = `
 .payment-confirmation {
-  background: white;
+  background: hsl(var(--card));
   border-radius: 12px;
   padding: 28px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -277,14 +293,14 @@ const styles = `
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 28px;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   text-align: center;
 }
 
 .confirmation-section {
   margin-bottom: 24px;
   padding-bottom: 24px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .confirmation-section:last-of-type {
@@ -295,13 +311,13 @@ const styles = `
   font-size: 15px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #333;
+  color: hsl(var(--foreground));
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .booking-summary {
-  background: #f9f9f9;
+  background: hsl(var(--muted));
   border-radius: 8px;
   padding: 16px;
 }
@@ -315,12 +331,12 @@ const styles = `
 }
 
 .summary-row .label {
-  color: #666;
+  color: hsl(var(--muted-foreground));
   font-weight: 500;
 }
 
 .summary-row .value {
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
   text-align: right;
   max-width: 250px;
   word-break: break-word;
@@ -328,15 +344,15 @@ const styles = `
 
 .summary-row .value.reference {
   font-family: monospace;
-  background: #e8f4f8;
+  background: hsl(var(--accent));
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 600;
 }
 
 .payment-breakdown-detail {
-  background: #f0f7ff;
-  border: 1px solid #d0e8ff;
+  background: hsl(var(--accent));
+  border: 1px solid hsl(var(--border));
   border-radius: 8px;
   padding: 16px;
   display: flex;
@@ -349,7 +365,7 @@ const styles = `
   justify-content: space-between;
   align-items: center;
   padding: 12px;
-  background: white;
+  background: hsl(var(--card));
   border-radius: 6px;
   font-size: 14px;
 }
@@ -366,37 +382,37 @@ const styles = `
 
 .payment-method .name {
   font-weight: 500;
-  color: #333;
+  color: hsl(var(--foreground));
 }
 
 .breakdown-row .amount {
   font-weight: 600;
-  color: #007bff;
+  color: hsl(var(--primary));
   font-size: 16px;
 }
 
 .breakdown-row.card-row {
-  background: #fff9f3;
-  border: 1px solid #ffe0b2;
+  background: hsl(var(--secondary));
+  border: 1px solid hsl(var(--border));
 }
 
 .breakdown-row.card-row .amount {
-  color: #ff9800;
+  color: hsl(var(--foreground));
 }
 
 .breakdown-row.total-row {
-  background: #e8f4f8;
-  border: 2px solid #007bff;
+  background: hsl(var(--accent));
+  border: 2px solid hsl(var(--primary));
   margin-top: 8px;
 }
 
 .breakdown-row.total-row .amount.total {
-  color: #007bff;
+  color: hsl(var(--primary));
   font-size: 18px;
 }
 
 .credits-details {
-  background: white;
+  background: hsl(var(--card));
   border-radius: 6px;
   padding: 12px;
   margin-top: 4px;
@@ -405,7 +421,7 @@ const styles = `
 .details-header {
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin: 0 0 8px 0;
   text-transform: uppercase;
 }
@@ -416,8 +432,8 @@ const styles = `
   align-items: center;
   padding: 6px 0;
   font-size: 12px;
-  color: #666;
-  border-top: 1px solid #f0f0f0;
+  color: hsl(var(--muted-foreground));
+  border-top: 1px solid hsl(var(--border));
 }
 
 .credit-detail:first-child {
@@ -425,7 +441,7 @@ const styles = `
 }
 
 .airline-code {
-  background: #e8f4f8;
+  background: hsl(var(--accent));
   padding: 2px 6px;
   border-radius: 3px;
   font-weight: 600;
@@ -435,7 +451,7 @@ const styles = `
 
 .credit-code {
   font-family: monospace;
-  color: #999;
+  color: hsl(var(--muted-foreground));
 }
 
 .payment-info {
@@ -445,8 +461,8 @@ const styles = `
 }
 
 .info-box {
-  background: #f9f9f9;
-  border-left: 4px solid #007bff;
+  background: hsl(var(--muted));
+  border-left: 4px solid hsl(var(--primary));
   padding: 12px;
   border-radius: 4px;
 }
@@ -455,24 +471,24 @@ const styles = `
   font-size: 13px;
   font-weight: 600;
   margin: 0 0 6px 0;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 
 .info-text {
   font-size: 13px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin: 4px 0;
 }
 
 .info-note {
   font-size: 12px;
-  color: #999;
+  color: hsl(var(--muted-foreground));
   margin: 6px 0 0 0;
 }
 
 .error-alert {
-  background: #ffebee;
-  border: 1px solid #ef5350;
+  background: hsl(var(--destructive) / 0.12);
+  border: 1px solid hsl(var(--destructive));
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 20px;
@@ -482,12 +498,12 @@ const styles = `
   font-size: 14px;
   font-weight: 600;
   margin: 0 0 6px 0;
-  color: #c62828;
+  color: hsl(var(--destructive));
 }
 
 .error-message {
   font-size: 13px;
-  color: #d32f2f;
+  color: hsl(var(--destructive));
   margin: 0;
 }
 
@@ -518,31 +534,31 @@ const styles = `
 }
 
 .btn-primary {
-  background: #007bff;
-  color: white;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
   flex: 1;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #0056b3;
+  background: hsl(var(--primary) / 0.9);
   box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
 }
 
 .btn-secondary {
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  border: 1px solid hsl(var(--border));
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
 }
 
 .spinner-mini {
   display: inline-block;
   width: 12px;
   height: 12px;
-  border: 2px solid #ffffff;
+  border: 2px solid hsl(var(--primary-foreground));
   border-top: 2px solid transparent;
   border-radius: 50%;
   animation: spin 0.6s linear infinite;
@@ -559,10 +575,10 @@ const styles = `
   justify-content: center;
   gap: 6px;
   padding: 12px;
-  background: #e8f5e9;
+  background: hsl(var(--secondary));
   border-radius: 6px;
   font-size: 13px;
-  color: #2e7d32;
+  color: hsl(var(--foreground));
   font-weight: 500;
 }
 
@@ -574,7 +590,7 @@ const styles = `
 .payment-success {
   text-align: center;
   padding: 40px 28px;
-  background: white;
+  background: hsl(var(--card));
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 500px;
@@ -590,30 +606,30 @@ const styles = `
   font-size: 24px;
   font-weight: 700;
   margin-bottom: 12px;
-  color: #2e7d32;
+  color: hsl(var(--foreground));
 }
 
 .confirmation-number {
   font-size: 14px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin-bottom: 12px;
 }
 
 .confirmation-number strong {
   font-family: monospace;
-  background: #e8f5e9;
+  background: hsl(var(--secondary));
   padding: 4px 8px;
   border-radius: 4px;
 }
 
 .success-message {
   font-size: 14px;
-  color: #666;
+  color: hsl(var(--muted-foreground));
   margin-bottom: 20px;
 }
 
 .success-details {
-  background: #f5f5f5;
+  background: hsl(var(--muted));
   border-radius: 8px;
   padding: 16px;
   text-align: left;
@@ -627,12 +643,12 @@ const styles = `
 }
 
 .success-details .detail-item span:first-child {
-  color: #666;
+  color: hsl(var(--muted-foreground));
 }
 
 .success-details .detail-item span:last-child {
   font-weight: 600;
-  color: #1a1a1a;
+  color: hsl(var(--foreground));
 }
 `;
 

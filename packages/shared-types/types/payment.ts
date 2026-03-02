@@ -13,8 +13,8 @@ import {
   TransactionStatus,
   RefundType,
   RefundStatus,
-} from './enums';
-import { Address } from './company';
+} from "./enums";
+import { Address } from "./company";
 
 // ============================================================================
 // Payment Gateway Types
@@ -26,24 +26,24 @@ export interface PaymentGateway {
   provider: PaymentProvider;
   type: PaymentGatewayType;
   status: GatewayStatus;
-  
+
   // Configuration
   config?: Record<string, unknown>;
   supportedCurrencies: string[];
   supportedMethods: string[];
-  
+
   // Fees
   transactionFee?: number;
   fixedFee?: number;
-  
+
   // Limits
   minAmount?: number;
   maxAmount?: number;
-  
+
   // Settings
   isDefault: boolean;
   priority: number;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -91,28 +91,28 @@ export interface PaymentMethod {
   userId: string;
   type: PaymentMethodType;
   status: PaymentMethodStatus;
-  
+
   // Card details (tokenized/masked)
   cardBrand?: string;
   cardLast4?: string;
   cardExpMonth?: number;
   cardExpYear?: number;
   cardHolderName?: string;
-  
+
   // Bank details (masked)
   bankName?: string;
   accountLast4?: string;
-  
+
   // Provider token
   providerToken?: string;
   providerCustomerId?: string;
-  
+
   // Settings
   isDefault: boolean;
   nickname?: string;
-  
+
   billingAddress?: Address;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -157,43 +157,43 @@ export interface Transaction {
   userId: string;
   gatewayId: string;
   paymentMethodId?: string;
-  
+
   type: TransactionType;
   status: TransactionStatus;
-  
+
   // Amounts
   currency: string;
   amount: number;
   fee: number;
   netAmount: number;
-  
+
   // Exchange rate
   originalCurrency?: string;
   originalAmount?: number;
   exchangeRate?: number;
-  
+
   // Provider response
   providerRef?: string;
   providerStatus?: string;
   providerResponse?: Record<string, unknown>;
-  
+
   // Error handling
   errorCode?: string;
   errorMessage?: string;
-  
+
   // 3DS
   requires3ds: boolean;
   threeDsStatus?: string;
-  
+
   // Context
   ipAddress?: string;
   userAgent?: string;
-  
+
   // Timestamps
   processedAt?: string;
   completedAt?: string;
   failedAt?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -233,31 +233,31 @@ export interface Refund {
   id: string;
   refundRef: string;
   transactionId: string;
-  
+
   type: RefundType;
   status: RefundStatus;
   reason: string;
-  
+
   // Amounts
   currency: string;
   requestedAmount: number;
   approvedAmount?: number;
   refundedAmount?: number;
-  
+
   // Processing
   requestedBy: string;
   requestedAt: string;
   approvedBy?: string;
   approvedAt?: string;
   processedAt?: string;
-  
+
   // Provider
   providerRef?: string;
   providerStatus?: string;
   providerResponse?: Record<string, unknown>;
-  
+
   rejectionReason?: string;
-  
+
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -340,8 +340,8 @@ export interface TransactionListParams {
   toDate?: string;
   minAmount?: number;
   maxAmount?: number;
-  sortBy?: 'createdAt' | 'amount' | 'transactionRef';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "createdAt" | "amount" | "transactionRef";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface TransactionListResponse {

@@ -1,70 +1,170 @@
-import React, { useState, useEffect } from 'react';
-import { Key, CreditCard, ShieldCheck, Bell, User, Download } from 'lucide-react';
-import { Button } from '../components/ui/button';
-import PageHeader from '../components/layout/PageHeader';
-import { Card } from '../components/ui/card';
-import { formatCurrency } from '@tripalfa/ui-components';
+import React, { useState, useEffect } from "react";
+import {
+  Key,
+  CreditCard,
+  ShieldCheck,
+  Bell,
+  User,
+  Download,
+} from "lucide-react";
+import { Button } from "../components/ui/button";
+import PageHeader from "../components/layout/PageHeader";
+import { Card } from "../components/ui/card";
+import { formatCurrency } from "@tripalfa/ui-components";
+import { Label } from "@/components/ui/label";
+import {
+  DEFAULT_CONTENT_CONFIG,
+  loadTenantContentConfig,
+} from "../lib/tenantContentConfig";
 
-type CardItem = { id: string; brand: string; last4: string; exp: string; currency: string; balance?: number };
+type CardItem = {
+  id: string;
+  brand: string;
+  last4: string;
+  exp: string;
+  currency: string;
+  balance?: number;
+};
 
 export default function AccountSettings(): React.JSX.Element {
-  const [tab, setTab] = useState<'profile' | 'security' | 'payments' | 'notifications' | 'documents' | 'api'>('profile');
+  const [tab, setTab] = useState<
+    "profile" | "security" | "payments" | "notifications" | "documents" | "api"
+  >("profile");
+
+  const [accountContent, setAccountContent] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings,
+  );
 
   // Mocked state (replace with hooks/api integration)
-  const [firstName, setFirstName] = useState('John');
-  const [lastName, setLastName] = useState('Doe');
-  const [email, setEmail] = useState('user@example.com');
-  const [phone, setPhone] = useState('+1 555 123 4567');
-  const [cards, setCards] = useState<CardItem[]>([
-    { id: 'c1', brand: 'Visa', last4: '4242', exp: '12/26', currency: 'USD', balance: 120.5 },
-    { id: 'c2', brand: 'Mastercard', last4: '8888', exp: '08/25', currency: 'USD' },
-  ]);
-  const [notifications, setNotifications] = useState({
-    marketing: true,
-    bookingUpdates: true,
-    promoSms: false,
-  });
-  const [apiKeys] = useState([{ id: 'k1', label: 'Default key', key: 'sk_live_xxx...xyz', created: '2024-12-01' }]);
+  const [firstName, setFirstName] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.firstName,
+  );
+  const [lastName, setLastName] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.lastName,
+  );
+  const [email, setEmail] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.email,
+  );
+  const [phone, setPhone] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.phone,
+  );
+  const [cards, setCards] = useState<CardItem[]>(
+    DEFAULT_CONTENT_CONFIG.accountSettings.paymentsDefaults.savedCards,
+  );
+  const [notifications, setNotifications] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings.notificationsDefaults,
+  );
+  const [apiKeys, setApiKeys] = useState(
+    DEFAULT_CONTENT_CONFIG.accountSettings.apiDefaults,
+  );
 
   // respect hash navigation (e.g. /account-settings#security)
   useEffect(() => {
+    const loadAccountContent = async () => {
+      try {
+        const contentConfig = await loadTenantContentConfig();
+        const loadedAccountContent = contentConfig.accountSettings;
+        setAccountContent(loadedAccountContent);
+        setFirstName(loadedAccountContent.profileDefaults.firstName);
+        setLastName(loadedAccountContent.profileDefaults.lastName);
+        setEmail(loadedAccountContent.profileDefaults.email);
+        setPhone(loadedAccountContent.profileDefaults.phone);
+        setCards(loadedAccountContent.paymentsDefaults.savedCards);
+        setNotifications(loadedAccountContent.notificationsDefaults);
+        setApiKeys(loadedAccountContent.apiDefaults);
+      } catch {
+        setAccountContent(DEFAULT_CONTENT_CONFIG.accountSettings);
+      }
+    };
+
     try {
-      const h = (window.location.hash || '').replace('#', '');
-      if (h && ['profile', 'security', 'payments', 'notifications', 'documents', 'api'].includes(h)) {
+      const h = (window.location.hash || "").replace("#", "");
+      if (
+        h &&
+        [
+          "profile",
+          "security",
+          "payments",
+          "notifications",
+          "documents",
+          "api",
+        ].includes(h)
+      ) {
         setTab(h as any);
       }
     } catch {
       // ignore
     }
+
+    void loadAccountContent();
   }, []);
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <PageHeader title="Account settings" subtitle="Manage profile, security, wallet and developer keys." />
+      <PageHeader
+        title={accountContent.title}
+        subtitle={accountContent.subtitle}
+      />
 
       <div className="flex gap-6">
         {/* Local page sidebar */}
         <aside className="w-64 hidden lg:block">
-          <div className="sticky top-28 bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-white/40 shadow">
+          <div className="sticky top-28 bg-background/60 backdrop-blur-md rounded-2xl p-4 border border-border/40 shadow">
             <nav className="space-y-2">
-              <button onClick={() => setTab('profile')} className={`w-full text-left px-3 py-2 rounded-md ${tab === 'profile' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`}>
-                <User className="inline-block mr-2 h-4 w-4 align-middle" /> Profile
-              </button>
-              <button onClick={() => setTab('security')} className={`w-full text-left px-3 py-2 rounded-md ${tab === 'security' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`}>
-                <ShieldCheck className="inline-block mr-2 h-4 w-4 align-middle" /> Security
-              </button>
-              <button onClick={() => setTab('payments')} className={`w-full text-left px-3 py-2 rounded-md ${tab === 'payments' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`}>
-                <CreditCard className="inline-block mr-2 h-4 w-4 align-middle" /> Payment Methods
-              </button>
-              <button onClick={() => setTab('notifications')} className={`w-full text-left px-3 py-2 rounded-md ${tab === 'notifications' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`}>
-                <Bell className="inline-block mr-2 h-4 w-4 align-middle" /> Notifications
-              </button>
-              <button onClick={() => setTab('documents')} className={`w-full text-left px-3 py-2 rounded-md ${tab === 'documents' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`}>
-                <Download className="inline-block mr-2 h-4 w-4 align-middle" /> Documents
-              </button>
-              <button onClick={() => setTab('api')} className={`w-full text-left px-3 py-2 rounded-md ${tab === 'api' ? 'bg-white/80 ring-1 ring-indigo-200' : 'hover:bg-white/30'}`}>
-                <Key className="inline-block mr-2 h-4 w-4 align-middle" /> API Keys
-              </button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setTab("profile")}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === "profile" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+              >
+                <User className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                {accountContent.tabs.profile}
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setTab("security")}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === "security" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+              >
+                <ShieldCheck className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                {accountContent.tabs.security}
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setTab("payments")}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === "payments" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+              >
+                <CreditCard className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                {accountContent.tabs.payments}
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setTab("notifications")}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === "notifications" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+              >
+                <Bell className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                {accountContent.tabs.notifications}
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setTab("documents")}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === "documents" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+              >
+                <Download className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                {accountContent.tabs.documents}
+              </Button>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setTab("api")}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === "api" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+              >
+                <Key className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                {accountContent.tabs.api}
+              </Button>
             </nav>
           </div>
         </aside>
@@ -72,54 +172,111 @@ export default function AccountSettings(): React.JSX.Element {
         {/* Content */}
         <div className="flex-1 space-y-6">
           {/* Profile */}
-          {tab === 'profile' && (
+          {tab === "profile" && (
             <Card className="p-6">
-              <h2 className="text-lg font-medium mb-4">Profile</h2>
+              <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
+                Profile
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="block">
-                  <div className="text-xs text-gray-500">First name</div>
-                  <input id="account-first-name" name="account-first-name" className="mt-1 w-full p-3 border rounded-lg bg-white/70" value={firstName} onChange={e => setFirstName(e.target.value)} />
-                </label>
-                <label className="block">
-                  <div className="text-xs text-gray-500">Last name</div>
-                  <input id="account-last-name" name="account-last-name" className="mt-1 w-full p-3 border rounded-lg bg-white/70" value={lastName} onChange={e => setLastName(e.target.value)} />
-                </label>
-                <label className="block sm:col-span-2">
-                  <div className="text-xs text-gray-500">Email</div>
-                  <input id="account-email" name="account-email" className="mt-1 w-full p-3 border rounded-lg bg-white/70" value={email} onChange={e => setEmail(e.target.value)} />
-                </label>
-                <label className="block sm:col-span-2">
-                  <div className="text-xs text-gray-500">Phone</div>
-                  <input id="account-phone" name="account-phone" className="mt-1 w-full p-3 border rounded-lg bg-white/70" value={phone} onChange={e => setPhone(e.target.value)} />
-                </label>
+                <Label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <div className="text-xs text-muted-foreground">
+                    First name
+                  </div>
+                  <input
+                    id="account-first-name"
+                    name="account-first-name"
+                    className="mt-1 w-full p-3 border rounded-lg bg-background/70"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </Label>
+                <Label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <div className="text-xs text-muted-foreground">Last name</div>
+                  <input
+                    id="account-last-name"
+                    name="account-last-name"
+                    className="mt-1 w-full p-3 border rounded-lg bg-background/70"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </Label>
+                <Label className="block sm:col-span-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <div className="text-xs text-muted-foreground">Email</div>
+                  <input
+                    id="account-email"
+                    name="account-email"
+                    className="mt-1 w-full p-3 border rounded-lg bg-background/70"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Label>
+                <Label className="block sm:col-span-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  <div className="text-xs text-muted-foreground">Phone</div>
+                  <input
+                    id="account-phone"
+                    name="account-phone"
+                    className="mt-1 w-full p-3 border rounded-lg bg-background/70"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </Label>
               </div>
 
               <div className="mt-4 flex gap-2">
                 <Button className="px-4 py-2">Save profile</Button>
-                <Button variant="ghost" className="px-4 py-2">Cancel</Button>
+                <Button variant="ghost" className="px-4 py-2">
+                  Cancel
+                </Button>
               </div>
             </Card>
           )}
 
           {/* Security */}
-          {tab === 'security' && (
+          {tab === "security" && (
             <Card className="p-6">
-              <h2 className="text-lg font-medium mb-4">Security</h2>
+              <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
+                Security
+              </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-500">Change password</label>
-                  <input id="account-current-password" name="account-current-password" type="password" placeholder="Current password" className="mt-1 w-full p-3 border rounded-lg bg-white/70" />
-                  <input id="account-new-password" name="account-new-password" type="password" placeholder="New password" className="mt-2 w-full p-3 border rounded-lg bg-white/70" />
-                  <input id="account-confirm-password" name="account-confirm-password" type="password" placeholder="Confirm new password" className="mt-2 w-full p-3 border rounded-lg bg-white/70" />
+                  <Label className="block text-xs text-muted-foreground font-medium">
+                    Change password
+                  </Label>
+                  <input
+                    id="account-current-password"
+                    name="account-current-password"
+                    type="password"
+                    placeholder="Current password"
+                    className="mt-1 w-full p-3 border rounded-lg bg-background/70"
+                  />
+                  <input
+                    id="account-new-password"
+                    name="account-new-password"
+                    type="password"
+                    placeholder="New password"
+                    className="mt-2 w-full p-3 border rounded-lg bg-background/70"
+                  />
+                  <input
+                    id="account-confirm-password"
+                    name="account-confirm-password"
+                    type="password"
+                    placeholder="Confirm new password"
+                    className="mt-2 w-full p-3 border rounded-lg bg-background/70"
+                  />
                   <div className="mt-3">
                     <Button>Update password</Button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-gray-500">Two-factor authentication</label>
-                  <div className="mt-2 bg-white/70 p-3 rounded-lg border">
-                    <p className="text-sm text-gray-700 mb-2">Protect your account with 2FA via SMS or authenticator app.</p>
+                  <Label className="block text-xs text-muted-foreground font-medium">
+                    Two-factor authentication
+                  </Label>
+                  <div className="mt-2 bg-background/70 p-3 rounded-lg border">
+                    <p className="text-sm text-foreground mb-2">
+                      Protect your account with 2FA via SMS or authenticator
+                      app.
+                    </p>
                     <div className="flex gap-2">
                       <Button variant="outline">Enable SMS 2FA</Button>
                       <Button variant="outline">Enable Authenticator</Button>
@@ -127,8 +284,19 @@ export default function AccountSettings(): React.JSX.Element {
                   </div>
 
                   <div className="mt-4">
-                    <label className="text-xs text-gray-500">Active sessions</label>
-                    <div className="mt-2 text-sm text-gray-600">You are signed in on 2 devices. <button className="ml-2 text-indigo-600">Sign out of other sessions</button></div>
+                    <Label className="text-xs text-muted-foreground font-medium">
+                      Active sessions
+                    </Label>
+                    <div className="mt-2 text-sm text-muted-foreground">
+                      You are signed in on 2 devices.{" "}
+                      <Button
+                        variant="ghost"
+                        size="md"
+                        className="ml-2 px-4 py-2 text-sm font-medium rounded-md transition-colors hover:bg-muted"
+                      >
+                        Sign out of other sessions
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -136,20 +304,35 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Payments */}
-          {tab === 'payments' && (
+          {tab === "payments" && (
             <Card className="p-6">
-              <h2 className="text-lg font-medium mb-4">Payment Methods & Billing</h2>
+              <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
+                Payment Methods & Billing
+              </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="col-span-1">
-                  <h3 className="text-sm text-gray-500 mb-2">Saved cards</h3>
+                  <h3 className="text-sm text-muted-foreground mb-2 text-xl font-semibold tracking-tight">
+                    Saved cards
+                  </h3>
                   <div className="space-y-3">
-                    {cards.map(c => (
-                      <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg bg-white/70">
+                    {cards.map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center justify-between p-3 border rounded-lg bg-background/70 gap-2"
+                      >
                         <div>
-                          <div className="text-sm font-medium">{c.brand} •••• {c.last4}</div>
-                          <div className="text-xs text-gray-500">Expires {c.exp}</div>
-                          {typeof c.balance === 'number' && <div className="text-xs text-gray-500 mt-1">Available: {formatCurrency(c.balance)}</div>}
+                          <div className="text-sm font-medium">
+                            {c.brand} •••• {c.last4}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Expires {c.exp}
+                          </div>
+                          {typeof c.balance === "number" && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              Available: {formatCurrency(c.balance)}
+                            </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button variant="ghost">Make default</Button>
@@ -161,13 +344,35 @@ export default function AccountSettings(): React.JSX.Element {
                 </div>
 
                 <div className="col-span-1">
-                  <h3 className="text-sm text-gray-500 mb-2">Add payment method</h3>
-                  <div className="p-3 border rounded-lg bg-white/70">
-                    <input id="account-card-number" name="account-card-number" placeholder="Card number" className="w-full p-3 border rounded-lg mb-2" />
+                  <h3 className="text-sm text-muted-foreground mb-2 text-xl font-semibold tracking-tight">
+                    Add payment method
+                  </h3>
+                  <div className="p-3 border rounded-lg bg-background/70">
+                    <input
+                      id="account-card-number"
+                      name="account-card-number"
+                      placeholder="Card number"
+                      className="w-full p-3 border rounded-lg mb-2"
+                    />
                     <div className="flex gap-2">
-                      <input id="account-card-expiry" name="account-card-expiry" placeholder="MM/YY" className="w-1/3 p-3 border rounded-lg" />
-                      <input id="account-card-cvc" name="account-card-cvc" placeholder="CVC" className="w-1/3 p-3 border rounded-lg" />
-                      <input id="account-card-name" name="account-card-name" placeholder="Name on card" className="flex-1 p-3 border rounded-lg" />
+                      <input
+                        id="account-card-expiry"
+                        name="account-card-expiry"
+                        placeholder="MM/YY"
+                        className="w-1/3 p-3 border rounded-lg"
+                      />
+                      <input
+                        id="account-card-cvc"
+                        name="account-card-cvc"
+                        placeholder="CVC"
+                        className="w-1/3 p-3 border rounded-lg"
+                      />
+                      <input
+                        id="account-card-name"
+                        name="account-card-name"
+                        placeholder="Name on card"
+                        className="flex-1 p-3 border rounded-lg gap-4"
+                      />
                     </div>
                     <div className="mt-3">
                       <Button>Add card</Button>
@@ -177,13 +382,35 @@ export default function AccountSettings(): React.JSX.Element {
               </div>
 
               <div className="mt-4">
-                <h3 className="text-sm text-gray-500 mb-2">Billing address</h3>
-                <div className="p-3 border rounded-lg bg-white/70">
-                  <input id="account-address-line1" name="account-address-line1" placeholder="Address line 1" className="w-full p-3 border rounded-lg mb-2" />
-                  <input id="account-city" name="account-city" placeholder="City" className="w-full p-3 border rounded-lg mb-2" />
+                <h3 className="text-sm text-muted-foreground mb-2 text-xl font-semibold tracking-tight">
+                  Billing address
+                </h3>
+                <div className="p-3 border rounded-lg bg-background/70">
+                  <input
+                    id="account-address-line1"
+                    name="account-address-line1"
+                    placeholder="Address line 1"
+                    className="w-full p-3 border rounded-lg mb-2"
+                  />
+                  <input
+                    id="account-city"
+                    name="account-city"
+                    placeholder="City"
+                    className="w-full p-3 border rounded-lg mb-2"
+                  />
                   <div className="flex gap-2">
-                    <input id="account-postal-code" name="account-postal-code" placeholder="Postal code" className="w-1/3 p-3 border rounded-lg" />
-                    <input id="account-country" name="account-country" placeholder="Country" className="flex-1 p-3 border rounded-lg" />
+                    <input
+                      id="account-postal-code"
+                      name="account-postal-code"
+                      placeholder="Postal code"
+                      className="w-1/3 p-3 border rounded-lg"
+                    />
+                    <input
+                      id="account-country"
+                      name="account-country"
+                      placeholder="Country"
+                      className="flex-1 p-3 border rounded-lg gap-4"
+                    />
                   </div>
                 </div>
               </div>
@@ -191,33 +418,65 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Notifications */}
-          {tab === 'notifications' && (
+          {tab === "notifications" && (
             <Card className="p-6">
-              <h2 className="text-lg font-medium mb-4">Notifications</h2>
+              <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
+                Notifications
+              </h2>
               <div className="space-y-3">
-                <label className="flex items-center justify-between">
+                <Label className="flex items-center justify-between gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   <div>
                     <div className="text-sm font-medium">Marketing emails</div>
-                    <div className="text-xs text-gray-500">Receive offers and product news</div>
+                    <div className="text-xs text-muted-foreground">
+                      Receive offers and product news
+                    </div>
                   </div>
-                  <input type="checkbox" checked={notifications.marketing} onChange={() => setNotifications(s => ({ ...s, marketing: !s.marketing }))} />
-                </label>
+                  <input
+                    type="checkbox"
+                    checked={notifications.marketing}
+                    onChange={() =>
+                      setNotifications((s) => ({
+                        ...s,
+                        marketing: !s.marketing,
+                      }))
+                    }
+                  />
+                </Label>
 
-                <label className="flex items-center justify-between">
+                <Label className="flex items-center justify-between gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   <div>
                     <div className="text-sm font-medium">Booking updates</div>
-                    <div className="text-xs text-gray-500">Important messages about your trips</div>
+                    <div className="text-xs text-muted-foreground">
+                      Important messages about your trips
+                    </div>
                   </div>
-                  <input type="checkbox" checked={notifications.bookingUpdates} onChange={() => setNotifications(s => ({ ...s, bookingUpdates: !s.bookingUpdates }))} />
-                </label>
+                  <input
+                    type="checkbox"
+                    checked={notifications.bookingUpdates}
+                    onChange={() =>
+                      setNotifications((s) => ({
+                        ...s,
+                        bookingUpdates: !s.bookingUpdates,
+                      }))
+                    }
+                  />
+                </Label>
 
-                <label className="flex items-center justify-between">
+                <Label className="flex items-center justify-between gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   <div>
                     <div className="text-sm font-medium">Promotional SMS</div>
-                    <div className="text-xs text-gray-500">Occasional SMS about promotions</div>
+                    <div className="text-xs text-muted-foreground">
+                      Occasional SMS about promotions
+                    </div>
                   </div>
-                  <input type="checkbox" checked={notifications.promoSms} onChange={() => setNotifications(s => ({ ...s, promoSms: !s.promoSms }))} />
-                </label>
+                  <input
+                    type="checkbox"
+                    checked={notifications.promoSms}
+                    onChange={() =>
+                      setNotifications((s) => ({ ...s, promoSms: !s.promoSms }))
+                    }
+                  />
+                </Label>
 
                 <div className="mt-4">
                   <Button>Save notification preferences</Button>
@@ -227,39 +486,58 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Documents */}
-          {tab === 'documents' && (
+          {tab === "documents" && (
             <Card className="p-6">
-              <h2 className="text-lg font-medium mb-4">Documents</h2>
+              <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
+                Documents
+              </h2>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 border rounded-lg bg-white/70">
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-background/70 gap-2">
                   <div>
-                    <div className="text-sm font-medium">Invoice - March 2025</div>
-                    <div className="text-xs text-gray-500">PDF • 120KB</div>
+                    <div className="text-sm font-medium">
+                      Invoice - March 2025
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      PDF • 120KB
+                    </div>
                   </div>
                   <div>
                     <Button variant="ghost">Download</Button>
-                    <Button variant="outline" className="ml-2">Request copy</Button>
+                    <Button variant="outline" className="ml-2">
+                      Request copy
+                    </Button>
                   </div>
                 </div>
 
-                <div className="text-sm text-gray-500">You can download invoices and booking confirmations here.</div>
+                <div className="text-sm text-muted-foreground">
+                  You can download invoices and booking confirmations here.
+                </div>
               </div>
             </Card>
           )}
 
           {/* API Keys */}
-          {tab === 'api' && (
+          {tab === "api" && (
             <Card className="p-6">
-              <h2 className="text-lg font-medium mb-4">API Keys</h2>
+              <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
+                API Keys
+              </h2>
               <div className="space-y-3">
-                {apiKeys.map(k => (
-                  <div key={k.id} className="flex items-center justify-between p-3 border rounded-lg bg-white/70">
+                {apiKeys.map((k) => (
+                  <div
+                    key={k.id}
+                    className="flex items-center justify-between p-3 border rounded-lg bg-background/70 gap-2"
+                  >
                     <div>
                       <div className="text-sm font-medium">{k.label}</div>
-                      <div className="text-xs text-gray-500">{k.created}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {k.created}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-xs text-gray-700 font-mono px-3 py-1 bg-slate-100 rounded">{k.key}</div>
+                      <div className="text-xs text-foreground font-mono px-3 py-1 bg-muted rounded">
+                        {k.key}
+                      </div>
                       <Button variant="ghost">Regenerate</Button>
                       <Button variant="outline">Revoke</Button>
                     </div>
@@ -277,12 +555,47 @@ export default function AccountSettings(): React.JSX.Element {
 
       {/* Mobile tab bar */}
       <div className="lg:hidden fixed bottom-4 left-0 right-0 flex justify-center px-4">
-        <div className="w-full max-w-3xl bg-white/70 backdrop-blur rounded-full p-2 flex justify-between items-center px-3 border border-white/30 shadow-md">
-          <button onClick={() => setTab('profile')} className={`flex-1 text-center py-2 ${tab === 'profile' ? 'text-indigo-700' : 'text-slate-600'}`}><User className="mx-auto" /></button>
-          <button onClick={() => setTab('payments')} className={`flex-1 text-center py-2 ${tab === 'payments' ? 'text-indigo-700' : 'text-slate-600'}`}><CreditCard className="mx-auto" /></button>
-          <button onClick={() => setTab('bookings' as any)} className={`flex-1 text-center py-2 text-slate-600`}><ShieldCheck className="mx-auto" /></button>
-          <button onClick={() => setTab('notifications')} className={`flex-1 text-center py-2 ${tab === 'notifications' ? 'text-indigo-700' : 'text-slate-600'}`}><Bell className="mx-auto" /></button>
-          <button onClick={() => setTab('api')} className={`flex-1 text-center py-2 ${tab === 'api' ? 'text-indigo-700' : 'text-slate-600'}`}><Key className="mx-auto" /></button>
+        <div className="w-full max-w-3xl bg-background/70 backdrop-blur rounded-full p-2 flex justify-between items-center px-3 border border-border/30 shadow-md gap-4">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setTab("profile")}
+            className={`flex-1 text-center py-2 ${tab === "profile" ? "text-indigo-700" : "text-muted-foreground"}`}
+          >
+            <User className="mx-auto" />
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setTab("payments")}
+            className={`flex-1 text-center py-2 ${tab === "payments" ? "text-indigo-700" : "text-muted-foreground"}`}
+          >
+            <CreditCard className="mx-auto" />
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setTab("bookings" as any)}
+            className={`flex-1 text-center py-2 text-muted-foreground`}
+          >
+            <ShieldCheck className="mx-auto" />
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setTab("notifications")}
+            className={`flex-1 text-center py-2 ${tab === "notifications" ? "text-indigo-700" : "text-muted-foreground"}`}
+          >
+            <Bell className="mx-auto" />
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => setTab("api")}
+            className={`flex-1 text-center py-2 ${tab === "api" ? "text-indigo-700" : "text-muted-foreground"}`}
+          >
+            <Key className="mx-auto" />
+          </Button>
         </div>
       </div>
     </div>

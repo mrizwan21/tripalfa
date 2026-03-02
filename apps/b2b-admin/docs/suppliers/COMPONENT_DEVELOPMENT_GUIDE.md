@@ -31,13 +31,14 @@ SupplierGateway (Page Wrapper)
 Comprehensive environment switcher with status indicators and configuration details.
 
 **Props**:
+
 ```typescript
 interface EnvironmentSelectorProps {
-  onEnvironmentChange?: (environment: Environment) => void
-  showStatus?: boolean          // Show green/red indicators
-  showDetails?: boolean         // Show full config panel
-  disabled?: boolean            // Disable interactions
-  className?: string            // Custom CSS class
+  onEnvironmentChange?: (environment: Environment) => void;
+  showStatus?: boolean; // Show green/red indicators
+  showDetails?: boolean; // Show full config panel
+  disabled?: boolean; // Disable interactions
+  className?: string; // Custom CSS class
 }
 ```
 
@@ -58,6 +59,7 @@ interface EnvironmentSelectorProps {
 ```
 
 **Features**:
+
 - ✅ Tab switcher for dev/staging/production
 - ✅ Status indicators (configured/invalid/missing)
 - ✅ Environment configuration display
@@ -68,6 +70,7 @@ interface EnvironmentSelectorProps {
 - ✅ Responsive design
 
 **Integration Points**:
+
 - Uses `useGatewayForm()` for active environment state
 - Uses `useEnvironmentConfig()` for configuration details
 - Updates form on environment change
@@ -81,13 +84,14 @@ interface EnvironmentSelectorProps {
 Multi-variant product selection with schema information and endpoint details.
 
 **Main Component Props**:
+
 ```typescript
 interface ProductSelectorProps {
-  onProductChange?: (productId: ProductType) => void
-  showDetails?: boolean        // Show product details
-  multiSelect?: boolean        // Allow multiple selection
-  disabled?: boolean           // Disable interactions
-  className?: string           // Custom CSS class
+  onProductChange?: (productId: ProductType) => void;
+  showDetails?: boolean; // Show product details
+  multiSelect?: boolean; // Allow multiple selection
+  disabled?: boolean; // Disable interactions
+  className?: string; // Custom CSS class
 }
 ```
 
@@ -104,7 +108,7 @@ interface ProductSelectorProps {
 <ProductSelector multiSelect={true} />
 
 // Dropdown variant
-<ProductDropdown 
+<ProductDropdown
   selectedProduct="hotel"
   onProductChange={(product) => console.log(product)}
   placeholder="Select a product..."
@@ -116,6 +120,7 @@ interface ProductSelectorProps {
 ```
 
 **Available Products**:
+
 - 🏨 Hotel Management (12 endpoints, api-key/oauth2)
 - ✈️ Flight Management (8 endpoints, api-key/bearer)
 - 🚗 Car Rental (6 endpoints, api-key/jwt)
@@ -124,6 +129,7 @@ interface ProductSelectorProps {
 - ⚙️ Custom Integration (flexible auth)
 
 **Features**:
+
 - ✅ Grid or dropdown layouts
 - ✅ Product categorization
 - ✅ Endpoint count display
@@ -134,6 +140,7 @@ interface ProductSelectorProps {
 - ✅ Single or multi-select
 
 **Integration Points**:
+
 - Updates `form.formData.productConfigs`
 - Uses `useProductSchema()` for endpoint definitions
 - Triggers `onProductChange` callback
@@ -149,17 +156,19 @@ interface ProductSelectorProps {
 **File**: `components/api-gateway/AuthenticationForm.tsx`
 
 **Props**:
+
 ```typescript
 interface AuthenticationFormProps {
-  environment: Environment
-  authType: 'api-key' | 'oauth2' | 'jwt' | 'bearer' | 'basic'
-  credentials?: Record<string, any>
-  onCredentialsChange?: (credentials: Record<string, any>) => void
-  error?: string
+  environment: Environment;
+  authType: "api-key" | "oauth2" | "jwt" | "bearer" | "basic";
+  credentials?: Record<string, any>;
+  onCredentialsChange?: (credentials: Record<string, any>) => void;
+  error?: string;
 }
 ```
 
 **Expected Features**:
+
 - Dynamic form fields based on auth type
 - API Key: Simple text input
 - OAuth2: ClientID, ClientSecret, TokenURL, Scopes
@@ -179,17 +188,19 @@ interface AuthenticationFormProps {
 **File**: `components/api-gateway/EndpointConfigurator.tsx`
 
 **Props**:
+
 ```typescript
 interface EndpointConfiguratorProps {
-  product: ProductType
-  environment: Environment
-  endpoints?: SupplierAPIEndpoint[]
-  onEndpointsChange?: (endpoints: SupplierAPIEndpoint[]) => void
-  onTest?: (endpointId: string) => Promise<void>
+  product: ProductType;
+  environment: Environment;
+  endpoints?: SupplierAPIEndpoint[];
+  onEndpointsChange?: (endpoints: SupplierAPIEndpoint[]) => void;
+  onTest?: (endpointId: string) => Promise<void>;
 }
 ```
 
 **Expected Features**:
+
 - List all endpoints for selected product
 - Edit endpoint configuration (URL, timeout, retry policy)
 - Add custom endpoints
@@ -208,17 +219,19 @@ interface EndpointConfiguratorProps {
 **File**: `components/api-gateway/RoutingConfigurator.tsx`
 
 **Props**:
+
 ```typescript
 interface RoutingConfiguratorProps {
-  geography?: GeographyRouting[]
-  channels?: ChannelRouting[]
-  endpoints: SupplierAPIEndpoint[]
-  onGeographyChange?: (routing: GeographyRouting[]) => void
-  onChannelChange?: (routing: ChannelRouting[]) => void
+  geography?: GeographyRouting[];
+  channels?: ChannelRouting[];
+  endpoints: SupplierAPIEndpoint[];
+  onGeographyChange?: (routing: GeographyRouting[]) => void;
+  onChannelChange?: (routing: ChannelRouting[]) => void;
 }
 ```
 
 **Expected Features**:
+
 - Add geography-specific routing rules
 - Configure channel-based routing (web/mobile/b2b/b2c)
 - Set primary and fallback endpoints
@@ -235,16 +248,18 @@ interface RoutingConfiguratorProps {
 **File**: `components/api-gateway/GatewayForm.tsx`
 
 **Props**:
+
 ```typescript
 interface GatewayFormProps {
-  supplierId: string
-  gatewayId?: string
-  onSaveSuccess?: () => void
-  onSaveError?: (error: string) => void
+  supplierId: string;
+  gatewayId?: string;
+  onSaveSuccess?: () => void;
+  onSaveError?: (error: string) => void;
 }
 ```
 
 **Expected Features**:
+
 - Integrate all sub-components
 - Handle multi-environment form state
 - Validate before submission
@@ -263,16 +278,18 @@ interface GatewayFormProps {
 **File**: `components/api-gateway/GatewayHealthStatus.tsx`
 
 **Props**:
+
 ```typescript
 interface GatewayHealthStatusProps {
-  supplierId: string
-  gatewayId: string
-  autoRefresh?: boolean
-  refreshInterval?: number  // milliseconds
+  supplierId: string;
+  gatewayId: string;
+  autoRefresh?: boolean;
+  refreshInterval?: number; // milliseconds
 }
 ```
 
 **Expected Features**:
+
 - Auto-refresh every 30 seconds
 - Display overall status (healthy/degraded/unhealthy)
 - Per-environment health indicators
@@ -291,7 +308,7 @@ interface GatewayHealthStatusProps {
 Fetch and manage single gateway configuration.
 
 ```typescript
-const { gateway, loading, error, refetch } = useGateway('supplier-1', 'gw-123')
+const { gateway, loading, error, refetch } = useGateway("supplier-1", "gw-123");
 
 // Returns:
 // - gateway: SupplierAPIGateway | null
@@ -307,8 +324,11 @@ const { gateway, loading, error, refetch } = useGateway('supplier-1', 'gw-123')
 Paginated list of gateways for a supplier.
 
 ```typescript
-const { gateways, total, loading, error, refetch } = 
-  useGatewayList('supplier-1', 1, 20)
+const { gateways, total, loading, error, refetch } = useGatewayList(
+  "supplier-1",
+  1,
+  20,
+);
 
 // Returns:
 // - gateways: SupplierAPIGateway[]
@@ -325,9 +345,9 @@ const { gateways, total, loading, error, refetch } =
 Complete form state management for gateway creation/editing.
 
 ```typescript
-const form = useGatewayForm('supplier-1', {
-  gateway: existingGateway  // Optional: for edit mode
-})
+const form = useGatewayForm("supplier-1", {
+  gateway: existingGateway, // Optional: for edit mode
+});
 
 // Returns GatewayFormContextType with:
 // - formData: SupplierAPIGatewayFormData
@@ -347,7 +367,7 @@ const form = useGatewayForm('supplier-1', {
 Get environment-specific configuration and requirements.
 
 ```typescript
-const config = useEnvironmentConfig('production')
+const config = useEnvironmentConfig("production");
 
 // Returns:
 // - requiresSSL: boolean
@@ -366,7 +386,7 @@ Test endpoints, credentials, and health status.
 
 ```typescript
 const { testing, result, error, testEndpoint, testCredentials, testGateway } =
-  useGatewayTest('supplier-1', 'gw-123')
+  useGatewayTest("supplier-1", "gw-123");
 
 // Methods:
 // - testEndpoint(endpointId, testData): Promise<TestResult>
@@ -381,8 +401,10 @@ const { testing, result, error, testEndpoint, testCredentials, testGateway } =
 Real-time health monitoring with auto-refresh every 30 seconds.
 
 ```typescript
-const { health, loading, error, refetch } = 
-  useGatewayHealth('supplier-1', 'gw-123')
+const { health, loading, error, refetch } = useGatewayHealth(
+  "supplier-1",
+  "gw-123",
+);
 
 // Returns:
 // - health.status: 'healthy' | 'degraded' | 'unhealthy'
@@ -398,8 +420,11 @@ const { health, loading, error, refetch } =
 Performance metrics for specific period.
 
 ```typescript
-const { metrics, loading, error, refetch } = 
-  useGatewayMetrics('supplier-1', 'gw-123', 'day')
+const { metrics, loading, error, refetch } = useGatewayMetrics(
+  "supplier-1",
+  "gw-123",
+  "day",
+);
 
 // Returns:
 // - metrics.averageResponseTime: number (ms)
@@ -415,7 +440,7 @@ const { metrics, loading, error, refetch } =
 Load product-specific endpoint definitions.
 
 ```typescript
-const { schema, loading } = useProductSchema('hotel')
+const { schema, loading } = useProductSchema("hotel");
 
 // Returns:
 // - schema.endpoints: Endpoint[]
@@ -433,15 +458,15 @@ const { schema, loading } = useProductSchema('hotel')
 Validate complete gateway configuration.
 
 ```typescript
-const result = validateGatewayForm(formData)
+const result = validateGatewayForm(formData);
 
 if (result.success) {
   // result.data contains validated data with correct types
-  console.log(result.data)
+  console.log(result.data);
 } else {
   // result.error contains detailed validation errors
-  const errors = formatValidationErrors(result.error.errors)
-  console.log(errors)
+  const errors = formatValidationErrors(result.error.errors);
+  console.log(errors);
 }
 ```
 
@@ -452,7 +477,7 @@ if (result.success) {
 Validate environment-specific configuration.
 
 ```typescript
-const result = validateEnvironmentConfig(envConfig, 'production')
+const result = validateEnvironmentConfig(envConfig, "production");
 
 if (!result.success) {
   // Production validation is strict:
@@ -470,7 +495,7 @@ if (!result.success) {
 Convert Zod errors to user-friendly format.
 
 ```typescript
-const errors = formatValidationErrors(validationError.errors)
+const errors = formatValidationErrors(validationError.errors);
 
 // Returns:
 // {
@@ -489,6 +514,7 @@ const errors = formatValidationErrors(validationError.errors)
 Centralized form state management accessible to all child components.
 
 **Provider**:
+
 ```typescript
 <GatewayFormProvider initialFormData={gateway}>
   {children}
@@ -496,23 +522,24 @@ Centralized form state management accessible to all child components.
 ```
 
 **Hook**:
+
 ```typescript
-const form = useGatewayForm()
+const form = useGatewayForm();
 
 // Available properties and methods:
-form.formData              // Current form values
-form.errors              // Validation errors
-form.isDirty             // Has form been modified?
-form.isSaving            // Is API request in progress?
-form.activeEnvironment   // Currently selected environment
+form.formData; // Current form values
+form.errors; // Validation errors
+form.isDirty; // Has form been modified?
+form.isSaving; // Is API request in progress?
+form.activeEnvironment; // Currently selected environment
 
-form.updateField(path, value)
-form.updateFormData(data)
-form.updateEnvironmentConfig(env, config)
-form.validateForm()
-form.resetForm()
-form.setActiveEnvironment(env)
-form.toggleSection(section)
+form.updateField(path, value);
+form.updateFormData(data);
+form.updateEnvironmentConfig(env, config);
+form.validateForm();
+form.resetForm();
+form.setActiveEnvironment(env);
+form.toggleSection(section);
 ```
 
 ---
@@ -562,27 +589,27 @@ All types are in `services/api-manager/types-gateway.ts`:
 
 ```typescript
 // Core types
-SupplierAPIGateway          // Complete gateway
-SupplierAPIGatewayFormData  // Form-ready structure
-EnvironmentSpecificGateway  // Per-environment config
-SupplierAPIEndpoint         // API endpoint definition
-SupplierAPIHeader           // HTTP header
-SupplierAPIQueryParam       // Query parameter
+SupplierAPIGateway; // Complete gateway
+SupplierAPIGatewayFormData; // Form-ready structure
+EnvironmentSpecificGateway; // Per-environment config
+SupplierAPIEndpoint; // API endpoint definition
+SupplierAPIHeader; // HTTP header
+SupplierAPIQueryParam; // Query parameter
 
 // Routing types
-GeographyRouting            // Geography based routing
-ChannelRouting              // Channel based routing
+GeographyRouting; // Geography based routing
+ChannelRouting; // Channel based routing
 
 // Health & Testing
-EnvironmentHealthCheck      // Health check result
-SupplierAPIGatewayAlert     // Alert information
-TestResult                  // Endpoint test result
+EnvironmentHealthCheck; // Health check result
+SupplierAPIGatewayAlert; // Alert information
+TestResult; // Endpoint test result
 
 // Environment enum
-type Environment = 'development' | 'staging' | 'production'
+type Environment = "development" | "staging" | "production";
 
 // Auth types union
-type AuthenticationType = 'api-key' | 'oauth2' | 'jwt' | 'bearer' | 'basic'
+type AuthenticationType = "api-key" | "oauth2" | "jwt" | "bearer" | "basic";
 ```
 
 ---
@@ -711,6 +738,7 @@ test('switches environment on click', () => {
 ## Summary
 
 **Infrastructure Complete** ✅
+
 - 8 custom hooks
 - 1 form context
 - 5 validation schemas
@@ -719,6 +747,7 @@ test('switches environment on click', () => {
 - 8,000+ lines of documentation
 
 **Ready to Build**:
+
 - AuthenticationForm
 - EndpointConfigurator
 - RoutingConfigurator

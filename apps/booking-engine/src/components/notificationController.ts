@@ -1,14 +1,14 @@
-import { Request, Response, NextFunction } from 'express';
-import { createLogger } from '@tripalfa/shared-utils/logger';
-const logger = createLogger({ serviceName: 'booking-engine' });
+import { Request, Response, NextFunction } from "express";
+import { createLogger } from "@tripalfa/shared-utils/logger";
+const logger = createLogger({ serviceName: "booking-engine" });
 
 // Types for notification operations
 interface CreateNotificationRequest {
   userId: string;
   orderId?: string;
-  channels: ('email' | 'sms' | 'push' | 'in_app')[];
+  channels: ("email" | "sms" | "push" | "in_app")[];
   notificationType: string;
-  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  priority?: "low" | "medium" | "high" | "urgent";
   content: Record<string, any>;
   metadata?: Record<string, any>;
   scheduledFor?: Date;
@@ -16,7 +16,7 @@ interface CreateNotificationRequest {
 
 interface UpdateNotificationRequest {
   channel?: string;
-  status?: 'pending' | 'sent' | 'failed' | 'delivered' | 'opened';
+  status?: "pending" | "sent" | "failed" | "delivered" | "opened";
   sentAt?: string;
   deliveredAt?: string;
   openedAt?: string;
@@ -31,7 +31,7 @@ interface ListNotificationsQuery {
   notificationType?: string;
   status?: string;
   sortBy?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
 }
 
 // In-memory storage for notifications during this implementation
@@ -53,7 +53,7 @@ function generateNotificationId(): string {
 export const createNotification = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const {
@@ -61,7 +61,7 @@ export const createNotification = async (
       orderId,
       channels,
       notificationType,
-      priority = 'medium',
+      priority = "medium",
       content,
       metadata,
       scheduledFor,
@@ -70,39 +70,39 @@ export const createNotification = async (
     // Validation
     if (!userId) {
       res.status(400).json({
-        error: 'userId is required',
-        message: 'User ID must be provided',
+        error: "userId is required",
+        message: "User ID must be provided",
       });
       return;
     }
 
     if (!channels || channels.length === 0) {
       res.status(400).json({
-        error: 'channels is required',
-        message: 'At least one channel must be specified',
+        error: "channels is required",
+        message: "At least one channel must be specified",
       });
       return;
     }
 
     if (!notificationType) {
       res.status(400).json({
-        error: 'notificationType is required',
-        message: 'Notification type must be specified',
+        error: "notificationType is required",
+        message: "Notification type must be specified",
       });
       return;
     }
 
     if (!content || Object.keys(content).length === 0) {
       res.status(400).json({
-        error: 'content is required',
-        message: 'Notification content must be provided',
+        error: "content is required",
+        message: "Notification content must be provided",
       });
       return;
     }
 
     // Validate that all channels have corresponding content
     for (const channel of channels) {
-      const channelKey = channel.replace('_', '');
+      const channelKey = channel.replace("_", "");
       if (!content[channel] && !content[channelKey]) {
         logger.warn(`Missing content for channel: ${channel}`);
       }
@@ -121,13 +121,13 @@ export const createNotification = async (
       priority,
       content,
       metadata: metadata || {},
-      status: 'pending',
+      status: "pending",
       channelStatus: channels.reduce(
         (acc, channel) => {
-          acc[channel] = 'pending';
+          acc[channel] = "pending";
           return acc;
         },
-        {} as Record<string, string>
+        {} as Record<string, string>,
       ),
       scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
       sentAt: undefined,
@@ -159,8 +159,8 @@ export const createNotification = async (
       updatedAt: notification.updatedAt,
     });
   } catch (error) {
-    logger.error('Error creating notification', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Error creating notification", {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     next(error);
   }
@@ -173,16 +173,18 @@ export const createNotification = async (
 export const getNotification = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : (req.params.id as string);
 
     const notification = notificationStorage.get(id);
 
     if (!notification) {
       res.status(404).json({
-        error: 'Not Found',
+        error: "Not Found",
         message: `Notification ${id} not found`,
       });
       return;
@@ -190,8 +192,8 @@ export const getNotification = async (
 
     res.status(200).json(notification);
   } catch (error) {
-    logger.error('Error retrieving notification', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Error retrieving notification", {
+      error: error instanceof Error ? error.message : "Unknown error",
       notificationId: req.params.id,
     });
     next(error);
@@ -205,14 +207,14 @@ export const getNotification = async (
 export const listNotifications = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const query: ListNotificationsQuery = req.query as any;
     const page = Math.max(1, parseInt(String(query.page || 1), 10));
     const limit = Math.min(100, parseInt(String(query.limit || 10), 10));
-    const sortBy = query.sortBy || 'createdAt';
-    const order = query.order || 'desc';
+    const sortBy = query.sortBy || "createdAt";
+    const order = query.order || "desc";
 
     let notifications = Array.from(notificationStorage.values());
 
@@ -224,7 +226,7 @@ export const listNotifications = async (
     // Filter by notification type
     if (query.notificationType) {
       notifications = notifications.filter(
-        (n) => n.notificationType === query.notificationType
+        (n) => n.notificationType === query.notificationType,
       );
     }
 
@@ -246,7 +248,7 @@ export const listNotifications = async (
         bVal = bVal.getTime() as any;
       }
 
-      if (order === 'asc') {
+      if (order === "asc") {
         return aVal > bVal ? 1 : -1;
       } else {
         return aVal < bVal ? 1 : -1;
@@ -269,8 +271,8 @@ export const listNotifications = async (
       },
     });
   } catch (error) {
-    logger.error('Error listing notifications', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Error listing notifications", {
+      error: error instanceof Error ? error.message : "Unknown error",
     });
     next(error);
   }
@@ -281,7 +283,7 @@ export const listNotifications = async (
  */
 function updateTimestamps(
   notification: any,
-  updates: UpdateNotificationRequest
+  updates: UpdateNotificationRequest,
 ): void {
   if (updates.sentAt) {
     notification.sentAt = new Date(updates.sentAt);
@@ -299,7 +301,7 @@ function updateTimestamps(
  */
 function updateErrorInfo(
   notification: any,
-  updates: UpdateNotificationRequest
+  updates: UpdateNotificationRequest,
 ): void {
   if (updates.error) {
     notification.error = updates.error;
@@ -316,17 +318,19 @@ function updateErrorInfo(
 export const updateNotification = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : (req.params.id as string);
     const updates: UpdateNotificationRequest = req.body;
 
     const notification = notificationStorage.get(id);
 
     if (!notification) {
       res.status(404).json({
-        error: 'Not Found',
+        error: "Not Found",
         message: `Notification ${id} not found`,
       });
       return;
@@ -361,8 +365,8 @@ export const updateNotification = async (
 
     res.status(200).json(notification);
   } catch (error) {
-    logger.error('Error updating notification', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Error updating notification", {
+      error: error instanceof Error ? error.message : "Unknown error",
       notificationId: req.params.id,
     });
     next(error);
@@ -376,16 +380,18 @@ export const updateNotification = async (
 export const deleteNotification = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : (req.params.id as string);
 
     const notification = notificationStorage.get(id);
 
     if (!notification) {
       res.status(404).json({
-        error: 'Not Found',
+        error: "Not Found",
         message: `Notification ${id} not found`,
       });
       return;
@@ -403,8 +409,8 @@ export const deleteNotification = async (
       message: `Notification ${id} deleted successfully`,
     });
   } catch (error) {
-    logger.error('Error deleting notification', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Error deleting notification", {
+      error: error instanceof Error ? error.message : "Unknown error",
       notificationId: req.params.id,
     });
     next(error);

@@ -1,4 +1,4 @@
-# Dockerfile for notification-service - NEON Database Support
+# Dockerfile for notification-service - Neon Database Support
 # This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
 # Parameters: SERVICE_NAME=notification-service, WORKSPACE_NAME=@tripalfa/notification-service, PORT=3005, HEALTH_PATH=health
 

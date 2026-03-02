@@ -2,8 +2,8 @@
 
 Write your markdown here.
 
-* And have fun
-* You can do whatever you want
+- And have fun
+- You can do whatever you want
 
 ## Images
 
@@ -27,38 +27,32 @@ JavaScript:
 
 ```javascript
 renderer.renderMarkdown = function (res, layout, apiResponse, body) {
-    var metaInfo = { showTitle: false };
-    var metaInfo64 = apiResponse.headers['x-metainfo'];
-    if (metaInfo64)
-        metaInfo = JSON.parse(new Buffer(metaInfo64, 'base64'));
+  var metaInfo = { showTitle: false };
+  var metaInfo64 = apiResponse.headers["x-metainfo"];
+  if (metaInfo64) metaInfo = JSON.parse(new Buffer(metaInfo64, "base64"));
 
-    console.log(JSON.stringify(metaInfo));
+  console.log(JSON.stringify(metaInfo));
 
-    var title = null;
-    if (metaInfo.title)
-        title = metaInfo.title;
-    var subTitle = null;
-    if (metaInfo.subTitle)
-        subTitle = marked(metaInfo.subTitle);
+  var title = null;
+  if (metaInfo.title) title = metaInfo.title;
+  var subTitle = null;
+  if (metaInfo.subTitle) subTitle = marked(metaInfo.subTitle);
 
-    var route = '/content';
-    if (layout == "index")
-        route = '/';
-        
-    marked.setOptions({
-        highlight: function (code) {
-            return highlightJs.highlightAuto(code).value;
-        }
-    });
+  var route = "/content";
+  if (layout == "index") route = "/";
 
-    res.render(
-        layout,
-        {
-            route: route,
-            showTitle: metaInfo.showTitle,
-            title: title,
-            subTitle: subTitle,
-            markdown: marked(body)
-        });
-}
+  marked.setOptions({
+    highlight: function (code) {
+      return highlightJs.highlightAuto(code).value;
+    },
+  });
+
+  res.render(layout, {
+    route: route,
+    showTitle: metaInfo.showTitle,
+    title: title,
+    subTitle: subTitle,
+    markdown: marked(body),
+  });
+};
 ```

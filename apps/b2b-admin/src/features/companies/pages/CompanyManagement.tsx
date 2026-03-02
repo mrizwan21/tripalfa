@@ -6,7 +6,13 @@ import { Button } from "@tripalfa/ui-components/ui/button";
 import { Input } from "@tripalfa/ui-components/ui/input";
 import { Label } from "@tripalfa/ui-components/ui/label";
 import { Checkbox } from "@tripalfa/ui-components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@tripalfa/ui-components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@tripalfa/ui-components/ui/select";
 import {
   Card,
   CardContent,
@@ -36,72 +42,14 @@ export type Company = {
 type BranchRow = { id: string; name: string; city?: string; status?: string };
 type DepartmentRow = { id: string; name: string; code?: string };
 type DesignationRow = { id: string; name: string; code?: string };
-type BankAccountRow = { bank: string; account: string; currency: string; branch?: string };
+type BankAccountRow = {
+  bank: string;
+  account: string;
+  currency: string;
+  branch?: string;
+};
 type DocumentRow = { name: string; status: string };
 type PermissionRow = { id: string; label: string };
-
-const fallbackBranches: BranchRow[] = [
-  { id: "BR-01", name: "Dubai HQ", city: "Dubai", status: "active" },
-  { id: "BR-02", name: "London Office", city: "London", status: "active" },
-  { id: "BR-03", name: "Mumbai Ops", city: "Mumbai", status: "inactive" },
-];
-
-const fallbackDepartments: DepartmentRow[] = [
-  { id: "DEP-01", name: "Operations" },
-  { id: "DEP-02", name: "Finance" },
-  { id: "DEP-03", name: "Customer Success" },
-];
-
-const fallbackDesignations: DesignationRow[] = [
-  { id: "DES-01", name: "Agent" },
-  { id: "DES-02", name: "Supervisor" },
-  { id: "DES-03", name: "Manager" },
-];
-
-const fallbackBankAccounts: BankAccountRow[] = [
-  { bank: "HSBC", account: "***2045", currency: "USD", branch: "Dubai" },
-  { bank: "Barclays", account: "***9182", currency: "GBP", branch: "London" },
-];
-
-const fallbackDocuments: DocumentRow[] = [
-  { name: "Trade License", status: "verified" },
-  { name: "Tax Certificate", status: "pending" },
-  { name: "Insurance", status: "expired" },
-];
-
-const mockPermissions: PermissionRow[] = [
-  { id: "perm-bookings", label: "Manage bookings" },
-  { id: "perm-finance", label: "View finance" },
-  { id: "perm-suppliers", label: "Manage suppliers" },
-  { id: "perm-rules", label: "Edit rules" },
-];
-
-const mockCompanies: Company[] = [
-  {
-    id: "C-1001",
-    name: "Atlas Travels",
-    domain: "atlastravels.com",
-    status: "active",
-    creditLimit: 25000,
-    balance: 8300,
-  },
-  {
-    id: "C-1002",
-    name: "Skyline Holidays",
-    domain: "skylineholidays.io",
-    status: "active",
-    creditLimit: 15000,
-    balance: 12000,
-  },
-  {
-    id: "C-1003",
-    name: "Global Tours",
-    domain: "globaltours.net",
-    status: "suspended",
-    creditLimit: 5000,
-    balance: 4800,
-  },
-];
 
 const columns: ColumnDef<Company>[] = [
   {
@@ -124,7 +72,9 @@ const columns: ColumnDef<Company>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
-      <Badge variant={row.original.status === "active" ? "default" : "destructive"}>
+      <Badge
+        variant={row.original.status === "active" ? "default" : "destructive"}
+      >
         {row.original.status}
       </Badge>
     ),
@@ -154,15 +104,22 @@ const columns: ColumnDef<Company>[] = [
 ];
 
 export default function CompanyManagementPage() {
-  const [companies, setCompanies] = useState<Company[]>(mockCompanies);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(mockCompanies[0]?.id ?? null);
-  const [branches, setBranches] = useState<BranchRow[]>(fallbackBranches);
-  const [departments, setDepartments] = useState<DepartmentRow[]>(fallbackDepartments);
-  const [designations, setDesignations] = useState<DesignationRow[]>(fallbackDesignations);
-  const [bankAccounts] = useState<BankAccountRow[]>(fallbackBankAccounts);
-  const [documents] = useState<DocumentRow[]>(fallbackDocuments);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(
+    null,
+  );
+  const [branches, setBranches] = useState<BranchRow[]>([]);
+  const [departments, setDepartments] = useState<DepartmentRow[]>([]);
+  const [designations, setDesignations] = useState<DesignationRow[]>([]);
+  const [bankAccounts] = useState<BankAccountRow[]>([]);
+  const [documents] = useState<DocumentRow[]>([]);
+  const permissions: PermissionRow[] = [];
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const selectedCompany = useMemo(
+    () => companies.find((c) => c.id === selectedCompanyId),
+    [companies, selectedCompanyId],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -179,7 +136,8 @@ export default function CompanyManagementPage() {
         }
       } catch (err) {
         console.error("Failed to load organizations", err);
-        if (!cancelled) setError("Unable to load organizations; showing fallback data.");
+        if (!cancelled)
+          setError("Unable to load organizations; showing fallback data.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -197,7 +155,9 @@ export default function CompanyManagementPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await api.get(`/organization/${selectedCompanyId}/branches`);
+        const res = await api.get(
+          `/organization/${selectedCompanyId}/branches`,
+        );
         const rows: any[] = res.data || [];
         if (cancelled) return;
         setBranches(
@@ -206,13 +166,13 @@ export default function CompanyManagementPage() {
             name: b.name || b.code || "Branch",
             city: b.address?.city,
             status: b.status?.toString().toLowerCase() ?? "active",
-          })) || fallbackBranches
+          })),
         );
       } catch (err) {
         console.error("Failed to load branches", err);
         if (!cancelled) {
-          setError((prev) => prev || "Unable to load branches; showing fallback data.");
-          setBranches(fallbackBranches);
+          setError((prev) => prev || "Unable to load branches.");
+          setBranches([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -237,17 +197,25 @@ export default function CompanyManagementPage() {
         const depRows: any[] = depRes.data?.data || depRes.data || [];
         const desRows: any[] = desRes.data?.data || desRes.data || [];
         setDepartments(
-          depRows.map((d) => ({ id: String(d.id), name: d.name, code: d.code })) || fallbackDepartments
+          depRows.map((d) => ({
+            id: String(d.id),
+            name: d.name,
+            code: d.code,
+          })),
         );
         setDesignations(
-          desRows.map((d) => ({ id: String(d.id), name: d.name, code: d.code })) || fallbackDesignations
+          desRows.map((d) => ({
+            id: String(d.id),
+            name: d.name,
+            code: d.code,
+          })),
         );
       } catch (err) {
         console.error("Failed to load departments/designations", err);
         if (!cancelled) {
-          setError((prev) => prev || "Unable to load org data; showing fallback.");
-          setDepartments(fallbackDepartments);
-          setDesignations(fallbackDesignations);
+          setError((prev) => prev || "Unable to load org data.");
+          setDepartments([]);
+          setDesignations([]);
         }
       }
     }
@@ -259,10 +227,14 @@ export default function CompanyManagementPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Organization Management</h1>
-          <p className="text-sm text-slate-500">Manage B2B agencies, credit limits, and statuses.</p>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Organization Management
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Manage B2B agencies, credit limits, and statuses.
+          </p>
         </div>
         <Button size="sm">
           <Plus className="mr-2 h-4 w-4" /> Add organization
@@ -283,9 +255,11 @@ export default function CompanyManagementPage() {
 
         <TabsContent value="overview">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 gap-2">
               <CardTitle>Organizations</CardTitle>
-              <CardDescription>Roster of B2B agencies with credit posture.</CardDescription>
+              <CardDescription>
+                Roster of B2B agencies with credit posture.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {error && (
@@ -295,23 +269,44 @@ export default function CompanyManagementPage() {
               )}
               {companies.length > 0 && (
                 <div className="mb-4 max-w-sm">
-                  <Label className="mb-1 block text-sm font-medium text-slate-700">Select organization</Label>
-                  <Select value={selectedCompanyId ?? undefined} onValueChange={(val) => setSelectedCompanyId(val)}>
+                  <Label className="mb-1 block text-sm font-medium text-foreground">
+                    Select organization
+                  </Label>
+                  <Select
+                    value={selectedCompanyId ?? undefined}
+                    onValueChange={(val) => setSelectedCompanyId(val)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Choose organization" />
                     </SelectTrigger>
                     <SelectContent>
                       {companies.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
               )}
               {loading ? (
-                <div className="text-sm text-slate-500">Loading organizations...</div>
+                <div className="text-sm text-muted-foreground">
+                  Loading organizations...
+                </div>
               ) : (
-                <DataTable columns={columns} data={companies} searchKey="name" />
+                <>
+                  {companies.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                      No organizations available.
+                    </div>
+                  ) : (
+                    <DataTable
+                      columns={columns}
+                      data={companies}
+                      searchKey="name"
+                    />
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
@@ -319,24 +314,46 @@ export default function CompanyManagementPage() {
 
         <TabsContent value="branches">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle>Branch Management</CardTitle>
-                <CardDescription>Regional branches with status and city.</CardDescription>
+                <CardDescription>
+                  Regional branches with status and city.
+                </CardDescription>
               </div>
-              <Button size="sm" variant="outline">Add branch</Button>
+              <Button size="sm" variant="outline">
+                Add branch
+              </Button>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {branches.map((b) => (
-                <div key={b.id} className="rounded-md border p-3">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium text-slate-800">{b.name}</div>
-                    <Badge variant={b.status === "active" ? "default" : "secondary"}>{b.status}</Badge>
-                  </div>
-                  <div className="text-sm text-slate-500">{b.city}</div>
-                  <div className="text-xs text-slate-400 mt-1">ID: {b.id}</div>
+            <CardContent className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 p-6">
+              {branches.length === 0 ? (
+                <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                  No branches available.
                 </div>
-              ))}
+              ) : (
+                branches.map((b) => (
+                  <div key={b.id} className="rounded-md border p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="font-medium text-foreground">
+                        {b.name}
+                      </div>
+                      <Badge
+                        variant={
+                          b.status === "active" ? "default" : "secondary"
+                        }
+                      >
+                        {b.status}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {b.city}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      ID: {b.id}
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -344,38 +361,72 @@ export default function CompanyManagementPage() {
         <TabsContent value="org">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
                 <div>
                   <CardTitle>Departments</CardTitle>
-                  <CardDescription>Organizational units for access scoping.</CardDescription>
+                  <CardDescription>
+                    Organizational units for access scoping.
+                  </CardDescription>
                 </div>
-                <Button size="sm" variant="outline">Add department</Button>
+                <Button size="sm" variant="outline">
+                  Add department
+                </Button>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {departments.map((d) => (
-                  <div key={d.id} className="flex items-center justify-between rounded-md border px-3 py-2">
-                    <div className="text-sm font-medium text-slate-800">{d.name}</div>
-                    <span className="text-xs text-slate-500">{d.code || d.id}</span>
+              <CardContent className="space-y-2 p-6">
+                {departments.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                    No departments available.
                   </div>
-                ))}
+                ) : (
+                  departments.map((d) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2 gap-2"
+                    >
+                      <div className="text-sm font-medium text-foreground">
+                        {d.name}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {d.code || d.id}
+                      </span>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
                 <div>
                   <CardTitle>Designations</CardTitle>
-                  <CardDescription>Role labels used for HR and permissions.</CardDescription>
+                  <CardDescription>
+                    Role labels used for HR and permissions.
+                  </CardDescription>
                 </div>
-                <Button size="sm" variant="outline">Add designation</Button>
+                <Button size="sm" variant="outline">
+                  Add designation
+                </Button>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {designations.map((d) => (
-                  <div key={d.id} className="flex items-center justify-between rounded-md border px-3 py-2">
-                    <div className="text-sm font-medium text-slate-800">{d.name}</div>
-                    <span className="text-xs text-slate-500">{d.code || d.id}</span>
+              <CardContent className="space-y-2 p-6">
+                {designations.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                    No designations available.
                   </div>
-                ))}
+                ) : (
+                  designations.map((d) => (
+                    <div
+                      key={d.id}
+                      className="flex items-center justify-between rounded-md border px-3 py-2 gap-2"
+                    >
+                      <div className="text-sm font-medium text-foreground">
+                        {d.name}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {d.code || d.id}
+                      </span>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </div>
@@ -383,60 +434,88 @@ export default function CompanyManagementPage() {
 
         <TabsContent value="financials">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle>Financials</CardTitle>
-                <CardDescription>Bank accounts and finance contacts per organization/branch.</CardDescription>
+                <CardDescription>
+                  Bank accounts and finance contacts per organization/branch.
+                </CardDescription>
               </div>
-              <Button size="sm" variant="outline">Add bank</Button>
+              <Button size="sm" variant="outline">
+                Add bank
+              </Button>
             </CardHeader>
-            <CardContent className="grid gap-3 md:grid-cols-2">
-              {bankAccounts.map((acct) => (
-                <div key={acct.account} className="rounded-md border p-3">
-                  <div className="font-medium text-slate-800">{acct.bank}</div>
-                  <div className="text-sm text-slate-500">{acct.account} · {acct.currency}</div>
-                  <div className="text-xs text-slate-400 mt-1">Branch: {acct.branch}</div>
+            <CardContent className="grid gap-3 md:grid-cols-2 p-6">
+              {bankAccounts.length === 0 ? (
+                <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                  No bank accounts available.
                 </div>
-              ))}
+              ) : (
+                bankAccounts.map((acct) => (
+                  <div key={acct.account} className="rounded-md border p-3">
+                    <div className="font-medium text-foreground">
+                      {acct.bank}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {acct.account} · {acct.currency}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Branch: {acct.branch}
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="loyalty">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 gap-2">
               <CardTitle>Corporate Loyalty Accounts</CardTitle>
               <CardDescription>
-                Manage frequent flyer accounts for corporate bookings. 
-                These accounts are used to access corporate benefits, earn miles, 
-                and receive priority services on eligible flights.
+                Manage frequent flyer accounts for corporate bookings. These
+                accounts are used to access corporate benefits, earn miles, and
+                receive priority services on eligible flights.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CorporateLoyaltyAccounts companyId={selectedCompanyId ?? undefined} />
+              <CorporateLoyaltyAccounts
+                companyId={selectedCompanyId ?? undefined}
+              />
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="profile">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 gap-2">
               <CardTitle>Profile & Branding</CardTitle>
-              <CardDescription>Upload logos used on invoices and documents.</CardDescription>
+              <CardDescription>
+                Upload logos used on invoices and documents.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
+            <CardContent className="grid gap-4 md:grid-cols-2 p-6">
               <div className="space-y-2">
                 <Label>Organization Name</Label>
-                <Input placeholder="Organization legal name" defaultValue="Atlas Travels" />
+                <Input
+                  placeholder="Organization legal name"
+                  defaultValue={selectedCompany?.name || ""}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Primary Domain</Label>
-                <Input placeholder="example.com" defaultValue="atlastravels.com" />
+                <Input
+                  placeholder="example.com"
+                  defaultValue={selectedCompany?.domain || ""}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Logo</Label>
                 <Input type="file" accept="image/*" />
-                <p className="text-xs text-slate-500">Used on vouchers, invoices, and emails.</p>
+                <p className="text-xs text-muted-foreground">
+                  Used on vouchers, invoices, and emails.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -444,43 +523,79 @@ export default function CompanyManagementPage() {
 
         <TabsContent value="documents">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle>Document Management</CardTitle>
-                <CardDescription>Compliance docs per organization and branch.</CardDescription>
+                <CardDescription>
+                  Compliance docs per organization and branch.
+                </CardDescription>
               </div>
-              <Button size="sm" variant="outline">Upload document</Button>
+              <Button size="sm" variant="outline">
+                Upload document
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {documents.map((doc) => (
-                <div key={doc.name} className="flex items-center justify-between rounded-md border px-3 py-2">
-                  <div className="text-sm font-medium text-slate-800">{doc.name}</div>
-                  <Badge variant={doc.status === "verified" ? "default" : doc.status === "pending" ? "secondary" : "destructive"}>
-                    {doc.status}
-                  </Badge>
+            <CardContent className="space-y-2 p-6">
+              {documents.length === 0 ? (
+                <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                  No documents available.
                 </div>
-              ))}
+              ) : (
+                documents.map((doc) => (
+                  <div
+                    key={doc.name}
+                    className="flex items-center justify-between rounded-md border px-3 py-2 gap-2"
+                  >
+                    <div className="text-sm font-medium text-foreground">
+                      {doc.name}
+                    </div>
+                    <Badge
+                      variant={
+                        doc.status === "verified"
+                          ? "default"
+                          : doc.status === "pending"
+                            ? "secondary"
+                            : "destructive"
+                      }
+                    >
+                      {doc.status}
+                    </Badge>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="access">
           <Card>
-            <CardHeader>
+            <CardHeader className="space-y-0 gap-2">
               <CardTitle>Access, Permissions & Sessions</CardTitle>
-              <CardDescription>Control roles, permissions, and session policies.</CardDescription>
+              <CardDescription>
+                Control roles, permissions, and session policies.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-6">
               <div className="space-y-2">
-                <Label className="text-sm font-semibold text-slate-700">Permissions</Label>
-                <div className="grid gap-2 md:grid-cols-2">
-                  {mockPermissions.map((perm) => (
-                    <label key={perm.id} className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-slate-700">
-                      <Checkbox id={perm.id} />
-                      <span>{perm.label}</span>
-                    </label>
-                  ))}
-                </div>
+                <Label className="text-sm font-semibold text-foreground">
+                  Permissions
+                </Label>
+                {permissions.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-border p-6 text-sm text-muted-foreground">
+                    Permissions are not available yet.
+                  </div>
+                ) : (
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {permissions.map((perm) => (
+                      <label
+                        key={perm.id}
+                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-foreground font-medium"
+                      >
+                        <Checkbox id={perm.id} />
+                        <span>{perm.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-3 md:grid-cols-2">
@@ -490,7 +605,7 @@ export default function CompanyManagementPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>MFA required</Label>
-                  <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-slate-700">
+                  <div className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-foreground">
                     <Checkbox id="mfa-required" />
                     <span>Enforce MFA for admins</span>
                   </div>

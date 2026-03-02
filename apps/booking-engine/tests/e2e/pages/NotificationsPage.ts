@@ -1,4 +1,4 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator, expect } from "@playwright/test";
 
 export class NotificationsPage {
   readonly page: Page;
@@ -23,27 +23,39 @@ export class NotificationsPage {
   constructor(page: Page) {
     this.page = page;
     this.heading = page.locator('h1:has-text("Notifications")');
-    this.description = page.locator('text=Personalized alerts about your trips');
+    this.description = page.locator(
+      "text=Personalized alerts about your trips",
+    );
     this.notificationList = page.locator('[role="group"]');
-    this.emptyState = page.locator('text=All caught up');
-    this.loadingSpinner = page.locator('.animate-spin').first();
-    this.unreadBadge = page.locator('.rounded-full:has-text(/^\\d+$/)').first();
-    this.markAllAsReadButton = page.locator('button:has-text("Mark all as read")');
+    this.emptyState = page.locator("text=All caught up");
+    this.loadingSpinner = page.locator(".animate-spin").first();
+    this.unreadBadge = page.locator(".rounded-full:has-text(/^\\d+$/)").first();
+    this.markAllAsReadButton = page.locator(
+      'button:has-text("Mark all as read")',
+    );
     this.viewDetailsButtons = page.locator('button:has-text("VIEW DETAILS")');
     this.markAsReadButtons = page.locator('button:has-text("MARK AS READ")');
-    this.notificationDetailsPopup = page.locator('[role="dialog"], [role="presentation"]').first();
-    this.popupCloseButton = page.locator('[aria-label="Close notification details"]');
+    this.notificationDetailsPopup = page
+      .locator('[role="dialog"], [role="presentation"]')
+      .first();
+    this.popupCloseButton = page.locator(
+      '[aria-label="Close notification details"]',
+    );
     this.searchInput = page.locator('input[placeholder*="Search"]').first();
     this.filterButton = page.locator('[aria-label*="Filter"]').first();
-    this.paginationControls = page.locator('[aria-label*="Page"], [aria-label*="pagination"]').first();
+    this.paginationControls = page
+      .locator('[aria-label*="Page"], [aria-label*="pagination"]')
+      .first();
     this.nextPageButton = page.locator('button:has-text("Next")').first();
-    this.previousPageButton = page.locator('button:has-text("Previous")').first();
-    this.pageSizeSelect = page.locator('select').first();
+    this.previousPageButton = page
+      .locator('button:has-text("Previous")')
+      .first();
+    this.pageSizeSelect = page.locator("select").first();
   }
 
   async goto() {
-    await this.page.goto('http://localhost:5173/notifications');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto("http://localhost:5173/notifications");
+    await this.page.waitForLoadState("networkidle");
   }
 
   async getPageTitle() {
@@ -51,11 +63,15 @@ export class NotificationsPage {
   }
 
   async isLoading() {
-    return await this.loadingSpinner.isVisible({ timeout: 100 }).catch(() => false);
+    return await this.loadingSpinner
+      .isVisible({ timeout: 100 })
+      .catch(() => false);
   }
 
   async waitForNotificationsToLoad(timeout = 5000) {
-    await this.page.waitForSelector('[role="group"], text=All caught up', { timeout });
+    await this.page.waitForSelector('[role="group"], text=All caught up', {
+      timeout,
+    });
   }
 
   async getNotificationCount() {
@@ -63,7 +79,7 @@ export class NotificationsPage {
   }
 
   async getNotificationTitles(): Promise<string[]> {
-    const elements = await this.notificationList.locator('h4').all();
+    const elements = await this.notificationList.locator("h4").all();
     const titles: string[] = [];
 
     for (const element of elements) {
@@ -82,21 +98,32 @@ export class NotificationsPage {
   }
 
   async isPopupVisible() {
-    return await this.notificationDetailsPopup.isVisible({ timeout: 2000 }).catch(() => false);
+    return await this.notificationDetailsPopup
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
   }
 
   async getPopupTitle() {
-    return await this.notificationDetailsPopup.locator('h3, h4, h2').first().textContent();
+    return await this.notificationDetailsPopup
+      .locator("h3, h4, h2")
+      .first()
+      .textContent();
   }
 
   async closePopup() {
-    if (await this.popupCloseButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.popupCloseButton
+        .isVisible({ timeout: 1000 })
+        .catch(() => false)
+    ) {
       await this.popupCloseButton.click();
     }
   }
 
   async isPopupClosed() {
-    return !(await this.notificationDetailsPopup.isVisible({ timeout: 500 }).catch(() => false));
+    return !(await this.notificationDetailsPopup
+      .isVisible({ timeout: 500 })
+      .catch(() => false));
   }
 
   async clickMarkAsRead(index = 0) {
@@ -112,7 +139,9 @@ export class NotificationsPage {
   }
 
   async isEmptyStateVisible() {
-    return await this.emptyState.isVisible({ timeout: 2000 }).catch(() => false);
+    return await this.emptyState
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
   }
 
   async clickMarkAllAsRead() {
@@ -120,21 +149,27 @@ export class NotificationsPage {
   }
 
   async search(term: string) {
-    if (await this.searchInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.searchInput.isVisible({ timeout: 1000 }).catch(() => false)
+    ) {
       await this.searchInput.fill(term);
       await this.page.waitForTimeout(300); // Wait for debounce
     }
   }
 
   async clearSearch() {
-    if (await this.searchInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.searchInput.isVisible({ timeout: 1000 }).catch(() => false)
+    ) {
       await this.searchInput.clear();
       await this.page.waitForTimeout(300);
     }
   }
 
   async clickFilter() {
-    if (await this.filterButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.filterButton.isVisible({ timeout: 1000 }).catch(() => false)
+    ) {
       await this.filterButton.click();
     }
   }
@@ -147,60 +182,68 @@ export class NotificationsPage {
   }
 
   async clickNextPage() {
-    if (await this.nextPageButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.nextPageButton.isVisible({ timeout: 1000 }).catch(() => false)
+    ) {
       await this.nextPageButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState("networkidle");
     }
   }
 
   async clickPreviousPage() {
-    if (await this.previousPageButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.previousPageButton
+        .isVisible({ timeout: 1000 })
+        .catch(() => false)
+    ) {
       await this.previousPageButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState("networkidle");
     }
   }
 
   async changePageSize(size: string) {
-    if (await this.pageSizeSelect.isVisible({ timeout: 1000 }).catch(() => false)) {
+    if (
+      await this.pageSizeSelect.isVisible({ timeout: 1000 }).catch(() => false)
+    ) {
       await this.pageSizeSelect.selectOption(size);
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState("networkidle");
     }
   }
 
   async getPaginationInfo() {
     const text = await this.paginationControls.textContent();
-    return text?.trim() || '';
+    return text?.trim() || "";
   }
 
   async isKeyboardNavigationSupported() {
-    const firstButton = this.page.locator('button').first();
+    const firstButton = this.page.locator("button").first();
     if (await firstButton.isVisible({ timeout: 1000 }).catch(() => false)) {
       await firstButton.focus();
-      return await firstButton.isFocused();
+      return await firstButton.evaluate((el) => el === document.activeElement);
     }
     return false;
   }
 
   async pressEscape() {
-    await this.page.keyboard.press('Escape');
+    await this.page.keyboard.press("Escape");
   }
 
   async pressEnter() {
-    await this.page.keyboard.press('Enter');
+    await this.page.keyboard.press("Enter");
   }
 
   async pressTab() {
-    await this.page.keyboard.press('Tab');
+    await this.page.keyboard.press("Tab");
   }
 
   async setViewportSize(width: number, height: number) {
     await this.page.setViewportSize({ width, height });
-    await this.page.goto('http://localhost:5173/notifications');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto("http://localhost:5173/notifications");
+    await this.page.waitForLoadState("networkidle");
   }
 
   async getHeadingLevel(text: string): Promise<number | null> {
-    const selectors = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+    const selectors = ["h1", "h2", "h3", "h4", "h5", "h6"];
 
     for (const selector of selectors) {
       const element = this.page.locator(`${selector}:has-text("${text}")`);
@@ -214,8 +257,14 @@ export class NotificationsPage {
   }
 
   async waitForToastNotification(timeout = 2000) {
-    await this.page.waitForSelector('[role="alert"]', { timeout }).catch(() => {});
-    return await this.page.locator('[role="alert"]').first().isVisible({ timeout: 500 }).catch(() => false);
+    await this.page
+      .waitForSelector('[role="alert"]', { timeout })
+      .catch(() => {});
+    return await this.page
+      .locator('[role="alert"]')
+      .first()
+      .isVisible({ timeout: 500 })
+      .catch(() => false);
   }
 
   async clickToast() {
@@ -225,19 +274,21 @@ export class NotificationsPage {
     }
   }
 
-  async getNotificationByTitle(title: string) {
+  getNotificationByTitle(title: string) {
     return this.page.locator(`text=${title}`).first();
   }
 
   async isNotificationVisible(title: string) {
-    return await this.getNotificationByTitle(title).isVisible({ timeout: 1000 }).catch(() => false);
+    return await this.getNotificationByTitle(title)
+      .isVisible({ timeout: 1000 })
+      .catch(() => false);
   }
 
   async verifyAccessibility() {
     // Basic accessibility checks
-    const headings = await this.page.locator('h1, h2, h3, h4, h5, h6').count();
-    const buttons = await this.page.locator('button').count();
-    const labels = await this.page.locator('label').count();
+    const headings = await this.page.locator("h1, h2, h3, h4, h5, h6").count();
+    const buttons = await this.page.locator("button").count();
+    const labels = await this.page.locator("label").count();
 
     return {
       hasHeadings: headings > 0,
@@ -246,7 +297,9 @@ export class NotificationsPage {
     };
   }
 
-  async getColorContrast(element: Locator): Promise<{ color: string; backgroundColor: string } | null> {
+  async getColorContrast(
+    element: Locator,
+  ): Promise<{ color: string; backgroundColor: string } | null> {
     try {
       const result = await element.evaluate((el) => {
         const style = window.getComputedStyle(el);
@@ -262,17 +315,17 @@ export class NotificationsPage {
   }
 
   async interceptAPIError() {
-    await this.page.route('**/api/notifications', (route) => {
+    await this.page.route("**/api/notifications", (route) => {
       route.abort();
     });
   }
 
   async stopInterceptingAPI() {
-    await this.page.unroute('**/api/notifications');
+    await this.page.unroute("**/api/notifications");
   }
 
   async reload() {
     await this.page.reload();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState("networkidle");
   }
 }

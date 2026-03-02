@@ -1,14 +1,15 @@
 /**
  * Brevo Email Service - Frontend Interface
- * 
+ *
  * This module provides email functionality through the API Gateway.
  * Emails are sent via the notification-service which uses Brevo (formerly Sendinblue).
- * 
+ *
  * Frontend should NOT directly call Brevo API (security risk).
  * All email operations must go through the backend API.
  */
 
-import { api } from '../lib/api';
+import { api } from "../lib/api";
+import { COLORS } from "../lib/constants/theme";
 
 // ============================================================================
 // TYPES
@@ -48,9 +49,11 @@ export interface SendEmailResult {
  * Send an email through the API Gateway
  * Routes to notification-service which handles Brevo integration
  */
-export async function sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
+export async function sendEmail(
+  params: SendEmailParams,
+): Promise<SendEmailResult> {
   try {
-    const response = await api.post('/api/notifications/email', {
+    const response = await api.post("/api/notifications/email", {
       to: Array.isArray(params.to) ? params.to : [params.to],
       subject: params.subject,
       htmlContent: params.htmlContent,
@@ -66,10 +69,10 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailResul
       messageId: response.messageId || response.id,
     };
   } catch (error: any) {
-    console.error('[Email Service] Failed to send email:', error?.message);
+    console.error("[Email Service] Failed to send email:", error?.message);
     return {
       success: false,
-      error: error?.message || 'Failed to send email',
+      error: error?.message || "Failed to send email",
     };
   }
 }
@@ -82,22 +85,22 @@ export async function sendBookingConfirmationEmail(
   bookingData: {
     bookingRef: string;
     customerName: string;
-    type: 'flight' | 'hotel';
+    type: "flight" | "hotel";
     details: any;
-  }
+  },
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
     subject: `Booking Confirmation - ${bookingData.bookingRef}`,
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #1e1b4b;">Booking Confirmed</h2>
+        <h2 style="color: ${COLORS.primary};">Booking Confirmed</h2>
         <p>Dear ${bookingData.customerName},</p>
         <p>Your booking <strong>${bookingData.bookingRef}</strong> has been confirmed.</p>
         <p>Thank you for booking with TripAlfa!</p>
       </div>
     `,
-    templateId: 'booking-confirmation',
+    templateId: "booking-confirmation",
     variables: bookingData,
   });
 }
@@ -112,22 +115,22 @@ export async function sendHoldOrderEmail(
     totalAmount: number;
     currency: string;
     paymentRequiredBy: string;
-    type: 'flight' | 'hotel';
-  }
+    type: "flight" | "hotel";
+  },
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
     subject: `Booking on Hold - ${holdData.reference}`,
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #f59e0b;">Booking on Hold</h2>
+        <h2 style="color: ${COLORS.warning};">Booking on Hold</h2>
         <p>Your booking <strong>${holdData.reference}</strong> is currently on hold.</p>
         <p><strong>Amount:</strong> ${holdData.currency} ${holdData.totalAmount}</p>
         <p><strong>Payment Required By:</strong> ${holdData.paymentRequiredBy}</p>
         <p>Please complete payment to confirm your booking.</p>
       </div>
     `,
-    templateId: 'hold-order-notification',
+    templateId: "hold-order-notification",
     variables: holdData,
   });
 }
@@ -140,20 +143,20 @@ export async function sendPasswordResetEmail(
   resetData: {
     resetLink: string;
     expiresIn: string;
-  }
+  },
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
-    subject: 'Password Reset Request',
+    subject: "Password Reset Request",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #1e1b4b;">Password Reset</h2>
+        <h2 style="color: ${COLORS.primary};">Password Reset</h2>
         <p>Click the link below to reset your password:</p>
         <p><a href="${resetData.resetLink}">${resetData.resetLink}</a></p>
         <p>This link will expire in ${resetData.expiresIn}.</p>
       </div>
     `,
-    templateId: 'password-reset',
+    templateId: "password-reset",
     variables: resetData,
   });
 }
@@ -165,20 +168,20 @@ export async function sendWelcomeEmail(
   to: string,
   userData: {
     name: string;
-  }
+  },
 ): Promise<SendEmailResult> {
   return sendEmail({
     to,
-    subject: 'Welcome to TripAlfa!',
+    subject: "Welcome to TripAlfa!",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #1e1b4b;">Welcome to TripAlfa!</h2>
+        <h2 style="color: ${COLORS.primary};">Welcome to TripAlfa!</h2>
         <p>Dear ${userData.name},</p>
         <p>Thank you for joining TripAlfa. We're excited to help you with your travel needs.</p>
         <p>Start exploring flights and hotels today!</p>
       </div>
     `,
-    templateId: 'welcome',
+    templateId: "welcome",
     variables: userData,
   });
 }

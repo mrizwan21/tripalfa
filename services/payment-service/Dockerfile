@@ -1,4 +1,4 @@
-# Dockerfile for payment-service - NEON Database Support
+# Dockerfile for payment-service - Neon Database Support
 # This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template
 # Parameters: SERVICE_NAME=payment-service, WORKSPACE_NAME=@tripalfa/payment-service, PORT=3007, HEALTH_PATH=health
 

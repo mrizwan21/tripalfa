@@ -28,6 +28,9 @@ import InventoryList from "@/features/inventory/pages/InventoryList";
 import DocumentManager from "@/features/documents/pages/DocumentManager";
 import SystemHealth from "@/features/system/pages/SystemHealth";
 import { OrganizationsList } from "@/features/system/pages/OrganizationsList";
+import BookingEngineRuntimeSettings from "@/features/system/pages/BookingEngineRuntimeSettings";
+import PermissionManager from "@/features/system/pages/PermissionManager";
+import ContentSettings from "@/features/system/pages/ContentSettings";
 import NotificationCenter from "@/features/notifications/pages/NotificationCenter";
 import BrandingSettings from "@/features/marketing/pages/BrandingSettings";
 import SystemMonitoring from "@/pages/SystemMonitoring";
@@ -57,7 +60,10 @@ function App() {
         <Route path="bookings/:id" element={<BookingDetailsPage />} />
         <Route path="booking-queues" element={<BookingQueuesPage />} />
         <Route path="bookings/new/online" element={<NewBookingOnlinePage />} />
-        <Route path="bookings/new/offline" element={<NewBookingOfflinePage />} />
+        <Route
+          path="bookings/new/offline"
+          element={<NewBookingOfflinePage />}
+        />
         <Route path="users" element={<UsersPage />} />
         <Route path="users/b2b-companies" element={<B2BCompaniesList />} />
         <Route path="organization" element={<CompanyManagementPage />} />
@@ -76,10 +82,22 @@ function App() {
         {/* Platform & System Modules */}
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="suppliers/management" element={<SuppliersManagement />} />
-        <Route path="suppliers/:id/gateway" element={<SupplierGatewayWrapper />} />
+        <Route
+          path="suppliers/:id/gateway"
+          element={<SupplierGatewayWrapper />}
+        />
         <Route path="rules" element={<RulesPage />} />
         <Route path="system" element={<SystemHealth />} />
         <Route path="system/monitoring" element={<SystemMonitoring />} />
+        <Route
+          path="system/runtime-settings"
+          element={<BookingEngineRuntimeSettings />}
+        />
+        <Route
+          path="system/permission-manager"
+          element={<PermissionManager />}
+        />
+        <Route path="system/content-settings" element={<ContentSettings />} />
         <Route path="notifications" element={<NotificationCenter />} />
         <Route path="branding" element={<BrandingSettings />} />
       </Route>

@@ -1,89 +1,245 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Deposit Receipt - TripAlfa</title>
   </head>
-  <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <body
+    style="
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: rgb(51, 51, 51);
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    "
+  >
     <!-- Header -->
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-      <h1 style="margin: 0;">💰 Deposit Receipt</h1>
-      <p style="margin: 10px 0 0 0;">TripAlfa Wallet</p>
+    <div
+      style="
+        background: linear-gradient(
+          135deg,
+          rgb(102, 126, 234) 0%,
+          rgb(118, 75, 162) 100%
+        );
+        color: white;
+        padding: 30px;
+        text-align: center;
+        border-radius: 10px 10px 0 0;
+      "
+    >
+      <h1 style="margin: 0">💰 Deposit Receipt</h1>
+      <p style="margin: 10px 0 0 0">TripAlfa Wallet</p>
     </div>
-    
+
     <!-- Content -->
-    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd; border-top: none;">
-      <p style="font-size: 16px;">Hi {{customerName}},</p>
-      
-      <p>Your wallet deposit has been successfully processed. Here is your receipt:</p>
-      
+    <div
+      style="
+        background: rgb(249, 249, 249);
+        padding: 30px;
+        border-radius: 0 0 10px 10px;
+        border: 1px solid rgb(221, 221, 221);
+        border-top: none;
+      "
+    >
+      <p style="font-size: 16px">Hi {{customerName}},</p>
+
+      <p>
+        Your wallet deposit has been successfully processed. Here is your
+        receipt:
+      </p>
+
       <!-- Receipt Details -->
-      <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
-        <h3 style="margin-top: 0; color: #667eea;">Transaction Details</h3>
-        <table style="width: 100%; border-collapse: collapse;">
+      <div
+        style="
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          border: 1px solid rgb(238, 238, 238);
+        "
+      >
+        <h3 style="margin-top: 0; color: rgb(102, 126, 234)">
+          Transaction Details
+        </h3>
+        <table style="width: 100%; border-collapse: collapse">
           <tr>
-            <td style="padding: 8px 0; color: #666;">Receipt Number:</td>
-            <td style="padding: 8px 0; font-weight: bold;">{{receiptNumber}}</td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              Receipt Number:
+            </th>
+            <td style="padding: 8px 0; font-weight: bold">{{receiptNumber}}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #666;">Transaction Date:</td>
-            <td style="padding: 8px 0;">{{transactionDate}}</td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              Transaction Date:
+            </th>
+            <td style="padding: 8px 0">{{transactionDate}}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #666;">Transaction Type:</td>
-            <td style="padding: 8px 0;">Deposit / Top-up</td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              Transaction Type:
+            </th>
+            <td style="padding: 8px 0">Deposit / Top-up</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #666;">Status:</td>
-            <td style="padding: 8px 0;"><span style="color: #28a745; font-weight: bold;">✓ Completed</span></td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              Status:
+            </th>
+            <td style="padding: 8px 0">
+              <span style="color: rgb(40, 167, 69); font-weight: bold"
+                >✓ Completed</span
+              >
+            </td>
           </tr>
         </table>
       </div>
-      
+
       <!-- Amount Details -->
-      <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
-        <h3 style="margin-top: 0; color: #667eea;">Payment Details</h3>
-        <table style="width: 100%; border-collapse: collapse;">
+      <div
+        style="
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          border: 1px solid rgb(238, 238, 238);
+        "
+      >
+        <h3 style="margin-top: 0; color: rgb(102, 126, 234)">
+          Payment Details
+        </h3>
+        <table style="width: 100%; border-collapse: collapse">
           <tr>
-            <td style="padding: 8px 0; color: #666;">Deposit Amount:</td>
-            <td style="padding: 8px 0; font-size: 18px; font-weight: bold;">{{currency}}{{depositAmount}}</td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              Deposit Amount:
+            </th>
+            <td style="padding: 8px 0; font-size: 18px; font-weight: bold">
+              {{currency}}{{depositAmount}}
+            </td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #666;">Previous Balance:</td>
-            <td style="padding: 8px 0;">{{currency}}{{previousBalance}}</td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              Previous Balance:
+            </th>
+            <td style="padding: 8px 0">{{currency}}{{previousBalance}}</td>
           </tr>
           <tr>
-            <td style="padding: 8px 0; color: #666;">New Balance:</td>
-            <td style="padding: 8px 0; font-weight: bold;">{{currency}}{{newBalance}}</td>
+            <th
+              style="
+                padding: 8px 0;
+                color: rgb(102, 102, 102);
+                text-align: left;
+                font-weight: normal;
+              "
+            >
+              New Balance:
+            </th>
+            <td style="padding: 8px 0; font-weight: bold">
+              {{currency}}{{newBalance}}
+            </td>
           </tr>
         </table>
       </div>
-      
+
       <!-- Description -->
       {{#if description}}
-      <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #eee;">
-        <h3 style="margin-top: 0; color: #667eea;">Description</h3>
-        <p style="margin: 0;">{{description}}</p>
+      <div
+        style="
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          border: 1px solid rgb(238, 238, 238);
+        "
+      >
+        <h3 style="margin-top: 0; color: rgb(102, 126, 234)">Description</h3>
+        <p style="margin: 0">{{description}}</p>
       </div>
       {{/if}}
-      
+
       <!-- Footer Info -->
-      <div style="margin-top: 30px; padding: 15px; background: #f0f0f0; border-radius: 8px; font-size: 12px; color: #666;">
-        <p style="margin: 0 0 10px 0;"><strong>Payment Method:</strong> {{paymentMethod}}</p>
-        <p style="margin: 0;"><strong>Reference:</strong> {{referenceId}}</p>
+      <div
+        style="
+          margin-top: 30px;
+          padding: 15px;
+          background: rgb(240, 240, 240);
+          border-radius: 8px;
+          font-size: 12px;
+          color: rgb(102, 102, 102);
+        "
+      >
+        <p style="margin: 0 0 10px 0">
+          <strong>Payment Method:</strong> {{paymentMethod}}
+        </p>
+        <p style="margin: 0"><strong>Reference:</strong> {{referenceId}}</p>
       </div>
-      
-      <p style="text-align: center; color: #666; margin-top: 30px;">
-        Thank you for using TripAlfa!<br>
+
+      <p
+        style="text-align: center; color: rgb(102, 102, 102); margin-top: 30px"
+      >
+        Thank you for using TripAlfa!<br />
         You can view your transaction history and manage your wallet anytime.
       </p>
     </div>
-    
+
     <!-- Footer -->
-    <div style="text-align: center; padding: 20px; color: #666; font-size: 12px;">
+    <div
+      style="
+        text-align: center;
+        padding: 20px;
+        color: rgb(102, 102, 102);
+        font-size: 12px;
+      "
+    >
       <p>TripAlfa - Your Travel Partner</p>
-      <p>Need help? Contact <a href="mailto:support@tripalfa.com" style="color: #667eea;">support@tripalfa.com</a></p>
+      <p>
+        Need help? Contact
+        <a href="mailto:support@tripalfa.com" style="color: rgb(102, 126, 234)"
+          >support@tripalfa.com</a
+        >
+      </p>
     </div>
   </body>
 </html>

@@ -2,13 +2,13 @@
  * Type definitions for the Rules Engine package
  */
 
-export * from './rules';
-export * from './coupon';
-export * from './pricing';
-export * from './loyalty';
-export * from './deals';
-export * from './analytics';
-export * from './plb';
+export * from "./rules";
+export * from "./coupon";
+export * from "./pricing";
+export * from "./loyalty";
+export * from "./deals";
+export * from "./analytics";
+export * from "./plb";
 
 // Re-export commonly used types for convenience
 export type {
@@ -25,7 +25,7 @@ export type {
   CommissionTargetType,
   CommissionSettlement,
   RuleMatchContext,
-} from './rules';
+} from "./rules";
 
 export type {
   DiscountCoupon,
@@ -36,7 +36,7 @@ export type {
   CouponValidationResult,
   DiscountType,
   RedemptionStatus,
-} from './coupon';
+} from "./coupon";
 
 export type {
   PricingCalculationRequest,
@@ -53,14 +53,14 @@ export type {
   TaxCalculation,
   TaxReclamationClaim,
   TaxReclamationClaimCreate,
-} from './pricing';
+} from "./pricing";
 
 export type {
   LoyaltyTier,
   CustomerLoyalty,
   LoyaltyTransaction,
   LoyaltyTransactionCreate,
-} from './loyalty';
+} from "./loyalty";
 
 export type {
   AirlineDealCategory,
@@ -71,4 +71,4 @@ export type {
   PrivateFareConfig,
   NDCSpecialDeal,
   AirlineContract,
-} from './deals';
+} from "./deals";

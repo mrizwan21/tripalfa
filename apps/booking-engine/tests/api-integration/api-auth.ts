@@ -1,14 +1,14 @@
 /**
  * API Authentication Helper
- * 
+ *
  * Handles authentication for API integration tests.
  * Provides utilities for login, token management, and session handling.
- * 
+ *
  * @module api-integration/api-auth
  */
 
-import { Page, APIRequestContext } from '@playwright/test';
-import { API_ENDPOINTS } from './api-test-helpers';
+import { Page, APIRequestContext } from "@playwright/test";
+import { API_ENDPOINTS } from "./api-test-helpers";
 
 /**
  * Authentication Configuration
@@ -17,16 +17,16 @@ export const AUTH_CONFIG = {
   // Test user credentials
   testUsers: {
     standard: {
-      email: process.env.TEST_USER_EMAIL || 'test.user@tripalfa.com',
-      password: process.env.TEST_USER_PASSWORD || 'Test@1234',
+      email: process.env.TEST_USER_EMAIL || "test.user@tripalfa.com",
+      password: process.env.TEST_USER_PASSWORD || "Test@1234",
     },
     premium: {
-      email: process.env.TEST_PREMIUM_EMAIL || 'premium.user@tripalfa.com',
-      password: process.env.TEST_PREMIUM_PASSWORD || 'Test@1234',
+      email: process.env.TEST_PREMIUM_EMAIL || "premium.user@tripalfa.com",
+      password: process.env.TEST_PREMIUM_PASSWORD || "Test@1234",
     },
     admin: {
-      email: process.env.TEST_ADMIN_EMAIL || 'admin.user@tripalfa.com',
-      password: process.env.TEST_ADMIN_PASSWORD || 'Test@1234',
+      email: process.env.TEST_ADMIN_EMAIL || "admin.user@tripalfa.com",
+      password: process.env.TEST_ADMIN_PASSWORD || "Test@1234",
     },
   },
   // Token settings
@@ -54,7 +54,9 @@ export class ApiAuthManager {
   private tokens: Map<string, TokenStorage> = new Map();
   private baseURL: string;
 
-  constructor(baseURL: string = process.env.API_URL || 'http://localhost:3003') {
+  constructor(
+    baseURL: string = process.env.API_URL || "http://localhost:3003",
+  ) {
     this.baseURL = baseURL;
   }
 
@@ -64,34 +66,39 @@ export class ApiAuthManager {
   async authenticate(
     email: string,
     password: string,
-    userKey: string = 'default'
+    userKey: string = "default",
   ): Promise<TokenStorage> {
     try {
-      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.auth.login}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        `${this.baseURL}${API_ENDPOINTS.auth.login}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        },
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(`Authentication failed: ${error.message || response.statusText}`);
+        throw new Error(
+          `Authentication failed: ${error.message || response.statusText}`,
+        );
       }
 
       const data = await response.json();
-      
+
       const tokenStorage: TokenStorage = {
         accessToken: data.accessToken || data.token,
         refreshToken: data.refreshToken,
         expiresAt: Date.now() + (data.expiresIn || 3600) * 1000,
         userId: data.userId || data.id,
         email: data.email || email,
-        role: data.role || 'CUSTOMER',
+        role: data.role || "CUSTOMER",
       };
 
       this.tokens.set(userKey, tokenStorage);
       console.log(`✅ Authenticated user: ${email} (${userKey})`);
-      
+
       return tokenStorage;
     } catch (error) {
       console.error(`❌ Authentication failed for ${email}:`, error);
@@ -102,14 +109,14 @@ export class ApiAuthManager {
   /**
    * Get stored tokens for a user
    */
-  getTokens(userKey: string = 'default'): TokenStorage | undefined {
+  getTokens(userKey: string = "default"): TokenStorage | undefined {
     return this.tokens.get(userKey);
   }
 
   /**
    * Get access token for API requests
    */
-  getAccessToken(userKey: string = 'default'): string | undefined {
+  getAccessToken(userKey: string = "default"): string | undefined {
     const tokens = this.tokens.get(userKey);
     return tokens?.accessToken;
   }
@@ -117,35 +124,38 @@ export class ApiAuthManager {
   /**
    * Check if token needs refresh
    */
-  needsRefresh(userKey: string = 'default'): boolean {
+  needsRefresh(userKey: string = "default"): boolean {
     const tokens = this.tokens.get(userKey);
     if (!tokens) return true;
-    
-    return Date.now() > (tokens.expiresAt - AUTH_CONFIG.tokenRefreshThreshold);
+
+    return Date.now() > tokens.expiresAt - AUTH_CONFIG.tokenRefreshThreshold;
   }
 
   /**
    * Refresh access token
    */
-  async refreshToken(userKey: string = 'default'): Promise<TokenStorage> {
+  async refreshToken(userKey: string = "default"): Promise<TokenStorage> {
     const tokens = this.tokens.get(userKey);
     if (!tokens?.refreshToken) {
       throw new Error(`No refresh token available for user: ${userKey}`);
     }
 
     try {
-      const response = await fetch(`${this.baseURL}${API_ENDPOINTS.auth.refresh}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken: tokens.refreshToken }),
-      });
+      const response = await fetch(
+        `${this.baseURL}${API_ENDPOINTS.auth.refresh}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken: tokens.refreshToken }),
+        },
+      );
 
       if (!response.ok) {
         throw new Error(`Token refresh failed: ${response.statusText}`);
       }
 
       const data = await response.json();
-      
+
       const updatedTokens: TokenStorage = {
         ...tokens,
         accessToken: data.accessToken || data.token,
@@ -154,7 +164,7 @@ export class ApiAuthManager {
 
       this.tokens.set(userKey, updatedTokens);
       console.log(`🔄 Token refreshed for user: ${userKey}`);
-      
+
       return updatedTokens;
     } catch (error) {
       console.error(`❌ Token refresh failed for ${userKey}:`, error);
@@ -165,38 +175,38 @@ export class ApiAuthManager {
   /**
    * Ensure valid token (refresh if needed)
    */
-  async ensureValidToken(userKey: string = 'default'): Promise<string> {
+  async ensureValidToken(userKey: string = "default"): Promise<string> {
     if (this.needsRefresh(userKey)) {
       await this.refreshToken(userKey);
     }
-    
+
     const token = this.getAccessToken(userKey);
     if (!token) {
       throw new Error(`No valid token available for user: ${userKey}`);
     }
-    
+
     return token;
   }
 
   /**
    * Logout user and clear tokens
    */
-  async logout(userKey: string = 'default'): Promise<void> {
+  async logout(userKey: string = "default"): Promise<void> {
     const tokens = this.tokens.get(userKey);
     if (tokens) {
       try {
         await fetch(`${this.baseURL}${API_ENDPOINTS.auth.logout}`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${tokens.accessToken}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${tokens.accessToken}`,
           },
         });
       } catch (error) {
         console.warn(`Warning: Logout API call failed for ${userKey}:`, error);
       }
     }
-    
+
     this.tokens.delete(userKey);
     console.log(`👋 Logged out user: ${userKey}`);
   }
@@ -206,17 +216,19 @@ export class ApiAuthManager {
    */
   clearAllTokens(): void {
     this.tokens.clear();
-    console.log('🧹 All tokens cleared');
+    console.log("🧹 All tokens cleared");
   }
 
   /**
    * Get authentication headers for API requests
    */
-  async getAuthHeaders(userKey: string = 'default'): Promise<Record<string, string>> {
+  async getAuthHeaders(
+    userKey: string = "default",
+  ): Promise<Record<string, string>> {
     const token = await this.ensureValidToken(userKey);
     return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     };
   }
 }
@@ -237,23 +249,26 @@ export class PageAuthHelper {
    */
   async loginViaUI(email: string, password: string): Promise<void> {
     console.log(`🔐 Logging in via UI: ${email}`);
-    
+
     // Navigate to login page
-    await this.page.goto('/login');
-    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.goto("/login");
+    await this.page.waitForLoadState("domcontentloaded");
 
     // Fill login form
-    const emailField = this.page.locator('[data-testid="login-email"]').or(
-      this.page.locator('input[type="email"]')
-    ).first();
-    
-    const passwordField = this.page.locator('[data-testid="login-password"]').or(
-      this.page.locator('input[type="password"]')
-    ).first();
-    
-    const submitButton = this.page.locator('[data-testid="login-submit"]').or(
-      this.page.locator('button[type="submit"]')
-    ).first();
+    const emailField = this.page
+      .locator('[data-testid="login-email"]')
+      .or(this.page.locator('input[type="email"]'))
+      .first();
+
+    const passwordField = this.page
+      .locator('[data-testid="login-password"]')
+      .or(this.page.locator('input[type="password"]'))
+      .first();
+
+    const submitButton = this.page
+      .locator('[data-testid="login-submit"]')
+      .or(this.page.locator('button[type="submit"]'))
+      .first();
 
     await emailField.fill(email);
     await passwordField.fill(password);
@@ -261,9 +276,9 @@ export class PageAuthHelper {
 
     // Wait for navigation to dashboard or home
     await Promise.race([
-      this.page.waitForURL('**/dashboard', { timeout: 10000 }),
-      this.page.waitForURL('**/flights', { timeout: 10000 }),
-      this.page.waitForURL('**/hotels', { timeout: 10000 }),
+      this.page.waitForURL("**/dashboard", { timeout: 10000 }),
+      this.page.waitForURL("**/flights", { timeout: 10000 }),
+      this.page.waitForURL("**/hotels", { timeout: 10000 }),
     ]);
 
     console.log(`✅ Login successful: ${email}`);
@@ -272,17 +287,23 @@ export class PageAuthHelper {
   /**
    * Set authentication token directly in localStorage/sessionStorage
    */
-  async setAuthToken(token: string, storage: 'localStorage' | 'sessionStorage' = 'localStorage'): Promise<void> {
-    await this.page.evaluate(({ token, storage }) => {
-      if (storage === 'localStorage') {
-        localStorage.setItem('accessToken', token);
-        localStorage.setItem('authToken', token);
-      } else {
-        sessionStorage.setItem('accessToken', token);
-        sessionStorage.setItem('authToken', token);
-      }
-    }, { token, storage });
-    
+  async setAuthToken(
+    token: string,
+    storage: "localStorage" | "sessionStorage" = "localStorage",
+  ): Promise<void> {
+    await this.page.evaluate(
+      ({ token, storage }) => {
+        if (storage === "localStorage") {
+          localStorage.setItem("accessToken", token);
+          localStorage.setItem("authToken", token);
+        } else {
+          sessionStorage.setItem("accessToken", token);
+          sessionStorage.setItem("authToken", token);
+        }
+      },
+      { token, storage },
+    );
+
     console.log(`🔑 Auth token set in ${storage}`);
   }
 
@@ -291,15 +312,15 @@ export class PageAuthHelper {
    */
   async clearAuthTokens(): Promise<void> {
     await this.page.evaluate(() => {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('refreshToken');
-      sessionStorage.removeItem('accessToken');
-      sessionStorage.removeItem('authToken');
-      sessionStorage.removeItem('refreshToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("authToken");
+      sessionStorage.removeItem("refreshToken");
     });
-    
-    console.log('🧹 Auth tokens cleared from storage');
+
+    console.log("🧹 Auth tokens cleared from storage");
   }
 
   /**
@@ -307,12 +328,14 @@ export class PageAuthHelper {
    */
   async isAuthenticated(): Promise<boolean> {
     const token = await this.page.evaluate(() => {
-      return localStorage.getItem('accessToken') || 
-             localStorage.getItem('authToken') ||
-             sessionStorage.getItem('accessToken') ||
-             sessionStorage.getItem('authToken');
+      return (
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        sessionStorage.getItem("accessToken") ||
+        sessionStorage.getItem("authToken")
+      );
     });
-    
+
     return !!token;
   }
 
@@ -321,10 +344,12 @@ export class PageAuthHelper {
    */
   async getAuthToken(): Promise<string | null> {
     return await this.page.evaluate(() => {
-      return localStorage.getItem('accessToken') || 
-             localStorage.getItem('authToken') ||
-             sessionStorage.getItem('accessToken') ||
-             sessionStorage.getItem('authToken');
+      return (
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("authToken") ||
+        sessionStorage.getItem("accessToken") ||
+        sessionStorage.getItem("authToken")
+      );
     });
   }
 
@@ -332,24 +357,25 @@ export class PageAuthHelper {
    * Logout via UI
    */
   async logoutViaUI(): Promise<void> {
-    console.log('👋 Logging out via UI...');
-    
+    console.log("👋 Logging out via UI...");
+
     // Try to find and click logout button/link
-    const logoutButton = this.page.locator('[data-testid="logout-button"]').or(
-      this.page.locator('text=Logout').or(
-        this.page.locator('text=Sign Out')
+    const logoutButton = this.page
+      .locator('[data-testid="logout-button"]')
+      .or(
+        this.page.locator("text=Logout").or(this.page.locator("text=Sign Out")),
       )
-    ).first();
-    
+      .first();
+
     if (await logoutButton.isVisible().catch(() => false)) {
       await logoutButton.click();
-      await this.page.waitForLoadState('networkidle');
+      await this.page.waitForLoadState("networkidle");
     }
-    
+
     // Clear tokens regardless
     await this.clearAuthTokens();
-    
-    console.log('✅ Logout completed');
+
+    console.log("✅ Logout completed");
   }
 }
 
@@ -360,12 +386,12 @@ export class PageAuthHelper {
 export async function createAuthenticatedContext(
   baseURL: string,
   authManager: ApiAuthManager,
-  userKey: string = 'default'
+  userKey: string = "default",
 ): Promise<APIRequestContext> {
-  const { request } = await import('@playwright/test');
-  
+  const { request } = await import("@playwright/test");
+
   const headers = await authManager.getAuthHeaders(userKey);
-  
+
   return request.newContext({
     baseURL,
     extraHTTPHeaders: headers,
@@ -377,7 +403,7 @@ export async function createAuthenticatedContext(
  */
 export async function quickLogin(
   page: Page,
-  userType: 'standard' | 'premium' | 'admin' = 'standard'
+  userType: "standard" | "premium" | "admin" = "standard",
 ): Promise<void> {
   const credentials = AUTH_CONFIG.testUsers[userType];
   const authHelper = new PageAuthHelper(page);
@@ -389,13 +415,13 @@ export async function quickLogin(
  */
 export async function quickApiAuth(
   authManager: ApiAuthManager,
-  userType: 'standard' | 'premium' | 'admin' = 'standard'
+  userType: "standard" | "premium" | "admin" = "standard",
 ): Promise<TokenStorage> {
   const credentials = AUTH_CONFIG.testUsers[userType];
   return await authManager.authenticate(
     credentials.email,
     credentials.password,
-    userType
+    userType,
   );
 }
 
@@ -413,13 +439,16 @@ export interface AuthState {
 /**
  * Get current authentication state
  */
-export function getAuthState(authManager: ApiAuthManager, userKey: string = 'default'): AuthState {
+export function getAuthState(
+  authManager: ApiAuthManager,
+  userKey: string = "default",
+): AuthState {
   const tokens = authManager.getTokens(userKey);
-  
+
   return {
     userKey,
-    email: tokens?.email || '',
-    role: tokens?.role || '',
+    email: tokens?.email || "",
+    role: tokens?.role || "",
     isAuthenticated: !!tokens?.accessToken,
     tokenExpiry: tokens?.expiresAt,
   };
@@ -432,23 +461,23 @@ export class AuthenticationError extends Error {
   constructor(
     message: string,
     public code: string,
-    public statusCode?: number
+    public statusCode?: number,
   ) {
     super(message);
-    this.name = 'AuthenticationError';
+    this.name = "AuthenticationError";
   }
 }
 
 export class TokenExpiredError extends AuthenticationError {
-  constructor(message: string = 'Token has expired') {
-    super(message, 'TOKEN_EXPIRED', 401);
-    this.name = 'TokenExpiredError';
+  constructor(message: string = "Token has expired") {
+    super(message, "TOKEN_EXPIRED", 401);
+    this.name = "TokenExpiredError";
   }
 }
 
 export class InvalidCredentialsError extends AuthenticationError {
-  constructor(message: string = 'Invalid credentials provided') {
-    super(message, 'INVALID_CREDENTIALS', 401);
-    this.name = 'InvalidCredentialsError';
+  constructor(message: string = "Invalid credentials provided") {
+    super(message, "INVALID_CREDENTIALS", 401);
+    this.name = "InvalidCredentialsError";
   }
 }

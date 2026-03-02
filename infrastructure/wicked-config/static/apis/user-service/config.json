@@ -1,19 +1,17 @@
 {
-    "api": {
-        "upstream_url": "http://host.docker.internal:3004",
-        "request_path": "/users",
-        "strip_uri": true,
-        "preserve_host": false
-    },
-    "plugins": [
-        {
-            "config": {
-                "key_names": [
-                    "apikey"
-                ],
-                "hide_credentials": true
-            },
-            "name": "key-auth"
-        }
-    ]
+  "api": {
+    "upstream_url": "http://host.docker.internal:3004",
+    "request_path": "/users",
+    "strip_uri": true,
+    "preserve_host": false
+  },
+  "plugins": [
+    {
+      "config": {
+        "key_names": ["apikey"],
+        "hide_credentials": true
+      },
+      "name": "key-auth"
+    }
+  ]
 }

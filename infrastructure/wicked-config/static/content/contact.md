@@ -1,24 +1,24 @@
-### Contact Information
+# Contact Information
 
-Your Company Ltd.<br/>
-Some Super Street 10a<br/>
+Your Company Ltd.
+Some Super Street 10a
 12345 Somewhere
 
-Telefon: +49-123-456789-0<br/>
+Telefon: +49-123-456789-0
 E-Mail: info[at]your-company.com
 
 ## Disclaimer - rechtliche Hinweise
-  
-&sect; 1 Haftungsbeschr&auml;nkung<br />
+
+&sect; 1 Haftungsbeschr&auml;nkung
 Die Inhalte dieser Website werden mit gr&ouml;&szlig;tm&ouml;glicher Sorgfalt erstellt.
 Der Anbieter &uuml;bernimmt jedoch keine Gew&auml;hr f&uuml;r die Richtigkeit,
 Vollst&auml;ndigkeit und Aktualit&auml;t der bereitgestellten Inhalte. Die Nutzung der
 Inhalte der Website erfolgt auf eigene Gefahr des Nutzers. Namentlich gekennzeichnete
 Beitr&auml;ge geben die Meinung des jeweiligen Autors und nicht immer die Meinung des
 Anbieters wieder. Mit der reinen Nutzung der Website des Anbieters kommt keinerlei
-Vertragsverh&auml;ltnis zwischen dem Nutzer und dem Anbieter zustande. 
-  
-&sect; 2 Externe Links<br/>
+Vertragsverh&auml;ltnis zwischen dem Nutzer und dem Anbieter zustande.
+
+&sect; 2 Externe Links
 Diese Website enth&auml;lt Verkn&uuml;pfungen zu Websites Dritter ("externe Links").
 Diese Websites unterliegen der Haftung der jeweiligen Betreiber. Der Anbieter hat bei
 der erstmaligen Verkn&uuml;pfung der externen Links die fremden Inhalte daraufhin
@@ -29,9 +29,9 @@ Seiten. Das Setzen von externen Links bedeutet nicht, dass sich der Anbieter die
 dem Verweis oder Link liegenden Inhalte zu Eigen macht. Eine st&auml;ndige Kontrolle
 der externen Links ist f&uuml;r den Anbieter ohne konkrete Hinweise auf
 Rechtsverst&ouml;&szlig;e nicht zumutbar. Bei Kenntnis von Rechtsverst&ouml;&szlig;en
-werden jedoch derartige externe Links unverz&uuml;glich gel&ouml;scht. 
-  
-&sect; 3 Urheber- und Leistungsschutzrechte<br/>
+werden jedoch derartige externe Links unverz&uuml;glich gel&ouml;scht.
+
+&sect; 3 Urheber- und Leistungsschutzrechte
 Die auf dieser Website ver&ouml;ffentlichten Inhalte unterliegen dem deutschen Urheber-
 und Leistungsschutzrecht. Jede vom deutschen Urheber- und Leistungsschutzrecht nicht
 zugelassene Verwertung bedarf der vorherigen schriftlichen Zustimmung des Anbieters
@@ -41,37 +41,36 @@ in Datenbanken oder anderen elektronischen Medien und Systemen. Inhalte und Rech
 Dritter sind dabei als solche gekennzeichnet. Die unerlaubte Vervielf&auml;ltigung
 oder Weitergabe einzelner Inhalte oder kompletter Seiten ist nicht gestattet und strafbar.
 Lediglich die Herstellung von Kopien und Downloads f&uuml;r den pers&ouml;nlichen,
-privaten und nicht kommerziellen Gebrauch ist erlaubt. 
-  
-Die Darstellung dieser Website in fremden Frames ist nur mit schriftlicher Erlaubnis zul&auml;ssig. 
-  
-&sect; 4 Besondere Nutzungsbedingungen<br/>
+privaten und nicht kommerziellen Gebrauch ist erlaubt.
+
+Die Darstellung dieser Website in fremden Frames ist nur mit schriftlicher Erlaubnis zul&auml;ssig.
+
+&sect; 4 Besondere Nutzungsbedingungen
 Soweit besondere Bedingungen f&uuml;r einzelne Nutzungen dieser Website von den vorgenannten
 Paragraphen abweichen, wird an entsprechender Stelle ausdr&uuml;cklich darauf hingewiesen.
 In diesem Falle gelten im jeweiligen Einzelfall die besonderen Nutzungsbedingungen.
-  
+
 Quelle: Impressumsgenerator von juraforum.de
-  
 
 ## Datenschutzerkl&auml;rung
-  
+
 ### Datenschutz
 
 Nachfolgend m&ouml;chten wir Sie &uuml;ber unsere Datenschutzerkl&auml;rung informieren. Sie
 finden hier Informationen &uuml;ber die Erhebung und Verwendung pers&ouml;nlicher Daten bei
 der Nutzung unserer Webseite. Wir beachten dabei das f&uuml;r Deutschland geltende
-Datenschutzrecht. Sie k&ouml;nnen diese Erkl&auml;rung jederzeit auf unserer Webseite abrufen. 
-  
+Datenschutzrecht. Sie k&ouml;nnen diese Erkl&auml;rung jederzeit auf unserer Webseite abrufen.
+
 Wir weisen ausdr&uuml;cklich darauf hin, dass die Daten&uuml;bertragung im Internet (z.B.
 bei der Kommunikation per E-Mail) Sicherheitsl&uuml;cken aufweisen und nicht l&uuml;ckenlos
-vor dem Zugriff durch Dritte gesch&uuml;tzt werden kann. 
-  
+vor dem Zugriff durch Dritte gesch&uuml;tzt werden kann.
+
 Die Verwendung der Kontaktdaten unseres Impressums zur gewerblichen Werbung ist ausdr&uuml;cklich
 nicht erw&uuml;nscht, es sei denn wir hatten zuvor unsere schriftliche Einwilligung erteilt
 oder es besteht bereits eine Gesch&auml;ftsbeziehung. Der Anbieter und alle auf dieser Website
-genannten Personen widersprechen hiermit jeder kommerziellen Verwendung und Weitergabe ihrer Daten. 
-  
-### Personenbezogene Daten 
+genannten Personen widersprechen hiermit jeder kommerziellen Verwendung und Weitergabe ihrer Daten.
+
+### Personenbezogene Daten
 
 Sie k&ouml;nnen unsere Webseite ohne Angabe personenbezogener Daten besuchen. Soweit auf unseren
 Seiten personenbezogene Daten (wie Name, Anschrift oder E-Mail Adresse) erhoben werden, erfolgt
@@ -88,7 +87,7 @@ Stellen d&uuml;rfen wir im Einzelfall Auskunft &uuml;ber diese Daten (Bestandsda
 soweit dies f&uuml;r Zwecke der Strafverfolgung, zur Gefahrenabwehr, zur Erf&uuml;llung der
 gesetzlichen Aufgaben der Verfassungsschutzbeh&ouml;rden oder des Milit&auml;rischen Abschirmdienstes
 oder zur Durchsetzung der Rechte am geistigen Eigentum erforderlich ist.
-  
+
 ### Auskunftsrecht
 
 Sie haben das jederzeitige Recht, sich unentgeltlich und unverz&uuml;glich &uuml;ber die zu Ihrer

@@ -1,22 +1,28 @@
 /**
  * Branding Provider - Whitelabel Support
- * 
+ *
  * This provider enables dynamic branding by accepting configuration from
  * the Marketing service and applying it as CSS variables.
- * 
+ *
  * Usage:
  * <BrandingProvider config={brandingConfig}>
  *   <App />
  * </BrandingProvider>
  */
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 
 /**
  * Branding configuration from Marketing service
  */
 export interface BrandingColors {
-  primary?: string;        // HSL values e.g., "221.2 83.2% 53.3%"
+  primary?: string; // HSL values e.g., "221.2 83.2% 53.3%"
   primaryForeground?: string;
   secondary?: string;
   secondaryForeground?: string;
@@ -40,16 +46,18 @@ interface BrandingContextType {
 
 const defaultBranding: BrandingConfig = {
   colors: {
-    primary: '221.2 83.2% 53.3%',    // Default blue
-    primaryForeground: '210 40% 98%',
-    secondary: '210 40% 96%',
-    secondaryForeground: '222.2 84% 4.9%',
-    accent: '25 95% 53%',             // Orange accent
-    accentForeground: '0 0% 100%',
+    primary: "221.2 83.2% 53.3%", // Default blue
+    primaryForeground: "210 40% 98%",
+    secondary: "210 40% 96%",
+    secondaryForeground: "222.2 84% 4.9%",
+    accent: "25 95% 53%", // Orange accent
+    accentForeground: "0 0% 100%",
   },
 };
 
-const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
+const BrandingContext = createContext<BrandingContextType | undefined>(
+  undefined,
+);
 
 interface BrandingProviderProps {
   children: ReactNode;
@@ -62,46 +70,60 @@ interface BrandingProviderProps {
  */
 const applyBrandingColors = (colors: BrandingColors): void => {
   const root = document.documentElement;
-  
+
   if (colors.primary) {
-    root.style.setProperty('--brand-primary', colors.primary);
-    root.style.setProperty('--primary', colors.primary);
-    root.style.setProperty('--ring', colors.primary);
+    root.style.setProperty("--brand-primary", colors.primary);
+    root.style.setProperty("--primary", colors.primary);
+    root.style.setProperty("--ring", colors.primary);
   }
   if (colors.primaryForeground) {
-    root.style.setProperty('--brand-primary-foreground', colors.primaryForeground);
-    root.style.setProperty('--primary-foreground', colors.primaryForeground);
+    root.style.setProperty(
+      "--brand-primary-foreground",
+      colors.primaryForeground,
+    );
+    root.style.setProperty("--primary-foreground", colors.primaryForeground);
   }
   if (colors.secondary) {
-    root.style.setProperty('--brand-secondary', colors.secondary);
-    root.style.setProperty('--secondary', colors.secondary);
+    root.style.setProperty("--brand-secondary", colors.secondary);
+    root.style.setProperty("--secondary", colors.secondary);
   }
   if (colors.secondaryForeground) {
-    root.style.setProperty('--brand-secondary-foreground', colors.secondaryForeground);
-    root.style.setProperty('--secondary-foreground', colors.secondaryForeground);
+    root.style.setProperty(
+      "--brand-secondary-foreground",
+      colors.secondaryForeground,
+    );
+    root.style.setProperty(
+      "--secondary-foreground",
+      colors.secondaryForeground,
+    );
   }
   if (colors.accent) {
-    root.style.setProperty('--brand-accent', colors.accent);
-    root.style.setProperty('--accent', colors.accent);
+    root.style.setProperty("--brand-accent", colors.accent);
+    root.style.setProperty("--accent", colors.accent);
   }
   if (colors.accentForeground) {
-    root.style.setProperty('--brand-accent-foreground', colors.accentForeground);
-    root.style.setProperty('--accent-foreground', colors.accentForeground);
+    root.style.setProperty(
+      "--brand-accent-foreground",
+      colors.accentForeground,
+    );
+    root.style.setProperty("--accent-foreground", colors.accentForeground);
   }
 };
 
 /**
  * Branding Provider Component
- * 
+ *
  * Wraps the application and provides branding configuration.
  * When config is provided, it applies the colors as CSS variables.
  */
-export function BrandingProvider({ 
-  children, 
+export function BrandingProvider({
+  children,
   config,
-  autoLoad = true 
+  autoLoad = true,
 }: BrandingProviderProps) {
-  const [branding, setBrandingState] = useState<BrandingConfig>(config || defaultBranding);
+  const [branding, setBrandingState] = useState<BrandingConfig>(
+    config || defaultBranding,
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   // Apply branding colors when they change
@@ -117,13 +139,13 @@ export function BrandingProvider({
 
     const loadSavedBranding = () => {
       try {
-        const saved = localStorage.getItem('branding_config');
+        const saved = localStorage.getItem("branding_config");
         if (saved) {
           const parsed = JSON.parse(saved);
           setBrandingState(parsed);
         }
       } catch (error) {
-        console.warn('Failed to load saved branding:', error);
+        console.warn("Failed to load saved branding:", error);
       }
     };
 
@@ -134,9 +156,9 @@ export function BrandingProvider({
   const setBranding = (config: BrandingConfig) => {
     setBrandingState(config);
     try {
-      localStorage.setItem('branding_config', JSON.stringify(config));
+      localStorage.setItem("branding_config", JSON.stringify(config));
     } catch (error) {
-      console.warn('Failed to save branding:', error);
+      console.warn("Failed to save branding:", error);
     }
   };
 
@@ -153,7 +175,9 @@ export function BrandingProvider({
   };
 
   return (
-    <BrandingContext.Provider value={{ branding, isLoading, setBranding, updateColors }}>
+    <BrandingContext.Provider
+      value={{ branding, isLoading, setBranding, updateColors }}
+    >
       {children}
     </BrandingContext.Provider>
   );
@@ -165,7 +189,7 @@ export function BrandingProvider({
 export function useBranding(): BrandingContextType {
   const context = useContext(BrandingContext);
   if (!context) {
-    throw new Error('useBranding must be used within a BrandingProvider');
+    throw new Error("useBranding must be used within a BrandingProvider");
   }
   return context;
 }
@@ -177,14 +201,14 @@ export function useBranding(): BrandingContextType {
 export function useBrandStyles(): React.CSSProperties {
   const { branding } = useBranding();
   const colors = branding.colors || defaultBranding.colors!;
-  
+
   return {
-    '--brand-primary': colors.primary,
-    '--brand-primary-foreground': colors.primaryForeground,
-    '--brand-secondary': colors.secondary,
-    '--brand-secondary-foreground': colors.secondaryForeground,
-    '--brand-accent': colors.accent,
-    '--brand-accent-foreground': colors.accentForeground,
+    "--brand-primary": colors.primary,
+    "--brand-primary-foreground": colors.primaryForeground,
+    "--brand-secondary": colors.secondary,
+    "--brand-secondary-foreground": colors.secondaryForeground,
+    "--brand-accent": colors.accent,
+    "--brand-accent-foreground": colors.accentForeground,
   } as React.CSSProperties;
 }
 
@@ -193,23 +217,23 @@ export function useBrandStyles(): React.CSSProperties {
  */
 export function hexToHsl(hex: string): string {
   // Remove # if present
-  hex = hex.replace('#', '');
-  
+  hex = hex.replace("#", "");
+
   // Parse RGB
   const r = parseInt(hex.substring(0, 2), 16) / 255;
   const g = parseInt(hex.substring(2, 4), 16) / 255;
   const b = parseInt(hex.substring(4, 6), 16) / 255;
-  
+
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   let h = 0;
   let s = 0;
   const l = (max + min) / 2;
-  
+
   if (max !== min) {
     const d = max - min;
     s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    
+
     switch (max) {
       case r:
         h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
@@ -222,7 +246,7 @@ export function hexToHsl(hex: string): string {
         break;
     }
   }
-  
+
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 

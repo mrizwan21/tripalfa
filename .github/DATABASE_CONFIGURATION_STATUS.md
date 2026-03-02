@@ -3,40 +3,30 @@
 **Date:** February 22, 2026
 **Status:** ✅ VERIFIED & CORRECTED
 
----
-
-## Summary
-
-All backend services have been configured to use **NEON** for application data and **Local PostgreSQL** (port 5433) for static reference data only.
-
----
-
-## Backend Services Configuration Matrix
-
-| Service | Database | Type | Environment Variable | Status |
- |---------|----------|------|---------------------|--------|
-| **API Gateway** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Booking Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Payment Service** | In-Memory/Redis | Application | - | ✅ No direct DB |
-| **User Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Wallet Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Organization Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **KYC Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Notification Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Marketing Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Rule Engine Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **B2B Admin Service** | NEON neondb | Application | `DIRECT_DATABASE_URL` | ✅ Using NEON |
-| **Static Data Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Using Local Only |
-| **Ingest Service** | Local PG (5433) | Reference | `STATIC_DATABASE_URL` | ✅ Reference Data |
-| **Booking Engine** | N/A | Frontend | - | ✅ N/A |
-| **B2B Admin** | N/A | Frontend | - | ✅ N/A |
+| Service                  | Database        | Type        | Environment Variable  | Status              |
+| ------------------------ | --------------- | ----------- | --------------------- | ------------------- |
+| **API Gateway**          | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Booking Service**      | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Payment Service**      | In-Memory/Redis | Application | -                     | ✅ No direct DB     |
+| **User Service**         | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Wallet Service**       | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Organization Service** | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **KYC Service**          | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Notification Service** | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Marketing Service**    | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Rule Engine Service**  | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **B2B Admin Service**    | Neon neondb     | Application | `DIRECT_DATABASE_URL` | ✅ Using Neon       |
+| **Static Data Service**  | Local PG (5433) | Reference   | `STATIC_DATABASE_URL` | ✅ Using Local Only |
+| **Ingest Service**       | Local PG (5433) | Reference   | `STATIC_DATABASE_URL` | ✅ Reference Data   |
+| **Booking Engine**       | N/A             | Frontend    | -                     | ✅ N/A              |
+| **B2B Admin**            | N/A             | Frontend    | -                     | ✅ N/A              |
 
 ---
 
 ## Environment Variables (.env) - CURRENT
 
 ```dotenv
-# NEON Production Database (Application Data)
+# Neon Production Database (Application Data)
 # IMPORTANT: Never commit actual credentials. Use .env.local for real values.
 DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@your-neon-host.neon.tech/neondb?sslmode=require&pgbouncer=true&connection_limit=20"
 DIRECT_DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@your-neon-host.neon.tech/neondb?sslmode=require"
@@ -80,7 +70,7 @@ ENABLE_LOYALTY=true
 
 ### 1. `.env` File (Root)
 
-- ✅ Updated to use NEON for DATABASE_URL and DIRECT_DATABASE_URL
+- ✅ Updated to use Neon for DATABASE_URL and DIRECT_DATABASE_URL
 - ✅ STATIC_DATABASE_URL points to local Docker staticdatabase (port 5433)
 - ✅ Redis configured to localhost:6379 (development)
 
@@ -122,7 +112,7 @@ ENABLE_LOYALTY=true
 
 ### ✅ After (Current Correct State)
 
-- **ALL backend services** → NEON (`DATABASE_URL` / `DIRECT_DATABASE_URL`)
+- **ALL backend services** → Neon (`DATABASE_URL` / `DIRECT_DATABASE_URL`)
 - **Static reference data (flight + hotel)** → Local PostgreSQL staticdatabase (port 5433)
 - **Environment variables** loaded consistently before Prisma
 - **Clear documentation** created for future developers
@@ -131,16 +121,16 @@ ENABLE_LOYALTY=true
 
 ## Currently Running Services
 
-```
+```text
 Frontend:
 ✅ Booking Engine - http://localhost:5176/
 
 Backend:
-✅ API Gateway - http://localhost:3000 (NEON)
-✅ Booking Service - http://localhost:3001 (NEON)
+✅ API Gateway - http://localhost:3000 (Neon)
+✅ Booking Service - http://localhost:3001 (Neon)
 
 Database Connections:
-✅ NEON neondb - All application data
+✅ Neon neondb - All application data
 ✅ Local PostgreSQL:5433 - Static reference data only
 ✅ Redis:6379 - Cache layer
 ```
@@ -151,12 +141,12 @@ Database Connections:
 
 - ✅ Reviewed all backend services for database connections
 - ✅ Confirmed no localhost:5432 connections (only 5433 for static data)
-- ✅ Updated .env with NEON URLs
+- ✅ Updated .env with Neon URLs
 - ✅ Modified shared-database to load dotenv first
 - ✅ Updated booking-service index to load dotenv first
 - ✅ Updated api-gateway index to load dotenv first
 - ✅ Ran Codacy analysis on all modified files
-- ✅ Verified services start successfully with NEON
+- ✅ Verified services start successfully with Neon
 - ✅ Created comprehensive documentation
 
 ---
@@ -166,21 +156,19 @@ Database Connections:
 **BEFORE making ANY database configuration changes:**
 
 1. Read: `.github/DATABASE_CONNECTION_RULES.md`
-2. Ask: Is this application data or static reference data?
-   - Application data → Use NEON
-   - Static reference data → Use local staticdatabase (5433)
+2. Ask: Is this application data or static reference data? (Application data → Neon, static reference data → local `staticdatabase` on port 5433)
 3. Verify: Load dotenv BEFORE importing database modules
 4. Test: Confirm service starts and connects to correct database
 5. Document: Update DATABASE_CONNECTION_RULES.md if new rules discovered
 
 ---
 
-## NEON Dashboard
+## Neon Dashboard
 
-Access the NEON console to verify databases:
+Access Neon via CLI to verify and manage databases:
 
-- **URL:** <https://console.neon.tech>
-- **Project:** curly-queen-75335750
+- **Initialize:** `brew install neonctl && neonctl init`
+- **Project/Container:** Use your currently selected Neon project
 - **Database:**
   - `neondb` - Application data
 
@@ -189,7 +177,7 @@ Access the NEON console to verify databases:
 ## Quick Reference Commands
 
 ```bash
-# Test NEON connection
+# Test Neon connection
 psql "$DIRECT_DATABASE_URL"
 
 # Check which database connected

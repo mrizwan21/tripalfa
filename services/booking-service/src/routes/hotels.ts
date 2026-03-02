@@ -1,12 +1,12 @@
 /**
  * Hotel Routes - Hybrid Data Fetching
  * =====================================
- * 
+ *
  * Strategy:
  * - Static data (95%): Postgres static DB
  * - Live data (rates): LITEAPI
  * - Fallback: LITEAPI if static DB has no data
- * 
+ *
  * Endpoints:
  * - GET  /hotels/search - Search hotels with live rates
  * - GET  /hotels/:hotelId - Get hotel details
@@ -14,8 +14,8 @@
  * - POST /hotels/rates - Get live rates for specific hotels
  */
 
-import { Router, Request, Response } from 'express';
-import HotelDataService from '../services/hotelDataService.js';
+import { Router, Request, Response } from "express";
+import HotelDataService from "../services/hotelDataService.js";
 
 const router: Router = Router();
 
@@ -23,10 +23,10 @@ const router: Router = Router();
 // Express query params can be string, string[], or ParsedQs objects
 function parseQueryString(value: unknown): string | undefined {
   if (!value) return undefined;
-  if (typeof value === 'string') return value;
+  if (typeof value === "string") return value;
   if (Array.isArray(value)) {
     const first = value[0];
-    return typeof first === 'string' ? first : undefined;
+    return typeof first === "string" ? first : undefined;
   }
   return undefined;
 }
@@ -35,7 +35,7 @@ function parseQueryString(value: unknown): string | undefined {
 // GET /hotels/search - Search hotels
 // ============================================================================
 
-router.get('/search', async (req: Request, res: Response) => {
+router.get("/search", async (req: Request, res: Response) => {
   try {
     const {
       location,
@@ -59,8 +59,8 @@ router.get('/search', async (req: Request, res: Response) => {
 
     // Validate required params
     if (!checkin || !checkout) {
-      return res.status(400).json({ 
-        error: 'checkin and checkout dates are required' 
+      return res.status(400).json({
+        error: "checkin and checkout dates are required",
       });
     }
 
@@ -69,8 +69,8 @@ router.get('/search', async (req: Request, res: Response) => {
     if (children) {
       if (Array.isArray(children)) {
         childrenAges = children.map(Number);
-      } else if (typeof children === 'string') {
-        childrenAges = children.split(',').map(Number);
+      } else if (typeof children === "string") {
+        childrenAges = children.split(",").map(Number);
       }
     }
 
@@ -79,8 +79,8 @@ router.get('/search', async (req: Request, res: Response) => {
     if (facilities) {
       if (Array.isArray(facilities)) {
         facilityIds = facilities.map(Number);
-      } else if (typeof facilities === 'string') {
-        facilityIds = facilities.split(',').map(Number);
+      } else if (typeof facilities === "string") {
+        facilityIds = facilities.split(",").map(Number);
       }
     }
 
@@ -89,15 +89,15 @@ router.get('/search', async (req: Request, res: Response) => {
     if (starRating) {
       if (Array.isArray(starRating)) {
         starRatings = starRating.map(Number);
-      } else if (typeof starRating === 'string') {
-        starRatings = starRating.split(',').map(Number);
+      } else if (typeof starRating === "string") {
+        starRatings = starRating.split(",").map(Number);
       }
     }
 
     const result = await HotelDataService.searchHotels({
-      location: String(location || city || ''),
-      cityName: String(city || location || ''),
-      countryCode: String(countryCode || country || ''),
+      location: String(location || city || ""),
+      cityName: String(city || location || ""),
+      countryCode: String(countryCode || country || ""),
       checkin: String(checkin),
       checkout: String(checkout),
       adults: adults ? Number(adults) : undefined,
@@ -109,8 +109,8 @@ router.get('/search', async (req: Request, res: Response) => {
       starRating: starRatings,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      sortBy: String(sortBy || ''),
-      sortOrder: String(sortOrder || 'asc'),
+      sortBy: String(sortBy || ""),
+      sortOrder: String(sortOrder || "asc"),
     });
 
     res.json({
@@ -118,7 +118,7 @@ router.get('/search', async (req: Request, res: Response) => {
       ...result,
     });
   } catch (error: any) {
-    console.error('[Hotels] Search error:', error.message);
+    console.error("[Hotels] Search error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -127,7 +127,7 @@ router.get('/search', async (req: Request, res: Response) => {
 // POST /hotels/search - POST version for complex queries
 // ============================================================================
 
-router.post('/search', async (req: Request, res: Response) => {
+router.post("/search", async (req: Request, res: Response) => {
   try {
     const {
       location,
@@ -150,8 +150,8 @@ router.post('/search', async (req: Request, res: Response) => {
 
     // Validate required params
     if (!checkin || !checkout) {
-      return res.status(400).json({ 
-        error: 'checkin and checkout dates are required' 
+      return res.status(400).json({
+        error: "checkin and checkout dates are required",
       });
     }
 
@@ -179,7 +179,7 @@ router.post('/search', async (req: Request, res: Response) => {
       ...result,
     });
   } catch (error: any) {
-    console.error('[Hotels] Search error:', error.message);
+    console.error("[Hotels] Search error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -188,7 +188,7 @@ router.post('/search', async (req: Request, res: Response) => {
 // GET /hotels/:hotelId - Get hotel details
 // ============================================================================
 
-router.get('/:hotelId', async (req: Request, res: Response) => {
+router.get("/:hotelId", async (req: Request, res: Response) => {
   try {
     const hotelId = String(req.params.hotelId);
     const { checkin, checkout, adults, children } = req.query;
@@ -198,8 +198,8 @@ router.get('/:hotelId', async (req: Request, res: Response) => {
     if (children) {
       if (Array.isArray(children)) {
         childrenAges = children.map(Number);
-      } else if (typeof children === 'string') {
-        childrenAges = children.split(',').map(Number);
+      } else if (typeof children === "string") {
+        childrenAges = children.split(",").map(Number);
       }
     }
 
@@ -211,9 +211,9 @@ router.get('/:hotelId', async (req: Request, res: Response) => {
     });
 
     if (!result.hotel) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Hotel not found' 
+      return res.status(404).json({
+        success: false,
+        error: "Hotel not found",
       });
     }
 
@@ -222,7 +222,7 @@ router.get('/:hotelId', async (req: Request, res: Response) => {
       ...result,
     });
   } catch (error: any) {
-    console.error('[Hotels] Get hotel error:', error.message);
+    console.error("[Hotels] Get hotel error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -231,14 +231,14 @@ router.get('/:hotelId', async (req: Request, res: Response) => {
 // POST /hotels/rates - Get live rates for specific hotels
 // ============================================================================
 
-router.post('/rates', async (req: Request, res: Response) => {
+router.post("/rates", async (req: Request, res: Response) => {
   try {
     const {
       hotelIds,
       checkin,
       checkout,
-      currency = 'USD',
-      guestNationality = 'US',
+      currency = "USD",
+      guestNationality = "US",
       occupancies,
       adults = 2,
       children,
@@ -247,14 +247,14 @@ router.post('/rates', async (req: Request, res: Response) => {
     } = req.body;
 
     if (!hotelIds || !Array.isArray(hotelIds) || hotelIds.length === 0) {
-      return res.status(400).json({ 
-        error: 'hotelIds array is required' 
+      return res.status(400).json({
+        error: "hotelIds array is required",
       });
     }
 
     if (!checkin || !checkout) {
-      return res.status(400).json({ 
-        error: 'checkin and checkout dates are required' 
+      return res.status(400).json({
+        error: "checkin and checkout dates are required",
       });
     }
 
@@ -263,14 +263,16 @@ router.post('/rates', async (req: Request, res: Response) => {
     if (!occs) {
       let childrenAges: number[] = [];
       if (children) {
-        childrenAges = Array.isArray(children) 
-          ? children.map(Number) 
-          : String(children).split(',').map(Number);
+        childrenAges = Array.isArray(children)
+          ? children.map(Number)
+          : String(children).split(",").map(Number);
       }
-      occs = [{
-        adults: Number(adults),
-        children: childrenAges,
-      }];
+      occs = [
+        {
+          adults: Number(adults),
+          children: childrenAges,
+        },
+      ];
     }
 
     const ratesMap = await HotelDataService.getLiveRates({
@@ -296,7 +298,7 @@ router.post('/rates', async (req: Request, res: Response) => {
       hotelCount: ratesMap.size,
     });
   } catch (error: any) {
-    console.error('[Hotels] Get rates error:', error.message);
+    console.error("[Hotels] Get rates error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -305,7 +307,7 @@ router.post('/rates', async (req: Request, res: Response) => {
 // GET /hotels/facilities - Get all facilities/amenities
 // ============================================================================
 
-router.get('/facilities/list', async (req: Request, res: Response) => {
+router.get("/facilities/list", async (req: Request, res: Response) => {
   try {
     const facilities = await HotelDataService.getFacilities();
 
@@ -315,7 +317,7 @@ router.get('/facilities/list', async (req: Request, res: Response) => {
       count: facilities.length,
     });
   } catch (error: any) {
-    console.error('[Hotels] Get facilities error:', error.message);
+    console.error("[Hotels] Get facilities error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -324,7 +326,7 @@ router.get('/facilities/list', async (req: Request, res: Response) => {
 // GET /hotels/filters/options - Get filter options for UI
 // ============================================================================
 
-router.get('/filters/options', async (req: Request, res: Response) => {
+router.get("/filters/options", async (req: Request, res: Response) => {
   try {
     // Get facilities from DB
     const facilities = await HotelDataService.getFacilities();
@@ -334,30 +336,30 @@ router.get('/filters/options', async (req: Request, res: Response) => {
       success: true,
       filters: {
         starRating: [
-          { value: 5, label: '5 Stars' },
-          { value: 4, label: '4 Stars' },
-          { value: 3, label: '3 Stars' },
-          { value: 2, label: '2 Stars' },
-          { value: 1, label: '1 Star' },
+          { value: 5, label: "5 Stars" },
+          { value: 4, label: "4 Stars" },
+          { value: 3, label: "3 Stars" },
+          { value: 2, label: "2 Stars" },
+          { value: 1, label: "1 Star" },
         ],
         priceRange: {
           min: 0,
           max: 10000,
           step: 50,
         },
-        facilities: facilities.map(f => ({
+        facilities: facilities.map((f) => ({
           value: f.id,
           label: f.name,
         })),
         sortOptions: [
-          { value: 'price', label: 'Price', defaultOrder: 'asc' },
-          { value: 'rating', label: 'Rating', defaultOrder: 'desc' },
-          { value: 'name', label: 'Name', defaultOrder: 'asc' },
+          { value: "price", label: "Price", defaultOrder: "asc" },
+          { value: "rating", label: "Rating", defaultOrder: "desc" },
+          { value: "name", label: "Name", defaultOrder: "asc" },
         ],
       },
     });
   } catch (error: any) {
-    console.error('[Hotels] Get filter options error:', error.message);
+    console.error("[Hotels] Get filter options error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });

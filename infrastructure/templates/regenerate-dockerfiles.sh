@@ -33,7 +33,7 @@ for service_info in "${SERVICES[@]}"; do
 
   # Generate Dockerfile content using pipes to avoid sed -i issues
   (
-    echo "# Dockerfile for $service_name - NEON Database Support"
+    echo "# Dockerfile for $service_name - Neon Database Support"
     echo "# This Dockerfile follows the shared template at infrastructure/templates/service.Dockerfile.template"
     echo "# Parameters: SERVICE_NAME=$service_name, WORKSPACE_NAME=$workspace_name, PORT=$port, HEALTH_PATH=health"
     echo ""

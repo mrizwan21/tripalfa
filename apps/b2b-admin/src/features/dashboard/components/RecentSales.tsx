@@ -1,4 +1,8 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@tripalfa/ui-components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@tripalfa/ui-components/ui/avatar";
 import { motion } from "framer-motion";
 
 const sales = [
@@ -55,21 +59,23 @@ export function RecentSales() {
           transition={{ delay: index * 0.1, duration: 0.3 }}
           className="flex items-center gap-4 group cursor-pointer"
         >
-          <Avatar className="h-11 w-11 border-2 border-white shadow-md">
+          <Avatar className="h-11 w-11 border-2 border-border shadow-md">
             <AvatarFallback
-              className={`bg-gradient-to-br ${sale.color} text-white text-sm font-bold`}
+              className={`bg-gradient-to-br ${sale.color} text-primary-foreground text-sm font-bold`}
             >
               {sale.initials}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
+          <div className="flex-1 min-w-0 gap-4">
+            <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
               {sale.name}
             </p>
-            <p className="text-xs text-slate-500 truncate">{sale.email}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {sale.email}
+            </p>
           </div>
           <div className="text-right">
-            <p className="text-sm font-bold text-slate-900">{sale.amount}</p>
+            <p className="text-sm font-bold text-foreground">{sale.amount}</p>
             <p className="text-xs text-emerald-600 font-medium">+Completed</p>
           </div>
         </motion.div>

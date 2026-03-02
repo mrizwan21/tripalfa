@@ -1,5 +1,18 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { motion } from "framer-motion";
+
+const CHART_REVENUE_COLOR = "hsl(var(--primary))";
+const CHART_BOOKINGS_COLOR = "hsl(var(--success))";
+const CHART_GRID_COLOR = "hsl(var(--border))";
+const CHART_TICK_COLOR = "hsl(var(--muted-foreground))";
 
 const data = [
   { name: "Jan", revenue: 4500, bookings: 2400 },
@@ -18,18 +31,25 @@ const data = [
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
+    const getDotClass = (dataKey: string) => {
+      return dataKey === "revenue" ? "bg-primary" : "bg-emerald-500";
+    };
+
     return (
-      <div className="bg-white p-4 rounded-xl shadow-xl border border-slate-200">
-        <p className="text-sm font-semibold text-slate-900 mb-2">{label}</p>
+      <div className="bg-popover p-4 rounded-xl shadow-xl border border-border">
+        <p className="text-sm font-semibold text-foreground mb-2">{label}</p>
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center gap-2 text-sm">
             <div
-              className="h-2 w-2 rounded-full"
-              style={{ backgroundColor: entry.color }}
+              className={`h-2 w-2 rounded-full ${getDotClass(entry.dataKey)}`}
             />
-            <span className="text-slate-500 capitalize">{entry.dataKey}:</span>
-            <span className="font-semibold text-slate-900">
-              {entry.dataKey === "revenue" ? `$${entry.value.toLocaleString()}` : entry.value.toLocaleString()}
+            <span className="text-muted-foreground capitalize">
+              {entry.dataKey}:
+            </span>
+            <span className="font-semibold text-foreground">
+              {entry.dataKey === "revenue"
+                ? `$${entry.value.toLocaleString()}`
+                : entry.value.toLocaleString()}
             </span>
           </div>
         ))}
@@ -54,30 +74,46 @@ export function Overview() {
         >
           <defs>
             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
+              <stop
+                offset="5%"
+                stopColor={CHART_REVENUE_COLOR}
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="95%"
+                stopColor={CHART_REVENUE_COLOR}
+                stopOpacity={0}
+              />
             </linearGradient>
             <linearGradient id="colorBookings" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+              <stop
+                offset="5%"
+                stopColor={CHART_BOOKINGS_COLOR}
+                stopOpacity={0.3}
+              />
+              <stop
+                offset="95%"
+                stopColor={CHART_BOOKINGS_COLOR}
+                stopOpacity={0}
+              />
             </linearGradient>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
-            stroke="#e2e8f0"
+            stroke={CHART_GRID_COLOR}
           />
           <XAxis
             dataKey="name"
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#64748b", fontSize: 12 }}
+            tick={{ fill: CHART_TICK_COLOR, fontSize: 12 }}
             dy={10}
           />
           <YAxis
             axisLine={false}
             tickLine={false}
-            tick={{ fill: "#64748b", fontSize: 12 }}
+            tick={{ fill: CHART_TICK_COLOR, fontSize: 12 }}
             tickFormatter={(value) => `$${value / 1000}k`}
             dx={-10}
           />
@@ -85,7 +121,7 @@ export function Overview() {
           <Area
             type="monotone"
             dataKey="revenue"
-            stroke="#4f46e5"
+            stroke={CHART_REVENUE_COLOR}
             strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorRevenue)"
@@ -95,7 +131,7 @@ export function Overview() {
           <Area
             type="monotone"
             dataKey="bookings"
-            stroke="#10b981"
+            stroke={CHART_BOOKINGS_COLOR}
             strokeWidth={2}
             strokeDasharray="5 5"
             fillOpacity={1}
@@ -105,16 +141,16 @@ export function Overview() {
           />
         </AreaChart>
       </ResponsiveContainer>
-      
+
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4">
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-indigo-500" />
-          <span className="text-sm text-slate-600">Revenue</span>
+          <div className="h-3 w-3 rounded-full bg-primary" />
+          <span className="text-sm text-muted-foreground">Revenue</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-full bg-emerald-500" />
-          <span className="text-sm text-slate-600">Bookings</span>
+          <span className="text-sm text-muted-foreground">Bookings</span>
         </div>
       </div>
     </div>

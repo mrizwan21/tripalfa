@@ -3,19 +3,33 @@
  * Base and concrete implementations for notification delivery channels
  */
 
-import { createLogger, Logger } from '@tripalfa/shared-utils/logger';
-import { Notification, NotificationChannel, ChannelError, EmailConfig, SMSConfig, PushConfig, BrevoEmailConfig, isBrevoConfig } from '../types';
-import { TransactionalEmailsApi, SendSmtpEmail, SendSmtpEmailSender, SendSmtpEmailReplyTo } from '@getbrevo/brevo';
+import { createLogger, Logger } from "@tripalfa/shared-utils/logger";
+import {
+  Notification,
+  NotificationChannel,
+  ChannelError,
+  EmailConfig,
+  SMSConfig,
+  PushConfig,
+  BrevoEmailConfig,
+  isBrevoConfig,
+} from "../types";
+import {
+  TransactionalEmailsApi,
+  SendSmtpEmail,
+  SendSmtpEmailSender,
+  SendSmtpEmailReplyTo,
+} from "@getbrevo/brevo";
 
 /**
  * Abstract base class for notification channels
  */
 export abstract class BaseChannel implements NotificationChannel {
   protected logger: Logger;
-  protected name: string = 'BaseChannel';
+  protected name: string = "BaseChannel";
 
   constructor(logger?: Logger) {
-    this.logger = logger || createLogger({ serviceName: 'notifications' });
+    this.logger = logger || createLogger({ serviceName: "notifications" });
   }
 
   abstract send(notification: Notification): Promise<boolean>;
@@ -25,11 +39,19 @@ export abstract class BaseChannel implements NotificationChannel {
     return this.name;
   }
 
-  protected logSend(notification: Notification, success: boolean, error?: Error): void {
+  protected logSend(
+    notification: Notification,
+    success: boolean,
+    error?: Error,
+  ): void {
     if (success) {
       this.logger.info(
-        { notificationId: notification.id, channel: this.name, userId: notification.userId },
-        `Notification sent via ${this.name}`
+        {
+          notificationId: notification.id,
+          channel: this.name,
+          userId: notification.userId,
+        },
+        `Notification sent via ${this.name}`,
       );
     } else {
       this.logger.warn(
@@ -39,7 +61,7 @@ export abstract class BaseChannel implements NotificationChannel {
           userId: notification.userId,
           error: error?.message,
         },
-        `Failed to send notification via ${this.name}`
+        `Failed to send notification via ${this.name}`,
       );
     }
   }
@@ -50,7 +72,7 @@ export abstract class BaseChannel implements NotificationChannel {
  * Supports both Brevo API and legacy SMTP configurations
  */
 export class EmailChannel extends BaseChannel {
-  protected name = 'email';
+  protected name = "email";
   private config: EmailConfig;
   private setupSuccess = false;
   private brevoApi: TransactionalEmailsApi | null = null;
@@ -59,7 +81,7 @@ export class EmailChannel extends BaseChannel {
     super(logger);
     this.config = config;
     this.setupSuccess = this.validateConfig();
-    
+
     // Initialize Brevo API if using Brevo config
     if (isBrevoConfig(config)) {
       this.brevoApi = new TransactionalEmailsApi();
@@ -72,7 +94,7 @@ export class EmailChannel extends BaseChannel {
     if (isBrevoConfig(this.config)) {
       return !!(this.config.apiKey && this.config.from);
     }
-    
+
     // Validate SMTP config
     return !!(
       this.config.from &&
@@ -86,45 +108,55 @@ export class EmailChannel extends BaseChannel {
   /**
    * Send email using Brevo API
    */
-  private async sendViaBrevo(notification: Notification): Promise<{ success: boolean; messageId?: string }> {
+  private async sendViaBrevo(
+    notification: Notification,
+  ): Promise<{ success: boolean; messageId?: string }> {
     if (!this.brevoApi) {
-      throw new ChannelError('Brevo API not initialized', 'email');
+      throw new ChannelError("Brevo API not initialized", "email");
     }
 
     const brevoConfig = this.config as BrevoEmailConfig;
-    
+
     const sender: SendSmtpEmailSender = {
       email: brevoConfig.from,
-      name: brevoConfig.fromName || 'TripAlfa',
+      name: brevoConfig.fromName || "TripAlfa",
     };
 
-    const replyTo = brevoConfig.replyTo ? {
-      email: brevoConfig.replyTo,
-      name: brevoConfig.replyToName || 'TripAlfa Support',
-    } : undefined;
+    const replyTo = brevoConfig.replyTo
+      ? {
+          email: brevoConfig.replyTo,
+          name: brevoConfig.replyToName || "TripAlfa Support",
+        }
+      : undefined;
 
     const sendSmtpEmail: SendSmtpEmail = {
       sender,
-      to: [{ email: notification.userId, name: notification.data?.recipientName }],
+      to: [
+        { email: notification.userId, name: notification.data?.recipientName },
+      ],
       subject: notification.title,
       htmlContent: notification.message,
-      textContent: notification.data?.textContent || this.stripHtml(notification.message),
+      textContent:
+        notification.data?.textContent || this.stripHtml(notification.message),
       ...(replyTo && { replyTo }),
       headers: {
-        'X-Notification-Id': notification.id,
+        "X-Notification-Id": notification.id,
       },
       tags: [notification.type, `priority-${notification.priority}`],
     };
 
     try {
       const response = await this.brevoApi.sendTransacEmail(sendSmtpEmail);
-      
+
       return {
         success: true,
         messageId: response.body?.messageId?.toString(),
       };
     } catch (error: any) {
-      this.logger.error({ error: error.message, notificationId: notification.id }, 'Brevo API error');
+      this.logger.error(
+        { error: error.message, notificationId: notification.id },
+        "Brevo API error",
+      );
       throw error;
     }
   }
@@ -132,16 +164,18 @@ export class EmailChannel extends BaseChannel {
   /**
    * Send email using SMTP (fallback/legacy)
    */
-  private async sendViaSMTP(notification: Notification): Promise<{ success: boolean; messageId?: string }> {
+  private async sendViaSMTP(
+    notification: Notification,
+  ): Promise<{ success: boolean; messageId?: string }> {
     // SMTP implementation would go here
     // For now, we log and simulate
     this.logger.warn(
       { notificationId: notification.id },
-      'SMTP email sending not fully implemented. Consider migrating to Brevo.'
+      "SMTP email sending not fully implemented. Consider migrating to Brevo.",
     );
-    
+
     await new Promise((resolve) => setTimeout(resolve, 100));
-    
+
     return {
       success: true,
       messageId: `smtp-${Date.now()}`,
@@ -152,13 +186,19 @@ export class EmailChannel extends BaseChannel {
    * Strip HTML tags from content for plain text version
    */
   private stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    return html
+      .replace(/<[^>]*>/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   async send(notification: Notification): Promise<boolean> {
     try {
       if (!this.setupSuccess) {
-        throw new ChannelError('Email channel not properly configured', 'email');
+        throw new ChannelError(
+          "Email channel not properly configured",
+          "email",
+        );
       }
 
       this.logger.debug(
@@ -166,9 +206,9 @@ export class EmailChannel extends BaseChannel {
           notificationId: notification.id,
           recipient: notification.userId,
           subject: notification.title,
-          provider: isBrevoConfig(this.config) ? 'brevo' : 'smtp',
+          provider: isBrevoConfig(this.config) ? "brevo" : "smtp",
         },
-        'Sending email notification'
+        "Sending email notification",
       );
 
       let result: { success: boolean; messageId?: string };
@@ -183,7 +223,7 @@ export class EmailChannel extends BaseChannel {
         this.logSend(notification, true);
         this.logger.info(
           { notificationId: notification.id, messageId: result.messageId },
-          'Email sent successfully'
+          "Email sent successfully",
         );
       }
 
@@ -200,16 +240,22 @@ export class EmailChannel extends BaseChannel {
   async sendTemplatedEmail(
     to: string,
     templateId: number,
-    params: Record<string, any>
+    params: Record<string, any>,
   ): Promise<{ success: boolean; messageId?: string }> {
     if (!this.brevoApi) {
-      throw new ChannelError('Templated emails require Brevo configuration', 'email');
+      throw new ChannelError(
+        "Templated emails require Brevo configuration",
+        "email",
+      );
     }
 
     const brevoConfig = this.config as BrevoEmailConfig;
 
     const sendSmtpEmail = {
-      sender: { email: brevoConfig.from, name: brevoConfig.fromName || 'TripAlfa' },
+      sender: {
+        email: brevoConfig.from,
+        name: brevoConfig.fromName || "TripAlfa",
+      },
       to: [{ email: to }],
       templateId,
       params,
@@ -222,7 +268,10 @@ export class EmailChannel extends BaseChannel {
         messageId: response.body?.messageId?.toString(),
       };
     } catch (error: any) {
-      this.logger.error({ error: error.message, templateId }, 'Brevo template email error');
+      this.logger.error(
+        { error: error.message, templateId },
+        "Brevo template email error",
+      );
       return { success: false };
     }
   }
@@ -232,7 +281,7 @@ export class EmailChannel extends BaseChannel {
  * SMS Channel Implementation
  */
 export class SMSChannel extends BaseChannel {
-  protected name = 'sms';
+  protected name = "sms";
   private config: SMSConfig;
   private setupSuccess = false;
 
@@ -243,13 +292,17 @@ export class SMSChannel extends BaseChannel {
   }
 
   validateConfig(): boolean {
-    return !!(this.config.accountSid && this.config.authToken && this.config.fromNumber);
+    return !!(
+      this.config.accountSid &&
+      this.config.authToken &&
+      this.config.fromNumber
+    );
   }
 
   async send(notification: Notification): Promise<boolean> {
     try {
       if (!this.setupSuccess) {
-        throw new ChannelError('SMS channel not properly configured', 'sms');
+        throw new ChannelError("SMS channel not properly configured", "sms");
       }
 
       // Mock SMS sending - replace with actual Twilio implementation
@@ -259,7 +312,7 @@ export class SMSChannel extends BaseChannel {
           recipient: notification.userId,
           message: notification.title,
         },
-        'Sending SMS notification'
+        "Sending SMS notification",
       );
 
       // Simulate SMS sending
@@ -278,7 +331,7 @@ export class SMSChannel extends BaseChannel {
  * Push Notification Channel Implementation
  */
 export class PushNotificationChannel extends BaseChannel {
-  protected name = 'push';
+  protected name = "push";
   private config: PushConfig;
   private setupSuccess = false;
 
@@ -289,13 +342,16 @@ export class PushNotificationChannel extends BaseChannel {
   }
 
   validateConfig(): boolean {
-    return !!(this.config.fcmServerKey || (this.config.apnsCert && this.config.apnsKey));
+    return !!(
+      this.config.fcmServerKey ||
+      (this.config.apnsCert && this.config.apnsKey)
+    );
   }
 
   async send(notification: Notification): Promise<boolean> {
     try {
       if (!this.setupSuccess) {
-        throw new ChannelError('Push channel not properly configured', 'push');
+        throw new ChannelError("Push channel not properly configured", "push");
       }
 
       // Mock push notification sending
@@ -305,7 +361,7 @@ export class PushNotificationChannel extends BaseChannel {
           recipient: notification.userId,
           title: notification.title,
         },
-        'Sending push notification'
+        "Sending push notification",
       );
 
       // Simulate push notification
@@ -324,7 +380,7 @@ export class PushNotificationChannel extends BaseChannel {
  * In-App Notification Channel Implementation
  */
 export class InAppNotificationChannel extends BaseChannel {
-  protected name = 'in_app';
+  protected name = "in_app";
   private notifications: Map<string, Notification[]> = new Map();
 
   validateConfig(): boolean {
@@ -374,7 +430,7 @@ export class InAppNotificationChannel extends BaseChannel {
  * Null Channel (no-op implementation for testing)
  */
 export class NullChannel extends BaseChannel {
-  protected name = 'null';
+  protected name = "null";
 
   validateConfig(): boolean {
     return true;

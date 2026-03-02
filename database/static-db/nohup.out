@@ -1,44 +1,79 @@
-[36m[2026-02-25T15:43:59.214Z] INFO    [LiteAPI] Starting LiteAPI static data sync...[0m
-[36m[2026-02-25T15:43:59.215Z] INFO    [LiteAPI] Configuration: HOTELS_DETAIL_LIMIT=100, BATCH_SIZE=100, API_CALL_DELAY=300ms[0m
-[36m[2026-02-25T15:43:59.817Z] INFO    [LiteAPI] Fetching countries...[0m
-[32m[2026-02-25T15:44:01.439Z] SUCCESS [LiteAPI] Countries: upserted 249[0m
-[36m[2026-02-25T15:44:01.454Z] INFO    [LiteAPI] Total countries to sync: 249[0m
-[36m[2026-02-25T15:44:01.455Z] INFO    [LiteAPI] Completed countries: 17[0m
-[36m[2026-02-25T15:44:01.455Z] INFO    [LiteAPI] Remaining countries: 232[0m
-[36m[2026-02-25T15:44:01.455Z] INFO    [LiteAPI] Fetching currencies...[0m
-[32m[2026-02-25T15:44:01.860Z] SUCCESS [LiteAPI] Currencies: upserted 62[0m
-[36m[2026-02-25T15:44:01.860Z] INFO    [LiteAPI] Fetching languages...[0m
-[32m[2026-02-25T15:44:02.538Z] SUCCESS [LiteAPI] Languages: upserted 29[0m
-[36m[2026-02-25T15:44:02.539Z] INFO    [LiteAPI] Fetching hotel chains...[0m
-[32m[2026-02-25T15:44:20.746Z] SUCCESS [LiteAPI] Hotel chains: upserted 4821[0m
-[36m[2026-02-25T15:44:20.747Z] INFO    [LiteAPI] Fetching hotel types...[0m
-[32m[2026-02-25T15:44:24.151Z] SUCCESS [LiteAPI] Hotel types: upserted 52[0m
-[36m[2026-02-25T15:44:24.152Z] INFO    [LiteAPI] Fetching hotel facilities...[0m
-[32m[2026-02-25T15:44:26.038Z] SUCCESS [LiteAPI] Hotel facilities: upserted 0[0m
-[36m[2026-02-25T15:44:26.039Z] INFO    [LiteAPI] Fetching IATA codes...[0m
-[32m[2026-02-25T15:45:11.351Z] SUCCESS [LiteAPI] IATA airports: upserted 8957[0m
-[36m[2026-02-25T15:45:11.352Z] INFO    [LiteAPI] Fetching cities for 232 countries...[0m
-[32m[2026-02-25T15:54:37.922Z] SUCCESS [LiteAPI] Cities: upserted 149995 across 232 countries[0m
-[36m[2026-02-25T15:54:37.924Z] INFO    [LiteAPI] Syncing hotels for 232 countries: BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BQ, BR, BS, BT, BV, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CW, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, EH, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GF, GG, GH, GI, GL, GM, GN, GP, GQ, GR, GS, GT, GU, GW, GY, HK, HM, HN, HR, HT, HU, ID, IE, IL, IM, IN, IO, IQ, IR, IS, IT, JE, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MQ, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NF, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PS, PT, PW, PY, QA, RE, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SJ, SK, SL, SM, SN, SO, SR, SS, ST, SV, SX, SY, SZ, TC, TD, TF, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, UM, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW[0m
-[36m[2026-02-25T15:54:37.926Z] INFO    [LiteAPI] [1/232] Fetching hotels in BB...[0m
-[36m[2026-02-25T15:55:58.680Z] INFO    [LiteAPI] BB: 1124 hotels listed — fetching detail for 100... [1/232 countries, 1124 total hotels][0m
-[36m[2026-02-25T16:03:29.756Z] INFO    [LiteAPI] ✓ Checkpoint: 1/232 countries completed, 100/1124 details fetched[0m
-[36m[2026-02-25T16:03:29.757Z] INFO    [LiteAPI] [2/232] Fetching hotels in BD...[0m
-[36m[2026-02-25T16:06:01.446Z] INFO    [LiteAPI] BD: 1103 hotels listed — fetching detail for 100... [2/232 countries, 2227 total hotels][0m
-[36m[2026-02-25T16:17:05.047Z] INFO    [LiteAPI] ✓ Checkpoint: 2/232 countries completed, 200/2227 details fetched[0m
-[36m[2026-02-25T16:17:05.049Z] INFO    [LiteAPI] [3/232] Fetching hotels in BE...[0m
-[36m[2026-02-25T16:28:35.150Z] INFO    [LiteAPI] BE: page 5, 2498 hotels so far...[0m
-[36m[2026-02-25T16:39:21.281Z] INFO    [LiteAPI] BE: page 10, 4994 hotels so far...[0m
-[36m[2026-02-25T16:55:09.832Z] INFO    [LiteAPI] BE: page 15, 7480 hotels so far...[0m
-[36m[2026-02-25T17:10:47.455Z] INFO    [LiteAPI] BE: page 20, 9970 hotels so far...[0m
-[36m[2026-02-25T18:06:07.735Z] INFO    [LiteAPI] BE: page 25, 12470 hotels so far...[0m
-[36m[2026-02-25T18:35:52.791Z] INFO    [LiteAPI] BE: page 30, 14970 hotels so far...[0m
-[36m[2026-02-25T18:51:56.968Z] INFO    [LiteAPI] BE: page 35, 17470 hotels so far...[0m
-[36m[2026-02-25T19:01:28.891Z] INFO    [LiteAPI] BE: page 40, 19970 hotels so far...[0m
-[36m[2026-02-25T19:03:13.875Z] INFO    [LiteAPI] BE: 21142 hotels listed — fetching detail for 100... [3/232 countries, 23369 total hotels][0m
-[36m[2026-02-25T19:48:05.848Z] INFO    [LiteAPI] ✓ Checkpoint: 3/232 countries completed, 300/23369 details fetched[0m
-[36m[2026-02-25T19:48:05.865Z] INFO    [LiteAPI] [4/232] Fetching hotels in BF...[0m
-[36m[2026-02-25T19:48:53.560Z] INFO    [LiteAPI] BF: 153 hotels listed — fetching detail for 100... [4/232 countries, 23522 total hotels][0m
-[36m[2026-02-25T20:33:44.451Z] INFO    [LiteAPI] ✓ Checkpoint: 4/232 countries completed, 400/23522 details fetched[0m
-[36m[2026-02-25T20:33:44.523Z] INFO    [LiteAPI] [5/232] Fetching hotels in BG...[0m
-[36m[2026-02-25T20:58:22.533Z] INFO    [LiteAPI] BG: page 5, 2500 hotels so far...[0m
+/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:859
+    return new TSError(diagnosticText, diagnosticCodes, diagnostics);
+           ^
+TSError: ⨯ Unable to compile TypeScript:
+scripts/sync-liteapi.ts(25,20): error TS2307: Cannot find module 'p-limit' or its corresponding type declarations.
+scripts/sync-liteapi.ts(1311,54): error TS7006: Parameter 'r' implicitly has an 'any' type.
+scripts/sync-liteapi.ts(1312,53): error TS7006: Parameter 'r' implicitly has an 'any' type.
+
+    at createTSError (/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:859:12)
+    at reportTSError (/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:863:19)
+    at getOutput (/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1077:36)
+    at Object.compile (/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1433:41)
+    at Module.m._compile (/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1617:30)
+    at node:internal/modules/cjs/loader:1942:10
+    at Object.require.extensions.<computed> [as .ts] (/Users/mohamedrizwan/.npm/_npx/1bf7c3c15bf47d04/node_modules/ts-node/src/index.ts:1621:12)
+    at Module.load (node:internal/modules/cjs/loader:1532:32)
+    at Module._load (node:internal/modules/cjs/loader:1334:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:255:19) {
+  diagnosticCodes: [ 2307, 7006, 7006 ]
+}
+[36m[2026-03-02T01:01:26.520Z] INFO    [LiteAPI] Starting LiteAPI static data sync...[0m
+[36m[2026-03-02T01:01:26.520Z] INFO    [LiteAPI] Configuration: HOTELS_DETAIL_LIMIT=100, BATCH_SIZE=100, API_CALL_DELAY=300ms[0m
+[36m[2026-03-02T01:01:26.650Z] INFO    [LiteAPI] Fetching countries...[0m
+[32m[2026-03-02T01:01:27.570Z] SUCCESS [LiteAPI] Countries: upserted 249[0m
+[36m[2026-03-02T01:01:27.626Z] INFO    [LiteAPI] Total countries to sync: 249[0m
+[36m[2026-03-02T01:01:27.626Z] INFO    [LiteAPI] Completed countries: 232[0m
+[36m[2026-03-02T01:01:27.627Z] INFO    [LiteAPI] Remaining countries: 17[0m
+[36m[2026-03-02T01:01:27.627Z] INFO    [LiteAPI] Fetching currencies...[0m
+[32m[2026-03-02T01:01:27.962Z] SUCCESS [LiteAPI] Currencies: upserted 62[0m
+[36m[2026-03-02T01:01:27.962Z] INFO    [LiteAPI] Fetching languages...[0m
+[32m[2026-03-02T01:01:28.225Z] SUCCESS [LiteAPI] Languages: upserted 29[0m
+[36m[2026-03-02T01:01:28.226Z] INFO    [LiteAPI] Fetching hotel chains...[0m
+[32m[2026-03-02T01:01:31.187Z] SUCCESS [LiteAPI] Hotel chains: upserted 4821[0m
+[36m[2026-03-02T01:01:31.188Z] INFO    [LiteAPI] Fetching hotel types...[0m
+[32m[2026-03-02T01:01:31.497Z] SUCCESS [LiteAPI] Hotel types: upserted 52[0m
+[36m[2026-03-02T01:01:31.498Z] INFO    [LiteAPI] Fetching hotel facilities...[0m
+[32m[2026-03-02T01:01:33.309Z] SUCCESS [LiteAPI] Hotel facilities: upserted 0[0m
+[36m[2026-03-02T01:01:33.309Z] INFO    [LiteAPI] Fetching IATA codes...[0m
+[32m[2026-03-02T01:01:38.035Z] SUCCESS [LiteAPI] IATA airports: upserted 8957[0m
+[36m[2026-03-02T01:01:38.035Z] INFO    [LiteAPI] Fetching cities for 17 countries...[0m
+[32m[2026-03-02T01:01:46.693Z] SUCCESS [LiteAPI] Cities: upserted 14461 across 17 countries[0m
+[36m[2026-03-02T01:01:46.694Z] INFO    [LiteAPI] Syncing hotels for 17 countries: US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW[0m
+[36m[2026-03-02T01:01:46.695Z] INFO    [LiteAPI] [1/17] Fetching hotels in US...[0m
+[36m[2026-03-02T01:02:27.207Z] INFO    [LiteAPI] US: page 5, 2500 hotels so far...[0m
+[36m[2026-03-02T01:03:09.742Z] INFO    [LiteAPI] US: page 10, 5000 hotels so far...[0m
+[36m[2026-03-02T01:03:49.209Z] INFO    [LiteAPI] US: page 15, 7500 hotels so far...[0m
+[36m[2026-03-02T01:05:42.370Z] INFO    [LiteAPI] US: page 20, 10000 hotels so far...[0m
+[36m[2026-03-02T01:07:44.007Z] INFO    [LiteAPI] US: page 25, 12500 hotels so far...[0m
+[36m[2026-03-02T01:09:14.568Z] INFO    [LiteAPI] US: page 30, 15000 hotels so far...[0m
+[36m[2026-03-02T01:11:05.105Z] INFO    [LiteAPI] US: page 35, 17500 hotels so far...[0m
+[36m[2026-03-02T01:12:15.804Z] INFO    [LiteAPI] US: page 40, 20000 hotels so far...[0m
+[36m[2026-03-02T01:13:22.633Z] INFO    [LiteAPI] US: page 45, 22500 hotels so far...[0m
+[36m[2026-03-02T01:13:54.903Z] INFO    [LiteAPI] US: page 50, 25000 hotels so far...[0m
+[36m[2026-03-02T01:14:28.102Z] INFO    [LiteAPI] US: page 55, 27500 hotels so far...[0m
+[36m[2026-03-02T15:28:27.419Z] INFO    [LiteAPI] Starting LiteAPI static data sync...[0m
+[36m[2026-03-02T15:28:27.419Z] INFO    [LiteAPI] Configuration: HOTELS_DETAIL_LIMIT=100, BATCH_SIZE=100, API_CALL_DELAY=300ms[0m
+[36m[2026-03-02T15:28:27.497Z] INFO    [LiteAPI] Fetching countries...[0m
+[32m[2026-03-02T15:28:28.314Z] SUCCESS [LiteAPI] Countries: upserted 249[0m
+[36m[2026-03-02T15:28:28.331Z] INFO    [LiteAPI] Total countries to sync: 249[0m
+[36m[2026-03-02T15:28:28.331Z] INFO    [LiteAPI] Completed countries: 232[0m
+[36m[2026-03-02T15:28:28.331Z] INFO    [LiteAPI] Remaining countries: 17[0m
+[36m[2026-03-02T15:28:28.331Z] INFO    [LiteAPI] Fetching currencies...[0m
+[32m[2026-03-02T15:28:28.640Z] SUCCESS [LiteAPI] Currencies: upserted 62[0m
+[36m[2026-03-02T15:28:28.640Z] INFO    [LiteAPI] Fetching languages...[0m
+[32m[2026-03-02T15:28:28.916Z] SUCCESS [LiteAPI] Languages: upserted 29[0m
+[36m[2026-03-02T15:28:28.916Z] INFO    [LiteAPI] Fetching hotel chains...[0m
+[32m[2026-03-02T15:28:32.469Z] SUCCESS [LiteAPI] Hotel chains: upserted 4821[0m
+[36m[2026-03-02T15:28:32.469Z] INFO    [LiteAPI] Fetching hotel types...[0m
+[32m[2026-03-02T15:28:32.755Z] SUCCESS [LiteAPI] Hotel types: upserted 52[0m
+[36m[2026-03-02T15:28:32.755Z] INFO    [LiteAPI] Fetching hotel facilities...[0m
+[32m[2026-03-02T15:28:34.328Z] SUCCESS [LiteAPI] Hotel facilities: upserted 0[0m
+[36m[2026-03-02T15:28:34.328Z] INFO    [LiteAPI] Fetching IATA codes...[0m
+[32m[2026-03-02T15:28:44.166Z] SUCCESS [LiteAPI] IATA airports: upserted 8957[0m
+[36m[2026-03-02T15:28:44.166Z] INFO    [LiteAPI] Fetching cities for 17 countries...[0m
+[32m[2026-03-02T15:28:54.409Z] SUCCESS [LiteAPI] Cities: upserted 14461 across 17 countries[0m
+[36m[2026-03-02T15:28:54.409Z] INFO    [LiteAPI] Syncing hotels for 17 countries: US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW[0m
+[36m[2026-03-02T15:28:54.410Z] INFO    [LiteAPI] [1/17] Fetching hotels in US...[0m
+[36m[2026-03-02T15:30:12.499Z] INFO    [LiteAPI] US: page 5, 2500 hotels so far...[0m
+[36m[2026-03-02T15:31:29.066Z] INFO    [LiteAPI] US: page 10, 5000 hotels so far...[0m

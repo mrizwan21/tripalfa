@@ -3,14 +3,14 @@
  * Integrates with the backend AdminBookingCardController
  */
 
-import { api } from '../lib/api';
+import { api } from "../lib/api.js";
 
 // Types
 export interface AdminBookingCard {
   id: string;
   bookingId?: string;
   userId?: string;
-  product: 'hotel' | 'flight';
+  product: "hotel" | "flight";
   status: string;
   reference?: string;
   total: { amount: number; currency: string };
@@ -60,7 +60,7 @@ export interface BookingStatistics {
 }
 
 export interface BookingQueueParams {
-  queueType?: 'pending' | 'processing' | 'completed';
+  queueType?: "pending" | "processing" | "completed";
   page?: number;
   limit?: number;
 }
@@ -73,11 +73,11 @@ export async function getAdminBookingCards(params?: {
   limit?: number;
 }): Promise<PaginatedResponse<AdminBookingCard>> {
   const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.set('page', params.page.toString());
-  if (params?.limit) queryParams.set('limit', params.limit.toString());
-  
+  if (params?.page) queryParams.set("page", params.page.toString());
+  if (params?.limit) queryParams.set("limit", params.limit.toString());
+
   const response = await api.get<PaginatedResponse<AdminBookingCard>>(
-    `/admin-bookings/cards?${queryParams.toString()}`
+    `/admin-bookings/cards?${queryParams.toString()}`,
   );
   return response;
 }
@@ -85,9 +85,11 @@ export async function getAdminBookingCards(params?: {
 /**
  * Get a specific booking card by ID
  */
-export async function getAdminBookingCard(id: string): Promise<SingleResponse<AdminBookingCard>> {
+export async function getAdminBookingCard(
+  id: string,
+): Promise<SingleResponse<AdminBookingCard>> {
   const response = await api.get<SingleResponse<AdminBookingCard>>(
-    `/admin-bookings/cards/${id}`
+    `/admin-bookings/cards/${id}`,
   );
   return response;
 }
@@ -95,10 +97,12 @@ export async function getAdminBookingCard(id: string): Promise<SingleResponse<Ad
 /**
  * Create a new booking card
  */
-export async function createAdminBookingCard(data: Partial<AdminBookingCard>): Promise<SingleResponse<AdminBookingCard>> {
+export async function createAdminBookingCard(
+  data: Partial<AdminBookingCard>,
+): Promise<SingleResponse<AdminBookingCard>> {
   const response = await api.post<SingleResponse<AdminBookingCard>>(
-    '/admin-bookings/cards',
-    data
+    "/admin-bookings/cards",
+    data,
   );
   return response;
 }
@@ -108,11 +112,11 @@ export async function createAdminBookingCard(data: Partial<AdminBookingCard>): P
  */
 export async function updateAdminBookingCard(
   id: string,
-  data: Partial<AdminBookingCard>
+  data: Partial<AdminBookingCard>,
 ): Promise<SingleResponse<AdminBookingCard>> {
   const response = await api.put<SingleResponse<AdminBookingCard>>(
     `/admin-bookings/cards/${id}`,
-    data
+    data,
   );
   return response;
 }
@@ -120,9 +124,11 @@ export async function updateAdminBookingCard(
 /**
  * Delete a booking card
  */
-export async function deleteAdminBookingCard(id: string): Promise<{ success: boolean; message: string }> {
+export async function deleteAdminBookingCard(
+  id: string,
+): Promise<{ success: boolean; message: string }> {
   const response = await api.delete<{ success: boolean; message: string }>(
-    `/admin-bookings/cards/${id}`
+    `/admin-bookings/cards/${id}`,
   );
   return response;
 }
@@ -130,14 +136,16 @@ export async function deleteAdminBookingCard(id: string): Promise<{ success: boo
 /**
  * Get booking queues (pending, processing, completed)
  */
-export async function getBookingQueues(params?: BookingQueueParams): Promise<PaginatedResponse<AdminBookingCard>> {
+export async function getBookingQueues(
+  params?: BookingQueueParams,
+): Promise<PaginatedResponse<AdminBookingCard>> {
   const queryParams = new URLSearchParams();
-  if (params?.queueType) queryParams.set('queueType', params.queueType);
-  if (params?.page) queryParams.set('page', params.page.toString());
-  if (params?.limit) queryParams.set('limit', params.limit.toString());
-  
+  if (params?.queueType) queryParams.set("queueType", params.queueType);
+  if (params?.page) queryParams.set("page", params.page.toString());
+  if (params?.limit) queryParams.set("limit", params.limit.toString());
+
   const response = await api.get<PaginatedResponse<AdminBookingCard>>(
-    `/admin-bookings/queues?${queryParams.toString()}`
+    `/admin-bookings/queues?${queryParams.toString()}`,
   );
   return response;
 }
@@ -145,10 +153,12 @@ export async function getBookingQueues(params?: BookingQueueParams): Promise<Pag
 /**
  * Get booking statistics
  */
-export async function getBookingStatistics(dateRange?: string): Promise<BookingStatistics> {
-  const queryParams = dateRange ? `?dateRange=${dateRange}` : '';
+export async function getBookingStatistics(
+  dateRange?: string,
+): Promise<BookingStatistics> {
+  const queryParams = dateRange ? `?dateRange=${dateRange}` : "";
   const response = await api.get<BookingStatistics>(
-    `/admin-bookings/statistics${queryParams}`
+    `/admin-bookings/statistics${queryParams}`,
   );
   return response;
 }
@@ -158,14 +168,14 @@ export async function getBookingStatistics(dateRange?: string): Promise<BookingS
  */
 export async function getAgentAssignments(
   agentId: string,
-  params?: { page?: number; limit?: number }
+  params?: { page?: number; limit?: number },
 ): Promise<PaginatedResponse<AdminBookingCard>> {
   const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.set('page', params.page.toString());
-  if (params?.limit) queryParams.set('limit', params.limit.toString());
-  
+  if (params?.page) queryParams.set("page", params.page.toString());
+  if (params?.limit) queryParams.set("limit", params.limit.toString());
+
   const response = await api.get<PaginatedResponse<AdminBookingCard>>(
-    `/admin-bookings/agents/${agentId}/assignments?${queryParams.toString()}`
+    `/admin-bookings/agents/${agentId}/assignments?${queryParams.toString()}`,
   );
   return response;
 }
@@ -190,7 +200,7 @@ export async function getSystemHealth(): Promise<{
     };
   };
 }> {
-  const response = await api.get('/admin-bookings/health');
+  const response = await api.get("/admin-bookings/health");
   return response;
 }
 

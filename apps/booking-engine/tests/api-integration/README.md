@@ -5,6 +5,7 @@ This module provides comprehensive utilities for API integration testing in the 
 ## Overview
 
 The API Integration Test module enables:
+
 - **API Request/Response Interception** - Monitor and validate API calls
 - **Authentication Management** - Handle tokens, sessions, and user authentication
 - **Test Data Management** - Create and cleanup test data via API calls
@@ -14,15 +15,15 @@ The API Integration Test module enables:
 ## Quick Start
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { 
-  ApiAuthManager, 
+import { test, expect } from "@playwright/test";
+import {
+  ApiAuthManager,
   ApiTestDataManager,
   ApiRequestInterceptor,
-  flightMocks 
-} from './api-integration';
+  flightMocks,
+} from "./api-integration";
 
-test.describe('API Integration Tests', () => {
+test.describe("API Integration Tests", () => {
   let authManager: ApiAuthManager;
   let dataManager: ApiTestDataManager;
   let interceptor: ApiRequestInterceptor;
@@ -33,28 +34,28 @@ test.describe('API Integration Tests', () => {
     interceptor = new ApiRequestInterceptor();
   });
 
-  test('should search flights via API', async ({ page }) => {
+  test("should search flights via API", async ({ page }) => {
     // Start intercepting requests
     await interceptor.start(page);
-    
+
     // Authenticate
-    await authManager.authenticate('test@example.com', 'password');
-    
+    await authManager.authenticate("test@example.com", "password");
+
     // Mock flight search response
-    await page.route('**/api/flights/search', async (route) => {
+    await page.route("**/api/flights/search", async (route) => {
       await route.fulfill(flightMocks.searchSuccess(3));
     });
-    
+
     // Perform search
-    await page.goto('/flights');
-    await page.fill('[data-testid="origin"]', 'JFK');
-    await page.fill('[data-testid="destination"]', 'LAX');
+    await page.goto("/flights");
+    await page.fill('[data-testid="origin"]', "JFK");
+    await page.fill('[data-testid="destination"]', "LAX");
     await page.click('[data-testid="search-button"]');
-    
+
     // Verify API call was made
-    const request = interceptor.findRequest('flights/search');
+    const request = interceptor.findRequest("flights/search");
     expect(request).toBeDefined();
-    expect(request?.method()).toBe('POST');
+    expect(request?.method()).toBe("POST");
   });
 });
 ```
@@ -77,40 +78,43 @@ api-integration/
 ### 1. API Test Helpers (`api-test-helpers.ts`)
 
 #### ApiMockBuilder
+
 Build mock API responses with a fluent interface:
 
 ```typescript
-import { ApiMockBuilder } from './api-integration';
+import { ApiMockBuilder } from "./api-integration";
 
 const mockResponse = new ApiMockBuilder()
   .withData({ offers: [] })
   .withStatus(200)
   .withDelay(100)
-  .withHeaders({ 'X-Custom-Header': 'value' })
+  .withHeaders({ "X-Custom-Header": "value" })
   .build();
 ```
 
 #### ApiRequestInterceptor
+
 Intercept and monitor API requests:
 
 ```typescript
-import { ApiRequestInterceptor } from './api-integration';
+import { ApiRequestInterceptor } from "./api-integration";
 
 const interceptor = new ApiRequestInterceptor();
 await interceptor.start(page);
 
 // Later in test
-const request = interceptor.findRequest('flights/search');
-const response = interceptor.findResponse('flights/search');
+const request = interceptor.findRequest("flights/search");
+const response = interceptor.findResponse("flights/search");
 ```
 
 #### ApiResponseValidator
+
 Validate API response structures:
 
 ```typescript
-import { ApiResponseValidator } from './api-integration';
+import { ApiResponseValidator } from "./api-integration";
 
-const response = await fetch('/api/bookings/123');
+const response = await fetch("/api/bookings/123");
 const data = await response.json();
 
 const validation = ApiResponseValidator.validateBookingResponse(data);
@@ -120,15 +124,16 @@ expect(validation.valid).toBe(true);
 ### 2. API Authentication (`api-auth.ts`)
 
 #### ApiAuthManager
+
 Manage authentication tokens and sessions:
 
 ```typescript
-import { ApiAuthManager } from './api-integration';
+import { ApiAuthManager } from "./api-integration";
 
-const authManager = new ApiAuthManager('http://localhost:3003');
+const authManager = new ApiAuthManager("http://localhost:3003");
 
 // Authenticate
-const tokens = await authManager.authenticate('user@example.com', 'password');
+const tokens = await authManager.authenticate("user@example.com", "password");
 
 // Get auth headers for API calls
 const headers = await authManager.getAuthHeaders();
@@ -143,18 +148,19 @@ await authManager.logout();
 ```
 
 #### PageAuthHelper
+
 Handle authentication within Playwright pages:
 
 ```typescript
-import { PageAuthHelper } from './api-integration';
+import { PageAuthHelper } from "./api-integration";
 
 const authHelper = new PageAuthHelper(page);
 
 // Login via UI
-await authHelper.loginViaUI('user@example.com', 'password');
+await authHelper.loginViaUI("user@example.com", "password");
 
 // Set token directly
-await authHelper.setAuthToken('my-token');
+await authHelper.setAuthToken("my-token");
 
 // Check authentication status
 const isAuth = await authHelper.isAuthenticated();
@@ -163,39 +169,41 @@ const isAuth = await authHelper.isAuthenticated();
 ### 3. API Test Data Management (`api-test-data.ts`)
 
 #### ApiTestDataManager
+
 Create and manage test data via API:
 
 ```typescript
-import { ApiTestDataManager } from './api-integration';
+import { ApiTestDataManager } from "./api-integration";
 
 const dataManager = new ApiTestDataManager(authManager);
 
 // Create test user
 const user = await dataManager.createTestUser({
-  email: 'test@example.com',
-  role: 'CUSTOMER'
+  email: "test@example.com",
+  role: "CUSTOMER",
 });
 
 // Create test booking
-const booking = await dataManager.createTestBooking('default', {
-  type: 'FLIGHT',
-  status: 'CONFIRMED'
+const booking = await dataManager.createTestBooking("default", {
+  type: "FLIGHT",
+  status: "CONFIRMED",
 });
 
 // Seed multiple bookings
-const bookings = await dataManager.seedTestBookings('default', 5);
+const bookings = await dataManager.seedTestBookings("default", 5);
 
 // Cleanup all test data
 await dataManager.cleanupAll();
 ```
 
 #### ApiTestDataFactory
+
 Generate test data:
 
 ```typescript
-import { ApiTestDataFactory } from './api-integration';
+import { ApiTestDataFactory } from "./api-integration";
 
-const card = ApiTestDataFactory.generateTestCard('success');
+const card = ApiTestDataFactory.generateTestCard("success");
 const address = ApiTestDataFactory.generateTestAddress();
 const flightOffer = ApiTestDataFactory.generateTestFlightOffer();
 ```
@@ -205,27 +213,27 @@ const flightOffer = ApiTestDataFactory.generateTestFlightOffer();
 Predefined mock responses for common scenarios:
 
 ```typescript
-import { 
-  authMocks, 
-  flightMocks, 
-  hotelMocks, 
+import {
+  authMocks,
+  flightMocks,
+  hotelMocks,
   walletMocks,
   paymentMocks,
   bookingMocks,
   healthMocks,
-  networkErrorMocks 
-} from './api-integration';
+  networkErrorMocks,
+} from "./api-integration";
 
 // Use in tests
-await page.route('**/api/auth/login', async (route) => {
+await page.route("**/api/auth/login", async (route) => {
   await route.fulfill(authMocks.loginSuccess());
 });
 
-await page.route('**/api/flights/search', async (route) => {
+await page.route("**/api/flights/search", async (route) => {
   await route.fulfill(flightMocks.searchSuccess(5));
 });
 
-await page.route('**/api/wallet/balance', async (route) => {
+await page.route("**/api/wallet/balance", async (route) => {
   await route.fulfill(walletMocks.balanceSuccess(1000));
 });
 ```
@@ -235,15 +243,15 @@ await page.route('**/api/wallet/balance', async (route) => {
 All API endpoints are centralized in `API_ENDPOINTS`:
 
 ```typescript
-import { API_ENDPOINTS } from './api-integration';
+import { API_ENDPOINTS } from "./api-integration";
 
 // Access endpoints
-API_ENDPOINTS.auth.login           // '/api/auth/login'
-API_ENDPOINTS.bookings.create      // '/api/bookings'
-API_ENDPOINTS.flights.search       // '/api/flights/search'
-API_ENDPOINTS.hotels.search        // '/api/hotels/search'
-API_ENDPOINTS.wallet.balance       // '/api/wallet/balance'
-API_ENDPOINTS.payments.intent      // '/api/payments/intent'
+API_ENDPOINTS.auth.login; // '/api/auth/login'
+API_ENDPOINTS.bookings.create; // '/api/bookings'
+API_ENDPOINTS.flights.search; // '/api/flights/search'
+API_ENDPOINTS.hotels.search; // '/api/hotels/search'
+API_ENDPOINTS.wallet.balance; // '/api/wallet/balance'
+API_ENDPOINTS.payments.intent; // '/api/payments/intent'
 ```
 
 ## Environment Configuration
@@ -269,6 +277,7 @@ DUFFEL_SANDBOX_KEY=duffel_test_...
 ## Best Practices
 
 ### 1. Test Isolation
+
 Always cleanup test data after tests:
 
 ```typescript
@@ -278,15 +287,17 @@ test.afterEach(async () => {
 ```
 
 ### 2. Mock External APIs
+
 Mock external service calls to ensure test reliability:
 
 ```typescript
-await page.route('**/api/external/**', async (route) => {
+await page.route("**/api/external/**", async (route) => {
   await route.fulfill(externalServiceMocks.success());
 });
 ```
 
 ### 3. Validate Responses
+
 Always validate API response structures:
 
 ```typescript
@@ -296,15 +307,20 @@ expect(validation.errors).toHaveLength(0);
 ```
 
 ### 4. Use Retry Logic
+
 For flaky API calls, use retry logic:
 
 ```typescript
-const result = await retryApiCall(async () => {
-  return await fetchApiData();
-}, { maxRetries: 3 });
+const result = await retryApiCall(
+  async () => {
+    return await fetchApiData();
+  },
+  { maxRetries: 3 },
+);
 ```
 
 ### 5. Monitor API Calls
+
 Use the interceptor to verify API behavior:
 
 ```typescript
@@ -319,38 +335,40 @@ expect(requests).toHaveLength(expectedCount);
 ### Flight Booking Flow
 
 ```typescript
-test('complete flight booking flow', async ({ page }) => {
+test("complete flight booking flow", async ({ page }) => {
   const authManager = new ApiAuthManager();
   const dataManager = new ApiTestDataManager(authManager);
-  
+
   // Setup
-  await authManager.authenticate('test@example.com', 'password');
-  await dataManager.createTestWallet('default', 2000);
-  
+  await authManager.authenticate("test@example.com", "password");
+  await dataManager.createTestWallet("default", 2000);
+
   // Mock flight search
-  await page.route('**/api/flights/search', async (route) => {
+  await page.route("**/api/flights/search", async (route) => {
     await route.fulfill(flightMocks.searchSuccess(3));
   });
-  
+
   // Execute booking flow
-  await page.goto('/flights');
-  await page.fill('[data-testid="origin"]', 'JFK');
-  await page.fill('[data-testid="destination"]', 'LAX');
+  await page.goto("/flights");
+  await page.fill('[data-testid="origin"]', "JFK");
+  await page.fill('[data-testid="destination"]', "LAX");
   await page.click('[data-testid="search-button"]');
-  
+
   // Select flight
   await page.click('[data-testid="flight-offer-0"]');
-  
+
   // Fill passenger details
-  await page.fill('[data-testid="passenger-firstName"]', 'John');
-  await page.fill('[data-testid="passenger-lastName"]', 'Doe');
-  
+  await page.fill('[data-testid="passenger-firstName"]', "John");
+  await page.fill('[data-testid="passenger-lastName"]', "Doe");
+
   // Complete booking
   await page.click('[data-testid="complete-booking"]');
-  
+
   // Verify success
-  await expect(page.locator('[data-testid="booking-confirmation"]')).toBeVisible();
-  
+  await expect(
+    page.locator('[data-testid="booking-confirmation"]'),
+  ).toBeVisible();
+
   // Cleanup
   await dataManager.cleanupAll();
 });
@@ -359,18 +377,20 @@ test('complete flight booking flow', async ({ page }) => {
 ### Error Handling Test
 
 ```typescript
-test('handles payment failure gracefully', async ({ page }) => {
+test("handles payment failure gracefully", async ({ page }) => {
   // Mock payment failure
-  await page.route('**/api/payments/confirm', async (route) => {
+  await page.route("**/api/payments/confirm", async (route) => {
     await route.fulfill(paymentMocks.paymentDeclined());
   });
-  
+
   // Execute payment
-  await page.goto('/checkout');
+  await page.goto("/checkout");
   await page.click('[data-testid="pay-button"]');
-  
+
   // Verify error message
-  await expect(page.locator('[data-testid="payment-error"]')).toContainText('declined');
+  await expect(page.locator('[data-testid="payment-error"]')).toContainText(
+    "declined",
+  );
 });
 ```
 
@@ -402,7 +422,7 @@ const interceptor = new ApiRequestInterceptor();
 await interceptor.start(page);
 
 // After test
-interceptor.getRequests().forEach(req => {
+interceptor.getRequests().forEach((req) => {
   console.log(`${req.method()} ${req.url()}`);
 });
 ```
@@ -410,6 +430,7 @@ interceptor.getRequests().forEach(req => {
 ## Contributing
 
 When adding new features:
+
 1. Add types to the appropriate interfaces
 2. Export from `index.ts`
 3. Add mocks to `fixtures/api-mocks.ts` if applicable

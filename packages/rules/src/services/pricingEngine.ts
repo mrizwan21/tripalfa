@@ -1,5 +1,5 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 import {
   PricingCalculationRequest,
   PricingCalculationResponse,
@@ -9,17 +9,17 @@ import {
   DiscountCoupon,
   CustomerLoyalty,
   LoyaltyTransactionCreate,
-  CouponValidationResult
-} from '../types';
+  CouponValidationResult,
+} from "../types";
 import {
   calculateMarkupAmount,
   calculateCommissionAmount,
   applyAmountConstraints,
   filterActiveRules,
-  sortRulesByPriority
-} from '../utils';
-import { PricingCalculationError, InvalidCouponError } from '../errors';
-import { RuleMatchingEngine } from './ruleMatchingEngine';
+  sortRulesByPriority,
+} from "../utils";
+import { PricingCalculationError, InvalidCouponError } from "../errors";
+import { RuleMatchingEngine } from "./ruleMatchingEngine";
 
 /**
  * Pricing Engine
@@ -33,13 +33,16 @@ export class PricingEngine {
 
   constructor(ruleMatchingEngine?: RuleMatchingEngine) {
     this.prisma = new PrismaClient();
-    this.ruleMatchingEngine = ruleMatchingEngine || new RuleMatchingEngine(true);
+    this.ruleMatchingEngine =
+      ruleMatchingEngine || new RuleMatchingEngine(true);
   }
 
   /**
    * Calculate comprehensive pricing for a booking
    */
-  async calculatePricing(request: PricingCalculationRequest): Promise<PricingCalculationResponse> {
+  async calculatePricing(
+    request: PricingCalculationRequest,
+  ): Promise<PricingCalculationResponse> {
     const {
       bookingType,
       baseAmount,
@@ -49,7 +52,7 @@ export class PricingEngine {
       userId,
       supplierId,
       serviceDetails,
-      couponCode
+      couponCode,
     } = request;
 
     try {
@@ -62,14 +65,15 @@ export class PricingEngine {
       const appliedRules: any = {};
 
       // 1. Apply markup rules
-      const markupRule = await this.ruleMatchingEngine.findFirstApplicableMarkupRule({
-        bookingType,
-        companyId,
-        branchId,
-        userId,
-        supplierId,
-        serviceDetails
-      });
+      const markupRule =
+        await this.ruleMatchingEngine.findFirstApplicableMarkupRule({
+          bookingType,
+          companyId,
+          branchId,
+          userId,
+          supplierId,
+          serviceDetails,
+        });
 
       if (markupRule) {
         markupAmount = this.applyMarkupRule(currentAmount, markupRule);
@@ -79,9 +83,16 @@ export class PricingEngine {
 
       // 2. Apply corporate contract discounts
       if (companyId) {
-        const corporateContract = await this.findApplicableCorporateContract(companyId, bookingType);
+        const corporateContract = await this.findApplicableCorporateContract(
+          companyId,
+          bookingType,
+        );
         if (corporateContract) {
-          const contractDiscount = this.calculateCorporateDiscount(currentAmount, corporateContract, bookingType);
+          const contractDiscount = this.calculateCorporateDiscount(
+            currentAmount,
+            corporateContract,
+            bookingType,
+          );
           discountAmount += contractDiscount;
           currentAmount -= contractDiscount;
           appliedRules.corporateContract = corporateContract;
@@ -90,7 +101,12 @@ export class PricingEngine {
 
       // 3. Apply coupon discounts
       if (couponCode && userId) {
-        const couponResult = await this.validateAndApplyCoupon(couponCode, userId, currentAmount, currency);
+        const couponResult = await this.validateAndApplyCoupon(
+          couponCode,
+          userId,
+          currentAmount,
+          currency,
+        );
         if (couponResult.valid && couponResult.discountAmount) {
           discountAmount += couponResult.discountAmount;
           currentAmount -= couponResult.discountAmount;
@@ -100,7 +116,10 @@ export class PricingEngine {
 
       // 4. Apply loyalty discounts
       if (userId) {
-        loyaltyDiscount = await this.calculateLoyaltyDiscount(userId, currentAmount);
+        loyaltyDiscount = await this.calculateLoyaltyDiscount(
+          userId,
+          currentAmount,
+        );
         if (loyaltyDiscount > 0) {
           currentAmount -= loyaltyDiscount;
 
@@ -113,12 +132,13 @@ export class PricingEngine {
       }
 
       // 5. Calculate commission
-      const commissionRule = await this.ruleMatchingEngine.findFirstApplicableCommissionRule({
-        bookingType,
-        companyId,
-        supplierId,
-        serviceDetails
-      });
+      const commissionRule =
+        await this.ruleMatchingEngine.findFirstApplicableCommissionRule({
+          bookingType,
+          companyId,
+          supplierId,
+          serviceDetails,
+        });
 
       if (commissionRule) {
         commissionAmount = this.applyCommissionRule(baseAmount, commissionRule);
@@ -127,10 +147,14 @@ export class PricingEngine {
 
       // Build price breakdown
       const breakdown = [
-        { label: 'Base Amount', amount: baseAmount, type: 'base' as const },
-        { label: 'Markup', amount: markupAmount, type: 'markup' as const },
-        { label: 'Discount', amount: -(discountAmount + loyaltyDiscount), type: 'discount' as const },
-        { label: 'Commission', amount: commissionAmount, type: 'fee' as const }
+        { label: "Base Amount", amount: baseAmount, type: "base" as const },
+        { label: "Markup", amount: markupAmount, type: "markup" as const },
+        {
+          label: "Discount",
+          amount: -(discountAmount + loyaltyDiscount),
+          type: "discount" as const,
+        },
+        { label: "Commission", amount: commissionAmount, type: "fee" as const },
       ];
 
       return {
@@ -144,12 +168,12 @@ export class PricingEngine {
         commission: commissionAmount,
         commissionRuleId: appliedRules.commissionRule?.id,
         totalAmount: currentAmount,
-        breakdown
+        breakdown,
       };
     } catch (error) {
-      throw new PricingCalculationError('Pricing calculation failed', {
+      throw new PricingCalculationError("Pricing calculation failed", {
         error: error instanceof Error ? error.message : String(error),
-        request
+        request,
       });
     }
   }
@@ -158,16 +182,31 @@ export class PricingEngine {
    * Apply a markup rule to calculate markup amount
    */
   private applyMarkupRule(baseAmount: number, rule: MarkupRule): number {
-    const markup = calculateMarkupAmount(baseAmount, rule.markupValue, rule.markupType);
+    const markup = calculateMarkupAmount(
+      baseAmount,
+      rule.markupValue,
+      rule.markupType,
+    );
     return applyAmountConstraints(markup, rule.minMarkup, rule.maxMarkup);
   }
 
   /**
    * Apply a commission rule to calculate commission amount
    */
-  private applyCommissionRule(baseAmount: number, rule: CommissionRule): number {
-    const commission = calculateCommissionAmount(baseAmount, rule.commissionValue, rule.commissionType);
-    return applyAmountConstraints(commission, rule.minCommission, rule.maxCommission);
+  private applyCommissionRule(
+    baseAmount: number,
+    rule: CommissionRule,
+  ): number {
+    const commission = calculateCommissionAmount(
+      baseAmount,
+      rule.commissionValue,
+      rule.commissionType,
+    );
+    return applyAmountConstraints(
+      commission,
+      rule.minCommission,
+      rule.maxCommission,
+    );
   }
 
   /**
@@ -175,16 +214,16 @@ export class PricingEngine {
    */
   private async findApplicableCorporateContract(
     companyId: string,
-    bookingType: string
+    bookingType: string,
   ): Promise<CorporateContract | null> {
     try {
       const contract = await this.prisma.corporateContract.findFirst({
         where: {
           companyId,
-          status: 'active',
+          status: "active",
           validFrom: { lte: new Date() },
-          OR: [{ validTo: null }, { validTo: { gte: new Date() } }]
-        }
+          OR: [{ validTo: null }, { validTo: { gte: new Date() } }],
+        },
       });
 
       return contract as CorporateContract | null;
@@ -200,7 +239,7 @@ export class PricingEngine {
   private calculateCorporateDiscount(
     amount: number,
     contract: CorporateContract,
-    bookingType: string
+    bookingType: string,
   ): number {
     let discount = 0;
 
@@ -211,7 +250,8 @@ export class PricingEngine {
 
     // Service-specific discounts
     if (contract.serviceDiscounts?.[bookingType]) {
-      const serviceDiscount = (contract.serviceDiscounts[bookingType] as number) || 0;
+      const serviceDiscount =
+        (contract.serviceDiscounts[bookingType] as number) || 0;
       discount = Math.max(discount, amount * (serviceDiscount / 100));
     }
 
@@ -225,18 +265,18 @@ export class PricingEngine {
     code: string,
     userId: string,
     amount: number,
-    currency: string
+    currency: string,
   ): Promise<CouponValidationResult> {
     try {
       const coupon = await this.prisma.discountCoupon.findUnique({
-        where: { code }
+        where: { code },
       });
 
       if (!coupon) {
         return {
           valid: false,
-          errorCode: 'INVALID_CODE',
-          errorMessage: 'Coupon code not found'
+          errorCode: "INVALID_CODE",
+          errorMessage: "Coupon code not found",
         };
       }
 
@@ -244,18 +284,21 @@ export class PricingEngine {
       if (!coupon.isActive) {
         return {
           valid: false,
-          errorCode: 'EXPIRED',
-          errorMessage: 'Coupon is not active'
+          errorCode: "EXPIRED",
+          errorMessage: "Coupon is not active",
         };
       }
 
       // Check validity period
       const now = new Date();
-      if (new Date(coupon.validFrom) > now || (coupon.validTo && new Date(coupon.validTo) < now)) {
+      if (
+        new Date(coupon.validFrom) > now ||
+        (coupon.validTo && new Date(coupon.validTo) < now)
+      ) {
         return {
           valid: false,
-          errorCode: 'EXPIRED',
-          errorMessage: 'Coupon is expired'
+          errorCode: "EXPIRED",
+          errorMessage: "Coupon is expired",
         };
       }
 
@@ -263,56 +306,62 @@ export class PricingEngine {
       if (coupon.minOrderAmount && amount < coupon.minOrderAmount) {
         return {
           valid: false,
-          errorCode: 'MIN_AMOUNT',
-          errorMessage: `Minimum order amount is ${currency} ${coupon.minOrderAmount}`
+          errorCode: "MIN_AMOUNT",
+          errorMessage: `Minimum order amount is ${currency} ${coupon.minOrderAmount}`,
         };
       }
 
       // Check usage limits
-      if (coupon.totalUsageLimit && coupon.currentUsage >= coupon.totalUsageLimit) {
+      if (
+        coupon.totalUsageLimit &&
+        coupon.currentUsage >= coupon.totalUsageLimit
+      ) {
         return {
           valid: false,
-          errorCode: 'USAGE_LIMIT',
-          errorMessage: 'Coupon usage limit exceeded'
+          errorCode: "USAGE_LIMIT",
+          errorMessage: "Coupon usage limit exceeded",
         };
       }
 
       // Check per-user limits
       if (coupon.perUserLimit) {
         const userUsage = await this.prisma.couponRedemption.count({
-          where: { couponId: coupon.id, userId }
+          where: { couponId: coupon.id, userId },
         });
         if (userUsage >= coupon.perUserLimit) {
           return {
             valid: false,
-            errorCode: 'USAGE_LIMIT',
-            errorMessage: 'Per-user usage limit exceeded'
+            errorCode: "USAGE_LIMIT",
+            errorMessage: "Per-user usage limit exceeded",
           };
         }
       }
 
       // Check user restrictions
-      if (coupon.allowedUserIds?.length && !coupon.allowedUserIds.includes(userId)) {
+      if (
+        coupon.allowedUserIds?.length &&
+        !coupon.allowedUserIds.includes(userId)
+      ) {
         return {
           valid: false,
-          errorCode: 'NOT_APPLICABLE',
-          errorMessage: 'Coupon not applicable for this user'
+          errorCode: "NOT_APPLICABLE",
+          errorMessage: "Coupon not applicable for this user",
         };
       }
 
       if (coupon.excludedUserIds?.includes(userId)) {
         return {
           valid: false,
-          errorCode: 'NOT_APPLICABLE',
-          errorMessage: 'Coupon not applicable for this user'
+          errorCode: "NOT_APPLICABLE",
+          errorMessage: "Coupon not applicable for this user",
         };
       }
 
       // Calculate discount amount
       let discountAmount = 0;
-      if (coupon.discountType === 'percentage') {
+      if (coupon.discountType === "percentage") {
         discountAmount = amount * (coupon.discountValue / 100);
-      } else if (coupon.discountType === 'fixed') {
+      } else if (coupon.discountType === "fixed") {
         discountAmount = coupon.discountValue;
       }
 
@@ -324,17 +373,23 @@ export class PricingEngine {
       return {
         valid: true,
         coupon: coupon as DiscountCoupon,
-        discountAmount
+        discountAmount,
       };
     } catch (error) {
-      throw new InvalidCouponError(code, error instanceof Error ? error.message : 'Unknown error');
+      throw new InvalidCouponError(
+        code,
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
   }
 
   /**
    * Calculate loyalty discount for user
    */
-  private async calculateLoyaltyDiscount(userId: string, amount: number): Promise<number> {
+  private async calculateLoyaltyDiscount(
+    userId: string,
+    amount: number,
+  ): Promise<number> {
     const customerLoyalty = await this.getCustomerLoyalty(userId);
     if (!customerLoyalty?.currentTier) {
       return 0;
@@ -351,7 +406,7 @@ export class PricingEngine {
     try {
       const loyalty = await this.prisma.customerLoyalty.findUnique({
         where: { userId },
-        include: { currentTier: true }
+        include: { currentTier: true },
       });
 
       return loyalty as CustomerLoyalty | null;
@@ -375,17 +430,17 @@ export class PricingEngine {
   }): Promise<void> {
     try {
       await this.prisma.couponRedemption.create({
-        data: redemptionData as any
+        data: redemptionData as any,
       });
 
       // Update coupon usage count
       await this.prisma.discountCoupon.update({
         where: { id: redemptionData.couponId },
-        data: { currentUsage: { increment: 1 } }
+        data: { currentUsage: { increment: 1 } },
       });
     } catch (error) {
-      throw new PricingCalculationError('Failed to record coupon redemption', {
-        error: error instanceof Error ? error.message : String(error)
+      throw new PricingCalculationError("Failed to record coupon redemption", {
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -393,15 +448,20 @@ export class PricingEngine {
   /**
    * Award loyalty points to user
    */
-  async awardLoyaltyPoints(transactionData: LoyaltyTransactionCreate): Promise<void> {
+  async awardLoyaltyPoints(
+    transactionData: LoyaltyTransactionCreate,
+  ): Promise<void> {
     try {
       // Create transaction record
       await this.prisma.loyaltyTransaction.create({
-        data: transactionData as any
+        data: transactionData as any,
       });
 
       // Update customer loyalty points
-      const pointsChange = transactionData.transactionType === 'redeem' ? -transactionData.points : transactionData.points;
+      const pointsChange =
+        transactionData.transactionType === "redeem"
+          ? -transactionData.points
+          : transactionData.points;
 
       await this.prisma.customerLoyalty.upsert({
         where: { userId: transactionData.userId },
@@ -409,22 +469,22 @@ export class PricingEngine {
           totalPoints: { increment: pointsChange },
           availablePoints: { increment: pointsChange },
           lifetimePoints: { increment: Math.max(0, pointsChange) },
-          lastActivityAt: new Date()
+          lastActivityAt: new Date(),
         },
         create: {
           userId: transactionData.userId,
           totalPoints: Math.max(0, pointsChange),
           availablePoints: Math.max(0, pointsChange),
           lifetimePoints: Math.max(0, pointsChange),
-          lastActivityAt: new Date()
-        }
+          lastActivityAt: new Date(),
+        },
       });
 
       // Update tier if needed
       await this.updateCustomerTier(transactionData.userId);
     } catch (error) {
-      throw new PricingCalculationError('Failed to award loyalty points', {
-        error: error instanceof Error ? error.message : String(error)
+      throw new PricingCalculationError("Failed to award loyalty points", {
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   }
@@ -436,7 +496,7 @@ export class PricingEngine {
     try {
       const customerLoyalty = await this.prisma.customerLoyalty.findUnique({
         where: { userId },
-        include: { currentTier: true }
+        include: { currentTier: true },
       });
 
       if (!customerLoyalty) return;
@@ -448,19 +508,22 @@ export class PricingEngine {
           minPoints: { lte: customerLoyalty.totalPoints },
           OR: [
             { maxPoints: null },
-            { maxPoints: { gte: customerLoyalty.totalPoints } }
-          ]
+            { maxPoints: { gte: customerLoyalty.totalPoints } },
+          ],
         },
-        orderBy: { tierLevel: 'desc' }
+        orderBy: { tierLevel: "desc" },
       });
 
-      if (appropriateTier && appropriateTier.id !== customerLoyalty.currentTierId) {
+      if (
+        appropriateTier &&
+        appropriateTier.id !== customerLoyalty.currentTierId
+      ) {
         await this.prisma.customerLoyalty.update({
           where: { userId },
           data: {
             currentTierId: appropriateTier.id,
-            tierQualifiedAt: new Date()
-          }
+            tierQualifiedAt: new Date(),
+          },
         });
       }
     } catch (error) {

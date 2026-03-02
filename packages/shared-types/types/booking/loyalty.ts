@@ -1,10 +1,10 @@
-import type { LoyaltyTierRecord, CustomerLoyaltyRecord } from '../loyalty';
+import type { LoyaltyTierRecord, CustomerLoyaltyRecord } from "../loyalty";
 
 export interface LoyaltyTransaction {
   id: string;
   customerId: string;
   points: number;
-  type: 'EARN' | 'REDEEM' | 'EXPIRE' | 'BONUS' | 'ADJUSTMENT';
+  type: "EARN" | "REDEEM" | "EXPIRE" | "BONUS" | "ADJUSTMENT";
   description: string;
   bookingReference?: string;
   createdAt: string;
@@ -39,8 +39,8 @@ export interface LoyaltyStatus {
 
 // UI-specific types for loyalty badges and progress indicators
 export interface BadgeConfig {
-  size: 'xs' | 'sm' | 'md' | 'lg';
-  variant?: 'solid' | 'outline';
+  size: "xs" | "sm" | "md" | "lg";
+  variant?: "solid" | "outline";
   showPoints?: boolean;
   showTierName?: boolean;
 }
@@ -53,40 +53,40 @@ export interface ProgressConfig {
 }
 
 export interface PointsDisplayConfig {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   showLabel?: boolean;
   showAnimation?: boolean;
-  format?: 'simple' | 'detailed';
+  format?: "simple" | "detailed";
 }
 
 // Tier colors and styling
 export const TIER_COLORS = {
-  SILVER: '#C0C0C0',
-  GOLD: '#FFD700',
-  PLATINUM: '#E5E4E2',
-  DIAMOND: '#00CED1',
+  SILVER: "silver",
+  GOLD: "gold",
+  PLATINUM: "gainsboro",
+  DIAMOND: "darkturquoise",
 } as const;
 
 export const TIER_STYLES = {
   SILVER: {
-    color: '#C0C0C0',
-    bgGradient: 'from-gray-100 to-gray-300',
-    textColor: 'text-gray-800',
+    color: "silver",
+    bgGradient: "from-gray-100 to-gray-300",
+    textColor: "text-gray-800",
   },
   GOLD: {
-    color: '#FFD700',
-    bgGradient: 'from-yellow-100 to-yellow-300',
-    textColor: 'text-yellow-900',
+    color: "gold",
+    bgGradient: "from-yellow-100 to-yellow-300",
+    textColor: "text-yellow-900",
   },
   PLATINUM: {
-    color: '#E5E4E2',
-    bgGradient: 'from-gray-100 to-gray-200',
-    textColor: 'text-gray-800',
+    color: "gainsboro",
+    bgGradient: "from-gray-100 to-gray-200",
+    textColor: "text-gray-800",
   },
   DIAMOND: {
-    color: '#00CED1',
-    bgGradient: 'from-cyan-100 to-cyan-400',
-    textColor: 'text-cyan-900',
+    color: "darkturquoise",
+    bgGradient: "from-cyan-100 to-cyan-400",
+    textColor: "text-cyan-900",
   },
 } as const;
 

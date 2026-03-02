@@ -1,9 +1,18 @@
-import { Request, Response, NextFunction } from 'express';
-import bookingService from '../services/bookingService';
-import { BookingData, BookingResponse, SearchParams, UserBookingStats } from '../types/index';
+import { Request, Response, NextFunction } from "express";
+import bookingService from "../services/bookingService";
+import {
+  BookingData,
+  BookingResponse,
+  SearchParams,
+  UserBookingStats,
+} from "../types/index";
 
 // Create a new booking
-const createBooking = async (req: Request, res: Response, next: NextFunction) => {
+const createBooking = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const bookingData = req.body;
     const userId = req.user?.id || req.body.userId;
@@ -11,7 +20,7 @@ const createBooking = async (req: Request, res: Response, next: NextFunction) =>
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'User ID is required',
+        error: "User ID is required",
       });
     }
 
@@ -29,7 +38,9 @@ const createBooking = async (req: Request, res: Response, next: NextFunction) =>
 // Get booking by ID
 const getBooking = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : (req.params.id as string);
     const booking = await bookingService.getBookingById(id);
 
     res.json({
@@ -42,16 +53,22 @@ const getBooking = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Cancel booking
-const cancelBooking = async (req: Request, res: Response, next: NextFunction) => {
+const cancelBooking = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const id = Array.isArray(req.params.id) ? req.params.id[0] : (req.params.id as string);
+    const id = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : (req.params.id as string);
     const { reason } = req.body;
     const userId = req.user?.id || req.body.userId;
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'User ID is required',
+        error: "User ID is required",
       });
     }
 
@@ -67,19 +84,30 @@ const cancelBooking = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Search bookings
-const searchBookings = async (req: Request, res: Response, next: NextFunction) => {
+const searchBookings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const searchParams = req.query;
-    const userId = req.user?.id || (Array.isArray(req.query.userId) ? req.query.userId[0] : String(req.query.userId));
+    const userId =
+      req.user?.id ||
+      (Array.isArray(req.query.userId)
+        ? req.query.userId[0]
+        : String(req.query.userId));
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'User ID is required for searching bookings',
+        error: "User ID is required for searching bookings",
       });
     }
 
-    const result = await bookingService.searchBookings(searchParams as any, String(userId));
+    const result = await bookingService.searchBookings(
+      searchParams as any,
+      String(userId),
+    );
 
     res.json({
       success: true,
@@ -91,13 +119,27 @@ const searchBookings = async (req: Request, res: Response, next: NextFunction) =
 };
 
 // Get user bookings
-const getUserBookings = async (req: Request, res: Response, next: NextFunction) => {
+const getUserBookings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const userId = Array.isArray(req.params.userId) ? req.params.userId[0] : (req.params.userId as string);
-    const status = Array.isArray(req.query.status) ? req.query.status[0] : String(req.query.status || '');
-    const type = Array.isArray(req.query.type) ? req.query.type[0] : String(req.query.type || '');
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : (req.params.userId as string);
+    const status = Array.isArray(req.query.status)
+      ? req.query.status[0]
+      : String(req.query.status || "");
+    const type = Array.isArray(req.query.type)
+      ? req.query.type[0]
+      : String(req.query.type || "");
 
-    const bookings = await bookingService.getUserBookings(userId, String(status), String(type));
+    const bookings = await bookingService.getUserBookings(
+      userId,
+      String(status),
+      String(type),
+    );
 
     res.json({
       success: true,
@@ -109,9 +151,15 @@ const getUserBookings = async (req: Request, res: Response, next: NextFunction) 
 };
 
 // Get user booking stats
-const getUserBookingStats = async (req: Request, res: Response, next: NextFunction) => {
+const getUserBookingStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
-    const userId = Array.isArray(req.params.userId) ? req.params.userId[0] : (req.params.userId as string);
+    const userId = Array.isArray(req.params.userId)
+      ? req.params.userId[0]
+      : (req.params.userId as string);
 
     const stats = await bookingService.getUserBookingStats(userId);
 
@@ -129,7 +177,7 @@ const holdBooking = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { type } = req.params;
     const bookingData = { ...req.body, type };
-    const userId = req.user?.id || req.body.userId || 'guest';
+    const userId = req.user?.id || req.body.userId || "guest";
     const booking = await bookingService.holdBooking(bookingData, userId);
     res.status(201).json({
       success: true,
@@ -143,29 +191,47 @@ const holdBooking = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Confirm booking
-const confirmBooking = async (req: Request, res: Response, next: NextFunction) => {
+const confirmBooking = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { bookingId, paymentDetails } = req.body;
     if (!bookingId) {
-      return res.status(400).json({ success: false, error: 'bookingId is required' });
+      return res
+        .status(400)
+        .json({ success: false, error: "bookingId is required" });
     }
-    const booking = await bookingService.confirmBooking(String(bookingId), paymentDetails);
-    res.json({ success: true, status: 'confirmed', data: booking });
+    const booking = await bookingService.confirmBooking(
+      String(bookingId),
+      paymentDetails,
+    );
+    res.json({ success: true, status: "confirmed", data: booking });
   } catch (error) {
     next(error);
   }
 };
 
 // List bookings
-const listBookings = async (req: Request, res: Response, next: NextFunction) => {
+const listBookings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const scopeParam: string = Array.isArray(req.query.scope)
       ? String(req.query.scope[0])
-      : (typeof req.query.scope === 'string' ? req.query.scope : 'all');
+      : typeof req.query.scope === "string"
+        ? req.query.scope
+        : "all";
     const userIdParam: string = Array.isArray(req.query.userId)
       ? String(req.query.userId[0])
-      : (typeof req.query.userId === 'string' ? req.query.userId : '');
-    const userId: string | undefined = typeof req.user?.id === 'string' ? req.user.id : (userIdParam || undefined);
+      : typeof req.query.userId === "string"
+        ? req.query.userId
+        : "";
+    const userId: string | undefined =
+      typeof req.user?.id === "string" ? req.user.id : userIdParam || undefined;
     const bookings = await bookingService.listBookings(scopeParam, userId);
     res.json({ bookings });
   } catch (error) {

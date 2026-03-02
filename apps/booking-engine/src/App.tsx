@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
+import { useTenantRuntime } from "./components/providers/TenantRuntimeProvider";
 
 // Lazy Loaded Pages
 const FlightHome = lazy(() => import("./pages/FlightHome"));
@@ -32,20 +33,46 @@ const Loyalty = lazy(() => import("./pages/Loyalty"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Notifications = lazy(() => import("./pages/Notifications"));
-const NotificationPreferencesPage = lazy(() => import("./pages/NotificationPreferencesPage"));
+const NotificationPreferencesPage = lazy(
+  () => import("./pages/NotificationPreferencesPage"),
+);
 const Alerts = lazy(() => import("./pages/Alerts"));
 const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const Home = lazy(() => import("./pages/Home"));
 
 const LoadingFallback = () => (
-  <div className="flex h-screen w-full items-center justify-center bg-background">
+  <div className="flex h-screen w-full items-center justify-center bg-background gap-4">
     <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
   </div>
 );
 
+function FeatureRoute({
+  enabled,
+  redirectTo = "/",
+  children,
+}: {
+  enabled: boolean;
+  redirectTo?: string;
+  children: React.ReactElement;
+}) {
+  if (!enabled) {
+    return <Navigate to={redirectTo} replace />;
+  }
+  return children;
+}
+
 function App() {
+  const { config: runtimeConfig } = useTenantRuntime();
+  const defaultLandingRoute = runtimeConfig.features.flightBookingEnabled
+    ? "/flights"
+    : runtimeConfig.features.hotelBookingEnabled
+      ? "/hotels"
+      : "/dashboard";
+
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingFallback />}>
@@ -53,10 +80,15 @@ function App() {
           {/* Auth Routes - No Layout */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Main Layout Routes */}
           <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/flights" replace />} />
+            <Route
+              index
+              element={<Navigate to={defaultLandingRoute} replace />}
+            />
 
             {/* Dashboard */}
             <Route path="dashboard" element={<Dashboard />} />
@@ -70,7 +102,10 @@ function App() {
 
             {/* Notifications */}
             <Route path="notifications" element={<Notifications />} />
-            <Route path="settings/notifications" element={<NotificationPreferencesPage />} />
+            <Route
+              path="settings/notifications"
+              element={<NotificationPreferencesPage />}
+            />
             <Route path="alerts" element={<Alerts />} />
 
             {/* Bookings */}
@@ -78,9 +113,42 @@ function App() {
             <Route path="bookings/:id" element={<BookingDetail />} />
 
             {/* Wallet */}
-            <Route path="wallet" element={<Wallet />} />
-            <Route path="wallet/topup" element={<WalletTopUp />} />
-            <Route path="wallet/transfer" element={<WalletTransfer />} />
+            <Route
+              path="wallet"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.walletEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <Wallet />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="wallet/topup"
+              element={
+                <FeatureRoute
+                  enabled={
+                    runtimeConfig.features.walletEnabled &&
+                    runtimeConfig.features.walletTopupEnabled
+                  }
+                  redirectTo="/wallet"
+                >
+                  <WalletTopUp />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="wallet/transfer"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.walletEnabled}
+                  redirectTo="/wallet"
+                >
+                  <WalletTransfer />
+                </FeatureRoute>
+              }
+            />
 
             {/* Help */}
             <Route path="help" element={<HelpCenter />} />
@@ -91,34 +159,217 @@ function App() {
 
           {/* Booking Card Routes - Standalone */}
           <Route path="/booking-card/:id" element={<BookingCard />} />
-          <Route path="/hotel-booking-card/:id" element={<HotelBookingCard />} />
+          <Route
+            path="/hotel-booking-card/:id"
+            element={<HotelBookingCard />}
+          />
 
           {/* Booking Flow Routes - Standalone Layout */}
-          <Route path="/seat-selection" element={<SeatSelection />} />
-          <Route path="/passenger-details" element={<PassengerDetails />} />
-          <Route path="/checkout" element={<BookingCheckout />} />
-          <Route path="/confirmation" element={<BookingConfirmation />} />
-          <Route path="/add-ons" element={<AddOns />} />
+          <Route
+            path="/seat-selection"
+            element={
+              <FeatureRoute
+                enabled={
+                  runtimeConfig.features.seatSelectionEnabled &&
+                  runtimeConfig.features.flightBookingEnabled
+                }
+                redirectTo={defaultLandingRoute}
+              >
+                <SeatSelection />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/passenger-details"
+            element={
+              <FeatureRoute
+                enabled={
+                  runtimeConfig.features.flightBookingEnabled ||
+                  runtimeConfig.features.hotelBookingEnabled
+                }
+                redirectTo={defaultLandingRoute}
+              >
+                <PassengerDetails />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <FeatureRoute
+                enabled={
+                  runtimeConfig.features.flightBookingEnabled ||
+                  runtimeConfig.features.hotelBookingEnabled
+                }
+                redirectTo={defaultLandingRoute}
+              >
+                <BookingCheckout />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/confirmation"
+            element={
+              <FeatureRoute
+                enabled={
+                  runtimeConfig.features.flightBookingEnabled ||
+                  runtimeConfig.features.hotelBookingEnabled
+                }
+                redirectTo={defaultLandingRoute}
+              >
+                <BookingConfirmation />
+              </FeatureRoute>
+            }
+          />
+          <Route
+            path="/add-ons"
+            element={
+              <FeatureRoute
+                enabled={
+                  runtimeConfig.features.ancillariesEnabled &&
+                  runtimeConfig.features.flightBookingEnabled
+                }
+                redirectTo={defaultLandingRoute}
+              >
+                <AddOns />
+              </FeatureRoute>
+            }
+          />
 
           {/* Flight Routes - Standalone Layout */}
           <Route path="/flights">
-            <Route index element={<FlightHome />} />
-            <Route path="search" element={<FlightSearch />} />
-            <Route path="list" element={<FlightList />} />
-            <Route path="detail" element={<FlightDetail />} />
-            <Route path="addons" element={<FlightAddons />} />
-            <Route path="duffel" element={<DuffelFlightsPage />} />
+            <Route
+              index
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.flightBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <FlightHome />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="search"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.flightBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <FlightSearch />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="list"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.flightBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <FlightList />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="detail"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.flightBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <FlightDetail />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="addons"
+              element={
+                <FeatureRoute
+                  enabled={
+                    runtimeConfig.features.flightBookingEnabled &&
+                    runtimeConfig.features.ancillariesEnabled
+                  }
+                  redirectTo={defaultLandingRoute}
+                >
+                  <FlightAddons />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="duffel"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.flightBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <DuffelFlightsPage />
+                </FeatureRoute>
+              }
+            />
           </Route>
 
           {/* Hotel Routes - Standalone Layout */}
           <Route path="/hotels">
-            <Route index element={<HotelHome />} />
-            <Route path="search" element={<HotelSearch />} />
-            <Route path="list" element={<HotelList />} />
-            <Route path=":id" element={<HotelDetail />} />
-            <Route path="addons" element={<HotelAddons />} />
+            <Route
+              index
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.hotelBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <HotelHome />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="search"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.hotelBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <HotelSearch />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="list"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.hotelBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <HotelList />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path=":id"
+              element={
+                <FeatureRoute
+                  enabled={runtimeConfig.features.hotelBookingEnabled}
+                  redirectTo={defaultLandingRoute}
+                >
+                  <HotelDetail />
+                </FeatureRoute>
+              }
+            />
+            <Route
+              path="addons"
+              element={
+                <FeatureRoute
+                  enabled={
+                    runtimeConfig.features.hotelBookingEnabled &&
+                    runtimeConfig.features.ancillariesEnabled
+                  }
+                  redirectTo={defaultLandingRoute}
+                >
+                  <HotelAddons />
+                </FeatureRoute>
+              }
+            />
           </Route>
-
 
           {/* Global Catch-all */}
           <Route path="*" element={<NotFound />} />

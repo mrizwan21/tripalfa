@@ -1,7 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { loyaltyApi } from '@/api/loyaltyApi';
-import type { LoyaltyStatus, TierBenefits } from '@/types/loyalty';
-import type { CustomerLoyalty } from '@tripalfa/shared-types';
+import { useState, useCallback, useEffect } from "react";
+import { loyaltyApi } from "@/api/loyaltyApi";
+import type { LoyaltyStatus } from "@/types/loyalty";
 
 interface UseLoyaltyBalanceOptions {
   userId?: string;
@@ -17,7 +16,7 @@ interface UseLoyaltyBalanceReturn {
 }
 
 export function useLoyaltyBalance(
-  options: UseLoyaltyBalanceOptions = {}
+  options: UseLoyaltyBalanceOptions = {},
 ): UseLoyaltyBalanceReturn {
   const { userId, autoRefreshInterval = 30000, onBalanceChange } = options;
 
@@ -39,8 +38,12 @@ export function useLoyaltyBalance(
 
       // Find current and next tier
       const sortedTiers = tiers.sort((a, b) => a.minPoints - b.minPoints);
-      const currentTier = sortedTiers.reverse().find(t => loyalty.currentPoints >= t.minPoints);
-      const nextTier = sortedTiers.find(t => loyalty.currentPoints < t.maxPoints);
+      const currentTier = sortedTiers
+        .reverse()
+        .find((t) => loyalty.currentPoints >= t.minPoints);
+      const nextTier = sortedTiers.find(
+        (t) => loyalty.currentPoints < t.maxPoints,
+      );
 
       const tierStatus: LoyaltyStatus = {
         tier: currentTier || sortedTiers[0],
@@ -50,8 +53,9 @@ export function useLoyaltyBalance(
         pointsExpiringDate: loyalty.pointsExpiringDate,
         nextTierThreshold: nextTier?.minPoints || loyalty.currentPoints + 1000,
         pointsUntilNextTier: Math.max(
-          (nextTier?.minPoints || loyalty.currentPoints + 1000) - loyalty.currentPoints,
-          0
+          (nextTier?.minPoints || loyalty.currentPoints + 1000) -
+            loyalty.currentPoints,
+          0,
         ),
         nextTierPerks: nextTier?.benefits || [],
       };
@@ -60,7 +64,7 @@ export function useLoyaltyBalance(
       onBalanceChange?.(tierStatus);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch loyalty balance';
+        err instanceof Error ? err.message : "Failed to fetch loyalty balance";
       setError(errorMessage);
       setBalance(null);
     } finally {

@@ -1,5 +1,14 @@
-import React from 'react';
-import { User, Globe, Clock, Utensils, Lock, Car, Waves, CheckCircle2 } from 'lucide-react';
+import React from "react";
+import {
+  User,
+  Globe,
+  Clock,
+  Utensils,
+  Lock,
+  Car,
+  Waves,
+  CheckCircle2,
+} from "lucide-react";
 
 interface Facility {
   id: string;
@@ -14,7 +23,7 @@ interface ItemProps {
 function FacilityItem({ name }: ItemProps) {
   return (
     <li className="flex items-center gap-3 text-[13px] font-bold text-gray-600 group">
-      <div className="w-1.5 h-1.5 rounded-full bg-indigo-100 group-hover:bg-[#152467] transition-colors" />
+      <div className="w-1.5 h-1.5 rounded-full bg-indigo-100 group-hover:bg-primary transition-colors" />
       {name}
     </li>
   );
@@ -29,7 +38,7 @@ interface CategoryProps {
 function FacilityCategory({ title, icon, items }: CategoryProps) {
   return (
     <div className="space-y-6">
-      <h4 className="text-[10px] font-black text-[#152467] uppercase tracking-[0.2em] flex items-center gap-2.5">
+      <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] flex items-center gap-2.5">
         {icon}
         {title}
       </h4>
@@ -53,40 +62,63 @@ interface FacilitiesProps {
 export function Facilities({ categories: userCategories }: FacilitiesProps) {
   const defaultCategories = [
     {
-      title: 'PUBLIC SUPPORT',
+      title: "PUBLIC SUPPORT",
       icon: <Globe size={14} />,
-      items: ['24-hour Front Desk', 'ATM on site', 'Currency Exchange', 'Concierge Service', 'Private Check-in/out']
+      items: [
+        "24-hour Front Desk",
+        "ATM on site",
+        "Currency Exchange",
+        "Concierge Service",
+        "Private Check-in/out",
+      ],
     },
     {
-      title: 'PERSONNEL',
+      title: "PERSONNEL",
       icon: <User size={14} />,
-      items: ['Multilingual Staff', 'Professional Bellhops', 'Daily Housekeeping', 'Laundry Service']
+      items: [
+        "Multilingual Staff",
+        "Professional Bellhops",
+        "Daily Housekeeping",
+        "Laundry Service",
+      ],
     },
     {
-      title: 'HEALTH & WELLNESS',
+      title: "HEALTH & WELLNESS",
       icon: <Clock size={14} />,
-      items: ['Spa & Massage', 'Fitness Center', 'Sauna Room']
+      items: ["Spa & Massage", "Fitness Center", "Sauna Room"],
     },
     {
-      title: 'SAFETY & SECURITY',
+      title: "SAFETY & SECURITY",
       icon: <Lock size={14} />,
-      items: ['24-hour Security', 'CCTV Cameras', 'Safe Box in Room', 'Fire Extinguishers', 'Key Card Access']
+      items: [
+        "24-hour Security",
+        "CCTV Cameras",
+        "Safe Box in Room",
+        "Fire Extinguishers",
+        "Key Card Access",
+      ],
     },
     {
-      title: 'FOOD & DRINK',
+      title: "FOOD & DRINK",
       icon: <Utensils size={14} />,
-      items: ['Room Service', 'Poolside Bar', 'Themed Dinners']
+      items: ["Room Service", "Poolside Bar", "Themed Dinners"],
     },
     {
-      title: 'TRANSPORT',
+      title: "TRANSPORT",
       icon: <Car size={14} />,
-      items: ['Airport Shuttle', 'Car Rental', 'Free Parking', 'Electric Charge', 'Valet Service']
+      items: [
+        "Airport Shuttle",
+        "Car Rental",
+        "Free Parking",
+        "Electric Charge",
+        "Valet Service",
+      ],
     },
     {
-      title: 'OTHER FACILITIES',
+      title: "OTHER FACILITIES",
       icon: <Waves size={14} />,
-      items: ['Mini Market', 'Games Room', 'Business Center']
-    }
+      items: ["Mini Market", "Games Room", "Business Center"],
+    },
   ];
 
   const displayCategories = userCategories || defaultCategories;

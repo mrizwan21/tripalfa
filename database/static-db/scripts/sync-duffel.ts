@@ -13,27 +13,37 @@
  * All Duffel lists use cursor-based pagination: after=<cursor>.
  */
 
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 dotenv.config();
 
-import pLimit from 'p-limit';
-import { createDuffelClient, get } from './utils/http';
-import { query, closePool } from './utils/db';
-import { createLogger } from './utils/logger';
-import type { AxiosInstance } from 'axios';
+import pLimit from "p-limit";
+import { createDuffelClient, get } from "./utils/http";
+import { query, closePool } from "./utils/db";
+import { createLogger } from "./utils/logger";
+import type { AxiosInstance } from "axios";
 
-const log = createLogger('Duffel');
+const log = createLogger("Duffel");
 const _CONCURRENCY = Number(process.env.SYNC_CONCURRENCY ?? 5);
 const PAGE_LIMIT = 200;
 
 // ---- Types ----------------------------------------------------
 
-interface DuffelMeta { after?: string; before?: string; limit: number }
-interface DuffelListResponse<T> { data: T[]; meta: DuffelMeta }
-interface DuffelObjectResponse<T> { data: T }
+interface DuffelMeta {
+  after?: string;
+  before?: string;
+  limit: number;
+}
+interface DuffelListResponse<T> {
+  data: T[];
+  meta: DuffelMeta;
+}
+interface DuffelObjectResponse<T> {
+  data: T;
+}
 
 interface DuffelAirline {
-  id: string; name: string;
+  id: string;
+  name: string;
   iata_code: string | null;
   logo_symbol_url: string | null;
   logo_lockup_url: string | null;
@@ -41,19 +51,22 @@ interface DuffelAirline {
 }
 
 interface DuffelAircraft {
-  id: string; name: string;
+  id: string;
+  name: string;
   iata_code: string | null;
 }
 
 interface DuffelCity {
-  id: string; name: string;
+  id: string;
+  name: string;
   iata_code: string;
   iata_country_code: string;
   airports?: DuffelAirport[];
 }
 
 interface DuffelAirport {
-  id: string; name: string;
+  id: string;
+  name: string;
   iata_code: string;
   icao_code: string | null;
   iata_city_code: string | null;
@@ -66,11 +79,12 @@ interface DuffelAirport {
 }
 
 interface DuffelLoyaltyProgramme {
-  id: string; name: string;
+  id: string;
+  name: string;
   alliance: string | null;
   logo_url: string | null;
   owner_airline_id: string | null;
-  programme_type?: 'flight' | 'hotel';
+  programme_type?: "flight" | "hotel";
 }
 
 // ---- Pagination helper ----------------------------------------
@@ -96,9 +110,12 @@ async function* paginateDuffel<T>(
 // ---- Sync functions -------------------------------------------
 
 async function syncAirlines(client: AxiosInstance): Promise<void> {
-  log.info('Syncing airlines...');
+  log.info("Syncing airlines...");
   let total = 0;
-  for await (const page of paginateDuffel<DuffelAirline>(client, '/air/airlines')) {
+  for await (const page of paginateDuffel<DuffelAirline>(
+    client,
+    "/air/airlines",
+  )) {
     for (const a of page) {
       await query(
         `INSERT INTO flight.airlines (id, iata_code, name, logo_symbol_url, logo_lockup_url, conditions_of_carriage_url)
@@ -110,8 +127,14 @@ async function syncAirlines(client: AxiosInstance): Promise<void> {
            logo_lockup_url            = EXCLUDED.logo_lockup_url,
            conditions_of_carriage_url = EXCLUDED.conditions_of_carriage_url,
            updated_at                 = NOW()`,
-        [a.id, a.iata_code || null, a.name, a.logo_symbol_url || null,
-          a.logo_lockup_url || null, a.conditions_of_carriage_url || null],
+        [
+          a.id,
+          a.iata_code || null,
+          a.name,
+          a.logo_symbol_url || null,
+          a.logo_lockup_url || null,
+          a.conditions_of_carriage_url || null,
+        ],
       );
       total++;
     }
@@ -120,9 +143,12 @@ async function syncAirlines(client: AxiosInstance): Promise<void> {
 }
 
 async function syncAircraft(client: AxiosInstance): Promise<void> {
-  log.info('Syncing aircraft...');
+  log.info("Syncing aircraft...");
   let total = 0;
-  for await (const page of paginateDuffel<DuffelAircraft>(client, '/air/aircraft')) {
+  for await (const page of paginateDuffel<DuffelAircraft>(
+    client,
+    "/air/aircraft",
+  )) {
     for (const a of page) {
       await query(
         `INSERT INTO flight.aircraft (id, iata_code, name)
@@ -140,9 +166,9 @@ async function syncAircraft(client: AxiosInstance): Promise<void> {
 }
 
 async function syncCities(client: AxiosInstance): Promise<void> {
-  log.info('Syncing Duffel cities...');
+  log.info("Syncing Duffel cities...");
   let total = 0;
-  for await (const page of paginateDuffel<DuffelCity>(client, '/air/cities')) {
+  for await (const page of paginateDuffel<DuffelCity>(client, "/air/cities")) {
     for (const c of page) {
       await query(
         `INSERT INTO flight.cities (id, iata_code, name, iata_country_code)
@@ -160,9 +186,12 @@ async function syncCities(client: AxiosInstance): Promise<void> {
 }
 
 async function syncAirports(client: AxiosInstance): Promise<void> {
-  log.info('Syncing airports...');
+  log.info("Syncing airports...");
   let total = 0;
-  for await (const page of paginateDuffel<DuffelAirport>(client, '/air/airports')) {
+  for await (const page of paginateDuffel<DuffelAirport>(
+    client,
+    "/air/airports",
+  )) {
     for (const a of page) {
       // Determine city_id FK: look up flight.cities by iata_city_code
       const cityRows = await query<{ id: string }>(
@@ -186,9 +215,19 @@ async function syncAirports(client: AxiosInstance): Promise<void> {
            time_zone         = EXCLUDED.time_zone,
            city_id           = EXCLUDED.city_id,
            updated_at        = NOW()`,
-        [a.id, a.iata_code, a.icao_code || null, a.name,
-          a.iata_city_code || null, a.iata_country_code, a.city_name || null,
-          a.latitude ?? null, a.longitude ?? null, a.time_zone || null, cityId],
+        [
+          a.id,
+          a.iata_code,
+          a.icao_code || null,
+          a.name,
+          a.iata_city_code || null,
+          a.iata_country_code,
+          a.city_name || null,
+          a.latitude ?? null,
+          a.longitude ?? null,
+          a.time_zone || null,
+          cityId,
+        ],
       );
       total++;
     }
@@ -197,12 +236,15 @@ async function syncAirports(client: AxiosInstance): Promise<void> {
 }
 
 async function syncLoyaltyProgrammes(client: AxiosInstance): Promise<void> {
-  log.info('Syncing loyalty programmes...');
+  log.info("Syncing loyalty programmes...");
   let total = 0;
-  for await (const page of paginateDuffel<DuffelLoyaltyProgramme>(client, '/air/loyalty_programmes')) {
+  for await (const page of paginateDuffel<DuffelLoyaltyProgramme>(
+    client,
+    "/air/loyalty_programmes",
+  )) {
     for (const p of page) {
       // Duffel /air/loyalty_programmes returns flight programmes by default
-      const programmeType = p.programme_type ?? 'flight';
+      const programmeType = p.programme_type ?? "flight";
       await query(
         `INSERT INTO flight.loyalty_programmes (id, name, alliance, logo_url, owner_airline_id, programme_type)
          VALUES ($1,$2,$3,$4,$5,$6)
@@ -213,8 +255,14 @@ async function syncLoyaltyProgrammes(client: AxiosInstance): Promise<void> {
            owner_airline_id = EXCLUDED.owner_airline_id,
            programme_type   = EXCLUDED.programme_type,
            updated_at       = NOW()`,
-        [p.id, p.name, p.alliance || null, p.logo_url || null,
-          p.owner_airline_id || null, programmeType],
+        [
+          p.id,
+          p.name,
+          p.alliance || null,
+          p.logo_url || null,
+          p.owner_airline_id || null,
+          programmeType,
+        ],
       );
       total++;
     }
@@ -223,7 +271,7 @@ async function syncLoyaltyProgrammes(client: AxiosInstance): Promise<void> {
 }
 
 async function populatePlaces(): Promise<void> {
-  log.info('Populating flight.places from airports + cities...');
+  log.info("Populating flight.places from airports + cities...");
 
   // Insert all airports into places
   const airportResult = await query(
@@ -257,27 +305,29 @@ async function populatePlaces(): Promise<void> {
      RETURNING id`,
   );
 
-  log.success(`Places: ${airportResult.length} airports + ${cityResult.length} cities`);
+  log.success(
+    `Places: ${airportResult.length} airports + ${cityResult.length} cities`,
+  );
 }
 
 // ---- Main entry -----------------------------------------------
 
 export async function syncDuffel(): Promise<void> {
   const accessToken = process.env.DUFFEL_API_KEY;
-  if (!accessToken) throw new Error('DUFFEL_API_KEY is not set');
+  if (!accessToken) throw new Error("DUFFEL_API_KEY is not set");
 
   const httpClient = createDuffelClient(accessToken);
 
-  log.info('Starting Duffel static data sync...');
+  log.info("Starting Duffel static data sync...");
 
   await syncAirlines(httpClient);
   await syncAircraft(httpClient);
   await syncCities(httpClient);
-  await syncAirports(httpClient);  // must run after cities (FK)
+  await syncAirports(httpClient); // must run after cities (FK)
   await syncLoyaltyProgrammes(httpClient);
   await populatePlaces();
 
-  log.success('Duffel sync complete!');
+  log.success("Duffel sync complete!");
 }
 
 if (require.main === module) {

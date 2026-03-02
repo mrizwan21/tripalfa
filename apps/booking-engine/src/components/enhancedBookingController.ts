@@ -1,9 +1,16 @@
-import { Request, Response, NextFunction } from 'express';
-import enhancedBookingService from '../services/enhancedBookingService';
-import { CreateBookingRequest, SearchBookingRequest } from '../types/enhancedBooking';
+import { Request, Response, NextFunction } from "express";
+import enhancedBookingService from "../services/enhancedBookingService";
+import {
+  CreateBookingRequest,
+  SearchBookingRequest,
+} from "../types/enhancedBooking";
 
 // Create B2B/B2C booking
-const createBooking = async (req: Request, res: Response, next: NextFunction) => {
+const createBooking = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const bookingData: CreateBookingRequest = req.body;
     const userId = req.user?.id || req.body.userId;
@@ -11,13 +18,13 @@ const createBooking = async (req: Request, res: Response, next: NextFunction) =>
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'User ID is required',
+        error: "User ID is required",
       });
     }
 
     const booking = await enhancedBookingService.createBooking({
       ...bookingData,
-      customerId: userId
+      customerId: userId,
     });
 
     res.status(201).json({
@@ -30,18 +37,26 @@ const createBooking = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Import booking from GDS
-const importFromGDS = async (req: Request, res: Response, next: NextFunction) => {
+const importFromGDS = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { gdsType, pnr, supplierRef } = req.body;
 
     if (!gdsType || !pnr) {
       return res.status(400).json({
         success: false,
-        error: 'GDS type and PNR are required',
+        error: "GDS type and PNR are required",
       });
     }
 
-    const booking = await enhancedBookingService.importFromGDS(gdsType, pnr, supplierRef);
+    const booking = await enhancedBookingService.importFromGDS(
+      gdsType,
+      pnr,
+      supplierRef,
+    );
 
     res.status(201).json({
       success: true,
@@ -53,7 +68,11 @@ const importFromGDS = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Search bookings with advanced filtering
-const searchBookings = async (req: Request, res: Response, next: NextFunction) => {
+const searchBookings = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const searchParams: SearchBookingRequest = req.query;
     const userId = req.user?.id || req.query.userId;
@@ -61,13 +80,13 @@ const searchBookings = async (req: Request, res: Response, next: NextFunction) =
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'User ID is required for searching bookings',
+        error: "User ID is required for searching bookings",
       });
     }
 
     const result = await enhancedBookingService.searchBookings({
       ...searchParams,
-      customerId: userId
+      customerId: userId,
     });
 
     res.json({
@@ -80,7 +99,11 @@ const searchBookings = async (req: Request, res: Response, next: NextFunction) =
 };
 
 // Process booking queues
-const processQueue = async (req: Request, res: Response, next: NextFunction) => {
+const processQueue = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { queueType, bookingId, action } = req.params;
     const bookingIdStr = String(bookingId);
@@ -90,11 +113,16 @@ const processQueue = async (req: Request, res: Response, next: NextFunction) => 
     if (!queueType || !bookingId || !action) {
       return res.status(400).json({
         success: false,
-        error: 'Queue type, booking ID, and action are required',
+        error: "Queue type, booking ID, and action are required",
       });
     }
 
-    const booking = await enhancedBookingService.processQueue(String(queueType), String(bookingId), String(action), reason);
+    const booking = await enhancedBookingService.processQueue(
+      String(queueType),
+      String(bookingId),
+      String(action),
+      reason,
+    );
 
     res.json({
       success: true,
@@ -106,7 +134,11 @@ const processQueue = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 // Process payments
-const processPayment = async (req: Request, res: Response, next: NextFunction) => {
+const processPayment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { bookingId } = req.params;
     const bookingIdStr = String(bookingId);
@@ -115,11 +147,15 @@ const processPayment = async (req: Request, res: Response, next: NextFunction) =
     if (!bookingId) {
       return res.status(400).json({
         success: false,
-        error: 'Booking ID is required',
+        error: "Booking ID is required",
       });
     }
 
-    const booking = await enhancedBookingService.processPayment(bookingIdStr, amount, paymentMethod);
+    const booking = await enhancedBookingService.processPayment(
+      bookingIdStr,
+      amount,
+      paymentMethod,
+    );
 
     res.json({
       success: true,
@@ -131,7 +167,11 @@ const processPayment = async (req: Request, res: Response, next: NextFunction) =
 };
 
 // Process refunds
-const processRefund = async (req: Request, res: Response, next: NextFunction) => {
+const processRefund = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { bookingId } = req.params;
     const bookingIdStr = String(bookingId);
@@ -140,11 +180,16 @@ const processRefund = async (req: Request, res: Response, next: NextFunction) =>
     if (!bookingId || !refundType || !reason) {
       return res.status(400).json({
         success: false,
-        error: 'Booking ID, refund type, and reason are required',
+        error: "Booking ID, refund type, and reason are required",
       });
     }
 
-    const booking = await enhancedBookingService.processRefund(bookingIdStr, refundType, reason, amount);
+    const booking = await enhancedBookingService.processRefund(
+      bookingIdStr,
+      refundType,
+      reason,
+      amount,
+    );
 
     res.json({
       success: true,
@@ -156,7 +201,11 @@ const processRefund = async (req: Request, res: Response, next: NextFunction) =>
 };
 
 // Process amendments
-const processAmendment = async (req: Request, res: Response, next: NextFunction) => {
+const processAmendment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { bookingId } = req.params;
     const bookingIdStr = String(bookingId);
@@ -165,11 +214,15 @@ const processAmendment = async (req: Request, res: Response, next: NextFunction)
     if (!bookingId || !changes || !reason) {
       return res.status(400).json({
         success: false,
-        error: 'Booking ID, changes, and reason are required',
+        error: "Booking ID, changes, and reason are required",
       });
     }
 
-    const booking = await enhancedBookingService.processAmendment(bookingIdStr, changes, reason);
+    const booking = await enhancedBookingService.processAmendment(
+      bookingIdStr,
+      changes,
+      reason,
+    );
 
     res.json({
       success: true,
@@ -190,11 +243,14 @@ const issueTicket = async (req: Request, res: Response, next: NextFunction) => {
     if (!bookingId) {
       return res.status(400).json({
         success: false,
-        error: 'Booking ID is required',
+        error: "Booking ID is required",
       });
     }
 
-    const booking = await enhancedBookingService.issueTicket(bookingIdStr, ticketDetails);
+    const booking = await enhancedBookingService.issueTicket(
+      bookingIdStr,
+      ticketDetails,
+    );
 
     res.json({
       success: true,
@@ -206,7 +262,11 @@ const issueTicket = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Get booking history
-const getBookingHistory = async (req: Request, res: Response, next: NextFunction) => {
+const getBookingHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { bookingId } = req.params;
     const bookingIdStr = String(bookingId);
@@ -214,11 +274,12 @@ const getBookingHistory = async (req: Request, res: Response, next: NextFunction
     if (!bookingId) {
       return res.status(400).json({
         success: false,
-        error: 'Booking ID is required',
+        error: "Booking ID is required",
       });
     }
 
-    const history = await enhancedBookingService.getBookingHistory(bookingIdStr);
+    const history =
+      await enhancedBookingService.getBookingHistory(bookingIdStr);
 
     res.json({
       success: true,
@@ -230,7 +291,11 @@ const getBookingHistory = async (req: Request, res: Response, next: NextFunction
 };
 
 // Get booking documents
-const getBookingDocuments = async (req: Request, res: Response, next: NextFunction) => {
+const getBookingDocuments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { bookingId } = req.params;
     const bookingIdStr = String(bookingId);
@@ -238,11 +303,12 @@ const getBookingDocuments = async (req: Request, res: Response, next: NextFuncti
     if (!bookingId) {
       return res.status(400).json({
         success: false,
-        error: 'Booking ID is required',
+        error: "Booking ID is required",
       });
     }
 
-    const documents = await enhancedBookingService.getBookingDocuments(bookingIdStr);
+    const documents =
+      await enhancedBookingService.getBookingDocuments(bookingIdStr);
 
     res.json({
       success: true,
@@ -254,20 +320,29 @@ const getBookingDocuments = async (req: Request, res: Response, next: NextFuncti
 };
 
 // Send document to customer
-const sendDocument = async (req: Request, res: Response, next: NextFunction) => {
+const sendDocument = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { documentId } = req.params;
-    const documentIdStr = Array.isArray(documentId) ? documentId[0] : (documentId as string);
+    const documentIdStr = Array.isArray(documentId)
+      ? documentId[0]
+      : (documentId as string);
     const { email } = req.body;
 
     if (!documentId || !email) {
       return res.status(400).json({
         success: false,
-        error: 'Document ID and email are required',
+        error: "Document ID and email are required",
       });
     }
 
-    const result = await enhancedBookingService.sendDocument(documentIdStr, email);
+    const result = await enhancedBookingService.sendDocument(
+      documentIdStr,
+      email,
+    );
 
     res.json({
       success: true,
@@ -279,22 +354,32 @@ const sendDocument = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 // Download document
-const downloadDocument = async (req: Request, res: Response, next: NextFunction) => {
+const downloadDocument = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { documentId } = req.params;
-    const documentIdStr = Array.isArray(documentId) ? documentId[0] : (documentId as string);
+    const documentIdStr = Array.isArray(documentId)
+      ? documentId[0]
+      : (documentId as string);
 
     if (!documentId) {
       return res.status(400).json({
         success: false,
-        error: 'Document ID is required',
+        error: "Document ID is required",
       });
     }
 
-    const documentBuffer = await enhancedBookingService.downloadDocument(documentIdStr);
+    const documentBuffer =
+      await enhancedBookingService.downloadDocument(documentIdStr);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=document_${documentId}.pdf`);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=document_${documentId}.pdf`,
+    );
     res.send(documentBuffer);
   } catch (error) {
     next(error);

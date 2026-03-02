@@ -31,7 +31,12 @@ This document provides practical examples of rule configurations for different b
       "advanceBookingDays": { "minimum": 14 },
       "flightClass": { "enum": ["economy", "business"] }
     },
-    "required": ["bookingType", "corporate", "advanceBookingDays", "flightClass"]
+    "required": [
+      "bookingType",
+      "corporate",
+      "advanceBookingDays",
+      "flightClass"
+    ]
   },
   "actions": [
     {
@@ -440,7 +445,9 @@ This document provides practical examples of rule configurations for different b
   "conditions": {
     "type": "object",
     "properties": {
-      "paymentMethod": { "enum": ["credit_card", "debit_card", "bank_transfer"] },
+      "paymentMethod": {
+        "enum": ["credit_card", "debit_card", "bank_transfer"]
+      },
       "paymentDaysAfterBooking": { "maximum": 7 }
     },
     "required": ["paymentMethod", "paymentDaysAfterBooking"]
@@ -674,14 +681,16 @@ This document provides practical examples of rule configurations for different b
 
 ## Rule Priority Guidelines
 
-### Priority Ranges:
+### Priority Ranges
+
 - **1-200**: System rules (lowest priority)
 - **201-400**: Basic business rules
 - **401-600**: Customer-facing rules
 - **601-800**: Premium/Corporate rules
 - **801-1000**: VIP/Executive rules (highest priority)
 
-### Best Practices:
+### Best Practices
+
 1. **Higher numbers = Higher priority**
 2. **More specific conditions = Higher priority**
 3. **Customer value rules = Higher priority**
@@ -690,7 +699,8 @@ This document provides practical examples of rule configurations for different b
 
 ## Testing Your Rules
 
-### Validation Checklist:
+### Validation Checklist
+
 - [ ] Conditions are properly structured JSON Schema
 - [ ] Actions are valid and executable
 - [ ] Priority levels prevent conflicts
@@ -698,7 +708,8 @@ This document provides practical examples of rule configurations for different b
 - [ ] Edge cases are handled
 - [ ] Performance impact is acceptable
 
-### Common Rule Patterns:
+### Common Rule Patterns
+
 1. **Discount Rules**: Apply percentage or fixed amount discounts
 2. **Markup Rules**: Add surcharges or fees
 3. **Upgrade Rules**: Enhance service levels

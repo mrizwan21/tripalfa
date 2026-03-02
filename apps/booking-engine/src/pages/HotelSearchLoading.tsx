@@ -7,34 +7,43 @@
  * - Currency exchange rates
  */
 
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useWeatherData } from '../hooks/useWeatherData';
-import { useExchangeRate } from '../hooks/useExchangeRate';
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import { useWeatherData } from "../hooks/useWeatherData";
+import { useExchangeRate } from "../hooks/useExchangeRate";
+import { CURRENCY_SYMBOLS, CURRENCY_NAMES } from "../api/exchangeRateApi";
 import {
-  CurrencyCode,
-  CURRENCY_SYMBOLS,
-  CURRENCY_NAMES,
-} from '../api/exchangeRateApi';
-import { MapCoordinates } from '../lib/mapbox-config';
+  DEFAULT_CONTENT_CONFIG,
+  loadTenantContentConfig,
+} from "../lib/tenantContentConfig";
+
+type CurrencyCode = string;
+type MapCoordinates = { latitude: number; longitude: number };
 
 // ── Code-split the heavy map component (mapbox-gl ~1.7MB) ────────────────────
-const AnimatedHotelMap = lazy(() => 
-  import('../components/map/AnimatedHotelMap').then(module => ({ 
-    default: module.AnimatedHotelMap 
-  }))
+const AnimatedHotelMap = lazy(() =>
+  import("../components/map/AnimatedHotelMap").then((module) => ({
+    default: module.AnimatedHotelMap,
+  })),
 );
+const AnimatedHotelMapAny = AnimatedHotelMap as any;
 
 // ── Map Loading Fallback ─────────────────────────────────────────────────────
-function MapFallback({ height = '500px' }: { height?: string }): React.JSX.Element {
+function MapFallback({
+  height = "500px",
+}: {
+  height?: string;
+}): React.JSX.Element {
   return (
-    <div 
-      className="flex items-center justify-center bg-gray-900 rounded-2xl"
+    <div
+      className="flex items-center justify-center bg-foreground rounded-2xl gap-2"
       style={{ height }}
     >
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-400 font-bold">Loading map...</p>
-        <p className="text-gray-500 text-xs mt-1">Initializing Mapbox</p>
+        <p className="text-muted-foreground font-bold">Loading map...</p>
+        <p className="text-muted-foreground text-xs mt-1">
+          Initializing Mapbox
+        </p>
       </div>
     </div>
   );
@@ -63,26 +72,32 @@ interface HotelSearchLoadingProps {
 
 // ── Weather Icon Component ───────────────────────────────────────────────────
 
-function WeatherIcon({ condition, size = 48 }: { condition: string; size?: number }): React.JSX.Element {
+function WeatherIcon({
+  condition,
+  size = 48,
+}: {
+  condition: string;
+  size?: number;
+}): React.JSX.Element {
   const iconMap: Record<string, string> = {
-    'clear': '☀️',
-    'sunny': '☀️',
-    'partly-cloudy': '⛅',
-    'cloudy': '☁️',
-    'overcast': '☁️',
-    'rain': '🌧️',
-    'light-rain': '🌦️',
-    'heavy-rain': '⛈️',
-    'thunderstorm': '⛈️',
-    'snow': '❄️',
-    'fog': '🌫️',
-    'wind': '💨',
-    'default': '🌤️',
+    clear: "☀️",
+    sunny: "☀️",
+    "partly-cloudy": "⛅",
+    cloudy: "☁️",
+    overcast: "☁️",
+    rain: "🌧️",
+    "light-rain": "🌦️",
+    "heavy-rain": "⛈️",
+    thunderstorm: "⛈️",
+    snow: "❄️",
+    fog: "🌫️",
+    wind: "💨",
+    default: "🌤️",
   };
 
-  const key = condition.toLowerCase().replace(/\s+/g, '-');
-  const icon = iconMap[key] || iconMap['default'];
-  
+  const key = condition.toLowerCase().replace(/\s+/g, "-");
+  const icon = iconMap[key] || iconMap["default"];
+
   return (
     <span style={{ fontSize: size }} className="drop-shadow-lg">
       {icon}
@@ -94,7 +109,7 @@ function WeatherIcon({ condition, size = 48 }: { condition: string; size?: numbe
 
 function WeatherWidget({
   destination,
-  className = '',
+  className = "",
 }: {
   destination: HotelDestination;
   className?: string;
@@ -106,11 +121,13 @@ function WeatherWidget({
 
   if (loading) {
     return (
-      <div className={`bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700 ${className}`}>
+      <div
+        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      >
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-700 rounded w-1/2 mb-4" />
-          <div className="h-8 bg-gray-700 rounded w-2/3 mb-2" />
-          <div className="h-3 bg-gray-700 rounded w-1/3" />
+          <div className="h-4 bg-muted rounded w-1/2 mb-4" />
+          <div className="h-8 bg-muted rounded w-2/3 mb-2" />
+          <div className="h-3 bg-muted rounded w-1/3" />
         </div>
       </div>
     );
@@ -118,8 +135,10 @@ function WeatherWidget({
 
   if (error || !weather) {
     return (
-      <div className={`bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700 ${className}`}>
-        <p className="text-gray-400 text-sm">Weather unavailable</p>
+      <div
+        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      >
+        <p className="text-muted-foreground text-sm">Weather unavailable</p>
       </div>
     );
   }
@@ -127,26 +146,30 @@ function WeatherWidget({
   const current = weather.current;
   const temp = Math.round(current.temp);
   const feelsLike = Math.round(current.feelsLike);
-  const condition = current.description || 'Clear';
-  const description = current.description || 'Clear sky';
+  const condition = current.description || "Clear";
+  const description = current.description || "Clear sky";
   const humidity = current.humidity;
   const windSpeed = Math.round(current.windSpeed);
 
   return (
-    <div className={`bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
+    <div
+      className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+    >
+      <div className="flex items-center justify-between mb-4 gap-2">
         <div>
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
             Weather in {destination.city}
           </p>
-          <p className="text-4xl font-black text-white">{temp}°C</p>
+          <p className="text-4xl font-black text-foreground">{temp}°C</p>
         </div>
         <WeatherIcon condition={condition} size={56} />
       </div>
-      
+
       <div className="space-y-2">
-        <p className="text-sm text-gray-300 capitalize">{description}</p>
-        <div className="flex gap-4 text-xs text-gray-400">
+        <p className="text-sm text-muted-foreground capitalize">
+          {description}
+        </p>
+        <div className="flex gap-4 text-xs text-muted-foreground">
           <span>Feels like {feelsLike}°C</span>
           <span>•</span>
           <span>Humidity {humidity}%</span>
@@ -163,7 +186,7 @@ function WeatherWidget({
 function CurrencyWidget({
   userCurrency,
   destinationCurrency,
-  className = '',
+  className = "",
 }: {
   userCurrency: CurrencyCode;
   destinationCurrency: CurrencyCode;
@@ -178,10 +201,12 @@ function CurrencyWidget({
 
   if (loading) {
     return (
-      <div className={`bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700 ${className}`}>
+      <div
+        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      >
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-700 rounded w-1/2 mb-4" />
-          <div className="h-8 bg-gray-700 rounded w-2/3" />
+          <div className="h-4 bg-muted rounded w-1/2 mb-4" />
+          <div className="h-8 bg-muted rounded w-2/3" />
         </div>
       </div>
     );
@@ -189,38 +214,46 @@ function CurrencyWidget({
 
   if (error || !rate) {
     return (
-      <div className={`bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700 ${className}`}>
-        <p className="text-gray-400 text-sm">Currency conversion unavailable</p>
+      <div
+        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      >
+        <p className="text-muted-foreground text-sm">
+          Currency conversion unavailable
+        </p>
       </div>
     );
   }
 
   const originSymbol = CURRENCY_SYMBOLS[userCurrency] || userCurrency;
-  const destSymbol = CURRENCY_SYMBOLS[destinationCurrency] || destinationCurrency;
+  const destSymbol =
+    CURRENCY_SYMBOLS[destinationCurrency] || destinationCurrency;
 
   return (
-    <div className={`bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700 ${className}`}>
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+    <div
+      className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+    >
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
         Currency Exchange
       </p>
-      
+
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-gray-300 text-sm">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-muted-foreground text-sm">
             {originSymbol} 100
           </span>
-          <span className="text-gray-500">→</span>
-          <span className="text-white font-bold text-lg">
+          <span className="text-muted-foreground">→</span>
+          <span className="text-foreground font-bold text-lg">
             {destSymbol} {conversion?.result.toFixed(2)}
           </span>
         </div>
-        
-        <div className="pt-3 border-t border-gray-700">
-          <p className="text-xs text-gray-400">
+
+        <div className="pt-3 border-t border-border">
+          <p className="text-xs text-muted-foreground">
             1 {userCurrency} = {rate.toFixed(4)} {destinationCurrency}
           </p>
-          <p className="text-[10px] text-gray-500 mt-1">
-            {CURRENCY_NAMES[userCurrency]} → {CURRENCY_NAMES[destinationCurrency]}
+          <p className="text-[10px] text-muted-foreground mt-1">
+            {CURRENCY_NAMES[userCurrency]} →{" "}
+            {CURRENCY_NAMES[destinationCurrency]}
           </p>
         </div>
       </div>
@@ -237,18 +270,27 @@ function SearchProgress({
   progress?: number;
   estimatedTime?: number;
 }): React.JSX.Element {
-  const tips = [
-    '💡 Tip: Book hotels on weekdays for better rates',
-    '💡 Tip: Check for free cancellation options',
-    '💡 Tip: Compare prices across different dates',
-    '💡 Tip: Look for hotels with free breakfast',
-    '💡 Tip: Consider staying slightly outside city center',
-    '💡 Tip: Book early for popular destinations',
-    '💡 Tip: Read recent guest reviews before booking',
-    '💡 Tip: Check hotel amenities before booking',
-  ];
+  const [tips, setTips] = useState<string[]>(
+    DEFAULT_CONTENT_CONFIG.searchLoading.hotelTips,
+  );
 
   const [currentTip, setCurrentTip] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadTips = async () => {
+      const contentConfig = await loadTenantContentConfig();
+      if (!active) return;
+      setTips(contentConfig.searchLoading.hotelTips);
+    };
+
+    void loadTips();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -258,23 +300,28 @@ function SearchProgress({
   }, [tips.length]);
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm font-bold text-white">Searching hotels...</p>
-        <p className="text-xs text-gray-400">~{estimatedTime}s remaining</p>
+    <div className="bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border">
+      <div className="flex items-center justify-between mb-4 gap-2">
+        <p className="text-sm font-bold text-foreground">Searching hotels...</p>
+        <p className="text-xs text-muted-foreground">
+          ~{estimatedTime}s remaining
+        </p>
       </div>
-      
+
       {/* Progress bar */}
-      <div className="h-2 bg-gray-700 rounded-full overflow-hidden mb-4">
+      <div className="h-2 bg-border rounded-full overflow-hidden mb-4">
         <div
           className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
-      
+
       {/* Animated tip */}
-      <div className="h-12 flex items-center">
-        <p className="text-xs text-gray-400 animate-fade-in" key={currentTip}>
+      <div className="h-12 flex items-center gap-2">
+        <p
+          className="text-xs text-muted-foreground animate-fade-in"
+          key={currentTip}
+        >
           {tips[currentTip]}
         </p>
       </div>
@@ -297,49 +344,63 @@ function StayInfo({
 }): React.JSX.Element {
   // Format dates if provided
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'Select dates';
+    if (!dateStr) return "Select dates";
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
     });
   };
 
-  const nights = checkIn && checkOut 
-    ? Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))
-    : 0;
+  const nights =
+    checkIn && checkOut
+      ? Math.ceil(
+          (new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : 0;
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+    <div className="bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border">
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">
         Your Stay
       </p>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-gray-400 mb-1">Check-in</p>
-          <p className="text-sm font-bold text-white">{formatDate(checkIn)}</p>
+          <p className="text-xs text-muted-foreground mb-1">Check-in</p>
+          <p className="text-sm font-bold text-foreground">
+            {formatDate(checkIn)}
+          </p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-1">Check-out</p>
-          <p className="text-sm font-bold text-white">{formatDate(checkOut)}</p>
+          <p className="text-xs text-muted-foreground mb-1">Check-out</p>
+          <p className="text-sm font-bold text-foreground">
+            {formatDate(checkOut)}
+          </p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-1">Guests</p>
-          <p className="text-sm font-bold text-white">{guests || 2} guests</p>
+          <p className="text-xs text-muted-foreground mb-1">Guests</p>
+          <p className="text-sm font-bold text-foreground">
+            {guests || 2} guests
+          </p>
         </div>
         <div>
-          <p className="text-xs text-gray-400 mb-1">Rooms</p>
-          <p className="text-sm font-bold text-white">{rooms || 1} room{(rooms || 1) > 1 ? 's' : ''}</p>
+          <p className="text-xs text-muted-foreground mb-1">Rooms</p>
+          <p className="text-sm font-bold text-foreground">
+            {rooms || 1} room{(rooms || 1) > 1 ? "s" : ""}
+          </p>
         </div>
       </div>
-      
+
       {nights > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-700">
+        <div className="mt-4 pt-4 border-t border-border">
           <p className="text-center">
             <span className="text-2xl font-black text-amber-500">{nights}</span>
-            <span className="text-sm text-gray-400 ml-2">night{nights > 1 ? 's' : ''}</span>
+            <span className="text-sm text-muted-foreground ml-2">
+              night{nights > 1 ? "s" : ""}
+            </span>
           </p>
         </div>
       )}
@@ -351,24 +412,24 @@ function StayInfo({
 
 export function HotelSearchLoading({
   destination,
-  userCurrency = 'USD',
+  userCurrency = "USD",
   searchProgress = 0,
   estimatedTime = 30,
   checkIn,
   checkOut,
   guests,
   rooms,
-  className = '',
+  className = "",
 }: HotelSearchLoadingProps): React.JSX.Element {
   return (
-    <div className={`min-h-screen bg-gray-900 ${className}`}>
+    <div className={`min-h-screen bg-background ${className}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-white mb-2">
+          <h1 className="text-3xl font-black text-foreground mb-2">
             Finding Your Perfect Stay
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Searching hotels in {destination.city}, {destination.country}
           </p>
         </div>
@@ -378,7 +439,7 @@ export function HotelSearchLoading({
           {/* Animated Map - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
             <Suspense fallback={<MapFallback height="500px" />}>
-              <AnimatedHotelMap
+              <AnimatedHotelMapAny
                 destination={destination}
                 animationDuration={5000}
                 showSearchRadius={true}
@@ -392,8 +453,11 @@ export function HotelSearchLoading({
           {/* Side panel */}
           <div className="space-y-6">
             {/* Search Progress */}
-            <SearchProgress progress={searchProgress} estimatedTime={estimatedTime} />
-            
+            <SearchProgress
+              progress={searchProgress}
+              estimatedTime={estimatedTime}
+            />
+
             {/* Stay Info */}
             <StayInfo
               checkIn={checkIn}
@@ -401,10 +465,10 @@ export function HotelSearchLoading({
               guests={guests}
               rooms={rooms}
             />
-            
+
             {/* Weather Widget */}
             <WeatherWidget destination={destination} />
-            
+
             {/* Currency Widget */}
             <CurrencyWidget
               userCurrency={userCurrency}
@@ -414,30 +478,40 @@ export function HotelSearchLoading({
         </div>
 
         {/* Destination Info */}
-        <div className="mt-8 bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 border border-gray-700">
+        <div className="mt-8 bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 Destination
               </p>
-              <p className="text-xl font-bold text-white">{destination.city}</p>
-              <p className="text-sm text-gray-400">{destination.country}</p>
+              <p className="text-xl font-bold text-foreground">
+                {destination.city}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {destination.country}
+              </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 Area
               </p>
-              <p className="text-xl font-bold text-white">{destination.name}</p>
-              <p className="text-sm text-gray-400">City center & nearby</p>
+              <p className="text-xl font-bold text-foreground">
+                {destination.name}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                City center & nearby
+              </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                 Local Currency
               </p>
-              <p className="text-xl font-bold text-white">
+              <p className="text-xl font-bold text-foreground">
                 {CURRENCY_SYMBOLS[destination.currency]} {destination.currency}
               </p>
-              <p className="text-sm text-gray-400">{CURRENCY_NAMES[destination.currency]}</p>
+              <p className="text-sm text-muted-foreground">
+                {CURRENCY_NAMES[destination.currency]}
+              </p>
             </div>
           </div>
         </div>

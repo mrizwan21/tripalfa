@@ -37,22 +37,23 @@ npm test -- --coverage
 
 ```typescript
 import {
-  MOCK_NOTIFICATION_LIST,           // All mock notifications
-  MOCK_SSR_NOTIFICATION,            // Special service request
-  MOCK_CONFIRMATION_NOTIFICATION,   // Booking confirmed
+  MOCK_NOTIFICATION_LIST, // All mock notifications
+  MOCK_SSR_NOTIFICATION, // Special service request
+  MOCK_CONFIRMATION_NOTIFICATION, // Booking confirmed
   MOCK_REJECTED_AMENDMENT_NOTIFICATION, // Rejected request
-  MOCK_SYSTEM_NOTIFICATION,         // System message
-  createMockNotification,            // Factory function
-  sortNotificationsByDateNewest,     // Sort utilities
-  filterNotificationsByType,         // Filter utilities
-  searchNotifications,               // Search utility
-  getUnreadNotificationCount,        // Count utilities
-} from '../__mocks__/fixtures';
+  MOCK_SYSTEM_NOTIFICATION, // System message
+  createMockNotification, // Factory function
+  sortNotificationsByDateNewest, // Sort utilities
+  filterNotificationsByType, // Filter utilities
+  searchNotifications, // Search utility
+  getUnreadNotificationCount, // Count utilities
+} from "../__mocks__/fixtures";
 ```
 
 ## Common Test Patterns
 
 ### Test Page Component
+
 ```typescript
 import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
@@ -72,6 +73,7 @@ it('should render notifications', async () => {
 ```
 
 ### Test Popup Component
+
 ```typescript
 import { NotificationDetailsPopup } from '../../../components/NotificationDetailsPopup';
 import { MOCK_SSR_NOTIFICATION } from '../__mocks__/fixtures';
@@ -90,9 +92,10 @@ it('should display details', () => {
 ```
 
 ### Test with API Mocking
+
 ```typescript
-import { initializeMSWServer } from '../setup';
-import { initializeNotificationsStore } from '../__mocks__/handlers';
+import { initializeMSWServer } from "../setup";
+import { initializeNotificationsStore } from "../__mocks__/handlers";
 
 beforeEach(() => {
   initializeMSWServer();
@@ -101,6 +104,7 @@ beforeEach(() => {
 ```
 
 ### Test User Interactions
+
 ```typescript
 import userEvent from '@testing-library/user-event';
 
@@ -116,6 +120,7 @@ it('should handle click', async () => {
 ```
 
 ### Test Async Operations
+
 ```typescript
 it('should fetch data', async () => {
   render(<Notifications />);
@@ -129,23 +134,31 @@ it('should fetch data', async () => {
 ## Notification Types Reference
 
 ### Types
+
 ```typescript
-type NotificationType = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR';
+type NotificationType = "SUCCESS" | "INFO" | "WARNING" | "ERROR";
 ```
 
 ### Statuses
+
 ```typescript
-type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED';
+type NotificationStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "REJECTED"
+  | "INFO"
+  | "CANCELLED";
 ```
 
 ### Full Structure
+
 ```typescript
 interface NotificationItem {
   id: string;
   type: NotificationType;
   title: string;
   description: string;
-  when: string;          // ISO date
+  when: string; // ISO date
   read: boolean;
   status?: NotificationStatus;
   passengerName?: string;
@@ -158,35 +171,35 @@ interface NotificationItem {
 
 ## API Endpoints (Mocked)
 
-| Method | Endpoint | Notes |
-|--------|----------|-------|
-| GET | `/api/notifications` | List with filters, pagination |
-| GET | `/api/notifications/:id` | Get single |
-| PATCH | `/api/notifications/:id/read` | Mark as read |
-| PATCH | `/api/notifications/:id/unread` | Mark as unread |
-| POST | `/api/notifications/search` | Full-text search |
-| PATCH | `/api/notifications/bulk-read` | Mark multiple read |
-| DELETE | `/api/notifications/:id` | Delete |
+| Method | Endpoint                        | Notes                         |
+| ------ | ------------------------------- | ----------------------------- |
+| GET    | `/api/notifications`            | List with filters, pagination |
+| GET    | `/api/notifications/:id`        | Get single                    |
+| PATCH  | `/api/notifications/:id/read`   | Mark as read                  |
+| PATCH  | `/api/notifications/:id/unread` | Mark as unread                |
+| POST   | `/api/notifications/search`     | Full-text search              |
+| PATCH  | `/api/notifications/bulk-read`  | Mark multiple read            |
+| DELETE | `/api/notifications/:id`        | Delete                        |
 
 ## Setup in New Test Files
 
 ```typescript
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 
-import { 
+import {
   MOCK_NOTIFICATION_LIST,
   createMockNotification,
   // ... other imports
-} from '../__mocks__/fixtures';
+} from "../__mocks__/fixtures";
 
-import { 
-  initializeNotificationsStore, 
-  resetNotificationsStore 
-} from '../__mocks__/handlers';
+import {
+  initializeNotificationsStore,
+  resetNotificationsStore,
+} from "../__mocks__/handlers";
 
-describe('Feature', () => {
+describe("Feature", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     initializeNotificationsStore(MOCK_NOTIFICATION_LIST);
@@ -196,7 +209,7 @@ describe('Feature', () => {
     resetNotificationsStore();
   });
 
-  it('should test something', async () => {
+  it("should test something", async () => {
     // Test code here
   });
 });
@@ -205,26 +218,29 @@ describe('Feature', () => {
 ## Utility Snippets
 
 ### Create notification with custom data
+
 ```typescript
 const notification = createMockNotification({
-  title: 'Custom Title',
+  title: "Custom Title",
   read: true,
-  status: 'CONFIRMED',
-  passengerName: 'John Doe'
+  status: "CONFIRMED",
+  passengerName: "John Doe",
 });
 ```
 
 ### Filter and sort
+
 ```typescript
 const sorted = sortNotificationsByDateNewest(MOCK_NOTIFICATION_LIST);
-const confirmed = filterNotificationsByStatus(sorted, 'CONFIRMED');
+const confirmed = filterNotificationsByStatus(sorted, "CONFIRMED");
 const unread = getUnreadNotifications(confirmed);
 ```
 
 ### Search
+
 ```typescript
-const results = searchNotifications(MOCK_NOTIFICATION_LIST, 'booking');
-results.forEach(notif => console.log(notif.title));
+const results = searchNotifications(MOCK_NOTIFICATION_LIST, "booking");
+results.forEach((notif) => console.log(notif.title));
 ```
 
 ## Troubleshooting Checklist
@@ -253,21 +269,25 @@ results.forEach(notif => console.log(notif.title));
 ## Common Issues & Solutions
 
 ### "Cannot find module"
+
 - Check import paths relative to file location
-- Verify __mocks__ folder exists
+- Verify **mocks** folder exists
 - Check spelling of import names
 
 ### "MSW not intercepting"
+
 - Verify handlers exported from handlers.ts
 - Ensure initializeMSWServer called in beforeEach
 - Check URL in handler matches request
 
 ### "act() warning"
+
 - Wrap state updates in act()
 - Use waitFor for async updates
 - Use userEvent instead of fireEvent for interactions
 
 ### Timeout in tests
+
 - Increase timeout in waitFor: `{ timeout: 5000 }`
 - Verify mock handlers return data
 - Check for unresolved promises
@@ -275,10 +295,11 @@ results.forEach(notif => console.log(notif.title));
 ## Adding New Notification Type
 
 1. Update fixture with new mock:
+
    ```typescript
    export const MOCK_NEW_TYPE: NotificationItem = {
-     id: 'notif-new',
-     type: 'SUCCESS',
+     id: "notif-new",
+     type: "SUCCESS",
      // ... other fields
    };
    ```

@@ -3,9 +3,9 @@
 // Customers, Agencies, Travel Suppliers with selling, purchasing, settlement, and refund scenarios
 // Now using Prisma with Neon Database
 
-import { prisma } from '@tripalfa/shared-database';
-import { getLatestSnapshot } from './fxService.js';
-import { logger } from '../utils/logger.js';
+import { prisma } from "@tripalfa/shared-database";
+import { getLatestSnapshot } from "./fxService.js";
+import { logger } from "../utils/logger.js";
 
 import type {
   Wallet,
@@ -14,19 +14,37 @@ import type {
   TransactionType,
   TransactionStatus,
   UserType,
-} from '../types/wallet.js';
+} from "../types/wallet.js";
 
-const SERVICE_NAME = 'walletService';
+const SERVICE_NAME = "walletService";
 
 interface WalletService {
   createWallet(userId: string, currency: string): Promise<Wallet>;
   getWalletBalance(userId: string, currency: string): Promise<number | null>;
   getUserWallets(userId: string): Promise<Wallet[]>;
-  creditWallet(userId: string, currency: string, amount: number, description: string, idempotencyKey: string): Promise<WalletTransaction>;
-  debitWallet(userId: string, currency: string, amount: number, description: string, idempotencyKey: string): Promise<WalletTransaction>;
-  getTransactionHistory(userId: string, limit?: number, offset?: number): Promise<WalletTransaction[]>;
+  creditWallet(
+    userId: string,
+    currency: string,
+    amount: number,
+    description: string,
+    idempotencyKey: string,
+  ): Promise<WalletTransaction>;
+  debitWallet(
+    userId: string,
+    currency: string,
+    amount: number,
+    description: string,
+    idempotencyKey: string,
+  ): Promise<WalletTransaction>;
+  getTransactionHistory(
+    userId: string,
+    limit?: number,
+    offset?: number,
+  ): Promise<WalletTransaction[]>;
   customerPurchaseFlow(flow: CustomerPurchaseFlow): Promise<WalletTransaction>;
-  supplierSettlementFlow(flow: SupplierSettlementFlow): Promise<WalletTransaction>;
+  supplierSettlementFlow(
+    flow: SupplierSettlementFlow,
+  ): Promise<WalletTransaction>;
 }
 
 interface CustomerPurchaseFlow {
@@ -55,7 +73,10 @@ const walletService: WalletService = {} as WalletService;
 /**
  * Create a wallet for a user in a specific currency
  */
-walletService.createWallet = async function(userId: string, currency: string): Promise<Wallet> {
+walletService.createWallet = async function (
+  userId: string,
+  currency: string,
+): Promise<Wallet> {
   // Use upsert to avoid unique constraint failure if wallet already exists
   const wallet = await prisma.wallet.upsert({
     where: {
@@ -67,7 +88,7 @@ walletService.createWallet = async function(userId: string, currency: string): P
       currency,
       balance: 0,
       reservedBalance: 0,
-      status: 'active',
+      status: "active",
     },
   });
 
@@ -77,7 +98,10 @@ walletService.createWallet = async function(userId: string, currency: string): P
 /**
  * Get wallet balance for a user in a specific currency
  */
-walletService.getWalletBalance = async function(userId: string, currency: string): Promise<number | null> {
+walletService.getWalletBalance = async function (
+  userId: string,
+  currency: string,
+): Promise<number | null> {
   const wallet = await prisma.wallet.findUnique({
     where: {
       userId_currency: { userId, currency },
@@ -93,10 +117,12 @@ walletService.getWalletBalance = async function(userId: string, currency: string
 /**
  * Get all wallets for a user
  */
-walletService.getUserWallets = async function(userId: string): Promise<Wallet[]> {
+walletService.getUserWallets = async function (
+  userId: string,
+): Promise<Wallet[]> {
   const wallets = await prisma.wallet.findMany({
     where: { userId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   return wallets;
@@ -105,12 +131,12 @@ walletService.getUserWallets = async function(userId: string): Promise<Wallet[]>
 /**
  * Credit a wallet (top-up/deposit)
  */
-walletService.creditWallet = async function(
+walletService.creditWallet = async function (
   userId: string,
   currency: string,
   amount: number,
   description: string,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<WalletTransaction> {
   return await prisma.$transaction(async (tx) => {
     // Check for idempotency INSIDE transaction to prevent race condition
@@ -135,7 +161,7 @@ walletService.creditWallet = async function(
           currency,
           balance: 0,
           reservedBalance: 0,
-          status: 'active',
+          status: "active",
         },
       });
     }
@@ -151,13 +177,13 @@ walletService.creditWallet = async function(
     const transaction = await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        type: 'deposit',
-        flow: 'credit',
+        type: "deposit",
+        flow: "credit",
         amount,
         currency,
         idempotencyKey,
         description,
-        status: 'completed',
+        status: "completed",
       },
     });
 
@@ -179,12 +205,12 @@ walletService.creditWallet = async function(
 /**
  * Debit a wallet (withdrawal/payment)
  */
-walletService.debitWallet = async function(
+walletService.debitWallet = async function (
   userId: string,
   currency: string,
   amount: number,
   description: string,
-  idempotencyKey: string
+  idempotencyKey: string,
 ): Promise<WalletTransaction> {
   return await prisma.$transaction(async (tx) => {
     // Check for idempotency INSIDE transaction to prevent race condition
@@ -202,7 +228,7 @@ walletService.debitWallet = async function(
     });
 
     if (!wallet || Number(wallet.balance) < amount) {
-      throw new Error('Insufficient balance');
+      throw new Error("Insufficient balance");
     }
 
     const newBalance = Number(wallet.balance) - amount;
@@ -214,13 +240,13 @@ walletService.debitWallet = async function(
     const transaction = await tx.walletTransaction.create({
       data: {
         walletId: wallet.id,
-        type: 'withdrawal',
-        flow: 'debit',
+        type: "withdrawal",
+        flow: "debit",
         amount,
         currency,
         idempotencyKey,
         description,
-        status: 'completed',
+        status: "completed",
       },
     });
 
@@ -241,17 +267,17 @@ walletService.debitWallet = async function(
 /**
  * Get transaction history for a user
  */
-walletService.getTransactionHistory = async function(
+walletService.getTransactionHistory = async function (
   userId: string,
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<WalletTransaction[]> {
   const wallets = await prisma.wallet.findMany({
     where: { userId },
     select: { id: true },
   });
 
-  const walletIds = wallets.map(w => w.id);
+  const walletIds = wallets.map((w) => w.id);
 
   if (walletIds.length === 0) {
     return [];
@@ -261,7 +287,7 @@ walletService.getTransactionHistory = async function(
     where: {
       walletId: { in: walletIds },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: limit,
     skip: offset,
   });
@@ -270,8 +296,19 @@ walletService.getTransactionHistory = async function(
 /**
  * Customer purchase flow: customer -> agency -> supplier with commission deduction
  */
-walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow): Promise<WalletTransaction> {
-  const { customerId, agencyId, supplierId, amount, currency, bookingId, commissionRate, idempotencyKey } = flow;
+walletService.customerPurchaseFlow = async function (
+  flow: CustomerPurchaseFlow,
+): Promise<WalletTransaction> {
+  const {
+    customerId,
+    agencyId,
+    supplierId,
+    amount,
+    currency,
+    bookingId,
+    commissionRate,
+    idempotencyKey,
+  } = flow;
 
   return await prisma.$transaction(async (tx) => {
     // Check for idempotency INSIDE transaction to prevent race condition
@@ -291,7 +328,13 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
 
     if (!customerWallet) {
       customerWallet = await tx.wallet.create({
-        data: { userId: customerId, currency, balance: 0, reservedBalance: 0, status: 'active' },
+        data: {
+          userId: customerId,
+          currency,
+          balance: 0,
+          reservedBalance: 0,
+          status: "active",
+        },
       });
     }
 
@@ -302,13 +345,19 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
 
     if (!agencyWallet) {
       agencyWallet = await tx.wallet.create({
-        data: { userId: agencyId, currency, balance: 0, reservedBalance: 0, status: 'active' },
+        data: {
+          userId: agencyId,
+          currency,
+          balance: 0,
+          reservedBalance: 0,
+          status: "active",
+        },
       });
     }
 
     // Validate and debit customer
     if (Number(customerWallet.balance) < amount) {
-      throw new Error('Insufficient funds');
+      throw new Error("Insufficient funds");
     }
 
     const customerNewBalance = Number(customerWallet.balance) - amount;
@@ -321,16 +370,16 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
     const customerTx = await tx.walletTransaction.create({
       data: {
         walletId: customerWallet.id,
-        type: 'purchase',
-        flow: 'debit',
+        type: "purchase",
+        flow: "debit",
         amount,
         currency,
         payerId: customerId,
         payeeId: agencyId,
         bookingId,
         idempotencyKey,
-        status: 'completed',
-        description: 'Customer purchase',
+        status: "completed",
+        description: "Customer purchase",
       },
     });
 
@@ -345,21 +394,23 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
     const agencyTx = await tx.walletTransaction.create({
       data: {
         walletId: agencyWallet.id,
-        type: 'purchase',
-        flow: 'credit',
+        type: "purchase",
+        flow: "credit",
         amount,
         currency,
         payerId: customerId,
         payeeId: agencyId,
         bookingId,
         idempotencyKey: `${idempotencyKey}_agency`,
-        status: 'completed',
-        description: 'Agency purchase credit',
+        status: "completed",
+        description: "Agency purchase credit",
       },
     });
 
     // Calculate and reserve commission
-    const commission = Number((Number(amount) * (Number(commissionRate) / 100)).toFixed(6));
+    const commission = Number(
+      (Number(amount) * (Number(commissionRate) / 100)).toFixed(6),
+    );
     const reservedBalance = Number(agencyWallet.reservedBalance) + commission;
     await tx.wallet.update({
       where: { id: agencyWallet.id },
@@ -373,7 +424,7 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
         account: `wallet:${customerWallet.id}`,
         debit: amount,
         currency,
-        description: 'Customer purchase debit',
+        description: "Customer purchase debit",
       },
     });
 
@@ -383,7 +434,7 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
         account: `wallet:${agencyWallet.id}`,
         credit: amount,
         currency,
-        description: 'Agency purchase credit',
+        description: "Agency purchase credit",
       },
     });
 
@@ -394,8 +445,18 @@ walletService.customerPurchaseFlow = async function(flow: CustomerPurchaseFlow):
 /**
  * Supplier settlement flow
  */
-walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFlow): Promise<WalletTransaction> {
-  const { supplierId, agencyId, settlementAmount, currency, invoiceId, deductedCommission, idempotencyKey } = flow;
+walletService.supplierSettlementFlow = async function (
+  flow: SupplierSettlementFlow,
+): Promise<WalletTransaction> {
+  const {
+    supplierId,
+    agencyId,
+    settlementAmount,
+    currency,
+    invoiceId,
+    deductedCommission,
+    idempotencyKey,
+  } = flow;
 
   return await prisma.$transaction(async (tx) => {
     // Check for idempotency INSIDE transaction to prevent race condition
@@ -415,7 +476,13 @@ walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFl
 
     if (!supplierWallet) {
       supplierWallet = await tx.wallet.create({
-        data: { userId: supplierId, currency, balance: 0, reservedBalance: 0, status: 'active' },
+        data: {
+          userId: supplierId,
+          currency,
+          balance: 0,
+          reservedBalance: 0,
+          status: "active",
+        },
       });
     }
 
@@ -425,30 +492,34 @@ walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFl
     });
 
     if (!agencyWallet) {
-      throw new Error('Agency wallet not found');
+      throw new Error("Agency wallet not found");
     }
 
-    const totalDebit = Number(settlementAmount) + Number(deductedCommission || 0);
-    
+    const totalDebit =
+      Number(settlementAmount) + Number(deductedCommission || 0);
+
     // Validate agency has sufficient funds (including reserved)
-    const availableBalance = Number(agencyWallet.balance) - Number(agencyWallet.reservedBalance);
+    const availableBalance =
+      Number(agencyWallet.balance) - Number(agencyWallet.reservedBalance);
     if (availableBalance < totalDebit) {
-      throw new Error('Insufficient funds');
+      throw new Error("Insufficient funds");
     }
 
     // Debit agency
     const agencyNewBalance = Number(agencyWallet.balance) - totalDebit;
-    const agencyReservedBalance = Number(agencyWallet.reservedBalance) - Number(deductedCommission || 0);
+    const agencyReservedBalance =
+      Number(agencyWallet.reservedBalance) - Number(deductedCommission || 0);
     await tx.wallet.update({
       where: { id: agencyWallet.id },
-      data: { 
+      data: {
         balance: agencyNewBalance,
         reservedBalance: agencyReservedBalance < 0 ? 0 : agencyReservedBalance,
       },
     });
 
     // Credit supplier
-    const supplierNewBalance = Number(supplierWallet.balance) + Number(settlementAmount);
+    const supplierNewBalance =
+      Number(supplierWallet.balance) + Number(settlementAmount);
     await tx.wallet.update({
       where: { id: supplierWallet.id },
       data: { balance: supplierNewBalance },
@@ -458,16 +529,16 @@ walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFl
     const settlementTx = await tx.walletTransaction.create({
       data: {
         walletId: supplierWallet.id,
-        type: 'settlement',
-        flow: 'credit',
+        type: "settlement",
+        flow: "credit",
         amount: Number(settlementAmount),
         currency,
         payerId: agencyId,
         payeeId: supplierId,
         invoiceId,
         idempotencyKey,
-        status: 'completed',
-        description: 'Supplier settlement',
+        status: "completed",
+        description: "Supplier settlement",
       },
     });
 
@@ -478,7 +549,7 @@ walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFl
         account: `wallet:${agencyWallet.id}`,
         debit: totalDebit,
         currency,
-        description: 'Agency settlement debit',
+        description: "Agency settlement debit",
       },
     });
 
@@ -488,7 +559,7 @@ walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFl
         account: `wallet:${supplierWallet.id}`,
         credit: Number(settlementAmount),
         currency,
-        description: 'Supplier settlement credit',
+        description: "Supplier settlement credit",
       },
     });
 
@@ -499,7 +570,7 @@ walletService.supplierSettlementFlow = async function(flow: SupplierSettlementFl
           account: `commission:deducted:${currency}`,
           credit: deductedCommission,
           currency,
-          description: 'Commission deducted',
+          description: "Commission deducted",
         },
       });
     }

@@ -1,6 +1,6 @@
 #
 # TripAlfa Resilient Microservices Architecture
-# 
+#
 # This configuration implements fault-tolerant microservices with:
 # - Circuit Breaker Pattern
 # - Service Discovery & Health Checks
@@ -13,13 +13,13 @@ services:
   # ============================================
   # INFRASTRUCTURE - Message Queue
   # ============================================
-  
+
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     container_name: tripalfa-rabbitmq
     ports:
-      - "5672:5672"    # AMQP
-      - "15672:15672"  # Management UI
+      - "5672:5672" # AMQP
+      - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: tripalfa
       RABBITMQ_DEFAULT_PASS: tripalfa123
@@ -48,10 +48,10 @@ services:
       - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.enable-lifecycle'
-      - '--web.enable-admin-api'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
     networks:
       - tripalfa-resilient
     restart: unless-stopped
@@ -196,7 +196,7 @@ services:
       RABBITMQ_URL: amqp://tripalfa:tripalfa123@rabbitmq:5672/tripalfa
       CONSUL_HOST: consul
       CONSUL_PORT: 8500
-      
+
       # Service URLs with DNS discovery fallback
       PAYMENT_SERVICE_URL: http://payment-service:3007
       RULE_ENGINE_SERVICE_URL: http://rule-engine-service:3010
@@ -206,17 +206,17 @@ services:
       ORGANIZATION_SERVICE_URL: http://organization-service:3006
       B2B_ADMIN_SERVICE_URL: http://b2b-admin-service:3020
       BOOKING_ENGINE_SERVICE_URL: http://booking-engine-service:3021
-      
+
       # Circuit Breaker Settings
       CIRCUIT_BREAKER_FAILURE_THRESHOLD: 5
       CIRCUIT_BREAKER_SUCCESS_THRESHOLD: 3
       CIRCUIT_BREAKER_TIMEOUT: 30000
-      
+
       # Resilience Settings
       ENABLE_CIRCUIT_BREAKER: "true"
       ENABLE_HEALTH_CHECKS: "true"
       ENABLE_SERVICE_REGISTRY: "true"
-      
+
     networks:
       - tripalfa-resilient
     healthcheck:
@@ -254,12 +254,12 @@ services:
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://tripalfa:tripalfa123@rabbitmq:5672/tripalfa
       JWT_SECRET: ${JWT_SECRET:-change-in-production}
-      
+
       # Resilience
       ENABLE_CIRCUIT_BREAKER: "true"
       CIRCUIT_BREAKER_FAILURE_THRESHOLD: 5
       CIRCUIT_BREAKER_TIMEOUT: 30000
-      
+
     networks:
       - tripalfa-resilient
     healthcheck:
@@ -272,10 +272,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 512M
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 256M
 
   # ============================================
@@ -302,7 +302,7 @@ services:
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://tripalfa:tripalfa123@rabbitmq:5672/tripalfa
       JWT_SECRET: ${JWT_SECRET:-change-in-production}
-      
+
       # Resilience
       ENABLE_CIRCUIT_BREAKER: "true"
     networks:
@@ -317,10 +317,10 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 512M
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 256M
 
   # ============================================

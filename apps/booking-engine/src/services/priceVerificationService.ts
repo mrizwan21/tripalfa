@@ -1,15 +1,16 @@
 /**
  * Price Verification Service
- * 
+ *
  * Provides functionality to verify and refresh flight prices before booking.
  * According to Duffel API best practices, prices should be refreshed before
  * final booking confirmation to ensure accuracy.
- * 
+ *
  * Documentation: https://duffel.com/docs/guides/getting-an-accurate-price-before-booking
  */
 
-import { api } from '../lib/api';
-import type { DuffelOffer } from '../types/duffel';
+import { api } from "../lib/api";
+
+type DuffelOffer = Record<string, any>;
 
 // ============================================================================
 // TYPES
@@ -46,7 +47,7 @@ export interface PriceRefreshParams {
 export interface OrderPricingParams {
   orderId: string;
   payment?: {
-    type: 'balance' | 'card';
+    type: "balance" | "card";
     card_id?: string;
   };
 }
@@ -64,34 +65,34 @@ export interface OrderPricingResult {
 // ============================================================================
 
 class PriceVerificationService {
-  private baseUrl = '/api/flights';
+  private baseUrl = "/api/flights";
 
   /**
    * Verify offer price before booking
-   * 
+   *
    * This fetches the latest offer data from Duffel and compares it with
    * the original price shown to the user. If the price has changed,
    * the user should be notified before proceeding.
-   * 
+   *
    * @param params - Price verification parameters
    * @returns Price verification result with change details
    */
-  async verifyOfferPrice(params: PriceRefreshParams): Promise<PriceVerificationResult> {
+  async verifyOfferPrice(
+    params: PriceRefreshParams,
+  ): Promise<PriceVerificationResult> {
     try {
       const { offerId, originalAmount, originalCurrency } = params;
 
       // Fetch latest offer data
-      const response = await api.get<{ offer: DuffelOffer }>(
-        `${this.baseUrl}/offers/${offerId}`
-      );
+      const response = await api.get(`${this.baseUrl}/offers/${offerId}`);
 
       const offer = response.offer || (response as any);
-      
+
       if (!offer) {
         return {
           success: false,
           priceChanged: false,
-          error: 'Offer not found',
+          error: "Offer not found",
         };
       }
 
@@ -102,9 +103,10 @@ class PriceVerificationService {
 
       // Calculate price difference
       const difference = newAmountNum - originalAmountNum;
-      const percentage = originalAmountNum > 0 
-        ? Math.abs((difference / originalAmountNum) * 100) 
-        : 0;
+      const percentage =
+        originalAmountNum > 0
+          ? Math.abs((difference / originalAmountNum) * 100)
+          : 0;
 
       const priceChanged = Math.abs(difference) > 0.01; // Allow for small rounding differences
 
@@ -128,21 +130,21 @@ class PriceVerificationService {
         expiresAt: offer.expires_at,
       };
     } catch (error: any) {
-      console.error('[PriceVerification] Verify error:', error);
+      console.error("[PriceVerification] Verify error:", error);
       return {
         success: false,
         priceChanged: false,
-        error: error?.message || 'Failed to verify price',
+        error: error?.message || "Failed to verify price",
       };
     }
   }
 
   /**
    * Refresh offer and get updated price
-   * 
+   *
    * This creates a new offer request with the same parameters to get
    * fresh pricing. Useful when the original offer has expired.
-   * 
+   *
    * @param offerRequestId - Original offer request ID
    */
   async refreshOfferRequest(offerRequestId: string): Promise<{
@@ -153,27 +155,24 @@ class PriceVerificationService {
   }> {
     try {
       // Get original offer request
-      const originalRequest = await api.get<any>(
-        `${this.baseUrl}/offer-requests/${offerRequestId}`
+      const originalRequest = await api.get(
+        `${this.baseUrl}/offer-requests/${offerRequestId}`,
       );
 
       if (!originalRequest) {
         return {
           success: false,
-          error: 'Original offer request not found',
+          error: "Original offer request not found",
         };
       }
 
       // Create new offer request with same parameters
-      const response = await api.post<{ offers: any[]; id: string }>(
-        `${this.baseUrl}/offer-requests`,
-        {
-          slices: originalRequest.slices,
-          passengers: originalRequest.passengers,
-          cabin_class: originalRequest.cabin_class,
-          return_available_services: true,
-        }
-      );
+      const response = await api.post(`${this.baseUrl}/offer-requests`, {
+        slices: originalRequest.slices,
+        passengers: originalRequest.passengers,
+        cabin_class: originalRequest.cabin_class,
+        return_available_services: true,
+      });
 
       return {
         success: true,
@@ -181,33 +180,29 @@ class PriceVerificationService {
         offerRequestId: response.id,
       };
     } catch (error: any) {
-      console.error('[PriceVerification] Refresh error:', error);
+      console.error("[PriceVerification] Refresh error:", error);
       return {
         success: false,
-        error: error?.message || 'Failed to refresh offers',
+        error: error?.message || "Failed to refresh offers",
       };
     }
   }
 
   /**
    * Get accurate price for an order before payment
-   * 
+   *
    * This prices an order with the selected payment method to get
    * the final amount including any payment fees.
-   * 
+   *
    * @param params - Order pricing parameters
    */
   async priceOrder(params: OrderPricingParams): Promise<OrderPricingResult> {
     try {
       const { orderId, payment } = params;
 
-      const response = await api.post<{
-        success: boolean;
-        data?: any;
-        error?: string;
-      }>(
+      const response = await api.post(
         `${this.baseUrl}/orders/${orderId}/price`,
-        { payment }
+        { payment },
       );
 
       if (response.success && response.data) {
@@ -221,13 +216,13 @@ class PriceVerificationService {
 
       return {
         success: false,
-        error: response.error || 'Failed to price order',
+        error: response.error || "Failed to price order",
       };
     } catch (error: any) {
-      console.error('[PriceVerification] Price order error:', error);
+      console.error("[PriceVerification] Price order error:", error);
       return {
         success: false,
-        error: error?.message || 'Failed to price order',
+        error: error?.message || "Failed to price order",
       };
     }
   }
@@ -237,7 +232,7 @@ class PriceVerificationService {
    */
   isOfferValid(offer: DuffelOffer): boolean {
     if (!offer.expires_at) return true;
-    
+
     const expiresAt = new Date(offer.expires_at);
     return expiresAt > new Date();
   }
@@ -258,7 +253,7 @@ class PriceVerificationService {
         milliseconds: Infinity,
         seconds: Infinity,
         minutes: Infinity,
-        formatted: 'No expiry',
+        formatted: "No expiry",
       };
     }
 
@@ -272,7 +267,7 @@ class PriceVerificationService {
         milliseconds: 0,
         seconds: 0,
         minutes: 0,
-        formatted: 'Expired',
+        formatted: "Expired",
       };
     }
 
@@ -293,12 +288,12 @@ class PriceVerificationService {
    */
   formatPriceChange(result: PriceVerificationResult): string {
     if (!result.priceChanged || !result.priceDifference) {
-      return 'Price verified';
+      return "Price verified";
     }
 
     const { amount, percentage, increased } = result.priceDifference;
-    const direction = increased ? 'increased' : 'decreased';
-    const symbol = result.newPrice?.currency || 'USD';
+    const direction = increased ? "increased" : "decreased";
+    const symbol = result.newPrice?.currency || "USD";
 
     return `Price has ${direction} by ${symbol} ${amount.toFixed(2)} (${percentage.toFixed(1)}%)`;
   }

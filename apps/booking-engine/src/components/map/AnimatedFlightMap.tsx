@@ -5,15 +5,15 @@
  * Used during flight search loading state.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import {
   MAPBOX_TOKEN,
   MAPBOX_STYLES,
   MARKER_COLORS,
   MapCoordinates,
-} from '../../lib/mapbox-config';
+} from "../../lib/mapbox-config";
 
 // Set Mapbox access token
 mapboxgl.accessToken = MAPBOX_TOKEN;
@@ -23,15 +23,15 @@ mapboxgl.accessToken = MAPBOX_TOKEN;
 interface AnimatedFlightMapProps {
   origin: MapCoordinates & { code: string; name: string; city: string };
   destination: MapCoordinates & { code: string; name: string; city: string };
-  
+
   // Animation options
   animationDuration?: number; // in milliseconds
   loopAnimation?: boolean;
-  
+
   // Map options
   className?: string;
   height?: string;
-  
+
   // Callbacks
   onAnimationComplete?: () => void;
 }
@@ -72,7 +72,7 @@ function calculateBearing(start: MapCoordinates, end: MapCoordinates): number {
 function interpolatePosition(
   start: MapCoordinates,
   end: MapCoordinates,
-  progress: number
+  progress: number,
 ): MapCoordinates {
   // Simple linear interpolation (for short distances)
   // For longer distances, you'd want to use great circle interpolation
@@ -88,29 +88,29 @@ function interpolatePosition(
 function generateArcPoints(
   start: MapCoordinates,
   end: MapCoordinates,
-  numPoints: number = 100
+  numPoints: number = 100,
 ): [number, number][] {
   const points: [number, number][] = [];
-  
+
   for (let i = 0; i <= numPoints; i++) {
     const t = i / numPoints;
-    
+
     // Calculate arc height based on distance
     const distance = Math.sqrt(
       Math.pow(end.longitude - start.longitude, 2) +
-      Math.pow(end.latitude - start.latitude, 2)
+        Math.pow(end.latitude - start.latitude, 2),
     );
     const arcHeight = distance * 0.15;
-    
+
     // Parabolic arc
     const arc = Math.sin(t * Math.PI) * arcHeight;
-    
+
     const lat = start.latitude + (end.latitude - start.latitude) * t;
     const lng = start.longitude + (end.longitude - start.longitude) * t + arc;
-    
+
     points.push([lng, lat]);
   }
-  
+
   return points;
 }
 
@@ -121,8 +121,8 @@ export function AnimatedFlightMap({
   destination,
   animationDuration = 5000,
   loopAnimation = true,
-  className = '',
-  height = '500px',
+  className = "",
+  height = "500px",
   onAnimationComplete,
 }: AnimatedFlightMapProps): React.JSX.Element {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -130,7 +130,7 @@ export function AnimatedFlightMap({
   const planeMarker = useRef<mapboxgl.Marker | null>(null);
   const animationFrame = useRef<number | null>(null);
   const startTime = useRef<number>(0);
-  
+
   const [mapLoaded, setMapLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -156,19 +156,18 @@ export function AnimatedFlightMap({
       });
 
       // Fit bounds on load
-      map.current.on('load', () => {
+      map.current.on("load", () => {
         setMapLoaded(true);
         map.current?.fitBounds(bounds, { padding: 80, maxZoom: 6 });
       });
 
-      map.current.on('error', (e) => {
-        console.error('Mapbox error:', e);
-        setError('Failed to load map');
+      map.current.on("error", (e) => {
+        console.error("Mapbox error:", e);
+        setError("Failed to load map");
       });
-
     } catch (err) {
-      console.error('Failed to initialize map:', err);
-      setError('Failed to initialize map');
+      console.error("Failed to initialize map:", err);
+      setError("Failed to initialize map");
     }
 
     return () => {
@@ -190,7 +189,7 @@ export function AnimatedFlightMap({
     if (!map.current || !mapLoaded) return;
 
     // ── Add origin marker ───────────────────────────────────────────────────
-    const originEl = document.createElement('div');
+    const originEl = document.createElement("div");
     originEl.innerHTML = `
       <div style="
         background: ${MARKER_COLORS.origin};
@@ -212,7 +211,7 @@ export function AnimatedFlightMap({
       .addTo(map.current);
 
     // ── Add destination marker ──────────────────────────────────────────────
-    const destEl = document.createElement('div');
+    const destEl = document.createElement("div");
     destEl.innerHTML = `
       <div style="
         background: ${MARKER_COLORS.destination};
@@ -235,14 +234,14 @@ export function AnimatedFlightMap({
 
     // ── Add flight path (arc) ───────────────────────────────────────────────
     const arcPoints = generateArcPoints(origin, destination, 100);
-    
-    map.current.addSource('flight-path', {
-      type: 'geojson',
+
+    map.current.addSource("flight-path", {
+      type: "geojson",
       data: {
-        type: 'Feature',
+        type: "Feature",
         properties: {},
         geometry: {
-          type: 'LineString',
+          type: "LineString",
           coordinates: arcPoints,
         },
       },
@@ -250,50 +249,50 @@ export function AnimatedFlightMap({
 
     // Glow layer
     map.current.addLayer({
-      id: 'flight-path-glow',
-      type: 'line',
-      source: 'flight-path',
+      id: "flight-path-glow",
+      type: "line",
+      source: "flight-path",
       layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
+        "line-join": "round",
+        "line-cap": "round",
       },
       paint: {
-        'line-color': MARKER_COLORS.flight,
-        'line-width': 6,
-        'line-opacity': 0.3,
+        "line-color": MARKER_COLORS.flight,
+        "line-width": 6,
+        "line-opacity": 0.3,
       },
     });
 
     // Main line
     map.current.addLayer({
-      id: 'flight-path-line',
-      type: 'line',
-      source: 'flight-path',
+      id: "flight-path-line",
+      type: "line",
+      source: "flight-path",
       layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
+        "line-join": "round",
+        "line-cap": "round",
       },
       paint: {
-        'line-color': MARKER_COLORS.flight,
-        'line-width': 2,
-        'line-dasharray': [2, 2],
+        "line-color": MARKER_COLORS.flight,
+        "line-width": 2,
+        "line-dasharray": [2, 2],
       },
     });
 
     // ── Create plane marker ─────────────────────────────────────────────────
-    const planeEl = document.createElement('div');
+    const planeEl = document.createElement("div");
     planeEl.style.cssText = `
       transform-origin: center;
       transition: transform 0.1s linear;
     `;
     planeEl.innerHTML = PLANE_SVG;
-    
+
     // Calculate initial bearing
     const bearing = calculateBearing(origin, destination);
     planeEl.style.transform = `rotate(${bearing - 45}deg)`;
-    
+
     planeMarker.current = new mapboxgl.Marker(planeEl, {
-      anchor: 'center',
+      anchor: "center",
     })
       .setLngLat([origin.longitude, origin.latitude])
       .addTo(map.current);
@@ -303,24 +302,25 @@ export function AnimatedFlightMap({
       if (!startTime.current) {
         startTime.current = timestamp;
       }
-      
+
       const elapsed = timestamp - startTime.current;
       let progress = Math.min(elapsed / animationDuration, 1);
-      
+
       // Ease in-out function for smoother animation
-      progress = progress < 0.5
-        ? 2 * progress * progress
-        : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-      
+      progress =
+        progress < 0.5
+          ? 2 * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
       // Calculate current position on arc
       const arcIndex = Math.floor(progress * (arcPoints.length - 1));
       const currentPoint = arcPoints[arcIndex] || arcPoints[0];
-      
+
       // Update plane position
       if (planeMarker.current) {
         planeMarker.current.setLngLat(currentPoint);
       }
-      
+
       // Continue animation or loop
       if (progress < 1) {
         animationFrame.current = requestAnimationFrame(animate);
@@ -333,7 +333,7 @@ export function AnimatedFlightMap({
         }
       }
     };
-    
+
     animationFrame.current = requestAnimationFrame(animate);
 
     return () => {
@@ -341,12 +341,19 @@ export function AnimatedFlightMap({
         cancelAnimationFrame(animationFrame.current);
       }
     };
-  }, [mapLoaded, origin, destination, animationDuration, loopAnimation, onAnimationComplete]);
+  }, [
+    mapLoaded,
+    origin,
+    destination,
+    animationDuration,
+    loopAnimation,
+    onAnimationComplete,
+  ]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div 
+      <div
         className={`flex items-center justify-center bg-gray-900 rounded-2xl ${className}`}
         style={{ height }}
       >
@@ -358,33 +365,31 @@ export function AnimatedFlightMap({
   }
 
   return (
-    <div 
+    <div
       className={`relative rounded-2xl overflow-hidden ${className}`}
       style={{ height }}
     >
       {/* Map container */}
-      <div 
-        ref={mapContainer} 
-        className="absolute inset-0"
-        style={{ width: '100%', height: '100%' }}
-      />
-      
+      <div ref={mapContainer} className="absolute inset-0 w-full h-full" />
+
       {/* Loading overlay */}
       {!mapLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 gap-2">
           <div className="text-center">
-            <div className="w-10 h-10 border-4 border-[#152467] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-gray-400 font-bold text-sm">Loading map...</p>
           </div>
         </div>
       )}
-      
+
       {/* Route info overlay */}
       <div className="absolute top-6 left-6 bg-gray-900/80 backdrop-blur-md rounded-2xl p-4 z-10 border border-gray-700">
         <div className="flex items-center gap-4">
           <div className="text-center">
             <p className="text-2xl font-black text-white">{origin.code}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{origin.city}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              {origin.city}
+            </p>
           </div>
           <div className="flex items-center gap-2 px-4">
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -393,11 +398,13 @@ export function AnimatedFlightMap({
           </div>
           <div className="text-center">
             <p className="text-2xl font-black text-white">{destination.code}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{destination.city}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              {destination.city}
+            </p>
           </div>
         </div>
       </div>
-      
+
       {/* Mapbox attribution */}
       <div className="absolute bottom-1 left-1 text-[10px] text-gray-500 bg-black/50 px-1 rounded">
         © Mapbox © OpenStreetMap

@@ -14,23 +14,13 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@tripalfa/*": ["../../node_modules/@tripalfa/*/dist", "../../node_modules/@tripalfa/*"]
+      "@tripalfa/*": [
+        "../../node_modules/@tripalfa/*/dist",
+        "../../node_modules/@tripalfa/*"
+      ]
     },
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "index.ts",
-    "constants.ts",
-    "types.ts",
-    "utils.ts",
-    "logger.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "hooks.ts",
-    "api.ts"
-  ]
+  "include": ["index.ts", "constants.ts", "types.ts", "utils.ts", "logger.ts"],
+  "exclude": ["dist", "node_modules", "hooks.ts", "api.ts"]
 }

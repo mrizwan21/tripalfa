@@ -1,5 +1,5 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 import {
   SupplierDeal,
   SupplierDealCreate,
@@ -9,8 +9,8 @@ import {
   ValidationResult,
   ConflictReport,
   DealMappingRules,
-  DealMappingRuleCreate
-} from '../types';
+  DealMappingRuleCreate,
+} from "../types";
 
 /**
  * Deal Service
@@ -33,7 +33,9 @@ export class DealService {
       // Validate deal data
       const validation = await this.validateDealCreation(dealData);
       if (!validation.isValid) {
-        throw new Error(`Deal validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Deal validation failed: ${validation.errors.join(", ")}`,
+        );
       }
 
       // Create deal with mapping rules in transaction
@@ -53,8 +55,8 @@ export class DealService {
             isCombinableWithCoupons: dealData.isCombinableWithCoupons || false,
             validFrom: new Date(dealData.validFrom),
             validTo: new Date(dealData.validTo),
-            metadata: dealData.metadata || {}
-          }
+            metadata: dealData.metadata || {},
+          },
         });
 
         // Create mapping rules
@@ -62,7 +64,7 @@ export class DealService {
           await tx.dealMappingRules.createMany({
             data: dealData.mappingRules.map((rule: DealMappingRuleCreate) => ({
               dealId: deal.id,
-              journeyType: rule.journeyType || 'all',
+              journeyType: rule.journeyType || "all",
               bookingClasses: rule.bookingClasses || [],
               rbds: rule.rbds || [],
               cabinClasses: rule.cabinClasses || [],
@@ -76,8 +78,8 @@ export class DealService {
               b2bCompanyIds: rule.b2bCompanyIds || [],
               hotelCategories: rule.hotelCategories || [],
               hotelStarRatings: rule.hotelStarRatings || [],
-              conditions: rule.conditions || {}
-            }))
+              conditions: rule.conditions || {},
+            })),
           });
         }
 
@@ -86,14 +88,19 @@ export class DealService {
 
       return this.mapPrismaToDeal(result);
     } catch (error) {
-      throw new Error(`Failed to create deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to create deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Update an existing deal
    */
-  async updateDeal(id: string, updates: SupplierDealUpdate): Promise<SupplierDeal> {
+  async updateDeal(
+    id: string,
+    updates: SupplierDealUpdate,
+  ): Promise<SupplierDeal> {
     try {
       const result = await this.prisma.$transaction(async (tx: any) => {
         const deal = await tx.supplierDeals.update({
@@ -103,18 +110,32 @@ export class DealService {
             ...(updates.code && { code: updates.code }),
             ...(updates.dealType && { dealType: updates.dealType }),
             ...(updates.discountType && { discountType: updates.discountType }),
-            ...(updates.discountValue !== undefined && { discountValue: updates.discountValue }),
-            ...(updates.maxDiscount !== undefined && { maxDiscount: updates.maxDiscount }),
-            ...(updates.minOrderAmount !== undefined && { minOrderAmount: updates.minOrderAmount }),
+            ...(updates.discountValue !== undefined && {
+              discountValue: updates.discountValue,
+            }),
+            ...(updates.maxDiscount !== undefined && {
+              maxDiscount: updates.maxDiscount,
+            }),
+            ...(updates.minOrderAmount !== undefined && {
+              minOrderAmount: updates.minOrderAmount,
+            }),
             ...(updates.status && { status: updates.status }),
-            ...(updates.priority !== undefined && { priority: updates.priority }),
-            ...(updates.isCombinableWithCoupons !== undefined && { isCombinableWithCoupons: updates.isCombinableWithCoupons }),
-            ...(updates.validFrom && { validFrom: new Date(updates.validFrom) }),
+            ...(updates.priority !== undefined && {
+              priority: updates.priority,
+            }),
+            ...(updates.isCombinableWithCoupons !== undefined && {
+              isCombinableWithCoupons: updates.isCombinableWithCoupons,
+            }),
+            ...(updates.validFrom && {
+              validFrom: new Date(updates.validFrom),
+            }),
             ...(updates.validTo && { validTo: new Date(updates.validTo) }),
             ...(updates.metadata && { metadata: updates.metadata }),
-            ...(updates.supplierCodes && { supplierCodes: updates.supplierCodes }),
-            updatedAt: new Date()
-          }
+            ...(updates.supplierCodes && {
+              supplierCodes: updates.supplierCodes,
+            }),
+            updatedAt: new Date(),
+          },
         });
 
         // Update mapping rules if provided
@@ -124,7 +145,7 @@ export class DealService {
             await tx.dealMappingRules.createMany({
               data: updates.mappingRules.map((rule: DealMappingRuleCreate) => ({
                 dealId: id,
-                journeyType: rule.journeyType || 'all',
+                journeyType: rule.journeyType || "all",
                 bookingClasses: rule.bookingClasses || [],
                 rbds: rule.rbds || [],
                 cabinClasses: rule.cabinClasses || [],
@@ -138,8 +159,8 @@ export class DealService {
                 b2bCompanyIds: rule.b2bCompanyIds || [],
                 hotelCategories: rule.hotelCategories || [],
                 hotelStarRatings: rule.hotelStarRatings || [],
-                conditions: rule.conditions || {}
-              }))
+                conditions: rule.conditions || {},
+              })),
             });
           }
         }
@@ -149,7 +170,9 @@ export class DealService {
 
       return this.mapPrismaToDeal(result);
     } catch (error) {
-      throw new Error(`Failed to update deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to update deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -158,40 +181,49 @@ export class DealService {
    */
   async getDeal(id: string): Promise<SupplierDeal | null> {
     try {
-      const deal = await this.prisma.supplierDeal.findUnique({
+      const deal = await this.prisma.supplierDeals.findUnique({
         where: { id },
-        include: { dealMappingRules: true }
+        include: { dealMappingRules: true },
       });
 
       return deal ? this.mapPrismaToDeal(deal) : null;
     } catch (error) {
-      throw new Error(`Failed to get deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * List deals with filters
    */
-  async listDeals(filters?: DealFilters, skip: number = 0, take: number = 50): Promise<SupplierDeal[]> {
+  async listDeals(
+    filters?: DealFilters,
+    skip: number = 0,
+    take: number = 50,
+  ): Promise<SupplierDeal[]> {
     try {
       const where: any = {};
 
       if (filters?.productType) where.productType = filters.productType;
       if (filters?.dealType) where.dealType = filters.dealType;
       if (filters?.status) where.status = filters.status;
-      if (filters?.supplierCode) where.supplierCodes = { hasSome: [filters.supplierCode] };
+      if (filters?.supplierCode)
+        where.supplierCodes = { hasSome: [filters.supplierCode] };
 
-      const deals = await this.prisma.supplierDeal.findMany({
+      const deals = await this.prisma.supplierDeals.findMany({
         where,
         include: { dealMappingRules: true },
-        orderBy: { priority: 'desc' },
+        orderBy: { priority: "desc" },
         skip,
-        take
+        take,
       });
 
       return deals.map((deal: any) => this.mapPrismaToDeal(deal));
     } catch (error) {
-      throw new Error(`Failed to list deals: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to list deals: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -200,12 +232,14 @@ export class DealService {
    */
   async deleteDeal(id: string): Promise<void> {
     try {
-      await this.prisma.supplierDeal.update({
+      await this.prisma.supplierDeals.update({
         where: { id },
-        data: { status: 'archived', updatedAt: new Date() }
+        data: { status: "archived", updatedAt: new Date() },
       });
     } catch (error) {
-      throw new Error(`Failed to delete deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to delete deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -214,14 +248,16 @@ export class DealService {
    */
   async activateDeal(id: string): Promise<SupplierDeal> {
     try {
-      const deal = await this.prisma.supplierDeal.update({
+      const deal = await this.prisma.supplierDeals.update({
         where: { id },
-        data: { status: 'active', updatedAt: new Date() }
+        data: { status: "active", updatedAt: new Date() },
       });
 
       return this.mapPrismaToDeal(deal);
     } catch (error) {
-      throw new Error(`Failed to activate deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to activate deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -230,35 +266,41 @@ export class DealService {
    */
   async pauseDeal(id: string): Promise<SupplierDeal> {
     try {
-      const deal = await this.prisma.supplierDeal.update({
+      const deal = await this.prisma.supplierDeals.update({
         where: { id },
-        data: { status: 'paused', updatedAt: new Date() }
+        data: { status: "paused", updatedAt: new Date() },
       });
 
       return this.mapPrismaToDeal(deal);
     } catch (error) {
-      throw new Error(`Failed to pause deal: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to pause deal: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Validate deal creation
    */
-  private async validateDealCreation(dealData: SupplierDealCreate): Promise<ValidationResult> {
+  private async validateDealCreation(
+    dealData: SupplierDealCreate,
+  ): Promise<ValidationResult> {
     const errors: string[] = [];
 
-    if (!dealData.name) errors.push('Deal name is required');
-    if (!dealData.code) errors.push('Deal code is required');
-    if (!dealData.productType) errors.push('Product type is required');
-    if (!dealData.dealType) errors.push('Deal type is required');
-    if (dealData.discountValue === undefined || dealData.discountValue < 0) errors.push('Discount value must be >= 0');
-    if (!dealData.validFrom) errors.push('Valid from date is required');
-    if (!dealData.validTo) errors.push('Valid to date is required');
-    if (new Date(dealData.validFrom) >= new Date(dealData.validTo)) errors.push('Valid to date must be after valid from date');
+    if (!dealData.name) errors.push("Deal name is required");
+    if (!dealData.code) errors.push("Deal code is required");
+    if (!dealData.productType) errors.push("Product type is required");
+    if (!dealData.dealType) errors.push("Deal type is required");
+    if (dealData.discountValue === undefined || dealData.discountValue < 0)
+      errors.push("Discount value must be >= 0");
+    if (!dealData.validFrom) errors.push("Valid from date is required");
+    if (!dealData.validTo) errors.push("Valid to date is required");
+    if (new Date(dealData.validFrom) >= new Date(dealData.validTo))
+      errors.push("Valid to date must be after valid from date");
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -276,15 +318,19 @@ export class DealService {
       supplierCodes: prismaDeal.supplierCodes,
       discountType: prismaDeal.discountType,
       discountValue: Number(prismaDeal.discountValue),
-      maxDiscount: prismaDeal.maxDiscount ? Number(prismaDeal.maxDiscount) : undefined,
-      minOrderAmount: prismaDeal.minOrderAmount ? Number(prismaDeal.minOrderAmount) : undefined,
+      maxDiscount: prismaDeal.maxDiscount
+        ? Number(prismaDeal.maxDiscount)
+        : undefined,
+      minOrderAmount: prismaDeal.minOrderAmount
+        ? Number(prismaDeal.minOrderAmount)
+        : undefined,
       priority: prismaDeal.priority,
       isCombinableWithCoupons: prismaDeal.isCombinableWithCoupons,
       validFrom: prismaDeal.validFrom.toISOString(),
       validTo: prismaDeal.validTo.toISOString(),
       metadata: prismaDeal.metadata,
       createdAt: prismaDeal.createdAt.toISOString(),
-      updatedAt: prismaDeal.updatedAt.toISOString()
+      updatedAt: prismaDeal.updatedAt.toISOString(),
     };
   }
 

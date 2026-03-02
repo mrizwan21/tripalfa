@@ -35,7 +35,7 @@ export interface PointsTransaction {
   id: string;
   customerId: string;
   points: number;
-  type: 'EARN' | 'REDEEM' | 'EXPIRE' | 'BONUS' | 'ADJUSTMENT';
+  type: "EARN" | "REDEEM" | "EXPIRE" | "BONUS" | "ADJUSTMENT";
   description: string;
   bookingReference?: string;
   orderReference?: string;
@@ -69,7 +69,13 @@ export interface PointsEarningRule {
   id: string;
   name: string;
   description: string;
-  eventType: 'BOOKING' | 'PAYMENT' | 'REFERRAL' | 'REVIEW' | 'BIRTHDAY' | 'ANNIVERSARY';
+  eventType:
+    | "BOOKING"
+    | "PAYMENT"
+    | "REFERRAL"
+    | "REVIEW"
+    | "BIRTHDAY"
+    | "ANNIVERSARY";
   pointsAwarded: number;
   multiplier?: number;
   conditions?: Record<string, any>;
@@ -84,7 +90,7 @@ export interface RedemptionOption {
   name: string;
   description: string;
   pointsRequired: number;
-  discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  discountType: "PERCENTAGE" | "FIXED_AMOUNT";
   discountValue: number;
   maxRedemptionsPerCustomer?: number;
   maxRedemptionsTotal?: number;
@@ -107,7 +113,7 @@ export interface LoyaltyStatus {
   pointsUntilNextTier: number;
   nextTierPerks?: string[];
   lastActivityDate?: string;
-  membershipStatus: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  membershipStatus: "ACTIVE" | "INACTIVE" | "SUSPENDED";
 }
 
 // Analytics and reporting
@@ -144,7 +150,7 @@ export interface LoyaltyEnrollmentForm {
   customerId: string;
   agreeToTerms: boolean;
   marketingConsent?: boolean;
-  preferredCommunication: 'EMAIL' | 'SMS' | 'BOTH';
+  preferredCommunication: "EMAIL" | "SMS" | "BOTH";
 }
 
 export interface PointsRedemptionForm {
@@ -159,7 +165,12 @@ export interface PointsRedemptionForm {
 export interface LoyaltyNotification {
   id: string;
   customerId: string;
-  type: 'TIER_UPGRADE' | 'POINTS_EXPIRY_WARNING' | 'POINTS_EARNED' | 'BONUS_POINTS' | 'REDEMPTION_CONFIRMATION';
+  type:
+    | "TIER_UPGRADE"
+    | "POINTS_EXPIRY_WARNING"
+    | "POINTS_EARNED"
+    | "BONUS_POINTS"
+    | "REDEMPTION_CONFIRMATION";
   title: string;
   message: string;
   data?: Record<string, any>;
@@ -182,25 +193,25 @@ export interface LoyaltyFeatures {
 
 // Constants
 export const LOYALTY_TIER_NAMES = {
-  SILVER: 'Silver',
-  GOLD: 'Gold',
-  PLATINUM: 'Platinum',
-  DIAMOND: 'Diamond',
+  SILVER: "Silver",
+  GOLD: "Gold",
+  PLATINUM: "Platinum",
+  DIAMOND: "Diamond",
 } as const;
 
 export const LOYALTY_TRANSACTION_TYPES = {
-  EARN: 'EARN',
-  REDEEM: 'REDEEM',
-  EXPIRE: 'EXPIRE',
-  BONUS: 'BONUS',
-  ADJUSTMENT: 'ADJUSTMENT',
+  EARN: "EARN",
+  REDEEM: "REDEEM",
+  EXPIRE: "EXPIRE",
+  BONUS: "BONUS",
+  ADJUSTMENT: "ADJUSTMENT",
 } as const;
 
 export const LOYALTY_EVENT_TYPES = {
-  BOOKING: 'BOOKING',
-  PAYMENT: 'PAYMENT',
-  REFERRAL: 'REFERRAL',
-  REVIEW: 'REVIEW',
-  BIRTHDAY: 'BIRTHDAY',
-  ANNIVERSARY: 'ANNIVERSARY',
+  BOOKING: "BOOKING",
+  PAYMENT: "PAYMENT",
+  REFERRAL: "REFERRAL",
+  REVIEW: "REVIEW",
+  BIRTHDAY: "BIRTHDAY",
+  ANNIVERSARY: "ANNIVERSARY",
 } as const;

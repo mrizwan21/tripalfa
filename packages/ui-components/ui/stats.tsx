@@ -1,9 +1,14 @@
-'use client';
+"use client";
 
 // Admin Panel - Stat Cards & Dashboard Components
-import { ReactNode } from 'react';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { cn, formatCurrency, formatNumber, formatPercent } from '@tripalfa/shared-utils';
+import { ReactNode } from "react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import {
+  cn,
+  formatCurrency,
+  formatNumber,
+  formatPercent,
+} from "@tripalfa/shared-utils";
 
 // ============================================================================
 // Stat Card Component
@@ -15,7 +20,7 @@ interface StatCardProps {
   subtitle?: string;
   change?: {
     value: number;
-    type: 'increase' | 'decrease' | 'neutral';
+    type: "increase" | "decrease" | "neutral";
     label?: string;
   };
   icon?: ReactNode;
@@ -29,7 +34,7 @@ export function StatCard({
   subtitle,
   change,
   icon,
-  iconBg = 'bg-primary-100 dark:bg-primary-900/30',
+  iconBg = "bg-primary-100 dark:bg-primary-900/30",
   loading = false,
 }: StatCardProps): React.ReactElement {
   if (loading) {
@@ -62,15 +67,19 @@ export function StatCard({
               {change && (
                 <span
                   className={cn(
-                    'inline-flex items-center gap-1 text-sm font-medium',
-                    change.type === 'increase' && 'text-success-600',
-                    change.type === 'decrease' && 'text-error-600',
-                    change.type === 'neutral' && 'text-secondary-500'
+                    "inline-flex items-center gap-1 text-sm font-medium",
+                    change.type === "increase" && "text-success-600",
+                    change.type === "decrease" && "text-error-600",
+                    change.type === "neutral" && "text-secondary-500",
                   )}
                 >
-                  {change.type === 'increase' && <TrendingUp className="h-4 w-4" />}
-                  {change.type === 'decrease' && <TrendingDown className="h-4 w-4" />}
-                  {change.type === 'neutral' && <Minus className="h-4 w-4" />}
+                  {change.type === "increase" && (
+                    <TrendingUp className="h-4 w-4" />
+                  )}
+                  {change.type === "decrease" && (
+                    <TrendingDown className="h-4 w-4" />
+                  )}
+                  {change.type === "neutral" && <Minus className="h-4 w-4" />}
                   {formatPercent(Math.abs(change.value))}
                 </span>
               )}
@@ -82,11 +91,7 @@ export function StatCard({
             </div>
           )}
         </div>
-        {icon && (
-          <div className={cn('rounded-lg p-3', iconBg)}>
-            {icon}
-          </div>
-        )}
+        {icon && <div className={cn("rounded-lg p-3", iconBg)}>{icon}</div>}
       </div>
     </div>
   );
@@ -101,15 +106,18 @@ interface StatsGridProps {
   columns?: 2 | 3 | 4 | 5;
 }
 
-export function StatsGrid({ children, columns = 4 }: StatsGridProps): React.ReactElement {
+export function StatsGrid({
+  children,
+  columns = 4,
+}: StatsGridProps): React.ReactElement {
   return (
     <div
       className={cn(
-        'grid gap-4',
-        columns === 2 && 'grid-cols-1 sm:grid-cols-2',
-        columns === 3 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-        columns === 4 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-        columns === 5 && 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-5'
+        "grid gap-4",
+        columns === 2 && "grid-cols-1 sm:grid-cols-2",
+        columns === 3 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+        columns === 4 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+        columns === 5 && "grid-cols-1 sm:grid-cols-2 lg:grid-cols-5",
       )}
     >
       {children}
@@ -124,20 +132,24 @@ export function StatsGrid({ children, columns = 4 }: StatsGridProps): React.Reac
 interface MiniStatProps {
   label: string;
   value: string | number;
-  color?: 'default' | 'success' | 'warning' | 'error';
+  color?: "default" | "success" | "warning" | "error";
 }
 
-export function MiniStat({ label, value, color = 'default' }: MiniStatProps): React.ReactElement {
+export function MiniStat({
+  label,
+  value,
+  color = "default",
+}: MiniStatProps): React.ReactElement {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm text-secondary-500">{label}</span>
       <span
         className={cn(
-          'text-sm font-semibold',
-          color === 'default' && 'text-secondary-900 dark:text-white',
-          color === 'success' && 'text-success-600',
-          color === 'warning' && 'text-warning-600',
-          color === 'error' && 'text-error-600'
+          "text-sm font-semibold",
+          color === "default" && "text-secondary-900 dark:text-white",
+          color === "success" && "text-success-600",
+          color === "warning" && "text-warning-600",
+          color === "error" && "text-error-600",
         )}
       >
         {value}
@@ -155,15 +167,15 @@ interface ProgressCardProps {
   current: number;
   total: number;
   unit?: string;
-  color?: 'primary' | 'success' | 'warning' | 'error';
+  color?: "primary" | "success" | "warning" | "error";
 }
 
 export function ProgressCard({
   title,
   current,
   total,
-  unit = '',
-  color = 'primary',
+  unit = "",
+  color = "primary",
 }: ProgressCardProps): React.ReactElement {
   const percentage = total > 0 ? (current / total) * 100 : 0;
 
@@ -172,17 +184,19 @@ export function ProgressCard({
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-secondary-500">{title}</span>
         <span className="text-sm font-semibold text-secondary-900 dark:text-white">
-          {formatNumber(current)}{unit} / {formatNumber(total)}{unit}
+          {formatNumber(current)}
+          {unit} / {formatNumber(total)}
+          {unit}
         </span>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary-100 dark:bg-secondary-700">
         <div
           className={cn(
-            'h-full rounded-full transition-all duration-500',
-            color === 'primary' && 'bg-primary-600',
-            color === 'success' && 'bg-success-600',
-            color === 'warning' && 'bg-warning-500',
-            color === 'error' && 'bg-error-600'
+            "h-full rounded-full transition-all duration-500",
+            color === "primary" && "bg-primary-600",
+            color === "success" && "bg-success-600",
+            color === "warning" && "bg-warning-500",
+            color === "error" && "bg-error-600",
           )}
           style={{ width: `${Math.min(percentage, 100)}%` }}
         />
@@ -209,7 +223,7 @@ interface ActivityItemProps {
 
 export function ActivityItem({
   icon,
-  iconBg = 'bg-secondary-100 dark:bg-secondary-700',
+  iconBg = "bg-secondary-100 dark:bg-secondary-700",
   title,
   description,
   timestamp,
@@ -218,7 +232,7 @@ export function ActivityItem({
   return (
     <div className="flex gap-4">
       {icon && (
-        <div className={cn('flex-shrink-0 rounded-full p-2', iconBg)}>
+        <div className={cn("flex-shrink-0 rounded-full p-2", iconBg)}>
           {icon}
         </div>
       )}
@@ -251,7 +265,7 @@ interface ActivityFeedProps {
 
 export function ActivityFeed({
   children,
-  title = 'Recent Activity',
+  title = "Recent Activity",
   showViewAll = false,
   onViewAll,
 }: ActivityFeedProps): React.ReactElement {
@@ -289,7 +303,12 @@ interface EmptyStateProps {
   };
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps): React.ReactElement {
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       {icon && (
@@ -301,7 +320,9 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
         {title}
       </h3>
       {description && (
-        <p className="mt-2 max-w-sm text-sm text-secondary-500">{description}</p>
+        <p className="mt-2 max-w-sm text-sm text-secondary-500">
+          {description}
+        </p>
       )}
       {action && (
         <button onClick={action.onClick} className="btn-primary mt-4">

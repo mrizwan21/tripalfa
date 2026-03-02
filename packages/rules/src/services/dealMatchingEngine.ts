@@ -3,8 +3,8 @@ import {
   DealMatchResult,
   SearchCriteria,
   CustomerContext,
-  DealMappingRules
-} from '../types';
+  DealMappingRules,
+} from "../types";
 
 /**
  * Deal Matching Engine
@@ -22,7 +22,7 @@ export class DealMatchingEngine {
    */
   initialize(deals: SupplierDeal[]): void {
     this.deals.clear();
-    deals.forEach(deal => this.deals.set(deal.id, deal));
+    deals.forEach((deal) => this.deals.set(deal.id, deal));
     this.matchCache.clear();
   }
 
@@ -32,7 +32,7 @@ export class DealMatchingEngine {
   findApplicableDeals(
     criteria: SearchCriteria,
     context: CustomerContext,
-    availableDeals?: SupplierDeal[]
+    availableDeals?: SupplierDeal[],
   ): DealMatchResult[] {
     const cacheKey = this.generateCacheKey(criteria);
 
@@ -45,7 +45,7 @@ export class DealMatchingEngine {
     const dealsToCheck = availableDeals || Array.from(this.deals.values());
 
     // Filter active and valid deals
-    const validDeals = dealsToCheck.filter(deal => this.isDealValid(deal));
+    const validDeals = dealsToCheck.filter((deal) => this.isDealValid(deal));
 
     // Match deals
     const matches: DealMatchResult[] = [];
@@ -57,7 +57,7 @@ export class DealMatchingEngine {
           discountAmount,
           applicableAmount: discountAmount,
           reason: `Deal ${deal.code} matches search criteria`,
-          priority: deal.priority
+          priority: deal.priority,
         });
       }
     }
@@ -80,7 +80,7 @@ export class DealMatchingEngine {
     criteria: SearchCriteria,
     context: CustomerContext,
     baseAmount: number,
-    availableDeals?: SupplierDeal[]
+    availableDeals?: SupplierDeal[],
   ): DealMatchResult | null {
     const matches = this.findApplicableDeals(criteria, context, availableDeals);
 
@@ -88,10 +88,18 @@ export class DealMatchingEngine {
 
     // Find deal with maximum discount
     let bestMatch = matches[0];
-    let maxDiscount = this.calculateDealDiscount(bestMatch.deal, baseAmount, criteria);
+    let maxDiscount = this.calculateDealDiscount(
+      bestMatch.deal,
+      baseAmount,
+      criteria,
+    );
 
     for (let i = 1; i < matches.length; i++) {
-      const discount = this.calculateDealDiscount(matches[i].deal, baseAmount, criteria);
+      const discount = this.calculateDealDiscount(
+        matches[i].deal,
+        baseAmount,
+        criteria,
+      );
       if (discount > maxDiscount) {
         maxDiscount = discount;
         bestMatch = matches[i];
@@ -101,7 +109,7 @@ export class DealMatchingEngine {
     return {
       ...bestMatch,
       discountAmount: maxDiscount,
-      applicableAmount: maxDiscount
+      applicableAmount: maxDiscount,
     };
   }
 
@@ -111,11 +119,15 @@ export class DealMatchingEngine {
   applyDealsToSearchResults(
     searchResults: any[],
     criteria: SearchCriteria,
-    context: CustomerContext
+    context: CustomerContext,
   ): any[] {
-    return searchResults.map(result => {
-      const bestDeal = this.findBestDeal(criteria, context, result.price || result.total);
-      
+    return searchResults.map((result) => {
+      const bestDeal = this.findBestDeal(
+        criteria,
+        context,
+        result.price || result.total,
+      );
+
       if (bestDeal) {
         return {
           ...result,
@@ -123,7 +135,7 @@ export class DealMatchingEngine {
           originalPrice: result.price || result.total,
           discountApplied: bestDeal.discountAmount,
           finalPrice: (result.price || result.total) - bestDeal.discountAmount,
-          dealCode: bestDeal.deal.code
+          dealCode: bestDeal.deal.code,
         };
       }
 
@@ -139,11 +151,7 @@ export class DealMatchingEngine {
     const validFrom = new Date(deal.validFrom);
     const validTo = new Date(deal.validTo);
 
-    return (
-      deal.status === 'active' &&
-      now >= validFrom &&
-      now <= validTo
-    );
+    return deal.status === "active" && now >= validFrom && now <= validTo;
   }
 
   /**
@@ -152,15 +160,15 @@ export class DealMatchingEngine {
   private dealMatchesCriteria(
     deal: SupplierDeal,
     criteria: SearchCriteria,
-    context: CustomerContext
+    context: CustomerContext,
   ): boolean {
     // Product type must match
     if (deal.productType !== criteria.productType) return false;
 
     // If supplier codes specified in criteria, deal must match one
     if (criteria.supplierCodes && criteria.supplierCodes.length > 0) {
-      const hasMatchingSupplier = deal.supplierCodes.some(s => 
-        criteria.supplierCodes!.includes(s)
+      const hasMatchingSupplier = deal.supplierCodes.some((s) =>
+        criteria.supplierCodes!.includes(s),
       );
       if (!hasMatchingSupplier) return false;
     }
@@ -168,7 +176,9 @@ export class DealMatchingEngine {
     // Check mapping rules if they exist
     if (deal.metadata && (deal.metadata as any).mappingRules) {
       const rules = (deal.metadata as any).mappingRules as DealMappingRules[];
-      const hasMatchingRule = rules.some(rule => this.ruleMatchesCriteria(rule, criteria, context));
+      const hasMatchingRule = rules.some((rule) =>
+        this.ruleMatchesCriteria(rule, criteria, context),
+      );
       if (!hasMatchingRule) return false;
     }
 
@@ -181,10 +191,13 @@ export class DealMatchingEngine {
   private ruleMatchesCriteria(
     rule: DealMappingRules,
     criteria: SearchCriteria,
-    context: CustomerContext
+    context: CustomerContext,
   ): boolean {
     // Check journey type
-    if (rule.journeyType !== 'all' && rule.journeyType !== criteria.journeyType) {
+    if (
+      rule.journeyType !== "all" &&
+      rule.journeyType !== criteria.journeyType
+    ) {
       return false;
     }
 
@@ -197,21 +210,30 @@ export class DealMatchingEngine {
 
     // Check destination cities
     if (rule.destinationCities && rule.destinationCities.length > 0) {
-      if (criteria.destination && !rule.destinationCities.includes(criteria.destination)) {
+      if (
+        criteria.destination &&
+        !rule.destinationCities.includes(criteria.destination)
+      ) {
         return false;
       }
     }
 
     // Check booking class
     if (rule.bookingClasses && rule.bookingClasses.length > 0) {
-      if (criteria.bookingClass && !rule.bookingClasses.includes(criteria.bookingClass)) {
+      if (
+        criteria.bookingClass &&
+        !rule.bookingClasses.includes(criteria.bookingClass)
+      ) {
         return false;
       }
     }
 
     // Check cabin class
     if (rule.cabinClasses && rule.cabinClasses.length > 0) {
-      if (criteria.cabinClass && !rule.cabinClasses.includes(criteria.cabinClass)) {
+      if (
+        criteria.cabinClass &&
+        !rule.cabinClasses.includes(criteria.cabinClass)
+      ) {
         return false;
       }
     }
@@ -225,7 +247,10 @@ export class DealMatchingEngine {
 
     // Check B2B company
     if (rule.b2bCompanyIds && rule.b2bCompanyIds.length > 0) {
-      if (context.companyId && !rule.b2bCompanyIds.includes(context.companyId)) {
+      if (
+        context.companyId &&
+        !rule.b2bCompanyIds.includes(context.companyId)
+      ) {
         return false;
       }
     }
@@ -236,14 +261,18 @@ export class DealMatchingEngine {
   /**
    * Calculate deal discount
    */
-  private calculateDealDiscount(deal: SupplierDeal, baseAmount: number, criteria: SearchCriteria): number {
+  private calculateDealDiscount(
+    deal: SupplierDeal,
+    baseAmount: number,
+    criteria: SearchCriteria,
+  ): number {
     let discount = 0;
 
-    if (deal.discountType === 'percentage') {
+    if (deal.discountType === "percentage") {
       discount = (baseAmount * deal.discountValue) / 100;
-    } else if (deal.discountType === 'fixed') {
+    } else if (deal.discountType === "fixed") {
       discount = deal.discountValue;
-    } else if (deal.discountType === 'tiered') {
+    } else if (deal.discountType === "tiered") {
       // Tiered discounts would be handled based on order size
       discount = deal.discountValue;
     }
@@ -260,7 +289,7 @@ export class DealMatchingEngine {
    * Generate cache key
    */
   private generateCacheKey(criteria: SearchCriteria): string {
-    return `${criteria.productType}|${criteria.supplierCodes?.join(',')}|${criteria.origin}|${criteria.destination}|${criteria.journeyType}`;
+    return `${criteria.productType}|${criteria.supplierCodes?.join(",")}|${criteria.origin}|${criteria.destination}|${criteria.journeyType}`;
   }
 
   /**
@@ -286,7 +315,7 @@ export class DealMatchingEngine {
   getCacheStats(): { size: number; enabled: boolean } {
     return {
       size: this.matchCache.size,
-      enabled: this.cacheEnabled
+      enabled: this.cacheEnabled,
     };
   }
 }

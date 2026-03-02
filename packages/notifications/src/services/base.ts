@@ -3,7 +3,7 @@
  * Abstract base class for notification services
  */
 
-import { Logger } from 'pino';
+import { Logger } from "pino";
 import {
   Notification,
   NotificationPayload,
@@ -12,7 +12,7 @@ import {
   INotificationService,
   NotificationFilterOptions,
   ValidationError,
-} from '../types';
+} from "../types";
 
 export abstract class BaseNotificationService implements INotificationService {
   protected logger: Logger;
@@ -26,27 +26,32 @@ export abstract class BaseNotificationService implements INotificationService {
    */
   protected validatePayload(payload: NotificationPayload): void {
     if (!payload.userId) {
-      throw new ValidationError('userId is required');
+      throw new ValidationError("userId is required");
     }
 
     if (!payload.type) {
-      throw new ValidationError('Notification type is required');
+      throw new ValidationError("Notification type is required");
     }
 
     if (!payload.title || payload.title.trim().length === 0) {
-      throw new ValidationError('Notification title is required');
+      throw new ValidationError("Notification title is required");
     }
 
     if (!payload.message || payload.message.trim().length === 0) {
-      throw new ValidationError('Notification message is required');
+      throw new ValidationError("Notification message is required");
     }
 
     if (payload.channels && payload.channels.length === 0) {
-      throw new ValidationError('At least one notification channel is required');
+      throw new ValidationError(
+        "At least one notification channel is required",
+      );
     }
 
-    if (payload.priority && !['low', 'medium', 'high', 'urgent'].includes(payload.priority)) {
-      throw new ValidationError('Invalid notification priority');
+    if (
+      payload.priority &&
+      !["low", "medium", "high", "urgent"].includes(payload.priority)
+    ) {
+      throw new ValidationError("Invalid notification priority");
     }
   }
 
@@ -54,7 +59,12 @@ export abstract class BaseNotificationService implements INotificationService {
    * Validate channel
    */
   protected validateChannel(channel: NotificationChannelType): boolean {
-    const validChannels: NotificationChannelType[] = ['email', 'sms', 'push', 'in_app'];
+    const validChannels: NotificationChannelType[] = [
+      "email",
+      "sms",
+      "push",
+      "in_app",
+    ];
     return validChannels.includes(channel);
   }
 
@@ -62,13 +72,20 @@ export abstract class BaseNotificationService implements INotificationService {
    * Abstract methods to be implemented by subclasses
    */
   abstract sendNotification(payload: NotificationPayload): Promise<string>;
-  abstract getNotifications(userId: string, limit: number, offset: number): Promise<Notification[]>;
+  abstract getNotifications(
+    userId: string,
+    limit: number,
+    offset: number,
+  ): Promise<Notification[]>;
   abstract markAsRead(notificationId: string): Promise<void>;
   abstract markAllAsRead(userId: string): Promise<void>;
   abstract deleteNotification(notificationId: string): Promise<void>;
   abstract getUnreadCount(userId: string): Promise<number>;
   abstract getPreferences(userId: string): Promise<NotificationPreferences>;
-  abstract updatePreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<void>;
+  abstract updatePreferences(
+    userId: string,
+    preferences: Partial<NotificationPreferences>,
+  ): Promise<void>;
 
   /**
    * Helper method to log notification events
@@ -76,7 +93,7 @@ export abstract class BaseNotificationService implements INotificationService {
   protected logNotificationEvent(
     notificationId: string,
     event: string,
-    details?: Record<string, any>
+    details?: Record<string, any>,
   ): void {
     this.logger.info(
       {
@@ -84,7 +101,7 @@ export abstract class BaseNotificationService implements INotificationService {
         event,
         ...details,
       },
-      `Notification event: ${event}`
+      `Notification event: ${event}`,
     );
   }
 
@@ -98,7 +115,7 @@ export abstract class BaseNotificationService implements INotificationService {
         stack: error.stack,
         ...context,
       },
-      'Notification error occurred'
+      "Notification error occurred",
     );
   }
 
@@ -107,7 +124,7 @@ export abstract class BaseNotificationService implements INotificationService {
    */
   protected applyFilters(
     notifications: Notification[],
-    filters: NotificationFilterOptions
+    filters: NotificationFilterOptions,
   ): Notification[] {
     let filtered = [...notifications];
 
@@ -139,8 +156,8 @@ export abstract class BaseNotificationService implements INotificationService {
    */
   protected sortNotifications(
     notifications: Notification[],
-    sortBy: keyof Notification = 'createdAt',
-    order: 'asc' | 'desc' = 'desc'
+    sortBy: keyof Notification = "createdAt",
+    order: "asc" | "desc" = "desc",
   ): Notification[] {
     return notifications.sort((a, b) => {
       let aVal = a[sortBy];
@@ -156,7 +173,7 @@ export abstract class BaseNotificationService implements INotificationService {
         return aVal === undefined ? 1 : -1;
       }
 
-      if (order === 'asc') {
+      if (order === "asc") {
         return aVal > bVal ? 1 : -1;
       } else {
         return aVal < bVal ? 1 : -1;

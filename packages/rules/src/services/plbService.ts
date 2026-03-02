@@ -1,5 +1,5 @@
 // @ts-ignore
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 import {
   PLBProgram,
   PLBProgramCreate,
@@ -13,8 +13,8 @@ import {
   AirlinePerformance,
   PLBStatus,
   PLBPeriodType,
-  BookingStatus
-} from '../types';
+  BookingStatus,
+} from "../types";
 
 /**
  * Airline PLB (Performance Linked Bonus) Service
@@ -37,12 +37,14 @@ export class PLBService {
       const where = airlineId ? { airlineId } : {};
       const programs = await this.prisma.airlinePLBPrograms.findMany({
         where,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       return programs as PLBProgram[];
     } catch (error) {
-      throw new Error(`Failed to get PLB programs: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get PLB programs: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -58,18 +60,20 @@ export class PLBService {
           name: data.name,
           code: data.code,
           plbType: data.plbType,
-          status: 'active',
+          status: "active",
           basePercentage: data.basePercentage ?? null,
           validFrom: data.validFrom,
           validTo: data.validTo,
           createdAt: new Date(),
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return program as PLBProgram;
     } catch (error) {
-      throw new Error(`Failed to create PLB program: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to create PLB program: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -80,12 +84,14 @@ export class PLBService {
     try {
       const tiers = await this.prisma.airlinePLBTiers.findMany({
         where: { plbProgramId: programId },
-        orderBy: { tierLevel: 'asc' }
+        orderBy: { tierLevel: "asc" },
       });
 
       return tiers as PLBTier[];
     } catch (error) {
-      throw new Error(`Failed to get PLB tiers: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get PLB tiers: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -105,13 +111,15 @@ export class PLBService {
           minGrowthPercentage: data.minGrowthPercentage ?? null,
           bonusPercentage: data.bonusPercentage,
           maxBonusAmount: data.maxBonusAmount ?? null,
-          createdAt: new Date()
-        }
+          createdAt: new Date(),
+        },
       });
 
       return tier as PLBTier;
     } catch (error) {
-      throw new Error(`Failed to add PLB tier: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to add PLB tier: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -132,10 +140,10 @@ export class PLBService {
       const program = await this.prisma.airlinePLBPrograms.findFirst({
         where: {
           airlineId: bookingData.airlineId,
-          status: 'active',
+          status: "active",
           validFrom: { lte: new Date() },
-          validTo: { gte: new Date() }
-        }
+          validTo: { gte: new Date() },
+        },
       });
 
       await this.prisma.airlineBookingAnalytics.create({
@@ -150,11 +158,13 @@ export class PLBService {
           plbProgramId: program?.id,
           plbEligible: !!program,
           plbEligibleAmount: program ? bookingData.baseFare : 0,
-          bookedAt: new Date()
-        }
+          bookedAt: new Date(),
+        },
       });
     } catch (error) {
-      throw new Error(`Failed to track booking: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to track booking: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -169,38 +179,52 @@ export class PLBService {
           airlineId: data.airlineId,
           plbProgramId: data.plbProgramId,
           bookedAt: { gte: data.periodStart, lte: data.periodEnd },
-          status: { in: ['booked', 'confirmed', 'flown'] }
-        }
+          status: { in: ["booked", "confirmed", "flown"] },
+        },
       });
 
       // Get program and tiers
       const program = await this.prisma.airlinePLBPrograms.findUnique({
-        where: { id: data.plbProgramId }
+        where: { id: data.plbProgramId },
       });
 
       const tiers = await this.getPLBTiers(data.plbProgramId);
 
       // Calculate metrics
       const totalBookings = bookings.length;
-      const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.totalFare?.toNumber() || 0), 0);
+      const totalRevenue = bookings.reduce(
+        (sum: number, b: any) => sum + (b.totalFare?.toNumber() || 0),
+        0,
+      );
       const totalPassengers = totalBookings;
       const revenueGrowth = data.revenueGrowth || 0;
 
       // Find applicable tier
-      const applicableTier = tiers.find(t => {
+      const applicableTier = tiers.find((t) => {
         let matches = true;
         if (t.minBookings && totalBookings < t.minBookings) matches = false;
-        if (t.minRevenue && totalRevenue < Number(t.minRevenue)) matches = false;
-        if (t.minPassengers && totalPassengers < t.minPassengers) matches = false;
-        if (t.minGrowthPercentage && revenueGrowth < Number(t.minGrowthPercentage)) matches = false;
+        if (t.minRevenue && totalRevenue < Number(t.minRevenue))
+          matches = false;
+        if (t.minPassengers && totalPassengers < t.minPassengers)
+          matches = false;
+        if (
+          t.minGrowthPercentage &&
+          revenueGrowth < Number(t.minGrowthPercentage)
+        )
+          matches = false;
         return matches;
       });
 
       // Calculate bonus
-      const bonusPercent = applicableTier ? Number(applicableTier.bonusPercentage) : 0;
+      const bonusPercent = applicableTier
+        ? Number(applicableTier.bonusPercentage)
+        : 0;
       let calculatedBonus = (totalRevenue * bonusPercent) / 100;
       if (applicableTier?.maxBonusAmount) {
-        calculatedBonus = Math.min(calculatedBonus, Number(applicableTier.maxBonusAmount));
+        calculatedBonus = Math.min(
+          calculatedBonus,
+          Number(applicableTier.maxBonusAmount),
+        );
       }
 
       const snapshot = await this.prisma.airlinePLBSnapshots.create({
@@ -218,9 +242,9 @@ export class PLBService {
           calculatedBonusAmount: calculatedBonus,
           achievedTierName: applicableTier?.tierName,
           achievedTierLevel: applicableTier?.tierLevel,
-          calculationStatus: 'calculated' as PLBStatus,
-          createdAt: new Date()
-        }
+          calculationStatus: "calculated" as PLBStatus,
+          createdAt: new Date(),
+        },
       });
 
       return {
@@ -234,29 +258,36 @@ export class PLBService {
         totalBookings: snapshot.totalBookings,
         totalRevenue: Number(snapshot.totalRevenue),
         totalPassengers: snapshot.totalPassengers,
-        revenueGrowth: snapshot.revenueGrowth ? Number(snapshot.revenueGrowth) : undefined,
+        revenueGrowth: snapshot.revenueGrowth
+          ? Number(snapshot.revenueGrowth)
+          : undefined,
         calculatedBonusAmount: Number(snapshot.calculatedBonusAmount),
         achievedTierName: snapshot.achievedTierName || undefined,
         achievedTierLevel: snapshot.achievedTierLevel || undefined,
         calculationStatus: snapshot.calculationStatus as PLBStatus,
-        createdAt: snapshot.createdAt
+        createdAt: snapshot.createdAt,
       };
     } catch (error) {
-      throw new Error(`Failed to generate snapshot: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to generate snapshot: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get airline performance
    */
-  async getAirlinePerformance(airlineId: number, periodDays: number = 30): Promise<AirlinePerformance | null> {
+  async getAirlinePerformance(
+    airlineId: number,
+    periodDays: number = 30,
+  ): Promise<AirlinePerformance | null> {
     try {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - periodDays);
 
       const program = await this.prisma.airlinePLBPrograms.findFirst({
-        where: { airlineId, status: 'active' }
+        where: { airlineId, status: "active" },
       });
 
       if (!program) return null;
@@ -266,48 +297,55 @@ export class PLBService {
           airlineId,
           plbProgramId: program.id,
           bookedAt: { gte: startDate, lte: endDate },
-          status: { in: ['booked', 'confirmed', 'flown'] }
-        }
+          status: { in: ["booked", "confirmed", "flown"] },
+        },
       });
 
       const totalBookings = bookings.length;
-      const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.totalFare?.toNumber() || 0), 0);
+      const totalRevenue = bookings.reduce(
+        (sum: number, b: any) => sum + (b.totalFare?.toNumber() || 0),
+        0,
+      );
 
       // Get latest snapshot to find achieved tier
       const latestSnapshot = await this.prisma.airlinePLBSnapshots.findFirst({
         where: { plbProgramId: program.id, airlineId },
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
 
       return {
         airlineId,
         airlineCode: program.airlineCode,
         airlineName: program.airlineCode,
-        currentTier: latestSnapshot?.achievedTierName || 'Bronze',
+        currentTier: latestSnapshot?.achievedTierName || "Bronze",
         totalBookings,
         totalRevenue,
         calculatedBonus: Number(latestSnapshot?.calculatedBonusAmount || 0),
         percentageOfTotal: 0,
-        status: (latestSnapshot?.calculationStatus || 'pending') as PLBStatus
+        status: (latestSnapshot?.calculationStatus || "pending") as PLBStatus,
       };
     } catch (error) {
-      throw new Error(`Failed to get airline performance: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get airline performance: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Get PLB dashboard overview
    */
-  async getDashboardOverview(periodType: PLBPeriodType = 'monthly'): Promise<PLBDashboardOverview> {
+  async getDashboardOverview(
+    periodType: PLBPeriodType = "monthly",
+  ): Promise<PLBDashboardOverview> {
     try {
       const programs = await this.prisma.airlinePLBPrograms.findMany({
-        where: { status: 'active' }
+        where: { status: "active" },
       });
 
       const snapshots = await this.prisma.airlinePLBSnapshots.findMany({
-        where: { calculationStatus: 'calculated' },
-        orderBy: { createdAt: 'desc' },
-        take: programs.length
+        where: { calculationStatus: "calculated" },
+        orderBy: { createdAt: "desc" },
+        take: programs.length,
       });
 
       let totalBonus = 0;
@@ -326,15 +364,23 @@ export class PLBService {
       return {
         period: periodType,
         totalPrograms: programs.length,
-        activePrograms: programs.filter((p: PLBProgram) => p.status === 'active').length,
-        totalAirlines: new Set(programs.map((p: PLBProgram) => p.airlineId)).size,
+        activePrograms: programs.filter(
+          (p: PLBProgram) => p.status === "active",
+        ).length,
+        totalAirlines: new Set(programs.map((p: PLBProgram) => p.airlineId))
+          .size,
         totalBonus,
-        averageBonusPerAirline: programs.length > 0 ? totalBonus / programs.length : 0,
+        averageBonusPerAirline:
+          programs.length > 0 ? totalBonus / programs.length : 0,
         topPerformers: topPerformers.slice(0, 5),
-        pendingPayments: snapshots.filter((s: PLBSnapshot) => s.calculationStatus === 'approved').length
+        pendingPayments: snapshots.filter(
+          (s: PLBSnapshot) => s.calculationStatus === "approved",
+        ).length,
       };
     } catch (error) {
-      throw new Error(`Failed to get dashboard overview: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get dashboard overview: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -346,7 +392,7 @@ export class PLBService {
     airlineId: number,
     periodStart: Date,
     periodEnd: Date,
-    periodType: PLBPeriodType
+    periodType: PLBPeriodType,
   ): Promise<PLBCalculationBreakdown> {
     try {
       const bookings = await this.prisma.airlineBookingAnalytics.findMany({
@@ -354,30 +400,39 @@ export class PLBService {
           plbProgramId: programId,
           airlineId,
           bookedAt: { gte: periodStart, lte: periodEnd },
-          status: { in: ['booked', 'confirmed', 'flown'] }
-        }
+          status: { in: ["booked", "confirmed", "flown"] },
+        },
       });
 
       const program = await this.prisma.airlinePLBPrograms.findUnique({
-        where: { id: programId }
+        where: { id: programId },
       });
 
       const tiers = await this.getPLBTiers(programId);
 
       const totalBookings = bookings.length;
-      const totalRevenue = bookings.reduce((sum: number, b: any) => sum + (b.totalFare?.toNumber() || 0), 0);
+      const totalRevenue = bookings.reduce(
+        (sum: number, b: any) => sum + (b.totalFare?.toNumber() || 0),
+        0,
+      );
       const totalPassengers = totalBookings;
-      const averageBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+      const averageBookingValue =
+        totalBookings > 0 ? totalRevenue / totalBookings : 0;
 
-      const applicableTier = tiers.find(t => totalBookings >= (t.minBookings || 0));
+      const applicableTier = tiers.find(
+        (t) => totalBookings >= (t.minBookings || 0),
+      );
 
-      const baseBonus = (totalRevenue * Number(program?.basePercentage || 0)) / 100;
-      const bonusPercentage = applicableTier ? Number(applicableTier.bonusPercentage) : 0;
+      const baseBonus =
+        (totalRevenue * Number(program?.basePercentage || 0)) / 100;
+      const bonusPercentage = applicableTier
+        ? Number(applicableTier.bonusPercentage)
+        : 0;
       const finalBonus = (totalRevenue * bonusPercentage) / 100;
 
       return {
         plbProgramId: programId,
-        airlineCode: program?.airlineCode || '',
+        airlineCode: program?.airlineCode || "",
         periodType,
         periodStart,
         periodEnd,
@@ -386,24 +441,26 @@ export class PLBService {
           totalRevenue,
           totalPassengers,
           averageBookingValue,
-          revenueGrowth: 0
+          revenueGrowth: 0,
         },
         tierAnalysis: {
-          currentTier: applicableTier?.tierName || 'Entry',
+          currentTier: applicableTier?.tierName || "Entry",
           currentTierLevel: applicableTier?.tierLevel || 1,
           bonusPercentage,
           calculatedBonus: finalBonus,
           nextTierThreshold: undefined,
-          gapToNextTier: undefined
+          gapToNextTier: undefined,
         },
         breakdown: {
           baseBonus,
           finalBonus,
-          deductions: 0
-        }
+          deductions: 0,
+        },
       };
     } catch (error) {
-      throw new Error(`Failed to calculate PLB breakdown: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to calculate PLB breakdown: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -415,9 +472,9 @@ export class PLBService {
       const snapshot = await this.prisma.airlinePLBSnapshots.update({
         where: { id: snapshotId },
         data: {
-          calculationStatus: 'approved',
-          approvedAt: new Date()
-        }
+          calculationStatus: "approved",
+          approvedAt: new Date(),
+        },
       });
 
       return {
@@ -434,24 +491,29 @@ export class PLBService {
         calculatedBonusAmount: Number(snapshot.calculatedBonusAmount),
         achievedTierName: snapshot.achievedTierName || undefined,
         calculationStatus: snapshot.calculationStatus as PLBStatus,
-        approvedAt: snapshot.approvedAt || undefined
+        approvedAt: snapshot.approvedAt || undefined,
       };
     } catch (error) {
-      throw new Error(`Failed to approve PLB snapshot: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to approve PLB snapshot: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   /**
    * Process PLB payment
    */
-  async processPLBPayment(snapshotId: string, paymentReference: string): Promise<PLBSnapshot> {
+  async processPLBPayment(
+    snapshotId: string,
+    paymentReference: string,
+  ): Promise<PLBSnapshot> {
     try {
       const snapshot = await this.prisma.airlinePLBSnapshots.update({
         where: { id: snapshotId },
         data: {
-          calculationStatus: 'paid',
-          paidAt: new Date()
-        }
+          calculationStatus: "paid",
+          paidAt: new Date(),
+        },
       });
 
       return {
@@ -467,10 +529,12 @@ export class PLBService {
         totalPassengers: snapshot.totalPassengers,
         calculatedBonusAmount: Number(snapshot.calculatedBonusAmount),
         calculationStatus: snapshot.calculationStatus as PLBStatus,
-        paidAt: snapshot.paidAt || undefined
+        paidAt: snapshot.paidAt || undefined,
       };
     } catch (error) {
-      throw new Error(`Failed to process PLB payment: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to process PLB payment: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 

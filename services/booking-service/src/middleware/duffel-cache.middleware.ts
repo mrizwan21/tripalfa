@@ -1,18 +1,18 @@
 /**
  * Duffel Hybrid Cache Middleware
- * 
- * Integrates Redis + NEON caching into the Duffel API Gateway response cycle
- * 
+ *
+ * Integrates Redis + Neon caching into the Duffel API Gateway response cycle
+ *
  * Flow:
  * 1. Request comes to /api/flights/* endpoint (via API Gateway)
  * 2. Middleware checks Redis cache
  * 3. If miss, request goes to Duffel API
- * 4. Response is processed and stored in NEON
+ * 4. Response is processed and stored in Neon
  * 5. Response is cached in Redis for next request
  * 6. Response returned to frontend
  */
 
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 import {
   DuffelOfferCache,
   DuffelOffersCache,
@@ -23,7 +23,7 @@ import {
   DuffelCacheUtils,
   DUFFEL_CACHE_TTL,
   DuffelCacheKeys,
-} from './duffel-hybrid-cache.service.js';
+} from "./duffel-hybrid-cache.service.js";
 
 // ============================================================================
 // RESPONSE CACHE WRAPPER
@@ -32,7 +32,11 @@ import {
 /**
  * Wraps res.json() to cache responses automatically
  */
-export function setupCacheInterceptor(req: Request, res: Response, next: NextFunction) {
+export function setupCacheInterceptor(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const originalJson = res.json.bind(res);
 
   res.json = function (data: any) {
@@ -40,7 +44,7 @@ export function setupCacheInterceptor(req: Request, res: Response, next: NextFun
     if (data && !data._cache) {
       data._cache = {
         cached: false,
-        source: 'api',
+        source: "api",
         timestamp: new Date().toISOString(),
       };
     }
@@ -58,8 +62,13 @@ export function setupCacheInterceptor(req: Request, res: Response, next: NextFun
 /**
  * Cache middleware for GET /api/flights/offer-requests/:id
  */
-export async function cacheOfferRequestMiddleware(req: Request, res: Response, next: NextFunction) {
-  const id = typeof req.params.id === 'string' ? req.params.id : String(req.params.id);
+export async function cacheOfferRequestMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const id =
+    typeof req.params.id === "string" ? req.params.id : String(req.params.id);
 
   try {
     // Try to get from cache
@@ -67,11 +76,18 @@ export async function cacheOfferRequestMiddleware(req: Request, res: Response, n
     if (cached) {
       return res.json({
         ...cached,
-        _cache: { cached: true, source: cached.source, ttl: DUFFEL_CACHE_TTL.OFFER_REQUEST },
+        _cache: {
+          cached: true,
+          source: cached.source,
+          ttl: DUFFEL_CACHE_TTL.OFFER_REQUEST,
+        },
       });
     }
   } catch (error) {
-    console.error('[CacheMiddleware] Error checking offer request cache:', error);
+    console.error(
+      "[CacheMiddleware] Error checking offer request cache:",
+      error,
+    );
   }
 
   next();
@@ -80,19 +96,28 @@ export async function cacheOfferRequestMiddleware(req: Request, res: Response, n
 /**
  * Cache middleware for GET /api/flights/offers/:id
  */
-export async function cacheOfferMiddleware(req: Request, res: Response, next: NextFunction) {
-  const id = typeof req.params.id === 'string' ? req.params.id : String(req.params.id);
+export async function cacheOfferMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const id =
+    typeof req.params.id === "string" ? req.params.id : String(req.params.id);
 
   try {
     const cached = await DuffelOffersCache.getOffer(id);
     if (cached) {
       return res.json({
         ...cached,
-        _cache: { cached: true, source: cached.source, ttl: DUFFEL_CACHE_TTL.OFFER },
+        _cache: {
+          cached: true,
+          source: cached.source,
+          ttl: DUFFEL_CACHE_TTL.OFFER,
+        },
       });
     }
   } catch (error) {
-    console.error('[CacheMiddleware] Error checking offer cache:', error);
+    console.error("[CacheMiddleware] Error checking offer cache:", error);
   }
 
   next();
@@ -101,19 +126,28 @@ export async function cacheOfferMiddleware(req: Request, res: Response, next: Ne
 /**
  * Cache middleware for GET /api/flights/orders/:id
  */
-export async function cacheOrderMiddleware(req: Request, res: Response, next: NextFunction) {
-  const id = typeof req.params.id === 'string' ? req.params.id : String(req.params.id);
+export async function cacheOrderMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const id =
+    typeof req.params.id === "string" ? req.params.id : String(req.params.id);
 
   try {
     const cached = await DuffelOrderCache.getOrder(id);
     if (cached) {
       return res.json({
         ...cached,
-        _cache: { cached: true, source: cached.source, ttl: DUFFEL_CACHE_TTL.ORDER },
+        _cache: {
+          cached: true,
+          source: cached.source,
+          ttl: DUFFEL_CACHE_TTL.ORDER,
+        },
       });
     }
   } catch (error) {
-    console.error('[CacheMiddleware] Error checking order cache:', error);
+    console.error("[CacheMiddleware] Error checking order cache:", error);
   }
 
   next();
@@ -122,22 +156,30 @@ export async function cacheOrderMiddleware(req: Request, res: Response, next: Ne
 /**
  * Cache middleware for GET /api/flights/seat-maps
  */
-export async function cacheSeatMapMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function cacheSeatMapMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const { offer_id, order_id } = req.query;
 
   try {
     const cached = await DuffelSeatMapCache.getSeatMap(
       offer_id as string,
-      order_id as string
+      order_id as string,
     );
     if (cached) {
       return res.json({
         ...cached,
-        _cache: { cached: true, source: 'redis', ttl: DUFFEL_CACHE_TTL.SEAT_MAP },
+        _cache: {
+          cached: true,
+          source: "redis",
+          ttl: DUFFEL_CACHE_TTL.SEAT_MAP,
+        },
       });
     }
   } catch (error) {
-    console.error('[CacheMiddleware] Error checking seat map cache:', error);
+    console.error("[CacheMiddleware] Error checking seat map cache:", error);
   }
 
   next();
@@ -146,19 +188,31 @@ export async function cacheSeatMapMiddleware(req: Request, res: Response, next: 
 /**
  * Cache middleware for GET /api/flights/orders/:id/available-services
  */
-export async function cacheAvailableServicesMiddleware(req: Request, res: Response, next: NextFunction) {
-  const id = typeof req.params.id === 'string' ? req.params.id : String(req.params.id);
+export async function cacheAvailableServicesMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const id =
+    typeof req.params.id === "string" ? req.params.id : String(req.params.id);
 
   try {
     const cached = await DuffelServicesCache.getAvailableServices(id);
     if (cached) {
       return res.json({
         data: cached,
-        _cache: { cached: true, source: 'redis', ttl: DUFFEL_CACHE_TTL.AVAILABLE_SERVICES },
+        _cache: {
+          cached: true,
+          source: "redis",
+          ttl: DUFFEL_CACHE_TTL.AVAILABLE_SERVICES,
+        },
       });
     }
   } catch (error) {
-    console.error('[CacheMiddleware] Error checking available services cache:', error);
+    console.error(
+      "[CacheMiddleware] Error checking available services cache:",
+      error,
+    );
   }
 
   next();
@@ -167,19 +221,31 @@ export async function cacheAvailableServicesMiddleware(req: Request, res: Respon
 /**
  * Cache middleware for GET /api/flights/order-cancellations/:id
  */
-export async function cacheCancellationMiddleware(req: Request, res: Response, next: NextFunction) {
-  const id = typeof req.params.id === 'string' ? req.params.id : String(req.params.id);
+export async function cacheCancellationMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const id =
+    typeof req.params.id === "string" ? req.params.id : String(req.params.id);
 
   try {
     const cached = await DuffelCancellationCache.getCancellation(id);
     if (cached) {
       return res.json({
         ...cached,
-        _cache: { cached: true, source: cached.source, ttl: DUFFEL_CACHE_TTL.CANCELLATION },
+        _cache: {
+          cached: true,
+          source: cached.source,
+          ttl: DUFFEL_CACHE_TTL.CANCELLATION,
+        },
       });
     }
   } catch (error) {
-    console.error('[CacheMiddleware] Error checking cancellation cache:', error);
+    console.error(
+      "[CacheMiddleware] Error checking cancellation cache:",
+      error,
+    );
   }
 
   next();
@@ -195,7 +261,7 @@ export async function cacheCancellationMiddleware(req: Request, res: Response, n
 export async function invalidateCacheAfterMutationMiddleware(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const originalJson = res.json.bind(res);
 
@@ -206,41 +272,41 @@ export async function invalidateCacheAfterMutationMiddleware(
       const method = req.method;
 
       try {
-        if (method === 'POST' && path.includes('/orders')) {
+        if (method === "POST" && path.includes("/orders")) {
           const { id } = req.body || {};
           if (id) {
             await DuffelOrderCache.invalidateOrder(id);
             // Also invalidate orders list
-            await DuffelCacheUtils.invalidatePattern('orders:list:*');
+            await DuffelCacheUtils.invalidatePattern("orders:list:*");
           }
-        } else if (method === 'PATCH' && path.includes('/orders')) {
+        } else if (method === "PATCH" && path.includes("/orders")) {
           const { id } = req.params || {};
           if (id) {
             await DuffelOrderCache.invalidateOrder(id);
           }
-        } else if (method === 'POST' && path.includes('/order-services')) {
+        } else if (method === "POST" && path.includes("/order-services")) {
           const { order_id } = req.body || {};
           if (order_id) {
             await DuffelServicesCache.invalidateServices(order_id);
             await DuffelOrderCache.invalidateOrder(order_id);
           }
-        } else if (method === 'POST' && path.includes('/order-cancellations')) {
+        } else if (method === "POST" && path.includes("/order-cancellations")) {
           const { order_id } = req.body || {};
           if (order_id) {
             await DuffelOrderCache.invalidateOrder(order_id);
             // Invalidate cancellations list
-            await DuffelCacheUtils.invalidatePattern('cancellations:list:*');
+            await DuffelCacheUtils.invalidatePattern("cancellations:list:*");
           }
         }
       } catch (error) {
-        console.error('[CacheMiddleware] Error invalidating caches:', error);
+        console.error("[CacheMiddleware] Error invalidating caches:", error);
         // Don't fail the response if cache invalidation fails
       }
     };
 
     // Fire invalidation asynchronously without blocking response
     invalidateCaches().catch((error: any) => {
-      console.error('[CacheMiddleware] Async invalidation error:', error);
+      console.error("[CacheMiddleware] Async invalidation error:", error);
     });
 
     return originalJson(data);
@@ -256,7 +322,11 @@ export async function invalidateCacheAfterMutationMiddleware(
 /**
  * Track cache hit/miss statistics
  */
-export function cacheStatsMiddleware(req: Request, res: Response, next: NextFunction) {
+export function cacheStatsMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   const startTime = Date.now();
   const originalJson = res.json.bind(res);
 
@@ -264,7 +334,7 @@ export function cacheStatsMiddleware(req: Request, res: Response, next: NextFunc
     const duration = Date.now() - startTime;
 
     // Add cache statistics
-    if (data && typeof data === 'object') {
+    if (data && typeof data === "object") {
       data._stats = {
         duration: `${duration}ms`,
         endpoint: req.path,
@@ -286,14 +356,18 @@ export function cacheStatsMiddleware(req: Request, res: Response, next: NextFunc
 /**
  * Warm up cache with frequently accessed data
  */
-export async function warmCacheMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function warmCacheMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   // Only warm cache for GET requests
-  if (req.method !== 'GET') {
+  if (req.method !== "GET") {
     return next();
   }
 
   // Warm cache for list endpoints
-  if (req.path.includes('/offer-requests') && !req.params.id) {
+  if (req.path.includes("/offer-requests") && !req.params.id) {
     // List requests are cached short (5 min)
     // Cache key is generated from query params
     const cacheKey = DuffelCacheKeys.offerRequestList(req.query);
@@ -313,15 +387,17 @@ export async function warmCacheMiddleware(req: Request, res: Response, next: Nex
 export async function cacheErrorFallbackMiddleware(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) {
   const originalStatus = res.status.bind(res);
   const originalJson = res.json.bind(res);
 
   res.status = function (code: number) {
     // If timeout or error, try to serve stale cache
-    if ((code >= 500 || code === 408 || code === 504) && req.method === 'GET') {
-      console.log(`[CacheErrorFallback] API returned ${code}, attempting cache fallback...`);
+    if ((code >= 500 || code === 408 || code === 504) && req.method === "GET") {
+      console.log(
+        `[CacheErrorFallback] API returned ${code}, attempting cache fallback...`,
+      );
 
       // For simplicity, we let the cache middleware handle this
       // In production, could implement stale-write logic
@@ -348,12 +424,15 @@ export function applyCacheMiddlewares(router: any) {
   router.use(cacheStatsMiddleware);
 
   // Specific endpoint caches (GET requests)
-  router.get('/offer-requests/:id', cacheOfferRequestMiddleware);
-  router.get('/offers/:id', cacheOfferMiddleware);
-  router.get('/orders/:id', cacheOrderMiddleware);
-  router.get('/seat-maps', cacheSeatMapMiddleware);
-  router.get('/orders/:id/available-services', cacheAvailableServicesMiddleware);
-  router.get('/order-cancellations/:id', cacheCancellationMiddleware);
+  router.get("/offer-requests/:id", cacheOfferRequestMiddleware);
+  router.get("/offers/:id", cacheOfferMiddleware);
+  router.get("/orders/:id", cacheOrderMiddleware);
+  router.get("/seat-maps", cacheSeatMapMiddleware);
+  router.get(
+    "/orders/:id/available-services",
+    cacheAvailableServicesMiddleware,
+  );
+  router.get("/order-cancellations/:id", cacheCancellationMiddleware);
 
   // Invalidate on mutations
   router.use(invalidateCacheAfterMutationMiddleware);

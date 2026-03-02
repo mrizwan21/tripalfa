@@ -10,10 +10,10 @@ export class RuleEngineError extends Error {
     message: string,
     public readonly code: string,
     public readonly statusCode: number = 400,
-    public readonly details?: Record<string, unknown>
+    public readonly details?: Record<string, unknown>,
   ) {
     super(message);
-    this.name = 'RuleEngineError';
+    this.name = "RuleEngineError";
     Object.setPrototypeOf(this, RuleEngineError.prototype);
   }
 }
@@ -23,13 +23,10 @@ export class RuleEngineError extends Error {
  */
 export class RuleNotFoundError extends RuleEngineError {
   constructor(ruleId: string) {
-    super(
-      `Rule with ID '${ruleId}' not found`,
-      'RULE_NOT_FOUND',
-      404,
-      { ruleId }
-    );
-    this.name = 'RuleNotFoundError';
+    super(`Rule with ID '${ruleId}' not found`, "RULE_NOT_FOUND", 404, {
+      ruleId,
+    });
+    this.name = "RuleNotFoundError";
     Object.setPrototypeOf(this, RuleNotFoundError.prototype);
   }
 }
@@ -39,8 +36,8 @@ export class RuleNotFoundError extends RuleEngineError {
  */
 export class InvalidRuleError extends RuleEngineError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'INVALID_RULE', 400, details);
-    this.name = 'InvalidRuleError';
+    super(message, "INVALID_RULE", 400, details);
+    this.name = "InvalidRuleError";
     Object.setPrototypeOf(this, InvalidRuleError.prototype);
   }
 }
@@ -50,8 +47,11 @@ export class InvalidRuleError extends RuleEngineError {
  */
 export class InvalidCouponError extends RuleEngineError {
   constructor(code: string, reason: string) {
-    super(`Coupon '${code}' is invalid: ${reason}`, 'INVALID_COUPON', 400, { code, reason });
-    this.name = 'InvalidCouponError';
+    super(`Coupon '${code}' is invalid: ${reason}`, "INVALID_COUPON", 400, {
+      code,
+      reason,
+    });
+    this.name = "InvalidCouponError";
     Object.setPrototypeOf(this, InvalidCouponError.prototype);
   }
 }
@@ -61,8 +61,10 @@ export class InvalidCouponError extends RuleEngineError {
  */
 export class CouponNotFoundError extends RuleEngineError {
   constructor(code: string) {
-    super(`Coupon with code '${code}' not found`, 'COUPON_NOT_FOUND', 404, { code });
-    this.name = 'CouponNotFoundError';
+    super(`Coupon with code '${code}' not found`, "COUPON_NOT_FOUND", 404, {
+      code,
+    });
+    this.name = "CouponNotFoundError";
     Object.setPrototypeOf(this, CouponNotFoundError.prototype);
   }
 }
@@ -72,8 +74,8 @@ export class CouponNotFoundError extends RuleEngineError {
  */
 export class PricingCalculationError extends RuleEngineError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'PRICING_CALCULATION_ERROR', 400, details);
-    this.name = 'PricingCalculationError';
+    super(message, "PRICING_CALCULATION_ERROR", 400, details);
+    this.name = "PricingCalculationError";
     Object.setPrototypeOf(this, PricingCalculationError.prototype);
   }
 }
@@ -83,8 +85,8 @@ export class PricingCalculationError extends RuleEngineError {
  */
 export class LoyaltyError extends RuleEngineError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'LOYALTY_ERROR', 400, details);
-    this.name = 'LoyaltyError';
+    super(message, "LOYALTY_ERROR", 400, details);
+    this.name = "LoyaltyError";
     Object.setPrototypeOf(this, LoyaltyError.prototype);
   }
 }
@@ -94,8 +96,8 @@ export class LoyaltyError extends RuleEngineError {
  */
 export class TaxCalculationError extends RuleEngineError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'TAX_CALCULATION_ERROR', 400, details);
-    this.name = 'TaxCalculationError';
+    super(message, "TAX_CALCULATION_ERROR", 400, details);
+    this.name = "TaxCalculationError";
     Object.setPrototypeOf(this, TaxCalculationError.prototype);
   }
 }
@@ -105,8 +107,8 @@ export class TaxCalculationError extends RuleEngineError {
  */
 export class RuleMatchingError extends RuleEngineError {
   constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'RULE_MATCHING_ERROR', 400, details);
-    this.name = 'RuleMatchingError';
+    super(message, "RULE_MATCHING_ERROR", 400, details);
+    this.name = "RuleMatchingError";
     Object.setPrototypeOf(this, RuleMatchingError.prototype);
   }
 }

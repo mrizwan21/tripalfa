@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import type { ProgressConfig } from '@/types/loyalty';
+import React, { useEffect, useState } from "react";
+import type { ProgressConfig } from "@/types/loyalty";
 
 interface TierProgressBarProps {
   currentPoints?: number;
@@ -11,7 +11,7 @@ interface TierProgressBarProps {
 export function TierProgressBar({
   currentPoints = 0,
   nextTierThreshold = 1000,
-  tierName = 'Bronze',
+  tierName = "Bronze",
   config,
 }: TierProgressBarProps) {
   const showLabel = config?.showLabel ?? true;
@@ -22,10 +22,7 @@ export function TierProgressBar({
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const percentage = Math.min(
-      (currentPoints / nextTierThreshold) * 100,
-      100
-    );
+    const percentage = Math.min((currentPoints / nextTierThreshold) * 100, 100);
 
     // Animate progress bar
     if (animated) {
@@ -49,11 +46,12 @@ export function TierProgressBar({
   return (
     <div className="w-full space-y-2">
       {showLabel && (
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <div>
             <p className="text-sm font-bold text-gray-700">{tierName}</p>
             <p className="text-xs text-gray-500">
-              {currentPoints.toLocaleString()} / {nextTierThreshold.toLocaleString()} points
+              {currentPoints.toLocaleString()} /{" "}
+              {nextTierThreshold.toLocaleString()} points
             </p>
           </div>
           {showPercentage && (

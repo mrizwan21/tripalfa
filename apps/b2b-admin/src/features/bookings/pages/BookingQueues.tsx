@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, Clock, RefreshCw, Loader2, MoreVertical, Zap } from "lucide-react";
+import {
+  ArrowUpDown,
+  Clock,
+  RefreshCw,
+  Loader2,
+  MoreVertical,
+  Zap,
+} from "lucide-react";
 import { DataTable } from "@tripalfa/ui-components/ui/data-table";
 import { Badge } from "@tripalfa/ui-components/ui/badge";
 import { Button } from "@tripalfa/ui-components/ui/button";
@@ -13,8 +20,43 @@ import {
 } from "@tripalfa/ui-components/ui/dropdown-menu";
 import api from "@/shared/lib/api";
 
-import { BookingQueueItem as QueueItem, AdminBooking } from "../types";
-import FlightAmendmentWorkflow, { FlightAmendmentRequest } from "../components/FlightAmendmentWorkflow";
+import FlightAmendmentWorkflow, {
+  type FlightAmendmentRequest,
+} from "../components/FlightAmendmentWorkflow";
+
+type QueueItem = {
+  id: string;
+  reference: string;
+  traveler: string;
+  product: string;
+  status: "Pending" | "Confirmed" | "Hold" | "Cancelled";
+  priority: "high" | "medium" | "low";
+  amount: number;
+  currency: string;
+  createdAt: string;
+  channel: string;
+};
+
+type AdminBooking = {
+  id?: string;
+  queueId?: string;
+  reference?: string;
+  bookingRef?: string;
+  traveler?: string;
+  customerName?: string;
+  product?: string;
+  type?: string;
+  status?: string;
+  queueStatus?: string;
+  priority?: string;
+  amount?: number;
+  total?: number;
+  currency?: string;
+  createdAt?: string;
+  issuedDate?: string;
+  channel?: string;
+  source?: string;
+};
 
 const mockQueues: QueueItem[] = [
   {
@@ -55,7 +97,10 @@ const mockQueues: QueueItem[] = [
   },
 ];
 
-const statusVariant: Record<QueueItem["status"], "default" | "secondary" | "destructive"> = {
+const statusVariant: Record<
+  QueueItem["status"],
+  "default" | "secondary" | "destructive"
+> = {
   Confirmed: "default",
   Pending: "secondary",
   Hold: "secondary",
@@ -81,18 +126,24 @@ export default function BookingQueuesPage() {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
-  const [selectedAmendment, setSelectedAmendment] = useState<FlightAmendmentRequest | null>(null);
+  const [selectedAmendment, setSelectedAmendment] =
+    useState<FlightAmendmentRequest | null>(null);
   const [amendmentDialogOpen, setAmendmentDialogOpen] = useState(false);
 
-  const handleStatusUpdate = async (queueId: string, newStatus: QueueItem["status"]) => {
+  const handleStatusUpdate = async (
+    queueId: string,
+    newStatus: QueueItem["status"],
+  ) => {
     setUpdating(queueId);
     setUpdateError(null);
     try {
-      await api.post(`/admin/bookings/${queueId}/status`, { status: newStatus });
+      await api.post(`/admin/bookings/${queueId}/status`, {
+        status: newStatus,
+      });
       setData((prevData) =>
         prevData.map((item) =>
-          item.id === queueId ? { ...item, status: newStatus } : item
-        )
+          item.id === queueId ? { ...item, status: newStatus } : item,
+        ),
       );
     } catch (err) {
       console.error("Failed to update queue status", err);
@@ -105,7 +156,9 @@ export default function BookingQueuesPage() {
   const handleOpenAmendment = async (queueItem: QueueItem) => {
     try {
       // Fetch amendment request details from API
-      const res = await api.get(`/admin/bookings/${queueItem.id}/amendment-request`);
+      const res = await api.get(
+        `/admin/bookings/${queueItem.id}/amendment-request`,
+      );
       const amendmentData = res.data as FlightAmendmentRequest;
       setSelectedAmendment(amendmentData);
       setAmendmentDialogOpen(true);
@@ -149,7 +202,9 @@ export default function BookingQueuesPage() {
       accessorKey: "priority",
       header: "Priority",
       cell: ({ row }) => (
-        <span className={`rounded-full px-2 py-1 text-xs font-medium ${priorityTone[row.original.priority]}`}>
+        <span
+          className={`rounded-full px-2 py-1 text-xs font-medium ${priorityTone[row.original.priority]}`}
+        >
           {row.original.priority.toUpperCase()}
         </span>
       ),
@@ -193,7 +248,9 @@ export default function BookingQueuesPage() {
                   onClick={() => handleStatusUpdate(queueItem.id, status)}
                   disabled={updating === queueItem.id}
                 >
-                  {updating === queueItem.id && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                  {updating === queueItem.id && (
+                    <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  )}
                   Mark {status}
                 </DropdownMenuItem>
               ))}
@@ -209,7 +266,7 @@ export default function BookingQueuesPage() {
               <DropdownMenuItem className="text-blue-600">
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-slate-600">
+              <DropdownMenuItem className="text-muted-foreground">
                 View Audit
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -226,14 +283,27 @@ export default function BookingQueuesPage() {
       try {
         setLoading(true);
         setError(null);
-        const res = await api.get("/admin/bookings/queues", { signal: controller.signal });
-        const raw = (res.data?.queues as AdminBooking[]) || (res.data?.data as AdminBooking[]) || [];
+        const res = await api.get("/admin/bookings/queues", {
+          signal: controller.signal,
+        });
+        const raw =
+          (res.data?.queues as AdminBooking[]) ||
+          (res.data?.data as AdminBooking[]) ||
+          [];
         const normalized: QueueItem[] = raw.map((q) => ({
-          id: String(q.id ?? q.queueId ?? q.reference ?? `tmp-${Math.random().toString(36).slice(2)}`),
+          id: String(
+            q.id ??
+              q.queueId ??
+              q.reference ??
+              `tmp-${Math.random().toString(36).slice(2)}`,
+          ),
           reference: q.reference ?? q.bookingRef ?? "N/A",
           traveler: q.traveler ?? q.customerName ?? "Unknown",
           product: q.product ?? q.type ?? "-",
-          status: (q.status as QueueItem["status"]) ?? (q.queueStatus as QueueItem["status"]) ?? "Pending",
+          status:
+            (q.status as QueueItem["status"]) ??
+            (q.queueStatus as QueueItem["status"]) ??
+            "Pending",
           priority: (q.priority as QueueItem["priority"]) ?? "medium",
           amount: Number(q.amount ?? q.total ?? 0),
           currency: q.currency ?? "USD",
@@ -262,13 +332,22 @@ export default function BookingQueuesPage() {
     setError(null);
     try {
       const res = await api.get("/admin/bookings/queues");
-      const raw = (res.data?.queues as any[]) || (res.data?.data as any[]) || [];
+      const raw =
+        (res.data?.queues as any[]) || (res.data?.data as any[]) || [];
       const normalized: QueueItem[] = raw.map((q) => ({
-        id: String(q.id ?? q.queueId ?? q.reference ?? `tmp-${Math.random().toString(36).slice(2)}`),
+        id: String(
+          q.id ??
+            q.queueId ??
+            q.reference ??
+            `tmp-${Math.random().toString(36).slice(2)}`,
+        ),
         reference: q.reference ?? q.bookingRef ?? "N/A",
         traveler: q.traveler ?? q.customerName ?? "Unknown",
         product: q.product ?? q.type ?? "-",
-        status: (q.status as QueueItem["status"]) ?? (q.queueStatus as QueueItem["status"]) ?? "Pending",
+        status:
+          (q.status as QueueItem["status"]) ??
+          (q.queueStatus as QueueItem["status"]) ??
+          "Pending",
         priority: (q.priority as QueueItem["priority"]) ?? "medium",
         amount: Number(q.amount ?? q.total ?? 0),
         currency: q.currency ?? "USD",
@@ -286,28 +365,45 @@ export default function BookingQueuesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">Booking Queues</h1>
-          <p className="text-sm text-slate-500">Monitor and action queued bookings, holds, and manual reviews.</p>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Booking Queues
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Monitor and action queued bookings, holds, and manual reviews.
+          </p>
         </div>
         <div className="flex gap-2">
           <Link to="/bookings/new/online">
-            <Button variant="outline" size="sm">Start Online Booking</Button>
+            <Button variant="outline" size="sm">
+              Start Online Booking
+            </Button>
           </Link>
           <Link to="/bookings/new/offline">
-            <Button variant="outline" size="sm">Manual Booking</Button>
+            <Button variant="outline" size="sm">
+              Manual Booking
+            </Button>
           </Link>
-          <Button size="sm" variant="secondary" onClick={refreshQueues} disabled={loading}>
-            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} /> {loading ? "Refreshing..." : "Refresh"}
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={refreshQueues}
+            disabled={loading}
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+            />{" "}
+            {loading ? "Refreshing..." : "Refresh"}
           </Button>
         </div>
       </div>
 
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center gap-2 text-sm text-slate-500">
+      <div className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          Queues synced from booking-service via API manager; falling back to mock data if unavailable.
+          Queues synced from booking-service via API manager; falling back to
+          mock data if unavailable.
         </div>
         {error && (
           <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -317,24 +413,22 @@ export default function BookingQueuesPage() {
         {updateError && (
           <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
             {updateError}
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setUpdateError(null)}
               className="ml-2 font-semibold hover:underline"
             >
               Dismiss
-            </button>
+            </Button>
           </div>
         )}
         {loading ? (
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading queues...
           </div>
         ) : (
-          <DataTable
-            columns={columns}
-            data={data}
-            searchKey="traveler"
-          />
+          <DataTable columns={columns} data={data} searchKey="traveler" />
         )}
       </div>
 

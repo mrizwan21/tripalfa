@@ -5,12 +5,12 @@ packages:
 
 # Build dependency controls for faster, more reliable installs
 ignoredBuiltDependencies:
-  - '@nestjs/core'
+  - "@nestjs/core"
 
 onlyBuiltDependencies:
-  - '@prisma/client'
-  - '@prisma/engines'
-  - '@scarf/scarf'
+  - "@prisma/client"
+  - "@prisma/engines"
+  - "@scarf/scarf"
   - esbuild
   - msw
   - prisma

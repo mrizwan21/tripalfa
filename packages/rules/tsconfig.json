@@ -10,21 +10,13 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "paths": {
-      "@tripalfa/shared-types": [
-        "../../packages/shared-types/src/index.ts"
-      ]
+      "@tripalfa/shared-types": ["../../packages/shared-types/src/index.ts"]
     },
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "skipLibCheck": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

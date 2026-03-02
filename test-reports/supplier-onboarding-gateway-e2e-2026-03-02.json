@@ -1,0 +1,162 @@
+{
+  "timestamp": "2026-03-02T16:18:09.992Z",
+  "gatewayBaseUrl": "http://localhost:3020",
+  "steps": [
+    {
+      "name": "Gateway health check",
+      "status": "PASS",
+      "statusCode": 200,
+      "details": "Gateway is reachable"
+    },
+    {
+      "name": "Unauthorized create supplier",
+      "status": "PASS",
+      "statusCode": 401
+    },
+    {
+      "name": "Invalid token create supplier",
+      "status": "PASS",
+      "statusCode": 401
+    },
+    {
+      "name": "Forbidden create supplier",
+      "status": "PASS",
+      "statusCode": 403
+    },
+    {
+      "name": "Create supplier validation: missing fields",
+      "status": "PASS",
+      "statusCode": 400
+    },
+    {
+      "name": "Create supplier validation: invalid type",
+      "status": "PASS",
+      "statusCode": 400
+    },
+    {
+      "name": "Create supplier via gateway",
+      "status": "PASS",
+      "statusCode": 201
+    },
+    {
+      "name": "Capture created supplier id",
+      "status": "PASS",
+      "details": "cmm9dunjw0000pnx327bi0y5d"
+    },
+    {
+      "name": "Duplicate create supplier code",
+      "status": "PASS",
+      "statusCode": 400
+    },
+    {
+      "name": "List suppliers",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Verify created supplier appears in list",
+      "status": "PASS"
+    },
+    {
+      "name": "Get supplier details",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Get supplier not found",
+      "status": "PASS",
+      "statusCode": 404
+    },
+    {
+      "name": "Update supplier",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "List credentials (initial)",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Verify credentials response is array",
+      "status": "PASS"
+    },
+    {
+      "name": "Add credential validation: missing apiKey",
+      "status": "PASS",
+      "statusCode": 400
+    },
+    {
+      "name": "Add supplier credential",
+      "status": "PASS",
+      "statusCode": 201
+    },
+    {
+      "name": "Capture created credential id",
+      "status": "PASS",
+      "details": "cmm9duqxx0001pnx3jq17ckwr"
+    },
+    {
+      "name": "Duplicate credential name",
+      "status": "PASS",
+      "statusCode": 400
+    },
+    {
+      "name": "List supplier credentials",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Verify created credential appears in list",
+      "status": "PASS"
+    },
+    {
+      "name": "Update supplier credential",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Update credential not found",
+      "status": "PASS",
+      "statusCode": 404
+    },
+    {
+      "name": "Trigger supplier sync",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Get supplier sync logs",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Delete supplier credential",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Delete supplier",
+      "status": "PASS",
+      "statusCode": 200
+    },
+    {
+      "name": "Get deleted supplier",
+      "status": "PASS",
+      "statusCode": 404
+    },
+    {
+      "name": "Delete supplier again",
+      "status": "PASS",
+      "statusCode": 404
+    }
+  ],
+  "summary": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0,
+    "skipped": 0
+  },
+  "createdSupplierId": "cmm9dunjw0000pnx327bi0y5d",
+  "createdCredentialId": "cmm9duqxx0001pnx3jq17ckwr"
+}

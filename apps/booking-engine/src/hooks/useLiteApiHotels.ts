@@ -1,9 +1,9 @@
 /**
  * useLiteApiHotels Hook
- * 
+ *
  * React hook for LiteAPI hotel search with built-in state management,
  * caching, Redis hybrid approach, and error handling.
- * 
+ *
  * Architecture matches Duffel flights pattern:
  * - Frontend -> API Manager -> Booking Service -> LiteAPI
  *                                     ↓
@@ -12,18 +12,18 @@
  *                               Neon DB
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { 
-  searchHotels, 
-  getHotelRates, 
-  createPrebook, 
+import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  searchHotels,
+  getHotelRates,
+  createPrebook,
   createHotelBooking,
   type HotelSearchParams,
   type HotelRatesParams,
   type PrebookParams,
   type BookParams,
-  type HotelSearchResult 
-} from '../services/liteApiManager';
+  type HotelSearchResult,
+} from "../services/liteApiManager";
 
 // ============================================================================
 // TYPES
@@ -97,11 +97,17 @@ export interface UseLiteApiHotelRatesReturn {
 
 export interface UseLiteApiBookingOptions {
   /** Callback on prebook success */
-  onPrebookSuccess?: (result: { transactionId: string; expiresAt?: string }) => void;
+  onPrebookSuccess?: (result: {
+    transactionId: string;
+    expiresAt?: string;
+  }) => void;
   /** Callback on prebook error */
   onPrebookError?: (error: string) => void;
   /** Callback on booking success */
-  onBookingSuccess?: (result: { confirmationId: string; bookingRef?: string }) => void;
+  onBookingSuccess?: (result: {
+    confirmationId: string;
+    bookingRef?: string;
+  }) => void;
   /** Callback on booking error */
   onBookingError?: (error: string) => void;
 }
@@ -162,20 +168,28 @@ function getRatesCacheKey(params: HotelRatesParams): string {
   });
 }
 
-function getFromCache<T>(cache: Map<string, CacheEntry<T>>, key: string, ttl: number): T | null {
+function getFromCache<T>(
+  cache: Map<string, CacheEntry<T>>,
+  key: string,
+  ttl: number,
+): T | null {
   const entry = cache.get(key);
   if (!entry) return null;
-  
+
   const now = Date.now();
   if (now - entry.timestamp > ttl) {
     cache.delete(key);
     return null;
   }
-  
+
   return entry.data;
 }
 
-function setCache<T>(cache: Map<string, CacheEntry<T>>, key: string, data: T): void {
+function setCache<T>(
+  cache: Map<string, CacheEntry<T>>,
+  key: string,
+  data: T,
+): void {
   cache.set(key, {
     data,
     timestamp: Date.now(),
@@ -187,7 +201,9 @@ function setCache<T>(cache: Map<string, CacheEntry<T>>, key: string, data: T): v
 // HOTEL SEARCH HOOK
 // ============================================================================
 
-export function useLiteApiHotels(options: UseLiteApiHotelsOptions = {}): UseLiteApiHotelsReturn {
+export function useLiteApiHotels(
+  options: UseLiteApiHotelsOptions = {},
+): UseLiteApiHotelsReturn {
   const {
     initialParams,
     enableCache = true,
@@ -200,7 +216,9 @@ export function useLiteApiHotels(options: UseLiteApiHotelsOptions = {}): UseLite
   const [hotels, setHotels] = useState<HotelSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchParams, setSearchParams] = useState<HotelSearchParams | null>(null);
+  const [searchParams, setSearchParams] = useState<HotelSearchParams | null>(
+    null,
+  );
   const [isCached, setIsCached] = useState(false);
   const [total, setTotal] = useState(0);
 
@@ -218,66 +236,73 @@ export function useLiteApiHotels(options: UseLiteApiHotelsOptions = {}): UseLite
   }, []);
 
   // Search function
-  const search = useCallback(async (params: HotelSearchParams) => {
-    // Cancel previous request
-    if (abortController.current) {
-      abortController.current.abort();
-    }
-    abortController.current = new AbortController();
-
-    // Check cache (Redis-backed via API)
-    const cacheKey = getSearchCacheKey(params);
-    if (enableCache) {
-      const cachedResults = getFromCache(hotelSearchCache, cacheKey, cacheTTL);
-      if (cachedResults) {
-        console.log('[useLiteApiHotels] Using cached results');
-        setHotels(cachedResults);
-        setSearchParams(params);
-        lastSearchParams.current = params;
-        setIsCached(true);
-        setTotal(cachedResults.length);
-        onSuccess?.(cachedResults);
-        return;
+  const search = useCallback(
+    async (params: HotelSearchParams) => {
+      // Cancel previous request
+      if (abortController.current) {
+        abortController.current.abort();
       }
-    }
+      abortController.current = new AbortController();
 
-    setLoading(true);
-    setError(null);
-    setIsCached(false);
-    setSearchParams(params);
-    lastSearchParams.current = params;
-
-    try {
-      const result = await searchHotels(params);
-
-      if (!result.hotels) {
-        throw new Error('Search failed');
+      // Check cache (Redis-backed via API)
+      const cacheKey = getSearchCacheKey(params);
+      if (enableCache) {
+        const cachedResults = getFromCache(
+          hotelSearchCache,
+          cacheKey,
+          cacheTTL,
+        );
+        if (cachedResults) {
+          console.log("[useLiteApiHotels] Using cached results");
+          setHotels(cachedResults);
+          setSearchParams(params);
+          lastSearchParams.current = params;
+          setIsCached(true);
+          setTotal(cachedResults.length);
+          onSuccess?.(cachedResults);
+          return;
+        }
       }
 
-      setHotels(result.hotels);
-      setTotal(result.hotels.length);
-      setIsCached(result.cached || false);
+      setLoading(true);
+      setError(null);
+      setIsCached(false);
+      setSearchParams(params);
+      lastSearchParams.current = params;
 
-      // Cache results
-      if (enableCache && result.hotels.length > 0) {
-        setCache(hotelSearchCache, cacheKey, result.hotels);
+      try {
+        const result = await searchHotels(params);
+
+        if (!result.hotels) {
+          throw new Error("Search failed");
+        }
+
+        setHotels(result.hotels);
+        setTotal(result.hotels.length);
+        setIsCached(result.cached || false);
+
+        // Cache results
+        if (enableCache && result.hotels.length > 0) {
+          setCache(hotelSearchCache, cacheKey, result.hotels);
+        }
+
+        onSuccess?.(result.hotels);
+      } catch (err: any) {
+        // Ignore abort errors
+        if (err.name === "AbortError") return;
+
+        const errorMessage = err?.message || "Failed to search hotels";
+        console.error("[useLiteApiHotels] Search error:", errorMessage);
+        setError(errorMessage);
+        setHotels([]);
+        setTotal(0);
+        onError?.(errorMessage);
+      } finally {
+        setLoading(false);
       }
-
-      onSuccess?.(result.hotels);
-    } catch (err: any) {
-      // Ignore abort errors
-      if (err.name === 'AbortError') return;
-
-      const errorMessage = err?.message || 'Failed to search hotels';
-      console.error('[useLiteApiHotels] Search error:', errorMessage);
-      setError(errorMessage);
-      setHotels([]);
-      setTotal(0);
-      onError?.(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [enableCache, cacheTTL, onSuccess, onError]);
+    },
+    [enableCache, cacheTTL, onSuccess, onError],
+  );
 
   // Reset function
   const reset = useCallback(() => {
@@ -323,7 +348,9 @@ export function useLiteApiHotels(options: UseLiteApiHotelsOptions = {}): UseLite
 // HOTEL RATES HOOK
 // ============================================================================
 
-export function useLiteApiHotelRates(options: UseLiteApiHotelRatesOptions = {}): UseLiteApiHotelRatesReturn {
+export function useLiteApiHotelRates(
+  options: UseLiteApiHotelRatesOptions = {},
+): UseLiteApiHotelRatesReturn {
   const {
     initialParams,
     enableCache = true,
@@ -349,56 +376,59 @@ export function useLiteApiHotelRates(options: UseLiteApiHotelRatesOptions = {}):
     };
   }, []);
 
-  const fetchRates = useCallback(async (newParams: HotelRatesParams) => {
-    if (abortController.current) {
-      abortController.current.abort();
-    }
-    abortController.current = new AbortController();
-
-    const cacheKey = getRatesCacheKey(newParams);
-    if (enableCache) {
-      const cached = getFromCache(hotelRatesCache, cacheKey, cacheTTL);
-      if (cached) {
-        console.log('[useLiteApiHotelRates] Using cached rates');
-        setRates(cached);
-        setParams(newParams);
-        lastParams.current = newParams;
-        setIsCached(true);
-        onSuccess?.(cached);
-        return;
+  const fetchRates = useCallback(
+    async (newParams: HotelRatesParams) => {
+      if (abortController.current) {
+        abortController.current.abort();
       }
-    }
+      abortController.current = new AbortController();
 
-    setLoading(true);
-    setError(null);
-    setIsCached(false);
-    setParams(newParams);
-    lastParams.current = newParams;
-
-    try {
-      const result = await getHotelRates(newParams);
-      const ratesData = result.hotels || [];
-      
-      setRates(ratesData);
-      setIsCached(result.cached || false);
-
-      if (enableCache && ratesData.length > 0) {
-        setCache(hotelRatesCache, cacheKey, ratesData);
+      const cacheKey = getRatesCacheKey(newParams);
+      if (enableCache) {
+        const cached = getFromCache(hotelRatesCache, cacheKey, cacheTTL);
+        if (cached) {
+          console.log("[useLiteApiHotelRates] Using cached rates");
+          setRates(cached);
+          setParams(newParams);
+          lastParams.current = newParams;
+          setIsCached(true);
+          onSuccess?.(cached);
+          return;
+        }
       }
 
-      onSuccess?.(ratesData);
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      
-      const errorMessage = err?.message || 'Failed to fetch hotel rates';
-      console.error('[useLiteApiHotelRates] Error:', errorMessage);
-      setError(errorMessage);
-      setRates([]);
-      onError?.(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [enableCache, cacheTTL, onSuccess, onError]);
+      setLoading(true);
+      setError(null);
+      setIsCached(false);
+      setParams(newParams);
+      lastParams.current = newParams;
+
+      try {
+        const result = await getHotelRates(newParams);
+        const ratesData = result.hotels || [];
+
+        setRates(ratesData);
+        setIsCached(result.cached || false);
+
+        if (enableCache && ratesData.length > 0) {
+          setCache(hotelRatesCache, cacheKey, ratesData);
+        }
+
+        onSuccess?.(ratesData);
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
+
+        const errorMessage = err?.message || "Failed to fetch hotel rates";
+        console.error("[useLiteApiHotelRates] Error:", errorMessage);
+        setError(errorMessage);
+        setRates([]);
+        onError?.(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [enableCache, cacheTTL, onSuccess, onError],
+  );
 
   const reset = useCallback(() => {
     setRates([]);
@@ -439,59 +469,69 @@ export function useLiteApiHotelRates(options: UseLiteApiHotelRatesOptions = {}):
 // BOOKING HOOK (Prebook + Book)
 // ============================================================================
 
-export function useLiteApiBooking(options: UseLiteApiBookingOptions = {}): UseLiteApiBookingReturn {
-  const {
-    onPrebookSuccess,
-    onPrebookError,
-    onBookingSuccess,
-    onBookingError,
-  } = options;
+export function useLiteApiBooking(
+  options: UseLiteApiBookingOptions = {},
+): UseLiteApiBookingReturn {
+  const { onPrebookSuccess, onPrebookError, onBookingSuccess, onBookingError } =
+    options;
 
   // Prebook state
   const [prebookLoading, setPrebookLoading] = useState(false);
   const [prebookError, setPrebookError] = useState<string | null>(null);
-  const [prebook, setPrebook] = useState<{ transactionId: string; expiresAt?: string } | null>(null);
+  const [prebook, setPrebook] = useState<{
+    transactionId: string;
+    expiresAt?: string;
+  } | null>(null);
 
   // Booking state
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
-  const [booking, setBooking] = useState<{ confirmationId: string; bookingRef?: string } | null>(null);
+  const [booking, setBooking] = useState<{
+    confirmationId: string;
+    bookingRef?: string;
+  } | null>(null);
 
   // Create prebook
-  const createPrebookSession = useCallback(async (params: PrebookParams) => {
-    setPrebookLoading(true);
-    setPrebookError(null);
+  const createPrebookSession = useCallback(
+    async (params: PrebookParams) => {
+      setPrebookLoading(true);
+      setPrebookError(null);
 
-    try {
-      const result = await createPrebook(params);
-      setPrebook(result);
-      onPrebookSuccess?.(result);
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to create prebook';
-      setPrebookError(errorMessage);
-      onPrebookError?.(errorMessage);
-    } finally {
-      setPrebookLoading(false);
-    }
-  }, [onPrebookSuccess, onPrebookError]);
+      try {
+        const result = await createPrebook(params);
+        setPrebook(result);
+        onPrebookSuccess?.(result);
+      } catch (err: any) {
+        const errorMessage = err?.message || "Failed to create prebook";
+        setPrebookError(errorMessage);
+        onPrebookError?.(errorMessage);
+      } finally {
+        setPrebookLoading(false);
+      }
+    },
+    [onPrebookSuccess, onPrebookError],
+  );
 
   // Create booking
-  const createBooking = useCallback(async (params: BookParams) => {
-    setBookingLoading(true);
-    setBookingError(null);
+  const createBooking = useCallback(
+    async (params: BookParams) => {
+      setBookingLoading(true);
+      setBookingError(null);
 
-    try {
-      const result = await createHotelBooking(params);
-      setBooking(result);
-      onBookingSuccess?.(result);
-    } catch (err: any) {
-      const errorMessage = err?.message || 'Failed to create booking';
-      setBookingError(errorMessage);
-      onBookingError?.(errorMessage);
-    } finally {
-      setBookingLoading(false);
-    }
-  }, [onBookingSuccess, onBookingError]);
+      try {
+        const result = await createHotelBooking(params);
+        setBooking(result);
+        onBookingSuccess?.(result);
+      } catch (err: any) {
+        const errorMessage = err?.message || "Failed to create booking";
+        setBookingError(errorMessage);
+        onBookingError?.(errorMessage);
+      } finally {
+        setBookingLoading(false);
+      }
+    },
+    [onBookingSuccess, onBookingError],
+  );
 
   // Reset all state
   const reset = useCallback(() => {
@@ -547,20 +587,22 @@ export function useHotelBooking() {
 export function useHotelPriceTracker(
   location: string,
   checkin: string,
-  checkout: string
+  checkout: string,
 ) {
   const [lowestPrice, setLowestPrice] = useState<number | null>(null);
-  const [priceHistory, setPriceHistory] = useState<Array<{ price: number; date: string }>>([]);
-  
+  const [priceHistory, setPriceHistory] = useState<
+    Array<{ price: number; date: string }>
+  >([]);
+
   const { search, loading, hotels } = useLiteApiHotels({
     onSuccess: (results) => {
       if (results.length > 0) {
-        const prices = results.map(h => h.price?.amount || 0);
-        const minPrice = Math.min(...prices.filter(p => p > 0));
+        const prices = results.map((h) => h.price?.amount || 0);
+        const minPrice = Math.min(...prices.filter((p) => p > 0));
         setLowestPrice(minPrice);
-        setPriceHistory(prev => [
+        setPriceHistory((prev) => [
           ...prev,
-          { price: minPrice, date: new Date().toISOString() }
+          { price: minPrice, date: new Date().toISOString() },
         ]);
       }
     },
@@ -583,13 +625,14 @@ export function useHotelPriceTracker(
     priceHistory,
     loading,
     hotels,
-    refresh: () => search({
-      location,
-      checkin,
-      checkout,
-      adults: 2,
-      rooms: 1,
-    }),
+    refresh: () =>
+      search({
+        location,
+        checkin,
+        checkout,
+        adults: 2,
+        rooms: 1,
+      }),
   };
 }
 

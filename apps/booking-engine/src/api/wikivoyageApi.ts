@@ -4,8 +4,8 @@
  * Based on mcp-wikivoyage implementation
  */
 
-const BASE_URL = 'https://en.wikivoyage.org/w/api.php';
-const USER_AGENT = 'TripAlfa-BookingEngine/1.0 (travel planning app)';
+const BASE_URL = "https://en.wikivoyage.org/w/api.php";
+const USER_AGENT = "TripAlfa-BookingEngine/1.0 (travel planning app)";
 
 export interface WikivoyageSearchResult {
   title: string;
@@ -49,14 +49,14 @@ class WikivoyageApi {
    */
   private async wikiRequest<T>(params: Record<string, string>): Promise<T> {
     const url = new URL(BASE_URL);
-    url.searchParams.set('format', 'json');
-    url.searchParams.set('origin', '*');
-    
+    url.searchParams.set("format", "json");
+    url.searchParams.set("origin", "*");
+
     for (const [key, value] of Object.entries(params)) {
       url.searchParams.set(key, value);
     }
 
-    const cacheKey = `${params.action}:${params.titles || params.srsearch || ''}:${params.prop || ''}`;
+    const cacheKey = `${params.action}:${params.titles || params.srsearch || ""}:${params.prop || ""}`;
     const cached = this.cache.get(cacheKey);
 
     if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
@@ -64,11 +64,13 @@ class WikivoyageApi {
     }
 
     const response = await fetch(url.toString(), {
-      headers: { 'User-Agent': USER_AGENT },
+      headers: { "User-Agent": USER_AGENT },
     });
 
     if (!response.ok) {
-      throw new Error(`Wikivoyage API error: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Wikivoyage API error: ${response.status} ${response.statusText}`,
+      );
     }
 
     const data = await response.json();
@@ -81,33 +83,36 @@ class WikivoyageApi {
    */
   private stripHtml(html: string): string {
     return html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/&/g, '&')
-      .replace(/</g, '<')
-      .replace(/>/g, '>')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&/g, "&")
+      .replace(/</g, "<")
+      .replace(/>/g, ">")
       .replace(/"/g, '"')
       .replace(/&#039;/g, "'")
-      .replace(/&nbsp;/g, ' ')
-      .replace(/\n{3,}/g, '\n\n')
+      .replace(/&nbsp;/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
 
   /**
    * Search for travel destinations
    */
-  async search(query: string, limit: number = 5): Promise<WikivoyageSearchResult[]> {
+  async search(
+    query: string,
+    limit: number = 5,
+  ): Promise<WikivoyageSearchResult[]> {
     const data = await this.wikiRequest<any>({
-      action: 'query',
-      list: 'search',
+      action: "query",
+      list: "search",
       srsearch: query,
       srlimit: String(limit),
-      srnamespace: '0', // Main namespace only
+      srnamespace: "0", // Main namespace only
     });
 
     const results = data.query?.search ?? [];
-    
+
     return results.map((r: any) => ({
       title: r.title,
       snippet: this.stripHtml(r.snippet),
@@ -119,17 +124,20 @@ class WikivoyageApi {
   /**
    * Get a travel guide for a destination
    */
-  async getGuide(destination: string, maxChars: number = 3000): Promise<DestinationContent | null> {
+  async getGuide(
+    destination: string,
+    maxChars: number = 3000,
+  ): Promise<DestinationContent | null> {
     try {
       // Get the main extract
       const data = await this.wikiRequest<any>({
-        action: 'query',
+        action: "query",
         titles: destination,
-        prop: 'extracts|pageimages',
-        explaintext: 'true',
-        exintro: 'true', // Get intro section
-        piprop: 'thumbnail',
-        pithumbsize: '800',
+        prop: "extracts|pageimages",
+        explaintext: "true",
+        exintro: "true", // Get intro section
+        piprop: "thumbnail",
+        pithumbsize: "800",
       });
 
       const pages = data.query?.pages ?? {};
@@ -139,52 +147,63 @@ class WikivoyageApi {
         return null;
       }
 
-      let extract: string = page.extract ?? '';
-      
+      let extract: string = page.extract ?? "";
+
       // Truncate if needed
       if (extract.length > maxChars) {
-        extract = extract.slice(0, maxChars).lastIndexOf('.') !== -1
-          ? extract.slice(0, extract.slice(0, maxChars).lastIndexOf('.') + 1)
-          : extract.slice(0, maxChars) + '...';
+        extract =
+          extract.slice(0, maxChars).lastIndexOf(".") !== -1
+            ? extract.slice(0, extract.slice(0, maxChars).lastIndexOf(".") + 1)
+            : extract.slice(0, maxChars) + "...";
       }
 
       const result: DestinationContent = {
         title: page.title,
-        description: extract.split('\n')[0] || '',
+        description: extract.split("\n")[0] || "",
         extract: extract,
         imageUrl: page.thumbnail?.source,
       };
 
       // Get sections for the page
       const sectionsData = await this.wikiRequest<any>({
-        action: 'parse',
+        action: "parse",
         page: destination,
-        prop: 'sections',
+        prop: "sections",
       });
 
       if (sectionsData.parse?.sections) {
         const sections = sectionsData.parse.sections;
-        
+
         // Fetch key sections asynchronously
-        const sectionPromises = ['See', 'Do', 'Eat', 'Sleep', 'Get in', 'Get around'].map(async (sectionName) => {
-          const match = sections.find((s: any) => s.line.toLowerCase() === sectionName.toLowerCase());
+        const sectionPromises = [
+          "See",
+          "Do",
+          "Eat",
+          "Sleep",
+          "Get in",
+          "Get around",
+        ].map(async (sectionName) => {
+          const match = sections.find(
+            (s: any) => s.line.toLowerCase() === sectionName.toLowerCase(),
+          );
           if (!match) return null;
 
           try {
             const sectionContent = await this.wikiRequest<any>({
-              action: 'parse',
+              action: "parse",
               page: destination,
               section: match.index,
-              prop: 'text',
+              prop: "text",
             });
 
-            const html = sectionContent.parse?.text?.['*'] ?? '';
+            const html = sectionContent.parse?.text?.["*"] ?? "";
             const plainText = this.stripHtml(html);
-            
+
             // Limit section content
-            const limitedText = plainText.length > 500 
-              ? plainText.slice(0, 500) + '...' 
-              : plainText;
+            const limitedText =
+              plainText.length > 500
+                ? plainText.slice(0, 500) + "..."
+                : plainText;
 
             return { section: sectionName, content: limitedText };
           } catch {
@@ -193,27 +212,27 @@ class WikivoyageApi {
         });
 
         const sectionResults = await Promise.all(sectionPromises);
-        
+
         sectionResults.forEach((sectionResult) => {
           if (sectionResult) {
             // Assign section content to the appropriate property on result
             switch (sectionResult.section) {
-              case 'See':
+              case "See":
                 result.see = sectionResult.content;
                 break;
-              case 'Do':
+              case "Do":
                 result.do = sectionResult.content;
                 break;
-              case 'Eat':
+              case "Eat":
                 result.eat = sectionResult.content;
                 break;
-              case 'Sleep':
+              case "Sleep":
                 result.sleep = sectionResult.content;
                 break;
-              case 'Get in':
+              case "Get in":
                 result.getIn = sectionResult.content;
                 break;
-              case 'Get around':
+              case "Get around":
                 result.getAround = sectionResult.content;
                 break;
             }
@@ -223,7 +242,7 @@ class WikivoyageApi {
 
       return result;
     } catch (error) {
-      console.error('Failed to fetch Wikivoyage guide:', error);
+      console.error("Failed to fetch Wikivoyage guide:", error);
       return null;
     }
   }
@@ -231,16 +250,18 @@ class WikivoyageApi {
   /**
    * Get multiple destination guides
    */
-  async getGuides(destinations: string[]): Promise<Map<string, DestinationContent>> {
+  async getGuides(
+    destinations: string[],
+  ): Promise<Map<string, DestinationContent>> {
     const results = new Map<string, DestinationContent>();
-    
+
     await Promise.all(
       destinations.map(async (dest) => {
         const guide = await this.getGuide(dest);
         if (guide) {
           results.set(dest, guide);
         }
-      })
+      }),
     );
 
     return results;
@@ -249,12 +270,15 @@ class WikivoyageApi {
   /**
    * Get a specific section of a guide
    */
-  async getSection(destination: string, section: string): Promise<string | null> {
+  async getSection(
+    destination: string,
+    section: string,
+  ): Promise<string | null> {
     try {
       const sectionsData = await this.wikiRequest<any>({
-        action: 'parse',
+        action: "parse",
         page: destination,
-        prop: 'sections',
+        prop: "sections",
       });
 
       if (sectionsData.error) {
@@ -265,7 +289,7 @@ class WikivoyageApi {
       const sectionLower = section.toLowerCase();
 
       const match = sections.find(
-        (s: any) => s.line.toLowerCase() === sectionLower
+        (s: any) => s.line.toLowerCase() === sectionLower,
       );
 
       if (!match) {
@@ -273,16 +297,16 @@ class WikivoyageApi {
       }
 
       const sectionContent = await this.wikiRequest<any>({
-        action: 'parse',
+        action: "parse",
         page: destination,
         section: match.index,
-        prop: 'text',
+        prop: "text",
       });
 
-      const html = sectionContent.parse?.text?.['*'] ?? '';
+      const html = sectionContent.parse?.text?.["*"] ?? "";
       return this.stripHtml(html);
     } catch (error) {
-      console.error('Failed to fetch section:', error);
+      console.error("Failed to fetch section:", error);
       return null;
     }
   }

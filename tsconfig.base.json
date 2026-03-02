@@ -1,12 +1,8 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
     "target": "ES2022",
     "module": "ESNext",
-    "lib": [
-      "ES2022",
-      "DOM"
-    ],
+    "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -23,34 +19,15 @@
     "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@tripalfa/shared-types": [
-        "packages/shared-types"
-      ],
-      "@tripalfa/shared-types/*": [
-        "packages/shared-types/*"
-      ],
-      "@tripalfa/shared-utils": [
-        "packages/shared-utils"
-      ],
-      "@tripalfa/shared-utils/*": [
-        "packages/shared-utils/*"
-      ],
-      "@tripalfa/shared-database": [
-        "packages/shared-database"
-      ],
-      "@tripalfa/shared-database/*": [
-        "packages/shared-database/*"
-      ]
+      "@/*": ["src/*"],
+      "@tripalfa/shared-types": ["packages/shared-types"],
+      "@tripalfa/shared-types/*": ["packages/shared-types/*"],
+      "@tripalfa/shared-utils": ["packages/shared-utils"],
+      "@tripalfa/shared-utils/*": ["packages/shared-utils/*"],
+      "@tripalfa/shared-database": ["packages/shared-database"],
+      "@tripalfa/shared-database/*": ["packages/shared-database/*"]
     }
   },
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

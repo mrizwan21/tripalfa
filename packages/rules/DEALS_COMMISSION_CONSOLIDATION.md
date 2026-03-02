@@ -14,10 +14,12 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 ## Components Added
 
 ### 1. Deal Management Types (`src/types/deals.ts`)
+
 **Location**: `/packages/rules/src/types/deals.ts`  
 **Lines**: 281 lines
 
 **Interfaces Defined**:
+
 - `SupplierDeal` - Core deal definition with metadata
 - `SupplierDealCreate` / `SupplierDealUpdate` - Deal mutation interfaces
 - `DealMappingRules` / `DealMappingRuleCreate` - Mapping rule definitions for product-specific matching
@@ -30,6 +32,7 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 - `ConflictReport` - Deal conflict detection reporting
 
 **Type Enums**:
+
 - `DealType`: 8 types (contracted_rate, package_deal, early_bird, last_minute, free_nights, seasonal, supplier_exclusive, volume_discount)
 - `DealStatus`: 5 statuses (draft, active, paused, expired, archived)
 - `DealDiscountType`: 3 types (percentage, fixed, tiered)
@@ -39,11 +42,13 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 ---
 
 ### 2. Deal Service (`src/services/dealService.ts`)
+
 **Location**: `/packages/rules/src/services/dealService.ts`  
 **Lines**: 312 lines  
 **Source**: Consolidation of `/apps/b2b-admin/.../inventory-service/src/services/dealService.ts` (544 lines)
 
 **Core Methods**:
+
 - `createDeal()` - Create supplier deal with transactional mapping rules
 - `updateDeal()` - Update deal properties and mapping rules
 - `getDeal()` - Retrieve deal by ID with mapping rules
@@ -53,6 +58,7 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 - `pauseDeal()` - Pause active deal
 
 **Features**:
+
 - Transactional integrity for deal + mapping rule creation/updates
 - Comprehensive validation (dates, amounts, required fields)
 - Soft delete support via status field
@@ -62,11 +68,13 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 ---
 
 ### 3. Deal Matching Engine (`src/services/dealMatchingEngine.ts`)
+
 **Location**: `/packages/rules/src/services/dealMatchingEngine.ts`  
 **Lines**: 337 lines  
 **Source**: Consolidation of `/apps/b2b-admin/.../inventory-service/src/services/dealMatchingEngine.ts` (370 lines)
 
 **Core Methods**:
+
 - `findApplicableDeals()` - Find all matching deals for search criteria with customer context
 - `findBestDeal()` - Find single best deal with maximum discount
 - `applyDealsToSearchResults()` - Apply deals to entire search result set
@@ -75,6 +83,7 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 - `getCacheStats()` - Get cache performance statistics
 
 **Matching Logic**:
+
 - Product type validation
 - Supplier code matching
 - Journey type filtering (one_way, round_trip, multi_city, all)
@@ -86,6 +95,7 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 - Custom condition evaluation
 
 **Performance Features**:
+
 - In-memory caching with cache key generation
 - Priority-based deal selection
 - Tiered, percentage, and fixed discount calculations
@@ -94,11 +104,13 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 ---
 
 ### 4. Commission Manager Service (`src/services/commissionManager.ts`)
+
 **Location**: `/packages/rules/src/services/commissionManager.ts`  
 **Lines**: 345 lines  
 **Source**: Consolidation of `/apps/b2b-admin/.../booking-service/src/services/commissionCalculationService.ts` (202 lines + enhancements)
 
 **Core Methods**:
+
 - `calculateCommission()` - Calculate commission (percentage, fixed, tiered)
 - `createSettlement()` - Create commission settlement record
 - `updateSettlementStatus()` - Update settlement: pending → paid/cancelled
@@ -112,11 +124,13 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 - `getSettlementByBooking()` - Retrieve settlement for specific booking
 
 **Commission Calculation Types**:
+
 - `percentage` - Percentage of booking amount
 - `fixed` - Fixed amount per booking
 - `tiered` - Amount-based tiered commission (multiple tier support)
 
 **Settlement Lifecycle**:
+
 - `pending` - Initial settlement creation
 - `paid` - Settlement paid to supplier
 - `cancelled` - Settlement cancelled/refunded
@@ -126,17 +140,20 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 ## Updated Type System
 
 **Updated Files**:
+
 - `/packages/rules/src/types/index.ts` - Added deals export
 - `/packages/rules/src/services/index.ts` - Added 3 new service exports
 - `/packages/rules/src/index.ts` - Added 6 new main package exports
 
 **Type Exports Added**:
+
 - `SupplierDeal`, `SupplierDealCreate`, `SupplierDealUpdate`
 - `DealMatchResult`
 - `SearchCriteria`, `CustomerContext`
 - `DealMappingRules`
 
 **Service Exports Added**:
+
 - `DealService`
 - `DealMatchingEngine`
 - `CommissionManager`
@@ -146,6 +163,7 @@ Successfully consolidated **Travel Agency Deal Management** and **Commission Man
 ## Package Statistics
 
 **Total Lines (After Consolidation)**:
+
 - Type definitions (types/): 1,850+ lines → 2,131 lines (+281 lines)
 - Service implementations (services/): 910 lines → 1,559 lines (+649 lines)
 - Middleware (middleware/): 150 lines (unchanged)
@@ -249,23 +267,29 @@ model CommissionSettlement {
 ## Integration Points
 
 ### Express Middleware Support
+
 All services designed for Express.js integration. Existing middleware factory pattern supports:
+
 ```typescript
 // Rule validation middleware
-const validateDeal = createRuleValidationMiddleware('deal');
+const validateDeal = createRuleValidationMiddleware("deal");
 
 // Pricing calculation with deals
 const calculatePricing = createPricingCalculationMiddleware();
 ```
 
 ### Prisma Client Integration
+
 All database services use PrismaClient for:
+
 - Transaction support (deal + mapping rules atomic creation)
 - Type-safe queries (SupplierDeals, CommissionSettlement)
 - Automatic date serialization
 
 ### Caching Strategy
+
 Deal matching engine implements cache:
+
 - Cache key: `productType|supplierCodes|origin|destination|journeyType`
 - Configurable cache enable/disable
 - Statistics tracking for monitoring
@@ -275,45 +299,47 @@ Deal matching engine implements cache:
 ## Usage Examples
 
 ### Deal Management
+
 ```typescript
-import { DealService, SearchCriteria, CustomerContext } from '@tripalfa/rules';
+import { DealService, SearchCriteria, CustomerContext } from "@tripalfa/rules";
 
 const dealService = new DealService();
 
 // Create deal
 const deal = await dealService.createDeal({
-  name: 'Holiday Season Sale',
-  code: 'HOLIDAY2025',
-  productType: 'hotel',
-  dealType: 'seasonal',
-  supplierCodes: ['supplier1', 'supplier2'],
-  discountType: 'percentage',
+  name: "Holiday Season Sale",
+  code: "HOLIDAY2025",
+  productType: "hotel",
+  dealType: "seasonal",
+  supplierCodes: ["supplier1", "supplier2"],
+  discountType: "percentage",
   discountValue: 15,
-  validFrom: '2025-01-01',
-  validTo: '2025-02-28'
+  validFrom: "2025-01-01",
+  validTo: "2025-02-28",
 });
 
 // List deals
-const deals = await dealService.listDeals({ dealType: 'seasonal' });
+const deals = await dealService.listDeals({ dealType: "seasonal" });
 ```
 
 ### Deal Matching
+
 ```typescript
-import { DealMatchingEngine } from '@tripalfa/rules';
+import { DealMatchingEngine } from "@tripalfa/rules";
 
 const engine = new DealMatchingEngine();
 engine.initialize(deals);
 
 const criteria: SearchCriteria = {
-  productType: 'hotel',
-  origin: 'NYC',
-  destination: 'Los Angeles',
-  journeyType: 'round_trip'
+  productType: "hotel",
+  origin: "NYC",
+  destination: "Los Angeles",
+  journeyType: "round_trip",
 };
 
 const context: CustomerContext = {
-  customerId: 'cust123',
-  companyId: 'company456'
+  customerId: "cust123",
+  companyId: "company456",
 };
 
 const matches = engine.findApplicableDeals(criteria, context);
@@ -321,17 +347,18 @@ const bestDeal = engine.findBestDeal(criteria, context, 1000);
 ```
 
 ### Commission Management
+
 ```typescript
-import { CommissionManager } from '@tripalfa/rules';
+import { CommissionManager } from "@tripalfa/rules";
 
 const commissionManager = new CommissionManager();
 
 // Calculate commission
 const commission = commissionManager.calculateCommission({
   totalAmount: 5000,
-  bookingId: 'booking123',
-  supplierId: 'supplier456',
-  commissionPercent: 5
+  bookingId: "booking123",
+  supplierId: "supplier456",
+  commissionPercent: 5,
 });
 
 // Create settlement
@@ -339,8 +366,8 @@ const settlement = await commissionManager.createSettlement(commission);
 
 // Process payment
 const paid = await commissionManager.processSupplierPayment(
-  'supplier456',
-  'PAYMENT_REF_001'
+  "supplier456",
+  "PAYMENT_REF_001",
 );
 ```
 
@@ -362,6 +389,7 @@ const paid = await commissionManager.processSupplierPayment(
 ## Files Consolidated
 
 **From Source Repository**:
+
 - `/apps/b2b-admin/.../inventory-service/src/services/dealService.ts` (544 lines)
 - `/apps/b2b-admin/.../inventory-service/src/services/dealMatchingEngine.ts` (370 lines)
 - `/apps/b2b-admin/.../booking-service/src/services/commissionCalculationService.ts` (202 lines)
@@ -372,6 +400,7 @@ const paid = await commissionManager.processSupplierPayment(
 **New Package Size**: 2,578 lines (+649 lines optimized consolidation)
 
 **Files Removed from Business Logic**:
+
 - Can now deprecate `/apps/b2b-admin/.../inventory-service/src/services/dealService.ts`
 - Can now deprecate `/apps/b2b-admin/.../inventory-service/src/services/dealMatchingEngine.ts`
 - Can now import deal types from `@tripalfa/rules` instead of local files

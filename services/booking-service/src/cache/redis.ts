@@ -1,6 +1,6 @@
 /**
  * Redis Cache Service for LITEAPI Data
- * 
+ *
  * Implements caching strategy for real-time hotel data:
  * - Hotel search results (TTL: 15 min)
  * - Room rates (TTL: 30 min)
@@ -8,33 +8,30 @@
  * - Static data (TTL: 24 hours)
  */
 
-import { createClient, RedisClientType } from 'redis';
+import { createClient, RedisClientType } from "redis";
 
 // Cache TTL constants (in seconds)
 export const CACHE_TTL = {
-  HOTEL_SEARCH: 900,      // 15 minutes
-  HOTEL_RATES: 1800,     // 30 minutes
+  HOTEL_SEARCH: 900, // 15 minutes
+  HOTEL_RATES: 1800, // 30 minutes
   PREBOOK_SESSION: 3600, // 60 minutes
-  RATE_LOCK: 600,         // 10 minutes
-  GUEST_DATA: 300,        // 5 minutes
-  MEDIUM: 3600,          // 1 hour (reviews)
-  LONG: 86400,           // 24 hours (static data like languages)
+  RATE_LOCK: 600, // 10 minutes
+  GUEST_DATA: 300, // 5 minutes
+  MEDIUM: 3600, // 1 hour (reviews)
+  LONG: 86400, // 24 hours (static data like languages)
 } as const;
 
 // Cache key generators
 export const CacheKeys = {
   hotelSearch: (params: Record<string, any>) => {
-    const hash = Buffer.from(JSON.stringify(params)).toString('base64');
+    const hash = Buffer.from(JSON.stringify(params)).toString("base64");
     return `hotel:search:${hash}`;
   },
-  hotelRates: (hotelId: string, checkin: string, checkout: string) => 
+  hotelRates: (hotelId: string, checkin: string, checkout: string) =>
     `hotel:rates:${hotelId}:${checkin}:${checkout}`,
-  prebookSession: (sessionId: string) => 
-    `prebook:${sessionId}`,
-  rateLock: (offerId: string) => 
-    `rate:lock:${offerId}`,
-  guestData: (guestId: string) => 
-    `guest:${guestId}`,
+  prebookSession: (sessionId: string) => `prebook:${sessionId}`,
+  rateLock: (offerId: string) => `rate:lock:${offerId}`,
+  guestData: (guestId: string) => `guest:${guestId}`,
 };
 
 // Redis client singleton
@@ -42,15 +39,15 @@ let redisClient: RedisClientType | null = null;
 
 export async function getRedisClient(): Promise<RedisClientType> {
   if (!redisClient) {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    
+    const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+
     redisClient = createClient({
       url: redisUrl,
       socket: {
         reconnectStrategy: (retries) => {
           if (retries > 10) {
-            console.error('[Redis] Max reconnection attempts reached');
-            return new Error('Max reconnection attempts reached');
+            console.error("[Redis] Max reconnection attempts reached");
+            return new Error("Max reconnection attempts reached");
           }
           console.log(`[Redis] Reconnecting... attempt ${retries}`);
           return Math.min(retries * 100, 3000);
@@ -58,12 +55,12 @@ export async function getRedisClient(): Promise<RedisClientType> {
       },
     });
 
-    redisClient.on('error', (err) => {
-      console.error('[Redis] Client error:', err);
+    redisClient.on("error", (err) => {
+      console.error("[Redis] Client error:", err);
     });
 
-    redisClient.on('connect', () => {
-      console.log('[Redis] Connected to Redis');
+    redisClient.on("connect", () => {
+      console.log("[Redis] Connected to Redis");
     });
 
     await redisClient.connect();
@@ -156,7 +153,7 @@ export const CacheService = {
   async getOrSet<T>(
     key: string,
     fetcher: () => Promise<T>,
-    ttlSeconds: number
+    ttlSeconds: number,
   ): Promise<T> {
     // Try to get from cache first
     const cached = await this.get(key);
@@ -168,10 +165,10 @@ export const CacheService = {
     // Fetch fresh data
     console.log(`[Cache] MISS: ${key}`);
     const data = await fetcher();
-    
+
     // Cache the result (don't await, fire and forget)
-    this.set(key, data, ttlSeconds).catch(err => 
-      console.error(`[Cache] Failed to cache ${key}:`, err)
+    this.set(key, data, ttlSeconds).catch((err) =>
+      console.error(`[Cache] Failed to cache ${key}:`, err),
     );
 
     return data;
@@ -184,7 +181,10 @@ export const CacheService = {
     try {
       const client = await getRedisClient();
       const key = CacheKeys.rateLock(offerId);
-      const result = await client.setNX(key, JSON.stringify({ userId, lockedAt: new Date() }));
+      const result = await client.setNX(
+        key,
+        JSON.stringify({ userId, lockedAt: new Date() }),
+      );
       if (result) {
         await client.expire(key, CACHE_TTL.RATE_LOCK);
       }
@@ -205,7 +205,9 @@ export const CacheService = {
   /**
    * Check if rate is locked
    */
-  async isRateLocked(offerId: string): Promise<{ locked: boolean; userId?: string }> {
+  async isRateLocked(
+    offerId: string,
+  ): Promise<{ locked: boolean; userId?: string }> {
     try {
       const client = await getRedisClient();
       const key = CacheKeys.rateLock(offerId);
@@ -225,7 +227,7 @@ export async function closeRedis() {
   if (redisClient) {
     await redisClient.quit();
     redisClient = null;
-    console.log('[Redis] Connection closed');
+    console.log("[Redis] Connection closed");
   }
 }
 

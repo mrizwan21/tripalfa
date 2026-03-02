@@ -1,14 +1,27 @@
-import { http, HttpResponse } from 'msw';
-import { faker } from '@faker-js/faker';
-import type { NotificationItem } from '../../../types/notification-types';
+import { http, HttpResponse } from "msw";
+import { faker } from "@faker-js/faker";
+import type { NotificationItem } from "../../../types/notification-types";
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = "http://localhost:3000";
 
 // Mock notification factory
-export const createMockNotification = (overrides?: Partial<NotificationItem>): NotificationItem => {
-  const types: NotificationItem['type'][] = ['SUCCESS', 'INFO', 'WARNING', 'ERROR'];
-  const statuses: NotificationItem['status'][] = ['PENDING', 'CONFIRMED', 'REJECTED', 'INFO', 'CANCELLED'];
-  
+export const createMockNotification = (
+  overrides?: Partial<NotificationItem>,
+): NotificationItem => {
+  const types: NotificationItem["type"][] = [
+    "SUCCESS",
+    "INFO",
+    "WARNING",
+    "ERROR",
+  ];
+  const statuses: NotificationItem["status"][] = [
+    "PENDING",
+    "CONFIRMED",
+    "REJECTED",
+    "INFO",
+    "CANCELLED",
+  ];
+
   return {
     id: faker.string.uuid(),
     type: faker.helpers.arrayElement(types),
@@ -19,7 +32,9 @@ export const createMockNotification = (overrides?: Partial<NotificationItem>): N
     status: faker.helpers.arrayElement(statuses),
     ...(faker.datatype.boolean() && { passengerName: faker.person.fullName() }),
     ...(faker.datatype.boolean() && { segment: faker.location.city() }),
-    ...(faker.datatype.boolean() && { price: faker.number.float({ min: 10, max: 1000, precision: 0.01 }) }),
+    ...(faker.datatype.boolean() && {
+      price: faker.number.float({ min: 10, max: 1000, precision: 0.01 }),
+    }),
     ...(faker.datatype.boolean() && { currency: faker.finance.currencyCode() }),
     ...(faker.datatype.boolean() && { remarks: faker.lorem.sentence() }),
     ...overrides,
@@ -33,30 +48,30 @@ let notificationsStore: Map<string, NotificationItem> = new Map();
 const initializeStore = () => {
   const initialNotifications = [
     createMockNotification({
-      id: 'notif-1',
-      type: 'SUCCESS',
-      title: 'Booking Confirmed',
-      description: 'Your flight booking has been confirmed',
+      id: "notif-1",
+      type: "SUCCESS",
+      title: "Booking Confirmed",
+      description: "Your flight booking has been confirmed",
       read: false,
-      status: 'CONFIRMED',
+      status: "CONFIRMED",
     }),
     createMockNotification({
-      id: 'notif-2',
-      type: 'INFO',
-      title: 'Special Service Request',
-      description: 'Wheelchair assistance has been added',
+      id: "notif-2",
+      type: "INFO",
+      title: "Special Service Request",
+      description: "Wheelchair assistance has been added",
       read: true,
-      status: 'PENDING',
-      passengerName: 'John Doe',
+      status: "PENDING",
+      passengerName: "John Doe",
     }),
     createMockNotification({
-      id: 'notif-3',
-      type: 'WARNING',
-      title: 'Schedule Change',
-      description: 'Your flight time has been changed',
+      id: "notif-3",
+      type: "WARNING",
+      title: "Schedule Change",
+      description: "Your flight time has been changed",
       read: false,
-      status: 'REJECTED',
-      remarks: 'Please update your calendar',
+      status: "REJECTED",
+      remarks: "Please update your calendar",
     }),
   ];
 
@@ -73,11 +88,11 @@ export const handlers = [
   // GET /api/notifications
   http.get(`${BASE_URL}/api/notifications`, ({ request }) => {
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1', 10);
-    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
-    const type = url.searchParams.get('type');
-    const status = url.searchParams.get('status');
-    const search = url.searchParams.get('search');
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
+    const type = url.searchParams.get("type");
+    const status = url.searchParams.get("status");
+    const search = url.searchParams.get("search");
 
     let notifications = Array.from(notificationsStore.values());
 
@@ -95,12 +110,14 @@ export const handlers = [
       notifications = notifications.filter(
         (n) =>
           n.title.toLowerCase().includes(searchLower) ||
-          n.description.toLowerCase().includes(searchLower)
+          n.description.toLowerCase().includes(searchLower),
       );
     }
 
     // Sort by date (newest first)
-    notifications.sort((a, b) => new Date(b.when).getTime() - new Date(a.when).getTime());
+    notifications.sort(
+      (a, b) => new Date(b.when).getTime() - new Date(a.when).getTime(),
+    );
 
     // Paginate
     const start = (page - 1) * pageSize;
@@ -124,7 +141,10 @@ export const handlers = [
     const notification = notificationsStore.get(id as string);
 
     if (!notification) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json(
+        { error: "Notification not found" },
+        { status: 404 },
+      );
     }
 
     return HttpResponse.json(notification);
@@ -136,7 +156,10 @@ export const handlers = [
     const notification = notificationsStore.get(id as string);
 
     if (!notification) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json(
+        { error: "Notification not found" },
+        { status: 404 },
+      );
     }
 
     notification.read = true;
@@ -147,7 +170,7 @@ export const handlers = [
 
   // POST /api/notifications/mark-read (bulk)
   http.post(`${BASE_URL}/api/notifications/mark-read`, async ({ request }) => {
-    const body = await request.json() as { ids?: string[] };
+    const body = (await request.json()) as { ids?: string[] };
     const ids = body.ids || [];
 
     ids.forEach((id) => {
@@ -163,7 +186,9 @@ export const handlers = [
 
   // GET /api/notifications/unread-count
   http.get(`${BASE_URL}/api/notifications/unread-count`, () => {
-    const unreadCount = Array.from(notificationsStore.values()).filter((n) => !n.read).length;
+    const unreadCount = Array.from(notificationsStore.values()).filter(
+      (n) => !n.read,
+    ).length;
 
     return HttpResponse.json({ count: unreadCount });
   }),
@@ -173,7 +198,10 @@ export const handlers = [
     const { id } = params;
 
     if (!notificationsStore.has(id as string)) {
-      return HttpResponse.json({ error: 'Notification not found' }, { status: 404 });
+      return HttpResponse.json(
+        { error: "Notification not found" },
+        { status: 404 },
+      );
     }
 
     notificationsStore.delete(id as string);
@@ -184,8 +212,8 @@ export const handlers = [
   // Error simulation endpoints for testing
   http.get(`${BASE_URL}/api/notifications/error/500`, () => {
     return HttpResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }),
 

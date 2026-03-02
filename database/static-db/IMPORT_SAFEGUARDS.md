@@ -17,7 +17,7 @@ The improved `sync-liteapi.ts` script now includes multiple layers of protection
 - **Benefit:** If the import crashes, restarting it will skip completed countries and continue from where it left off
 - **How it works:**
 
-  ```
+  ```text
   - Creates sync_progress table with status: pending|in_progress|completed|failed
   - Before starting, checks for completed countries
   - Only processes remaining countries
@@ -131,7 +131,7 @@ tail -f nohup.out | grep "hotels listed\|fetched\|Checkpoint\|ERROR"
 
 ```sql
 -- Check overall progress
-SELECT 
+SELECT
   COUNT(*) as total_countries,
   SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
   SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
@@ -139,15 +139,15 @@ SELECT
 FROM sync_progress;
 
 -- See which countries are completed
-SELECT country_code, status, hotels_count, details_count, completed_at 
-FROM sync_progress 
+SELECT country_code, status, hotels_count, details_count, completed_at
+FROM sync_progress
 WHERE status = 'completed'
 ORDER BY completed_at DESC
 LIMIT 10;
 
 -- Check for failed countries (if any)
-SELECT country_code, status, error_message, started_at 
-FROM sync_progress 
+SELECT country_code, status, error_message, started_at
+FROM sync_progress
 WHERE status = 'failed';
 ```
 
@@ -224,7 +224,7 @@ The import will continue running in the background even if you close the termina
 ✅ **Progress tracked:** Every country's status is recorded for full observability  
 ✅ **Error logged:** Every failure includes hotel ID, field type, and error message  
 ✅ **No data loss:** Failed details don't prevent move to next hotel/country  
-✅ **Resumable:** Import can restart from any point without data loss  
+✅ **Resumable:** Import can restart from any point without data loss
 
 ---
 
@@ -254,15 +254,15 @@ The import will continue running in the background even if you close the termina
 
 ## Summary of Safe Operations
 
-| Operation | Safeguard |
-|-----------|-----------|
-| API calls | Retry x3, exponential backoff, rate limiting |
-| Hotel inserts | Validation, error handling per-hotel |
-| Detail fetches | Individual try-catch, continues on failure |
-| Progress | Database tracking, resumable checkpoints |
-| Memory | Cache clearing every 50 countries |
-| Data | Idempotent upserts, atomic per-hotel |
-| Logging | Detailed per-country and per-error logging |
+| Operation      | Safeguard                                    |
+| -------------- | -------------------------------------------- |
+| API calls      | Retry x3, exponential backoff, rate limiting |
+| Hotel inserts  | Validation, error handling per-hotel         |
+| Detail fetches | Individual try-catch, continues on failure   |
+| Progress       | Database tracking, resumable checkpoints     |
+| Memory         | Cache clearing every 50 countries            |
+| Data           | Idempotent upserts, atomic per-hotel         |
+| Logging        | Detailed per-country and per-error logging   |
 
 ---
 

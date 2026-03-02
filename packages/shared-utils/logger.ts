@@ -1,8 +1,8 @@
 // Centralized logger utility for TripAlfa
 // @ts-ignore
-import pino, { Logger, LoggerOptions } from 'pino';
+import pino, { Logger, LoggerOptions } from "pino";
 
-export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal';
+export type LogLevel = "trace" | "debug" | "info" | "warn" | "error" | "fatal";
 export type { Logger };
 
 export interface LoggerConfig {
@@ -15,8 +15,8 @@ export interface LoggerConfig {
 export function createLogger(config: LoggerConfig = {}): Logger {
   const {
     // @ts-ignore
-    level = process.env.LOG_LEVEL || 'info',
-    serviceName = 'tripalfa',
+    level = process.env.LOG_LEVEL || "info",
+    serviceName = "tripalfa",
   } = config;
 
   const loggerOptions: LoggerOptions = {
@@ -24,20 +24,20 @@ export function createLogger(config: LoggerConfig = {}): Logger {
     base: {
       service: serviceName,
       // @ts-ignore
-      environment: process.env.NODE_ENV || 'development',
+      environment: process.env.NODE_ENV || "development",
     },
   };
 
   // @ts-ignore
-  if (process.env.NODE_ENV !== 'production' && config.pretty !== false) {
+  if (process.env.NODE_ENV !== "production" && config.pretty !== false) {
     return pino({
       ...loggerOptions,
       transport: {
-        target: 'pino-pretty',
+        target: "pino-pretty",
         options: {
           colorize: true,
           singleLine: false,
-          translateTime: 'SYS:standard',
+          translateTime: "SYS:standard",
         },
       },
     });
@@ -46,13 +46,20 @@ export function createLogger(config: LoggerConfig = {}): Logger {
   return pino(loggerOptions);
 }
 
-export function createChildLogger(logger: Logger, context: Record<string, any>): Logger {
+export function createChildLogger(
+  logger: Logger,
+  context: Record<string, any>,
+): Logger {
   return logger.child(context);
 }
 
 // Prisma logger for shared use
 export class PrismaLogger {
-  static log(level: 'info' | 'warn' | 'error', message: string, data?: unknown): void {
+  static log(
+    level: "info" | "warn" | "error",
+    message: string,
+    data?: unknown,
+  ): void {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
     if (data) {
@@ -62,12 +69,12 @@ export class PrismaLogger {
     }
   }
   static info(message: string, data?: unknown): void {
-    this.log('info', message, data);
+    this.log("info", message, data);
   }
   static warn(message: string, data?: unknown): void {
-    this.log('warn', message, data);
+    this.log("warn", message, data);
   }
   static error(message: string, data?: unknown): void {
-    this.log('error', message, data);
+    this.log("error", message, data);
   }
 }

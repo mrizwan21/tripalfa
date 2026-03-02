@@ -34,7 +34,7 @@ A comprehensive test suite has been created for the Booking Engine notification 
 
 ### Mock Files (769 lines)
 
-5. **__mocks__/fixtures.ts** (395 lines)
+5. \***\*mocks**/fixtures.ts\*\* (395 lines)
    - 10 pre-configured mock notifications covering all scenarios
    - 20+ utility functions for filtering, sorting, searching, pagination
    - Realistic test data using Faker
@@ -51,7 +51,7 @@ A comprehensive test suite has been created for the Booking Engine notification 
      - Refunds
    - **Utilities:** Sort, filter, search, paginate, count, mark read, etc.
 
-6. **__mocks__/handlers.ts** (374 lines)
+6. \***\*mocks**/handlers.ts\*\* (374 lines)
    - 7 MSW (Mock Service Worker) API handlers
    - In-memory notification store management
    - Full CRUD operations with filtering
@@ -91,37 +91,41 @@ A comprehensive test suite has been created for the Booking Engine notification 
 
 ### Total Test Cases: 50+
 
-| Component | Test Cases | Lines | Coverage |
-|-----------|-----------|-------|----------|
-| Notifications Page | 16 | 484 | ~95% |
-| Details Popup | 11+ | 402 | ~90% |
-| Toast Component | 7+ | 345 | ~85% |
-| Type Validation | 16+ | 356 | ~100% |
-| Fixtures | - | 395 | ~100% |
-| Handlers | - | 374 | ~100% |
-| **Total** | **50+** | **2,356** | **~94%** |
+| Component          | Test Cases | Lines     | Coverage |
+| ------------------ | ---------- | --------- | -------- |
+| Notifications Page | 16         | 484       | ~95%     |
+| Details Popup      | 11+        | 402       | ~90%     |
+| Toast Component    | 7+         | 345       | ~85%     |
+| Type Validation    | 16+        | 356       | ~100%    |
+| Fixtures           | -          | 395       | ~100%    |
+| Handlers           | -          | 374       | ~100%    |
+| **Total**          | **50+**    | **2,356** | **~94%** |
 
 ## Key Features
 
 ### ✅ Complete API Mocking
+
 - MSW handlers for all notification endpoints
 - In-memory store for test isolation
 - Realistic request/response patterns
 - Error scenario handling
 
 ### ✅ Comprehensive Mock Data
+
 - 10 pre-configured notification scenarios
 - Factory function for custom test data
 - Faker for realistic variations
 - Edge case coverage
 
 ### ✅ React Testing Library Best Practices
+
 - Semantic queries (getByRole, getByText)
 - User interaction testing
 - Accessibility testing
 - Proper async handling with waitFor
 
 ### ✅ Real-world Test Scenarios
+
 - Filtering by multiple criteria
 - Search functionality
 - Pagination
@@ -130,6 +134,7 @@ A comprehensive test suite has been created for the Booking Engine notification 
 - Responsive design
 
 ### ✅ Developer Experience
+
 - Clear test organization
 - Descriptive test names with comments
 - Easy-to-use fixtures and utilities
@@ -139,12 +144,14 @@ A comprehensive test suite has been created for the Booking Engine notification 
 ## Setup Instructions
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 # MSW has been added to package.json
 ```
 
 ### 2. Run Tests
+
 ```bash
 # All notification tests
 npm test -- src/__tests__/notifications
@@ -160,6 +167,7 @@ npm test -- --coverage
 ```
 
 ### 3. Verify Setup
+
 ```bash
 # Quick check that tests pass
 npm test -- src/__tests__/notifications/notification-types.test.ts
@@ -194,21 +202,25 @@ apps/booking-engine/
 ## Testing the Setup
 
 ### Quick Validation Test
+
 ```bash
 npm test -- notification-types.test.ts --reporter=verbose
 ```
 
 Expected output:
+
 - ✓ All tests pass
 - 16+ test cases executed
 - No errors or warnings
 
 ### Full Suite Validation
+
 ```bash
 npm test -- src/__tests__/notifications
 ```
 
 Expected output:
+
 - 50+ test cases passing
 - ~2,356 lines of test code
 - MSW handlers intercepting API calls
@@ -217,36 +229,45 @@ Expected output:
 ## Notification Data Types
 
 ### Notification Type
+
 ```typescript
-type NotificationType = 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR'
+type NotificationType = "SUCCESS" | "INFO" | "WARNING" | "ERROR";
 ```
 
 ### Notification Status
+
 ```typescript
-type NotificationStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'INFO' | 'CANCELLED'
+type NotificationStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "REJECTED"
+  | "INFO"
+  | "CANCELLED";
 ```
 
 ### Full Item Structure
+
 ```typescript
 interface NotificationItem {
-  id: string;                    // UUID
-  type: NotificationType;        // SUCCESS/INFO/WARNING/ERROR
-  title: string;                 // Short title
-  description: string;           // Main content
-  when: string;                  // ISO date string
-  read: boolean;                 // Read status
-  status?: NotificationStatus;   // PENDING/CONFIRMED/REJECTED/INFO/CANCELLED
-  passengerName?: string;        // For passenger-related notifications
-  segment?: string;              // Flight segment info
-  price?: number;                // Optional price
-  currency?: string;             // Currency code (ISO 4217)
-  remarks?: string;              // Additional remarks
+  id: string; // UUID
+  type: NotificationType; // SUCCESS/INFO/WARNING/ERROR
+  title: string; // Short title
+  description: string; // Main content
+  when: string; // ISO date string
+  read: boolean; // Read status
+  status?: NotificationStatus; // PENDING/CONFIRMED/REJECTED/INFO/CANCELLED
+  passengerName?: string; // For passenger-related notifications
+  segment?: string; // Flight segment info
+  price?: number; // Optional price
+  currency?: string; // Currency code (ISO 4217)
+  remarks?: string; // Additional remarks
 }
 ```
 
 ## Key Test Scenarios Covered
 
 ### 1. Display & Rendering
+
 - ✅ List displays correctly
 - ✅ Different types shown
 - ✅ Status badges visible
@@ -255,6 +276,7 @@ interface NotificationItem {
 - ✅ Error states
 
 ### 2. User Interactions
+
 - ✅ Click to view details
 - ✅ Mark as read
 - ✅ Search functionality
@@ -265,6 +287,7 @@ interface NotificationItem {
 - ✅ Dismiss toast
 
 ### 3. Data Handling
+
 - ✅ Unread count tracking
 - ✅ Pagination
 - ✅ Real-time updates
@@ -272,12 +295,14 @@ interface NotificationItem {
 - ✅ Edge case data
 
 ### 4. Accessibility
+
 - ✅ ARIA roles
 - ✅ Keyboard navigation
 - ✅ Semantic HTML
 - ✅ Focus management
 
 ### 5. Responsive Design
+
 - ✅ Mobile layout
 - ✅ Tablet layout
 - ✅ Desktop layout
@@ -285,6 +310,7 @@ interface NotificationItem {
 ## Integration with Project
 
 ### Works with existing:
+
 - ✅ Vitest configuration
 - ✅ React Testing Library setup
 - ✅ TypeScript configuration
@@ -293,6 +319,7 @@ interface NotificationItem {
 - ✅ Existing components
 
 ### Adds:
+
 - ✅ MSW for API mocking (msw ^2.1.5)
 - ✅ 30+ test files
 - ✅ 2,200+ lines of test code
@@ -303,25 +330,30 @@ interface NotificationItem {
 ## Next Steps
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Run Tests
+
 ```bash
 npm test -- src/__tests__/notifications
 ```
 
 ### 3. Verify Complete Coverage
+
 ```bash
 npm test -- --coverage src/__tests__/notifications
 ```
 
 ### 4. Read Documentation
+
 - Start with: `QUICK_REFERENCE.md` for overview
 - Deep dive: `README.md` for comprehensive guide
 
 ### 5. Add New Tests
+
 Follow patterns in existing tests to add new notification features.
 
 ## Performance & Optimization
@@ -334,11 +366,11 @@ Follow patterns in existing tests to add new notification features.
 
 ## Documentation Index
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| **README.md** | Full technical reference | Developers, QA |
-| **QUICK_REFERENCE.md** | Quick setup and patterns | Developers |
-| **This File** | Implementation summary | Project managers, team |
+| Document               | Purpose                  | Audience               |
+| ---------------------- | ------------------------ | ---------------------- |
+| **README.md**          | Full technical reference | Developers, QA         |
+| **QUICK_REFERENCE.md** | Quick setup and patterns | Developers             |
+| **This File**          | Implementation summary   | Project managers, team |
 
 ## Quality Metrics
 
@@ -354,18 +386,21 @@ Follow patterns in existing tests to add new notification features.
 ## Support & Maintenance
 
 ### Adding New Notification Types
+
 1. Add mock in `fixtures.ts`
 2. Create test cases in appropriate test file
 3. Update handlers if API changes
 4. Document in README.md
 
 ### Modifying Test Utilities
+
 1. Update functions in `fixtures.ts`
 2. Verify all tests still pass
 3. Update documentation
 4. Consider backward compatibility
 
 ### Debugging Tests
+
 ```bash
 # Verbose output
 npm test -- --reporter=verbose
@@ -379,21 +414,22 @@ npm test -- Notifications.test.tsx --inspect-brk
 
 ## Files Created Summary
 
-| File | Type | Lines | Purpose |
-|------|------|-------|---------|
-| Notifications.test.tsx | Test | 484 | Main page tests |
-| NotificationDetailsPopup.test.tsx | Test | 402 | Popup tests |
-| Toast.test.tsx | Test | 345 | Toast tests |
-| notification-types.test.ts | Test | 356 | Type validation |
-| __mocks__/fixtures.ts | Fixture | 395 | Mock data & utilities |
-| __mocks__/handlers.ts | Handler | 374 | MSW API mocking |
-| README.md | Docs | 1,800+ | Complete reference |
-| QUICK_REFERENCE.md | Docs | 1,300+ | Developer guide |
-| **Total** | - | **2,356+** | **Complete Suite** |
+| File                              | Type    | Lines      | Purpose               |
+| --------------------------------- | ------- | ---------- | --------------------- |
+| Notifications.test.tsx            | Test    | 484        | Main page tests       |
+| NotificationDetailsPopup.test.tsx | Test    | 402        | Popup tests           |
+| Toast.test.tsx                    | Test    | 345        | Toast tests           |
+| notification-types.test.ts        | Test    | 356        | Type validation       |
+| **mocks**/fixtures.ts             | Fixture | 395        | Mock data & utilities |
+| **mocks**/handlers.ts             | Handler | 374        | MSW API mocking       |
+| README.md                         | Docs    | 1,800+     | Complete reference    |
+| QUICK_REFERENCE.md                | Docs    | 1,300+     | Developer guide       |
+| **Total**                         | -       | **2,356+** | **Complete Suite**    |
 
 ## Compatibility
 
 ✅ Works with:
+
 - Vitest 4.0.18+
 - React 18.3.1+
 - React Testing Library 14.1.2+
@@ -404,16 +440,19 @@ npm test -- Notifications.test.tsx --inspect-brk
 ## Getting Help
 
 ### Test Failures
+
 1. Check `QUICK_REFERENCE.md` → "Troubleshooting Checklist"
 2. Review `README.md` → "Troubleshooting"
 3. Check console output for specific errors
 
 ### Adding New Tests
+
 1. Copy pattern from similar test
 2. Refer to `QUICK_REFERENCE.md` → "Common Test Patterns"
 3. Use fixtures from `fixtures.ts`
 
 ### API Integration
+
 1. Add handler in `__mocks__/handlers.ts`
 2. Add tests in appropriate test file
 3. Update documentation

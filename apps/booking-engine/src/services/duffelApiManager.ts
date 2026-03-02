@@ -1,13 +1,13 @@
 /**
  * Duffel API Manager - Frontend Integration Layer
- * 
+ *
  * This module provides a unified interface for all Duffel API operations
  * through the API Gateway's API Manager. All endpoints are routed through
  * the centralized gateway at `/api/flights/*` and `/api/airline-credits/*`.
- * 
+ *
  * Architecture:
  * Frontend (Booking Engine) -> API Manager (Gateway) -> Booking Service -> Duffel API
- * 
+ *
  * Benefits:
  * - Centralized authentication and rate limiting
  * - Consistent error handling
@@ -16,7 +16,7 @@
  * - Service versioning support
  */
 
-import { api } from '../lib/api';
+import { api } from "../lib/api";
 
 // ============================================================================
 // TYPE DEFINITIONS (shared with duffelBookingApi.ts)
@@ -30,32 +30,32 @@ export interface FlightSlice {
 }
 
 export interface Passenger {
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
 }
 
 export interface OfferRequestParams {
   slices: FlightSlice[];
   passengers: Passenger[];
-  cabin_class?: 'economy' | 'business' | 'first' | 'premium_economy';
+  cabin_class?: "economy" | "business" | "first" | "premium_economy";
 }
 
 export interface PassengerData {
   id: string;
   email: string;
-  type: 'adult' | 'child' | 'infant';
+  type: "adult" | "child" | "infant";
   given_name: string;
   family_name: string;
   phone_number: string;
   born_at?: string;
-  gender?: 'M' | 'F';
+  gender?: "M" | "F";
 }
 
 export interface CreateOrderParams {
   selectedOffers: string[];
   passengers: PassengerData[];
-  orderType?: 'instant' | 'hold';
+  orderType?: "instant" | "hold";
   paymentMethod?: {
-    type: 'balance' | 'card';
+    type: "balance" | "card";
     id?: string;
   };
 }
@@ -78,7 +78,7 @@ export interface SelectedSeat {
 
 export interface SeatElement {
   designator: string;
-  type: 'seat' | 'empty' | 'lavatory' | 'galley' | 'bassinet' | 'closet';
+  type: "seat" | "empty" | "lavatory" | "galley" | "bassinet" | "closet";
   available_services?: Array<{
     id: string;
     passenger_id?: string;
@@ -122,17 +122,22 @@ export interface GetSeatMapsResponse {
  * Create an offer request (flight search) through the API Manager
  * POST /api/flights/offer-requests
  */
-export async function createOfferRequest(params: OfferRequestParams): Promise<any> {
+export async function createOfferRequest(
+  params: OfferRequestParams,
+): Promise<any> {
   try {
-    const response = await api.post('/api/flights/offer-requests', {
+    const response = await api.post("/api/flights/offer-requests", {
       slices: params.slices,
       passengers: params.passengers,
-      cabin_class: params.cabin_class || 'economy',
+      cabin_class: params.cabin_class || "economy",
       return_available_services: true,
     });
     return response;
   } catch (error) {
-    console.error('[Duffel API Manager] Offer request error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Offer request error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -145,7 +150,10 @@ export async function getOfferRequest(id: string): Promise<any> {
   try {
     return await api.get(`/api/flights/offer-requests/${id}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get offer request error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get offer request error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -154,15 +162,21 @@ export async function getOfferRequest(id: string): Promise<any> {
  * List all offer requests
  * GET /api/flights/offer-requests
  */
-export async function listOfferRequests(params?: { limit?: number; offset?: number }): Promise<any> {
+export async function listOfferRequests(params?: {
+  limit?: number;
+  offset?: number;
+}): Promise<any> {
   try {
     const qs = new URLSearchParams();
-    if (params?.limit) qs.append('limit', params.limit.toString());
-    if (params?.offset) qs.append('offset', params.offset.toString());
-    const query = qs.toString() ? `?${qs.toString()}` : '';
+    if (params?.limit) qs.append("limit", params.limit.toString());
+    if (params?.offset) qs.append("offset", params.offset.toString());
+    const query = qs.toString() ? `?${qs.toString()}` : "";
     return await api.get(`/api/flights/offer-requests${query}`);
   } catch (error) {
-    console.error('[Duffel API Manager] List offer requests error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] List offer requests error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -176,7 +190,10 @@ export async function getOfferDetails(offerId: string): Promise<any> {
     // Get offer request to retrieve offer details
     return await api.get(`/api/flights/offer-requests/${offerId}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get offer details error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get offer details error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -189,17 +206,22 @@ export async function getOfferDetails(offerId: string): Promise<any> {
  * Create a flight order from selected offers
  * POST /api/flights/orders
  */
-export async function createFlightOrder(params: CreateOrderParams): Promise<any> {
+export async function createFlightOrder(
+  params: CreateOrderParams,
+): Promise<any> {
   try {
-    console.log('[Duffel API Manager] Creating flight order:', params);
-    return await api.post('/api/flights/orders', {
+    console.log("[Duffel API Manager] Creating flight order:", params);
+    return await api.post("/api/flights/orders", {
       selectedOffers: params.selectedOffers,
       passengers: params.passengers,
-      orderType: params.orderType || 'instant',
+      orderType: params.orderType || "instant",
       paymentMethod: params.paymentMethod,
     });
   } catch (error) {
-    console.error('[Duffel API Manager] Create order error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Create order error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -212,7 +234,10 @@ export async function getFlightOrder(orderId: string): Promise<any> {
   try {
     return await api.get(`/api/flights/orders/${orderId}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get order error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get order error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -221,15 +246,21 @@ export async function getFlightOrder(orderId: string): Promise<any> {
  * List all orders
  * GET /api/flights/orders
  */
-export async function listFlightOrders(params?: { limit?: number; offset?: number }): Promise<any> {
+export async function listFlightOrders(params?: {
+  limit?: number;
+  offset?: number;
+}): Promise<any> {
   try {
     const qs = new URLSearchParams();
-    if (params?.limit) qs.append('limit', params.limit.toString());
-    if (params?.offset) qs.append('offset', params.offset.toString());
-    const query = qs.toString() ? `?${qs.toString()}` : '';
+    if (params?.limit) qs.append("limit", params.limit.toString());
+    if (params?.offset) qs.append("offset", params.offset.toString());
+    const query = qs.toString() ? `?${qs.toString()}` : "";
     return await api.get(`/api/flights/orders${query}`);
   } catch (error) {
-    console.error('[Duffel API Manager] List orders error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] List orders error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -238,11 +269,17 @@ export async function listFlightOrders(params?: { limit?: number; offset?: numbe
  * Update order details
  * PATCH /api/flights/orders/:id
  */
-export async function updateFlightOrder(orderId: string, data: any): Promise<any> {
+export async function updateFlightOrder(
+  orderId: string,
+  data: any,
+): Promise<any> {
   try {
     return await api.patch(`/api/flights/orders/${orderId}`, data);
   } catch (error) {
-    console.error('[Duffel API Manager] Update order error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Update order error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -255,7 +292,10 @@ export async function getOrderAvailableServices(orderId: string): Promise<any> {
   try {
     return await api.get(`/api/flights/orders/${orderId}/available-services`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get available services error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get available services error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -264,13 +304,19 @@ export async function getOrderAvailableServices(orderId: string): Promise<any> {
  * Price an order
  * POST /api/flights/orders/:id/price
  */
-export async function priceFlightOrder(orderId: string, paymentMethod?: any): Promise<any> {
+export async function priceFlightOrder(
+  orderId: string,
+  paymentMethod?: any,
+): Promise<any> {
   try {
     return await api.post(`/api/flights/orders/${orderId}/price`, {
       paymentMethod,
     });
   } catch (error) {
-    console.error('[Duffel API Manager] Price order error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Price order error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -281,9 +327,12 @@ export async function priceFlightOrder(orderId: string, paymentMethod?: any): Pr
  */
 export async function addOrderServices(data: any): Promise<any> {
   try {
-    return await api.post('/api/flights/order-services', data);
+    return await api.post("/api/flights/order-services", data);
   } catch (error) {
-    console.error('[Duffel API Manager] Add order services error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Add order services error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -308,43 +357,50 @@ export type {
   ProcessedSeatMap,
   SelectedSeatForBooking,
   SeatSelectionPayload,
-} from '../types/duffel-seat-maps';
+} from "../types/duffel-seat-maps";
 
-// Import the new service
-import {
+import type {
   DuffelSeatMap,
   DuffelGetSeatMapsResponse,
   ProcessedSeatMap,
   FlattenedSeat,
   SelectedSeatForBooking,
   SeatSelectionPayload,
-} from '../types/duffel-seat-maps';
-import { duffelSeatMapsService } from './duffelSeatMapsService';
+} from "../types/duffel-seat-maps";
+
+// Import the new service
+import { duffelSeatMapsService } from "./duffelSeatMapsService";
 
 /**
  * Get seat map for an offer or order
  * GET /api/flights/seat-maps
- * 
+ *
  * @param offerId - The offer ID to get seat maps for (booking flow)
  * @param orderId - The order ID to get seat maps for (post-booking flow)
  * @returns Raw Duffel seat maps response
  */
-export async function getSeatMap(offerId?: string, orderId?: string): Promise<DuffelGetSeatMapsResponse> {
+export async function getSeatMap(
+  offerId?: string,
+  orderId?: string,
+): Promise<DuffelGetSeatMapsResponse> {
   try {
     const qs = new URLSearchParams();
-    if (offerId) qs.append('offer_id', offerId);
-    if (orderId) qs.append('order_id', orderId);
-    const query = qs.toString() ? `?${qs.toString()}` : '';
+    if (offerId) qs.append("offer_id", offerId);
+    if (orderId) qs.append("order_id", orderId);
+    const query = qs.toString() ? `?${qs.toString()}` : "";
     return await api.get(`/api/flights/seat-maps${query}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get seat map error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get seat map error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
 
 /**
  * Get processed seat maps for an offer (ready for UI rendering)
- * 
+ *
  * @param offerId - The offer ID to get seat maps for
  * @returns Processed seat maps with flattened seats
  */
@@ -368,7 +424,7 @@ export async function getProcessedSeatMapsForOffer(offerId: string): Promise<{
 
 /**
  * Get processed seat maps for an order (post-booking flow)
- * 
+ *
  * @param orderId - The order ID to get seat maps for
  * @returns Processed seat maps with current seat assignments
  */
@@ -392,11 +448,13 @@ export async function getProcessedSeatMapsForOrder(orderId: string): Promise<{
 
 /**
  * Select seats for an order
- * 
+ *
  * @param payload - Seat selection payload
  * @returns Confirmation of seat selection
  */
-export async function selectSeatsForOrder(payload: SeatSelectionPayload): Promise<{
+export async function selectSeatsForOrder(
+  payload: SeatSelectionPayload,
+): Promise<{
   success: boolean;
   data?: {
     selectedSeats: SelectedSeatForBooking[];
@@ -414,7 +472,9 @@ export async function selectSeatsForOrder(payload: SeatSelectionPayload): Promis
 /**
  * Get available seats from a processed seat map
  */
-export function getAvailableSeatsFromMap(seatMap: ProcessedSeatMap): FlattenedSeat[] {
+export function getAvailableSeatsFromMap(
+  seatMap: ProcessedSeatMap,
+): FlattenedSeat[] {
   return seatMap.seats.filter((seat) => seat.available);
 }
 
@@ -440,11 +500,14 @@ export function calculateSeatsTotalCost(seats: FlattenedSeat[]): {
  */
 export async function createOrderCancellation(orderId: string): Promise<any> {
   try {
-    return await api.post('/api/flights/order-cancellations', {
+    return await api.post("/api/flights/order-cancellations", {
       order_id: orderId,
     });
   } catch (error) {
-    console.error('[Duffel API Manager] Create cancellation error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Create cancellation error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -453,11 +516,16 @@ export async function createOrderCancellation(orderId: string): Promise<any> {
  * Get cancellation by ID
  * GET /api/flights/order-cancellations/:id
  */
-export async function getOrderCancellation(cancellationId: string): Promise<any> {
+export async function getOrderCancellation(
+  cancellationId: string,
+): Promise<any> {
   try {
     return await api.get(`/api/flights/order-cancellations/${cancellationId}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get cancellation error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get cancellation error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -466,15 +534,21 @@ export async function getOrderCancellation(cancellationId: string): Promise<any>
  * List all cancellations
  * GET /api/flights/order-cancellations
  */
-export async function listOrderCancellations(params?: { limit?: number; offset?: number }): Promise<any> {
+export async function listOrderCancellations(params?: {
+  limit?: number;
+  offset?: number;
+}): Promise<any> {
   try {
     const qs = new URLSearchParams();
-    if (params?.limit) qs.append('limit', params.limit.toString());
-    if (params?.offset) qs.append('offset', params.offset.toString());
-    const query = qs.toString() ? `?${qs.toString()}` : '';
+    if (params?.limit) qs.append("limit", params.limit.toString());
+    if (params?.offset) qs.append("offset", params.offset.toString());
+    const query = qs.toString() ? `?${qs.toString()}` : "";
     return await api.get(`/api/flights/order-cancellations${query}`);
   } catch (error) {
-    console.error('[Duffel API Manager] List cancellations error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] List cancellations error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -483,11 +557,19 @@ export async function listOrderCancellations(params?: { limit?: number; offset?:
  * Confirm cancellation
  * POST /api/flights/order-cancellations/:id/confirm
  */
-export async function confirmOrderCancellation(cancellationId: string): Promise<any> {
+export async function confirmOrderCancellation(
+  cancellationId: string,
+): Promise<any> {
   try {
-    return await api.post(`/api/flights/order-cancellations/${cancellationId}/confirm`, {});
+    return await api.post(
+      `/api/flights/order-cancellations/${cancellationId}/confirm`,
+      {},
+    );
   } catch (error) {
-    console.error('[Duffel API Manager] Confirm cancellation error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Confirm cancellation error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -500,14 +582,20 @@ export async function confirmOrderCancellation(cancellationId: string): Promise<
  * Create order change request
  * POST /api/flights/order-change-requests
  */
-export async function createOrderChangeRequest(orderId: string, changeData: any): Promise<any> {
+export async function createOrderChangeRequest(
+  orderId: string,
+  changeData: any,
+): Promise<any> {
   try {
-    return await api.post('/api/flights/order-change-requests', {
+    return await api.post("/api/flights/order-change-requests", {
       order_id: orderId,
       ...changeData,
     });
   } catch (error) {
-    console.error('[Duffel API Manager] Create change request error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Create change request error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -516,11 +604,18 @@ export async function createOrderChangeRequest(orderId: string, changeData: any)
  * Get change request by ID
  * GET /api/flights/order-change-requests/:id
  */
-export async function getOrderChangeRequest(changeRequestId: string): Promise<any> {
+export async function getOrderChangeRequest(
+  changeRequestId: string,
+): Promise<any> {
   try {
-    return await api.get(`/api/flights/order-change-requests/${changeRequestId}`);
+    return await api.get(
+      `/api/flights/order-change-requests/${changeRequestId}`,
+    );
   } catch (error) {
-    console.error('[Duffel API Manager] Get change request error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get change request error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -529,13 +624,18 @@ export async function getOrderChangeRequest(changeRequestId: string): Promise<an
  * List change offers for a request
  * GET /api/flights/order-change-offers
  */
-export async function listOrderChangeOffers(changeRequestId: string): Promise<any> {
+export async function listOrderChangeOffers(
+  changeRequestId: string,
+): Promise<any> {
   try {
     const qs = new URLSearchParams();
-    qs.append('order_change_request_id', changeRequestId);
+    qs.append("order_change_request_id", changeRequestId);
     return await api.get(`/api/flights/order-change-offers?${qs.toString()}`);
   } catch (error) {
-    console.error('[Duffel API Manager] List change offers error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] List change offers error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -548,7 +648,10 @@ export async function getOrderChangeOffer(offerId: string): Promise<any> {
   try {
     return await api.get(`/api/flights/order-change-offers/${offerId}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get change offer error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get change offer error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -559,9 +662,12 @@ export async function getOrderChangeOffer(offerId: string): Promise<any> {
  */
 export async function createOrderChange(data: any): Promise<any> {
   try {
-    return await api.post('/api/flights/order-changes', data);
+    return await api.post("/api/flights/order-changes", data);
   } catch (error) {
-    console.error('[Duffel API Manager] Create order change error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Create order change error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -572,9 +678,12 @@ export async function createOrderChange(data: any): Promise<any> {
  */
 export async function confirmOrderChange(offerData: any): Promise<any> {
   try {
-    return await api.post('/api/flights/order-changes/confirm', offerData);
+    return await api.post("/api/flights/order-changes/confirm", offerData);
   } catch (error) {
-    console.error('[Duffel API Manager] Confirm order change error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Confirm order change error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -587,7 +696,10 @@ export async function getOrderChange(changeId: string): Promise<any> {
   try {
     return await api.get(`/api/flights/order-changes/${changeId}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get order change error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get order change error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -600,15 +712,21 @@ export async function getOrderChange(changeId: string): Promise<any> {
  * List airline credits
  * GET /api/airline-credits
  */
-export async function listAirlineCredits(params?: { limit?: number; offset?: number }): Promise<any> {
+export async function listAirlineCredits(params?: {
+  limit?: number;
+  offset?: number;
+}): Promise<any> {
   try {
     const qs = new URLSearchParams();
-    if (params?.limit) qs.append('limit', params.limit.toString());
-    if (params?.offset) qs.append('offset', params.offset.toString());
-    const query = qs.toString() ? `?${qs.toString()}` : '';
+    if (params?.limit) qs.append("limit", params.limit.toString());
+    if (params?.offset) qs.append("offset", params.offset.toString());
+    const query = qs.toString() ? `?${qs.toString()}` : "";
     return await api.get(`/api/airline-credits${query}`);
   } catch (error) {
-    console.error('[Duffel API Manager] List airline credits error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] List airline credits error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -621,7 +739,10 @@ export async function getAirlineCredit(creditId: string): Promise<any> {
   try {
     return await api.get(`/api/airline-credits/${creditId}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Get airline credit error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Get airline credit error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -632,9 +753,12 @@ export async function getAirlineCredit(creditId: string): Promise<any> {
  */
 export async function createAirlineCredit(data: any): Promise<any> {
   try {
-    return await api.post('/api/airline-credits', data);
+    return await api.post("/api/airline-credits", data);
   } catch (error) {
-    console.error('[Duffel API Manager] Create airline credit error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Create airline credit error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -643,11 +767,17 @@ export async function createAirlineCredit(data: any): Promise<any> {
  * Update airline credit
  * PATCH /api/airline-credits/:id
  */
-export async function updateAirlineCredit(creditId: string, data: any): Promise<any> {
+export async function updateAirlineCredit(
+  creditId: string,
+  data: any,
+): Promise<any> {
   try {
     return await api.patch(`/api/airline-credits/${creditId}`, data);
   } catch (error) {
-    console.error('[Duffel API Manager] Update airline credit error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Update airline credit error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }
@@ -663,10 +793,13 @@ export async function updateAirlineCredit(creditId: string, data: any): Promise<
 export async function searchAirports(query: string): Promise<any> {
   try {
     const qs = new URLSearchParams();
-    qs.append('q', query);
+    qs.append("q", query);
     return await api.get(`/api/duffel/airports?${qs.toString()}`);
   } catch (error) {
-    console.error('[Duffel API Manager] Search airports error:', (error as any)?.message);
+    console.error(
+      "[Duffel API Manager] Search airports error:",
+      (error as any)?.message,
+    );
     throw error;
   }
 }

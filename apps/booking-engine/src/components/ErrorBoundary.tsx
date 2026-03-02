@@ -1,7 +1,7 @@
-import React, { ReactNode } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import React, { ReactNode } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -27,10 +27,10 @@ export class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    
+    console.error("Error caught by boundary:", error, errorInfo);
+
     // Log to error tracking service in production
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       // TODO: Send to error tracking service
     }
   }
@@ -48,15 +48,15 @@ export class ErrorBoundary extends React.Component<
       return (
         <Card className="m-6 p-8 border-2 border-red-200 bg-red-50">
           <div className="flex gap-4">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 gap-4">
               <AlertTriangle className="h-12 w-12 text-red-600" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-red-900 mb-2">
+            <div className="flex-1 gap-4">
+              <h2 className="text-xl font-bold text-red-900 mb-2 text-2xl font-semibold tracking-tight">
                 Something went wrong
               </h2>
               <p className="text-red-700 mb-4">
-                {this.state.error.message || 'An unexpected error occurred'}
+                {this.state.error.message || "An unexpected error occurred"}
               </p>
               <details className="mb-4 text-sm text-red-700">
                 <summary className="cursor-pointer font-bold mb-2">
@@ -68,7 +68,7 @@ export class ErrorBoundary extends React.Component<
               </details>
               <Button
                 onClick={this.reset}
-                className="bg-red-600 hover:bg-red-700 text-white rounded-lg"
+                className="hover: text-white rounded-lg"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again

@@ -56,7 +56,7 @@ export function WalletBalance({
   return (
     <div className="wallet-balances">
       <h2>My Wallets</h2>
-      <div className="wallet-grid">
+      <div className="wallet-grid gap-4">
         {wallets.map((wallet) => (
           <div key={wallet.id} className="wallet-card">
             <div className="wallet-currency">{wallet.currency}</div>

@@ -1,8 +1,8 @@
 // @ts-ignore
- // @ts-ignore
-import * as React from "react"
+// @ts-ignore
+import * as React from "react";
 
-import { cn } from "../lib/utils"
+import { cn } from "../lib/utils";
 
 const Table = React.forwardRef<
   HTMLTableElement,
@@ -15,20 +15,23 @@ const Table = React.forwardRef<
       {...props}
     />
   </div>
-))
-Table.displayName = "Table"
+));
+Table.displayName = "Table";
 
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead 
-    ref={ref} 
-    className={cn("bg-slate-50/80 [&_tr]:border-b [&_tr]:border-slate-200", className)} 
-    {...props} 
+  <thead
+    ref={ref}
+    className={cn(
+      "bg-slate-50/80 [&_tr]:border-b [&_tr]:border-slate-200",
+      className,
+    )}
+    {...props}
   />
-))
-TableHeader.displayName = "TableHeader"
+));
+TableHeader.displayName = "TableHeader";
 
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
@@ -39,8 +42,8 @@ const TableBody = React.forwardRef<
     className={cn("[&_tr:last-child]:border-0", className)}
     {...props}
   />
-))
-TableBody.displayName = "TableBody"
+));
+TableBody.displayName = "TableBody";
 
 const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
@@ -50,12 +53,12 @@ const TableFooter = React.forwardRef<
     ref={ref}
     className={cn(
       "border-t border-slate-200 bg-slate-50/50 font-medium [&>tr]:last:border-b-0",
-      className
+      className,
     )}
     {...props}
   />
-))
-TableFooter.displayName = "TableFooter"
+));
+TableFooter.displayName = "TableFooter";
 
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
@@ -67,12 +70,12 @@ const TableRow = React.forwardRef<
       "border-b border-slate-100 transition-colors duration-150",
       "hover:bg-slate-50/80",
       "data-[state=selected]:bg-slate-100",
-      className
+      className,
     )}
     {...props}
   />
-))
-TableRow.displayName = "TableRow"
+));
+TableRow.displayName = "TableRow";
 
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
@@ -83,12 +86,12 @@ const TableHead = React.forwardRef<
     className={cn(
       "h-11 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wide text-slate-500",
       "[&:has([role=checkbox])]:pr-0",
-      className
+      className,
     )}
     {...props}
   />
-))
-TableHead.displayName = "TableHead"
+));
+TableHead.displayName = "TableHead";
 
 const TableCell = React.forwardRef<
   HTMLTableCellElement,
@@ -99,12 +102,12 @@ const TableCell = React.forwardRef<
     className={cn(
       "p-4 align-middle text-slate-600",
       "[&:has([role=checkbox])]:pr-0",
-      className
+      className,
     )}
     {...props}
   />
-))
-TableCell.displayName = "TableCell"
+));
+TableCell.displayName = "TableCell";
 
 const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
@@ -115,8 +118,8 @@ const TableCaption = React.forwardRef<
     className={cn("mt-4 text-sm text-slate-400", className)}
     {...props}
   />
-))
-TableCaption.displayName = "TableCaption"
+));
+TableCaption.displayName = "TableCaption";
 
 export {
   Table,
@@ -127,4 +130,4 @@ export {
   TableRow,
   TableCell,
   TableCaption,
-}
+};

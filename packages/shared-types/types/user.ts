@@ -2,8 +2,8 @@
 // TripAlfa Shared Types - User Domain
 // ============================================================================
 
-import { UserType, UserStatus, Gender, CustomerTier } from './enums';
-import { Address } from './company';
+import { UserType, UserStatus, Gender, CustomerTier } from "./enums";
+import { Address } from "./company";
 
 // ============================================================================
 // User Types
@@ -129,7 +129,7 @@ export interface EmergencyContact {
 }
 
 export interface TravelPreferences {
-  seatPreference?: 'window' | 'aisle' | 'middle';
+  seatPreference?: "window" | "aisle" | "middle";
   mealPreference?: string;
   specialAssistance?: string[];
 }
@@ -256,8 +256,8 @@ export interface UserListParams {
   branchId?: string;
   type?: UserType;
   status?: UserStatus;
-  sortBy?: 'firstName' | 'lastName' | 'email' | 'createdAt' | 'lastLoginAt';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "firstName" | "lastName" | "email" | "createdAt" | "lastLoginAt";
+  sortOrder?: "asc" | "desc";
 }
 
 export interface UserListResponse {

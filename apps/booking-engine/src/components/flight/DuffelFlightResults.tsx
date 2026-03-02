@@ -1,13 +1,13 @@
 /**
  * DuffelFlightResults Component
- * 
+ *
  * Displays flight search results from Duffel API with filtering,
  * sorting, and selection capabilities.
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { formatCurrency } from '@tripalfa/ui-components';
+import React, { useState, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "@tripalfa/ui-components";
 import {
   Plane,
   Clock,
@@ -24,9 +24,12 @@ import {
   RefreshCw,
   AlertCircle,
   Loader2,
-} from 'lucide-react';
-import { Button } from '../ui/button';
-import type { FlightSearchResult, FlightSearchFilters } from '../../types/duffel';
+} from "lucide-react";
+import { Button } from "../ui/button";
+import type {
+  FlightSearchResult,
+  FlightSearchFilters,
+} from "../../types/duffel";
 
 // ============================================================================
 // TYPES
@@ -68,11 +71,15 @@ interface AirlineInfo {
 // ============================================================================
 
 function getAirlineLogo(carrierCode: string): string {
-  if (!carrierCode) return 'https://cdn-icons-png.flaticon.com/512/723/723955.png';
+  if (!carrierCode)
+    return "https://cdn-icons-png.flaticon.com/512/723/723955.png";
   return `/airline-logos/${carrierCode}.png`;
 }
 
-function resolveAirportName(iata: string, airportsByIata: Record<string, any>): string {
+function resolveAirportName(
+  iata: string,
+  airportsByIata: Record<string, any>,
+): string {
   const airport = airportsByIata[iata];
   if (airport) return `${airport.name} (${airport.code})`;
   return iata;
@@ -97,10 +104,14 @@ interface LegTimelineProps {
   resolveAirport: (code: string) => string;
 }
 
-const LegTimeline: React.FC<LegTimelineProps> = ({ leg, label, resolveAirport }) => (
-  <div className="space-y-1">
+const LegTimeline: React.FC<LegTimelineProps> = ({
+  leg,
+  label,
+  resolveAirport,
+}) => (
+  <div className="space-y-2">
     {label && (
-      <p className="text-[9px] font-black text-[#152467] uppercase tracking-[0.3em] mb-2">
+      <p className="text-[9px] font-black text-primary uppercase tracking-[0.3em] mb-2">
         {label}
       </p>
     )}
@@ -116,25 +127,25 @@ const LegTimeline: React.FC<LegTimelineProps> = ({ leg, label, resolveAirport })
           <p className="text-[9px] text-gray-300 font-bold">{leg.originCity}</p>
         )}
       </div>
-      <div className="flex-1 flex flex-col items-center min-w-0">
+      <div className="flex-1 flex flex-col items-center min-w-0 gap-4">
         <span className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1.5">
           {leg.duration}
         </span>
         <div className="w-full h-px bg-gray-100 relative">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#152467] shadow-sm">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border border-gray-100 flex items-center justify-center text-primary shadow-sm gap-2">
             <Plane size={11} />
           </div>
         </div>
         <div className="mt-2 flex items-center gap-1.5">
           <div
             className={`h-1.5 w-1.5 rounded-full ${
-              leg.stops === 0 ? 'bg-green-500' : 'bg-amber-400'
+              leg.stops === 0 ? "bg-green-500" : "bg-amber-400"
             }`}
           />
           <span className="text-[9px] font-black text-gray-700 uppercase tracking-wider">
             {leg.stops === 0
-              ? 'Direct'
-              : `${leg.stops} Stop${leg.stops > 1 ? 's' : ''}`}
+              ? "Direct"
+              : `${leg.stops} Stop${leg.stops > 1 ? "s" : ""}`}
           </span>
         </div>
       </div>
@@ -164,10 +175,10 @@ export function DuffelFlightResults({
   isCached = false,
   onSelectFlight,
   onRefresh,
-  origin = '',
-  destination = '',
-  departureDate = '',
-  className = '',
+  origin = "",
+  destination = "",
+  departureDate = "",
+  className = "",
 }: DuffelFlightResultsProps) {
   const navigate = useNavigate();
 
@@ -180,7 +191,9 @@ export function DuffelFlightResults({
   });
 
   // Sort state
-  const [sortBy, setSortBy] = useState<'price' | 'duration' | 'departure'>('price');
+  const [sortBy, setSortBy] = useState<"price" | "duration" | "departure">(
+    "price",
+  );
 
   // Extract unique airlines from results
   const realtimeAirlines = useMemo(() => {
@@ -190,7 +203,7 @@ export function DuffelFlightResults({
       if (code && !airlineMap.has(code)) {
         airlineMap.set(code, {
           code,
-          name: flight.airline || 'Unknown Airline',
+          name: flight.airline || "Unknown Airline",
           logo: getAirlineLogo(code),
         });
       }
@@ -216,10 +229,10 @@ export function DuffelFlightResults({
       result = result.filter((flight) => {
         const stopLabel =
           flight.stops === 0
-            ? 'non-stop'
+            ? "non-stop"
             : flight.stops === 1
-            ? '1-stop'
-            : '2-plus-stops';
+              ? "1-stop"
+              : "2-plus-stops";
         return filters.stops.has(stopLabel);
       });
     }
@@ -233,20 +246,20 @@ export function DuffelFlightResults({
 
     // Apply sorting
     switch (sortBy) {
-      case 'price':
+      case "price":
         result.sort((a, b) => a.amount - b.amount);
         break;
-      case 'duration':
+      case "duration":
         result.sort((a, b) => {
           const aDur = parseInt(a.duration) || 0;
           const bDur = parseInt(b.duration) || 0;
           return aDur - bDur;
         });
         break;
-      case 'departure':
+      case "departure":
         result.sort((a, b) => {
-          const aTime = a.departureTime || '';
-          const bTime = b.departureTime || '';
+          const aTime = a.departureTime || "";
+          const bTime = b.departureTime || "";
           return aTime.localeCompare(bTime);
         });
         break;
@@ -295,12 +308,10 @@ export function DuffelFlightResults({
       if (onSelectFlight) {
         onSelectFlight(flight);
       } else {
-        navigate(
-          `/flights/detail?id=${flight.id}&offerId=${flight.offerId}`
-        );
+        navigate(`/flights/detail?id=${flight.id}&offerId=${flight.offerId}`);
       }
     },
-    [navigate, onSelectFlight]
+    [navigate, onSelectFlight],
   );
 
   // Resolve airport name (placeholder - would use static data in production)
@@ -312,7 +323,7 @@ export function DuffelFlightResults({
       <div
         className={`flex flex-col items-center justify-center py-20 ${className}`}
       >
-        <div className="w-12 h-12 border-4 border-[#152467] border-t-transparent rounded-full animate-spin mb-4" />
+        <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
         <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
           Searching the skies...
         </p>
@@ -326,7 +337,7 @@ export function DuffelFlightResults({
       <div
         className={`flex flex-col items-center justify-center py-20 bg-white rounded-[2rem] border border-red-100 ${className}`}
       >
-        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6 gap-2">
           <AlertCircle size={32} className="text-red-400" />
         </div>
         <h3 className="text-lg font-black text-gray-900">Search Failed</h3>
@@ -363,7 +374,7 @@ export function DuffelFlightResults({
   return (
     <div className={className}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-2">
         <div className="flex items-center gap-3">
           <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">
             Found {filteredFlights.length} of {flights.length} results
@@ -386,7 +397,7 @@ export function DuffelFlightResults({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-transparent text-[11px] font-black text-[#152467] uppercase tracking-widest outline-none border-none py-0"
+            className="bg-transparent text-[11px] font-black text-primary uppercase tracking-widest outline-none border-none py-0"
           >
             <option value="price">Cheapest</option>
             <option value="duration">Fastest</option>
@@ -400,13 +411,13 @@ export function DuffelFlightResults({
         {/* Filters Sidebar */}
         <div className="lg:col-span-3 space-y-6">
           <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6 space-y-6 sticky top-32">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-xs font-black text-gray-900 uppercase tracking-widest text-xl font-semibold tracking-tight">
                 Filters
               </h3>
               <button
                 onClick={resetFilters}
-                className="text-[10px] font-black text-[#152467] uppercase underline"
+                className="text-[10px] font-black text-primary uppercase underline px-4 py-2 rounded-md"
               >
                 Reset All
               </button>
@@ -431,25 +442,25 @@ export function DuffelFlightResults({
               <div className="space-y-3">
                 {[
                   {
-                    label: 'Non-stop',
-                    value: 'non-stop',
+                    label: "Non-stop",
+                    value: "non-stop",
                     count: flights.filter((f) => f.stops === 0).length,
                   },
                   {
-                    label: '1 Stop',
-                    value: '1-stop',
+                    label: "1 Stop",
+                    value: "1-stop",
                     count: flights.filter((f) => f.stops === 1).length,
                   },
                   {
-                    label: '2+ Stops',
-                    value: '2-plus-stops',
+                    label: "2+ Stops",
+                    value: "2-plus-stops",
                     count: flights.filter((f) => f.stops >= 2).length,
                   },
                 ].map((stop) => (
                   <label
                     key={stop.value}
                     className={`flex items-center justify-between cursor-pointer group ${
-                      stop.count === 0 ? 'opacity-50' : ''
+                      stop.count === 0 ? "opacity-50" : ""
                     }`}
                   >
                     <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors">
@@ -463,7 +474,7 @@ export function DuffelFlightResults({
                         type="checkbox"
                         checked={filters.stops.has(stop.value)}
                         onChange={() => toggleStopFilter(stop.value)}
-                        className="w-4 h-4 rounded border-gray-200 text-[#152467] focus:ring-[#152467]"
+                        className="w-4 h-4 rounded border-gray-200 text-primary focus:ring-primary"
                       />
                     </div>
                   </label>
@@ -483,7 +494,7 @@ export function DuffelFlightResults({
                 {realtimeAirlines.map((airline) => (
                   <label
                     key={airline.code}
-                    className="flex items-center justify-between cursor-pointer group"
+                    className="flex items-center justify-between cursor-pointer group gap-2 text-sm font-medium"
                   >
                     <div className="flex items-center gap-2">
                       <img
@@ -491,7 +502,7 @@ export function DuffelFlightResults({
                         alt={airline.name}
                         className="w-5 h-5 object-contain rounded"
                         onError={(e) => {
-                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.style.display = "none";
                         }}
                       />
                       <span className="text-xs font-bold text-gray-600 group-hover:text-gray-900 transition-colors">
@@ -502,7 +513,7 @@ export function DuffelFlightResults({
                       type="checkbox"
                       checked={filters.airlines.has(airline.code)}
                       onChange={() => toggleAirlineFilter(airline.code)}
-                      className="w-4 h-4 rounded border-gray-200 text-[#152467] focus:ring-[#152467]"
+                      className="w-4 h-4 rounded border-gray-200 text-primary focus:ring-primary"
                     />
                   </label>
                 ))}
@@ -515,35 +526,36 @@ export function DuffelFlightResults({
         <div className="lg:col-span-9 space-y-4">
           {filteredFlights.map((flight) => {
             const airlineInfo: AirlineInfo = {
-              code: flight.carrierCode || '',
+              code: flight.carrierCode || "",
               name: flight.airline,
-              logo: getAirlineLogo(flight.carrierCode || ''),
+              logo: getAirlineLogo(flight.carrierCode || ""),
             };
 
-            const isRoundTrip = flight.tripType === 'round-trip';
-            const isMultiCity = flight.tripType === 'multi-city';
-            const hasExtraLegs = flight.extraSlices && flight.extraSlices.length > 0;
+            const isRoundTrip = flight.tripType === "round-trip";
+            const isMultiCity = flight.tripType === "multi-city";
+            const hasExtraLegs =
+              flight.extraSlices && flight.extraSlices.length > 0;
 
             return (
               <div
                 key={flight.id}
-                className="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-[#152467]/20 transition-all duration-500 group relative overflow-hidden cursor-pointer"
+                className="bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-500 group relative overflow-hidden cursor-pointer"
                 onClick={() => handleSelectFlight(flight)}
               >
-                <div className="absolute top-0 left-0 w-1 h-full bg-[#152467] scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
 
                 {/* Card Header */}
                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 px-8 pt-8 pb-6">
                   {/* Airline Info */}
                   <div className="flex items-center gap-4 shrink-0 lg:w-44">
-                    <div className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center p-2 border border-gray-100">
+                    <div className="w-11 h-11 rounded-2xl bg-gray-50 flex items-center justify-center p-2 border border-gray-100 gap-2">
                       <img
                         src={airlineInfo.logo}
                         className="w-full h-full object-contain"
                         alt={flight.airline}
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
-                            'https://cdn-icons-png.flaticon.com/512/723/723955.png';
+                            "https://cdn-icons-png.flaticon.com/512/723/723955.png";
                         }}
                       />
                     </div>
@@ -558,17 +570,17 @@ export function DuffelFlightResults({
                       <span
                         className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${
                           isRoundTrip
-                            ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                            ? "bg-indigo-50 text-indigo-600 border-indigo-100"
                             : isMultiCity
-                            ? 'bg-amber-50 text-amber-600 border-amber-100'
-                            : 'bg-gray-50 text-gray-500 border-gray-100'
+                              ? "bg-amber-50 text-amber-600 border-amber-100"
+                              : "bg-gray-50 text-gray-500 border-gray-100"
                         }`}
                       >
                         {isRoundTrip
-                          ? '↔ Round Trip'
+                          ? "↔ Round Trip"
                           : isMultiCity
-                          ? '⤳ Multi-City'
-                          : '→ One Way'}
+                            ? "⤳ Multi-City"
+                            : "→ One Way"}
                       </span>
                     </div>
                   </div>
@@ -588,7 +600,7 @@ export function DuffelFlightResults({
                           duration: flight.duration,
                           stops: flight.stops,
                         }}
-                        label={hasExtraLegs ? 'Outbound' : undefined}
+                        label={hasExtraLegs ? "Outbound" : undefined}
                         resolveAirport={resolveAirport}
                       />
                     </div>
@@ -598,13 +610,13 @@ export function DuffelFlightResults({
                       flight.extraSlices!.map((sl, idx) => (
                         <div key={idx}>
                           <div className="flex items-center gap-3 my-3 px-4">
-                            <div className="flex-1 h-px border-t border-dashed border-gray-200" />
+                            <div className="flex-1 h-px border-t border-dashed border-gray-200 gap-4" />
                             <span className="text-[8px] font-black text-gray-300 uppercase tracking-[2px] flex items-center gap-1">
                               <ArrowRight size={8} className="rotate-180" />
-                              {isRoundTrip ? 'Return' : `Leg ${idx + 2}`}
+                              {isRoundTrip ? "Return" : `Leg ${idx + 2}`}
                               <ArrowRight size={8} />
                             </span>
-                            <div className="flex-1 h-px border-t border-dashed border-gray-200" />
+                            <div className="flex-1 h-px border-t border-dashed border-gray-200 gap-4" />
                           </div>
                           <div className="px-0 lg:px-4">
                             <LegTimeline
@@ -622,12 +634,12 @@ export function DuffelFlightResults({
                     <div className="text-right lg:text-center">
                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
                         {isRoundTrip
-                          ? 'Round Trip'
+                          ? "Round Trip"
                           : isMultiCity
-                          ? 'All Legs'
-                          : 'Per Person'}
+                            ? "All Legs"
+                            : "Per Person"}
                       </p>
-                      <p className="text-2xl font-black text-[#152467] tracking-tighter">
+                      <p className="text-2xl font-black text-primary tracking-tighter">
                         {formatCurrency(flight.amount, flight.currency)}
                       </p>
                       <div className="flex items-center gap-1 justify-end lg:justify-center text-[9px] font-bold mt-1 uppercase tracking-widest">
@@ -641,7 +653,7 @@ export function DuffelFlightResults({
                             <Luggage size={9} />
                             {flight.includedBags?.[0]?.weight
                               ? `${flight.includedBags[0].weight}kg bag`
-                              : 'See bags'}
+                              : "See bags"}
                           </span>
                         )}
                       </div>
@@ -651,7 +663,7 @@ export function DuffelFlightResults({
                         e.stopPropagation();
                         handleSelectFlight(flight);
                       }}
-                      className="h-11 px-8 bg-[#111827] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-black transition-all hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+                      className="h-11 px-8 bg-foreground text-background rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-foreground/90 transition-all hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
                     >
                       Select Deal
                     </Button>

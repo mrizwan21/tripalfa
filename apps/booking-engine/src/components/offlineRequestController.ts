@@ -1,23 +1,23 @@
-import { Request, Response, NextFunction } from 'express';
-import { createLogger } from '@tripalfa/shared-utils/logger';
-const logger = createLogger({ serviceName: 'booking-engine' });
-import offlineRequestService from '../services/offlineRequestService';
+import { Request, Response, NextFunction } from "express";
+import { createLogger } from "@tripalfa/shared-utils/logger";
+const logger = createLogger({ serviceName: "booking-engine" });
+import offlineRequestService from "../services/offlineRequestService";
 import {
   CreateOfflineRequestPayload,
   SubmitPricingPayload,
   OfflineRequestStatus,
   OfflineChangeRequest,
   OfflineRequestAuditLog,
-} from '@tripalfa/shared-types';
+} from "@tripalfa/shared-types";
 
 /**
  * Helper to safely extract string parameters from request
  */
 const getStringParam = (param: string | string[] | undefined): string => {
   if (Array.isArray(param)) {
-    return param[0] || '';
+    return param[0] || "";
   }
-  return param || '';
+  return param || "";
 };
 
 /**
@@ -27,7 +27,7 @@ const getStringParam = (param: string | string[] | undefined): string => {
 export const createOfflineRequest = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const payload: CreateOfflineRequestPayload = req.body;
@@ -36,8 +36,8 @@ export const createOfflineRequest = async (
     // Validation
     if (!payload.bookingId || !payload.bookingRef) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'bookingId and bookingRef are required',
+        error: "Missing required fields",
+        message: "bookingId and bookingRef are required",
       });
       return;
     }
@@ -56,7 +56,7 @@ export const createOfflineRequest = async (
       message: `Offline request ${request.requestRef} created successfully`,
     });
   } catch (error) {
-    logger.error('Error creating offline request', { error });
+    logger.error("Error creating offline request", { error });
     next(error);
   }
 };
@@ -68,7 +68,7 @@ export const createOfflineRequest = async (
 export const getOfflineRequest = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
@@ -76,7 +76,7 @@ export const getOfflineRequest = async (
 
     if (!request) {
       res.status(404).json({
-        error: 'Not found',
+        error: "Not found",
         message: `Offline request ${id} not found`,
       });
       return;
@@ -87,7 +87,7 @@ export const getOfflineRequest = async (
       data: request,
     });
   } catch (error) {
-    logger.error('Error retrieving offline request', { error });
+    logger.error("Error retrieving offline request", { error });
     next(error);
   }
 };
@@ -99,7 +99,7 @@ export const getOfflineRequest = async (
 export const getOfflineRequestByRef = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const requestRef = getStringParam(req.params.requestRef);
@@ -107,7 +107,7 @@ export const getOfflineRequestByRef = async (
 
     if (!request) {
       res.status(404).json({
-        error: 'Not found',
+        error: "Not found",
         message: `Offline request ${requestRef} not found`,
       });
       return;
@@ -118,7 +118,7 @@ export const getOfflineRequestByRef = async (
       data: request,
     });
   } catch (error) {
-    logger.error('Error retrieving offline request by ref', { error });
+    logger.error("Error retrieving offline request by ref", { error });
     next(error);
   }
 };
@@ -130,7 +130,7 @@ export const getOfflineRequestByRef = async (
 export const getCustomerRequests = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const { bookingId } = req.query;
@@ -139,8 +139,8 @@ export const getCustomerRequests = async (
 
     if (!bookingId) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'bookingId is required',
+        error: "Missing required fields",
+        message: "bookingId is required",
       });
       return;
     }
@@ -148,7 +148,7 @@ export const getCustomerRequests = async (
     const result = await offlineRequestService.getCustomerRequests(
       bookingId as string,
       limit,
-      offset
+      offset,
     );
 
     res.json({
@@ -156,7 +156,7 @@ export const getCustomerRequests = async (
       data: result,
     });
   } catch (error) {
-    logger.error('Error retrieving customer requests', { error });
+    logger.error("Error retrieving customer requests", { error });
     next(error);
   }
 };
@@ -168,21 +168,27 @@ export const getCustomerRequests = async (
 export const getStaffQueue = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
-    const status = (req.query.status as OfflineRequestStatus) || OfflineRequestStatus.PENDING_STAFF;
+    const status =
+      (req.query.status as OfflineRequestStatus) ||
+      OfflineRequestStatus.PENDING_STAFF;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
     const offset = parseInt(req.query.offset as string) || 0;
 
-    const result = await offlineRequestService.getStaffQueue(status, limit, offset);
+    const result = await offlineRequestService.getStaffQueue(
+      status,
+      limit,
+      offset,
+    );
 
     res.json({
       success: true,
       data: result,
     });
   } catch (error) {
-    logger.error('Error retrieving staff queue', { error });
+    logger.error("Error retrieving staff queue", { error });
     next(error);
   }
 };
@@ -194,20 +200,21 @@ export const getStaffQueue = async (
 export const getRequestsByBooking = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const bookingId = getStringParam(req.params.bookingId);
 
     if (!bookingId) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'bookingId is required',
+        error: "Missing required fields",
+        message: "bookingId is required",
       });
       return;
     }
 
-    const requests = await offlineRequestService.getRequestsByBooking(bookingId);
+    const requests =
+      await offlineRequestService.getRequestsByBooking(bookingId);
 
     res.json({
       success: true,
@@ -217,7 +224,7 @@ export const getRequestsByBooking = async (
       },
     });
   } catch (error) {
-    logger.error('Error retrieving requests by booking', { error });
+    logger.error("Error retrieving requests by booking", { error });
     next(error);
   }
 };
@@ -229,7 +236,7 @@ export const getRequestsByBooking = async (
 export const submitPricing = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
@@ -245,8 +252,9 @@ export const submitPricing = async (
       payload.newTotalPrice === undefined
     ) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'newBaseFare, newTaxes, newMarkup, currency, and newTotalPrice are required',
+        error: "Missing required fields",
+        message:
+          "newBaseFare, newTaxes, newMarkup, currency, and newTotalPrice are required",
       });
       return;
     }
@@ -254,21 +262,24 @@ export const submitPricing = async (
     const request = await offlineRequestService.submitPricing(
       id,
       payload,
-      staffId
+      staffId,
     );
 
-    logger.info(`Pricing submitted for offline request: ${request.requestRef}`, {
-      requestId: id,
-      staffId,
-    });
+    logger.info(
+      `Pricing submitted for offline request: ${request.requestRef}`,
+      {
+        requestId: id,
+        staffId,
+      },
+    );
 
     res.json({
       success: true,
       data: request,
-      message: 'Pricing submitted successfully',
+      message: "Pricing submitted successfully",
     });
   } catch (error) {
-    logger.error('Error submitting pricing', { error });
+    logger.error("Error submitting pricing", { error });
     next(error);
   }
 };
@@ -280,7 +291,7 @@ export const submitPricing = async (
 export const approveRequest = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
@@ -290,17 +301,20 @@ export const approveRequest = async (
     // Validate required fields
     if (approved === undefined || approved === null) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'approved flag is required',
+        error: "Missing required fields",
+        message: "approved flag is required",
       });
       return;
     }
 
     // If rejecting, rejectionReason must be provided
-    if (!approved && (!rejectionReason || typeof rejectionReason !== 'string')) {
+    if (
+      !approved &&
+      (!rejectionReason || typeof rejectionReason !== "string")
+    ) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'rejectionReason is required when rejecting (approved=false)',
+        error: "Missing required fields",
+        message: "rejectionReason is required when rejecting (approved=false)",
       });
       return;
     }
@@ -309,10 +323,10 @@ export const approveRequest = async (
       id,
       userId,
       approved,
-      rejectionReason
+      rejectionReason,
     );
 
-    const action = approved ? 'approved' : 'rejected';
+    const action = approved ? "approved" : "rejected";
     logger.info(`Offline request ${action}: ${request.requestRef}`, {
       requestId: id,
       userId,
@@ -324,7 +338,7 @@ export const approveRequest = async (
       message: `Request ${action} successfully`,
     });
   } catch (error) {
-    logger.error('Error approving/rejecting request', { error });
+    logger.error("Error approving/rejecting request", { error });
     next(error);
   }
 };
@@ -336,25 +350,26 @@ export const approveRequest = async (
 export const recordPayment = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
-    const { paymentId, amount, method, transactionRef, paymentDetails } = req.body;
+    const { paymentId, amount, method, transactionRef, paymentDetails } =
+      req.body;
 
     // Validation
     if (!paymentId || !amount || !method) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'paymentId, amount, and method are required',
+        error: "Missing required fields",
+        message: "paymentId, amount, and method are required",
       });
       return;
     }
 
-    if (typeof amount !== 'number' || amount <= 0) {
+    if (typeof amount !== "number" || amount <= 0) {
       res.status(400).json({
-        error: 'Invalid payment amount',
-        message: 'amount must be a positive number',
+        error: "Invalid payment amount",
+        message: "amount must be a positive number",
       });
       return;
     }
@@ -365,23 +380,26 @@ export const recordPayment = async (
       amount,
       method,
       transactionRef,
-      paymentDetails
+      paymentDetails,
     );
 
-    logger.info(`Payment processed for offline request: ${request.requestRef}`, {
-      requestId: id,
-      paymentId,
-      amount,
-      method,
-    });
+    logger.info(
+      `Payment processed for offline request: ${request.requestRef}`,
+      {
+        requestId: id,
+        paymentId,
+        amount,
+        method,
+      },
+    );
 
     res.json({
       success: true,
       data: request,
-      message: 'Payment processed successfully',
+      message: "Payment processed successfully",
     });
   } catch (error) {
-    logger.error('Error processing payment', { error });
+    logger.error("Error processing payment", { error });
     next(error);
   }
 };
@@ -393,13 +411,16 @@ export const recordPayment = async (
 export const completeRequest = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
     const { documentUrls = [] } = req.body;
 
-    const request = await offlineRequestService.completeRequest(id, documentUrls);
+    const request = await offlineRequestService.completeRequest(
+      id,
+      documentUrls,
+    );
 
     logger.info(`Offline request completed: ${request.requestRef}`, {
       requestId: id,
@@ -408,10 +429,10 @@ export const completeRequest = async (
     res.json({
       success: true,
       data: request,
-      message: 'Request completed successfully',
+      message: "Request completed successfully",
     });
   } catch (error) {
-    logger.error('Error completing request', { error });
+    logger.error("Error completing request", { error });
     next(error);
   }
 };
@@ -423,7 +444,7 @@ export const completeRequest = async (
 export const cancelRequest = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
@@ -432,13 +453,17 @@ export const cancelRequest = async (
 
     if (!reason) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'reason is required',
+        error: "Missing required fields",
+        message: "reason is required",
       });
       return;
     }
 
-    const request = await offlineRequestService.cancelRequest(id, userId, reason);
+    const request = await offlineRequestService.cancelRequest(
+      id,
+      userId,
+      reason,
+    );
 
     logger.info(`Offline request cancelled: ${request.requestRef}`, {
       requestId: id,
@@ -448,10 +473,10 @@ export const cancelRequest = async (
     res.json({
       success: true,
       data: request,
-      message: 'Request cancelled successfully',
+      message: "Request cancelled successfully",
     });
   } catch (error) {
-    logger.error('Error cancelling request', { error });
+    logger.error("Error cancelling request", { error });
     next(error);
   }
 };
@@ -463,7 +488,7 @@ export const cancelRequest = async (
 export const addInternalNote = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
@@ -472,26 +497,33 @@ export const addInternalNote = async (
 
     if (!note) {
       res.status(400).json({
-        error: 'Missing required fields',
-        message: 'note is required',
+        error: "Missing required fields",
+        message: "note is required",
       });
       return;
     }
 
-    const request = await offlineRequestService.addInternalNote(id, note, staffId);
-
-    logger.info(`Internal note added to offline request: ${request.requestRef}`, {
-      requestId: id,
+    const request = await offlineRequestService.addInternalNote(
+      id,
+      note,
       staffId,
-    });
+    );
+
+    logger.info(
+      `Internal note added to offline request: ${request.requestRef}`,
+      {
+        requestId: id,
+        staffId,
+      },
+    );
 
     res.json({
       success: true,
       data: request,
-      message: 'Note added successfully',
+      message: "Note added successfully",
     });
   } catch (error) {
-    logger.error('Error adding internal note', { error });
+    logger.error("Error adding internal note", { error });
     next(error);
   }
 };
@@ -503,7 +535,7 @@ export const addInternalNote = async (
 export const getAuditLog = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> => {
   try {
     const id = getStringParam(req.params.id);
@@ -517,7 +549,7 @@ export const getAuditLog = async (
       data: result,
     });
   } catch (error) {
-    logger.error('Error retrieving audit log', { error });
+    logger.error("Error retrieving audit log", { error });
     next(error);
   }
 };

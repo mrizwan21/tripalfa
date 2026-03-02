@@ -1,0 +1,119 @@
+{
+  "testName": "🟡 Normal Load (50 users, 120s)",
+  "config": {
+    "baseURL": "http://localhost:3001/api",
+    "duration": 120000,
+    "concurrentUsers": 50,
+    "rampUpTime": 10000,
+    "warmupDuration": 5000
+  },
+  "startTime": 1772416130537,
+  "endTime": 1772416250571,
+  "duration": 120034,
+  "totalOperations": 46650,
+  "totalSuccesses": 35960,
+  "totalFailures": 10690,
+  "overallThroughput": 299.5817851608711,
+  "operationMetrics": {
+    "wallet_transfer": {
+      "operation": "wallet_transfer",
+      "count": 7860,
+      "successes": 5707,
+      "failures": 2153,
+      "avgTime": 58.16454676870506,
+      "minTime": 2.0422919999982696,
+      "maxTime": 453.96374999999534,
+      "p50": 56.69862499998999,
+      "p95": 101.34591699999874,
+      "p99": 170.04316699999617,
+      "throughput": 47.544862289018106,
+      "errorRate": 27.391857506361323
+    },
+    "wallet_topup": {
+      "operation": "wallet_topup",
+      "count": 7888,
+      "successes": 7888,
+      "failures": 0,
+      "avgTime": 57.75739762563382,
+      "minTime": 1.696416999999201,
+      "maxTime": 478.0088340000075,
+      "p50": 56.65654100000393,
+      "p95": 101.43929199999548,
+      "p99": 151.41195899999002,
+      "throughput": 65.7147141643201,
+      "errorRate": 0
+    },
+    "wallet_balance": {
+      "operation": "wallet_balance",
+      "count": 7622,
+      "successes": 7622,
+      "failures": 0,
+      "avgTime": 57.86146943558135,
+      "minTime": 2.0745830000087153,
+      "maxTime": 454.18820799997775,
+      "p50": 56.383041000008234,
+      "p95": 101.24029200000223,
+      "p99": 170.47629200000665,
+      "throughput": 63.49867537531033,
+      "errorRate": 0
+    },
+    "wallet_settlement": {
+      "operation": "wallet_settlement",
+      "count": 7697,
+      "successes": 0,
+      "failures": 7697,
+      "avgTime": 0,
+      "minTime": 0,
+      "maxTime": 0,
+      "p50": 0,
+      "p95": 0,
+      "p99": 0,
+      "throughput": 0,
+      "errorRate": 100
+    },
+    "wallet_payment": {
+      "operation": "wallet_payment",
+      "count": 7812,
+      "successes": 6972,
+      "failures": 840,
+      "avgTime": 57.35458005077464,
+      "minTime": 2.0658340000081807,
+      "maxTime": 456.89112500002375,
+      "p50": 55.6608750000014,
+      "p95": 101.42562500000349,
+      "p99": 168.01766700000735,
+      "throughput": 58.08354299615109,
+      "errorRate": 10.75268817204301
+    },
+    "wallet_refund": {
+      "operation": "wallet_refund",
+      "count": 7771,
+      "successes": 7771,
+      "failures": 0,
+      "avgTime": 58.111195596962794,
+      "minTime": 1.8989580000052229,
+      "maxTime": 453.14212500001304,
+      "p50": 56.42941599999904,
+      "p95": 101.27845800000068,
+      "p99": 174.92208299999766,
+      "throughput": 64.73999033607144,
+      "errorRate": 0
+    }
+  },
+  "bottlenecks": [
+    "❌ wallet_transfer: High error rate (27.4%)",
+    "❌ wallet_settlement: High error rate (100.0%)",
+    "📉 wallet_settlement: Low throughput (0.0 ops/sec)",
+    "❌ wallet_payment: High error rate (10.8%)"
+  ],
+  "recommendations": [
+    "🔧 Performance Issues Detected:",
+    "  → Increase timeout/retry logic for wallet_transfer",
+    "  → Increase timeout/retry logic for wallet_settlement",
+    "  → Increase timeout/retry logic for wallet_payment",
+    "  → Consider database connection pool optimization",
+    "  → Review query execution plans for slow operations",
+    "  → Implement request rate limiting if needed"
+  ],
+  "systemHealthCheckpoints": []
+}

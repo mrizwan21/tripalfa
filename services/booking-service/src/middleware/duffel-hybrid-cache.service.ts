@@ -1,5 +1,5 @@
-import { CacheService } from '../cache/redis.js';
-import { prisma } from '@tripalfa/shared-database';
+import { CacheService } from "../cache/redis.js";
+import { prisma } from "@tripalfa/shared-database";
 
 // ============================================================================
 // CACHE TTL CONSTANTS
@@ -20,14 +20,18 @@ export const DUFFEL_CACHE_TTL = {
 
 export const DuffelCacheKeys = {
   offerRequest: (id: string) => `duffel:offer-request:${id}`,
-  offerRequestList: (params: any) => `duffel:offer-request:list:${JSON.stringify(params)}`,
+  offerRequestList: (params: any) =>
+    `duffel:offer-request:list:${JSON.stringify(params)}`,
   offer: (id: string) => `duffel:offer:${id}`,
   order: (id: string) => `duffel:order:${id}`,
-  ordersList: (params?: any) => `duffel:orders:list:${params ? JSON.stringify(params) : '*'}`,
-  seatMap: (offerId: string, orderId: string) => `duffel:seat-map:${offerId}:${orderId}`,
+  ordersList: (params?: any) =>
+    `duffel:orders:list:${params ? JSON.stringify(params) : "*"}`,
+  seatMap: (offerId: string, orderId: string) =>
+    `duffel:seat-map:${offerId}:${orderId}`,
   availableServices: (orderId: string) => `duffel:services:${orderId}`,
   cancellation: (id: string) => `duffel:cancellation:${id}`,
-  cancellationsList: (params?: any) => `duffel:cancellations:list:${params ? JSON.stringify(params) : '*'}`,
+  cancellationsList: (params?: any) =>
+    `duffel:cancellations:list:${params ? JSON.stringify(params) : "*"}`,
 };
 
 // ============================================================================
@@ -42,10 +46,15 @@ export const DuffelCacheUtils = {
     try {
       const count = await CacheService.deletePattern(pattern);
       if (count > 0) {
-        console.log(`[DuffelCache] Invalidated ${count} keys matching pattern: ${pattern}`);
+        console.log(
+          `[DuffelCache] Invalidated ${count} keys matching pattern: ${pattern}`,
+        );
       }
     } catch (error) {
-      console.error(`[DuffelCache] Error invalidating pattern ${pattern}:`, error);
+      console.error(
+        `[DuffelCache] Error invalidating pattern ${pattern}:`,
+        error,
+      );
     }
   },
 
@@ -80,8 +89,18 @@ export const DuffelCacheUtils = {
     try {
       await CacheService.delete(key);
     } catch (error) {
-      console.error(`[DuffelCache] Error deleting cache for key ${key}:`, error);
+      console.error(
+        `[DuffelCache] Error deleting cache for key ${key}:`,
+        error,
+      );
     }
+  },
+
+  /**
+   * Clear all Duffel cache keys
+   */
+  async clearAll(): Promise<void> {
+    await DuffelCacheUtils.invalidatePattern("duffel:*");
   },
 };
 
@@ -91,7 +110,7 @@ export const DuffelCacheUtils = {
 
 export const DuffelOfferCache = {
   /**
-   * Get offer request from cache (Redis first, then NEON)
+   * Get offer request from cache (Redis first, then Neon)
    */
   async getOfferRequest(id: string): Promise<any | null> {
     const cacheKey = DuffelCacheKeys.offerRequest(id);
@@ -99,53 +118,69 @@ export const DuffelOfferCache = {
     // Try Redis first
     const redisCache = await DuffelCacheUtils.getCache(cacheKey);
     if (redisCache) {
-      return Object.assign({}, redisCache, { source: 'redis' });
+      return Object.assign({}, redisCache, { source: "redis" });
     }
 
-    // Try NEON database
+    // Try Neon database
     try {
       const dbCache = await prisma.duffelOfferRequestCache.findUnique({
-        where: { offerId: id },
+        where: { cacheKey },
       });
 
       if (dbCache && new Date(dbCache.expiresAt) > new Date()) {
         // Restore to Redis
-        await DuffelCacheUtils.setCache(cacheKey, dbCache.data, DUFFEL_CACHE_TTL.OFFER_REQUEST);
-        const data = typeof dbCache.data === 'object' && dbCache.data !== null ? dbCache.data : {};
-        return Object.assign({}, data, { source: 'neon' });
+        await DuffelCacheUtils.setCache(
+          cacheKey,
+          dbCache.requestData,
+          DUFFEL_CACHE_TTL.OFFER_REQUEST,
+        );
+        const data =
+          typeof dbCache.requestData === "object" &&
+          dbCache.requestData !== null
+            ? dbCache.requestData
+            : {};
+        return Object.assign({}, data, { source: "neon" });
       }
     } catch (error) {
-      console.error(`[DuffelOfferCache] Error fetching from NEON:`, error);
+      console.error(`[DuffelOfferCache] Error fetching from Neon:`, error);
     }
 
     return null;
   },
 
   /**
-   * Set offer request cache (Redis + NEON)
+   * Set offer request cache (Redis + Neon)
    */
   async setOfferRequest(id: string, data: any): Promise<void> {
     const cacheKey = DuffelCacheKeys.offerRequest(id);
 
     // Set in Redis
-    await DuffelCacheUtils.setCache(cacheKey, data, DUFFEL_CACHE_TTL.OFFER_REQUEST);
+    await DuffelCacheUtils.setCache(
+      cacheKey,
+      data,
+      DUFFEL_CACHE_TTL.OFFER_REQUEST,
+    );
 
-    // Set in NEON
+    // Set in Neon
     try {
       await prisma.duffelOfferRequestCache.upsert({
-        where: { offerId: id },
+        where: { cacheKey },
         update: {
-          data,
-          expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.OFFER_REQUEST * 1000),
+          requestData: data,
+          expiresAt: new Date(
+            Date.now() + DUFFEL_CACHE_TTL.OFFER_REQUEST * 1000,
+          ),
         },
         create: {
-          offerId: id,
-          data,
-          expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.OFFER_REQUEST * 1000),
+          cacheKey,
+          requestData: data,
+          expiresAt: new Date(
+            Date.now() + DUFFEL_CACHE_TTL.OFFER_REQUEST * 1000,
+          ),
         },
       });
     } catch (error) {
-      console.error(`[DuffelOfferCache] Error upserting to NEON:`, error);
+      console.error(`[DuffelOfferCache] Error upserting to Neon:`, error);
     }
   },
 
@@ -157,11 +192,13 @@ export const DuffelOfferCache = {
     await DuffelCacheUtils.deleteCache(cacheKey);
 
     try {
-      await prisma.duffelOfferRequestCache.delete({
-        where: { offerId: id },
-      }).catch(() => {}); // Ignore if not found
+      await prisma.duffelOfferRequestCache
+        .delete({
+          where: { cacheKey },
+        })
+        .catch(() => {}); // Ignore if not found
     } catch (error) {
-      console.error(`[DuffelOfferCache] Error deleting from NEON:`, error);
+      console.error(`[DuffelOfferCache] Error deleting from Neon:`, error);
     }
   },
 };
@@ -180,22 +217,29 @@ export const DuffelOffersCache = {
     // Try Redis
     const redisCache = await DuffelCacheUtils.getCache(cacheKey);
     if (redisCache) {
-      return Object.assign({}, redisCache, { source: 'redis' });
+      return Object.assign({}, redisCache, { source: "redis" });
     }
 
-    // Try NEON
+    // Try Neon
     try {
       const dbCache = await prisma.duffelOfferCache.findUnique({
-        where: { offerId: id },
+        where: { cacheKey },
       });
 
       if (dbCache && new Date(dbCache.expiresAt) > new Date()) {
-        await DuffelCacheUtils.setCache(cacheKey, dbCache.data, DUFFEL_CACHE_TTL.OFFER);
-        const data = typeof dbCache.data === 'object' && dbCache.data !== null ? dbCache.data : {};
-        return Object.assign({}, data, { source: 'neon' });
+        await DuffelCacheUtils.setCache(
+          cacheKey,
+          dbCache.offerData,
+          DUFFEL_CACHE_TTL.OFFER,
+        );
+        const data =
+          typeof dbCache.offerData === "object" && dbCache.offerData !== null
+            ? dbCache.offerData
+            : {};
+        return Object.assign({}, data, { source: "neon" });
       }
     } catch (error) {
-      console.error(`[DuffelOffersCache] Error fetching from NEON:`, error);
+      console.error(`[DuffelOffersCache] Error fetching from Neon:`, error);
     }
 
     return null;
@@ -211,19 +255,20 @@ export const DuffelOffersCache = {
 
     try {
       await prisma.duffelOfferCache.upsert({
-        where: { offerId: id },
+        where: { cacheKey },
         update: {
-          data,
+          offerData: data,
           expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.OFFER * 1000),
         },
         create: {
+          cacheKey,
           offerId: id,
-          data,
+          offerData: data,
           expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.OFFER * 1000),
         },
       });
     } catch (error) {
-      console.error(`[DuffelOffersCache] Error upserting to NEON:`, error);
+      console.error(`[DuffelOffersCache] Error upserting to Neon:`, error);
     }
   },
 
@@ -235,11 +280,13 @@ export const DuffelOffersCache = {
     await DuffelCacheUtils.deleteCache(cacheKey);
 
     try {
-      await prisma.duffelOfferCache.delete({
-        where: { offerId: id },
-      }).catch(() => {});
+      await prisma.duffelOfferCache
+        .delete({
+          where: { cacheKey },
+        })
+        .catch(() => {});
     } catch (error) {
-      console.error(`[DuffelOffersCache] Error deleting from NEON:`, error);
+      console.error(`[DuffelOffersCache] Error deleting from Neon:`, error);
     }
   },
 };
@@ -257,21 +304,28 @@ export const DuffelOrderCache = {
 
     const redisCache = await DuffelCacheUtils.getCache(cacheKey);
     if (redisCache) {
-      return Object.assign({}, redisCache, { source: 'redis' });
+      return Object.assign({}, redisCache, { source: "redis" });
     }
 
     try {
       const dbCache = await prisma.duffelOrderCache.findUnique({
-        where: { orderId: id },
+        where: { cacheKey },
       });
 
       if (dbCache && new Date(dbCache.expiresAt) > new Date()) {
-        await DuffelCacheUtils.setCache(cacheKey, dbCache.data, DUFFEL_CACHE_TTL.ORDER);
-        const data = typeof dbCache.data === 'object' && dbCache.data !== null ? dbCache.data : {};
-        return Object.assign({}, data, { source: 'neon' });
+        await DuffelCacheUtils.setCache(
+          cacheKey,
+          dbCache.orderData,
+          DUFFEL_CACHE_TTL.ORDER,
+        );
+        const data =
+          typeof dbCache.orderData === "object" && dbCache.orderData !== null
+            ? dbCache.orderData
+            : {};
+        return Object.assign({}, data, { source: "neon" });
       }
     } catch (error) {
-      console.error(`[DuffelOrderCache] Error fetching from NEON:`, error);
+      console.error(`[DuffelOrderCache] Error fetching from Neon:`, error);
     }
 
     return null;
@@ -287,19 +341,19 @@ export const DuffelOrderCache = {
 
     try {
       await prisma.duffelOrderCache.upsert({
-        where: { orderId: id },
+        where: { cacheKey },
         update: {
-          data,
+          orderData: data,
           expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.ORDER * 1000),
         },
         create: {
-          orderId: id,
-          data,
+          cacheKey,
+          orderData: data,
           expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.ORDER * 1000),
         },
       });
     } catch (error) {
-      console.error(`[DuffelOrderCache] Error upserting to NEON:`, error);
+      console.error(`[DuffelOrderCache] Error upserting to Neon:`, error);
     }
   },
 
@@ -311,11 +365,13 @@ export const DuffelOrderCache = {
     await DuffelCacheUtils.deleteCache(cacheKey);
 
     try {
-      await prisma.duffelOrderCache.delete({
-        where: { orderId: id },
-      }).catch(() => {});
+      await prisma.duffelOrderCache
+        .delete({
+          where: { cacheKey },
+        })
+        .catch(() => {});
     } catch (error) {
-      console.error(`[DuffelOrderCache] Error deleting from NEON:`, error);
+      console.error(`[DuffelOrderCache] Error deleting from Neon:`, error);
     }
   },
 };
@@ -328,26 +384,35 @@ export const DuffelSeatMapCache = {
   /**
    * Get seat map from cache
    */
-  async getSeatMap(offerId: string, orderId: string): Promise<any | null> {
-    const cacheKey = DuffelCacheKeys.seatMap(offerId, orderId);
+  async getSeatMap(offerId?: string, orderId?: string): Promise<any | null> {
+    const safeOfferId = offerId || "none";
+    const safeOrderId = orderId || "none";
+    const cacheKey = DuffelCacheKeys.seatMap(safeOfferId, safeOrderId);
 
     const redisCache = await DuffelCacheUtils.getCache(cacheKey);
     if (redisCache) {
-      return Object.assign({}, redisCache, { source: 'redis' });
+      return Object.assign({}, redisCache, { source: "redis" });
     }
 
     try {
       const dbCache = await prisma.duffelSeatMapCache.findUnique({
-        where: { seatMapKey: `${offerId}:${orderId}` },
+        where: { cacheKey },
       });
 
       if (dbCache && new Date(dbCache.expiresAt) > new Date()) {
-        await DuffelCacheUtils.setCache(cacheKey, dbCache.data, DUFFEL_CACHE_TTL.SEAT_MAP);
-        const data = typeof dbCache.data === 'object' && dbCache.data !== null ? dbCache.data : {};
-        return Object.assign({}, data, { source: 'neon' });
+        await DuffelCacheUtils.setCache(
+          cacheKey,
+          dbCache.seatData,
+          DUFFEL_CACHE_TTL.SEAT_MAP,
+        );
+        const data =
+          typeof dbCache.seatData === "object" && dbCache.seatData !== null
+            ? dbCache.seatData
+            : {};
+        return Object.assign({}, data, { source: "neon" });
       }
     } catch (error) {
-      console.error(`[DuffelSeatMapCache] Error fetching from NEON:`, error);
+      console.error(`[DuffelSeatMapCache] Error fetching from Neon:`, error);
     }
 
     return null;
@@ -357,43 +422,47 @@ export const DuffelSeatMapCache = {
    * Set seat map cache
    */
   async setSeatMap(offerId: string, orderId: string, data: any): Promise<void> {
-    const cacheKey = DuffelCacheKeys.seatMap(offerId, orderId);
+    const safeOfferId = offerId || "none";
+    const safeOrderId = orderId || "none";
+    const cacheKey = DuffelCacheKeys.seatMap(safeOfferId, safeOrderId);
 
     await DuffelCacheUtils.setCache(cacheKey, data, DUFFEL_CACHE_TTL.SEAT_MAP);
 
     try {
       await prisma.duffelSeatMapCache.upsert({
-        where: { seatMapKey: `${offerId}:${orderId}` },
+        where: { cacheKey },
         update: {
-          data,
+          seatData: data,
           expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.SEAT_MAP * 1000),
         },
         create: {
-          seatMapKey: `${offerId}:${orderId}`,
-          offerId,
-          orderId,
-          data,
+          cacheKey,
+          seatData: data,
           expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.SEAT_MAP * 1000),
         },
       });
     } catch (error) {
-      console.error(`[DuffelSeatMapCache] Error upserting to NEON:`, error);
+      console.error(`[DuffelSeatMapCache] Error upserting to Neon:`, error);
     }
   },
 
   /**
    * Invalidate seat map cache
    */
-  async invalidateSeatMap(offerId: string, orderId: string): Promise<void> {
-    const cacheKey = DuffelCacheKeys.seatMap(offerId, orderId);
+  async invalidateSeatMap(offerId?: string, orderId?: string): Promise<void> {
+    const safeOfferId = offerId || "none";
+    const safeOrderId = orderId || "none";
+    const cacheKey = DuffelCacheKeys.seatMap(safeOfferId, safeOrderId);
     await DuffelCacheUtils.deleteCache(cacheKey);
 
     try {
-      await prisma.duffelSeatMapCache.delete({
-        where: { seatMapKey: `${offerId}:${orderId}` },
-      }).catch(() => {});
+      await prisma.duffelSeatMapCache
+        .delete({
+          where: { cacheKey },
+        })
+        .catch(() => {});
     } catch (error) {
-      console.error(`[DuffelSeatMapCache] Error deleting from NEON:`, error);
+      console.error(`[DuffelSeatMapCache] Error deleting from Neon:`, error);
     }
   },
 };
@@ -416,15 +485,19 @@ export const DuffelServicesCache = {
 
     try {
       const dbCache = await prisma.duffelServicesCache.findUnique({
-        where: { orderId },
+        where: { cacheKey },
       });
 
       if (dbCache && new Date(dbCache.expiresAt) > new Date()) {
-        await DuffelCacheUtils.setCache(cacheKey, dbCache.data, DUFFEL_CACHE_TTL.AVAILABLE_SERVICES);
-        return Array.isArray(dbCache.data) ? dbCache.data : [];
+        await DuffelCacheUtils.setCache(
+          cacheKey,
+          dbCache.servicesData,
+          DUFFEL_CACHE_TTL.AVAILABLE_SERVICES,
+        );
+        return Array.isArray(dbCache.servicesData) ? dbCache.servicesData : [];
       }
     } catch (error) {
-      console.error(`[DuffelServicesCache] Error fetching from NEON:`, error);
+      console.error(`[DuffelServicesCache] Error fetching from Neon:`, error);
     }
 
     return null;
@@ -436,23 +509,31 @@ export const DuffelServicesCache = {
   async setAvailableServices(orderId: string, data: any[]): Promise<void> {
     const cacheKey = DuffelCacheKeys.availableServices(orderId);
 
-    await DuffelCacheUtils.setCache(cacheKey, data, DUFFEL_CACHE_TTL.AVAILABLE_SERVICES);
+    await DuffelCacheUtils.setCache(
+      cacheKey,
+      data,
+      DUFFEL_CACHE_TTL.AVAILABLE_SERVICES,
+    );
 
     try {
       await prisma.duffelServicesCache.upsert({
-        where: { orderId },
+        where: { cacheKey },
         update: {
-          data,
-          expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.AVAILABLE_SERVICES * 1000),
+          servicesData: data,
+          expiresAt: new Date(
+            Date.now() + DUFFEL_CACHE_TTL.AVAILABLE_SERVICES * 1000,
+          ),
         },
         create: {
-          orderId,
-          data,
-          expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.AVAILABLE_SERVICES * 1000),
+          cacheKey,
+          servicesData: data,
+          expiresAt: new Date(
+            Date.now() + DUFFEL_CACHE_TTL.AVAILABLE_SERVICES * 1000,
+          ),
         },
       });
     } catch (error) {
-      console.error(`[DuffelServicesCache] Error upserting to NEON:`, error);
+      console.error(`[DuffelServicesCache] Error upserting to Neon:`, error);
     }
   },
 
@@ -464,11 +545,13 @@ export const DuffelServicesCache = {
     await DuffelCacheUtils.deleteCache(cacheKey);
 
     try {
-      await prisma.duffelServicesCache.delete({
-        where: { orderId },
-      }).catch(() => {});
+      await prisma.duffelServicesCache
+        .delete({
+          where: { cacheKey },
+        })
+        .catch(() => {});
     } catch (error) {
-      console.error(`[DuffelServicesCache] Error deleting from NEON:`, error);
+      console.error(`[DuffelServicesCache] Error deleting from Neon:`, error);
     }
   },
 };
@@ -486,21 +569,32 @@ export const DuffelCancellationCache = {
 
     const redisCache = await DuffelCacheUtils.getCache(cacheKey);
     if (redisCache) {
-      return Object.assign({}, redisCache, { source: 'redis' });
+      return Object.assign({}, redisCache, { source: "redis" });
     }
 
     try {
       const dbCache = await prisma.duffelCancellationCache.findUnique({
-        where: { cancellationId: id },
+        where: { cacheKey },
       });
 
       if (dbCache && new Date(dbCache.expiresAt) > new Date()) {
-        await DuffelCacheUtils.setCache(cacheKey, dbCache.data, DUFFEL_CACHE_TTL.CANCELLATION);
-        const data = typeof dbCache.data === 'object' && dbCache.data !== null ? dbCache.data : {};
-        return Object.assign({}, data, { source: 'neon' });
+        await DuffelCacheUtils.setCache(
+          cacheKey,
+          dbCache.cancellationData,
+          DUFFEL_CACHE_TTL.CANCELLATION,
+        );
+        const data =
+          typeof dbCache.cancellationData === "object" &&
+          dbCache.cancellationData !== null
+            ? dbCache.cancellationData
+            : {};
+        return Object.assign({}, data, { source: "neon" });
       }
     } catch (error) {
-      console.error(`[DuffelCancellationCache] Error fetching from NEON:`, error);
+      console.error(
+        `[DuffelCancellationCache] Error fetching from Neon:`,
+        error,
+      );
     }
 
     return null;
@@ -512,23 +606,34 @@ export const DuffelCancellationCache = {
   async setCancellation(id: string, data: any): Promise<void> {
     const cacheKey = DuffelCacheKeys.cancellation(id);
 
-    await DuffelCacheUtils.setCache(cacheKey, data, DUFFEL_CACHE_TTL.CANCELLATION);
+    await DuffelCacheUtils.setCache(
+      cacheKey,
+      data,
+      DUFFEL_CACHE_TTL.CANCELLATION,
+    );
 
     try {
       await prisma.duffelCancellationCache.upsert({
-        where: { cancellationId: id },
+        where: { cacheKey },
         update: {
-          data,
-          expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.CANCELLATION * 1000),
+          cancellationData: data,
+          expiresAt: new Date(
+            Date.now() + DUFFEL_CACHE_TTL.CANCELLATION * 1000,
+          ),
         },
         create: {
-          cancellationId: id,
-          data,
-          expiresAt: new Date(Date.now() + DUFFEL_CACHE_TTL.CANCELLATION * 1000),
+          cacheKey,
+          cancellationData: data,
+          expiresAt: new Date(
+            Date.now() + DUFFEL_CACHE_TTL.CANCELLATION * 1000,
+          ),
         },
       });
     } catch (error) {
-      console.error(`[DuffelCancellationCache] Error upserting to NEON:`, error);
+      console.error(
+        `[DuffelCancellationCache] Error upserting to Neon:`,
+        error,
+      );
     }
   },
 
@@ -540,11 +645,16 @@ export const DuffelCancellationCache = {
     await DuffelCacheUtils.deleteCache(cacheKey);
 
     try {
-      await prisma.duffelCancellationCache.delete({
-        where: { cancellationId: id },
-      }).catch(() => {});
+      await prisma.duffelCancellationCache
+        .delete({
+          where: { cacheKey },
+        })
+        .catch(() => {});
     } catch (error) {
-      console.error(`[DuffelCancellationCache] Error deleting from NEON:`, error);
+      console.error(
+        `[DuffelCancellationCache] Error deleting from Neon:`,
+        error,
+      );
     }
   },
 };

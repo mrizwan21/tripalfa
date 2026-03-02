@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    monitor: 'tripalfa-monitor'
+    monitor: "tripalfa-monitor"
 
 alerting:
   alertmanagers:
@@ -13,98 +13,98 @@ rule_files: []
 
 scrape_configs:
   # Prometheus self-monitoring
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
 
   # API Gateway
-  - job_name: 'api-gateway'
+  - job_name: "api-gateway"
     static_configs:
-      - targets: ['api-gateway:3000']
+      - targets: ["api-gateway:3000"]
     metrics_path: /metrics
 
   # Booking Service
-  - job_name: 'booking-service'
+  - job_name: "booking-service"
     static_configs:
-      - targets: ['booking-service:3001']
+      - targets: ["booking-service:3001"]
     metrics_path: /metrics
 
   # Payment Service
-  - job_name: 'payment-service'
+  - job_name: "payment-service"
     static_configs:
-      - targets: ['payment-service:3007']
+      - targets: ["payment-service:3007"]
     metrics_path: /metrics
 
   # User Service
-  - job_name: 'user-service'
+  - job_name: "user-service"
     static_configs:
-      - targets: ['user-service:3004']
+      - targets: ["user-service:3004"]
     metrics_path: /metrics
 
   # Notification Service
-  - job_name: 'notification-service'
+  - job_name: "notification-service"
     static_configs:
-      - targets: ['notification-service:3009']
+      - targets: ["notification-service:3009"]
     metrics_path: /metrics
 
   # Organization Service
-  - job_name: 'organization-service'
+  - job_name: "organization-service"
     static_configs:
-      - targets: ['organization-service:3006']
+      - targets: ["organization-service:3006"]
     metrics_path: /metrics
 
   # Rule Engine Service
-  - job_name: 'rule-engine-service'
+  - job_name: "rule-engine-service"
     static_configs:
-      - targets: ['rule-engine-service:3010']
+      - targets: ["rule-engine-service:3010"]
     metrics_path: /metrics
 
   # Wallet Service
-  - job_name: 'wallet-service'
+  - job_name: "wallet-service"
     static_configs:
-      - targets: ['wallet-service:3008']
+      - targets: ["wallet-service:3008"]
     metrics_path: /metrics
 
   # KYC Service
-  - job_name: 'kyc-service'
+  - job_name: "kyc-service"
     static_configs:
-      - targets: ['kyc-service:3011']
+      - targets: ["kyc-service:3011"]
     metrics_path: /metrics
 
   # Marketing Service
-  - job_name: 'marketing-service'
+  - job_name: "marketing-service"
     static_configs:
-      - targets: ['marketing-service:3012']
+      - targets: ["marketing-service:3012"]
     metrics_path: /metrics
 
   # B2B Admin Service
-  - job_name: 'b2b-admin-service'
+  - job_name: "b2b-admin-service"
     static_configs:
-      - targets: ['b2b-admin-service:3020']
+      - targets: ["b2b-admin-service:3020"]
     metrics_path: /metrics
 
   # Booking Engine Service
-  - job_name: 'booking-engine-service'
+  - job_name: "booking-engine-service"
     static_configs:
-      - targets: ['booking-engine-service:3021']
+      - targets: ["booking-engine-service:3021"]
     metrics_path: /metrics
 
   # RabbitMQ
-  - job_name: 'rabbitmq'
+  - job_name: "rabbitmq"
     static_configs:
-      - targets: ['rabbitmq:15692']
+      - targets: ["rabbitmq:15692"]
 
   # Redis Exporter (if added)
-  - job_name: 'redis'
+  - job_name: "redis"
     static_configs:
-      - targets: ['redis:6379']
+      - targets: ["redis:6379"]
 
   # PostgreSQL Exporter (if added)
-  - job_name: 'postgres'
+  - job_name: "postgres"
     static_configs:
-      - targets: ['postgres-static:5432']
+      - targets: ["postgres-static:5432"]
 
   # Consul
-  - job_name: 'consul'
+  - job_name: "consul"
     static_configs:
-      - targets: ['consul:8500']
+      - targets: ["consul:8500"]

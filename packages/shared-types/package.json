@@ -8,6 +8,7 @@
   "types": "dist/src/index.d.ts",
   "exports": {
     ".": "./dist/src/index.js",
+    "./types/*": "./dist/types/*.js",
     "./types/enums": "./dist/types/enums.js",
     "./types/hotel-deals": "./dist/types/hotel-deals.js",
     "./types/loyalty": "./dist/types/loyalty.js",
@@ -17,6 +18,9 @@
   },
   "typesVersions": {
     "*": {
+      "types/*": [
+        "./dist/types/*.d.ts"
+      ],
       "types/enums": [
         "./dist/types/enums.d.ts"
       ],
