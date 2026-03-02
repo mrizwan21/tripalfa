@@ -42,6 +42,13 @@ export function validateApiId(
     throw new Error("Invalid ID: ID must be a non-empty string");
   }
 
+  // Length validation FIRST to prevent DoS attacks via regex catastrophic backtracking
+  if (id.length === 0 || id.length > opts.maxLength!) {
+    throw new Error(
+      `Invalid ID: length must be between 1 and ${opts.maxLength} characters`,
+    );
+  }
+
   // Check for dangerous characters that could indicate injection attempts
   const dangerousPatterns = ["..", "/", "\\", "%00", "\x00"];
   for (const pattern of dangerousPatterns) {
@@ -59,13 +66,6 @@ export function validateApiId(
 
   if (!allowedChars.test(id)) {
     throw new Error("Invalid ID: contains invalid characters");
-  }
-
-  // Length validation to prevent DoS
-  if (id.length === 0 || id.length > opts.maxLength!) {
-    throw new Error(
-      `Invalid ID: length must be between 1 and ${opts.maxLength} characters`,
-    );
   }
 
   // Return URL-encoded for safe API usage
