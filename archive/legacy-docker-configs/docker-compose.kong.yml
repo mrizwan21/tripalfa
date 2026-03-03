@@ -1,0 +1,169 @@
+version: "3.8"
+
+services:
+  # ===== PostgreSQL Database =====
+  postgres:
+    image: postgres:15
+    container_name: tripalfa-postgres
+    environment:
+      POSTGRES_USER: tripalfa
+      POSTGRES_PASSWORD: tripalfa_dev
+      POSTGRES_DB: tripalfa
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "55432:5432"
+    networks:
+      - tripalfa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tripalfa"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+
+  # ===== PgBouncer Connection Pool =====
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: compose-pgbouncer
+    environment:
+      DATABASE_URL: "postgres://tripalfa:tripalfa_dev@postgres:5432/tripalfa"
+      POOL_MODE: "transaction"
+      MAX_CLIENT_CONN: "1000"
+      DEFAULT_POOL_SIZE: "25"
+    ports:
+      - "6433:6432"
+    networks:
+      - tripalfa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ===== Kong API Gateway =====
+  kong-db:
+    image: postgres:15
+    container_name: tripalfa-kong-db
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: kong
+      POSTGRES_DB: kong
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data
+    networks:
+      - tripalfa-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+
+  kong:
+    image: kong:3.3
+    container_name: tripalfa-kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PG_DATABASE: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_PLUGINS: bundled
+    ports:
+      - "8000:8000" # Proxy
+      - "8443:8443" # Proxy SSL
+      - "8001:8001" # Admin API
+      - "8444:8444" # Admin SSL
+    networks:
+      - tripalfa-network
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/status"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+
+  # ===== Konga - Kong Admin UI =====
+  konga-db:
+    image: postgres:15
+    container_name: tripalfa-konga-db
+    environment:
+      POSTGRES_USER: konga
+      POSTGRES_PASSWORD: konga
+      POSTGRES_DB: konga
+    volumes:
+      - konga_db_data:/var/lib/postgresql/data
+    networks:
+      - tripalfa-network
+
+  konga:
+    image: pantsel/konga:latest
+    container_name: tripalfa-konga
+    environment:
+      DB_ADAPTER: postgres
+      DB_HOST: konga-db
+      DB_USER: konga
+      DB_PASSWORD: konga
+      DB_DATABASE: konga
+      NODE_ENV: production
+      DB_PG_SCHEMA: konga
+      KONGA_SEED_USER_DATA_SOURCE_FILE: /etc/konga/user-seeder.json
+    ports:
+      - "1337:1337"
+    networks:
+      - tripalfa-network
+    depends_on:
+      - konga-db
+    volumes:
+      - ./konga/user-seeder.json:/etc/konga/user-seeder.json
+
+  # ===== API Gateway (Fastify) =====
+  api-gateway:
+    image: api-gateway:staging
+    container_name: tripalfa-api-gateway-local
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      # Database Configuration
+      DATABASE_URL: "postgresql://tripalfa:tripalfa_dev@pgbouncer:6433/tripalfa?schema=public"
+      # API Keys - Duffel Sandbox Credentials
+      DUFFEL_TEST_API_KEY: ${DUFFEL_TEST_API_KEY:-REDACTED}
+      DUFFEL_PROD_API_KEY: ${DUFFEL_PROD_API_KEY:-your_duffel_prod_key_here}
+      # Kong Configuration - Request Transformer adds credentials automatically
+      KONG_PROXY_URL: "http://kong:8000"
+      DUFFEL_API_BASE_URL: "https://api-sandbox.duffel.com/air"
+      # Use Kong for all API management and credential injection
+      USE_KONG_PROXY: "true"
+    ports:
+      - "3000:3000"
+    networks:
+      - tripalfa-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: "10s"
+      timeout: "5s"
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  tripalfa-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  kong_db_data:
+  konga_db_data:
