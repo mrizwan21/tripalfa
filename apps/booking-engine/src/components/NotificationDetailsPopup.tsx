@@ -12,7 +12,7 @@ import {
 import { format } from "date-fns";
 import { NotificationItem } from "../lib/notification-types";
 import { cn } from "@tripalfa/ui-components";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tripalfa/ui-components";
 
 interface NotificationDetailsPopupProps {
   isOpen: boolean;

@@ -261,6 +261,33 @@ TripAlfa - Node/
 └── types/                       # TypeScript type definitions
 ```
 
+## 📚 Documentation Guide
+
+All project documentation is organized under `/docs` by category. **For setup & development, start here:**
+
+### Quick Links
+
+| Purpose | Location | Key Files |
+|---------|----------|-----------|
+| **Getting Started** | [`docs/getting-started/`](docs/getting-started/) | [SETUP.md](docs/getting-started/SETUP.md), [QUICK_START_ENV.md](docs/getting-started/QUICK_START_ENV.md) |
+| **Development & Local Setup** | [`docs/development/`](docs/development/) | [DOCKER_SETUP.md](docs/development/DOCKER_SETUP.md), [QUICK_REFERENCE.md](docs/development/QUICK_REFERENCE.md) |
+| **Production & Operations** | [`docs/operations/`](docs/operations/) | [PRODUCTION_DEPLOYMENT_GUIDE.md](docs/operations/PRODUCTION_DEPLOYMENT_GUIDE.md), [INCIDENT_RESPONSE_PLAYBOOK.md](docs/operations/INCIDENT_RESPONSE_PLAYBOOK.md) |
+| **Architecture & Design** | [`docs/architecture/`](docs/architecture/) | [TRIPALFA_DATABASE_ARCHITECTURE.md](docs/architecture/TRIPALFA_DATABASE_ARCHITECTURE.md) |
+| **APIs & Integrations** | [`docs/integrations/`](docs/integrations/) | Various integration guides (Duffel, LiteAPI, etc.) |
+| **Security & Compliance** | [`docs/compliance/`](docs/compliance/) | [SECURITY_AUDIT_CHECKLIST.md](docs/compliance/SECURITY_AUDIT_CHECKLIST.md) |
+| **Historical Docs** | [`archive/`](archive/README.md) | Phase completion reports, feature docs, test records |
+
+### Finding What You Need
+
+- **💻 New to the project?** → Start with [docs/getting-started/SETUP.md](docs/getting-started/SETUP.md)
+- **🚀 Deploying to production?** → Check [docs/operations/PRODUCTION_DEPLOYMENT_GUIDE.md](docs/operations/PRODUCTION_DEPLOYMENT_GUIDE.md)
+- **🔍 Trouble with database setup?** → See [docs/development/DOCKER_SETUP.md](docs/development/DOCKER_SETUP.md)
+- **📊 Want the full architecture?** → Read [docs/architecture/TRIPALFA_DATABASE_ARCHITECTURE.md](docs/architecture/TRIPALFA_DATABASE_ARCHITECTURE.md)
+- **🛟 Incident response?** → Use [docs/operations/INCIDENT_RESPONSE_PLAYBOOK.md](docs/operations/INCIDENT_RESPONSE_PLAYBOOK.md)
+- **📚 Looking for older docs?** → Check [archive/README.md](archive/README.md) for historical documentation
+
+---
+
 ## Testing Documentation
 
 ### E2E Testing

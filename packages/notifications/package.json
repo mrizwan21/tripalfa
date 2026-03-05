@@ -22,7 +22,7 @@
   "author": "TripAlfa Dev Team",
   "license": "MIT",
   "dependencies": {
-    "@getbrevo/brevo": "^2.2.0",
+    "resend": "^3.0.0",
     "@prisma/client": "^7.4.0",
     "@tripalfa/shared-utils": "workspace:*",
     "nodemailer": "^7.0.11",

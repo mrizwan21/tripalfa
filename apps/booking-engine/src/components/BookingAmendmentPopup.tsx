@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { X, Upload, Calendar, User, Plane, Check } from "lucide-react";
 
 import { NotificationItem } from "../lib/notification-types";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tripalfa/ui-components";
 import { Label } from "@/components/ui/label";
 
 interface BookingAmendmentPopupProps {

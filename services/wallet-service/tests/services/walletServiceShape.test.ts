@@ -1,9 +1,11 @@
 /* Diagnostic test: inspect walletService module export shape under Jest */
 
-const path = require("path");
-require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
-console.log("About to require walletService");
-const walletService = require("../../src/services/walletService");
+import path from "path";
+import { config } from "dotenv";
+config({ path: path.resolve(__dirname, "../../.env") });
+
+console.log("About to import walletService");
+import * as walletService from "../../src/services/walletService";
 console.log(
   "walletService (raw):",
   Object.prototype.toString.call(walletService),

@@ -24,29 +24,30 @@ export const validate: RequestHandler = (req, res, next): void => {
 export const validateZod: (schema: z.ZodSchema) => RequestHandler = (
   schema: z.ZodSchema,
 ) => {
-  const handler: RequestHandler = (req, res, next): void => {
-    schema
-      .parseAsync({
+  const handler: RequestHandler = async (req, res, next): Promise<void> => {
+    try {
+      // Parse the request data (using parseAsync to support async refinements/transforms)
+      const data = {
         body: req.body,
         query: req.query,
         params: req.params,
-      })
-      .then(() => {
-        next();
-      })
-      .catch((error) => {
-        if (error instanceof z.ZodError) {
-          res.status(400).json({
-            success: false,
-            errors: error.errors.map((err) => ({
-              field: err.path.join("."),
-              message: err.message,
-            })),
-          });
-          return;
-        }
-        next(error);
-      });
+      };
+
+      await schema.parseAsync(data);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          errors: error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+        return;
+      }
+      next(error);
+    }
   };
 
   return handler;
@@ -55,10 +56,10 @@ export const validateZod: (schema: z.ZodSchema) => RequestHandler = (
 // Common validation schemas
 export const paginationSchema = z.object({
   query: z.object({
-    page: z.string().optional().default("1").transform(Number),
-    limit: z.string().optional().default("10").transform(Number),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(10),
     sortBy: z.string().optional(),
-    sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+    sortOrder: z.enum(["asc", "desc"]).default("desc"),
     search: z.string().optional(),
   }),
 });
@@ -143,8 +144,8 @@ export const updateUserSchema = z.object({
 // Booking validation schemas
 export const bookingFilterSchema = z.object({
   query: z.object({
-    page: z.string().optional().default("1").transform(Number),
-    limit: z.string().optional().default("10").transform(Number),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(10),
     status: z.string().optional(),
     type: z.string().optional(),
     search: z.string().optional(),
@@ -152,8 +153,8 @@ export const bookingFilterSchema = z.object({
     toDate: z.string().optional(),
     companyId: z.string().optional(),
     userId: z.string().optional(),
-    sortBy: z.string().optional().default("createdAt"),
-    sortOrder: z.enum(["asc", "desc"]).optional().default("desc"),
+    sortBy: z.string().default("createdAt"),
+    sortOrder: z.enum(["asc", "desc"]).default("desc"),
   }),
 });
 

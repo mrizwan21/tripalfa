@@ -1,4 +1,6 @@
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
 
 export interface AuditLog {
   id: string;
@@ -19,8 +21,12 @@ export interface ComplianceReport {
 }
 
 export class AuditService {
-  private static baseURL =
-    process.env.VITE_AUDIT_SERVICE_URL || "http://localhost:3012";
+  /**
+   * Get base URL for audit service - uses lazy evaluation to support runtime config changes
+   */
+  private static get baseURL(): string {
+    return getEnv("VITE_AUDIT_SERVICE_URL", "http://localhost:3012");
+  }
 
   /**
    * Get audit logs
@@ -42,7 +48,8 @@ export class AuditService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch audit logs: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to fetch audit logs: ${message}`, { cause: error });
     }
   }
 
@@ -63,7 +70,8 @@ export class AuditService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to log action: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to log action: ${message}`, { cause: error });
     }
   }
 
@@ -78,7 +86,8 @@ export class AuditService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch compliance report: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to fetch compliance report: ${message}`, { cause: error });
     }
   }
 }

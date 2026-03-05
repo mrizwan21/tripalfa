@@ -17,7 +17,7 @@ import {
   Tag,
   Zap,
 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@tripalfa/ui-components";
 import { Flight } from "../lib/srs-types";
 import { useFareUpsell } from "../hooks/useFareUpsell";
 import type { FareOption } from "../hooks/useFareUpsell";

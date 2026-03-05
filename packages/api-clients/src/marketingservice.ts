@@ -1,4 +1,6 @@
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
 
 export interface Campaign {
   id: string;
@@ -17,10 +19,14 @@ export interface Campaign {
 }
 
 export class MarketingService {
-  private static baseURL =
-    process.env.VITE_ORGANIZATION_SERVICE_URL ||
-    process.env.VITE_API_GATEWAY_URL ||
-    "http://localhost:3006";
+  /**
+   * Get base URL for marketing service - uses lazy evaluation to support runtime config changes
+   */
+  private static get baseURL(): string {
+    return getEnv("VITE_ORGANIZATION_SERVICE_URL",
+      getEnv("VITE_API_GATEWAY_URL", "http://localhost:3006")
+    );
+  }
 
   /**
    * Get all campaigns
@@ -33,7 +39,8 @@ export class MarketingService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get campaigns: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get campaigns: ${message}`, { cause: error });
     }
   }
 
@@ -51,7 +58,8 @@ export class MarketingService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create campaign: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to create campaign: ${message}`, { cause: error });
     }
   }
 
@@ -70,7 +78,8 @@ export class MarketingService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to update campaign status: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to update campaign status: ${message}`, { cause: error });
     }
   }
 }

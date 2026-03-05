@@ -1,3 +1,4 @@
+/* global console, process */
 // Test to check what endpoints are in APIManager
 import('./services/api-gateway/dist/config/api-manager.config.js').then(module => {
   const apiManager = module.default;

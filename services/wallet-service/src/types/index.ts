@@ -176,3 +176,9 @@ export interface AuthPayload {
   userId: string;
   iat: number;
 }
+
+// Global declarations for test environment
+declare global {
+  // eslint-disable-next-line no-var
+  var PG_POOL: import("pg").Pool | undefined;
+}

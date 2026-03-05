@@ -14,12 +14,7 @@ import {
   BrevoEmailConfig,
   isBrevoConfig,
 } from "../types";
-import {
-  TransactionalEmailsApi,
-  SendSmtpEmail,
-  SendSmtpEmailSender,
-  SendSmtpEmailReplyTo,
-} from "@getbrevo/brevo";
+import { Resend } from "resend";
 
 /**
  * Abstract base class for notification channels
@@ -75,17 +70,16 @@ export class EmailChannel extends BaseChannel {
   protected name = "email";
   private config: EmailConfig;
   private setupSuccess = false;
-  private brevoApi: TransactionalEmailsApi | null = null;
+  private resendApi: Resend | null = null;
 
   constructor(config: EmailConfig, logger?: Logger) {
     super(logger);
     this.config = config;
     this.setupSuccess = this.validateConfig();
 
-    // Initialize Brevo API if using Brevo config
+    // Initialize Resend API if using Brevo config
     if (isBrevoConfig(config)) {
-      this.brevoApi = new TransactionalEmailsApi();
-      this.brevoApi.setApiKey(0, config.apiKey);
+      this.resendApi = new Resend(config.apiKey);
     }
   }
 
@@ -106,56 +100,43 @@ export class EmailChannel extends BaseChannel {
   }
 
   /**
-   * Send email using Brevo API
+   * Send email using Resend API
    */
   private async sendViaBrevo(
     notification: Notification,
   ): Promise<{ success: boolean; messageId?: string }> {
-    if (!this.brevoApi) {
-      throw new ChannelError("Brevo API not initialized", "email");
+    if (!this.resendApi) {
+      throw new ChannelError("Resend API not initialized", "email");
     }
 
     const brevoConfig = this.config as BrevoEmailConfig;
 
-    const sender: SendSmtpEmailSender = {
-      email: brevoConfig.from,
-      name: brevoConfig.fromName || "TripAlfa",
-    };
-
-    const replyTo = brevoConfig.replyTo
-      ? {
-          email: brevoConfig.replyTo,
-          name: brevoConfig.replyToName || "TripAlfa Support",
-        }
-      : undefined;
-
-    const sendSmtpEmail: SendSmtpEmail = {
-      sender,
-      to: [
-        { email: notification.userId, name: notification.data?.recipientName },
-      ],
-      subject: notification.title,
-      htmlContent: notification.message,
-      textContent:
-        notification.data?.textContent || this.stripHtml(notification.message),
-      ...(replyTo && { replyTo }),
-      headers: {
-        "X-Notification-Id": notification.id,
-      },
-      tags: [notification.type, `priority-${notification.priority}`],
-    };
-
     try {
-      const response = await this.brevoApi.sendTransacEmail(sendSmtpEmail);
+      const response = await this.resendApi.emails.send({
+        from: `${brevoConfig.fromName || "TripAlfa"} <${brevoConfig.from}>`,
+        to: notification.userId,
+        subject: notification.title,
+        html: notification.message,
+        text: notification.data?.textContent || this.stripHtml(notification.message),
+        reply_to: brevoConfig.replyTo || undefined,
+        headers: {
+          'X-Notification-Id': notification.id,
+          'X-Tags': [notification.type, `priority-${notification.priority}`].join(','),
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
 
       return {
         success: true,
-        messageId: response.body?.messageId?.toString(),
+        messageId: response.data?.id,
       };
     } catch (error: any) {
       this.logger.error(
         { error: error.message, notificationId: notification.id },
-        "Brevo API error",
+        "Resend API error",
       );
       throw error;
     }
@@ -235,42 +216,49 @@ export class EmailChannel extends BaseChannel {
   }
 
   /**
-   * Send a templated email using Brevo templates
+   * Send a templated email using Resend
    */
   async sendTemplatedEmail(
     to: string,
     templateId: number,
     params: Record<string, any>,
   ): Promise<{ success: boolean; messageId?: string }> {
-    if (!this.brevoApi) {
+    if (!this.resendApi) {
       throw new ChannelError(
-        "Templated emails require Brevo configuration",
+        "Templated emails require Resend configuration",
         "email",
       );
     }
 
     const brevoConfig = this.config as BrevoEmailConfig;
 
-    const sendSmtpEmail = {
-      sender: {
-        email: brevoConfig.from,
-        name: brevoConfig.fromName || "TripAlfa",
-      },
-      to: [{ email: to }],
-      templateId,
-      params,
-    };
-
     try {
-      const response = await this.brevoApi.sendTransacEmail(sendSmtpEmail);
+      // Resend doesn't support template IDs directly, so we'll send as HTML
+      // Templates should be rendered before calling this method
+      const htmlContent = params.htmlContent || "<p>Email content not provided</p>";
+      
+      const response = await this.resendApi.emails.send({
+        from: `${brevoConfig.fromName || "TripAlfa"} <${brevoConfig.from}>`,
+        to,
+        subject: params.subject || "TripAlfa Notification",
+        html: htmlContent,
+        headers: {
+          'X-Template-Id': templateId.toString(),
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
       return {
         success: true,
-        messageId: response.body?.messageId?.toString(),
+        messageId: response.data?.id,
       };
     } catch (error: any) {
       this.logger.error(
         { error: error.message, templateId },
-        "Brevo template email error",
+        "Resend template email error",
       );
       return { success: false };
     }

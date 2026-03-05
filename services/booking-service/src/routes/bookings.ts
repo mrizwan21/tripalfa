@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import type { Router as ExpressRouter } from "express";
 import axios, { AxiosResponse } from "axios";
 
@@ -96,6 +96,17 @@ const queues: QueueItem[] = [];
 // ============================================================================
 // Booking Management Routes for B2B Admin Panel
 // ============================================================================
+//
+// IMPORTANT: Express routes are matched in order of registration.
+// Static routes (e.g., /stats, /user, /queues) must be registered BEFORE
+// parameterized routes (e.g., /:id) to prevent Express from interpreting
+// static path segments as ID parameters.
+//
+// Current order: /stats/summary (line ~205), /user/:userId (line ~232),
+// /:id (line ~278), /queues (line ~476)
+//
+// The /:id route includes a bypass check for static routes as a safety net.
+
 
 // POST /api/admin/bookings - Create a manual booking
 router.post("/", async (req: Request, res: Response) => {
@@ -201,10 +212,88 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
+ // GET /api/admin/bookings/stats/summary - Get booking statistics
+router.get("/stats/summary", async (req: Request, res: Response) => {
+  try {
+    const { period = "30d", companyId } = req.query;
+
+    // This could aggregate data from multiple sources
+    // For now, get basic stats from booking service
+    const response = await axios.get(
+      `${BOOKING_SERVICE_URL}/stats/summary?period=${period}${companyId ? `&companyId=${companyId}` : ""}`,
+      {
+        headers: {
+          Authorization: req.headers.authorization || "",
+          "X-Admin-Request": "true",
+        },
+      },
+    );
+
+    res.json(response.data);
+  } catch (error: any) {
+    console.error("Error fetching booking stats:", error.message);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      error: "Failed to fetch booking statistics",
+    });
+  }
+});
+
+ // GET /api/admin/bookings/user/:userId - Get user's bookings (admin view)
+router.get("/user/:userId", async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 20, status, fromDate, toDate } = req.query;
+
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      userId: userId.toString(),
+    });
+
+    if (status) queryParams.append("status", status.toString());
+    if (fromDate) queryParams.append("startDate", fromDate.toString());
+    if (toDate) queryParams.append("endDate", toDate.toString());
+
+    const response = await axios.get(`${BOOKING_SERVICE_URL}?${queryParams}`, {
+      headers: {
+        Authorization: req.headers.authorization || "",
+        "X-Admin-Request": "true",
+      },
+    });
+
+    res.json(response.data);
+  } catch (error) {
+    const message =
+      error && typeof error === "object" && "message" in error
+        ? (error as Error).message
+        : String(error);
+    console.error("Error fetching user bookings:", message);
+    const status =
+      error &&
+      typeof error === "object" &&
+      "response" in error &&
+      error.response &&
+      typeof error.response === "object" &&
+      "status" in error.response
+        ? (error.response as { status: number }).status
+        : 500;
+    res.status(status).json({
+      success: false,
+      error: "Failed to fetch user bookings",
+    });
+  }
+});
+
 // GET /api/admin/bookings/:id - Get booking details
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
+
+    // Avoid shadowing static routes like /queues
+    if (id === "queues" || id === "stats" || id === "user") {
+      return next();
+    }
 
     const response = await axios.get(`${BOOKING_SERVICE_URL}/${id}`, {
       headers: {
@@ -310,139 +399,6 @@ router.put("/:id/status", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/admin/bookings/stats/summary - Get booking statistics
-router.get("/stats/summary", async (req: Request, res: Response) => {
-  try {
-    const { period = "30d", companyId } = req.query;
-
-    // This could aggregate data from multiple sources
-    // For now, get basic stats from booking service
-    const response = await axios.get(
-      `${BOOKING_SERVICE_URL}/stats/summary?period=${period}${companyId ? `&companyId=${companyId}` : ""}`,
-      {
-        headers: {
-          Authorization: req.headers.authorization || "",
-          "X-Admin-Request": "true",
-        },
-      },
-    );
-
-    res.json(response.data);
-  } catch (error: any) {
-    console.error("Error fetching booking stats:", error.message);
-    res.status(error.response?.status || 500).json({
-      success: false,
-      error: "Failed to fetch booking statistics",
-    });
-  }
-});
-
-// GET /api/admin/bookings/user/:userId - Get user's bookings (admin view)
-router.get("/user/:userId", async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    // Try to proxy upstream PDF first
-    const pdfUrl = `${BOOKING_SERVICE_URL}/${id}/invoice/pdf`;
-    try {
-      const response = await axios.get(pdfUrl, {
-        headers: {
-          Authorization: req.headers.authorization || "",
-          "X-Admin-Request": "true",
-        },
-        responseType: "arraybuffer",
-      });
-      res.setHeader("Content-Type", "application/pdf");
-      return res.send(response.data);
-    } catch (err) {
-      // Upstream not available or doesn't support PDF. Try to generate PDF locally using puppeteer (if installed).
-    }
-
-    // Fetch invoice HTML from upstream (or fallback) to render
-    let html: string | null = null;
-    try {
-      const invResp: AxiosResponse<any> = await axios.get(
-        `${BOOKING_SERVICE_URL}/${id}/invoice`,
-        {
-          headers: {
-            Authorization: req.headers.authorization || "",
-            "X-Admin-Request": "true",
-          },
-        },
-      );
-      if (typeof invResp.data === "string") html = invResp.data;
-      else if (invResp.data && typeof invResp.data.html === "string")
-        html = invResp.data.html;
-    } catch (err) {
-      // try internal fallback invoice
-      const q = mockQueues.find((m) => String(m.id) === String(id));
-      if (q) {
-        html = `<!doctype html><html><head><meta charset="utf-8"><title>Invoice</title></head><body><h1>Invoice ${q.bookingRef}</h1><p>Customer: ${q.customerName}</p></body></html>`;
-      }
-    }
-
-    if (!html)
-      return res.status(501).json({
-        success: false,
-        error: "No invoice HTML available to generate PDF",
-      });
-
-    // Dynamic import of puppeteer to avoid hard dependency if not installed
-    try {
-      // NOTE: In ESM, we use dynamic import() instead of require()
-      // @ts-ignore
-      const { default: puppeteer } = await import("puppeteer");
-      if (typeof puppeteer.launch === "function") {
-        const browser = await puppeteer.launch({
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        });
-        const page = await browser.newPage();
-        await page.setContent(html, { waitUntil: "networkidle0" });
-        const pdfBuffer = await page.pdf({
-          format: "A4",
-          printBackground: true,
-        });
-        await browser.close();
-        res.setHeader("Content-Type", "application/pdf");
-        return res.send(pdfBuffer);
-      } else {
-        throw new Error("Puppeteer launch method not found");
-      }
-    } catch (err) {
-      const message =
-        err && typeof err === "object" && "message" in err
-          ? (err as Error).message
-          : String(err);
-      console.error(
-        "Puppeteer not available or failed to generate PDF:",
-        message,
-      );
-      return res.status(501).json({
-        success: false,
-        error: "PDF generation not available on server (puppeteer missing)",
-      });
-    }
-  } catch (error) {
-    const message =
-      error && typeof error === "object" && "message" in error
-        ? (error as Error).message
-        : String(error);
-    console.error("Error creating booking:", message);
-    const status =
-      error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "status" in error.response
-        ? (error.response as { status: number }).status
-        : 500;
-    res.status(status).json({
-      success: false,
-      error: "Failed to create booking",
-    });
-  }
-});
 
 // PUT /api/admin/bookings/:id - Update booking details
 router.put("/:id", async (req: Request, res: Response) => {
@@ -563,14 +519,12 @@ router.get("/queues", async (req: Request, res: Response) => {
     res.json(response.data);
   } catch (error: any) {
     console.error("Error fetching booking queues:", error.message);
-    res
-      .status(error.response?.status || 500)
-      .json({ success: false, error: "Failed to fetch booking queues" });
     // Fallback to in-memory queues so admin UI remains functional
     return res.json({
       success: true,
       queues: mockQueues,
       total: mockQueues.length,
+      fallback: true,
     });
   }
 });
@@ -601,9 +555,6 @@ router.post("/:id/queue-action", async (req: Request, res: Response) => {
     res.json(response.data);
   } catch (error: any) {
     console.error("Error performing queue action:", error.message);
-    res
-      .status(error.response?.status || 500)
-      .json({ success: false, error: "Failed to perform queue action" });
     // Fallback: perform action against in-memory queues
     const { id } = req.params;
     const { action, processedBy } = req.body;
@@ -633,7 +584,7 @@ router.post("/:id/queue-action", async (req: Request, res: Response) => {
       details: { queueId: id },
     });
 
-    return res.json({ success: true, queue: mockQueues[idx] });
+    return res.json({ success: true, queue: mockQueues[idx], fallback: true });
   }
 });
 
@@ -656,9 +607,6 @@ router.get("/:id/invoice", async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     console.error("Error fetching invoice:", error.message);
-    res
-      .status(error.response?.status || 500)
-      .json({ success: false, error: "Failed to fetch invoice" });
     // Fallback: try to return a simple JSON invoice constructed from mockQueues
     const q = mockQueues.find((m) => String(m.id) === String(req.params.id));
     if (q) {
@@ -683,11 +631,12 @@ router.get("/:id/invoice", async (req: Request, res: Response) => {
             },
           ],
         },
+        fallback: true,
       };
       return res.json(invoice);
     }
 
-    res
+    return res
       .status(error.response?.status || 500)
       .json({ success: false, error: "Failed to fetch invoice" });
   }

@@ -2,6 +2,10 @@ import express, { Express, ErrorRequestHandler } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
+// Import middleware
+import { requestLogger, requestId, errorHandler } from "./middleware/error-handler.js";
+import { monitoringMiddleware, healthCheckWithMetrics, metricsEndpoint, resetMetricsEndpoint } from "./middleware/monitoring.js";
+
 // Import routes
 import companiesRoutes from "./routes/companies.js";
 import usersRoutes from "./routes/users.js";
@@ -20,11 +24,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  next();
-});
+// Enhanced middleware
+app.use(requestId);
+app.use(requestLogger);
 
 // Health check
 app.get("/health", (req, res) => {
@@ -35,6 +37,9 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Enhanced health check with metrics
+app.get("/health/metrics", healthCheckWithMetrics);
 
 // API version info
 app.get("/api", (req, res) => {
@@ -48,9 +53,15 @@ app.get("/api", (req, res) => {
       finance: "/api/finance",
       suppliers: "/api/suppliers",
       rules: "/api/rules",
+      metrics: "/metrics",
+      resetMetrics: "/metrics/reset",
     },
   });
 });
+
+// Metrics endpoints
+app.get("/metrics", metricsEndpoint);
+app.post("/metrics/reset", resetMetricsEndpoint);
 
 // API Routes
 app.use("/api/companies", companiesRoutes);
@@ -69,38 +80,7 @@ app.use((req, res) => {
   });
 });
 
-// Error Handler
-const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  console.error("[B2BAdminService] Error:", err);
-
-  // Handle specific error types
-  if (err.name === "UnauthorizedError") {
-    res.status(401).json({
-      success: false,
-      error: "Invalid or expired token",
-    });
-    return;
-  }
-
-  if (err.name === "ValidationError") {
-    res.status(400).json({
-      success: false,
-      error: "Validation error",
-      details: err.message,
-    });
-    return;
-  }
-
-  res.status(500).json({
-    success: false,
-    error: "Internal Server Error",
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "An unexpected error occurred",
-  });
-};
-
+// Use enhanced error handler
 app.use(errorHandler);
 
 // Start server

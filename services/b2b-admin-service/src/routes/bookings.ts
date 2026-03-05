@@ -1,4 +1,4 @@
-import { Router, Response } from "express";
+import { Router, Response, NextFunction } from "express";
 import prisma from "../database.js";
 import {
   AuthRequest,
@@ -54,6 +54,35 @@ router.get(
         userId,
       } = req.query as any;
 
+      const parsedPage = Number(page) || 1;
+      const parsedLimit = Number(limit) || 20;
+      const safeSortOrder =
+        String(sortOrder || "").toLowerCase() === "asc" ? "asc" : "desc";
+
+      // restrict sortBy to an allow-list to avoid invalid orderBy fields
+      const allowedSortBy = new Set([
+        "createdAt",
+        "updatedAt",
+        "totalAmount",
+        "baseAmount",
+      ]);
+      const safeSortBy = allowedSortBy.has(String(sortBy))
+        ? String(sortBy)
+        : "createdAt";
+
+      if (
+        !Number.isInteger(parsedPage) ||
+        parsedPage <= 0 ||
+        !Number.isInteger(parsedLimit) ||
+        parsedLimit <= 0 ||
+        parsedLimit > 500
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid pagination: page must be >=1 and limit between 1 and 500",
+        });
+      }
+
       // Build where clause
       const where: any = {};
 
@@ -105,9 +134,9 @@ router.get(
       const [bookings, total] = await Promise.all([
         prisma.booking.findMany({
           where,
-          skip: (page - 1) * limit,
-          take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          skip: (parsedPage - 1) * parsedLimit,
+          take: parsedLimit,
+          orderBy: safeSortBy ? { [safeSortBy]: safeSortOrder } : { createdAt: "desc" },
           include: {
             bookingSegments: {
               orderBy: { sequenceNumber: "asc" },
@@ -126,10 +155,10 @@ router.get(
         success: true,
         data: bookings.map(serializeBooking),
         pagination: {
-          page,
-          limit,
+          page: parsedPage,
+          limit: parsedLimit,
           total,
-          totalPages: Math.ceil(total / limit),
+          totalPages: Math.ceil(total / parsedLimit),
         },
       });
     } catch (error) {
@@ -259,9 +288,15 @@ router.get(
   "/:id",
   requirePermission("bookings:read"),
   validateZod(idParamSchema),
-  async (req: AuthRequest, res: Response) => {
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
+
+      // Avoid shadowing static routes - these are defined elsewhere in the router
+      // If the ID matches a static route, pass to next() to avoid 404
+      if (id === "queues" || id === "stats" || id === "ref" || id === "search") {
+        return next();
+      }
 
       const booking = await prisma.booking.findUnique({
         where: { id },
@@ -482,6 +517,14 @@ router.post(
       const { id } = req.params;
       const { amount, reason, processedBy } = req.body;
 
+      const parsedAmount = amount === undefined ? null : Number(amount);
+      if (parsedAmount !== null && (!Number.isFinite(parsedAmount) || parsedAmount < 0)) {
+        return res.status(400).json({
+          success: false,
+          error: "amount must be a non-negative number",
+        });
+      }
+
       const booking = await prisma.booking.findUnique({
         where: { id },
       });
@@ -500,7 +543,7 @@ router.post(
           modificationType: "refund",
           status: "completed",
           requestNote: reason,
-          modificationFee: amount ? new Prisma.Decimal(amount) : null,
+          modificationFee: parsedAmount !== null ? new Prisma.Decimal(parsedAmount) : null,
           internalNote: `Processed by: ${processedBy || "admin"}`,
         },
       });
@@ -605,6 +648,22 @@ router.get(
         toDate,
       } = req.query;
 
+      const parsedPage = Number(page) || 1;
+      const parsedLimit = Number(limit) || 20;
+
+      if (
+        !Number.isInteger(parsedPage) ||
+        parsedPage <= 0 ||
+        !Number.isInteger(parsedLimit) ||
+        parsedLimit <= 0 ||
+        parsedLimit > 500
+      ) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid pagination: page must be >=1 and limit between 1 and 500",
+        });
+      }
+
       // Build where clause for bookings that need attention
       const where: any = {
         OR: [
@@ -649,8 +708,8 @@ router.get(
       const [bookings, total] = await Promise.all([
         prisma.booking.findMany({
           where,
-          skip: (Number(page) - 1) * Number(limit),
-          take: Number(limit),
+          skip: (parsedPage - 1) * parsedLimit,
+          take: parsedLimit,
           orderBy: { createdAt: "asc" }, // Oldest first for queue processing
           include: {
             bookingSegments: {
@@ -686,10 +745,10 @@ router.get(
         success: true,
         data: queues,
         pagination: {
-          page: Number(page),
-          limit: Number(limit),
+          page: parsedPage,
+          limit: parsedLimit,
           total,
-          totalPages: Math.ceil(total / Number(limit)),
+          totalPages: Math.ceil(total / parsedLimit),
         },
       });
     } catch (error) {

@@ -34,6 +34,7 @@ router.post("/", async (req, res: Response) => {
         priority,
         submittedBy: req.body.customerId || "customer",
         requestDetails: {
+          customerId: req.body.customerId || "customer",
           originalDetails: originalDetails || {},
           requestedChanges: requestedChanges || {},
           timeline: {
@@ -82,6 +83,22 @@ router.get("/", async (req, res: Response) => {
       search,
     } = req.query;
 
+    const parsedPage = Number(page);
+    const parsedLimit = Number(limit);
+
+    if (
+      !Number.isInteger(parsedPage) ||
+      parsedPage <= 0 ||
+      !Number.isInteger(parsedLimit) ||
+      parsedLimit <= 0 ||
+      parsedLimit > 200
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid pagination values: page >= 1, limit in [1, 200]",
+      });
+    }
+
     const where: any = {};
 
     if (status) {
@@ -106,8 +123,8 @@ router.get("/", async (req, res: Response) => {
     const [requests, total] = await Promise.all([
       prisma.offlineChangeRequest.findMany({
         where,
-        skip: (Number(page) - 1) * Number(limit),
-        take: Number(limit),
+        skip: (parsedPage - 1) * parsedLimit,
+        take: parsedLimit,
         orderBy: { createdAt: "desc" },
         include: {
           auditLogs: {
@@ -123,10 +140,10 @@ router.get("/", async (req, res: Response) => {
       success: true,
       data: requests,
       pagination: {
-        page: Number(page),
-        limit: Number(limit),
+        page: parsedPage,
+        limit: parsedLimit,
         total,
-        totalPages: Math.ceil(total / Number(limit)),
+        totalPages: Math.ceil(total / parsedLimit),
       },
     });
   } catch (error: any) {
@@ -181,6 +198,13 @@ router.put("/:id/pricing", async (req, res: Response) => {
   try {
     const { id } = req.params;
     const { staffPricing, priceDifference, staffNotes, staffId } = req.body;
+
+    if (!staffId || typeof staffId !== "string") {
+      return res.status(400).json({
+        success: false,
+        error: "staffId is required",
+      });
+    }
 
     const offlineRequest = await prisma.offlineChangeRequest.findUnique({
       where: { id },
@@ -264,6 +288,20 @@ router.put("/:id/approve", async (req, res: Response) => {
     const { id } = req.params;
     const { approved, rejectionReason, customerId } = req.body;
 
+    if (!customerId || typeof customerId !== "string") {
+      return res.status(400).json({
+        success: false,
+        error: "customerId is required",
+      });
+    }
+
+    if (typeof approved !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        error: "approved must be a boolean",
+      });
+    }
+
     const offlineRequest = await prisma.offlineChangeRequest.findUnique({
       where: { id },
     });
@@ -282,9 +320,9 @@ router.put("/:id/approve", async (req, res: Response) => {
       });
     }
 
-    const newStatus = approved ? "approved" : "rejected";
+    const finalStatus = approved ? "payment_pending" : "rejected";
     const updateData: any = {
-      status: newStatus,
+      status: finalStatus,
       resolution: {
         ...(offlineRequest.resolution as any),
         customerApproval: {
@@ -294,10 +332,6 @@ router.put("/:id/approve", async (req, res: Response) => {
         },
       },
     };
-
-    if (approved) {
-      updateData.status = "payment_pending";
-    }
 
     const updatedRequest = await prisma.offlineChangeRequest.update({
       where: { id },
@@ -312,7 +346,7 @@ router.put("/:id/approve", async (req, res: Response) => {
         actorId: customerId,
         actorType: "customer",
         previousStatus: offlineRequest.status,
-        newStatus,
+        newStatus: finalStatus,
         metadata: { approved },
       },
     });
@@ -320,7 +354,9 @@ router.put("/:id/approve", async (req, res: Response) => {
     res.json({
       success: true,
       data: updatedRequest,
-      message: approved ? "Request approved successfully" : "Request rejected",
+      message: approved
+        ? "Request approved and moved to payment_pending"
+        : "Request rejected",
     });
   } catch (error: any) {
     console.error("[OfflineRequests] Approval error:", error.message);
@@ -336,6 +372,14 @@ router.put("/:id/payment", async (req, res: Response) => {
   try {
     const { id } = req.params;
     const { paymentId, amount, method, transactionRef } = req.body;
+
+    const parsedAmount = Number(amount);
+    if (!paymentId || !method || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "paymentId, method, and positive numeric amount are required",
+      });
+    }
 
     const offlineRequest = await prisma.offlineChangeRequest.findUnique({
       where: { id },
@@ -362,7 +406,7 @@ router.put("/:id/payment", async (req, res: Response) => {
           ...(offlineRequest.resolution as any),
           payment: {
             paymentId,
-            amount,
+            amount: parsedAmount,
             method,
             transactionRef,
             status: "completed",
@@ -382,7 +426,7 @@ router.put("/:id/payment", async (req, res: Response) => {
         actorType: "system",
         previousStatus: offlineRequest.status,
         newStatus: "completed",
-        metadata: { paymentId, amount, method, transactionRef },
+        metadata: { paymentId, amount: parsedAmount, method, transactionRef },
       },
     });
 

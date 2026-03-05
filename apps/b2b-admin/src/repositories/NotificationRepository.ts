@@ -5,8 +5,8 @@
  * between the frontend components and the backend API.
  */
 
+import { NotificationService, type DeliveryStatus } from "@/services/notification-client/NotificationService";
 import {
-  NotificationService,
   type CreateNotificationRequest,
   type CreateTemplateRequest,
   type CreateCampaignRequest,
@@ -16,7 +16,6 @@ import {
   type Notification,
   type NotificationTemplate,
   type NotificationCampaign,
-  type DeliveryStatus,
 } from "@tripalfa/api-clients";
 
 // ============================================================================
@@ -24,8 +23,10 @@ import {
 // ============================================================================
 
 export class NotificationRepository {
-  constructor(apiBaseUrl: string = "/api", apiKey: string = "") {
-    // Service is now static, no instance needed
+  private notificationService: NotificationService;
+
+  constructor(apiBaseUrl: string = "/api") {
+    this.notificationService = new NotificationService(apiBaseUrl);
   }
 
   /**
@@ -34,14 +35,14 @@ export class NotificationRepository {
   async sendNotification(
     request: CreateNotificationRequest,
   ): Promise<SendNotificationResponse> {
-    return NotificationService.sendNotification(request);
+    return this.notificationService.sendNotification(request);
   }
 
   /**
    * Get notification delivery status (for NotificationAnalyticsOverview)
    */
   async getDeliveryStatus(notificationId: string): Promise<DeliveryStatus> {
-    return NotificationService.getDeliveryStatus(notificationId);
+    return this.notificationService.getDeliveryStatus(notificationId);
   }
 
   /**
@@ -52,7 +53,7 @@ export class NotificationRepository {
     endDate: Date,
     channel?: string,
   ): Promise<DeliveryAnalytics> {
-    return NotificationService.getDeliveryAnalytics(
+    return this.notificationService.getDeliveryAnalytics(
       startDate,
       endDate,
       channel,
@@ -65,14 +66,14 @@ export class NotificationRepository {
   async createTemplate(
     request: CreateTemplateRequest,
   ): Promise<NotificationTemplate> {
-    return NotificationService.createTemplate(request);
+    return this.notificationService.createTemplate(request);
   }
 
   /**
    * Get template by ID
    */
   async getTemplate(templateId: string): Promise<NotificationTemplate> {
-    return NotificationService.getTemplate(templateId);
+    return this.notificationService.getTemplate(templateId);
   }
 
   /**
@@ -82,7 +83,7 @@ export class NotificationRepository {
     limit: number = 50,
     offset: number = 0,
   ): Promise<NotificationTemplate[]> {
-    return NotificationService.listTemplates(limit, offset);
+    return this.notificationService.listTemplates(limit, offset);
   }
 
   /**
@@ -92,14 +93,14 @@ export class NotificationRepository {
     limit: number = 50,
     offset: number = 0,
   ): Promise<Notification[]> {
-    return NotificationService.listNotifications(limit, offset);
+    return this.notificationService.listNotifications(limit, offset);
   }
 
   /**
    * Delete notification (from NotificationCenter activity feed)
    */
   async deleteNotification(notificationId: string): Promise<void> {
-    return NotificationService.deleteNotification(notificationId);
+    return this.notificationService.deleteNotification(notificationId);
   }
 
   /**
@@ -109,14 +110,14 @@ export class NotificationRepository {
     templateId: string,
     updates: Partial<CreateTemplateRequest>,
   ): Promise<NotificationTemplate> {
-    return NotificationService.updateTemplate(templateId, updates);
+    return this.notificationService.updateTemplate(templateId, updates);
   }
 
   /**
    * Delete template
    */
   async deleteTemplate(templateId: string): Promise<void> {
-    return NotificationService.deleteTemplate(templateId);
+    return this.notificationService.deleteTemplate(templateId);
   }
 
   /**
@@ -125,7 +126,7 @@ export class NotificationRepository {
   async createCampaign(
     request: CreateCampaignRequest,
   ): Promise<NotificationCampaign> {
-    return NotificationService.createCampaign(request);
+    return this.notificationService.createCampaign(request);
   }
 
   /**
@@ -134,21 +135,21 @@ export class NotificationRepository {
   async executeCampaign(
     campaignId: string,
   ): Promise<CampaignExecutionResponse> {
-    return NotificationService.executeCampaign(campaignId);
+    return this.notificationService.executeCampaign(campaignId);
   }
 
   /**
    * Pause campaign
    */
   async pauseCampaign(campaignId: string): Promise<void> {
-    return NotificationService.pauseCampaign(campaignId);
+    return this.notificationService.pauseCampaign(campaignId);
   }
 
   /**
    * Resume campaign
    */
   async resumeCampaign(campaignId: string): Promise<void> {
-    return NotificationService.resumeCampaign(campaignId);
+    return this.notificationService.resumeCampaign(campaignId);
   }
 
   /**
@@ -157,7 +158,7 @@ export class NotificationRepository {
   async retryFailedDeliveries(
     notificationId: string,
   ): Promise<SendNotificationResponse> {
-    return NotificationService.retryFailedDeliveries(notificationId);
+    return this.notificationService.retryFailedDeliveries(notificationId);
   }
 }
 

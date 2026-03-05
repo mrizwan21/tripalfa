@@ -19,6 +19,7 @@
  * NEW: Progress tracking, resumable import, batch operations, safety checks.
  */
 
+import { fileURLToPath } from "url";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -41,15 +42,19 @@ const HOTELS_DETAIL_LIMIT = Number(
 ); // max hotel details per country
 
 // Safety & Performance
-const API_CALL_DELAY_MS = Number(process.env.LITEAPI_API_CALL_DELAY_MS ?? 200); // rate limiting
-const BATCH_SIZE = Number(process.env.LITEAPI_BATCH_SIZE ?? 50); // batch insert size
+const API_CALL_DELAY_MS = Number(process.env.LITEAPI_API_CALL_DELAY_MS ?? 300); // rate limiting
+const BATCH_SIZE = Number(process.env.LITEAPI_BATCH_SIZE ?? 100); // batch insert size
 const MEMORY_CLEAR_INTERVAL = Number(
-  process.env.LITEAPI_MEMORY_CLEAR_INTERVAL ?? 50,
+  process.env.LITEAPI_MEMORY_CLEAR_INTERVAL ?? 10,
 ); // clear cache every N countries
 const CHECKPOINT_INTERVAL = Number(
-  process.env.LITEAPI_CHECKPOINT_INTERVAL ?? 5,
+  process.env.LITEAPI_CHECKPOINT_INTERVAL ?? 1,
 ); // progress checkpoint every N countries
-const MAX_RETRY_ATTEMPTS = Number(process.env.LITEAPI_MAX_RETRY_ATTEMPTS ?? 3);
+const MAX_RETRY_ATTEMPTS = Number(process.env.LITEAPI_MAX_RETRY_ATTEMPTS ?? 5); // increased retries
+const CONNECTION_TIMEOUT_MS = Number(process.env.LITEAPI_CONNECTION_TIMEOUT_MS ?? 30000); // 30s connection timeout
+const REQUEST_TIMEOUT_MS = Number(process.env.LITEAPI_REQUEST_TIMEOUT_MS ?? 120000); // 2min request timeout
+const CIRCUIT_BREAKER_FAILURE_THRESHOLD = Number(process.env.LITEAPI_CIRCUIT_BREAKER_THRESHOLD ?? 5);
+const CIRCUIT_BREAKER_RESET_TIMEOUT_MS = Number(process.env.LITEAPI_CIRCUIT_BREAKER_RESET_MS ?? 60000); // 1min
 
 // ---- Types ----------------------------------------------------
 
@@ -141,6 +146,7 @@ interface LiteRoomPhoto {
 }
 interface LiteRoom {
   id: number;
+  roomId?: string;              // External/supplier-specific room identifier
   roomName?: string;
   description?: string;
   roomSizeSquare?: number;
@@ -152,6 +158,7 @@ interface LiteRoom {
   bedTypes?: LiteBedType[];
   roomAmenities?: LiteRoomAmenity[];
   photos?: LiteRoomPhoto[];
+  deletedAt?: string;           // Soft delete timestamp from API
 }
 
 interface LiteHotelImage {
@@ -749,6 +756,60 @@ async function upsertHotelList(
   return hotelIds;
 }
 
+/**
+ * Soft-delete rooms that are no longer present in the API response.
+ * This ensures rooms removed from LiteAPI are marked as deleted in our database.
+ */
+async function softDeleteRemovedRooms(
+  hotelId: string,
+  currentRooms: LiteRoom[],
+): Promise<void> {
+  try {
+    // Get current room IDs from API response (excluding already deleted rooms)
+    const currentRoomIds = currentRooms
+      .filter(r => !r.deletedAt) // Don't include already deleted rooms from API
+      .map(r => r.id);
+
+    if (currentRoomIds.length === 0) {
+      // If API returns no rooms, don't soft-delete everything - could be an error
+      return;
+    }
+
+    // Find rooms in DB that are not in the current API response and not already deleted
+    const result = await query<{ id: number; room_name: string | null }>(
+      `SELECT id, room_name
+       FROM hotel.rooms
+       WHERE hotel_id = $1
+         AND is_deleted = FALSE
+         AND id != ALL($2::int[])`,
+      [hotelId, currentRoomIds],
+    );
+
+    if (result.length > 0) {
+      const roomIdsToDelete = result.map(r => r.id);
+
+      await query(
+        `UPDATE hotel.rooms
+         SET is_deleted = TRUE,
+             deleted_at = NOW(),
+             updated_at = NOW()
+         WHERE hotel_id = $1
+           AND id = ANY($2::int[])`,
+        [hotelId, roomIdsToDelete],
+      );
+
+      log.debug(
+        `Soft-deleted ${result.length} removed rooms for hotel ${hotelId}: ${result.map(r => r.room_name || r.id).join(', ')}`,
+      );
+    }
+  } catch (err) {
+    // Don't fail the entire sync if soft-delete fails
+    log.warn(
+      `Failed to soft-delete removed rooms for hotel ${hotelId}: ${(err as Error).message}`,
+    );
+  }
+}
+
 async function upsertHotelDetail(
   client: AxiosInstance,
   hotelId: string,
@@ -983,18 +1044,22 @@ async function upsertHotelDetail(
             sanitizeString(room.roomSizeUnit) || "m2";
 
           await query(
-            `INSERT INTO hotel.rooms (id, hotel_id, room_name, description, size_sqm, size_unit, max_adults, max_children, max_occupancy)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+            `INSERT INTO hotel.rooms (id, external_room_id, hotel_id, room_name, description, size_sqm, size_unit, max_adults, max_children, max_occupancy, is_deleted, deleted_at)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
              ON CONFLICT (id) DO UPDATE SET
+               external_room_id = EXCLUDED.external_room_id,
                room_name    = EXCLUDED.room_name,
                description  = EXCLUDED.description,
                size_sqm     = EXCLUDED.size_sqm,
                max_adults   = EXCLUDED.max_adults,
                max_children = EXCLUDED.max_children,
                max_occupancy = EXCLUDED.max_occupancy,
+               is_deleted   = EXCLUDED.is_deleted,
+               deleted_at   = EXCLUDED.deleted_at,
                updated_at   = NOW()`,
             [
               room.id,
+              room.roomId ?? null,
               detail.id,
               sanitizedRoomName,
               sanitizedRoomDesc,
@@ -1003,6 +1068,8 @@ async function upsertHotelDetail(
               room.maxAdults ?? null,
               room.maxChildren ?? null,
               room.maxOccupancy ?? null,
+              !!room.deletedAt,
+              room.deletedAt ? new Date(room.deletedAt) : null,
             ],
           );
 
@@ -1017,9 +1084,10 @@ async function upsertHotelDetail(
                 const sanitizedBedSize = sanitizeString(bt.bedSize);
 
                 await query(
-                  `INSERT INTO hotel.room_bed_types (room_id, bed_type, bed_size, quantity) VALUES ($1,$2,$3,$4)`,
+                  `INSERT INTO hotel.room_bed_types (room_id, bed_type_id, bed_type, bed_size, quantity) VALUES ($1,$2,$3,$4,$5)`,
                   [
                     room.id,
+                    bt.Id ?? null,
                     sanitizedBedType,
                     sanitizedBedSize,
                     bt.quantity ?? 1,
@@ -1104,6 +1172,9 @@ async function upsertHotelDetail(
           );
         }
       }
+
+      // Soft-delete rooms that are no longer in the API response
+      await softDeleteRemovedRooms(detail.id, detail.rooms);
     }
 
     return { success: true };
@@ -1362,6 +1433,7 @@ export async function syncLiteAPI(): Promise<void> {
   log.success("LiteAPI sync complete!");
 }
 
+// Node.js-compatible main module check
 if (require.main === module) {
   syncLiteAPI()
     .then(() => closePool())
@@ -1370,3 +1442,4 @@ if (require.main === module) {
       process.exit(1);
     });
 }
+

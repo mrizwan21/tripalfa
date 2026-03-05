@@ -764,7 +764,7 @@ app.post(
       if (
         promoCode.minOrderAmount &&
         purchaseAmount &&
-        purchaseAmount < promoCode.minOrderAmount
+        purchaseAmount < (promoCode.minOrderAmount.toNumber?.() ?? Number(promoCode.minOrderAmount))
       ) {
         return res.status(400).json({
           valid: false,

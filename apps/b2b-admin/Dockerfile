@@ -17,14 +17,14 @@ COPY .npmrc ./
 # Copy monorepo root files
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY tsconfig.json tsconfig.base.json ./
-COPY tsconfig.json tsconfig.base.json ./
+COPY database ./database
 COPY packages ./packages
 COPY scripts ./scripts
 COPY apps/b2b-admin ./apps/b2b-admin
 
 # Install dependencies using pnpm with cache mount
 # Using --fetch-timeout for better handling of slow connections
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --fetch-timeout=300000
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts --fetch-timeout=300000
 
 # Build shared-types first
 RUN find . -name "*.tsbuildinfo" -delete

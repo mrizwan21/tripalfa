@@ -13,7 +13,7 @@
 import React, { useState, useRef } from "react";
 import type { FC } from "react";
 import { getStoredAuthToken } from "../lib/authToken";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tripalfa/ui-components";
 
 interface PaymentBreakdown {
   walletAmount: number;

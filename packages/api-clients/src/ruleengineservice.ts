@@ -3,6 +3,8 @@
 // ============================================================================
 
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
 
 export type RuleStatus =
   | "draft"
@@ -393,8 +395,12 @@ export interface RuleDebugSession {
 // Note: RuleStats is already exported above, RuleExecutionHistory is separate interface
 
 export class RuleEngineService {
-  private static baseURL =
-    process.env.VITE_RULE_ENGINE_SERVICE_URL || "http://localhost:3005";
+  /**
+   * Get base URL for rule engine service - uses lazy evaluation to support runtime config changes
+   */
+  private static get baseURL(): string {
+    return getEnv("VITE_RULE_ENGINE_SERVICE_URL", "http://localhost:3005");
+  }
 
   /**
    * Create a new rule
@@ -408,7 +414,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to create rule: ${message}`, { cause: error });
     }
   }
 
@@ -423,7 +430,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get rule: ${message}`, { cause: error });
     }
   }
 
@@ -448,7 +456,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to list rules: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to list rules: ${message}`, { cause: error });
     }
   }
 
@@ -467,7 +476,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to update rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to update rule: ${message}`, { cause: error });
     }
   }
 
@@ -478,7 +488,8 @@ export class RuleEngineService {
     try {
       await axios.delete(`${this.baseURL}/api/rules/${ruleId}`);
     } catch (error) {
-      throw new Error(`Failed to delete rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to delete rule: ${message}`, { cause: error });
     }
   }
 
@@ -500,7 +511,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to execute rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to execute rule: ${message}`, { cause: error });
     }
   }
 
@@ -522,7 +534,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to debug rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to debug rule: ${message}`, { cause: error });
     }
   }
 
@@ -537,7 +550,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to analyze rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to analyze rule: ${message}`, { cause: error });
     }
   }
 
@@ -554,7 +568,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to check conflicts: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to check conflicts: ${message}`, { cause: error });
     }
   }
 
@@ -574,7 +589,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get execution history: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get execution history: ${message}`, { cause: error });
     }
   }
 
@@ -591,7 +607,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get execution: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get execution: ${message}`, { cause: error });
     }
   }
 
@@ -607,7 +624,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to duplicate rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to duplicate rule: ${message}`, { cause: error });
     }
   }
 
@@ -622,7 +640,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to enable rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to enable rule: ${message}`, { cause: error });
     }
   }
 
@@ -637,7 +656,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to disable rule: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to disable rule: ${message}`, { cause: error });
     }
   }
 
@@ -664,7 +684,8 @@ export class RuleEngineService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get rule stats: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get rule stats: ${message}`, { cause: error });
     }
   }
 }

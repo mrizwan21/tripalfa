@@ -1,4 +1,6 @@
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
 
 export interface SupportTicket {
   id: string;
@@ -25,8 +27,12 @@ export interface SupportMessage {
 }
 
 export class SupportService {
-  private static baseURL =
-    process.env.VITE_SUPPORT_SERVICE_URL || "http://localhost:3008";
+  /**
+   * Get base URL for support service - uses lazy evaluation to support runtime config changes
+   */
+  private static get baseURL(): string {
+    return getEnv("VITE_SUPPORT_SERVICE_URL", "http://localhost:3008");
+  }
 
   /**
    * Get all support tickets
@@ -46,7 +52,8 @@ export class SupportService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get support tickets: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get support tickets: ${message}`, { cause: error });
     }
   }
 
@@ -68,7 +75,8 @@ export class SupportService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create support ticket: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to create support ticket: ${message}`, { cause: error });
     }
   }
 
@@ -92,7 +100,8 @@ export class SupportService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to add message to ticket: ${error}`);
+      const messageStr = getErrorMessage(error);
+      throw new Error(`Failed to add message to ticket: ${messageStr}`, { cause: error });
     }
   }
 }

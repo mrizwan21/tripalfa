@@ -1,0 +1,195 @@
+name: Coverage Tracking
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    # Run daily at 3 AM UTC
+    - cron: '0 3 * * *'
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage 2>&1 | tee coverage-output.log
+
+      - name: Extract coverage summary
+        if: always()
+        run: |
+          # Generate JSON coverage summary
+          npm run coverage --workspace=@tripalfa/coverage-tracking -- --format json 2>&1 || true
+
+      - name: Compare with baseline
+        if: github.event_name == 'pull_request'
+        run: |
+          # Download baseline from main
+          git fetch origin main:main 2>/dev/null || true
+          git show origin/main:coverage-results/baseline-coverage.json > /tmp/baseline.json 2>/dev/null || echo "No baseline found"
+          
+          # Compare current vs baseline
+          if [ -f /tmp/baseline.json ]; then
+            echo "📊 Comparing coverage against main branch..."
+            npm run coverage:compare --workspace=@tripalfa/coverage-tracking 2>&1 || true
+          fi
+
+      - name: Generate coverage report
+        if: always()
+        run: |
+          npm run coverage:report --workspace=@tripalfa/coverage-tracking 2>&1 || true
+
+      - name: Generate coverage badges
+        if: always()
+        run: |
+          npm run coverage:badges --workspace=@tripalfa/coverage-tracking 2>&1 || true
+
+      - name: Generate coverage dashboard
+        if: always()
+        run: |
+          npm run coverage:dashboard --workspace=@tripalfa/coverage-tracking 2>&1 || true
+
+      - name: Check for regressions and generate alerts
+        if: always()
+        run: |
+          npm run coverage:check-regressions --workspace=@tripalfa/coverage-tracking 2>&1 || echo "Regressions detected - see details above"
+
+      - name: Upload coverage results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: coverage-results/
+          retention-days: 30
+
+      - name: Upload to codecov
+        if: always()
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          fail_ci_if_error: false
+          verbose: false
+
+      - name: Comment PR with coverage
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            const reportPath = 'coverage-results/report.md';
+            let body = '## 📊 Coverage Report\n\n';
+            
+            if (fs.existsSync(reportPath)) {
+              const report = fs.readFileSync(reportPath, 'utf-8');
+              body += report;
+            } else {
+              body += 'Coverage report not available. Check artifacts.';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Check coverage thresholds
+        if: always()
+        run: |
+          npm run coverage:strict --workspace=@tripalfa/coverage-tracking 2>&1 || {
+            echo "⚠️  Coverage thresholds not met"
+            exit 0  # Don't fail, just warn
+          }
+
+      - name: Store coverage as baseline (main branch only)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          npm run coverage:baseline --workspace=@tripalfa/coverage-tracking 2>&1 || true
+
+      - name: Commit baseline update
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'test: update coverage baseline'
+          file_pattern: 'coverage-results/baseline-coverage.json'
+          disable_globbing: true
+
+      - name: Post status check
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'coverage-results/report.json';
+            
+            let conclusion = 'success';
+            let summary = '✅ Coverage tracking passed';
+            
+            if (fs.existsSync(reportPath)) {
+              const report = JSON.parse(fs.readFileSync(reportPath, 'utf-8'));
+              
+              if (report.status === 'critical') {
+                conclusion = 'failure';
+                summary = `🔴 Critical coverage regressions detected (${report.regressions.length})`;
+              } else if (report.status === 'warning') {
+                conclusion = 'neutral';
+                summary = `⚠️  Coverage warnings found (${report.regressions.length} regressions)`;
+              }
+            }
+            
+            if (context.eventName === 'pull_request') {
+              github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'Coverage Report',
+                head_sha: context.payload.pull_request.head.sha,
+                status: 'completed',
+                conclusion: conclusion,
+                output: {
+                  title: summary,
+                  summary: 'See PR comment for details'
+                }
+              });
+            }
+

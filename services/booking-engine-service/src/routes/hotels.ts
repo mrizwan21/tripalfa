@@ -141,131 +141,6 @@ router.post("/search", async (req, res: Response) => {
   }
 });
 
-// GET /api/hotels/:hotelId - Get hotel details
-router.get("/:hotelId", async (req, res: Response) => {
-  try {
-    const { hotelId } = req.params;
-
-    // Try to get from canonical hotel first
-    const mapping = await prisma.supplierHotelMapping.findFirst({
-      where: {
-        OR: [{ supplierHotelId: hotelId }, { localHotelId: hotelId }],
-      },
-    });
-
-    if (mapping && mapping.localHotelId) {
-      // Use the mapping data directly since there's no separate hotel model
-      const canonicalHotel = {
-        id: mapping.localHotelId,
-        name: mapping.hotelName || "",
-        description: "",
-        starRating: 0,
-        address: "",
-        city: "",
-        country: "",
-        countryCode: "",
-        latitude: null,
-        longitude: null,
-        images: [],
-        amenities: [],
-        reviews: [],
-        checkInTime: null,
-        checkOutTime: null,
-        phone: null,
-        email: null,
-      };
-
-      return res.json({
-        success: true,
-        data: {
-          hotel: {
-            id: canonicalHotel.id,
-            name: canonicalHotel.name || "",
-            description: canonicalHotel.description || "",
-            starRating: canonicalHotel.starRating || 0,
-            address: canonicalHotel.address,
-            city: canonicalHotel.city,
-            country: canonicalHotel.country,
-            countryCode: canonicalHotel.countryCode,
-            latitude: canonicalHotel.latitude,
-            longitude: canonicalHotel.longitude,
-            images: canonicalHotel.images,
-            amenities: canonicalHotel.amenities,
-            reviews: canonicalHotel.reviews,
-            checkInTime: canonicalHotel.checkInTime || null,
-            checkOutTime: canonicalHotel.checkOutTime || null,
-            phone: canonicalHotel.phone || null,
-            email: canonicalHotel.email || null,
-          },
-          supplier: mapping.supplierId,
-        },
-      });
-    }
-
-    // Fallback to LITEAPI
-    const safeHotelId = validateLiteApiId(hotelId);
-    const hotelDetails = await liteApiRequest<any>(
-      `/v3.0/hotels/${safeHotelId}`,
-    );
-
-    res.json({
-      success: true,
-      data: hotelDetails.data || hotelDetails,
-    });
-  } catch (error: any) {
-    console.error("[Hotels] Get hotel error:", error.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to get hotel details",
-    });
-  }
-});
-
-// POST /api/hotels/:hotelId/rates - Get hotel rates
-router.post("/:hotelId/rates", async (req, res: Response) => {
-  try {
-    const { hotelId } = req.params;
-    const {
-      checkIn,
-      checkOut,
-      guests,
-      rooms = 1,
-      nationality,
-      currency = "USD",
-    } = req.body;
-
-    if (!checkIn || !checkOut) {
-      return res.status(400).json({
-        success: false,
-        error: "Check-in and check-out dates are required",
-      });
-    }
-
-    const safeHotelId = validateLiteApiId(hotelId);
-    const ratesResponse = await liteApiPost<any>(
-      `/v3.0/hotels/${safeHotelId}/rates`,
-      {
-        checkIn,
-        checkOut,
-        guests: guests || [{ adults: 2, children: [] }],
-        rooms,
-        nationality: nationality || "US",
-        currency,
-      },
-    );
-
-    res.json({
-      success: true,
-      data: ratesResponse.data || ratesResponse,
-    });
-  } catch (error: any) {
-    console.error("[Hotels] Get rates error:", error.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to get hotel rates",
-    });
-  }
-});
 
 // POST /api/hotels/book - Create hotel booking
 router.post("/book", async (req, res: Response) => {
@@ -614,6 +489,132 @@ router.get("/board-types", async (req, res: Response) => {
     res.status(500).json({
       success: false,
       error: "Failed to get board types",
+    });
+  }
+});
+
+ // GET /api/hotels/:hotelId - Get hotel details
+router.get("/:hotelId", async (req, res: Response) => {
+  try {
+    const { hotelId } = req.params;
+
+    // Try to get from canonical hotel first
+    const mapping = await prisma.supplierHotelMapping.findFirst({
+      where: {
+        OR: [{ supplierHotelId: hotelId }, { localHotelId: hotelId }],
+      },
+    });
+
+    if (mapping && mapping.localHotelId) {
+      // Use the mapping data directly since there's no separate hotel model
+      const canonicalHotel = {
+        id: mapping.localHotelId,
+        name: mapping.hotelName || "",
+        description: "",
+        starRating: 0,
+        address: "",
+        city: "",
+        country: "",
+        countryCode: "",
+        latitude: null,
+        longitude: null,
+        images: [],
+        amenities: [],
+        reviews: [],
+        checkInTime: null,
+        checkOutTime: null,
+        phone: null,
+        email: null,
+      };
+
+      return res.json({
+        success: true,
+        data: {
+          hotel: {
+            id: canonicalHotel.id,
+            name: canonicalHotel.name || "",
+            description: canonicalHotel.description || "",
+            starRating: canonicalHotel.starRating || 0,
+            address: canonicalHotel.address,
+            city: canonicalHotel.city,
+            country: canonicalHotel.country,
+            countryCode: canonicalHotel.countryCode,
+            latitude: canonicalHotel.latitude,
+            longitude: canonicalHotel.longitude,
+            images: canonicalHotel.images,
+            amenities: canonicalHotel.amenities,
+            reviews: canonicalHotel.reviews,
+            checkInTime: canonicalHotel.checkInTime || null,
+            checkOutTime: canonicalHotel.checkOutTime || null,
+            phone: canonicalHotel.phone || null,
+            email: canonicalHotel.email || null,
+          },
+          supplier: mapping.supplierId,
+        },
+      });
+    }
+
+    // Fallback to LITEAPI
+    const safeHotelId = validateLiteApiId(hotelId);
+    const hotelDetails = await liteApiRequest<any>(
+      `/v3.0/hotels/${safeHotelId}`,
+    );
+
+    res.json({
+      success: true,
+      data: hotelDetails.data || hotelDetails,
+    });
+  } catch (error: any) {
+    console.error("[Hotels] Get hotel error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get hotel details",
+    });
+  }
+});
+
+// POST /api/hotels/:hotelId/rates - Get hotel rates
+router.post("/:hotelId/rates", async (req, res: Response) => {
+  try {
+    const { hotelId } = req.params;
+    const {
+      checkIn,
+      checkOut,
+      guests,
+      rooms = 1,
+      nationality,
+      currency = "USD",
+    } = req.body;
+
+    if (!checkIn || !checkOut) {
+      return res.status(400).json({
+        success: false,
+        error: "Check-in and check-out dates are required",
+      });
+    }
+
+    const safeHotelId = validateLiteApiId(hotelId);
+    const ratesResponse = await liteApiPost<any>(
+      `/v3.0/hotels/${safeHotelId}/rates`,
+      {
+        checkIn,
+        checkOut,
+        guests: guests || [{ adults: 2, children: [] }],
+        rooms,
+        nationality: nationality || "US",
+        currency,
+      },
+    );
+
+    res.json({
+      success: true,
+      data: ratesResponse.data || ratesResponse,
+    });
+  } catch (error: any) {
+    console.error("[Hotels] Get rates error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to get hotel rates",
     });
   }
 });

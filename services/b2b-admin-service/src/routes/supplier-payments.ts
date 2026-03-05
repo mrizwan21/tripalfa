@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../database.js";
 import {
   AuthRequest,
@@ -43,8 +44,10 @@ router.post(
         res.status(400).json({ error: "type is required (payout|refund|adjustment)" });
         return;
       }
-      if (!amount || amount <= 0) {
-        res.status(400).json({ error: "amount is required and must be > 0" });
+      // Validate amount is a valid positive number
+      const amountNum = Number(amount);
+      if (!amount || Number.isNaN(amountNum) || amountNum <= 0) {
+        res.status(400).json({ error: "amount is required and must be a valid number > 0" });
         return;
       }
       if (!currency) {
@@ -90,14 +93,16 @@ router.post(
         data: {
           supplierId: supplierId as string,
           walletId: wallet.id,
-          type,
-          amount,
+          paymentType: type,
+          amount: new Prisma.Decimal(amount),
           currency,
           status: "pending",
-          referenceId,
-          description,
-          paymentGateway: paymentGateway || "stripe",
           scheduledFor: scheduledFor ? new Date(scheduledFor) : undefined,
+          metadata: {
+            referenceId,
+            description,
+            paymentGateway: paymentGateway || "stripe",
+          },
         },
       });
 
@@ -108,9 +113,9 @@ router.post(
           paymentId: payment.id,
           action: "created",
           previousBalance: wallet.balance,
-          newBalance: wallet.balance, // Balance updated on confirmation
-          performedBy: req.user?.id || "system",
-          details: `Payment created: ${type} of ${currency} ${amount}`,
+          newBalance: wallet.balance,
+          actorId: req.user?.id || "system",
+          notes: `Payment created: ${type} of ${currency} ${amount}`,
         },
       });
 
@@ -155,7 +160,7 @@ router.get(
         whereClause.status = status;
       }
       if (type) {
-        whereClause.type = type;
+        whereClause.paymentType = type;
       }
 
       const [payments, total] = await Promise.all([
@@ -266,13 +271,19 @@ router.put(
 
       // Update balance based on payment type and status
       if (newStatus === "completed") {
-        if (payment.type === "payout") {
-          newBalance = wallet.balance - payment.amount;
-        } else if (payment.type === "refund") {
-          newBalance = wallet.balance + payment.amount;
-        } else if (payment.type === "adjustment") {
-          newBalance = wallet.balance + payment.amount; // Adjustment is credit
+        const balanceNum = wallet.balance.toNumber?.() ?? Number(wallet.balance);
+        const amountNum = payment.amount.toNumber?.() ?? Number(payment.amount);
+        let newBalanceNum = balanceNum;
+        
+        if (payment.paymentType === "payout") {
+          newBalanceNum = balanceNum - amountNum;
+        } else if (payment.paymentType === "refund") {
+          newBalanceNum = balanceNum + amountNum;
+        } else if (payment.paymentType === "adjustment") {
+          newBalanceNum = balanceNum + amountNum; // Adjustment is credit
         }
+        
+        newBalance = new Prisma.Decimal(newBalanceNum);
       }
 
       // Update payment
@@ -280,7 +291,7 @@ router.put(
         where: { id: paymentId as string },
         data: {
           status: newStatus,
-          transactionId,
+          transactionReference: transactionId,
           failureReason,
           processedAt: new Date(),
         },
@@ -302,8 +313,8 @@ router.put(
           action: newStatus === "completed" ? "processed" : "failed",
           previousBalance: wallet.balance,
           newBalance,
-          performedBy: req.user?.id || "system",
-          details: `Payment ${newStatus}: ${payment.type} of ${payment.currency} ${payment.amount}${
+          actorId: req.user?.id || "system",
+          notes: `Payment ${newStatus}: ${payment.paymentType} of ${payment.currency} ${payment.amount}${
             failureReason ? `. Reason: ${failureReason}` : ""
           }`,
         },
@@ -366,8 +377,8 @@ router.delete(
           action: "cancelled",
           previousBalance: 0, // No balance change on cancel
           newBalance: 0,
-          performedBy: req.user?.id || "system",
-          details: `Payment cancelled: ${payment.type} of ${payment.currency} ${payment.amount}${
+          actorId: req.user?.id || "system",
+          notes: `Payment cancelled: ${payment.paymentType} of ${payment.currency} ${payment.amount}${
             reason ? `. Reason: ${reason}` : ""
           }`,
         },

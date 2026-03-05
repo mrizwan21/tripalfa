@@ -13,7 +13,7 @@
  * - Prebook sessions: 60 min TTL
  */
 
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { prisma } from "@tripalfa/shared-database";
 import { Pool } from "pg";
 import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
@@ -1698,9 +1698,17 @@ router.get("/vouchers", async (req: Request, res: Response) => {
 });
 
 // GET /vouchers/:voucherId - Retrieve a specific voucher
-router.get("/vouchers/:voucherId", async (req: Request, res: Response) => {
+router.get(
+  "/vouchers/:voucherId",
+  async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { voucherId } = req.params;
+
+    // Avoid shadowing static route /vouchers/history
+    if (voucherId === "history") {
+      return next();
+    }
+
     const result = await liteApiDaRequest<any>(`/vouchers/${voucherId}`, "GET");
     res.json(result);
   } catch (error: any) {

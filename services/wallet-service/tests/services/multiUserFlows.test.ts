@@ -1,8 +1,8 @@
 // tests/services/multiUserFlows.test.ts
 // Integration tests for customer->agency->supplier transaction flows
 
-import * as walletService from "../../src/services/walletService.ts";
-import { saveSnapshot } from "../../src/services/fxService.ts";
+import * as walletService from "../../src/services/walletService";
+import { saveSnapshot } from "../../src/services/fxService";
 const pool = (global as any).PG_POOL;
 import { v4 as uuidv4 } from "uuid";
 

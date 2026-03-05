@@ -10,11 +10,13 @@ router.use(authMiddleware);
 
 // Account Management
 router.post("/", WalletController.createAccount);
-router.get("/:entityType/:entityId", WalletController.getEntityAccounts);
 
 // Transactions
 router.post("/transfer", WalletController.transferFunds);
 router.post("/deposit", WalletController.depositFunds);
 router.get("/history/:accountId", WalletController.getAccountHistory);
+
+// Dynamic route last to avoid shadowing static paths
+router.get("/:entityType/:entityId", WalletController.getEntityAccounts);
 
 export default router;

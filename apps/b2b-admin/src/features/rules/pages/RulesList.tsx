@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAccessControl } from "@/contexts/AccessControlContext";
 import { RuleEngineRepository } from "@/repositories/RuleEngineRepository";
-import type { CreateRuleRequest, Rule } from "@tripalfa/api-clients";
+import type { CreateRuleRequest, Rule, ConditionOperator, ActionType } from "@tripalfa/api-clients";
 import { Button } from "@tripalfa/ui-components/ui/button";
 import {
   Dialog,
@@ -55,17 +55,22 @@ export default function RulesPage() {
   const descriptionMaxLength = 240;
   const repository = useMemo(() => new RuleEngineRepository("/api"), []);
 
-  const categoryPresets = useMemo(
+  const categoryPresets: Record<RulesManagerRule["type"], {
+    help: string;
+    condition: { field: string; operator: ConditionOperator; value: unknown };
+    action: { type: ActionType; config: Record<string, unknown>; description: string };
+    examples: string[];
+  }> = useMemo(
     () => ({
       markup: {
         help: "Markup rules adjust pricing and margin settings.",
         condition: {
           field: "pricing.baseFare",
-          operator: "greater_than",
+          operator: "greater_than" as ConditionOperator,
           value: 0,
         },
         action: {
-          type: "log_event",
+          type: "log_event" as ActionType,
           config: { message: "Markup rule applied" },
           description: "Log markup rule execution",
         },
@@ -75,11 +80,11 @@ export default function RulesPage() {
         help: "Commission rules apply supplier or agency commission logic.",
         condition: {
           field: "supplier.id",
-          operator: "exists",
+          operator: "exists" as ConditionOperator,
           value: true,
         },
         action: {
-          type: "log_event",
+          type: "log_event" as ActionType,
           config: { message: "Commission rule applied" },
           description: "Log commission rule execution",
         },
@@ -89,11 +94,11 @@ export default function RulesPage() {
         help: "Discount rules apply promotional or negotiated discounts.",
         condition: {
           field: "promo.code",
-          operator: "exists",
+          operator: "exists" as ConditionOperator,
           value: true,
         },
         action: {
-          type: "log_event",
+          type: "log_event" as ActionType,
           config: { message: "Discount rule applied" },
           description: "Log discount rule execution",
         },
@@ -103,11 +108,11 @@ export default function RulesPage() {
         help: "Pricing rules orchestrate dynamic pricing policies.",
         condition: {
           field: "pricing.total",
-          operator: "greater_than",
+          operator: "greater_than" as ConditionOperator,
           value: 0,
         },
         action: {
-          type: "log_event",
+          type: "log_event" as ActionType,
           config: { message: "Pricing rule applied" },
           description: "Log pricing rule execution",
         },

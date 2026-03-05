@@ -13,13 +13,15 @@ export interface RetryOptions {
   initialDelayMs?: number;
   maxDelayMs?: number;
   backoffMultiplier?: number;
+  enableJitter?: boolean;
 }
 
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
-  maxAttempts: 3,
-  initialDelayMs: 500,
-  maxDelayMs: 10000,
+  maxAttempts: 5, // Increased from 3
+  initialDelayMs: 1000, // Increased from 500ms
+  maxDelayMs: 30000, // Increased from 10s to 30s
   backoffMultiplier: 2,
+  enableJitter: true, // Add jitter to prevent thundering herd
 };
 
 export async function withRetry<T>(
@@ -39,14 +41,16 @@ export async function withRetry<T>(
       if (attempt === opts.maxAttempts) {
         break;
       }
-      const nextDelay = Math.min(
-        delayMs * opts.backoffMultiplier,
-        opts.maxDelayMs,
-      );
+      
+      // Calculate delay with jitter
+      const baseDelay = Math.min(delayMs * opts.backoffMultiplier, opts.maxDelayMs);
+      const jitter = opts.enableJitter ? Math.random() * 1000 : 0;
+      const nextDelay = Math.floor(baseDelay + jitter);
+      
       log.warn(
-        `${context} — attempt ${attempt}/${opts.maxAttempts} failed: ${(err as Error).message}, retry in ${delayMs}ms`,
+        `${context} — attempt ${attempt}/${opts.maxAttempts} failed: ${(err as Error).message}, retry in ${nextDelay}ms`,
       );
-      await sleep(delayMs);
+      await sleep(nextDelay);
       delayMs = nextDelay;
     }
   }

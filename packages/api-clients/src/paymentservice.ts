@@ -1,4 +1,6 @@
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
 
 export interface Payment {
   id: string;
@@ -20,8 +22,12 @@ export interface PaymentRequest {
 }
 
 export class PaymentService {
-  private static baseURL =
-    process.env.VITE_PAYMENT_SERVICE_URL || "http://localhost:3003";
+  /**
+   * Get base URL for payment service - uses lazy evaluation to support runtime config changes
+   */
+  private static get baseURL(): string {
+    return getEnv("VITE_PAYMENT_SERVICE_URL", "http://localhost:3003");
+  }
 
   /**
    * Process a payment
@@ -35,7 +41,8 @@ export class PaymentService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to process payment: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to process payment: ${message}`, { cause: error });
     }
   }
 
@@ -50,7 +57,8 @@ export class PaymentService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get payment: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get payment: ${message}`, { cause: error });
     }
   }
 
@@ -69,7 +77,8 @@ export class PaymentService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to refund payment: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to refund payment: ${message}`, { cause: error });
     }
   }
 
@@ -84,7 +93,8 @@ export class PaymentService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get payments for booking: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get payments for booking: ${message}`, { cause: error });
     }
   }
 }

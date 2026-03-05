@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Save, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,

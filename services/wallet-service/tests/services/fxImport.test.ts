@@ -1,7 +1,7 @@
 // tests/services/fxImport.test.ts
 // Minimal import test to inspect runtime exports of fxService
 
-const fx = require("../../src/services/fxService");
+import * as fx from "../../src/services/fxService";
 
 test("inspect saveSnapshot export", () => {
   // Log available exports and type of saveSnapshot

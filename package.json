@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -14,18 +15,20 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.2.1",
     "@types/pg": "^8.16.0",
-    "@typescript-eslint/eslint-plugin": "^8.55.0",
-    "@typescript-eslint/parser": "^8.55.0",
-    "dotenv": "^17.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.2",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.2.7",
+    "jsdom": "^28.1.0",
+    "lint-staged": "^16.3.2",
     "markdownlint": "^0.40.0",
     "prettier": "^3.8.1",
     "prisma": "7.4.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   },
   "scripts": {
     "consolidate": "pnpm dlx tsx scripts/consolidate-hotel-data.ts",
@@ -132,17 +135,18 @@
     "lint:no-fallbacks": "eslint . --ext .ts,.tsx --no-eslintrc --parser @typescript-eslint/parser --plugin no-restricted-syntax --rule 'no-restricted-syntax: [error, {selector: BinaryExpression[operator=\"||\"][left.type=\"MemberExpression\"][left.object.name=\"process\"] > Literal, message: \"process.env fallback pattern detected\"}]'"
   },
   "dependencies": {
-    "@getbrevo/brevo": "^2.2.0",
     "@prisma/adapter-neon": "^7.4.0",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client-runtime-utils": "^7.4.2",
     "@tanstack/react-query": "^5.90.21",
     "@types/node-fetch": "^2.6.13",
     "axios": "^1.6.0",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "node-fetch": "^3.3.2",
-    "pg": "^8.11.0"
+    "pg": "^8.11.0",
+    "resend": "^3.0.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --fix"
@@ -152,7 +156,9 @@
       "form-data": "^4.0.4",
       "hono": "^4.11.10",
       "lodash": "^4.17.23",
-      "qs": "^6.14.1"
+      "qs": "^6.14.1",
+      "minimatch": ">=9.0.7",
+      "esbuild": ">=0.25.0"
     }
   }
 }

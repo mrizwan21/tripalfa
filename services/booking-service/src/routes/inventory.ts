@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import type { Router as ExpressRouter } from "express";
 import multer from "multer";
 import type { Express } from "express";
@@ -253,7 +253,22 @@ router.get("/", (req: Request, res: Response) => {
 });
 
 // GET /inventory/:id - get item details
-router.get("/:id", (req: Request, res: Response) => {
+router.get("/:id", (req: Request, res: Response, next: NextFunction) => {
+  const reservedPaths = new Set([
+    "hotels",
+    "room-types",
+    "rooms",
+    "allocations",
+    "availability",
+    "rate-plans",
+    "yield-rules",
+    "competitive-rates",
+  ]);
+
+  if (reservedPaths.has(req.params.id)) {
+    return next();
+  }
+
   const item = inventory.find((i) => i.id === req.params.id);
   if (!item)
     return res.status(404).json({ message: "Inventory item not found." });

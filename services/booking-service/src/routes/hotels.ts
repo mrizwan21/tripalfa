@@ -185,49 +185,6 @@ router.post("/search", async (req: Request, res: Response) => {
 });
 
 // ============================================================================
-// GET /hotels/:hotelId - Get hotel details
-// ============================================================================
-
-router.get("/:hotelId", async (req: Request, res: Response) => {
-  try {
-    const hotelId = String(req.params.hotelId);
-    const { checkin, checkout, adults, children } = req.query;
-
-    // Parse children ages if provided
-    let childrenAges: number[] | undefined;
-    if (children) {
-      if (Array.isArray(children)) {
-        childrenAges = children.map(Number);
-      } else if (typeof children === "string") {
-        childrenAges = children.split(",").map(Number);
-      }
-    }
-
-    const result = await HotelDataService.getHotelDetails(hotelId, {
-      checkin: parseQueryString(checkin),
-      checkout: parseQueryString(checkout),
-      adults: adults ? Number(adults) : undefined,
-      children: childrenAges,
-    });
-
-    if (!result.hotel) {
-      return res.status(404).json({
-        success: false,
-        error: "Hotel not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      ...result,
-    });
-  } catch (error: any) {
-    console.error("[Hotels] Get hotel error:", error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================================================
 // POST /hotels/rates - Get live rates for specific hotels
 // ============================================================================
 
@@ -360,6 +317,49 @@ router.get("/filters/options", async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("[Hotels] Get filter options error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
+// GET /hotels/:hotelId - Get hotel details
+// ============================================================================
+
+router.get("/:hotelId", async (req: Request, res: Response) => {
+  try {
+    const hotelId = String(req.params.hotelId);
+    const { checkin, checkout, adults, children } = req.query;
+
+    // Parse children ages if provided
+    let childrenAges: number[] | undefined;
+    if (children) {
+      if (Array.isArray(children)) {
+        childrenAges = children.map(Number);
+      } else if (typeof children === "string") {
+        childrenAges = children.split(",").map(Number);
+      }
+    }
+
+    const result = await HotelDataService.getHotelDetails(hotelId, {
+      checkin: parseQueryString(checkin),
+      checkout: parseQueryString(checkout),
+      adults: adults ? Number(adults) : undefined,
+      children: childrenAges,
+    });
+
+    if (!result.hotel) {
+      return res.status(404).json({
+        success: false,
+        error: "Hotel not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      ...result,
+    });
+  } catch (error: any) {
+    console.error("[Hotels] Get hotel error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });

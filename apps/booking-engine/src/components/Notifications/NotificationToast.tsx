@@ -7,7 +7,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 

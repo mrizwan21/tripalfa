@@ -3,10 +3,11 @@
 
 // Bootstrap environment and DB pool synchronously before importing service modules
 
-const path = require("path");
+import path from "path";
 // __dirname is tests/services; go up two levels to service root
-require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
-const pg = require("pg");
+import { config } from "dotenv";
+config({ path: path.resolve(__dirname, "../../.env") });
+import pg from "pg";
 if (pg && pg.types && typeof pg.types.setTypeParser === "function") {
   pg.types.setTypeParser(1700, (val) =>
     val === null ? null : parseFloat(val),
@@ -15,7 +16,7 @@ if (pg && pg.types && typeof pg.types.setTypeParser === "function") {
 const { Pool } = pg;
 const connStr = (process.env.DATABASE_URL || "").replace(/^"|"$/g, "");
 global.PG_POOL = new Pool({ connectionString: connStr });
-const walletService = require("../../src/services/walletService");
+import * as walletService from "../../src/services/walletService";
 // Since it's CommonJS, require returns the exports object directly
 const WS = walletService;
 const { v4: uuidv4 } = require("uuid");

@@ -8,6 +8,9 @@ export { default as RuleEngineService } from "./ruleengineservice.js";
 export { default as SupportService } from "./supportservice.js";
 export { default as TaxService } from "./taxservice.js";
 
+// Shared utilities
+export { getErrorMessage, safeJsonParse, buildUrl, sleep, withRetry } from "./utils.js";
+
 // Export types from services
 export type { AuditLog, ComplianceReport } from "./auditservice.js";
 export type { KYCVerification } from "./kycservice.js";

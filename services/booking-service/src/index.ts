@@ -24,6 +24,7 @@ import webhookRoutes from "./routes/webhooks.js";
 import duffelRoutes from "./routes/duffel.js";
 import flightBookingRoutes from "./routes/flight-booking.js";
 import hotelBookingRoutes from "./routes/hotel-booking.js";
+import realtimeBookingRoutes from "./routes/realtime-booking.js";
 import hotelRoutes from "./routes/hotels.js";
 
 // Duffel API configuration
@@ -568,6 +569,9 @@ app.use("/api/flight-booking", flightBookingRoutes);
 
 // Hotel Booking Orchestrator Routes (E2E hotel booking flow)
 app.use("/api/hotel-booking", hotelBookingRoutes);
+
+// Real-Time Hotel Booking Routes (LiteAPI direct integration with NEON DB)
+app.use("/api/realtime-booking", realtimeBookingRoutes);
 
 // Hotel Routes (Hybrid: Static DB + Live Rates from LiteAPI)
 app.use("/api/hotels", hotelRoutes);

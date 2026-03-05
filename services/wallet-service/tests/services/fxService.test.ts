@@ -1,15 +1,8 @@
 // tests/services/fxService.test.ts
 // Unit tests for FX conversion service
 
-import {
-  saveSnapshot,
-  getLatestSnapshot,
-  convertAmount,
-  isSnapshotStale,
-  getRate,
-} from "../../src/services/fxService.ts";
+import * as fxService from "../../src/services/fxService.ts";
 const pool = (global as any).PG_POOL;
-import { v4 as uuidv4 } from "uuid";
 
 describe("fxService", () => {
   beforeAll(async () => {

@@ -205,96 +205,80 @@ class LiteApiAdditionalWorkflowsClient {
   }
 
   async testVoucherRefund(bookingId: string) {
-    try {
-      const payload = {
-        action: "refund_voucher",
-        voucherId: "VOUCHER_123",
-      };
+    const payload = {
+      action: "refund_voucher",
+      voucherId: "VOUCHER_123",
+    };
 
-      const response = await this.bookClient.post(
-        `/bookings/${bookingId}/voucher-refund`,
-        payload,
-      );
-      return {
-        success: true,
-        bookingId,
-        voucherId: "VOUCHER_123",
-        data: response.data,
-      };
-    } catch (error) {
-      throw error;
-    }
+    const response = await this.bookClient.post(
+      `/bookings/${bookingId}/voucher-refund`,
+      payload,
+    );
+    return {
+      success: true,
+      bookingId,
+      voucherId: "VOUCHER_123",
+      data: response.data,
+    };
   }
 
   async testCardRefund(bookingId: string, amount: number) {
-    try {
-      const payload = {
-        action: "refund_card",
-        amount,
-        currency: "USD",
-        originalPaymentMethod: "CARD",
-      };
+    const payload = {
+      action: "refund_card",
+      amount,
+      currency: "USD",
+      originalPaymentMethod: "CARD",
+    };
 
-      const response = await this.bookClient.post(
-        `/bookings/${bookingId}/card-refund`,
-        payload,
-      );
-      return {
-        success: true,
-        bookingId,
-        refundAmount: amount,
-        data: response.data,
-      };
-    } catch (error) {
-      throw error;
-    }
+    const response = await this.bookClient.post(
+      `/bookings/${bookingId}/card-refund`,
+      payload,
+    );
+    return {
+      success: true,
+      bookingId,
+      refundAmount: amount,
+      data: response.data,
+    };
   }
 
   async extendStay(bookingId: string, additionalNights: number) {
-    try {
-      const futureCheckout = new Date();
-      futureCheckout.setDate(futureCheckout.getDate() + additionalNights);
-      const newCheckout = futureCheckout.toISOString().split("T")[0];
+    const futureCheckout = new Date();
+    futureCheckout.setDate(futureCheckout.getDate() + additionalNights);
+    const newCheckout = futureCheckout.toISOString().split("T")[0];
 
-      const response = await this.bookClient.patch(`/bookings/${bookingId}`, {
-        action: "extend_stay",
-        additionalNights,
-        newCheckoutDate: newCheckout,
-      });
+    const response = await this.bookClient.patch(`/bookings/${bookingId}`, {
+      action: "extend_stay",
+      additionalNights,
+      newCheckoutDate: newCheckout,
+    });
 
-      return {
-        success: true,
-        bookingId,
-        additionalNights,
-        newCheckout,
-        data: response.data,
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      success: true,
+      bookingId,
+      additionalNights,
+      newCheckout,
+      data: response.data,
+    };
   }
 
   async requestEarlyCheckout(bookingId: string) {
-    try {
-      const earlyCheckout = new Date();
-      earlyCheckout.setDate(earlyCheckout.getDate() + 1);
-      const checkoutDate = earlyCheckout.toISOString().split("T")[0];
+    const earlyCheckout = new Date();
+    earlyCheckout.setDate(earlyCheckout.getDate() + 1);
+    const checkoutDate = earlyCheckout.toISOString().split("T")[0];
 
-      const response = await this.bookClient.patch(`/bookings/${bookingId}`, {
-        action: "early_checkout",
-        newCheckoutDate: checkoutDate,
-        reason: "Early departure",
-      });
+    const response = await this.bookClient.patch(`/bookings/${bookingId}`, {
+      action: "early_checkout",
+      newCheckoutDate: checkoutDate,
+      reason: "Early departure",
+    });
 
-      return {
-        success: true,
-        bookingId,
-        checkoutDate,
-        data: response.data,
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      success: true,
+      bookingId,
+      checkoutDate,
+      data: response.data,
+    };
   }
 
   async getRefundPolicyDetails(bookingId: string) {

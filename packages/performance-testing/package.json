@@ -1,0 +1,40 @@
+{
+  "name": "@tripalfa/performance-testing",
+  "version": "1.0.0",
+  "description": "Performance testing framework for TripAlfa critical services",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./benchmarks": "./dist/benchmarks/index.js",
+    "./monitoring": "./dist/monitoring/index.js"
+  },
+  "scripts": {
+    "bench": "vitest bench --run",
+    "bench:watch": "vitest bench",
+    "bench:ui": "vitest bench --ui",
+    "perf:payment": "vitest bench --run src/benchmarks/payment.bench.ts",
+    "perf:booking": "vitest bench --run src/benchmarks/booking.bench.ts",
+    "perf:database": "vitest bench --run src/benchmarks/database.bench.ts",
+    "perf:api": "vitest bench --run src/benchmarks/api.bench.ts",
+    "report": "tsx src/cli/generate-report.ts --format console",
+    "report:json": "tsx src/cli/generate-report.ts --format json --output benchmark-results/report",
+    "report:md": "tsx src/cli/generate-report.ts --format markdown --output benchmark-results/report",
+    "report:compare": "tsx src/cli/generate-report.ts --compare --format console",
+    "report:strict": "tsx src/cli/generate-report.ts --compare --format json",
+    "baseline:init": "tsx src/cli/generate-report.ts --format json",
+    "baseline:reset": "rm -f benchmark-results/baseline.json",
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tripalfa/shared-types": "workspace:*",
+    "@tripalfa/shared-utils": "workspace:*",
+    "@tripalfa/shared-database": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "tsx": "^4.7.0"
+  }
+}

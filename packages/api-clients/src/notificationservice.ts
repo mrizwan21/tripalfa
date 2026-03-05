@@ -1,4 +1,132 @@
+/**
+ * NotificationService - API Client for Notification Service
+ * 
+ * ## Migration Guide (Breaking Change in v2.0.0)
+ * 
+ * This service has been converted from static methods to instance methods.
+ * 
+ * ### Before (static methods - deprecated):
+ * ```typescript
+ * await NotificationService.sendNotification(request);
+ * await NotificationService.getNotifications(userId);
+ * ```
+ * 
+ * ### After (instance methods):
+ * ```typescript
+ * // Option 1: Create instance with custom base URL
+ * const service = new NotificationService('http://localhost:3004');
+ * await service.sendNotification(request);
+ * await service.getNotifications(userId);
+ * 
+ * // Option 2: Use global default base URL
+ * setDefaultBaseUrl('http://localhost:3004');
+ * const service = new NotificationService();
+ * await service.sendNotification(request);
+ * ```
+ * 
+ * ### Environment Variable
+ * Defaults to VITE_NOTIFICATION_SERVICE_URL or http://localhost:3004
+ */
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
+
+// ============================================================================
+// DEFAULT BASE URL - Can be overridden via setDefaultBaseUrl()
+// ============================================================================
+
+let defaultBaseUrl: string | undefined = undefined;
+
+// Service instance cache for static method backward compatibility
+// Prevents creating new instances on every deprecated static method call
+const serviceInstanceCache = new Map<string, NotificationService>();
+const MAX_CACHE_SIZE = 100; // Prevent unbounded memory growth
+
+/**
+ * Normalize URL to prevent cache pollution from variations
+ * (e.g., trailing slashes, query params, different protocols, casing)
+ *
+ * NOTE: This normalization intentionally removes standard ports (80 for HTTP, 443 for HTTPS)
+ * but PRESERVES non-standard ports. This means:
+ *   - "http://api:80" and "http://api" will share a cache key
+ *   - "http://api:3000" and "http://api" will have DIFFERENT cache keys
+ *   - "http://api:8080" and "http://api" will have DIFFERENT cache keys
+ *
+ * If your services use non-standard ports, ensure consistent URL formatting
+ * across your codebase to avoid cache misses.
+ *
+ * @internal
+ */
+function normalizeBaseUrl(url: string | undefined): string {
+  if (!url) return "default";
+  
+  try {
+    // Normalize casing and trim whitespace
+    const trimmedUrl = url.trim().toLowerCase();
+    const parsed = new URL(trimmedUrl);
+    
+    // Normalize to just protocol, host, and pathname (no query, hash, trailing slash, or port 80/443)
+    let host = parsed.host;
+    // Remove default ports for cleaner keys
+    if (host.endsWith(':80')) {
+      host = host.slice(0, -3);
+    } else if (host.endsWith(':443')) {
+      host = host.slice(0, -4);
+    }
+    
+    const normalized = `${parsed.protocol}//${host}${parsed.pathname.replace(/\/$/, "")}`;
+    return normalized;
+  } catch {
+    // If URL parsing fails, normalize casing and trim only
+    return url.trim().toLowerCase();
+  }
+}
+
+/**
+ * Get or create a cached NotificationService instance for the given baseUrl
+ * @internal Used by deprecated static methods for performance
+ */
+function getCachedService(baseUrl?: string): NotificationService {
+  const rawUrl = baseUrl || defaultBaseUrl;
+  const key = normalizeBaseUrl(rawUrl);
+  
+  // Don't cache instances with invalid URLs to prevent cache pollution
+  // Invalid URLs return as-is from normalizeBaseUrl (not "default" or normalized)
+  const isInvalidUrl = key === rawUrl && rawUrl !== undefined && rawUrl !== "default";
+  if (isInvalidUrl) {
+    console.warn(`[NotificationService] Creating uncached instance for invalid URL: ${rawUrl}`);
+    return new NotificationService(baseUrl);
+  }
+  
+  let instance = serviceInstanceCache.get(key);
+  if (!instance) {
+    instance = new NotificationService(baseUrl);
+    // Prevent unbounded growth by removing oldest entry when at capacity
+    if (serviceInstanceCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = serviceInstanceCache.keys().next().value;
+      serviceInstanceCache.delete(firstKey);
+    }
+    serviceInstanceCache.set(key, instance);
+  }
+  return instance;
+}
+
+/**
+ * Set the default base URL for all NotificationService instances and static methods.
+ * This allows configuring a custom service URL before making API calls.
+ */
+export function setDefaultBaseUrl(baseUrl: string): void {
+  defaultBaseUrl = baseUrl;
+  // Clear cache when default URL changes to ensure new instances use the updated URL
+  serviceInstanceCache.clear();
+}
+
+/**
+ * Get the current default base URL
+ */
+export function getDefaultBaseUrl(): string | undefined {
+  return defaultBaseUrl;
+}
 
 // ============================================================================
 // NOTIFICATION TYPES - Aligned with b2b-admin feature types
@@ -301,183 +429,207 @@ export interface DeliveryAnalytics {
 // Note: DeliveryStatus is already exported as DeliveryStatusResponse above
 
 export class NotificationService {
-  private static baseURL =
-    process.env.VITE_NOTIFICATION_SERVICE_URL || "http://localhost:3004";
+  private baseUrl: string;
+
+  /**
+   * Create a new NotificationService instance
+   * @param baseUrl - Optional custom base URL (defaults to VITE_NOTIFICATION_SERVICE_URL env var)
+   */
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || defaultBaseUrl || getEnv("VITE_NOTIFICATION_SERVICE_URL", "http://localhost:3004");
+  }
+
+  /**
+   * Get the base URL used by this instance
+   */
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
 
   /**
    * Create and send a notification
    */
-  static async sendNotification(
+  async sendNotification(
     request: CreateNotificationRequest,
   ): Promise<SendNotificationResponse> {
     try {
       const response = await axios.post<SendNotificationResponse>(
-        `${this.baseURL}/api/notifications/send`,
+        `${this.baseUrl}/api/notifications/send`,
         request,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to send notification: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to send notification: ${message}`, { cause: error });
     }
   }
 
   /**
    * Create a notification template
    */
-  static async createTemplate(
+  async createTemplate(
     request: CreateTemplateRequest,
   ): Promise<NotificationTemplate> {
     try {
       const response = await axios.post<NotificationTemplate>(
-        `${this.baseURL}/api/notifications/templates`,
+        `${this.baseUrl}/api/notifications/templates`,
         request,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create template: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to create template: ${message}`, { cause: error });
     }
   }
 
   /**
    * Get template by ID
    */
-  static async getTemplate(templateId: string): Promise<NotificationTemplate> {
+  async getTemplate(templateId: string): Promise<NotificationTemplate> {
     try {
       const response = await axios.get<NotificationTemplate>(
-        `${this.baseURL}/api/notifications/templates/${templateId}`,
+        `${this.baseUrl}/api/notifications/templates/${templateId}`,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get template: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get template: ${message}`, { cause: error });
     }
   }
 
   /**
    * List all templates
    */
-  static async listTemplates(
+  async listTemplates(
     limit: number = 50,
     offset: number = 0,
   ): Promise<NotificationTemplate[]> {
     try {
       const response = await axios.get<NotificationTemplate[]>(
-        `${this.baseURL}/api/notifications/templates`,
+        `${this.baseUrl}/api/notifications/templates`,
         { params: { limit, offset } },
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to list templates: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to list templates: ${message}`, { cause: error });
     }
   }
 
   /**
    * Update template
    */
-  static async updateTemplate(
+  async updateTemplate(
     templateId: string,
     updates: Partial<CreateTemplateRequest>,
   ): Promise<NotificationTemplate> {
     try {
       const response = await axios.patch<NotificationTemplate>(
-        `${this.baseURL}/api/notifications/templates/${templateId}`,
+        `${this.baseUrl}/api/notifications/templates/${templateId}`,
         updates,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to update template: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to update template: ${message}`, { cause: error });
     }
   }
 
   /**
    * Delete template
    */
-  static async deleteTemplate(templateId: string): Promise<void> {
+  async deleteTemplate(templateId: string): Promise<void> {
     try {
       await axios.delete(
-        `${this.baseURL}/api/notifications/templates/${templateId}`,
+        `${this.baseUrl}/api/notifications/templates/${templateId}`,
       );
     } catch (error) {
-      throw new Error(`Failed to delete template: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to delete template: ${message}`, { cause: error });
     }
   }
 
   /**
    * Create a campaign
    */
-  static async createCampaign(
+  async createCampaign(
     request: CreateCampaignRequest,
   ): Promise<NotificationCampaign> {
     try {
       const response = await axios.post<NotificationCampaign>(
-        `${this.baseURL}/api/notifications/campaigns`,
+        `${this.baseUrl}/api/notifications/campaigns`,
         request,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create campaign: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to create campaign: ${message}`, { cause: error });
     }
   }
 
   /**
    * Execute campaign immediately
    */
-  static async executeCampaign(
+  async executeCampaign(
     campaignId: string,
   ): Promise<CampaignExecutionResponse> {
     try {
       const response = await axios.post<CampaignExecutionResponse>(
-        `${this.baseURL}/api/notifications/campaigns/${campaignId}/execute`,
+        `${this.baseUrl}/api/notifications/campaigns/${campaignId}/execute`,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to execute campaign: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to execute campaign: ${message}`, { cause: error });
     }
   }
 
   /**
    * Pause campaign
    */
-  static async pauseCampaign(campaignId: string): Promise<void> {
+  async pauseCampaign(campaignId: string): Promise<void> {
     try {
       await axios.post(
-        `${this.baseURL}/api/notifications/campaigns/${campaignId}/pause`,
+        `${this.baseUrl}/api/notifications/campaigns/${campaignId}/pause`,
       );
     } catch (error) {
-      throw new Error(`Failed to pause campaign: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to pause campaign: ${message}`, { cause: error });
     }
   }
 
   /**
    * Resume campaign
    */
-  static async resumeCampaign(campaignId: string): Promise<void> {
+  async resumeCampaign(campaignId: string): Promise<void> {
     try {
       await axios.post(
-        `${this.baseURL}/api/notifications/campaigns/${campaignId}/resume`,
+        `${this.baseUrl}/api/notifications/campaigns/${campaignId}/resume`,
       );
     } catch (error) {
-      throw new Error(`Failed to resume campaign: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to resume campaign: ${message}`, { cause: error });
     }
   }
 
   /**
    * Get delivery analytics
    */
-  static async getDeliveryAnalytics(
+  async getDeliveryAnalytics(
     startDate: Date,
     endDate: Date,
     channel?: string,
   ): Promise<DeliveryAnalytics> {
     try {
       const response = await axios.get<DeliveryAnalytics>(
-        `${this.baseURL}/api/notifications/analytics`,
+        `${this.baseUrl}/api/notifications/analytics`,
         {
           params: {
             startDate: startDate.toISOString(),
@@ -489,43 +641,255 @@ export class NotificationService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get delivery analytics: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get delivery analytics: ${message}`, { cause: error });
     }
   }
 
   /**
    * Get delivery status for a notification
    */
-  static async getDeliveryStatus(
+  async getDeliveryStatus(
     notificationId: string,
   ): Promise<DeliveryStatus> {
     try {
       const response = await axios.get<DeliveryStatus>(
-        `${this.baseURL}/api/notifications/${notificationId}/status`,
+        `${this.baseUrl}/api/notifications/${notificationId}/status`,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get delivery status: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get delivery status: ${message}`, { cause: error });
     }
   }
 
   /**
    * Retry failed deliveries
    */
-  static async retryFailedDeliveries(
+  async retryFailedDeliveries(
     notificationId: string,
   ): Promise<SendNotificationResponse> {
     try {
       const response = await axios.post<SendNotificationResponse>(
-        `${this.baseURL}/api/notifications/${notificationId}/retry`,
+        `${this.baseUrl}/api/notifications/${notificationId}/retry`,
       );
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to retry deliveries: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to retry deliveries: ${message}`, { cause: error });
+    }
+  }
+
+  /**
+   * List all notifications
+   */
+  async listNotifications(
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<Notification[]> {
+    try {
+      const response = await axios.get<Notification[]>(
+        `${this.baseUrl}/api/notifications`,
+        { params: { limit, offset } },
+      );
+
+      return response.data;
+    } catch (error) {
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to list notifications: ${message}`, { cause: error });
+    }
+  }
+
+  /**
+   * Delete a notification by ID
+   */
+  async deleteNotification(notificationId: string): Promise<void> {
+    try {
+      await axios.delete(
+        `${this.baseUrl}/api/notifications/${notificationId}`,
+      );
+    } catch (error) {
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to delete notification: ${message}`, { cause: error });
     }
   }
 }
+
+// ============================================================================
+// DEPRECATED: Static method wrappers for backward compatibility
+// @deprecated Use instance methods instead: new NotificationService().sendNotification(...)
+// ============================================================================
+
+/**
+ * Helper to warn about deprecated usage - only logs in development
+ * to prevent spamming production logs
+ */
+function warnDeprecated(methodName: string, alternative: string): void {
+  if (typeof process !== "undefined" && process.env.NODE_ENV === "development") {
+    console.warn(
+      `WARNING: NotificationService.${methodName}() is deprecated. Use '${alternative}' instead.`
+    );
+  }
+}
+
+const NotificationServiceStatic = NotificationService as unknown as {
+  sendNotification(request: CreateNotificationRequest, baseUrl?: string): Promise<SendNotificationResponse>;
+  createTemplate(request: CreateTemplateRequest, baseUrl?: string): Promise<NotificationTemplate>;
+  getTemplate(templateId: string, baseUrl?: string): Promise<NotificationTemplate>;
+  listTemplates(limit?: number, offset?: number, baseUrl?: string): Promise<NotificationTemplate[]>;
+  updateTemplate(templateId: string, updates: Partial<CreateTemplateRequest>, baseUrl?: string): Promise<NotificationTemplate>;
+  deleteTemplate(templateId: string, baseUrl?: string): Promise<void>;
+  createCampaign(request: CreateCampaignRequest, baseUrl?: string): Promise<NotificationCampaign>;
+  executeCampaign(campaignId: string, baseUrl?: string): Promise<CampaignExecutionResponse>;
+  pauseCampaign(campaignId: string, baseUrl?: string): Promise<void>;
+  resumeCampaign(campaignId: string, baseUrl?: string): Promise<void>;
+  getDeliveryAnalytics(startDate: Date, endDate: Date, channel?: string, baseUrl?: string): Promise<DeliveryAnalytics>;
+  getDeliveryStatus(notificationId: string, baseUrl?: string): Promise<DeliveryStatus>;
+  retryFailedDeliveries(notificationId: string, baseUrl?: string): Promise<SendNotificationResponse>;
+  listNotifications(limit?: number, offset?: number, baseUrl?: string): Promise<Notification[]>;
+  deleteNotification(notificationId: string, baseUrl?: string): Promise<void>;
+};
+
+/** @deprecated Use instance method instead: new NotificationService().sendNotification(request) */
+NotificationServiceStatic.sendNotification = async function (
+  request: CreateNotificationRequest,
+  baseUrl?: string,
+): Promise<SendNotificationResponse> {
+  warnDeprecated("sendNotification", "new NotificationService().sendNotification()");
+  return getCachedService(baseUrl).sendNotification(request);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().createTemplate(request) */
+NotificationServiceStatic.createTemplate = async function (
+  request: CreateTemplateRequest,
+  baseUrl?: string,
+): Promise<NotificationTemplate> {
+  warnDeprecated("createTemplate", "new NotificationService().createTemplate()");
+  return getCachedService(baseUrl).createTemplate(request);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().getTemplate(templateId) */
+NotificationServiceStatic.getTemplate = async function (
+  templateId: string,
+  baseUrl?: string,
+): Promise<NotificationTemplate> {
+  warnDeprecated("getTemplate", "new NotificationService().getTemplate()");
+  return getCachedService(baseUrl).getTemplate(templateId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().listTemplates(limit, offset) */
+NotificationServiceStatic.listTemplates = async function (
+  limit: number = 50,
+  offset: number = 0,
+  baseUrl?: string,
+): Promise<NotificationTemplate[]> {
+  warnDeprecated("listTemplates", "new NotificationService().listTemplates()");
+  return getCachedService(baseUrl).listTemplates(limit, offset);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().updateTemplate(templateId, updates) */
+NotificationServiceStatic.updateTemplate = async function (
+  templateId: string,
+  updates: Partial<CreateTemplateRequest>,
+  baseUrl?: string,
+): Promise<NotificationTemplate> {
+  warnDeprecated("updateTemplate", "new NotificationService().updateTemplate()");
+  return getCachedService(baseUrl).updateTemplate(templateId, updates);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().deleteTemplate(templateId) */
+NotificationServiceStatic.deleteTemplate = async function (
+  templateId: string,
+  baseUrl?: string
+): Promise<void> {
+  warnDeprecated("deleteTemplate", "new NotificationService().deleteTemplate()");
+  return getCachedService(baseUrl).deleteTemplate(templateId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().createCampaign(request) */
+NotificationServiceStatic.createCampaign = async function (
+  request: CreateCampaignRequest,
+  baseUrl?: string,
+): Promise<NotificationCampaign> {
+  warnDeprecated("createCampaign", "new NotificationService().createCampaign()");
+  return getCachedService(baseUrl).createCampaign(request);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().executeCampaign(campaignId) */
+NotificationServiceStatic.executeCampaign = async function (
+  campaignId: string,
+  baseUrl?: string,
+): Promise<CampaignExecutionResponse> {
+  warnDeprecated("executeCampaign", "new NotificationService().executeCampaign()");
+  return getCachedService(baseUrl).executeCampaign(campaignId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().pauseCampaign(campaignId) */
+NotificationServiceStatic.pauseCampaign = async function (
+  campaignId: string,
+  baseUrl?: string
+): Promise<void> {
+  warnDeprecated("pauseCampaign", "new NotificationService().pauseCampaign()");
+  return getCachedService(baseUrl).pauseCampaign(campaignId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().resumeCampaign(campaignId) */
+NotificationServiceStatic.resumeCampaign = async function (
+  campaignId: string,
+  baseUrl?: string
+): Promise<void> {
+  warnDeprecated("resumeCampaign", "new NotificationService().resumeCampaign()");
+  return getCachedService(baseUrl).resumeCampaign(campaignId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().getDeliveryAnalytics(startDate, endDate, channel) */
+NotificationServiceStatic.getDeliveryAnalytics = async function (
+  startDate: Date,
+  endDate: Date,
+  channel?: string,
+  baseUrl?: string,
+): Promise<DeliveryAnalytics> {
+  warnDeprecated("getDeliveryAnalytics", "new NotificationService().getDeliveryAnalytics()");
+  return getCachedService(baseUrl).getDeliveryAnalytics(startDate, endDate, channel);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().getDeliveryStatus(notificationId) */
+NotificationServiceStatic.getDeliveryStatus = async function (
+  notificationId: string,
+  baseUrl?: string,
+): Promise<DeliveryStatus> {
+  warnDeprecated("getDeliveryStatus", "new NotificationService().getDeliveryStatus()");
+  return getCachedService(baseUrl).getDeliveryStatus(notificationId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().retryFailedDeliveries(notificationId) */
+NotificationServiceStatic.retryFailedDeliveries = async function (
+  notificationId: string,
+  baseUrl?: string,
+): Promise<SendNotificationResponse> {
+  warnDeprecated("retryFailedDeliveries", "new NotificationService().retryFailedDeliveries()");
+  return getCachedService(baseUrl).retryFailedDeliveries(notificationId);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().listNotifications(limit, offset) */
+NotificationServiceStatic.listNotifications = async function (
+  limit: number = 50,
+  offset: number = 0,
+  baseUrl?: string,
+): Promise<Notification[]> {
+  warnDeprecated("listNotifications", "new NotificationService().listNotifications()");
+  return getCachedService(baseUrl).listNotifications(limit, offset);
+};
+
+/** @deprecated Use instance method instead: new NotificationService().deleteNotification(notificationId) */
+NotificationServiceStatic.deleteNotification = async function (
+  notificationId: string,
+  baseUrl?: string,
+): Promise<void> {
+  warnDeprecated("deleteNotification", "new NotificationService().deleteNotification()");
+  return getCachedService(baseUrl).deleteNotification(notificationId);
+};
 
 export default NotificationService;

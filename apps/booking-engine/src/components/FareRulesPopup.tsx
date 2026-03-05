@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tripalfa/ui-components";
 
 interface FareRulesPopupProps {
   isOpen: boolean;

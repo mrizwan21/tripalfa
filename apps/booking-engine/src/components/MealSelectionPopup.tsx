@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X, Utensils, Check, Plus, Info } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@tripalfa/ui-components";
 import { formatCurrency } from "@tripalfa/ui-components";
 
 interface MealSelectionPopupProps {
@@ -140,7 +140,7 @@ export const MealSelectionPopup = ({
           </p>
           <Button
             variant="ghost"
-            size="md"
+            size="icon"
             onClick={onClose}
             className="absolute top-8 right-8 p-2 text-muted-foreground hover:text-foreground"
           >
@@ -154,7 +154,7 @@ export const MealSelectionPopup = ({
             {passengers.map((p) => (
               <Button
                 variant="outline"
-                size="md"
+                size="default"
                 key={p.id}
                 onClick={() => setSelectedPassenger(p.id)}
                 className={`px-6 h-12 rounded-[2rem] flex items-center gap-3 border transition-all ${

@@ -5,6 +5,7 @@
 
 // Note: Stripe package must be installed via: pnpm add stripe
 import Stripe from "stripe";
+import { createHmac } from "crypto";
 import {
   IPaymentGateway,
   PaymentRequest,
@@ -23,9 +24,12 @@ export class StripePaymentGateway implements IPaymentGateway {
       throw new Error("Stripe API key is required");
     }
     this.config = config;
+    // Use the latest stable API version supported by the installed SDK
+    // The SDK types may lag behind the actual API, so we use a type assertion
+    // See: https://docs.stripe.com/changelog for latest API versions
+    const apiVersion: Stripe.LatestApiVersion = "2023-10-16";
     this.stripe = new Stripe(config.apiKey, {
-      apiVersion: "2024-04-10",
-      httpClient: new Stripe.HttpClient(),
+      apiVersion,
       timeout: config.timeout || 30000,
     });
   }
@@ -105,19 +109,29 @@ export class StripePaymentGateway implements IPaymentGateway {
       throw new Error("Bank details required for payout");
     }
 
-    // In a real scenario, you would:
-    // 1. Create a connected account for the supplier in Stripe
-    // 2. Use bank account tokens for transfers
-    // For this implementation, we'll use Stripe's transfer to bank account API
+    // Validate connected account ID for the supplier
+    // In production, this should be stored in the supplier's record
+    const connectedAccountId = request.metadata?.connectedAccountId;
+    
+    if (!connectedAccountId) {
+      throw new Error(
+        "connectedAccountId is required for payouts. " +
+        "Supplier must have a Stripe connected account. " +
+        "Use Stripe Connect to onboard suppliers first."
+      );
+    }
 
-    // Get or create a bank account token
-    const bankAccount = await this.createBankAccountToken(request.bankDetails);
+    // Get or create a bank account token on the connected account
+    const bankAccount = await this.createBankAccountToken(
+      request.bankDetails,
+      connectedAccountId
+    );
 
-    // Create transfer to bank account
+    // Create transfer to bank account via Stripe Connect
     const transfer = await this.stripe.transfers.create({
       amount: Math.round(request.amount * 100), // Convert to cents
       currency: request.currency.toLowerCase(),
-      destination: bankAccount.id,
+      destination: connectedAccountId, // Transfer to connected account
       description: request.description || `Payout for supplier ${request.supplierId}`,
       metadata: {
         supplierId: request.supplierId,
@@ -126,55 +140,100 @@ export class StripePaymentGateway implements IPaymentGateway {
       },
     });
 
-    // Wrap transfer as payout-like response
-    return transfer as unknown as Stripe.Payout;
+    // Create a payout object from the transfer
+    // Note: In a full implementation, you'd create a Payout directly on the connected account
+    const payoutResponse: Partial<Stripe.Payout> = {
+      id: `po_${transfer.id}`,
+      amount: transfer.amount,
+      currency: transfer.currency,
+      status: transfer.reversed ? 'failed' : 'paid',
+    };
+    
+    return payoutResponse as Stripe.Payout;
   }
 
   private async createBankAccountToken(
-    bankDetails: any
+    bankDetails: any,
+    connectedAccountId: string
   ): Promise<Stripe.BankAccount> {
-    return await this.stripe.customers.createSource("dummy_customer_id", {
-      object: "bank_account",
-      country: bankDetails.bankCountry,
-      currency: "usd",
-      account_holder_name: bankDetails.accountName,
-      account_holder_type: "individual",
-      account_number: bankDetails.accountNumber,
-      routing_number: bankDetails.routingNumber,
-    }) as unknown as Stripe.BankAccount;
+    // Bank account token creation using Stripe's source API
+    // For connected accounts, we create the token directly on the connected account
+    
+    // Validate required bank details
+    if (!bankDetails.bankCountry || !bankDetails.accountNumber) {
+      throw new Error("Bank country and account number are required");
+    }
+    
+    // Use Stripe's token API to create a bank account token
+    // This is the recommended approach for connected accounts
+    const token = await this.stripe.tokens.create(
+      {
+        bank_account: {
+          country: bankDetails.bankCountry,
+          currency: bankDetails.currency?.toLowerCase() || "usd",
+          account_holder_name: bankDetails.accountName || "",
+          account_holder_type: (bankDetails.accountHolderType as "individual" | "company") || "individual",
+          account_number: bankDetails.accountNumber,
+          routing_number: bankDetails.routingNumber,
+        },
+      },
+      { stripeAccount: connectedAccountId }
+    );
+    
+    // Create a bank account source using the token
+    const result = await this.stripe.customers.createSource(
+      connectedAccountId,
+      { source: token.id },
+      { stripeAccount: connectedAccountId }
+    );
+    
+    // Handle different possible result types
+    if (result.object === "bank_account") {
+      return result;
+    }
+    
+    throw new Error(`Unexpected source type: ${result.object}. Expected bank_account.`);
   }
 
   private async createRefund(request: PaymentRequest): Promise<Stripe.Refund> {
-    // In a real scenario, you would refund a previous charge by charge ID
-    // For this implementation, we're simulating a refund
-    // You'd normally have: await this.stripe.refunds.create({charge: chargeId})
+    // Refund a previous charge by charge ID
+    // The chargeId should be provided in the request metadata or referenceId
+    const chargeId = request.referenceId || request.metadata?.chargeId;
+    
+    if (!chargeId) {
+      throw new Error(
+        "chargeId is required for refunds. Provide referenceId or chargeId in metadata."
+      );
+    }
 
-    // Create a credit memo (simulated refund)
-    const creditNote = await this.stripe.creditNotes.create({
-      invoice: "dummy_invoice_id",
-      amount: Math.round(request.amount * 100),
-      reason: "product_unsatisfactory" as any,
-      memo: request.description || "Refund processed",
+    // Create actual refund using Stripe's refund API
+    const refund = await this.stripe.refunds.create({
+      charge: chargeId,
+      amount: Math.round(request.amount * 100), // Optional: partial refund amount in cents
+      reason: "requested_by_customer",
       metadata: {
         supplierId: request.supplierId,
         walletId: request.walletId,
       },
     });
 
-    // Convert to refund-like response
-    return {
-      id: creditNote.id,
-      status: "succeeded",
-    } as Stripe.Refund;
+    return refund;
   }
 
   private async createCredit(request: PaymentRequest): Promise<Stripe.Charge> {
-    // Create an invoice item for credit
-    // Note: invoiceItems require a customer; creating a temporary one if needed
-    const dummyCustomerId = "cust_dummy_supplier";
+    // For credits/adjustments, we need a real Stripe customer ID
+    // This should be stored in the supplier's record in the database
+    const supplierStripeCustomerId = request.metadata?.supplierStripeCustomerId;
+    
+    if (!supplierStripeCustomerId) {
+      throw new Error(
+        "supplierStripeCustomerId is required for credits. " +
+        "Register supplier's Stripe customer ID in the system first."
+      );
+    }
     
     const invoiceItem = await this.stripe.invoiceItems.create({
-      customer: dummyCustomerId,
+      customer: supplierStripeCustomerId,
       description: request.description || `Credit adjustment for supplier ${request.supplierId}`,
       amount: Math.round(request.amount * 100),
       currency: request.currency.toLowerCase(),
@@ -186,10 +245,12 @@ export class StripePaymentGateway implements IPaymentGateway {
     });
 
     // Return as charge-like response
-    return {
+    // Partial type for simulated charge response
+    const chargeResponse: Partial<Stripe.Charge> = {
       id: invoiceItem.id,
       status: "pending",
-    } as Stripe.Charge;
+    };
+    return chargeResponse as Stripe.Charge;
   }
 
   async getPaymentStatus(transactionId: string): Promise<PaymentResponse> {
@@ -214,7 +275,7 @@ export class StripePaymentGateway implements IPaymentGateway {
         return {
           transactionId,
           status,
-          amount: (refund.charge as any)?.amount_refunded || (refund.amount || 0) / 100,
+          amount: (refund.amount || 0) / 100,
           currency: refund.currency.toUpperCase(),
           gateway: "stripe",
         };
@@ -260,9 +321,7 @@ export class StripePaymentGateway implements IPaymentGateway {
     }
 
     try {
-      const crypto = require("crypto");
-      const expectedSignature = crypto
-        .createHmac("sha256", this.config.webhookSecret)
+      const expectedSignature = createHmac("sha256", this.config.webhookSecret)
         .update(JSON.stringify(payload))
         .digest("hex");
 
@@ -351,10 +410,18 @@ export class StripePaymentGateway implements IPaymentGateway {
 
     const message =
       error.message || stripeErrors[error.type] || "Stripe payment failed";
-    const err = new Error(message);
-    (err as any).code = error.code || error.type;
-    (err as any).retriable = this.isRetriable(error);
-    (err as any).details = error;
+    
+    // Create extended error with additional properties
+    interface StripeError extends Error {
+      code?: string;
+      retriable?: boolean;
+      details?: unknown;
+    }
+    
+    const err: StripeError = new Error(message);
+    err.code = error.code || error.type;
+    err.retriable = this.isRetriable(error);
+    err.details = error;
 
     return err;
   }

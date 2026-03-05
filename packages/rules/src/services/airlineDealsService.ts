@@ -61,7 +61,11 @@ export class AirlineDealsService {
         data: {
           name: dealData.name,
           code: dealData.code,
-          supplier: dealData.airlineCode,
+          supplier: {
+            connect: {
+              code: dealData.airlineCode,
+            },
+          },
           productType: "flight", // Force flight product type
           supplierCodes: [dealData.airlineCode], // Store airline code as supplier
           dealType: dealData.dealType,

@@ -316,6 +316,9 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3008
+      # JWT_SECRET: REQUIRED - Set this environment variable for production deployments
+      # Using empty fallback here to ensure the service fails fast if JWT_SECRET is not set
+      JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: ${NEON_DATABASE_URL}
       DIRECT_DATABASE_URL: ${DIRECT_NEON_DATABASE_URL:-${NEON_DATABASE_URL}}
       # Kiwi integration (optional - service will gracefully degrade if not set)

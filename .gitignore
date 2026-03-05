@@ -18,6 +18,9 @@ logs/
 *.log.*
 database/static-db/nohup.out
 
+# SARIF analysis results - large files, don't commit
+*.sarif
+
 # Runtime data
 pids
 *.pid
@@ -110,6 +113,9 @@ public
 
 # TypeScript source maps (generated)
 *.d.ts.map
+
+# TypeScript build info (cache files)
+*.tsbuildinfo
 
 # Lock files in subdirectories (use root pnpm-lock.yaml)
 **/package-lock.json

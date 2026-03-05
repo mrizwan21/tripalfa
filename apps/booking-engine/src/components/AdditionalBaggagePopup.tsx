@@ -8,7 +8,7 @@ import {
   Luggage,
   Briefcase,
 } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "@tripalfa/ui-components";
 
 interface AdditionalBaggagePopupProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ export const AdditionalBaggagePopup = ({
           <div className="flex gap-4 w-full">
             <Button
               variant="outline"
-              size="md"
+              size="lg"
               onClick={() => setIsConfirming(false)}
               className="flex-1 h-12 rounded-xl border border-primary text-primary font-black text-xs uppercase tracking-widest transition-colors hover:bg-primary/10 gap-4"
             >
@@ -81,7 +81,7 @@ export const AdditionalBaggagePopup = ({
             </Button>
             <Button
               variant="outline"
-              size="md"
+              size="lg"
               onClick={() => onConfirm(bags)}
               className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 transition-all hover:-translate-y-0.5 active:scale-95 gap-4"
             >
@@ -111,7 +111,7 @@ export const AdditionalBaggagePopup = ({
           </h2>
           <Button
             variant="ghost"
-            size="md"
+            size="sm"
             onClick={onClose}
             className="absolute top-8 right-8 p-2 text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -123,7 +123,7 @@ export const AdditionalBaggagePopup = ({
           {/* Passenger Selection */}
           <div className="flex items-center justify-center gap-6 border-b border-border pb-10">
             <Button
-              variant="primary"
+              variant="default"
               size="sm"
               className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-primary hover:bg-primary/10 transition-all gap-2"
             >
@@ -133,7 +133,7 @@ export const AdditionalBaggagePopup = ({
               {passengers.map((p) => (
                 <Button
                   variant="outline"
-                  size="md"
+                  size="lg"
                   key={p.id}
                   onClick={() => setSelectedPassenger(p.id)}
                   className={`px-8 h-14 rounded-[2rem] flex items-center gap-3 border transition-all ${
@@ -155,7 +155,7 @@ export const AdditionalBaggagePopup = ({
               ))}
             </div>
             <Button
-              variant="primary"
+              variant="default"
               size="sm"
               className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-primary hover:bg-primary/10 transition-all gap-2"
             >
@@ -169,8 +169,8 @@ export const AdditionalBaggagePopup = ({
             <div className="flex justify-center gap-4">
               <div className="bg-card p-2 rounded-2xl flex gap-4">
                 <Button
-                  variant="primary"
-                  size="md"
+                  variant="default"
+                  size="sm"
                   className="px-10 py-3 bg-primary text-primary-foreground rounded-xl text-xs font-black uppercase tracking-widest shadow-lg flex items-center gap-3"
                 >
                   FIG4312{" "}
@@ -181,7 +181,7 @@ export const AdditionalBaggagePopup = ({
                 </Button>
                 <Button
                   variant="outline"
-                  size="md"
+                  size="sm"
                   className="px-10 py-3 border border-primary text-primary rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-3"
                 >
                   FIG4312{" "}
@@ -260,7 +260,7 @@ export const AdditionalBaggagePopup = ({
                 />
                 <Button
                   variant="outline"
-                  size="md"
+                  size="sm"
                   onClick={() => {
                     if (!selectedBagId) return;
                     const opt = baggageOptions.find(
@@ -312,7 +312,7 @@ export const AdditionalBaggagePopup = ({
                     </div>
                     <Button
                       variant="outline"
-                      size="md"
+                      size="sm"
                       onClick={() =>
                         setBags((p: any[]) => p.filter((_, idx) => idx !== i))
                       }

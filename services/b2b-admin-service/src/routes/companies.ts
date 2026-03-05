@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { z } from "zod";
 import { prisma } from "../database.js";
 import {
   AuthRequest,
@@ -22,10 +23,22 @@ router.use(authMiddleware);
 router.get(
   "/",
   requirePermission("companies:read"),
-  validateZod(paginationSchema),
+  validateZod(z.object({
+    query: z.object({
+      page: z.coerce.number().min(1).default(1),
+      limit: z.coerce.number().min(1).max(100).default(10),
+      sortBy: z.string().optional(),
+      sortOrder: z.enum(["asc", "desc"]).default("desc"),
+      search: z.string().optional(),
+    }),
+  })),
   async (req: AuthRequest, res: Response) => {
     try {
       const { page, limit, sortBy, sortOrder, search } = req.query as any;
+      
+      // Ensure proper type conversion
+      const pageNum = Number(page) || 1;
+      const limitNum = Number(limit) || 10;
 
       const where = search
         ? {
@@ -36,9 +49,6 @@ router.get(
               {
                 email: { contains: search, mode: Prisma.QueryMode.insensitive },
               },
-              {
-                city: { contains: search, mode: Prisma.QueryMode.insensitive },
-              },
             ],
           }
         : {};
@@ -46,8 +56,8 @@ router.get(
       const [companies, total] = await Promise.all([
         prisma.company.findMany({
           where,
-          skip: (page - 1) * limit,
-          take: limit,
+          skip: (pageNum - 1) * limitNum,
+          take: limitNum,
           orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
           include: {
             _count: {
@@ -62,10 +72,10 @@ router.get(
         success: true,
         data: companies,
         pagination: {
-          page,
-          limit,
+          page: pageNum,
+          limit: limitNum,
           total,
-          totalPages: Math.ceil(total / limit),
+          totalPages: Math.ceil(total / limitNum),
         },
       });
     } catch (error) {

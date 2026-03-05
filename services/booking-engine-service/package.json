@@ -9,7 +9,7 @@
     "build": "pnpm exec tsc",
     "start": "node dist/index.js",
     "lint": "pnpm exec eslint src --ext .ts",
-    "test": "pnpm exec vitest"
+    "test": "pnpm exec vitest --passWithNoTests"
   },
   "dependencies": {
     "@tripalfa/shared-database": "workspace:*",

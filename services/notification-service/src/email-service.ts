@@ -1,6 +1,6 @@
 /**
  * Email Service for Flight Amendment Notifications
- * Powered by Brevo (formerly Sendinblue)
+ * Powered by Resend
  *
  * Handles:
  * - Amendment approval email sending
@@ -11,23 +11,16 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import {
-  TransactionalEmailsApi,
-  TransactionalEmailsApiApiKeys,
-  SendSmtpEmail,
-} from "@getbrevo/brevo";
+import { Resend } from "resend";
 
-// Brevo API configuration
-const BREVO_API_KEY = process.env.BREVO_API_KEY || "";
-const BREVO_FROM_EMAIL = process.env.BREVO_FROM_EMAIL || "noreply@tripalfa.com";
-const BREVO_FROM_NAME = process.env.BREVO_FROM_NAME || "TripAlfa";
-const BREVO_REPLY_TO = process.env.BREVO_REPLY_TO || "support@tripalfa.com";
+// Resend API configuration
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@tripalfa.com";
+const RESEND_FROM_NAME = process.env.RESEND_FROM_NAME || "TripAlfa";
+const RESEND_REPLY_TO = process.env.RESEND_REPLY_TO || "support@tripalfa.com";
 
-// Initialize Brevo API
-const brevoApi = new TransactionalEmailsApi();
-if (BREVO_API_KEY) {
-  brevoApi.setApiKey(TransactionalEmailsApiApiKeys.apiKey, BREVO_API_KEY);
-}
+// Initialize Resend API
+const resend = new Resend(RESEND_API_KEY);
 
 // Get directory path for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -229,9 +222,9 @@ export function generateAmendmentApprovalEmail(
 }
 
 /**
- * Send email via Brevo API with retry logic
+ * Send email via Resend API with retry logic
  */
-async function sendEmailViaBrevo(
+async function sendEmailViaResend(
   to: string,
   subject: string,
   htmlContent: string,
@@ -239,12 +232,12 @@ async function sendEmailViaBrevo(
   tags?: string[],
   maxRetries: number = 3,
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  if (!BREVO_API_KEY) {
-    console.error("[EMAIL_SERVICE] BREVO_API_KEY not configured");
+  if (!RESEND_API_KEY) {
+    console.error("[EMAIL_SERVICE] RESEND_API_KEY not configured");
     return {
       success: false,
       error:
-        "Email service not configured. Set BREVO_API_KEY environment variable.",
+        "Email service not configured. Set RESEND_API_KEY environment variable.",
     };
   }
 
@@ -254,37 +247,33 @@ async function sendEmailViaBrevo(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const sendSmtpEmail: SendSmtpEmail = {
-        sender: {
-          email: BREVO_FROM_EMAIL,
-          name: BREVO_FROM_NAME,
-        },
-        to: [{ email: to }],
+      const response = await resend.emails.send({
+        from: `${RESEND_FROM_NAME} <${RESEND_FROM_EMAIL}>`,
+        to,
         subject,
-        htmlContent,
-        textContent:
-          textContent ||
+        html: htmlContent,
+        text: textContent ||
           htmlContent
             .replace(/<[^>]*>/g, "")
             .replace(/\s+/g, " ")
             .trim(),
-        replyTo: {
-          email: BREVO_REPLY_TO,
-          name: "TripAlfa Support",
-        },
-        tags: tags || [],
-      };
+        reply_to: RESEND_REPLY_TO,
+        headers: tags ? { 'X-Tags': tags.join(',') } : {},
+      });
 
-      const response = await brevoApi.sendTransacEmail(sendSmtpEmail);
+      if (response.error) {
+        lastError = response.error.message || "Failed to send email via Resend";
+        throw new Error(lastError);
+      }
 
       return {
         success: true,
-        messageId: response.body?.messageId?.toString(),
+        messageId: response.data?.id,
       };
     } catch (error: any) {
-      lastError = error.message || "Failed to send email via Brevo";
+      lastError = error.message || "Failed to send email via Resend";
       console.error(
-        `[EMAIL_SERVICE] Brevo API error (attempt ${attempt}/${maxRetries}):`,
+        `[EMAIL_SERVICE] Resend API error (attempt ${attempt}/${maxRetries}):`,
         lastError,
       );
 
@@ -317,7 +306,7 @@ async function sendEmailViaBrevo(
 }
 
 /**
- * Send amendment approval email via Brevo
+ * Send amendment approval email via Resend
  */
 export async function sendAmendmentApprovalEmail(
   data: AmendmentNotificationData,
@@ -340,7 +329,7 @@ export async function sendAmendmentApprovalEmail(
     const emailHtml = generateAmendmentApprovalEmail(data);
     const subject = `Confirm Your Flight Amendment for ${data.bookingReference}`;
 
-    const result = await sendEmailViaBrevo(
+    const result = await sendEmailViaResend(
       data.travelerEmail,
       subject,
       emailHtml,
@@ -350,7 +339,7 @@ export async function sendAmendmentApprovalEmail(
 
     if (result.success) {
       console.log(
-        `[EMAIL_SERVICE] Email sent successfully via Brevo (Message ID: ${result.messageId})`,
+        `[EMAIL_SERVICE] Email sent successfully via Resend (Message ID: ${result.messageId})`,
       );
     } else {
       console.error(`[EMAIL_SERVICE] Failed to send email: ${result.error}`);
@@ -372,7 +361,7 @@ export async function sendAmendmentApprovalEmail(
 }
 
 /**
- * Send amendment reminder email via Brevo (24 hours before expiry)
+ * Send amendment reminder email via Resend (24 hours before expiry)
  */
 export async function sendAmendmentReminderEmail(
   data: AmendmentNotificationData,
@@ -403,7 +392,7 @@ export async function sendAmendmentReminderEmail(
       `<p>Hi {{travelerName}},</p>\n${reminderBanner}`,
     );
 
-    const result = await sendEmailViaBrevo(
+    const result = await sendEmailViaResend(
       data.travelerEmail,
       subject,
       modifiedHtml,
@@ -413,7 +402,7 @@ export async function sendAmendmentReminderEmail(
 
     if (result.success) {
       console.log(
-        `[EMAIL_SERVICE] Reminder email sent via Brevo (Message ID: ${result.messageId})`,
+        `[EMAIL_SERVICE] Reminder email sent via Resend (Message ID: ${result.messageId})`,
       );
     } else {
       console.error(
@@ -434,7 +423,7 @@ export async function sendAmendmentReminderEmail(
 }
 
 /**
- * Send amendment confirmation email via Brevo (after finalization)
+ * Send amendment confirmation email via Resend (after finalization)
  */
 export async function sendAmendmentConfirmationEmail(
   travelerEmail: string,
@@ -492,7 +481,7 @@ export async function sendAmendmentConfirmationEmail(
           </div>
           <div style="text-align: center; padding: 20px; color: rgb(102, 102, 102); font-size: 12px;">
             <p>TripAlfa - Your Travel Partner</p>
-            <p>Need help? Contact <a href="mailto:${BREVO_REPLY_TO}" style="color: rgb(102, 126, 234);">${BREVO_REPLY_TO}</a></p>
+            <p>Need help? Contact <a href="mailto:${RESEND_REPLY_TO}" style="color: rgb(102, 126, 234);">${RESEND_REPLY_TO}</a></p>
           </div>
         </body>
       </html>
@@ -500,7 +489,7 @@ export async function sendAmendmentConfirmationEmail(
 
     const subject = `✓ Flight Amendment Confirmed - ${bookingReference}`;
 
-    const result = await sendEmailViaBrevo(
+    const result = await sendEmailViaResend(
       travelerEmail,
       subject,
       confirmationHtml,
@@ -510,7 +499,7 @@ export async function sendAmendmentConfirmationEmail(
 
     if (result.success) {
       console.log(
-        `[EMAIL_SERVICE] Confirmation email sent via Brevo (Message ID: ${result.messageId})`,
+        `[EMAIL_SERVICE] Confirmation email sent via Resend (Message ID: ${result.messageId})`,
       );
     } else {
       console.error(
@@ -668,7 +657,7 @@ function replaceWalletDepositVariables(
 }
 
 /**
- * Send wallet deposit receipt email via Brevo
+ * Send wallet deposit receipt email via Resend
  */
 export async function sendWalletDepositReceiptEmail(
   data: WalletDepositReceiptData,
@@ -687,7 +676,7 @@ export async function sendWalletDepositReceiptEmail(
     const emailHtml = generateWalletDepositReceiptEmail(data);
     const subject = `💰 Deposit Receipt - ${data.receiptNumber}`;
 
-    const result = await sendEmailViaBrevo(
+    const result = await sendEmailViaResend(
       data.customerEmail,
       subject,
       emailHtml,
@@ -697,7 +686,7 @@ export async function sendWalletDepositReceiptEmail(
 
     if (result.success) {
       console.log(
-        `[EMAIL_SERVICE] Wallet deposit receipt sent successfully via Brevo (Message ID: ${result.messageId})`,
+        `[EMAIL_SERVICE] Wallet deposit receipt sent successfully via Resend (Message ID: ${result.messageId})`,
       );
     } else {
       console.error(

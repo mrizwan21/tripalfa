@@ -7,15 +7,32 @@ const router: ExpressRouter = Router();
 router.get("/calculate", async (req: Request, res: Response) => {
   try {
     const { amount, country, state } = req.query;
-    const taxAmount = parseFloat(amount as string) * 0.08; // Mock 8% tax
+
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+      return res.status(400).json({
+        error: "amount must be a non-negative number",
+      });
+    }
+
+    const normalizedCountry =
+      typeof country === "string" && country.trim()
+        ? country.trim().toUpperCase()
+        : "US";
+    const normalizedState =
+      typeof state === "string" && state.trim()
+        ? state.trim().toUpperCase()
+        : "CA";
+
+    const taxAmount = parsedAmount * 0.08; // Mock 8% tax
     res.json({
       data: {
-        originalAmount: parseFloat(amount as string),
+        originalAmount: parsedAmount,
         taxAmount,
-        totalAmount: parseFloat(amount as string) + taxAmount,
+        totalAmount: parsedAmount + taxAmount,
         taxRate: 0.08,
-        country: country || "US",
-        state: state || "CA",
+        country: normalizedCountry,
+        state: normalizedState,
       },
     });
   } catch (error) {

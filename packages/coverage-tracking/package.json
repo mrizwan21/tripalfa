@@ -1,0 +1,36 @@
+{
+  "name": "@tripalfa/coverage-tracking",
+  "version": "1.0.0",
+  "description": "Unit test coverage tracking and regression detection for TripAlfa services",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./monitor": "./dist/monitor.js"
+  },
+  "scripts": {
+    "coverage": "vitest run --coverage",
+    "coverage:watch": "vitest --coverage",
+    "coverage:ui": "vitest --coverage --ui",
+    "coverage:report": "tsx src/cli/generate-report.ts",
+    "coverage:compare": "tsx src/cli/generate-report.ts --compare",
+    "coverage:strict": "tsx src/cli/generate-report.ts --strict",
+    "coverage:baseline": "tsx src/cli/generate-report.ts --baseline",
+    "coverage:badges": "tsx src/cli/generate-badges.ts",
+    "coverage:dashboard": "tsx src/cli/generate-dashboard.ts",
+    "coverage:alerts": "tsx src/alerts.ts",
+    "coverage:check-regressions": "tsx src/alerts.ts",
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tripalfa/shared-types": "workspace:*",
+    "@tripalfa/shared-utils": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.1",
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "tsx": "^4.7.0"
+  }
+}

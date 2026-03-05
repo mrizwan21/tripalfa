@@ -1,4 +1,6 @@
 import axios from "axios";
+import { getEnv } from "./env.js";
+import { getErrorMessage } from "./utils.js";
 
 export interface TaxCalculation {
   id: string;
@@ -21,8 +23,12 @@ export interface TaxBreakdown {
 }
 
 export class TaxService {
-  private static baseURL =
-    process.env.VITE_TAX_SERVICE_URL || "http://localhost:3011";
+  /**
+   * Get base URL for tax service - uses lazy evaluation to support runtime config changes
+   */
+  private static get baseURL(): string {
+    return getEnv("VITE_TAX_SERVICE_URL", "http://localhost:3011");
+  }
 
   /**
    * Calculate taxes for a booking
@@ -40,7 +46,8 @@ export class TaxService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to calculate taxes: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to calculate taxes: ${message}`, { cause: error });
     }
   }
 
@@ -57,7 +64,8 @@ export class TaxService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get tax calculation: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get tax calculation: ${message}`, { cause: error });
     }
   }
 
@@ -74,7 +82,8 @@ export class TaxService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get tax calculations for booking: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get tax calculations for booking: ${message}`, { cause: error });
     }
   }
 
@@ -89,7 +98,8 @@ export class TaxService {
 
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to get tax rates: ${error}`);
+      const message = getErrorMessage(error);
+      throw new Error(`Failed to get tax rates: ${message}`, { cause: error });
     }
   }
 }

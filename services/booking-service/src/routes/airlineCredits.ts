@@ -10,7 +10,7 @@
  * - POST /api/airline-credits - Create airline credit
  */
 
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import type { Router as ExpressRouter } from "express";
 import { prisma } from "@tripalfa/shared-database";
 
@@ -176,9 +176,14 @@ router.get("/", async (req: Request, res: Response) => {
 });
 
 // GET /api/airline-credits/:id - Get single airline credit
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = String(req.params.id);
+
+    // Avoid shadowing static route segments like /customer/:customerId
+    if (id === "customer") {
+      return next();
+    }
 
     // Try Duffel API first
     try {
