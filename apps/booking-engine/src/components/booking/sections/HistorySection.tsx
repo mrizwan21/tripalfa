@@ -25,7 +25,7 @@ export const HistorySection: React.FC<HistorySectionProps> = ({ booking }) => {
   useEffect(() => {
     async function loadHistory() {
       try {
-        // Fetch history from API (which now includes mock login events)
+        // Fetch history from API
         const historyData = await getBookingHistory(booking.id);
         // Map API response to HistoryEvent if needed, or assume it matches
         // For now, api.ts returns compatible structure

@@ -81,6 +81,7 @@ The **Supplier Management Module** is a comprehensive system for onboarding, man
 ### Phase 2 New Tables
 
 #### 1. SupplierProduct
+
 Maps supplier's own product catalog to the platform.
 
 ```sql
@@ -104,6 +105,7 @@ CREATE UNIQUE INDEX ON supplier_products(supplierId, externalProductId);
 ```
 
 #### 2. SupplierProductMapping
+
 Maps supplier products to platform products with geographic/market rules.
 
 ```sql
@@ -131,6 +133,7 @@ CREATE INDEX ON supplier_product_mappings(status);
 ```
 
 #### 3. ProductMappingParameter
+
 Detailed parameters for product mapping (e.g., commission per market).
 
 ```sql
@@ -153,6 +156,7 @@ CREATE INDEX ON product_mapping_parameters(mappingId);
 ```
 
 #### 4. SupplierFinancial
+
 Financial profile of supplier (payment terms, settlement cycles, etc.).
 
 ```sql
@@ -186,6 +190,7 @@ CREATE UNIQUE INDEX ON supplier_financials(supplierId);
 ```
 
 #### 5. SupplierPaymentTerm
+
 Detailed payment term rules.
 
 ```sql
@@ -205,6 +210,7 @@ CREATE INDEX ON supplier_payment_terms(supplierId);
 ```
 
 #### 6. SupplierWallet
+
 Supplier's payment wallet (separate from user wallets).
 
 ```sql
@@ -230,6 +236,7 @@ CREATE INDEX ON supplier_wallets(status);
 ```
 
 #### 7. SupplierWalletApprovalRequest
+
 Approval workflow for wallet creation/changes.
 
 ```sql
@@ -255,6 +262,7 @@ CREATE INDEX ON supplier_wallet_approval_requests(status);
 ```
 
 #### 8. SupplierPayment
+
 Payment/payout records.
 
 ```sql
@@ -282,6 +290,7 @@ CREATE INDEX ON supplier_payments(createdAt);
 ```
 
 #### 9. SupplierPaymentLog
+
 Audit trail for all financial transactions.
 
 ```sql
@@ -430,12 +439,14 @@ IF All Conditions Met:
 ## Implementation Phases
 
 ### Phase 2a: Schema & Models (Current)
+
 - [ ] Create 9 new Prisma models
 - [ ] Run migrations
 - [ ] Verify indexes
 - [ ] Generate Prisma client
 
 ### Phase 2b: Product Mapping APIs
+
 - [ ] GET /api/suppliers/:id/products
 - [ ] POST /api/suppliers/:id/products
 - [ ] PUT/DELETE product endpoints
@@ -444,17 +455,20 @@ IF All Conditions Met:
 - [ ] E2E tests for product mapping
 
 ### Phase 2c: Financial APIs
+
 - [ ] GET/PUT /api/suppliers/:id/financial
 - [ ] Payment term CRUD endpoints
 - [ ] E2E tests for financial management
 
 ### Phase 2d: Supplier Wallet APIs
+
 - [ ] POST /api/suppliers/:id/wallets (request)
 - [ ] GET wallet details
 - [ ] Approval workflow endpoints
 - [ ] E2E tests for wallet approval
 
 ### Phase 2e: Payment Processing
+
 - [ ] Payment creation endpoints
 - [ ] Payment processing logic
 - [ ] Bank integration hooks
@@ -462,6 +476,7 @@ IF All Conditions Met:
 - [ ] Load testing for payment throughput
 
 ### Phase 2f: Comprehensive E2E Testing
+
 - [ ] Full supplier lifecycle test
 - [ ] Product mapping matrix test
 - [ ] Financial calculations test

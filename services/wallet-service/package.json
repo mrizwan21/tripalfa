@@ -10,7 +10,7 @@
     "dev": "pnpm dlx tsx watch src/app.ts",
     "test": "pnpm exec jest --config ./jest.config.cjs",
     "test:watch": "pnpm exec jest --config ./jest.config.cjs --watch",
-    "lint": "pnpm exec eslint src/**/*.ts",
+    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
     "lint:fix": "pnpm exec eslint src/**/*.ts --fix",
     "migrations": "node dist/scripts/runMigrations.js",
     "fx:fetch": "node dist/jobs/fxFetcher.js --now",

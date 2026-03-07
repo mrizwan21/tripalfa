@@ -85,38 +85,46 @@ packages/coverage-tracking/
 ## Service Coverage Breakdown
 
 ### Critical Services (≥85%)
+
 - Payment Service
 - Wallet Service
 
 ### Core Services (≥80%)
+
 - Booking Service
 - KYC Service
 - Notification Service
 
 ### Secondary Services (≥75%)
+
 - API Gateway
 - Booking Engine
 
 ### Administrative (≥70%)
+
 - B2B Admin App
 
 ### Infrastructure (≥88%)
+
 - Shared Packages
 
 ## Improving Coverage
 
 ### Step 1: Identify Gaps
+
 ```bash
 pnpm coverage:report
 # Check which services are below target
 ```
 
 ### Step 2: Focus on High-Impact Areas
+
 - Critical/core services first
 - Test error paths
 - Test edge cases
 
 ### Step 3: Write Tests
+
 ```typescript
 it('should handle edge case', () => {
   // test code
@@ -124,12 +132,14 @@ it('should handle edge case', () => {
 ```
 
 ### Step 4: Verify
+
 ```bash
 pnpm coverage:report
 # Check improvement
 ```
 
 ### Step 5: Commit
+
 ```bash
 git commit -m "test: improve payment coverage to 87%"
 ```

@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import flightsRoutes from "./routes/flights.js";
 import hotelsRoutes from "./routes/hotels.js";
 import offlineRequestsRoutes from "./routes/offline-requests.js";
+import staticDataRoutes from "./routes/static-data.js";
 
 dotenv.config();
 
@@ -43,6 +44,7 @@ app.get("/api", (req, res) => {
       flights: "/api/flights",
       hotels: "/api/hotels",
       offlineRequests: "/api/offline-requests",
+      staticData: "/api/static",
     },
   });
 });
@@ -51,6 +53,7 @@ app.get("/api", (req, res) => {
 app.use("/api/flights", flightsRoutes);
 app.use("/api/hotels", hotelsRoutes);
 app.use("/api/offline-requests", offlineRequestsRoutes);
+app.use("/api/static", staticDataRoutes);
 
 // 404 Handler
 app.use((req, res) => {

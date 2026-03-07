@@ -33,7 +33,7 @@ npm run test:api:wallet:e2e
 
 Tests 10+ currencies across 5 global regions:
 
-```
+```text
 ✓ Create USD wallet (Americas)
 ✓ Create EUR wallet (Europe)
 ✓ Create GBP wallet (Europe)
@@ -49,7 +49,7 @@ Tests 10+ currencies across 5 global regions:
 
 **File**: `scripts/wallet-management-orchestrator.ts` (lines 604-645)
 
-```
+```text
 ✓ Top-up with Stripe (100 USD)
 ✓ Verify balance after top-up
 ✓ Top-up with PayPal (50 USD)
@@ -61,7 +61,7 @@ Tests 10+ currencies across 5 global regions:
 
 **File**: `scripts/wallet-management-orchestrator.ts` (lines 656-708)
 
-```
+```text
 ✓ Pay 50 USD for booking
 ✓ Verify balance after payment
 ✓ Pay 100 USD for another booking
@@ -73,7 +73,7 @@ Tests 10+ currencies across 5 global regions:
 
 **File**: `scripts/wallet-management-orchestrator.ts` (lines 710-740)
 
-```
+```text
 ✓ Process booking cancellation refund
 ✓ Verify balance increases after refund
 ✓ Process dispute refund
@@ -83,7 +83,7 @@ Tests 10+ currencies across 5 global regions:
 
 **File**: `scripts/wallet-management-orchestrator.ts` (lines 742-784)
 
-```
+```text
 ✓ Transfer 100 USD between customers
 ✓ Verify sender balance reduced by transfer + fee
 ✓ Verify recipient balance increased
@@ -95,7 +95,7 @@ Tests 10+ currencies across 5 global regions:
 
 Tests 15+ currencies across 5 global regions:
 
-```
+```text
 ✓ Top-up in USD (Americas)
 ✓ Top-up in EUR (Europe)
 ✓ Top-up in GBP (Europe)
@@ -112,7 +112,7 @@ Tests 15+ currencies across 5 global regions:
 
 **File**: `scripts/wallet-management-orchestrator.ts` (lines 815-844)
 
-```
+```text
 ✓ Get complete transaction history
 ✓ Verify no duplicate transactions
 ✓ Verify transaction amounts are positive
@@ -121,7 +121,7 @@ Tests 15+ currencies across 5 global regions:
 
 ## Test File Locations
 
-```
+```text
 scripts/
 ├── wallet-management-orchestrator.ts    (Main orchestrator - 844 lines)
 └── test-liteapi-*.ts                   (Related hotel tests)
@@ -145,7 +145,7 @@ docs/
 
 ### Wallet Management
 
-```
+```text
 POST   /api/wallet/create           Create wallet for user
 GET    /api/wallet/balance/:userId   Get wallet balance
 GET    /api/wallet/transactions/:userId Get transaction history
@@ -153,7 +153,7 @@ GET    /api/wallet/transactions/:userId Get transaction history
 
 ### Transactions
 
-```
+```text
 POST   /api/wallet/topup            Add funds to wallet
 POST   /api/wallet/pay              Pay from wallet (debit)
 POST   /api/wallet/refund           Refund to wallet (credit)
@@ -213,7 +213,7 @@ POST   /api/wallet/transfer         Transfer between users
 
 ## Performance Expectations
 
-```
+```text
 Average Test Duration:    1-3 seconds
 Average Test Count:       29 tests
 Average Pass Rate:        95%+ (with services running)
@@ -224,7 +224,7 @@ Report File Size:         ~50-100 KB
 ## Troubleshooting Guide
 
 | Error | Cause | Solution |
-|-------|-------|----------|
+| ------- | ------- | ---------- |
 | `Cannot connect to API` | Services not running | `npm run dev` |
 | `Wallet not found` | Create wallet first | Tests auto-create wallets |
 | `Insufficient balance` | Payment exceeds balance | Tests verify balance first |
@@ -251,7 +251,6 @@ npm run test:api:wallet:orchestrator --workspace=@tripalfa/wallet-service
 
 1. **Understand Wallet Architecture**
    - Review [WALLET_API_CONTRACT.md](./api/WALLET_API_CONTRACT.md)
-   - Check [Wallet Service README](../services/wallet-service/README.md)
 
 2. **Run Full Test Suite**
 
@@ -259,18 +258,20 @@ npm run test:api:wallet:orchestrator --workspace=@tripalfa/wallet-service
 npm run test:api:wallet:e2e
 ```
 
-3. **Check Live Services**
+1. **Check Live Services**
 
 ```bash
 npm run dev  # Starts all services
 npm run test:api:wallet:orchestrator
 ```
 
-4. **Review Test Reports**
+1. **Review Test Reports**
+
 - Check: `test-reports/wallet-orchestrator-YYYY-MM-DD.json`
 - View: Transaction logs and coverage details
 
-5. **Extend Tests**
+1. **Extend Tests**
+
 - Add custom scenarios to orchestrator
 - Create additional Playwright E2E tests
 - Implement integration tests
@@ -278,7 +279,7 @@ npm run test:api:wallet:orchestrator
 ## Key Files Reference
 
 | File | Purpose | Lines |
-|------|---------|-------|
+| ------ | --------- | ------- |
 | `wallet-management-orchestrator.ts` | Main test orchestrator | 844 |
 | `WALLET_MANAGEMENT_TESTING_GUIDE.md` | Detailed documentation | This |
 | `WALLET_MANAGEMENT_TESTING_QUICKSTART.md` | Quick reference | This |
@@ -299,6 +300,6 @@ npm run test:api:wallet:orchestrator
 ## References
 
 - [Wallet API Contract](../docs/api/WALLET_API_CONTRACT.md)
-- [Payment Service Integration](../services/payment-service/README.md)
-- [Wallet Service Implementation](../services/wallet-service/README.md)
-- [Hotel Booking Orchestrator Pattern](./scripts/booking-workflow-orchestrator.ts)
+- [Payment Service Integration](./API_DOCUMENTATION.md)
+- [Wallet Service Implementation](./api/WALLET_API_CONTRACT.md)
+- [Hotel Booking Orchestrator Pattern](../scripts/booking-workflow-orchestrator.ts)

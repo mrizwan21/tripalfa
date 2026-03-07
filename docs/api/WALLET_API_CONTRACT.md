@@ -1,5 +1,7 @@
 # Wallet API Contract
 
+<!-- markdownlint-disable MD024 MD036 MD040 -->
+
 ## Overview
 
 The Wallet API is a centralized, multi-currency wallet system owned and operated by the **Payment Service**. All wallet operations are routed through the **API Gateway** at the canonical entry point `/api/wallet/*`.
@@ -14,29 +16,28 @@ The Wallet API is a centralized, multi-currency wallet system owned and operated
 
 - **Public API:** `https://api.tripinfo.com/api/wallet/*` (Production)
 - **Local Development:** `http://localhost:3000/api/wallet/*`
-- **Docker Container (local):** `http://api-gateway:3000/api/wallet/*`
 
 ### Backend Routing
 
 - **API Gateway receives:** `POST /api/wallet/credit` → resolves to Payment Service
-- **API Gateway forwards to:** `http://payment-service:3007/api/wallet/credit`
+- **API Gateway forwards to:** `http://localhost:3007/api/wallet/credit`
 - **Payment Service implementation:** `services/payment-service/src/routes/wallet.ts`
 
 ### Service URLs (Environment-Specific)
 
-#### Local Development (docker-compose.local.yml)
+#### Local Development (Process Mode)
 
 ```env
-PAYMENT_SERVICE_URL=http://payment-service:3007
+PAYMENT_SERVICE_URL=http://localhost:3007
 PAYMENT_SERVICE_PORT=3007
 ```
 
-#### Staging/Neon (docker-compose.resilient.yml)
+#### Staging/Neon
 
 ```env
-PAYMENT_SERVICE_URL=http://payment-service:3007
+PAYMENT_SERVICE_URL=http://localhost:3007
 PAYMENT_SERVICE_PORT=3007
-RULE_ENGINE_SERVICE_URL=http://rule-engine-service:3010
+RULE_ENGINE_SERVICE_URL=http://localhost:3010
 RULE_ENGINE_SERVICE_PORT=3010
 ```
 

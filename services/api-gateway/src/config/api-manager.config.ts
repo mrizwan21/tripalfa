@@ -60,13 +60,113 @@ export interface EndpointConfig {
 // SERVICE CONFIGURATIONS
 // ============================================
 
+// Service hostname mappings for Docker network mode (USE_DOCKER_NETWORK=1)
+// Use explicit mapping for consistency between Docker and local development
+// NOTE: STATIC_DATA_SERVICE was removed - static data now uses in-memory fallbacks
+const SERVICE_HOST_MAP: Record<string, string> = {
+  'NOTIFICATION_SERVICE': 'notification-service',
+  'USER_SERVICE': 'user-service',
+  'ORGANIZATION_SERVICE': 'organization-service',
+  'BOOKING_SERVICE': 'booking-service',
+  'PAYMENT_SERVICE': 'payment-service',
+  'RULE_ENGINE_SERVICE': 'rule-engine-service',
+  'KYC_SERVICE': 'kyc-service',
+  'MARKETING_SERVICE': 'marketing-service',
+  'B2B_ADMIN_SERVICE': 'b2b-admin-service',
+  'BOOKING_ENGINE_SERVICE': 'booking-engine-service',
+};
+
+// Service port mappings - centralized for easier maintenance
+// Can be overridden via environment variables (e.g., NOTIFICATION_SERVICE_PORT)
+const SERVICE_PORTS: Record<string, string> = {
+  'NOTIFICATION_SERVICE': '3009',
+  'USER_SERVICE': '3004',
+  'ORGANIZATION_SERVICE': '3006',
+  'BOOKING_SERVICE': '3001',
+  'PAYMENT_SERVICE': '3007',
+  'RULE_ENGINE_SERVICE': '3010',
+  'KYC_SERVICE': '3011',
+  'MARKETING_SERVICE': '3012',
+  'B2B_ADMIN_SERVICE': '3020',
+  'BOOKING_ENGINE_SERVICE': '3021',
+};
+
+// Helper function to get service URL with environment-based fallback
+// Supports both Docker (container names) and local development (localhost)
+// Set USE_DOCKER_NETWORK=1 to use Docker container names, or leave unset for localhost
+function getServiceUrl(serviceName: string, port?: string): string {
+  const baseUrl = process.env[`${serviceName}_URL`];
+  if (baseUrl) return baseUrl;
+
+  // Check if running in Docker mode
+  const useDocker = process.env.USE_DOCKER_NETWORK === '1';
+
+  // Use explicit hostname mapping for Docker, localhost for local development
+  const host = useDocker
+    ? (SERVICE_HOST_MAP[serviceName] || `${serviceName.toLowerCase().replace(/Service/, '-service')}`)
+    : 'localhost';
+
+  // Use provided port, environment variable, or centralized SERVICE_PORTS
+  const servicePort = port || process.env[`${serviceName}_PORT`] || SERVICE_PORTS[serviceName] || '3000';
+  return `http://${host}:${servicePort}`;
+}
+
+// Startup validation function - run at module load to detect configuration issues
+export function validateServiceConfiguration(): { valid: boolean; warnings: string[]; errors: string[] } {
+  const warnings: string[] = [];
+  const errors: string[] = [];
+  const useDocker = process.env.USE_DOCKER_NETWORK === '1';
+
+  // Check USE_DOCKER_NETWORK configuration
+  if (useDocker) {
+    console.log('[API Manager] Running in Docker network mode (USE_DOCKER_NETWORK=1)');
+    // In Docker mode, we expect container names to be reachable
+  } else {
+    console.log('[API Manager] Running in local development mode (USE_DOCKER_NETWORK not set)');
+  }
+
+  // Validate critical service URLs are configured
+  const criticalServices = ['NOTIFICATION_SERVICE', 'USER_SERVICE', 'BOOKING_SERVICE', 'PAYMENT_SERVICE'];
+  for (const service of criticalServices) {
+    const url = getServiceUrl(service);
+    if (url.includes('localhost') && process.env.NODE_ENV === 'production') {
+      warnings.push(`Service ${service} is using localhost in production mode`);
+    }
+  }
+
+  // NOTE: STATIC_DATA_SERVICE was removed - static data now uses in-memory fallbacks
+  // See apps/booking-engine/src/lib/constants/*-static-data.ts for fallback data
+
+  // Validate all service ports are defined
+  const requiredPorts = ['NOTIFICATION_SERVICE', 'USER_SERVICE', 'ORGANIZATION_SERVICE', 'BOOKING_SERVICE',
+    'PAYMENT_SERVICE', 'RULE_ENGINE_SERVICE', 'KYC_SERVICE', 'MARKETING_SERVICE',
+    'B2B_ADMIN_SERVICE', 'BOOKING_ENGINE_SERVICE'];
+  for (const service of requiredPorts) {
+    if (!SERVICE_PORTS[service]) {
+      errors.push(`Service ${service} is missing port configuration`);
+    }
+  }
+
+  if (warnings.length > 0) {
+    console.warn('[API Manager] Configuration warnings:', warnings);
+  }
+  if (errors.length > 0) {
+    console.error('[API Manager] Configuration errors:', errors);
+  }
+
+  return { valid: errors.length === 0, warnings, errors };
+}
+
+// Run validation at module load time (only in non-test environments)
+if (process.env.NODE_ENV !== 'test') {
+  validateServiceConfiguration();
+}
+
 export const SERVICES: Record<string, ServiceConfig> = {
   notificationService: {
     name: "Notification Service",
-    baseUrl:
-      process.env.NOTIFICATION_SERVICE_URL ||
-      "http://notification-service:3009",
-    port: parseInt(process.env.NOTIFICATION_SERVICE_PORT || "3009"),
+    baseUrl: getServiceUrl('NOTIFICATION_SERVICE'),
+    port: parseInt(process.env.NOTIFICATION_SERVICE_PORT || SERVICE_PORTS['NOTIFICATION_SERVICE'] || "3009"),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -85,8 +185,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   userService: {
     name: "User Service",
-    baseUrl: process.env.USER_SERVICE_URL || "http://user-service:3004",
-    port: parseInt(process.env.USER_SERVICE_PORT || "3004"),
+    baseUrl: getServiceUrl('USER_SERVICE'),
+    port: parseInt(process.env.USER_SERVICE_PORT || SERVICE_PORTS['USER_SERVICE'] || "3004"),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -105,10 +205,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   organizationService: {
     name: "Organization Service",
-    baseUrl:
-      process.env.ORGANIZATION_SERVICE_URL ||
-      "http://organization-service:3006",
-    port: parseInt(process.env.ORGANIZATION_SERVICE_PORT || "3006"),
+    baseUrl: getServiceUrl('ORGANIZATION_SERVICE'),
+    port: parseInt(process.env.ORGANIZATION_SERVICE_PORT || SERVICE_PORTS['ORGANIZATION_SERVICE'] || "3006"),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -127,8 +225,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   bookingService: {
     name: "Booking Service",
-    baseUrl: process.env.BOOKING_SERVICE_URL || "http://booking-service:3001",
-    port: parseInt(process.env.BOOKING_SERVICE_PORT || "3001"),
+    baseUrl: getServiceUrl('BOOKING_SERVICE'),
+    port: parseInt(process.env.BOOKING_SERVICE_PORT || SERVICE_PORTS['BOOKING_SERVICE'] || "3001"),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -147,8 +245,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   paymentService: {
     name: "Payment Service",
-    baseUrl: process.env.PAYMENT_SERVICE_URL || "http://payment-service:3007",
-    port: parseInt(process.env.PAYMENT_SERVICE_PORT || "3007"),
+    baseUrl: getServiceUrl('PAYMENT_SERVICE'),
+    port: parseInt(process.env.PAYMENT_SERVICE_PORT || SERVICE_PORTS['PAYMENT_SERVICE'] || "3007"),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -167,9 +265,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   ruleEngineService: {
     name: "Rule Engine Service",
-    baseUrl:
-      process.env.RULE_ENGINE_SERVICE_URL || "http://rule-engine-service:3010",
-    port: parseInt(process.env.RULE_ENGINE_SERVICE_PORT || "3010"),
+    baseUrl: getServiceUrl('RULE_ENGINE_SERVICE'),
+    port: parseInt(process.env.RULE_ENGINE_SERVICE_PORT || SERVICE_PORTS['RULE_ENGINE_SERVICE'] || "3010"),
     timeout: 10000,
     retryPolicy: {
       maxRetries: 3,
@@ -188,8 +285,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   kycService: {
     name: "KYC Service",
-    baseUrl: process.env.KYC_SERVICE_URL || "http://kyc-service:3011",
-    port: parseInt(process.env.KYC_SERVICE_PORT || "3011"),
+    baseUrl: getServiceUrl('KYC_SERVICE'),
+    port: parseInt(process.env.KYC_SERVICE_PORT || SERVICE_PORTS['KYC_SERVICE'] || "3011"),
     timeout: 30000,
     retryPolicy: {
       maxRetries: 3,
@@ -208,9 +305,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   marketingService: {
     name: "Marketing Service",
-    baseUrl:
-      process.env.MARKETING_SERVICE_URL || "http://marketing-service:3012",
-    port: parseInt(process.env.MARKETING_SERVICE_PORT || "3012"),
+    baseUrl: getServiceUrl('MARKETING_SERVICE'),
+    port: parseInt(process.env.MARKETING_SERVICE_PORT || SERVICE_PORTS['MARKETING_SERVICE'] || "3012"),
     timeout: 5000,
     retryPolicy: {
       maxRetries: 3,
@@ -229,9 +325,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   b2bAdminService: {
     name: "B2B Admin Service",
-    baseUrl:
-      process.env.B2B_ADMIN_SERVICE_URL || "http://b2b-admin-service:3020",
-    port: parseInt(process.env.B2B_ADMIN_SERVICE_PORT || "3020"),
+    baseUrl: getServiceUrl('B2B_ADMIN_SERVICE'),
+    port: parseInt(process.env.B2B_ADMIN_SERVICE_PORT || SERVICE_PORTS['B2B_ADMIN_SERVICE'] || "3020"),
     timeout: 15000,
     retryPolicy: {
       maxRetries: 3,
@@ -250,10 +345,8 @@ export const SERVICES: Record<string, ServiceConfig> = {
   },
   bookingEngineService: {
     name: "Booking Engine Service",
-    baseUrl:
-      process.env.BOOKING_ENGINE_SERVICE_URL ||
-      "http://booking-engine-service:3021",
-    port: parseInt(process.env.BOOKING_ENGINE_SERVICE_PORT || "3021"),
+    baseUrl: getServiceUrl('BOOKING_ENGINE_SERVICE'),
+    port: parseInt(process.env.BOOKING_ENGINE_SERVICE_PORT || SERVICE_PORTS['BOOKING_ENGINE_SERVICE'] || "3021"),
     timeout: 30000,
     retryPolicy: {
       maxRetries: 3,
@@ -660,32 +753,7 @@ export const TAX_ENDPOINTS: EndpointConfig[] = [
   },
 ];
 
-// ============================================
-// SUPPORT ENDPOINTS
-// ============================================
 
-export const SUPPORT_ENDPOINTS: EndpointConfig[] = [
-  {
-    id: "support_list_tickets",
-    method: "GET",
-    path: "/api/support-tickets",
-    serviceId: "userService",
-    description: "List support tickets",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 20, requestsPerHour: 1000 },
-    timeout: 5000,
-  },
-  {
-    id: "support_create_ticket",
-    method: "POST",
-    path: "/api/support-tickets",
-    serviceId: "userService",
-    description: "Create support ticket",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 500 },
-    timeout: 5000,
-  },
-];
 
 // ============================================
 // BOOKING ENDPOINTS
@@ -2322,81 +2390,7 @@ export const B2B_ADMIN_RULE_ENDPOINTS: EndpointConfig[] = [
 ];
 
 // ============================================
-// AUTH ENDPOINTS (OAuth Social Login)
-// ============================================
 
-export const AUTH_ENDPOINTS: EndpointConfig[] = [
-  {
-    id: "auth_oauth_google",
-    method: "GET",
-    path: "/auth/oauth/google",
-    serviceId: "userService",
-    description: "Initiate Google OAuth flow",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 5000,
-  },
-  {
-    id: "auth_oauth_facebook",
-    method: "GET",
-    path: "/auth/oauth/facebook",
-    serviceId: "userService",
-    description: "Initiate Facebook OAuth flow",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 5000,
-  },
-  {
-    id: "auth_oauth_apple",
-    method: "GET",
-    path: "/auth/oauth/apple",
-    serviceId: "userService",
-    description: "Initiate Apple OAuth flow",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 5000,
-  },
-  {
-    id: "auth_oauth_callback",
-    method: "POST",
-    path: "/auth/oauth/callback",
-    serviceId: "userService",
-    description: "Handle OAuth callback and exchange code for tokens",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 10000,
-  },
-  {
-    id: "auth_linked_accounts",
-    method: "GET",
-    path: "/auth/linked-accounts",
-    serviceId: "userService",
-    description: "Get linked social accounts for current user",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 20, requestsPerHour: 500 },
-    timeout: 5000,
-  },
-  {
-    id: "auth_oauth_link",
-    method: "GET",
-    path: "/auth/oauth/link/:provider",
-    serviceId: "userService",
-    description: "Link a social account to existing user",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 5000,
-  },
-  {
-    id: "auth_oauth_unlink",
-    method: "DELETE",
-    path: "/auth/oauth/unlink/:provider",
-    serviceId: "userService",
-    description: "Unlink a social account from existing user",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 5000,
-  },
-];
 
 // ============================================
 // BOOKING ENGINE ENDPOINTS - Flights
@@ -2562,172 +2556,8 @@ export const BOOKING_ENGINE_HOTEL_ENDPOINTS: EndpointConfig[] = [
   },
 ];
 
-// ============================================
-// LITEAPI STATIC DATA ENDPOINTS (Direct + Fallback Cache)
-// ============================================
 
-export const LITEAPI_STATIC_DATA_ENDPOINTS: EndpointConfig[] = [
-  // Places/Locations
-  {
-    id: "liteapi_places_list",
-    method: "GET",
-    path: "/api/liteapi/places",
-    serviceId: "bookingService",
-    description: "Get places list - LiteAPI /data/places with static DB cache",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 10000,
-  },
-  {
-    id: "liteapi_places_get",
-    method: "GET",
-    path: "/api/liteapi/places/:placeId",
-    serviceId: "bookingService",
-    description: "Get place details - LiteAPI /data/places/{placeId}",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 10000,
-  },
-  // Hotels Static Data
-  {
-    id: "liteapi_hotels_list",
-    method: "GET",
-    path: "/api/liteapi/hotels",
-    serviceId: "bookingService",
-    description:
-      "Search hotels - LiteAPI /data/hotels with PostGIS geo + pg_trgm",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 15000,
-  },
-  {
-    id: "liteapi_hotel_get",
-    method: "POST",
-    path: "/api/liteapi/hotel",
-    serviceId: "bookingService",
-    description: "Get hotel details - LiteAPI /data/hotel with fallback cache",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 10000,
-  },
-  // Semantic Search (pgvector)
-  {
-    id: "liteapi_semantic_search",
-    method: "POST",
-    path: "/api/liteapi/hotels/semantic-search",
-    serviceId: "bookingService",
-    description:
-      "Semantic hotel search - LiteAPI /data/hotels/semantic-search with pgvector",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
-    timeout: 15000,
-  },
-  // Room Search
-  {
-    id: "liteapi_room_search",
-    method: "POST",
-    path: "/api/liteapi/hotels/room-search",
-    serviceId: "bookingService",
-    description: "Search hotel rooms - LiteAPI /data/hotels/room-search",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
-    timeout: 15000,
-  },
-  // Natural Language Query (RAG)
-  {
-    id: "liteapi_ask_hotel",
-    method: "POST",
-    path: "/api/liteapi/hotel/ask",
-    serviceId: "bookingService",
-    description:
-      "Ask about hotel - LiteAPI /data/hotel/ask with RAG-style search",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 20, requestsPerHour: 300 },
-    timeout: 20000,
-  },
-  // Reference Data
-  {
-    id: "liteapi_facilities",
-    method: "GET",
-    path: "/api/liteapi/facilities",
-    serviceId: "bookingService",
-    description: "Get hotel facilities - LiteAPI /data/facilities",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 5000,
-  },
-  {
-    id: "liteapi_hotel_types",
-    method: "GET",
-    path: "/api/liteapi/hotel-types",
-    serviceId: "bookingService",
-    description: "Get hotel types - LiteAPI /data/hotelTypes",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 5000,
-  },
-  {
-    id: "liteapi_chains",
-    method: "GET",
-    path: "/api/liteapi/chains",
-    serviceId: "bookingService",
-    description: "Get hotel chains - LiteAPI /data/chains",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 5000,
-  },
-  {
-    id: "liteapi_countries",
-    method: "GET",
-    path: "/api/liteapi/countries",
-    serviceId: "bookingService",
-    description: "Get countries - LiteAPI /data/countries",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 5000,
-  },
-  {
-    id: "liteapi_currencies",
-    method: "GET",
-    path: "/api/liteapi/currencies",
-    serviceId: "bookingService",
-    description: "Get currencies - LiteAPI /data/currencies",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 5000,
-  },
-  {
-    id: "liteapi_languages",
-    method: "GET",
-    path: "/api/liteapi/languages",
-    serviceId: "bookingService",
-    description: "Get languages - LiteAPI /data/languages",
-    requiresAuth: false,
-    rateLimit: { requestsPerMinute: 60, requestsPerHour: 2000 },
-    timeout: 5000,
-  },
-  // Cache Management
-  {
-    id: "liteapi_cache_status",
-    method: "GET",
-    path: "/api/liteapi/cache/status",
-    serviceId: "bookingService",
-    description: "Get fallback cache status and statistics",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 30, requestsPerHour: 500 },
-    timeout: 5000,
-  },
-  {
-    id: "liteapi_cache_clear",
-    method: "POST",
-    path: "/api/liteapi/cache/clear",
-    serviceId: "bookingService",
-    description: "Clear stale cache entries",
-    requiresAuth: true,
-    rateLimit: { requestsPerMinute: 10, requestsPerHour: 100 },
-    timeout: 10000,
-  },
-];
+
 
 // ============================================
 // HYBRID HOTEL API ENDPOINTS (Static DB + Live Rates)
@@ -2892,6 +2722,182 @@ export const BOOKING_ENGINE_OFFLINE_ENDPOINTS: EndpointConfig[] = [
 ];
 
 // ============================================
+// STATIC DATA ENDPOINTS (Replaces port 3002)
+// ============================================
+export const STATIC_DATA_ENDPOINTS: EndpointConfig[] = [
+  {
+    id: "static_data_countries",
+    method: "GET",
+    path: "/api/static/countries",
+    serviceId: "staticDataService",
+    description: "Get all countries",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_currencies",
+    method: "GET",
+    path: "/api/static/currencies",
+    serviceId: "staticDataService",
+    description: "Get all currencies",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_languages",
+    method: "GET",
+    path: "/api/static/languages",
+    serviceId: "staticDataService",
+    description: "Get all languages",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_hotel_types",
+    method: "GET",
+    path: "/api/static/hotel-types",
+    serviceId: "staticDataService",
+    description: "Get hotel types",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_hotel_amenities",
+    method: "GET",
+    path: "/api/static/hotel-amenities",
+    serviceId: "staticDataService",
+    description: "Get hotel amenities",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_hotel_chains",
+    method: "GET",
+    path: "/api/static/hotel-chains",
+    serviceId: "staticDataService",
+    description: "Get hotel chains",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_board_types",
+    method: "GET",
+    path: "/api/static/board-types",
+    serviceId: "staticDataService",
+    description: "Get boarding/meal types",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_destinations",
+    method: "GET",
+    path: "/api/static/destinations",
+    serviceId: "staticDataService",
+    description: "Search destinations",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_popular_destinations",
+    method: "GET",
+    path: "/api/static/popular-destinations",
+    serviceId: "staticDataService",
+    description: "Get popular destinations",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_popular_hotels",
+    method: "GET",
+    path: "/api/static/hotels/popular",
+    serviceId: "staticDataService",
+    description: "Get popular hotels",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_hotel_full",
+    method: "GET",
+    path: "/api/static/hotels/:id/full",
+    serviceId: "staticDataService",
+    description: "Get hotel full static detail",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 8000,
+  },
+  {
+    id: "static_data_hotel_single",
+    method: "GET",
+    path: "/api/static/hotels/:id",
+    serviceId: "staticDataService",
+    description: "Get hotel single base detail",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_loyalty_programmes",
+    method: "GET",
+    path: "/api/static/loyalty-programmes",
+    serviceId: "staticDataService",
+    description: "Get loyalty programmes",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_iata_codes",
+    method: "GET",
+    path: "/api/static/iata-codes",
+    serviceId: "staticDataService",
+    description: "Get IATA codes lookup",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_nationalities",
+    method: "GET",
+    path: "/api/static/nationalities",
+    serviceId: "bookingEngineService",
+    description: "Get nationalities",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_phone_codes",
+    method: "GET",
+    path: "/api/static/phone-codes",
+    serviceId: "bookingEngineService",
+    description: "Get phone country codes",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+  {
+    id: "static_data_suggestions",
+    method: "GET",
+    path: "/api/static/suggestions",
+    serviceId: "bookingEngineService",
+    description: "Get autocomplete suggestions",
+    requiresAuth: false,
+    rateLimit: { requestsPerMinute: 60, requestsPerHour: 1000 },
+    timeout: 5000,
+  },
+];
+
+// ============================================
 // API MANAGER CLASS
 // ============================================
 
@@ -2912,13 +2918,11 @@ export class APIManager {
       ...RULE_ENGINE_ENDPOINTS,
       ...AUDIT_ENDPOINTS,
       ...TAX_ENDPOINTS,
-      ...SUPPORT_ENDPOINTS,
       ...BOOKING_ENDPOINTS,
       ...KYC_ENDPOINTS,
       ...MARKETING_ENDPOINTS,
       ...WALLET_ENDPOINTS,
       ...DUFFEL_ENDPOINTS,
-      ...AUTH_ENDPOINTS,
       ...B2B_ADMIN_COMPANY_ENDPOINTS,
       ...B2B_ADMIN_USER_ENDPOINTS,
       ...B2B_ADMIN_BOOKING_ENDPOINTS,
@@ -2928,7 +2932,6 @@ export class APIManager {
       ...BOOKING_ENGINE_FLIGHT_ENDPOINTS,
       ...BOOKING_ENGINE_HOTEL_ENDPOINTS,
       ...BOOKING_ENGINE_OFFLINE_ENDPOINTS,
-      ...LITEAPI_STATIC_DATA_ENDPOINTS, // LiteAPI static data endpoints with fallback cache
       ...HOTEL_HYBRID_ENDPOINTS, // Hybrid hotel endpoints (Static DB + Live Rates)
     ];
     allEndpoints.forEach((endpoint) => {
@@ -2938,6 +2941,46 @@ export class APIManager {
       const routeKey = `${endpoint.method} ${endpoint.path}`;
       this.routeMap.set(routeKey, endpoint);
     });
+  }
+
+  /**
+   * Get runtime health status of all services
+   * Returns a map of service name to health status
+   */
+  async getServicesHealth(): Promise<Record<string, { healthy: boolean; latency?: number; error?: string }>> {
+    const healthStatus: Record<string, { healthy: boolean; latency?: number; error?: string }> = {};
+
+    const checkPromises = Array.from(this.services.entries()).map(async ([name, config]) => {
+      const start = Date.now();
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), config.timeout);
+
+        const response = await fetch(`${config.baseUrl}${config.healthCheck.endpoint}`, {
+          method: 'GET',
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+        const latency = Date.now() - start;
+
+        healthStatus[name] = {
+          healthy: response.ok,
+          latency,
+          error: response.ok ? undefined : `HTTP ${response.status}`,
+        };
+      } catch (error: any) {
+        const latency = Date.now() - start;
+        healthStatus[name] = {
+          healthy: false,
+          latency,
+          error: error.message || 'Connection failed',
+        };
+      }
+    });
+
+    await Promise.all(checkPromises);
+    return healthStatus;
   }
 
   /**
@@ -2987,8 +3030,6 @@ export class APIManager {
       kycEndpoints: KYC_ENDPOINTS.length,
       marketingEndpoints: MARKETING_ENDPOINTS.length,
       duffelEndpoints: DUFFEL_ENDPOINTS.length,
-      authEndpoints: AUTH_ENDPOINTS.length,
-      liteapiStaticDataEndpoints: LITEAPI_STATIC_DATA_ENDPOINTS.length,
       hotelHybridEndpoints: HOTEL_HYBRID_ENDPOINTS.length,
       b2bAdminEndpoints:
         B2B_ADMIN_COMPANY_ENDPOINTS.length +

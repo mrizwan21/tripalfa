@@ -15,6 +15,7 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 import { prisma } from "@tripalfa/shared-database";
+import { Pool } from "pg";
 import {
   cacheOfferRequestMiddleware,
   cacheOfferMiddleware,
@@ -33,48 +34,30 @@ import {
   CancellationManager,
   CacheBulkOperations,
 } from "../services/duffel-api-manager.service.js";
+import {
+  normalizeDuffelServices,
+  extractServiceCategories
+} from "../utils/duffel-normalizer.js";
 
 const router: Router = Router();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+import { duffelClient } from "../utils/duffelClient.js";
+
 const rootDir = resolve(__dirname, "../../../../");
 
-// ============================================================================
-// Environment Configuration
-// ============================================================================
-
-const DUFFEL_API_URL = process.env.DUFFEL_API_URL || "https://api.duffel.com";
-
-function resolveDuffelApiKey() {
-  const normalizeToken = (value?: string) => {
-    if (!value) return "";
-    const trimmed = value.trim().replace(/^['\"]|['\"]$/g, "");
-    const withoutBearer = trimmed.replace(/^Bearer\s+/i, "").trim();
-    return withoutBearer.startsWith("duffel_") ? withoutBearer : "";
-  };
-
-  const envKey = normalizeToken(
-    process.env.DUFFEL_API_KEY || process.env.DUFFEL_TEST_TOKEN,
-  );
-  if (envKey) {
-    return envKey;
-  }
-
-  const keyPath = resolve(rootDir, "secrets", "duffel_api_key.txt");
-  if (fs.existsSync(keyPath)) {
-    const fileKey = normalizeToken(fs.readFileSync(keyPath, "utf8"));
-    if (fileKey) {
-      return fileKey;
-    }
-  }
-
-  return "";
-}
-
-const DUFFEL_API_KEY = resolveDuffelApiKey();
-const DUFFEL_VERSION = "v2";
 const DB_WRITE_TIMEOUT_MS = 1500;
+
+// Static reference database connection
+const STATIC_DATABASE_URL = process.env.STATIC_DATABASE_URL;
+const staticDbPool = STATIC_DATABASE_URL
+  ? new Pool({
+    connectionString: STATIC_DATABASE_URL,
+    max: 5,
+    connectionTimeoutMillis: 5000,
+  })
+  : null;
 
 async function withTimeout<T>(
   promise: Promise<T>,
@@ -91,31 +74,30 @@ async function withTimeout<T>(
 // ============================================================================
 
 /**
- * Make authenticated request to Duffel API
+ * Make authenticated request to Duffel API using the shared Axios client
+ * Preserved for backwards compatibility with existing routes in this file
  */
 async function duffelRequest<T>(
   endpoint: string,
   method: string = "GET",
   body?: object,
 ): Promise<T> {
-  const url = `${DUFFEL_API_URL}${endpoint}`;
-
-  const response = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${DUFFEL_API_KEY}`,
-      "Duffel-Version": DUFFEL_VERSION,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Duffel API Error (${response.status}): ${errorText}`);
+  try {
+    const config: any = {
+      method,
+      url: endpoint,
+    };
+    if (body) {
+      config.data = body;
+    }
+    const response = await duffelClient.request(config);
+    return response.data as T;
+  } catch (error: any) {
+    if (error.response) {
+      throw new Error(`Duffel API Error (${error.response.status}): ${JSON.stringify(error.response.data)}`);
+    }
+    throw error;
   }
-
-  return response.json();
 }
 
 // ============================================================================
@@ -778,6 +760,159 @@ router.post(
     }
   },
 );
+
+// ============================================================================
+// STANDARDIZED ANCILLARY SERVICES
+// ============================================================================
+
+/**
+ * GET /api/flights/ancillary/services
+ * Get available ancillary services for an offer or order (normalized for UI)
+ */
+router.get("/ancillary/services", async (req: Request, res: Response) => {
+  try {
+    const { offerId, orderId, serviceType } = req.query;
+
+    if (!offerId && !orderId) {
+      return res.status(400).json({ error: "Either offerId or orderId is required" });
+    }
+
+    let rawServices = [];
+    let source = "api";
+
+    if (orderId) {
+      // Try cache first
+      const cached = await AvailableServicesManager.getAvailableServices(orderId as string);
+      if (cached?.data) {
+        rawServices = cached.data;
+        source = "redis";
+      } else {
+        // Fetch from Duffel
+        const duffelResponse = await duffelRequest<any>(`/air/orders/${orderId}/available_services`);
+        rawServices = duffelResponse.data || [];
+        // Cache it
+        await AvailableServicesManager.processResponse(orderId as string, duffelResponse.data);
+      }
+    } else if (offerId) {
+      // Try to get offer from cache
+      const cachedOffer = await OfferManager.getOffer(offerId as string);
+      if (cachedOffer?.data) {
+        rawServices = cachedOffer.data.available_services || [];
+        source = cachedOffer.source;
+      } else {
+        // Fetch fresh offer from Duffel
+        const duffelResponse = await duffelRequest<any>(`/air/offers/${offerId}`);
+        rawServices = duffelResponse.data?.available_services || [];
+        source = "api";
+        // Cache it
+        await OfferManager.processResponse(offerId as string, duffelResponse.data);
+      }
+    }
+
+    // Normalize for frontend
+    let normalizedServices = normalizeDuffelServices(rawServices);
+
+    // Filter by type if requested
+    if (serviceType) {
+      normalizedServices = normalizedServices.filter(s => s.type === serviceType);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        services: normalizedServices,
+        categories: extractServiceCategories(rawServices),
+        provider: "duffel",
+        source
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    console.error("[Duffel] Ancillary services error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/flights/ancillary/services/categories
+ * Get available service categories
+ */
+router.get("/ancillary/services/categories", async (req: Request, res: Response) => {
+  try {
+    // Return standard categories supported by the UI
+    const categories = [
+      { type: "baggage", name: "Baggage", description: "Extra bags and weight allowance", icon: "🧳" },
+      { type: "meal", name: "Meals", description: "In-flight meals and dietary options", icon: "🍽️" },
+      { type: "seat", name: "Seats", description: "Preferred seating and extra legroom", icon: "💺" },
+      { type: "special_request", name: "Services", description: "Priority boarding and other help", icon: "♿" },
+      { type: "lounge", name: "Lounges", description: "Airport lounge access", icon: "✈️" },
+    ];
+
+    res.json({
+      success: true,
+      data: categories,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/flights/ancillary/services/select
+ * Select or add services to a booking/order
+ */
+router.post("/ancillary/services/select", async (req: Request, res: Response) => {
+  try {
+    const { offerId, orderId, services } = req.body;
+
+    if (!services || !Array.isArray(services)) {
+      return res.status(400).json({ error: "services array is required" });
+    }
+
+    if (orderId) {
+      // Add services to existing order
+      const duffelResponse = await duffelRequest<any>("/air/order_services", "POST", {
+        data: {
+          order_id: orderId,
+          services: services.map(s => ({
+            id: s.id,
+            quantity: s.quantity || 1
+          }))
+        }
+      });
+
+      res.json({
+        success: true,
+        data: {
+          orderId,
+          selectedServices: services,
+          totalAmount: duffelResponse.data?.total_amount,
+          currency: duffelResponse.data?.total_currency
+        },
+        message: "Services added to order successfully"
+      });
+    } else if (offerId) {
+      // For offer booking, we just acknowledge the selection
+      // The actual order creation will include these services
+      res.json({
+        success: true,
+        data: {
+          offerId,
+          selectedServices: services,
+          totalAmount: "0.00", // Will be calculated during order creation
+          currency: "GBP"
+        },
+        message: "Services selected for booking"
+      });
+    } else {
+      res.status(400).json({ error: "Either offerId or orderId is required" });
+    }
+  } catch (error: any) {
+    console.error("[Duffel] Service selection error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ============================================================================
 // ORDER CANCELLATIONS
@@ -1445,30 +1580,32 @@ router.get(
   cacheSeatMapMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const { offer_id, order_id, segment_id } = req.query;
+      const { offer_id, order_id, offerId, orderId, segment_id } = req.query;
+      const actualOfferId = (offerId || offer_id) as string;
+      const actualOrderId = (orderId || order_id) as string;
 
-      if (!offer_id && !order_id) {
+      if (!actualOfferId && !actualOrderId) {
         return res
           .status(400)
-          .json({ error: "offer_id or order_id is required" });
+          .json({ error: "offerId or orderId is required" });
       }
 
       const params = new URLSearchParams();
-      if (offer_id) params.append("offer_id", offer_id as string);
-      if (order_id) params.append("order_id", order_id as string);
+      if (actualOfferId) params.append("offer_id", actualOfferId);
+      if (actualOrderId) params.append("order_id", actualOrderId);
       if (segment_id) params.append("segment_id", segment_id as string);
 
       // Call Duffel API
       const duffelResponse = await duffelRequest<any>(
-        `/air/seat_maps?${params}`,
+        `/air/seat_maps?${params.toString()}`,
       );
 
       // Process through API Manager (caches in Redis)
       const seatMapData = duffelResponse.data;
       await SeatMapManager.processResponse(
         seatMapData,
-        offer_id as string,
-        order_id as string,
+        actualOfferId,
+        actualOrderId,
       );
 
       res.json({
@@ -1600,11 +1737,11 @@ router.post(
           paymentIntentData.order_id || paymentIntentData.order?.id;
         const order = paymentOrderId
           ? await withTimeout(
-              prisma.duffelOrder.findUnique({
-                where: { externalId: String(paymentOrderId) },
-              }),
-              DB_WRITE_TIMEOUT_MS,
-            )
+            prisma.duffelOrder.findUnique({
+              where: { externalId: String(paymentOrderId) },
+            }),
+            DB_WRITE_TIMEOUT_MS,
+          )
           : null;
 
         if (order) {
@@ -2230,7 +2367,48 @@ router.get("/airports", async (req: Request, res: Response) => {
         .json({ error: 'Query parameter "q" is required (min 2 characters)' });
     }
 
-    // Call Duffel Places API
+    // Attempt to search local static database first for speed
+    if (staticDbPool) {
+      try {
+        const searchTerm = `%${q}%`;
+        const result = await staticDbPool.query(
+          `SELECT 'AIRPORT' as type, iata_code as code, name, city_name, country_name, latitude, longitude
+           FROM duffel_airports
+           WHERE LOWER(name) LIKE LOWER($1) OR LOWER(iata_code) LIKE LOWER($1)
+           UNION ALL
+           SELECT 'CITY' as type, iata_code as code, name as name, name as city_name, country_name, latitude, longitude
+           FROM duffel_cities
+           WHERE LOWER(name) LIKE LOWER($1)
+           LIMIT $2`,
+          [searchTerm, Number(limit)],
+        );
+
+        if (result.rows.length > 0) {
+          const places = result.rows.map((row: any) => ({
+            type: row.type,
+            icon: row.type === "AIRPORT" ? "plane" : "map-pin",
+            title: row.type === "AIRPORT" ? `${row.name} (${row.code})` : row.name,
+            subtitle: row.city_name ? `${row.city_name}, ${row.country_name}` : row.country_name || "",
+            code: row.code,
+            city: row.city_name || row.name,
+            country: row.country_name || "",
+            countryCode: "", // Add if available
+            latitude: row.latitude,
+            longitude: row.longitude,
+          }));
+
+          return res.json({
+            success: true,
+            data: places,
+            source: "static-db",
+          });
+        }
+      } catch (dbError) {
+        console.warn("[Duffel] Static DB search failed, falling back to API:", dbError);
+      }
+    }
+
+    // Fallback to Duffel Places API
     const params = new URLSearchParams();
     params.append("query", q);
     params.append("limit", String(limit));
@@ -2240,7 +2418,6 @@ router.get("/airports", async (req: Request, res: Response) => {
       "GET",
     );
 
-    // Transform to consistent format for frontend autocomplete
     const places = (duffelResponse.data || []).map((place: any) => ({
       type: place.type === "airport" ? "AIRPORT" : "CITY",
       icon: place.type === "airport" ? "plane" : "map-pin",
@@ -2262,6 +2439,7 @@ router.get("/airports", async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: places,
+      source: "api",
     });
   } catch (error: any) {
     console.error("[Duffel] Airports search error:", error.message);
@@ -2370,11 +2548,11 @@ router.get("/places/suggestions", async (req: Request, res: Response) => {
       // City information (if available)
       city: place.city
         ? {
-            id: place.city.id,
-            name: place.city.name,
-            iataCode: place.city.iata_code,
-            countryCode: place.city.iata_country_code,
-          }
+          id: place.city.id,
+          name: place.city.name,
+          iataCode: place.city.iata_code,
+          countryCode: place.city.iata_country_code,
+        }
         : null,
       // Airports within city (for city-type results)
       airports:

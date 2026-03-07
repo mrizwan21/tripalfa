@@ -1,3 +1,6 @@
+# Local development configuration for Prometheus
+# Use prometheus.docker.yml for Docker Compose and Kubernetes deployments
+
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
@@ -20,84 +23,84 @@ scrape_configs:
   # API Gateway
   - job_name: "api-gateway"
     static_configs:
-      - targets: ["api-gateway:3000"]
+      - targets: ["localhost:3000"]
     metrics_path: /metrics
 
   # Booking Service
   - job_name: "booking-service"
     static_configs:
-      - targets: ["booking-service:3001"]
+      - targets: ["localhost:3001"]
     metrics_path: /metrics
 
   # Payment Service
   - job_name: "payment-service"
     static_configs:
-      - targets: ["payment-service:3007"]
+      - targets: ["localhost:3007"]
     metrics_path: /metrics
 
   # User Service
   - job_name: "user-service"
     static_configs:
-      - targets: ["user-service:3004"]
+      - targets: ["localhost:3004"]
     metrics_path: /metrics
 
   # Notification Service
   - job_name: "notification-service"
     static_configs:
-      - targets: ["notification-service:3009"]
+      - targets: ["localhost:3009"]
     metrics_path: /metrics
 
   # Organization Service
   - job_name: "organization-service"
     static_configs:
-      - targets: ["organization-service:3006"]
+      - targets: ["localhost:3006"]
     metrics_path: /metrics
 
   # Rule Engine Service
   - job_name: "rule-engine-service"
     static_configs:
-      - targets: ["rule-engine-service:3010"]
+      - targets: ["localhost:3010"]
     metrics_path: /metrics
 
   # Wallet Service
   - job_name: "wallet-service"
     static_configs:
-      - targets: ["wallet-service:3008"]
+      - targets: ["localhost:3008"]
     metrics_path: /metrics
 
   # KYC Service
   - job_name: "kyc-service"
     static_configs:
-      - targets: ["kyc-service:3011"]
+      - targets: ["localhost:3011"]
     metrics_path: /metrics
 
   # Marketing Service
   - job_name: "marketing-service"
     static_configs:
-      - targets: ["marketing-service:3012"]
+      - targets: ["localhost:3012"]
     metrics_path: /metrics
 
   # B2B Admin Service
   - job_name: "b2b-admin-service"
     static_configs:
-      - targets: ["b2b-admin-service:3020"]
+      - targets: ["localhost:3020"]
     metrics_path: /metrics
 
   # Booking Engine Service
   - job_name: "booking-engine-service"
     static_configs:
-      - targets: ["booking-engine-service:3021"]
+      - targets: ["localhost:3021"]
     metrics_path: /metrics
 
-  # RabbitMQ
+  # RabbitMQ (if running locally)
   - job_name: "rabbitmq"
     static_configs:
-      - targets: ["rabbitmq:15692"]
+      - targets: ["localhost:15692"]
 
-  # Redis Exporter (if added)
+  # Redis Exporter (if running locally)
   - job_name: "redis"
     static_configs:
-      - targets: ["redis:6379"]
+      - targets: ["localhost:6379"]
 
   # PostgreSQL Exporter (if added)
   - job_name: "postgres"

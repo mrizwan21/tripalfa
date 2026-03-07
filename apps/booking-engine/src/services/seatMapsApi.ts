@@ -105,7 +105,7 @@ export async function getSeatMaps(
     );
 
     const result = await api.get(
-      `/api/bookings/flight/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`,
+      `/api/flights/seat-maps?offerId=${encodeURIComponent(offerId)}&provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=booking`,
     );
 
     console.log("[SeatMaps] Seat maps retrieved (BOOKING):", result);
@@ -135,7 +135,7 @@ export async function selectSeats(
   try {
     console.log("[SeatMaps] Selecting seats (BOOKING FLOW):", selectedSeats);
 
-    const result = await api.post("/api/bookings/flight/seat-maps/select", {
+    const result = await api.post("/api/flights/seat-maps/select", {
       offerId,
       selectedSeats,
       provider,
@@ -182,7 +182,7 @@ export async function getSeatMapsForBooking(
     );
 
     const result = await api.get(
-      `/api/bookings/flight/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`,
+      `/api/flights/seat-maps/booking/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}&context=post-booking`,
     );
 
     console.log("[SeatMaps] Seat maps retrieved (POST-BOOKING):", result);
@@ -223,7 +223,7 @@ export async function updateBookingSeats(
     );
 
     const result = await api.patch(
-      `/api/bookings/flight/update-seats/${encodeURIComponent(orderId)}`,
+      `/api/flights/update-seats/${encodeURIComponent(orderId)}`,
       {
         orderId,
         selectedSeats,
@@ -257,7 +257,7 @@ export async function getBookingSeatHistory(
     );
 
     const result = await api.get(
-      `/api/bookings/flight/seat-history/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}`,
+      `/api/flights/seat-history/${encodeURIComponent(orderId)}?provider=${encodeURIComponent(provider)}&env=${encodeURIComponent(environment)}`,
     );
 
     console.log("[SeatMaps] Seat history retrieved:", result);

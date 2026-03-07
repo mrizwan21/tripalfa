@@ -34,7 +34,7 @@ import { TripLogerLayout } from "../components/layout/TripLogerLayout";
 import { FlightDetailPopup } from "../components/FlightDetailPopup";
 import { FareUpsellPopup } from "../components/FareUpsellPopup";
 import { AncillaryPopup } from "../components/AncillaryPopup";
-import { searchFlights, fetchAirlines } from "../lib/api";
+import { searchFlights, fetchAirlines, fetchFlightResults } from "../lib/api";
 import { BookingFilters } from "../components/booking/BookingFilters";
 import { ModifySearchPanel } from "../components/booking/ModifySearchPanel";
 import type { Flight } from "../lib/srs-types";
@@ -50,9 +50,12 @@ export default function FlightList() {
   const [isUpsellOpen, setIsUpsellOpen] = useState(false);
   const [isAncillaryOpen, setIsAncillaryOpen] = useState(false);
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
+  const [selectedAncillaries, setSelectedAncillaries] = useState<string[]>([]);
 
   // Flight data state - populated from location state or API
   const [flights, setFlights] = useState<Flight[]>([]);
+  const [totalFlights, setTotalFlights] = useState(0);
+  const [searchSessionId, setSearchSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [airlines, setAirlines] = useState<any[]>([]);
@@ -85,7 +88,8 @@ export default function FlightList() {
     return `/airline-logos/${code}.png`;
   };
 
-  // Filter State
+  // Filter and Sort State
+  const [sortBy, setSortBy] = useState("Best Value");
   const [filters, setFilters] = useState({
     search: "",
     product: "",
@@ -93,6 +97,8 @@ export default function FlightList() {
     maxPrice: 10000,
     stops: [] as string[],
     time: [] as string[], // e.g., 'morning', 'afternoon'
+    airlines: [] as string[],
+    cabinClass: "",
   });
 
   // Load flights from location state or fetch from API
@@ -133,24 +139,35 @@ export default function FlightList() {
       })
         .then((results: any) => {
           console.log("[FlightList] searchFlights returned:", results);
-          // Results should already be an array from the API function
-          const flightData = Array.isArray(results)
-            ? results
-            : results?.offers || results?.data || [];
-
-          // If no flights found, show empty state
-          if (flightData.length === 0) {
-            console.warn(
-              "[FlightList] No flights found for the search criteria",
-            );
+          const data = results?.data || results;
+          if (data?.searchId) {
+            // Session-based search - store session ID and fetch results
+            setSearchSessionId(data.searchId);
+            // Fetch results using the session
+            fetchFlightResults(data.searchId, {})
+              .then((flightResults: any) => {
+                const flightData = Array.isArray(flightResults)
+                  ? flightResults
+                  : flightResults?.data?.offers || flightResults?.offers || flightResults?.results || [];
+                setFlights(flightData);
+                setTotalFlights(flightData.length);
+              })
+              .catch((err) => {
+                console.error("[FlightList] Failed to fetch flight results:", err);
+                setError("Failed to load flight results. Please try again.");
+              })
+              .finally(() => setLoading(false));
+          } else if (data?.error) {
+            // API returned an error
+            setError(data.error || "Failed to search flights.");
+            setLoading(false);
+          } else {
+            // Direct results returned
+            const flightData = Array.isArray(results) ? results : data?.offers || data?.results || [];
+            setFlights(flightData);
+            setTotalFlights(flightData.length);
+            setLoading(false);
           }
-
-          console.log(
-            "[FlightList] Parsed flight data count:",
-            flightData.length,
-          );
-          setFlights(flightData);
-          setLoading(false);
         })
         .catch((err) => {
           console.error("[FlightList] Failed to fetch flights:", err);
@@ -158,7 +175,6 @@ export default function FlightList() {
           setLoading(false);
         });
     } else {
-      // No search params - try loading with defaults to show some flights
       console.log("[FlightList] No search params, loading default flights");
       setLoading(true);
       searchFlights({
@@ -167,18 +183,39 @@ export default function FlightList() {
         departureDate: "2026-10-24",
       })
         .then((results: any) => {
-          const flightData = Array.isArray(results)
-            ? results
-            : results?.offers || [];
-          setFlights(flightData);
-          setLoading(false);
+          const data = results?.data || results;
+          if (data?.searchId) {
+            // Session-based search - store session ID and fetch results
+            setSearchSessionId(data.searchId);
+            fetchFlightResults(data.searchId, {})
+              .then((flightResults: any) => {
+                const flightData = Array.isArray(flightResults)
+                  ? flightResults
+                  : flightResults?.data?.offers || flightResults?.offers || flightResults?.results || [];
+                setFlights(flightData);
+                setTotalFlights(flightData.length);
+              })
+              .catch(() => {
+                setError("Failed to load default flights.");
+              })
+              .finally(() => setLoading(false));
+          } else {
+            const flightData = Array.isArray(results) ? results : data?.offers || data?.results || [];
+            setFlights(flightData);
+            setTotalFlights(flightData.length);
+            setLoading(false);
+          }
         })
-        .catch(() => setLoading(false));
+        .catch(() => {
+          setError("Failed to load default flights.");
+          setLoading(false);
+        });
     }
   }, [location.state, searchParams]);
 
   const handleBookNow = (flight: Flight) => {
     setSelectedFlight(flight);
+    setSelectedAncillaries([]);
     setIsDetailOpen(true);
   };
 
@@ -186,63 +223,40 @@ export default function FlightList() {
     setActiveFilter(activeFilter === filter ? null : filter);
   };
 
-  // Filter Logic - now uses flights state instead of MOCK_FLIGHTS
-  const filteredFlights = React.useMemo(() => {
-    return flights.filter((flight) => {
-      // Search Filter
-      if (filters.search) {
-        const term = filters.search.toLowerCase();
-        const matches =
-          (flight.airline?.toLowerCase() || "").includes(term) ||
-          (flight.flightNumber?.toLowerCase() || "").includes(term) ||
-          (flight.origin?.toLowerCase() || "").includes(term) ||
-          (flight.destination?.toLowerCase() || "").includes(term);
-        if (!matches) return false;
-      }
+  // Fetch results from Redis session when filters or sort change
+  useEffect(() => {
+    if (!searchSessionId) return;
 
-      // Price Filter
-      const price = flight.amount || 0;
-      if (
-        price < filters.minPrice ||
-        (filters.maxPrice > 0 && price > filters.maxPrice)
-      ) {
-        return false;
-      }
+    setLoading(true);
 
-      // Stops Filter
-      if (filters.stops.length > 0) {
-        const stopsCount = flight.stops ?? 0;
-        const isNonStop =
-          stopsCount === 0 && filters.stops.includes("Non-stop");
-        const isOneStop = stopsCount === 1 && filters.stops.includes("1 Stop");
-        const isTwoPlus = stopsCount >= 2 && filters.stops.includes("2+ Stops");
+    const payload: any = {
+      limit: 50,
+      offset: 0,
+      sortBy: sortBy === "Price: Low to High" ? "price" : sortBy === "Duration: Shortest" ? "duration" : "best value",
+      sortOrder: sortBy.includes("Low to High") ? "asc" : "asc",
+    };
 
-        if (!isNonStop && !isOneStop && !isTwoPlus) return false;
-      }
+    if (filters.maxPrice < 10000) payload.maxPrice = filters.maxPrice;
+    if (filters.airlines.length > 0) payload.airlines = filters.airlines;
+    if (filters.stops.length > 0) {
+      if (filters.stops.includes("Non-stop")) payload.stops = 0;
+      else if (filters.stops.includes("1 Stop")) payload.stops = 1;
+      else payload.stops = 2; // Approximation for 2+ stops
+    }
 
-      // Time Filter (Departure)
-      if (filters.time.length > 0) {
-        const depTime = flight.departureTime
-          ? parseISO(flight.departureTime)
-          : new Date();
-        const hour = depTime.getHours();
+    fetchFlightResults(searchSessionId, payload)
+      .then((res: any) => {
+        const data = res.data || res;
+        setFlights(data.results || []);
+        setTotalFlights(data.total || 0);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch results:", err);
+        setLoading(false);
+      });
 
-        const isEarlyMorning =
-          hour >= 0 && hour < 8 && filters.time.includes("Early Morning");
-        const isMorning =
-          hour >= 8 && hour < 12 && filters.time.includes("Morning");
-        const isAfternoon =
-          hour >= 12 && hour < 18 && filters.time.includes("Afternoon");
-        const isNight =
-          hour >= 18 && hour <= 23 && filters.time.includes("Night");
-
-        if (!isEarlyMorning && !isMorning && !isAfternoon && !isNight)
-          return false;
-      }
-
-      return true;
-    });
-  }, [flights, filters]);
+  }, [searchSessionId, filters, sortBy]);
 
   const updateFilter = (key: string, value: any) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -262,13 +276,13 @@ export default function FlightList() {
       case "price":
         return (
           <div className={dropdownClasses}>
-            <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest mb-8">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
               Price Range
             </h4>
-            <div className="space-y-8">
+            <div className="space-y-6">
               <div className="flex gap-4">
                 <div className="flex-1 space-y-2">
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Min
                   </p>
                   <input
@@ -281,7 +295,7 @@ export default function FlightList() {
                   />
                 </div>
                 <div className="flex-1 space-y-2">
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Max
                   </p>
                   <input
@@ -290,13 +304,14 @@ export default function FlightList() {
                     onChange={(e) =>
                       updateFilter("maxPrice", Number(e.target.value))
                     }
-                    className="w-full h-11 px-4 bg-muted border border-border rounded-xl flex items-center text-xs font-bold text-foreground outline-none focus:border-[hsl(var(--primary))] gap-2"
+                    className="input"
                   />
                 </div>
               </div>
               <Button
+                variant="primary"
                 onClick={() => setActiveFilter(null)}
-                className="w-full h-12 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-[hsl(var(--primary-foreground))] font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-purple-100"
+                className="w-full"
               >
                 Apply Filter
               </Button>
@@ -307,7 +322,7 @@ export default function FlightList() {
         // Simplified time filter UI
         return (
           <div className={dropdownClasses + " min-w-[380px]"}>
-            <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest mb-8">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
               Departure Time
             </h4>
             <div className="grid grid-cols-2 gap-4">
@@ -364,10 +379,10 @@ export default function FlightList() {
       case "stops":
         return (
           <div className={dropdownClasses}>
-            <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest mb-8">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
               Stops Count
             </h4>
-            <div className="space-y-6">
+            <div className="space-y-4">
               {["Non-stop", "1 Stop", "2+ Stops"].map((s) => (
                 <Label
                   key={s}
@@ -395,13 +410,13 @@ export default function FlightList() {
       case "more":
         return (
           <div className={dropdownClasses}>
-            <h4 className="text-[10px] font-black text-foreground uppercase tracking-widest mb-8">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
               Additional Filters
             </h4>
 
             {/* Airlines */}
-            <div className="mb-8">
-              <h5 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-4">
+            <div className="mb-6">
+              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Preferred Airlines
               </h5>
               <div className="space-y-3">
@@ -421,7 +436,14 @@ export default function FlightList() {
                           id={`flight-airline-${airlineName.toLowerCase().replace(" ", "-")}`}
                           name="flight-airlines"
                           type="checkbox"
-                          value={airlineName.toLowerCase().replace(" ", "-")}
+                          value={airlineName}
+                          checked={filters.airlines.includes(airlineName)}
+                          onChange={(e) => {
+                            const newAirlines = e.target.checked
+                              ? [...filters.airlines, airlineName]
+                              : filters.airlines.filter((a) => a !== airlineName);
+                            updateFilter("airlines", newAirlines);
+                          }}
                           className="w-4 h-4 rounded border-border text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
                         />
                       </Label>
@@ -437,7 +459,7 @@ export default function FlightList() {
 
             {/* Cabin Class - from static IATA enumeration */}
             <div>
-              <h5 className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-4">
+              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Cabin Class
               </h5>
               <div className="space-y-3">
@@ -454,6 +476,8 @@ export default function FlightList() {
                       name="flight-cabin"
                       type="radio"
                       value={cabin.code.toLowerCase()}
+                      checked={filters.cabinClass === cabin.code.toLowerCase()}
+                      onChange={(e) => updateFilter("cabinClass", e.target.value)}
                       className="w-4 h-4 border-border text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
                     />
                   </Label>
@@ -461,16 +485,18 @@ export default function FlightList() {
               </div>
             </div>
 
-            <div className="mt-8 pt-8 border-t border-border flex gap-4">
+            <div className="mt-8 pt-6 border-t border-border flex gap-4">
               <Button
+                variant="secondary"
                 onClick={() => setActiveFilter(null)}
-                className="flex-1 h-10 bg-muted text-muted-foreground font-bold text-[10px] uppercase tracking-widest rounded-xl hover:bg-muted/80 gap-4"
+                className="flex-1"
               >
                 Reset
               </Button>
               <Button
+                variant="primary"
                 onClick={() => setActiveFilter(null)}
-                className="flex-[2] h-10 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-[hsl(var(--primary)/0.9)] shadow-lg shadow-purple-100 gap-4"
+                className="flex-[2]"
               >
                 Apply Filter
               </Button>
@@ -498,11 +524,10 @@ export default function FlightList() {
                 variant="outline"
                 size="md"
                 onClick={() => toggleFilter("price")}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                  activeFilter === "price"
-                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
-                    : "bg-card border-border text-muted-foreground hover:border-border/80"
-                }`}
+                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${activeFilter === "price"
+                  ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
+                  : "bg-card border-border text-muted-foreground hover:border-border/80"
+                  }`}
               >
                 Price Range
                 <ChevronDown
@@ -516,11 +541,10 @@ export default function FlightList() {
                 variant="outline"
                 size="md"
                 onClick={() => toggleFilter("time")}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                  activeFilter === "time"
-                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
-                    : "bg-card border-border text-muted-foreground hover:border-border/80"
-                }`}
+                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${activeFilter === "time"
+                  ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
+                  : "bg-card border-border text-muted-foreground hover:border-border/80"
+                  }`}
               >
                 Departure Time
                 <ChevronDown
@@ -534,11 +558,10 @@ export default function FlightList() {
                 variant="outline"
                 size="md"
                 onClick={() => toggleFilter("stops")}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                  activeFilter === "stops"
-                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
-                    : "bg-card border-border text-muted-foreground hover:border-border/80"
-                }`}
+                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${activeFilter === "stops"
+                  ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
+                  : "bg-card border-border text-muted-foreground hover:border-border/80"
+                  }`}
               >
                 Stops
                 <ChevronDown
@@ -554,11 +577,10 @@ export default function FlightList() {
                 variant="outline"
                 size="md"
                 onClick={() => toggleFilter("more")}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
-                  activeFilter === "more"
-                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
-                    : "bg-card border-border text-muted-foreground hover:border-border/80"
-                }`}
+                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${activeFilter === "more"
+                  ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]"
+                  : "bg-card border-border text-muted-foreground hover:border-border/80"
+                  }`}
               >
                 <SlidersHorizontal size={14} />
                 More Filters
@@ -577,7 +599,7 @@ export default function FlightList() {
           <div className="flex items-center justify-between mb-8 gap-2">
             <div>
               <h2 className="text-xl font-black text-foreground tracking-tight text-2xl font-semibold tracking-tight">
-                {filteredFlights.length} Flights Found
+                {totalFlights} Flights Found
               </h2>
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
                 Showing best results for your trip
@@ -590,11 +612,13 @@ export default function FlightList() {
               <select
                 id="flight-list-sort"
                 name="flight-list-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
                 className="bg-transparent text-xs font-black text-foreground uppercase tracking-widest outline-none cursor-pointer"
               >
-                <option>Best Value</option>
-                <option>Price: Low to High</option>
-                <option>Duration: Shortest</option>
+                <option value="Best Value">Best Value</option>
+                <option value="Price: Low to High">Price: Low to High</option>
+                <option value="Duration: Shortest">Duration: Shortest</option>
               </select>
             </div>
           </div>
@@ -604,55 +628,56 @@ export default function FlightList() {
               <div className="flex flex-col items-center justify-center py-32 space-y-4">
                 <Loader2
                   size={48}
-                  className="text-[hsl(var(--primary))] animate-spin"
+                  className="text-primary animate-spin"
                 />
-                <p className="text-xs font-black text-muted-foreground uppercase tracking-widest animate-pulse">
+                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider animate-pulse">
                   Searching best flights...
                 </p>
               </div>
             ) : error ? (
-              <div className="text-center py-20 bg-card rounded-[2.5rem] border border-red-100 shadow-sm">
-                <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 gap-2">
-                  <X size={32} className="text-red-400" />
+              <div className="text-center py-20 card shadow-sm">
+                <div className="w-16 h-16 bg-red-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 gap-2">
+                  <X size={28} className="text-red-500" />
                 </div>
-                <h3 className="text-lg font-black text-foreground">
+                <h3 className="text-lg font-bold text-foreground">
                   Search Failed
                 </h3>
-                <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-wide max-w-xs mx-auto">
+                <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">
                   {error}
                 </p>
                 <Button
+                  variant="primary"
                   onClick={() => window.location.reload()}
-                  className="mt-8 bg-foreground hover:bg-foreground/80 text-background rounded-xl text-xs font-black uppercase tracking-widest px-8 py-4"
+                  className="mt-6"
                 >
                   Try Again
                 </Button>
               </div>
-            ) : filteredFlights.length > 0 ? (
-              filteredFlights.map((flight, index) => (
+            ) : flights.length > 0 ? (
+              flights.map((flight, index) => (
                 <div
                   key={flight.id}
                   data-testid={`flight-result-card-${index}`}
                   onClick={() => handleBookNow(flight)}
-                  className="group relative bg-card rounded-[2.5rem] p-1 shadow-sm hover:shadow-2xl hover:shadow-border/50 transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                  className="group relative card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
                 >
-                  <div className="absolute top-8 right-8 z-10">
+                  <div className="absolute top-6 right-6 z-10">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover: hover:bg-red-50 transition-all gap-2"
+                      className="w-10 h-10 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
                     >
                       <Heart size={18} />
                     </Button>
                   </div>
 
-                  <div className="p-8 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+                  <div className="p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-8">
                     {/* Airline Logo & Info */}
-                    <div className="flex flex-col items-center md:items-start gap-4 min-w-[140px]">
+                    <div className="flex flex-col items-center md:items-start gap-3 min-w-[120px]">
                       <img
                         src={getAirlineLogo(flight)}
                         alt={flight.airline}
-                        className="h-16 w-16 object-contain rounded-2xl bg-card p-2 shadow-sm border border-border/40"
+                        className="h-12 w-12 object-contain rounded-xl bg-background p-1.5 border border-border"
                         onError={(e) => {
                           // Fallback if logo fails
                           (e.target as HTMLImageElement).src =
@@ -660,10 +685,10 @@ export default function FlightList() {
                         }}
                       />
                       <div className="text-center md:text-left">
-                        <h3 className="text-sm font-black text-foreground text-xl font-semibold tracking-tight">
+                        <h3 className="text-base font-bold text-foreground">
                           {flight.airline}
                         </h3>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest">
+                        <p className="text-xs font-semibold text-muted-foreground mt-0.5">
                           {flight.flightNumber}
                         </p>
                       </div>
@@ -767,18 +792,19 @@ export default function FlightList() {
                     </div>
 
                     {/* Price & Action */}
-                    <div className="flex flex-col items-center gap-4 min-w-[160px] pl-8 border-l border-dashed border-border">
+                    <div className="flex flex-col items-center gap-3 min-w-[140px] pl-6 border-l border-border/50">
                       <div className="text-center">
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">
                           Economy From
                         </p>
-                        <p className="text-3xl font-black text-foreground tracking-tighter">
+                        <p className="text-2xl font-bold text-foreground">
                           {formatCurrency(flight.amount)}
                         </p>
                       </div>
                       <Button
-                        onClick={() => handleBookNow(flight)}
-                        className="w-full h-12 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-[hsl(var(--primary-foreground))] rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-border hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95"
+                        variant="primary"
+                        onClick={(e) => { e.stopPropagation(); handleBookNow(flight); }}
+                        className="w-full"
                       >
                         Select Flight
                       </Button>
@@ -841,6 +867,8 @@ export default function FlightList() {
                       maxPrice: 10000,
                       stops: [],
                       time: [],
+                      airlines: [],
+                      cabinClass: "",
                     })
                   }
                   className="mt-8 bg-foreground hover:bg-foreground/80 text-background rounded-xl text-xs font-black uppercase tracking-widest px-8 py-4"
@@ -919,6 +947,7 @@ export default function FlightList() {
         <AncillaryPopup
           isOpen={isAncillaryOpen}
           onClose={() => setIsAncillaryOpen(false)}
+          selectedServices={selectedAncillaries}
           title="Customize Your Trip"
           // Dynamic mapping of ancillaries from API
           services={selectedFlight.ancillaries?.map((s) => ({
@@ -936,11 +965,14 @@ export default function FlightList() {
                   children: parseInt(searchParams.get("children") || "0"),
                   infants: parseInt(searchParams.get("infants") || "0"),
                 },
+                selectedAncillaries,
               },
             })
           }
           onToggleService={(id) => {
-            console.log("Toggled service", id);
+            setSelectedAncillaries((prev) =>
+              prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+            );
           }}
         />
       )}

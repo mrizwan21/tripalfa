@@ -59,8 +59,6 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-# Commit: .env.example (master template), docker-compose.local.yml (primary compose file)
-# Ignore: .env* files with actual credentials
 .env
 .env.test
 .env.local
@@ -68,7 +66,6 @@ jspm_packages/
 .env.services
 .env.staging
 .env.*.local
-.env.docker.local
 .env.staticdb.local
 
 # Secrets folder - never commit
@@ -165,6 +162,8 @@ playwright-report/
 test-results/
 **/playwright-report/
 **/test-results/
+# Playwright auth state (generated at runtime — do not commit)
+**/tests/fixtures/storageState.json
 
 #Ignore vscode AI rules
 
@@ -173,3 +172,14 @@ docs/archive/
 
 # Session/timestamped documentation files (keep only essential ones)
 [0-9]*-*.md
+
+# Cache and monitoring
+.npm-cache/
+.npm-temp/
+.monitoring-data/
+
+# Database
+database/static-db/backups/
+
+# Large data files
+infrastructure/scripts/hotelbeds/

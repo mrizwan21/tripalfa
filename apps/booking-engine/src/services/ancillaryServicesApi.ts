@@ -90,7 +90,7 @@ class AncillaryServicesApi {
     serviceType?: ServiceType,
   ): Promise<AncillaryServiceResponse> {
     const result = await api.get<any>(
-      `/bookings/ancillary/services?offerId=${offerId}${serviceType ? `&serviceType=${serviceType}` : ""}`,
+      `/api/flights/ancillary/services?offerId=${offerId}${serviceType ? `&serviceType=${serviceType}` : ""}`,
     );
     return result;
   }
@@ -105,7 +105,7 @@ class AncillaryServicesApi {
     serviceType?: ServiceType,
   ): Promise<AncillaryServiceResponse & { currentServices: Service[] }> {
     const result = await api.get<any>(
-      `/bookings/ancillary/services?orderId=${orderId}${serviceType ? `&serviceType=${serviceType}` : ""}`,
+      `/api/flights/ancillary/services?orderId=${orderId}${serviceType ? `&serviceType=${serviceType}` : ""}`,
     );
     return result;
   }
@@ -130,7 +130,7 @@ class AncillaryServicesApi {
     servicesCount: number;
     timestamp: string;
   }> {
-    const result = await api.post<any>("/bookings/ancillary/services/select", {
+    const result = await api.post<any>("/api/flights/ancillary/services/select", {
       offerId,
       services,
     });
@@ -157,7 +157,7 @@ class AncillaryServicesApi {
     servicesCount: number;
     timestamp: string;
   }> {
-    const result = await api.post<any>("/bookings/ancillary/services/select", {
+    const result = await api.post<any>("/api/flights/ancillary/services/select", {
       orderId,
       services,
     });
@@ -173,7 +173,7 @@ class AncillaryServicesApi {
     timestamp: string;
   }> {
     const result = await api.get<any>(
-      "/bookings/ancillary/services/categories",
+      "/api/flights/ancillary/services/categories",
     );
     return result;
   }
@@ -187,7 +187,7 @@ class AncillaryServicesApi {
     timestamp: string;
   }> {
     const result = await api.get<any>(
-      `/bookings/ancillary/services/details/${serviceId}`,
+      `/api/flights/ancillary/services/details/${serviceId}`,
     );
     return result;
   }
@@ -211,7 +211,7 @@ export async function getServiceDetails(serviceId: string): Promise<{
   timestamp: string;
 }> {
   const result = await api.get<any>(
-    `/api/bookings/ancillary/services/details?serviceId=${serviceId}`,
+    `/api/flights/ancillary/services/details?serviceId=${serviceId}`,
   );
   return result;
 }

@@ -25,7 +25,7 @@ import { API_BASE_URL, API_ENDPOINTS } from "./constants";
 // STATIC DATA - Direct PostgreSQL Access (Not through API Manager)
 // ============================================================================
 // Hotel static data - imported from centralized constants
-// Primary source: PostgreSQL static-data-service running in Docker container
+// Primary source: PostgreSQL static-data-service running locally on port 3002
 // Frontend fetches directly from /static/* endpoint (no API manager routing)
 import {
   HOTEL_STATIC_DATA,
@@ -33,23 +33,16 @@ import {
 } from "./constants/hotel-static-data";
 
 /**
- * Static data service endpoint (DEPRECATED - static-data-service deleted).
- *
- * The /static/* calls now fail and trigger in-memory fallbacks.
- * Static data comes from packages/static-data constants (HOTEL_STATIC_DATA, etc.)
- *
- * @deprecated - kept for reference, actual data from in-memory fallbacks
+ * Static data fetch wrapper.
+ * Routes through the APIManager gateway to the booking-engine-service's /api/static/* endpoints.
  */
-const STATIC_SVC = "/static";
-
-/** Thin fetch wrapper for the static-data-service */
 async function staticFetch<T = any>(path: string): Promise<T> {
-  const res = await fetch(`${STATIC_SVC}${path}`, {
+  const res = await fetch(`${API_BASE_URL}/api/static${path}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     signal: AbortSignal.timeout(8000),
   });
-  if (!res.ok) throw new Error(`static-svc ${res.status} for ${path}`);
+  if (!res.ok) throw new Error(`API Gateway static route ${res.status} for ${path}`);
   const json = await res.json();
   // Handle case where service returns 200 OK with { error: "Not found" }
   if (
@@ -512,7 +505,7 @@ async function fetchLiteAPIPopularDestinations(limit = 12) {
  * Fetch popular destinations for homepage from PostgreSQL.
  * Falls back to LiteAPI, then to in-memory static data.
  */
-export async function fetchPopularDestinationsDB(limit = 12) {
+export async function fetchPopularDestinations(limit = 12) {
   try {
     const res = await staticFetch<{ data: any[] }>(
       `/popular-destinations?limit=${limit}`,
@@ -520,17 +513,21 @@ export async function fetchPopularDestinationsDB(limit = 12) {
     if (res?.data && res.data.length > 0) return res.data;
   } catch (e) {
     console.warn(
-      "[fetchPopularDestinationsDB] DB fetch failed, attempting LiteAPI fallback:",
+      "[fetchPopularDestinations] DB fetch failed, attempting LiteAPI fallback:",
       e,
     );
   }
   // Fallback to LiteAPI
-  const liteAPIData = await fetchLiteAPIPopularDestinations(limit);
-  if (liteAPIData.length > 0) return liteAPIData;
+  try {
+    const liteAPIData = await fetchLiteAPIPopularDestinations(limit);
+    if (liteAPIData && liteAPIData.length > 0) return liteAPIData;
+  } catch (e) {
+    console.warn("[fetchPopularDestinations] LiteAPI fallback failed:", e);
+  }
 
   // Final fallback to static data
-  console.debug("[fetchPopularDestinationsDB] Using static fallback data");
-  return HOTEL_STATIC_DATA.POPULAR_DESTINATIONS.slice(0, limit) as any[];
+  console.debug("[fetchPopularDestinations] Using static fallback data");
+  return (HOTEL_STATIC_DATA.POPULAR_DESTINATIONS || []).slice(0, limit) as any[];
 }
 
 /**
@@ -973,22 +970,26 @@ export async function fetchHotelChains() {
 }
 
 /**
- * Fetch popular hotel destinations from PostgreSQL (via static-data-service).
- * Falls back to in-memory static data on error.
+ * Fetch initial suggestions for autocomplete components.
+ * Returns popular airports/cities when the user hasn't typed anything yet.
  */
-export async function fetchPopularDestinations(limit = 20) {
+export async function fetchInitialSuggestions(limit = 10) {
   try {
-    const res = await staticFetch<{ data: any[] }>(
-      `/popular-destinations?limit=${limit}`,
-    );
-    if (res?.data && res.data.length > 0) return res.data;
+    // We can use popular destinations as a proxy for initial suggestions
+    const destinations = await fetchPopularDestinations(limit);
+    return destinations.map((d: any) => ({
+      type: "AIRPORT" as const, // Or CITY, mapping depends on what the destination object looks like
+      icon: "plane",
+      title: d.city || d.name,
+      subtitle: d.country || "",
+      code: d.iata_code || d.code || "",
+      city: d.city,
+      country: d.country,
+    }));
   } catch (error) {
-    console.warn(
-      "[fetchPopularDestinations] DB fetch failed, using static fallback:",
-      error,
-    );
+    console.warn("[fetchInitialSuggestions] failed:", error);
+    return [];
   }
-  return HOTEL_STATIC_DATA.POPULAR_DESTINATIONS;
 }
 
 /**
@@ -1132,62 +1133,43 @@ export async function searchFlights(params: any) {
       "[api.ts] SEARCH FLIGHTS: Attempting API Gateway request to /search/flights",
     );
     // Delegate to API Gateway (which uses DuffelAdapter with backend keys)
-    const response = await api.post("/search/flights", payload);
-    console.log("[api.ts] API Gateway response received:", response);
 
-    // The backend's DuffelAdapter already transforms the response to FlightResult[]
-    // Check if response is already transformed (has airline/carrierCode properties)
-    // or if it's raw Duffel format (needs mapDuffelResponse)
-    const results = Array.isArray(response)
-      ? response
-      : response.data || response.offers || [];
+    // Retry logic for transient network failures
+    const MAX_RETRIES = 2;
+    const BASE_DELAY = 1000;
+    let lastError: any;
 
-    if (results.length > 0 && results[0].carrierCode && !results[0].slices) {
-      // Already transformed by backend - use directly
-      console.log(
-        "[api.ts] Using pre-transformed backend response, flights:",
-        results.length,
-      );
-      return results;
-    }
-
-    // Raw Duffel format - needs transformation
-    console.log("[api.ts] Raw Duffel format detected, transforming offers...");
-    const offers = response.data?.offers || response.offers || results || [];
-    console.log(
-      "[api.ts] Extracted offers count:",
-      Array.isArray(offers) ? offers.length : "N/A",
-    );
-    return mapDuffelResponse({ offers: Array.isArray(offers) ? offers : [] });
-  } catch (error: any) {
-    console.error("[api.ts] API Gateway search failed:", {
-      message: error?.message,
-      status: error?.status,
-      toString: String(error),
-    });
-
-    // Fallback: try again with explicit logging
-    console.log("[api.ts] Retrying API Gateway with enhanced diagnostics...");
-    try {
-      const response = await api.post("/search/flights", payload);
-      console.log("[api.ts] Retry successful");
-
-      // Same check for transformed vs raw response
-      const results = Array.isArray(response)
-        ? response
-        : response.data || response.offers || [];
-      if (results.length > 0 && results[0].carrierCode && !results[0].slices) {
-        return results;
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const response = await api.post("/search/flights", payload);
+        console.log("[api.ts] API Gateway response session received:", response);
+        return response;
+      } catch (error: any) {
+        lastError = error;
+        if (attempt < MAX_RETRIES) {
+          const delay = BASE_DELAY * Math.pow(2, attempt); // exponential backoff
+          console.log(`[api.ts] Flight search attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-
-      const offers = response.data?.offers || response.offers || results || [];
-      return mapDuffelResponse({ offers: Array.isArray(offers) ? offers : [] });
-    } catch (retryError: any) {
-      console.error("[api.ts] Retry also failed:", retryError?.message);
-      throw new Error(
-        `Flight search failed after retry: ${error?.message || "Unknown error"}`,
-      );
     }
+
+    console.error("[api.ts] API Gateway search failed after retries:", lastError);
+    throw new Error(`Flight search failed: ${lastError?.message || "Unknown error"}`);
+  } catch (error: any) {
+    console.error("[api.ts] API Gateway search failed:", error);
+    throw new Error(`Flight search failed: ${error?.message || "Unknown error"}`);
+  }
+}
+
+export async function fetchFlightResults(searchId: string, params: any = {}) {
+  try {
+    console.log(`[api.ts] Fetching flight results for session ${searchId} with params:`, params);
+    const response = await api.post(`/search/flights/results/${searchId}`, params);
+    return response;
+  } catch (error: any) {
+    console.error("[api.ts] fetchFlightResults error:", error);
+    throw new Error(`Failed to fetch flight results: ${error?.message || "Unknown error"}`);
   }
 }
 
@@ -1608,7 +1590,7 @@ export async function fetchSuggestions(
     // Use a short 1.5s timeout for autocomplete — fast fallback is better than slow waiting
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 1500);
-    const res = await fetch(`${STATIC_SVC}/suggestions${qs}`, {
+    const res = await fetch(`${API_BASE_URL}/api/static/suggestions${qs}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
@@ -2290,12 +2272,12 @@ function safeLog(...args: any[]) {
   if (isProd) return; // no-op in prod
   try {
     console.log(...args);
-  } catch {}
+  } catch { }
 }
 function safeError(...args: any[]) {
   try {
     console.error(...args);
-  } catch {}
+  } catch { }
 }
 
 // Helper to call real backend; returns parsed JSON or throws, with timeout and normalization
@@ -2331,7 +2313,9 @@ async function remoteFetch(path: string, opts: RequestInit = {}) {
       try {
         const j = JSON.parse(raw);
         msg = j.message || j.error || raw;
-      } catch {}
+      } catch (parseError) {
+        // Raw response is not valid JSON, use raw text
+      }
       const err: any = new Error(msg || `HTTP ${res.status}`);
       err.status = res.status;
       err.statusText = res.statusText;
@@ -2392,7 +2376,7 @@ async function apiGetWithRetry<T = any>(
   baseDelay = 300,
 ): Promise<T> {
   let attempt = 0;
-  for (;;) {
+  for (; ;) {
     try {
       return await remoteFetch(path, { method: "GET" });
     } catch (err: any) {

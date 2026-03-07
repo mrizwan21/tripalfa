@@ -134,7 +134,7 @@ class HotelBookingWorkflowOrchestrator {
     walletApiUrl =
       import.meta.env.VITE_API_URL ||
       process.env.API_GATEWAY_URL ||
-      "http://localhost:3000/api",
+      "http://localhost:3001/api",
     verbose = false,
     authToken: string | null = null,
   ) {
@@ -799,9 +799,8 @@ class HotelBookingWorkflowOrchestrator {
               </table>
             </div>
 
-            ${
-              customerCurrency !== hotelCurrency
-                ? `
+            ${customerCurrency !== hotelCurrency
+        ? `
             <div class="fx-section">
               <div class="section-title">Currency Conversion</div>
               <table>
@@ -811,8 +810,8 @@ class HotelBookingWorkflowOrchestrator {
               </table>
             </div>
             `
-                : ""
-            }
+        : ""
+      }
 
             <div class="section">
               <div class="section-title">Payment Method</div>

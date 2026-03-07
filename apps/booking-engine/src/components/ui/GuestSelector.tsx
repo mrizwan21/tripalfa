@@ -62,7 +62,7 @@ export function GuestSelector() {
           <div className="w-full h-full relative group cursor-pointer">
             <Button
               variant="outline"
-              className="w-full h-full flex items-center justify-between gap-2 bg-white px-4 rounded-xl border-2 border-gray-100 hover:border-gray-200 focus:border-[hsl(var(--primary))] text-left transition-all"
+              className="w-full h-full flex items-center justify-between gap-2 bg-card px-4 rounded-xl border-2 border-border hover:border-border/80 focus:border-[hsl(var(--primary))] text-left transition-all"
             >
               <span className="flex-1 text-gray-800 font-bold text-sm truncate gap-4">
                 {displayText}

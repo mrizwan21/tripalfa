@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS _backup_commission_rules AS SELECT * FROM commission_
 CREATE TABLE IF NOT EXISTS _backup_commission_settlements AS SELECT * FROM commission_settlements WHERE 1=0;
 
 -- Backup current data (only if tables have data and backups are empty)
-DO $
+DO $$
 BEGIN
     -- Backup markup_rules
     IF EXISTS (SELECT 1 FROM markup_rules LIMIT 1) AND 
@@ -46,7 +46,7 @@ BEGIN
         INSERT INTO _backup_commission_settlements SELECT * FROM commission_settlements;
         RAISE NOTICE 'Backed up commission_settlements: % rows', (SELECT COUNT(*) FROM commission_settlements);
     END IF;
-END $;
+END $$;
 
 -- ============================================
 -- MARKUP_RULES TABLE MIGRATION

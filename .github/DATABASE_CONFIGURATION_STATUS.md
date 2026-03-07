@@ -31,7 +31,7 @@
 DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@your-neon-host.neon.tech/neondb?sslmode=require&pgbouncer=true&connection_limit=20"
 DIRECT_DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@your-neon-host.neon.tech/neondb?sslmode=require"
 
-# Local Docker Static Database (Reference Data: flight + hotel)
+# Local Static Database (Reference Data: flight + hotel)
 STATIC_DATABASE_URL="postgresql://postgres:postgres@localhost:5433/staticdatabase"
 
 # Redis Cache
@@ -71,7 +71,7 @@ ENABLE_LOYALTY=true
 ### 1. `.env` File (Root)
 
 - ✅ Updated to use Neon for DATABASE_URL and DIRECT_DATABASE_URL
-- ✅ STATIC_DATABASE_URL points to local Docker staticdatabase (port 5433)
+- ✅ STATIC_DATABASE_URL points to local PostgreSQL instance on port 5433
 - ✅ Redis configured to localhost:6379 (development)
 
 ### 2. `packages/shared-database/src/index.ts`

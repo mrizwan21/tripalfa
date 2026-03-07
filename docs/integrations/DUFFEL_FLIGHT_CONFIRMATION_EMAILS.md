@@ -4,7 +4,7 @@
 
 This document outlines the implementation of flight booking confirmation emails based on Duffel's best practices for handling flight booking confirmation emails.
 
-**Reference**: https://duffel.com/docs/guides/handling-flight-booking-confirmation-emails
+**Reference**: <https://duffel.com/docs/guides/handling-flight-booking-confirmation-emails>
 
 ## Implementation Summary
 
@@ -48,7 +48,7 @@ Updated `handleOrderCreated()` to:
 
 ## Data Flow
 
-```
+```text
 Duffel API (order.created webhook)
          ↓
 booking-service (webhooks.ts)
@@ -71,7 +71,7 @@ Customer receives confirmation email
 
 ### Send Flight Confirmation
 
-```
+```text
 POST /api/notifications/flight/confirmation
 
 Request Body:
@@ -116,7 +116,7 @@ Response:
 
 ### Webhook Endpoint
 
-```
+```text
 POST /api/notifications/flight/confirmation/webhook
 
 Request Body:
@@ -244,6 +244,6 @@ The implementation uses the following environment variables:
 ## Related Documentation
 
 - [Duffel API Integration](./DUFFEL_API_INTEGRATION.md)
-- [Duffel Webhooks](./DUFFEL_WEBHOOKS.md)
+- [Duffel Flight Amendment Features](./DUFFEL_FLIGHT_AMENDMENT_FEATURES.md)
 - [Flight Amendment Features](./DUFFEL_FLIGHT_AMENDMENT_FEATURES.md)
-- [Notification Service](../services/notification-service/README.md)
+- [API Documentation](../API_DOCUMENTATION.md)

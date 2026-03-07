@@ -633,7 +633,7 @@ For issues or questions:
 1. Check the README.md
 2. Review example code in `/examples`
 3. Check test files in `/__tests__`
-4. Contact: dev-team@tripalfa.com
+4. Contact: <dev-team@tripalfa.com>
 
 ---
 

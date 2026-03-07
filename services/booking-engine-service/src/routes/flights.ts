@@ -1,56 +1,24 @@
 import { Router, Response } from "express";
 import prisma, { Decimal } from "../database.js";
-import { Prisma } from "@prisma/client";
+import { staticDbPool } from "../static-db.js";
 import { validateDuffelId } from "../utils/validation.js";
+import { duffelClient } from "../utils/duffelClient.js";
 
 const router: Router = Router();
 
-// Duffel API configuration
-const DUFFEL_API_URL = process.env.DUFFEL_API_URL || "https://api.duffel.com";
-const DUFFEL_API_KEY =
-  process.env.DUFFEL_API_KEY || process.env.DUFFEL_TEST_TOKEN;
-const DUFFEL_VERSION = "v2";
-
-// Helper to make authenticated Duffel API requests
-async function duffelApi<T>(
-  endpoint: string,
-  method: string = "GET",
-  body?: object,
-): Promise<T> {
-  const url = `${DUFFEL_API_URL}${endpoint}`;
-  const response = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${DUFFEL_API_KEY}`,
-      "Duffel-Version": DUFFEL_VERSION,
-      "Content-Type": "application/json",
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Duffel API Error (${response.status}): ${errorText}`);
-  }
-
-  return response.json();
-}
-
-// POST /api/flights/search - Search for flights
-// Implements Duffel Best Practices: https://duffel.com/docs/guides/following-search-best-practices
+// POST /api/flights/search - Create an offer request
 router.post("/search", async (req, res: Response) => {
   try {
-    // Extract search parameters including Duffel best practice options
     const {
       slices,
       passengers,
       cabin_class = "economy",
-      // Duffel best practice parameters
       max_connections,
       direct_flights,
       max_price,
       sort_by,
       return_available_services = true,
+      userId
     } = req.body;
 
     if (!slices || !Array.isArray(slices) || slices.length === 0) {
@@ -73,16 +41,6 @@ router.post("/search", async (req, res: Response) => {
       type: p.type || "adult", // Default to adult if not specified
     }));
 
-    console.log("[Flights] Searching flights:", {
-      slices,
-      passengers: normalizedPassengers,
-      cabin_class,
-      max_connections,
-      direct_flights,
-      max_price,
-      sort_by,
-    });
-
     // Build offer request with Duffel best practices
     const offerRequestData: any = {
       slices,
@@ -91,102 +49,68 @@ router.post("/search", async (req, res: Response) => {
       return_available_services,
     };
 
-    // Apply Duffel best practice filters
-    if (max_connections !== undefined) {
-      // Limit number of connections (0 = direct only)
-      offerRequestData.max_connections = parseInt(max_connections, 10);
-    }
+    if (max_connections !== undefined) offerRequestData.max_connections = parseInt(max_connections, 10);
+    if (direct_flights === true) offerRequestData.max_connections = 0;
+    if (max_price) offerRequestData.max_price = {
+      amount: parseFloat(max_price.amount || max_price),
+      currency: max_price.currency || "USD",
+    };
 
-    if (direct_flights === true) {
-      // Request only direct flights - shorthand for max_connections: 0
-      offerRequestData.max_connections = 0;
-    }
-
-    if (max_price) {
-      // Set maximum price to filter expensive flights
-      offerRequestData.max_price = {
-        amount: parseFloat(max_price.amount || max_price),
-        currency: max_price.currency || "USD",
-      };
-    }
-
-    if (sort_by) {
-      // Sort results: 'total_amount' (cheapest), 'duration' (fastest), 'departure', 'arrival'
-      offerRequestData.sort_by = sort_by;
-    }
-
-    // Create offer request in Duffel
-    const duffelResponse = await duffelApi<any>("/air/offer_requests", "POST", {
+    // 1. Create offer request in Duffel via dedicated client
+    const duffelResponse = await duffelClient.post("/air/offer_requests", {
       data: offerRequestData,
     });
 
-    const offers = duffelResponse.data?.offers || [];
-    const offerRequestId = duffelResponse.data?.id;
+    const offerRequestResponse = duffelResponse.data;
+    const offers = offerRequestResponse.offers || [];
 
-    // Store offer request in database
-    await prisma.duffelOfferRequest.create({
-      data: {
-        externalId: offerRequestId,
-        slices: slices,
-        passengers: passengers,
-        cabinClass: cabin_class,
-        offersCount: offers.length,
-        expiresAt: duffelResponse.data?.expires_at
-          ? new Date(duffelResponse.data.expires_at)
-          : null,
-        status: "completed",
-      },
-    });
+    // 2. Persist Offer Request in our Neon Database
+    // Only attempt if the Prisma model is available (after migration)
+    if ('duffelOfferRequest' in prisma) {
+      try {
+        await (prisma as any).duffelOfferRequest.create({
+          data: {
+            id: offerRequestResponse.id,
+            userId: userId || null,
+            origin: slices[0].origin,
+            destination: slices[0].destination,
+            departureDate: new Date(slices[0].departure_date),
+            returnDate: slices.length > 1 ? new Date(slices[1].departure_date) : null,
+            passengers: normalizedPassengers,
+            cabinClass: cabin_class,
+            rawResponse: offerRequestResponse,
+          }
+        });
+      } catch (e) { console.warn('Could not save DuffelOfferRequest to Neon DB (Migration pending)', e); }
+    }
 
-    // Transform offers for frontend
-    const transformedOffers = offers.map((offer: any) => {
-      const firstSlice = offer.slices?.[0];
-      const firstSegment = firstSlice?.segments?.[0];
-      const lastSegment =
-        firstSlice?.segments?.[firstSlice.segments.length - 1];
+    // 3. Persist individual Offers in Neon Database
+    if ('duffelOffer' in prisma && offers.length > 0) {
+      try {
+        await (prisma as any).duffelOffer.createMany({
+          data: offers.map((o: any) => ({
+            id: o.id,
+            offerRequestId: offerRequestResponse.id,
+            totalAmount: new Decimal(o.total_amount),
+            taxAmount: new Decimal(o.tax_amount),
+            currency: o.total_currency,
+            ownerId: o.owner.iata_code,
+            expiresAt: new Date(o.expires_at),
+            rawResponse: o
+          })),
+          skipDuplicates: true
+        });
+      } catch (e) { console.warn('Could not save DuffelOffers to Neon DB (Migration pending)', e); }
+    }
 
-      return {
-        id: offer.id,
-        offerId: offer.id,
-        airline:
-          firstSegment?.operating_carrier?.name ||
-          firstSegment?.marketing_carrier?.name ||
-          "Unknown",
-        flightNumber: firstSegment?.marketing_carrier_flight_number || "",
-        carrierCode: firstSegment?.marketing_carrier?.iata_code || "",
-        departureTime: firstSegment?.departing_at || "",
-        arrivalTime: lastSegment?.arriving_at || "",
-        origin: firstSegment?.origin?.iata_code || "",
-        destination: lastSegment?.destination?.iata_code || "",
-        duration: firstSlice?.duration || "",
-        stops: (firstSlice?.segments?.length || 1) - 1,
-        amount: parseFloat(offer.total_amount) || 0,
-        currency: offer.total_currency || "USD",
-        cabin: firstSegment?.passengers?.[0]?.cabin_class || cabin_class,
-        refundable: offer.conditions?.refund_before_departure?.allowed || false,
-        segments:
-          firstSlice?.segments?.map((seg: any) => ({
-            origin: seg.origin?.iata_code,
-            destination: seg.destination?.iata_code,
-            departureTime: seg.departing_at,
-            arrivalTime: seg.arriving_at,
-            carrierCode: seg.marketing_carrier?.iata_code,
-            flightNumber: seg.marketing_carrier_flight_number,
-            carrier: seg.marketing_carrier?.name,
-            duration: seg.duration,
-            aircraft: seg.aircraft?.name,
-          })) || [],
-        rawOffer: offer,
-      };
-    });
 
     res.json({
       success: true,
       data: {
-        offers: transformedOffers,
-        offerRequestId,
-        expiresAt: duffelResponse.data?.expires_at,
-        total: transformedOffers.length,
+        offers: offers,
+        offerRequestId: offerRequestResponse.id,
+        expiresAt: offerRequestResponse.expires_at,
+        total: offers.length,
       },
     });
   } catch (error: any) {
@@ -205,7 +129,7 @@ router.get("/offers/:offerId", async (req, res: Response) => {
     const { offerId } = req.params;
     const safeOfferId = validateDuffelId(offerId);
 
-    const duffelResponse = await duffelApi<any>(`/air/offers/${safeOfferId}`);
+    const duffelResponse = await duffelClient.get(`/air/offers/${safeOfferId}`);
 
     res.json({
       success: true,
@@ -216,6 +140,34 @@ router.get("/offers/:offerId", async (req, res: Response) => {
     res.status(500).json({
       success: false,
       error: "Failed to get offer details",
+    });
+  }
+});
+
+// POST /api/flights/offers/:offerId/price - Price an offer with intended payment methods
+router.post("/offers/:offerId/price", async (req, res: Response) => {
+  try {
+    const { offerId } = req.params;
+    const safeOfferId = validateDuffelId(offerId);
+    const { payment_type = 'arc_bsp_cash' } = req.body;
+
+    const duffelResponse = await duffelClient.post(`/air/offers/${safeOfferId}/actions/price`, {
+      data: {
+        payment: {
+          type: payment_type
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: duffelResponse.data,
+    });
+  } catch (error: any) {
+    console.error("[Flights] Price offer error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to price offer",
     });
   }
 });
@@ -250,7 +202,7 @@ router.post("/book", async (req, res: Response) => {
     });
 
     // Create order in Duffel
-    const duffelResponse = await duffelApi<any>("/air/orders", "POST", {
+    const duffelResponse = await duffelClient.post("/air/orders", {
       data: {
         selected_offers: selectedOffers,
         passengers: passengers.map((p: any) => ({
@@ -422,7 +374,8 @@ router.get("/booking/:bookingRef", async (req, res: Response) => {
     if (metadata?.duffelOrderId) {
       try {
         const safeDuffelOrderId = validateDuffelId(metadata.duffelOrderId);
-        duffelOrder = await duffelApi<any>(`/air/orders/${safeDuffelOrderId}`);
+        const duffelResponse = await duffelClient.get(`/air/orders/${safeDuffelOrderId}`);
+        duffelOrder = duffelResponse.data;
       } catch (e) {
         console.warn("[Flights] Could not fetch Duffel order:", e);
       }
@@ -481,15 +434,12 @@ router.post("/booking/:bookingRef/cancel", async (req, res: Response) => {
     } | null;
     if (cancelMetadata?.duffelOrderId) {
       try {
-        cancellation = await duffelApi<any>(
-          "/air/order_cancellations",
-          "POST",
-          {
-            data: {
-              order_id: cancelMetadata.duffelOrderId,
-            },
+        const duffelResponse = await duffelClient.post("/air/order_cancellations", {
+          data: {
+            order_id: cancelMetadata.duffelOrderId,
           },
-        );
+        });
+        cancellation = duffelResponse.data;
       } catch (e: any) {
         console.warn(
           "[Flights] Could not create Duffel cancellation:",
@@ -548,32 +498,25 @@ router.get("/airports", async (req, res: Response) => {
       });
     }
 
-    const airports = await prisma.airport.findMany({
-      where: {
-        OR: [
-          { iataCode: { contains: search.toString().toUpperCase() } },
-          {
-            name: {
-              contains: search.toString(),
-              mode: Prisma.QueryMode.insensitive,
-            },
-          },
-          {
-            city: {
-              contains: search.toString(),
-              mode: Prisma.QueryMode.insensitive,
-            },
-          },
-        ],
-        isActive: true,
-      },
-      take: 20,
-      orderBy: { name: "asc" },
-    });
+    const query = `
+      SELECT 
+        iata_code as "iataCode", 
+        name, 
+        city_name as city, 
+        true as "isActive"
+      FROM flight.airports
+      WHERE 
+        iata_code ILIKE $1 OR 
+        name ILIKE $1 OR 
+        city_name ILIKE $1
+      ORDER BY name ASC
+      LIMIT 20
+    `;
+    const result = await staticDbPool.query(query, [`%${search}%`]);
 
     res.json({
       success: true,
-      data: airports,
+      data: result.rows,
     });
   } catch (error: any) {
     console.error("[Flights] Airport search error:", error.message);
@@ -589,32 +532,26 @@ router.get("/airlines", async (req, res: Response) => {
   try {
     const { search } = req.query;
 
-    const where = search
-      ? {
-          OR: [
-            { iataCode: { contains: search.toString().toUpperCase() } },
-            {
-              name: {
-                contains: search.toString(),
-                mode: Prisma.QueryMode.insensitive,
-              },
-            },
-          ],
-        }
-      : {};
+    let query = `
+      SELECT 
+        iata_code as "iataCode", 
+        name, 
+        true as "isActive"
+      FROM flight.airlines
+    `;
+    const params = [];
 
-    const airlines = await prisma.airline.findMany({
-      where: {
-        ...where,
-        isActive: true,
-      },
-      take: 50,
-      orderBy: { name: "asc" },
-    });
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` WHERE iata_code ILIKE $1 OR name ILIKE $1`;
+    }
+    query += " ORDER BY name ASC LIMIT 50";
+
+    const result = await staticDbPool.query(query, params);
 
     res.json({
       success: true,
-      data: airlines,
+      data: result.rows,
     });
   } catch (error: any) {
     console.error("[Flights] Airlines fetch error:", error.message);

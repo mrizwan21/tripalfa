@@ -1,29 +1,64 @@
 {
   "name": "@tripalfa/static-data",
   "version": "1.0.0",
-  "description": "Static data and reference data for TripAlfa",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "description": "Static data management package for TripAlfa platform",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    },
-    "./frontend-index": {
-      "types": "./dist/frontend-index.d.ts",
-      "import": "./dist/frontend-index.mjs",
-      "require": "./dist/frontend-index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/frontend-index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/frontend-index.ts --format cjs,esm --dts --watch"
+    "test": "node scripts/comprehensive-system-test.js",
+    "import:hotels": "node scripts/import-uae-hotels.js",
+    "import:cities": "node scripts/import-uae-cities.js",
+    "import:countries": "node scripts/import-uae-countries.js",
+    "import:airports": "node scripts/import-uae-airports.js",
+    "import:all": "npm run import:countries && npm run import:cities && npm run import:airports && npm run import:hotels",
+    "test:summary": "node uaehotels-test-summary.js",
+    "dev": "pnpm dlx tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "dev:watch": "pnpm dlx tsx watch src/server.ts",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix"
   },
-  "dependencies": {},
+  "keywords": [
+    "static-data",
+    "hotels",
+    "uae",
+    "import",
+    "postgresql",
+    "liteapi",
+    "api-server",
+    "express"
+  ],
+  "author": "TripAlfa Team",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pg": "^8.11.3",
+    "node-fetch": "^3.3.2",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5"
+  },
   "devDependencies": {
-    "tsup": "^8.0.0",
-    "typescript": "^5.0.0"
+    "vitest": "^2.1.9",
+    "nodemon": "^3.1.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

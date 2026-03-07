@@ -61,6 +61,8 @@ export interface UseLiteApiHotelsReturn {
   total: number;
   /** Refetch last search */
   refetch: () => Promise<void>;
+  /** Search session ID for applying filters */
+  searchId: string | null;
 }
 
 export interface UseLiteApiHotelRatesOptions {
@@ -221,6 +223,7 @@ export function useLiteApiHotels(
   );
   const [isCached, setIsCached] = useState(false);
   const [total, setTotal] = useState(0);
+  const [searchId, setSearchId] = useState<string | null>(null);
 
   // Refs
   const lastSearchParams = useRef<HotelSearchParams | null>(null);
@@ -273,20 +276,21 @@ export function useLiteApiHotels(
       try {
         const result = await searchHotels(params);
 
-        if (!result.hotels) {
+        if (!result.hotels && !result.searchId) {
           throw new Error("Search failed");
         }
 
-        setHotels(result.hotels);
-        setTotal(result.hotels.length);
+        setSearchId(result.searchId || null);
+        setHotels(result.hotels || []);
+        setTotal(result.total || result.hotels?.length || 0);
         setIsCached(result.cached || false);
 
         // Cache results
-        if (enableCache && result.hotels.length > 0) {
+        if (enableCache && result.hotels && result.hotels.length > 0) {
           setCache(hotelSearchCache, cacheKey, result.hotels);
         }
 
-        onSuccess?.(result.hotels);
+        onSuccess?.(result.hotels || []);
       } catch (err: any) {
         // Ignore abort errors
         if (err.name === "AbortError") return;
@@ -312,6 +316,7 @@ export function useLiteApiHotels(
     setSearchParams(null);
     setIsCached(false);
     setTotal(0);
+    setSearchId(null);
     lastSearchParams.current = null;
   }, []);
 
@@ -341,6 +346,7 @@ export function useLiteApiHotels(
     isCached,
     total,
     refetch,
+    searchId,
   };
 }
 

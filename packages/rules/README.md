@@ -347,6 +347,7 @@ This package consolidates rule management code from:
    ```
 
 4. **Disconnect Gracefully**: Close database connections on shutdown
+
    ```typescript
    process.on("SIGTERM", async () => {
      await pricingEngine.disconnect();

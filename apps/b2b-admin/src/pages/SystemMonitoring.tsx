@@ -43,7 +43,7 @@ import {
 
 // Grafana dashboard URLs (embedded)
 const GRAFANA_BASE_URL =
-  import.meta.env.VITE_GRAFANA_URL || "http://localhost:3009";
+  import.meta.env.VITE_GRAFANA_URL || "http://localhost:3500";
 const GRAFANA_DASHBOARDS = {
   overview: `${GRAFANA_BASE_URL}/d/overview/services-overview?kiosk&theme=light`,
   apiGateway: `${GRAFANA_BASE_URL}/d/api-gateway/api-gateway?kiosk&theme=light`,

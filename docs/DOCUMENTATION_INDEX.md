@@ -2,12 +2,19 @@
 
 This index maps documentation domains to their folder locations.
 
+## Core Entry Points
+
+- [Docs Home](./README.md)
+- [Repository Structure Guide](./REPOSITORY_STRUCTURE.md)
+- [Local Development Guide](./LOCAL_DEVELOPMENT.md)
+- [Project Overview](./README.md)
+
 ## Architecture
 
-- [Microservices Architecture](./architecture/microservices.md)
-- [Resilient Microservices Architecture](./architecture/RESILIENT_MICROSERVICES_ARCHITECTURE.md)
+- [Microservices Architecture](./microservices.md)
+- [Resilient Microservices Architecture](./RESILIENT_MICROSERVICES_ARCHITECTURE.md)
 - [Backend Services](./architecture/BACKEND_SERVICES.md)
-- [Build Optimization](./architecture/BUILD_OPTIMIZATION.md)
+- [Build Optimization](./BUILD_OPTIMIZATION.md)
 
 ## API
 
@@ -37,7 +44,7 @@ This index maps documentation domains to their folder locations.
 
 - [Deployment Guide](./operations/deployment.md)
 - [Deployment Optimization Guide](./operations/deployment-optimization-guide.md)
-- [Phase 1 Quick Reference](./operations/PHASE_1_QUICK_REFERENCE.md)
+- [Phase 1 Quick Reference](./PHASE_1_QUICK_REFERENCE.md)
 
 ## Specs
 
@@ -49,14 +56,12 @@ This index maps documentation domains to their folder locations.
 
 ## Status
 
-- [Booking V2 Implementation Summary](./status/BOOKING_V2_IMPLEMENTATION_SUMMARY.md)
-- [UI Development Status](./status/UI_DEVELOPMENT_STATUS.md)
-- [Flight Amendment Workflow](./status/FLIGHT_AMENDMENT_WORKFLOW.md)
-- [Flight Amendment Testing Quick Reference](./status/FLIGHT_AMENDMENT_TESTING_QUICK_REFERENCE.md)
+- [Booking V2 Implementation Summary](./BOOKING_V2_IMPLEMENTATION_SUMMARY.md)
+- [UI Development Status](./UI_DEVELOPMENT_STATUS.md)
+- [Flight Amendment Workflow](./FLIGHT_AMENDMENT_WORKFLOW.md)
+- [Flight Amendment Testing Quick Reference](./FLIGHT_AMENDMENT_TESTING_QUICK_REFERENCE.md)
 
 ## Structure and Conventions
 
-- [Docs Home](./README.md)
-- [Repository Structure Guide](./REPOSITORY_STRUCTURE.md)
 - [Agent Rules](./AGENT_RULES.md)
-- [Migration Notes](./migrations/LITEAPI_SCHEMA_MIGRATION.md)
+- [Migration Notes](./integrations/LITEAPI_INTEGRATION.md)

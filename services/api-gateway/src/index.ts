@@ -37,7 +37,8 @@ app.get("/health", (req, res) => {
   res.json({ status: "healthy", service: "api-gateway" });
 });
 
-// OAuth routes (no authentication required)
+// OAuth routes - Forward to user-service for authentication
+// Set USE_DOCKER_NETWORK=1 for Docker deployments, leave unset for local development
 app.get("/auth/oauth/google", resolveEndpoint, rateLimit, forwardRequest);
 app.get("/auth/oauth/facebook", resolveEndpoint, rateLimit, forwardRequest);
 app.get("/auth/oauth/apple", resolveEndpoint, rateLimit, forwardRequest);
@@ -375,25 +376,7 @@ app.all(
   forwardRequest,
 );
 
-// Legacy static data routes - forward to new endpoints with deprecation headers
-app.all(
-  /^\/static-data\/.*/,
-  (req, res, next) => {
-    console.warn(
-      `[DEPRECATED] ${req.method} ${req.path} - ${DEPRECATION_WARNING}`,
-    );
-    res.setHeader("X-Deprecation-Warning", DEPRECATION_WARNING);
-    res.setHeader("X-Deprecation-Date", "2025-06-01");
-    res.setHeader("X-Deprecation-Migration", "Use /api/static/* instead");
-    // Rewrite path to new endpoint
-    req.url = req.url.replace("/static-data/", "/api/static/");
-    next();
-  },
-  resolveEndpoint,
-  checkAuth,
-  rateLimit,
-  forwardRequest,
-);
+
 
 // API Gateway Routes - All API requests go through the gateway middleware
 // Using regex to match all /api/* paths

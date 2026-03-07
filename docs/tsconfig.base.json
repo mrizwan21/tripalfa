@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM"],
+    "jsx": "react-jsx",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "Node16",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@tripalfa/shared-types": ["packages/shared-types"],
+      "@tripalfa/shared-types/*": ["packages/shared-types/*"],
+      "@tripalfa/shared-utils": ["packages/shared-utils"],
+      "@tripalfa/shared-utils/*": ["packages/shared-utils/*"],
+      "@tripalfa/shared-database": ["packages/shared-database"],
+      "@tripalfa/shared-database/*": ["packages/shared-database/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

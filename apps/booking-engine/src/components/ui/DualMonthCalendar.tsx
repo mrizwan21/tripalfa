@@ -251,14 +251,13 @@ export function DualMonthCalendar({
       />
       <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
         <Popover.Trigger asChild>
-          <div className="flex gap-4 cursor-pointer h-12">
+          <div className="flex gap-4 cursor-pointer h-full min-h-[48px] w-full">
             {/* Departure/Check-in Input */}
             <div
-              className={`flex items-center gap-2 bg-white px-4 h-12 rounded-xl border-2 transition-all ${
-                selectionMode === "departure" && isOpen
-                  ? "border-[hsl(var(--primary))] ring-2 ring-purple-100"
-                  : "border-gray-100 hover:border-gray-200"
-              }`}
+              className={`flex-1 flex items-center gap-2 bg-card px-4 h-full rounded-xl border-2 transition-all ${selectionMode === "departure" && isOpen
+                ? "border-[hsl(var(--primary))] ring-2 ring-[hsl(var(--primary)/0.1)]"
+                : "border-border hover:border-border/80"
+                }`}
               onClick={() => {
                 setSelectionMode("departure");
                 setIsOpen(true);
@@ -273,11 +272,10 @@ export function DualMonthCalendar({
 
             {/* Return/Check-out Input */}
             <div
-              className={`flex items-center gap-2 bg-white px-4 h-12 rounded-xl border-2 transition-all ${
-                selectionMode === "return" && isOpen
-                  ? "border-green-500 ring-2 ring-green-100"
-                  : "border-gray-100 hover:border-gray-200"
-              }`}
+              className={`flex-1 flex items-center gap-2 bg-card px-4 h-full rounded-xl border-2 transition-all ${selectionMode === "return" && isOpen
+                ? "border-[hsl(var(--secondary))] ring-2 ring-[hsl(var(--secondary)/0.1)]"
+                : "border-border hover:border-border/80"
+                }`}
               onClick={() => {
                 setSelectionMode("return");
                 setIsOpen(true);
@@ -294,7 +292,7 @@ export function DualMonthCalendar({
 
         <Popover.Portal>
           <Popover.Content
-            className="w-[700px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-[100] animate-in fade-in-0 zoom-in-95"
+            className="w-[700px] bg-card rounded-2xl shadow-2xl border border-border p-6 z-[100] animate-in fade-in-0 zoom-in-95"
             sideOffset={12}
             align="start"
           >
@@ -303,11 +301,10 @@ export function DualMonthCalendar({
               <div className="flex gap-4">
                 <button
                   onClick={() => setSelectionMode("departure")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                    selectionMode === "departure"
-                      ? "bg-purple-100 text-purple-700"
-                      : "text-gray-500 hover:bg-gray-100"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${selectionMode === "departure"
+                    ? "bg-purple-100 text-purple-700"
+                    : "text-gray-500 hover:bg-gray-100"
+                    }`}
                 >
                   {mode === "hotel" ? "Check-in" : departureLabel}
                   {internalDeparture && (
@@ -318,11 +315,10 @@ export function DualMonthCalendar({
                 </button>
                 <button
                   onClick={() => setSelectionMode("return")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                    selectionMode === "return"
-                      ? "bg-green-100 text-green-700"
-                      : "text-gray-500 hover:bg-gray-100"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${selectionMode === "return"
+                    ? "bg-green-100 text-green-700"
+                    : "text-gray-500 hover:bg-gray-100"
+                    }`}
                 >
                   {mode === "hotel" ? "Check-out" : returnLabel}
                   {internalReturn && (

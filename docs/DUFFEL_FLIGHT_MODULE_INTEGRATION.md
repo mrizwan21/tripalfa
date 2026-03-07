@@ -449,19 +449,19 @@ SELECT * FROM "Order" WHERE status = 'hold' ORDER BY created_at DESC LIMIT 10;
 
 ### Payment Failures
 
-1. **Check order status**
+- **Check order status**
 
-   ```
-   GET /duffel/orders/{orderId}
-   ```
+  ```text
+  GET /duffel/orders/{orderId}
+  ```
 
-2. **Verify payment method**
-   - Ensure "balance" payment method is available
-   - Check wallet balance if using balance payment
+- **Verify payment method**
+  - Ensure "balance" payment method is available
+  - Check wallet balance if using balance payment
 
-3. **Check payment deadline**
-   - Holds expire after `payment_required_by` timestamp
-   - Create new order if expired
+- **Check payment deadline**
+  - Holds expire after `payment_required_by` timestamp
+  - Create new order if expired
 
 ### Timeout Issues
 
@@ -535,9 +535,9 @@ REDIS_URL=redis://localhost:6379
 ## References
 
 - [Duffel API Documentation](https://duffel.com/docs/api/v2)
-- [Setup Guide](./FLIGHT_MODULE_SETUP.md)
+- [Setup Guide](./FLIGHT_MODULE_INTEGRATION_GUIDE.md)
 - [API Implementation Status](./DUFFEL_API_INTEGRATION.md)
-- [Caching Guide](./docs/integrations/DUFFEL_CACHING_GUIDE.md)
+- [Caching Guide](./integrations/DUFFEL_CACHING_GUIDE.md)
 
 ## Support
 

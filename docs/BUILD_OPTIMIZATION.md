@@ -1,3 +1,3 @@
 # Moved Documentation
 
-This document has moved to [BUILD_OPTIMIZATION.md](./architecture/BUILD_OPTIMIZATION.md).
+This document is maintained at this path.

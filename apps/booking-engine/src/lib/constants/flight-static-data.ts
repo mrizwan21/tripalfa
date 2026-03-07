@@ -2,7 +2,7 @@
  * Flight Static Data Constants
  *
  * Fallback data used when static-data-service is unavailable.
- * Primary source: PostgreSQL static-data-service running in Docker container
+ * Primary source: PostgreSQL static-data-service running locally on port 3002
  * Frontend fetches directly from /static/* endpoint (no API manager routing)
  */
 

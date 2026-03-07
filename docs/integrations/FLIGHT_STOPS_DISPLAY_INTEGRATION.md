@@ -268,11 +268,7 @@ interface FlightSearchResult {
 
 **Note**: The related documentation links below may be outdated. Please refer to the current documentation structure.
 
-- [Duffel Search Best Practices](./DUFFEL_SEARCH_BEST_PRACTICES.md)
-- [Duffel API Integration](./DUFFEL_API_INTEGRATION.md)
-- [Frontend Integration Guide](./DUFFEL_FRONTEND_INTEGRATION_GUIDE.md)
-
----
+ [Duffel Frontend Integration Guide](../DUFFEL_FRONTEND_INTEGRATION_GUIDE.md)
 
 **Last Updated**: February 25, 2026
 

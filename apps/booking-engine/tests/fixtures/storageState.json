@@ -1,4 +1,33 @@
 {
-  "cookies": [],
-  "origins": []
+  "cookies": [
+    {
+      "name": "WMF-Uniq",
+      "value": "20B1DmcB6DA-Eihvm_zfpgMdAAAAAFvd_C2Fv9hdjC8Unh3GoQmR3lrIK5-MitXA",
+      "domain": ".upload.wikimedia.org",
+      "path": "/",
+      "expires": 1804520350.037613,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:5174",
+      "localStorage": [
+        {
+          "name": "accessToken",
+          "value": "mock_jwt_token_12345"
+        },
+        {
+          "name": "refreshToken",
+          "value": "mock_refresh_token_67890"
+        },
+        {
+          "name": "tenant_runtime_config",
+          "value": "{\"config\":{\"features\":{\"walletEnabled\":true,\"walletTopupEnabled\":true,\"flightBookingEnabled\":true,\"hotelBookingEnabled\":true,\"seatSelectionEnabled\":true,\"ancillariesEnabled\":true},\"pricing\":{\"markupPercent\":0,\"markupFlat\":0,\"commissionPercent\":0,\"commissionFlat\":0,\"commissionChargeableToCustomer\":false},\"checkout\":{\"defaultPaymentMethod\":\"wallet\",\"allowedPaymentMethods\":[\"wallet\"],\"enforceSupplierWallet\":true},\"branding\":{\"appName\":\"TripAlfa\",\"logoUrl\":\"/logo.png\",\"defaultAvatarUrl\":\"\",\"rtlEnabled\":true}},\"timestamp\":1772987484949}"
+        }
+      ]
+    }
+  ]
 }

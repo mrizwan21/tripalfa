@@ -139,8 +139,8 @@ export default function Wallet(): React.JSX.Element {
                   Manage your funds & transactions
                 </p>
               </div>
-              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center border border-purple-100 gap-2">
-                <WalletIcon size={18} className="text-purple-600" />
+              <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 gap-2">
+                <WalletIcon size={18} className="text-primary" />
               </div>
             </div>
 
@@ -167,7 +167,7 @@ export default function Wallet(): React.JSX.Element {
                   onClick={() => navigate("/wallet/topup")}
                   data-testid="topup-btn"
                   disabled={!runtimeConfig.features.walletTopupEnabled}
-                  className={`h-10 px-6 ${DEMO_CONFIG.enabled ? "bg-[hsl(var(--primary))]" : "bg-purple-600"} hover:bg-purple-700 text-background rounded-lg text-sm font-medium shadow-sm transition-all`}
+                  className="h-10 px-6 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))/90] text-[hsl(var(--primary-foreground))] rounded-lg text-sm font-medium shadow-sm transition-all"
                 >
                   <Plus size={16} /> Top Up
                 </Button>
@@ -227,7 +227,7 @@ export default function Wallet(): React.JSX.Element {
             <Button
               variant="ghost"
               size="md"
-              className="bg-muted border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-purple-400 hover: hover:bg-purple-50/30 transition-all min-h-[120px] px-4 py-2 text-sm font-medium rounded-md transition-colors hover:bg-muted"
+              className="bg-muted border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-primary/5 transition-all min-h-[120px] px-4 py-2 text-sm font-medium rounded-md"
             >
               <div className="w-8 h-8 bg-card rounded-full shadow-sm flex items-center justify-center gap-2">
                 <Plus size={16} />
@@ -282,15 +282,14 @@ export default function Wallet(): React.JSX.Element {
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
                           <div
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                              tx.type === "topup"
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${tx.type === "topup"
                                 ? "bg-green-50 text-green-600"
                                 : tx.type === "spend"
-                                  ? "bg-blue-50 text-blue-600"
+                                  ? "bg-accent/10 text-accent"
                                   : tx.type === "transfer"
-                                    ? "bg-purple-50 text-purple-600"
+                                    ? "bg-secondary/10 text-secondary"
                                     : "bg-muted text-muted-foreground"
-                            }`}
+                              }`}
                           >
                             {tx.type === "topup" && <ArrowUpRight size={16} />}
                             {tx.type === "spend" && <CreditCard size={16} />}
@@ -317,11 +316,10 @@ export default function Wallet(): React.JSX.Element {
                         </span>
                       </td>
                       <td
-                        className={`px-8 py-6 text-right font-black text-sm ${
-                          tx.type === "topup"
+                        className={`px-8 py-6 text-right font-black text-sm ${tx.type === "topup"
                             ? "text-green-600"
                             : "text-foreground"
-                        }`}
+                          }`}
                       >
                         {tx.type === "topup" ? "+" : "-"}
                         {formatCurrency(tx.amount, tx.currency)}

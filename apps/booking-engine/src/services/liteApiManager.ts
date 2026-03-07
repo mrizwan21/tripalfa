@@ -291,7 +291,7 @@ export interface HotelChain {
  */
 export async function searchHotels(
   params: HotelSearchParams,
-): Promise<{ hotels: HotelSearchResult[]; cached?: boolean }> {
+): Promise<{ searchId?: string; total?: number; hotels?: HotelSearchResult[]; cached?: boolean }> {
   try {
     const payload = {
       location: params.location,
@@ -306,16 +306,42 @@ export async function searchHotels(
       guestNationality: params.guestNationality || "US",
     };
 
-    console.log("[LiteAPI Manager] Searching hotels:", payload);
+    console.log("[LiteAPI Manager] Searching hotels init:", payload);
     const response = await api.post("/api/search/hotels", payload);
 
     return {
+      searchId: response.searchId,
+      total: response.total,
       hotels: response.results || [],
       cached: response.cached || false,
     };
   } catch (error) {
     console.error(
       "[LiteAPI Manager] Hotel search error:",
+      (error as any)?.message,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Fetch narrowed hotel results from an existing Redis session
+ * POST /api/search/hotels/results/:searchId
+ */
+export async function fetchHotelResults(
+  searchId: string,
+  params: any = {}
+): Promise<{ results: HotelSearchResult[]; total: number; cached?: boolean }> {
+  try {
+    const response = await api.post(`/api/search/hotels/results/${searchId}`, params);
+    return {
+      results: response.results || [],
+      total: response.total || 0,
+      cached: response.cached || false,
+    };
+  } catch (error) {
+    console.error(
+      "[LiteAPI Manager] Hotel results error:",
       (error as any)?.message,
     );
     throw error;

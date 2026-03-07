@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "module": "Node16",
     "composite": true,
     "declaration": true,
     "declarationMap": true,

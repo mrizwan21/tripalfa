@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import type { Router as ExpressRouter } from "express";
 import axios, { AxiosResponse } from "axios";
+import { prisma } from "@tripalfa/shared-database";
 
 const router: ExpressRouter = Router();
 
@@ -8,90 +9,7 @@ const router: ExpressRouter = Router();
 const BOOKING_SERVICE_URL =
   process.env.BOOKING_SERVICE_URL || "http://booking-service:3001/api/bookings";
 
-// In-memory fallback data for queues when upstream booking service is unavailable
-interface MockQueueRow {
-  id: number;
-  bookingRef: string;
-  supplierRef: string;
-  product: string;
-  details: string;
-  customerName: string;
-  issuedDate: string;
-  queueStatus: string;
-  updatedAt?: string;
-}
-
-const mockQueues: MockQueueRow[] = [
-  {
-    id: 1,
-    bookingRef: "ET1234567",
-    supplierRef: "S-124567",
-    product: "Hotel",
-    details: "Hilton Jumeirah",
-    customerName: "Mohamed Rizwan",
-    issuedDate: "01 Dec 24",
-    queueStatus: "Req. Refund",
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 2,
-    bookingRef: "ET1234568",
-    supplierRef: "S-124568",
-    product: "Flight",
-    details: "DXB-LON",
-    customerName: "Mohamed Rizwan",
-    issuedDate: "01 Dec 24",
-    queueStatus: "Req. Cancel",
-    updatedAt: new Date().toISOString(),
-  },
-];
-
-// Simple in-memory audit log for admin actions (fallback)
-const mockAuditLogs: Array<{
-  id: number;
-  action: string;
-  performedBy?: string;
-  ts: string;
-  details?: unknown;
-}> = [];
-
-// Define interfaces for in-memory storage
-interface Invoice {
-  id: number;
-  bookingId: number;
-  invoiceNumber: string;
-  totalAmount: number;
-  currency: string;
-  dueDate: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Payment {
-  id: number;
-  invoiceId: number;
-  paymentMethod: string;
-  amount: number;
-  currency: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface QueueItem {
-  id: number;
-  bookingId: number;
-  queueType: string;
-  status: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Define in-memory storage for invoices, payments, and queues
-const invoices: Invoice[] = [];
-const payments: Payment[] = [];
-const queues: QueueItem[] = [];
+// Mocks removed as part of Phase 2 persistence migration
 
 // ============================================================================
 // Booking Management Routes for B2B Admin Panel
@@ -113,33 +31,43 @@ router.post("/", async (req: Request, res: Response) => {
   try {
     const bookingData = req.body;
 
-    // In a real scenario, this would call the booking service.
-    // Here we simulate it by adding to our local mock queues if it's the right format,
-    // or just returning a success message for the mock flow.
-    const newBooking = {
-      id: Math.floor(Math.random() * 1000000),
-      bookingRef: `MB${Math.floor(1000000 + Math.random() * 9000000)}`,
-      supplierRef: `S-${Math.floor(100000 + Math.random() * 900000)}`,
-      product: bookingData.type || "Manual",
-      details: bookingData.details || "Manual Booking Entry",
-      customerName: bookingData.customerName || "Walk-in Customer",
-      issuedDate: new Date().toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      }),
-      queueStatus: "Confirmed",
-      updatedAt: new Date().toISOString(),
-    };
+    // Create a real Booking record in the Neon database
+    const newBooking = await prisma.booking.create({
+      data: {
+        bookingRef: `MB${Math.floor(1000000 + Math.random() * 9000000)}`,
+        userId: bookingData.userId || "manual-admin",
+        serviceType: bookingData.type || "Manual",
+        status: "confirmed",
+        baseAmount: bookingData.amount || 0,
+        totalAmount: bookingData.amount || 0,
+        currency: bookingData.currency || "USD",
+        metadata: {
+          details: bookingData.details || "Manual Booking Entry",
+          customerName: bookingData.customerName || "Walk-in Customer",
+          source: "manual-admin-panel"
+        }
+      }
+    });
 
-    mockQueues.unshift(newBooking);
+    // Create a persistent queue entry
+    await prisma.bookingQueue.create({
+      data: {
+        bookingId: newBooking.id,
+        queueType: "verification",
+        status: "completed",
+        priority: "medium",
+        notes: `Manual booking created by admin for ${bookingData.customerName || "Unknown"}`
+      }
+    });
 
-    mockAuditLogs.push({
-      id: mockAuditLogs.length + 1,
-      action: "manual-booking-created",
-      performedBy: "admin",
-      ts: new Date().toISOString(),
-      details: { bookingRef: newBooking.bookingRef },
+    // Log to persistent AuditLog
+    await prisma.auditLog.create({
+      data: {
+        action: "manual-booking-created",
+        resource: "Booking",
+        resourceId: newBooking.id,
+        metadata: { bookingRef: newBooking.bookingRef }
+      }
     });
 
     res.status(201).json({
@@ -212,7 +140,7 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
- // GET /api/admin/bookings/stats/summary - Get booking statistics
+// GET /api/admin/bookings/stats/summary - Get booking statistics
 router.get("/stats/summary", async (req: Request, res: Response) => {
   try {
     const { period = "30d", companyId } = req.query;
@@ -239,7 +167,7 @@ router.get("/stats/summary", async (req: Request, res: Response) => {
   }
 });
 
- // GET /api/admin/bookings/user/:userId - Get user's bookings (admin view)
+// GET /api/admin/bookings/user/:userId - Get user's bookings (admin view)
 router.get("/user/:userId", async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
@@ -271,11 +199,11 @@ router.get("/user/:userId", async (req: Request, res: Response) => {
     console.error("Error fetching user bookings:", message);
     const status =
       error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "status" in error.response
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "status" in error.response
         ? (error.response as { status: number }).status
         : 500;
     res.status(status).json({
@@ -385,11 +313,11 @@ router.put("/:id/status", async (req: Request, res: Response) => {
     console.error("Error updating booking status:", message);
     const status =
       error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "status" in error.response
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "status" in error.response
         ? (error.response as { status: number }).status
         : 500;
     res.status(status).json({
@@ -430,11 +358,11 @@ router.put("/:id", async (req: Request, res: Response) => {
     console.error("Error updating booking:", message);
     const status =
       error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "status" in error.response
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "status" in error.response
         ? (error.response as { status: number }).status
         : 500;
     res.status(status).json({
@@ -469,11 +397,11 @@ router.delete("/:id", async (req: Request, res: Response) => {
     console.error("Error deleting booking:", message);
     const status =
       error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "status" in error.response
+        typeof error === "object" &&
+        "response" in error &&
+        error.response &&
+        typeof error.response === "object" &&
+        "status" in error.response
         ? (error.response as { status: number }).status
         : 500;
     res.status(status).json({
@@ -492,39 +420,66 @@ router.get("/queues", async (req: Request, res: Response) => {
       status,
       product,
       search,
-      fromDate,
-      toDate,
     } = req.query;
 
-    const queryParams = new URLSearchParams({
-      page: page.toString(),
-      limit: limit.toString(),
+    const skip = (Number(page) - 1) * Number(limit);
+    const take = Number(limit);
+
+    // Build filter
+    const where: any = {};
+    if (status) where.status = status as string;
+    if (product) {
+      where.booking = { serviceType: product as string };
+    }
+    if (search) {
+      where.booking = {
+        OR: [
+          { bookingRef: { contains: search as string, mode: 'insensitive' } },
+          { customerEmail: { contains: search as string, mode: 'insensitive' } }
+        ]
+      };
+    }
+
+    const [queues, total] = await Promise.all([
+      prisma.bookingQueue.findMany({
+        where,
+        include: { booking: true },
+        skip,
+        take,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.bookingQueue.count({ where }),
+    ]);
+
+    // Map to the format expected by the frontend (previously MockQueueRow)
+    const formattedQueues = queues.map((q) => ({
+      id: q.id,
+      bookingRef: q.booking.bookingRef,
+      supplierRef: q.booking.id, // Using internal ID as supplier ref for now
+      product: q.booking.serviceType,
+      details: (q.booking.metadata as any)?.details || q.notes || "No details",
+      customerName: (q.booking.metadata as any)?.customerName || q.booking.customerEmail || "Guest",
+      issuedDate: q.createdAt.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      }),
+      queueStatus: q.status,
+      updatedAt: q.updatedAt.toISOString(),
+      queueType: q.queueType,
+      priority: q.priority
+    }));
+
+    res.json({
+      success: true,
+      queues: formattedQueues,
+      total,
     });
-    if (status) queryParams.append("status", status.toString());
-    if (product) queryParams.append("product", product.toString());
-    if (search) queryParams.append("search", search.toString());
-    if (fromDate) queryParams.append("startDate", fromDate.toString());
-    if (toDate) queryParams.append("endDate", toDate.toString());
-
-    const response = await axios.get(
-      `${BOOKING_SERVICE_URL}/queues?${queryParams}`,
-      {
-        headers: {
-          Authorization: req.headers.authorization || "",
-          "X-Admin-Request": "true",
-        },
-      },
-    );
-
-    res.json(response.data);
   } catch (error: any) {
     console.error("Error fetching booking queues:", error.message);
-    // Fallback to in-memory queues so admin UI remains functional
-    return res.json({
-      success: true,
-      queues: mockQueues,
-      total: mockQueues.length,
-      fallback: true,
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch booking queues from database",
     });
   }
 });
@@ -588,57 +543,46 @@ router.post("/:id/queue-action", async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/bookings/:id/invoice - Get invoice HTML/JSON for booking
+// GET /api/bookings/:id/invoice - Get invoice JSON for booking
 router.get("/:id/invoice", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const response = await axios.get(`${BOOKING_SERVICE_URL}/${id}/invoice`, {
-      headers: {
-        Authorization: req.headers.authorization || "",
-        "X-Admin-Request": "true",
+
+    const invoice = await prisma.invoice.findFirst({
+      where: {
+        OR: [
+          { bookingId: id },
+          { invoiceNumber: id }
+        ]
       },
-    });
-    // Proxy whatever the booking service returns (HTML or JSON)
-    if (typeof response.data === "string") {
-      res.setHeader("Content-Type", "text/html");
-      res.send(response.data);
-    } else {
-      res.json(response.data);
-    }
-  } catch (error: any) {
-    console.error("Error fetching invoice:", error.message);
-    // Fallback: try to return a simple JSON invoice constructed from mockQueues
-    const q = mockQueues.find((m) => String(m.id) === String(req.params.id));
-    if (q) {
-      const invoice = {
+      include: {
         booking: {
-          id: q.id,
-          bookingRef: q.bookingRef,
-          invoiceNo: `CI${q.id}`,
-          supplierInvoiceNo: `SI${q.id}`,
-          customerName: q.customerName,
-          supplierName: q.supplierRef,
-          currency: "USD",
-          date: q.issuedDate,
-          passengers: [
-            {
-              name: "Sample Passenger",
-              ticket: "000 0000 000 000",
-              baseFare: 100,
-              taxes: 10,
-              discount: 0,
-              netTotal: 110,
-            },
-          ],
+          include: {
+            bookingPassengers: true,
+            bookingSegments: true
+          }
         },
-        fallback: true,
-      };
-      return res.json(invoice);
+        payments: true
+      }
+    });
+
+    if (!invoice) {
+      return res.status(404).json({
+        success: false,
+        error: "Invoice not found for this booking"
+      });
     }
 
-    return res
-      .status(error.response?.status || 500)
-      .json({ success: false, error: "Failed to fetch invoice" });
+    res.json({
+      success: true,
+      data: invoice
+    });
+  } catch (error: any) {
+    console.error("Error fetching invoice:", error.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch invoice from database"
+    });
   }
 });
 
@@ -720,52 +664,47 @@ router.get("/:id/invoice/pdf", async (req: Request, res: Response) => {
 router.post("/:id/invoice", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { totalAmount, currency, dueDate, amount, note } = req.body;
+    const { totalAmount, currency, dueDate, amount } = req.body;
 
     // Use provided amounts or calculate from request body
-    const invoiceAmount = totalAmount || amount;
+    const invoiceAmount = Number(totalAmount || amount || 0);
     const invoiceCurrency = currency || "USD";
 
-    const newInvoice = {
-      id: invoices.length + 1,
-      bookingId: parseInt(id as string),
-      invoiceNumber: `INV-${invoices.length + 1}`,
-      totalAmount: invoiceAmount,
-      currency: invoiceCurrency,
-      dueDate:
-        dueDate ||
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10),
-      status: "unpaid",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    invoices.push(newInvoice);
+    // Create persistent invoice in Prisma
+    const newInvoice = await prisma.invoice.create({
+      data: {
+        bookingId: id,
+        invoiceNumber: `INV-${Date.now()}`,
+        totalAmount: invoiceAmount,
+        currency: invoiceCurrency,
+        dueDate: dueDate ? new Date(dueDate) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        status: "unpaid"
+      }
+    });
 
     // Log audit trail for invoice generation
-    mockAuditLogs.push({
-      id: mockAuditLogs.length + 1,
-      action: "invoice-generated",
-      performedBy: "admin",
-      ts: new Date().toISOString(),
-      details: {
-        invoiceId: newInvoice.id,
-        bookingId: id,
-        amount: invoiceAmount,
-      },
+    await prisma.auditLog.create({
+      data: {
+        action: "invoice-generated",
+        resource: "Invoice",
+        resourceId: newInvoice.id,
+        metadata: {
+          bookingId: id,
+          invoiceNumber: newInvoice.invoiceNumber,
+          amount: invoiceAmount
+        }
+      }
     });
 
     res.status(201).json({
       success: true,
       data: newInvoice,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating invoice:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to generate invoice",
+      error: "Failed to generate invoice in database",
     });
   }
 });
@@ -832,91 +771,79 @@ router.post("/:id/pricing", async (req: Request, res: Response) => {
 router.post("/:id/pay-wallet", async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { amount, currency, note } = req.body;
+    const { amount, currency } = req.body;
 
-    // Validate payment data
-    if (amount === undefined || currency === undefined) {
-      return res.status(400).json({
-        success: false,
-        error: "amount and currency are required",
+    // Find or create invoice first
+    let invoice = await prisma.invoice.findFirst({
+      where: { bookingId: id }
+    });
+
+    if (!invoice) {
+      invoice = await prisma.invoice.create({
+        data: {
+          bookingId: id,
+          invoiceNumber: `INV-${Date.now()}`,
+          totalAmount: Number(amount || 0),
+          currency: currency || "USD",
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          status: "unpaid"
+        }
       });
     }
 
-    // Create a corresponding invoice first if not exists
-    const bookingId = parseInt(id as string);
-    let invoiceId: number;
-
-    // Check if invoice exists for this booking
-    const existingInvoice = invoices.find((i) => i.bookingId === bookingId);
-    if (existingInvoice) {
-      invoiceId = existingInvoice.id;
-    } else {
-      // Create a new invoice for this booking
-      const newInvoice = {
-        id: invoices.length + 1,
-        bookingId,
-        invoiceNumber: `INV-${invoices.length + 1}`,
-        totalAmount: amount,
-        currency,
-        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10),
-        status: "unpaid" as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      invoices.push(newInvoice);
-      invoiceId = newInvoice.id;
-    }
-
-    // Create payment record
-    const paymentRecord = {
-      id: payments.length + 1,
-      invoiceId,
-      paymentMethod: "wallet",
-      amount,
-      currency,
-      status: "processing" as const,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    payments.push(paymentRecord);
-
-    // Log audit trail for wallet payment
-    mockAuditLogs.push({
-      id: mockAuditLogs.length + 1,
-      action: "wallet-payment-initiated",
-      performedBy: "admin",
-      ts: new Date().toISOString(),
-      details: {
-        paymentId: paymentRecord.id,
-        bookingId: id,
-        amount,
-        currency,
-      },
+    // Create persistent payment record
+    const paymentRecord = await prisma.paymentRecord.create({
+      data: {
+        invoiceId: invoice.id,
+        amount: Number(amount || 0),
+        currency: currency || "USD",
+        paymentMethod: "wallet",
+        gateway: "admin",
+        transactionId: `TX-W-${Date.now()}`,
+        status: "completed"
+      }
     });
 
-    // Update booking queue status if present
-    const queueIdx = mockQueues.findIndex((q) => String(q.id) === String(id));
-    if (queueIdx !== -1) {
-      mockQueues[queueIdx].queueStatus = "Payment In Progress";
-      mockQueues[queueIdx].updatedAt = new Date().toISOString();
+    // Update invoice status if fully paid
+    await prisma.invoice.update({
+      where: { id: invoice.id },
+      data: { status: "paid" }
+    });
+
+    // Log to persistent AuditLog
+    await prisma.auditLog.create({
+      data: {
+        action: "wallet-payment-initiated",
+        resource: "PaymentRecord",
+        resourceId: paymentRecord.id,
+        metadata: { bookingId: id, amount, currency }
+      }
+    });
+
+    // Update booking queue status to processing
+    const queueEntry = await prisma.bookingQueue.findFirst({
+      where: { bookingId: id }
+    });
+    if (queueEntry) {
+      await prisma.bookingQueue.update({
+        where: { id: queueEntry.id },
+        data: {
+          status: "processing",
+          notes: `${queueEntry.notes || ""}\nWallet payment processed.`
+        }
+      });
     }
 
     res.status(201).json({
       success: true,
       data: paymentRecord,
-      message: "Wallet payment initiated successfully",
+      message: "Wallet payment processed successfully in database",
     });
-  } catch (error: unknown) {
-    console.error(
-      "Error processing wallet payment:",
-      error instanceof Error ? error.message : String(error),
-    );
+  } catch (error: any) {
+    console.error("Error processing wallet payment:", error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to process wallet payment",
+      error: "Failed to process wallet payment in database",
     });
   }
 });

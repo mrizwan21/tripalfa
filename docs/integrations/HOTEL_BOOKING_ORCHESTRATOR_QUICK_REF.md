@@ -163,6 +163,7 @@ const result = await orchestrator.processRefund(
 **Purpose**: Generate documents and send notifications after booking confirmation
 
 **Signature**:
+
 ```typescript
 async confirmBooking(
   bookingRequest: HotelBookingRequest,
@@ -171,10 +172,12 @@ async confirmBooking(
 ```
 
 **Input**:
+
 - `bookingRequest`: Customer booking details
 - `booking`: Hotel and booking details
 
 **Output**:
+
 ```typescript
 {
   success: boolean;
@@ -195,10 +198,12 @@ async confirmBooking(
 ```
 
 **Documents Generated**:
+
 - 📄 Hotel Voucher (with hotel details, dates, rates)
 - 📄 Hotel Invoice (with payment breakdown)
 
 **Notifications Sent**:
+
 - 📧 Voucher email with PDF
 - 📧 Invoice email with PDF
 - 📧 Booking confirmation summary
@@ -210,6 +215,7 @@ async confirmBooking(
 **Purpose**: Generate credit note, record refund, cancel voucher, send notifications
 
 **Signature**:
+
 ```typescript
 async cancelBooking(
   bookingId: string,
@@ -220,12 +226,14 @@ async cancelBooking(
 ```
 
 **Input**:
+
 - `bookingId`: ID of booking to cancel
 - `booking`: Hotel booking details
 - `refundAmount`: Amount to refund (e.g., 1500 for AED 1500)
 - `refundReason`: Reason for cancellation (displayed on credit note)
 
 **Output**:
+
 ```typescript
 {
   success: boolean;
@@ -245,6 +253,7 @@ async cancelBooking(
 ```
 
 **Actions Taken**:
+
 - ✅ Generate credit note document
 - ✅ Record refund in wallet system
 - ✅ Cancel associated voucher
@@ -258,6 +267,7 @@ async cancelBooking(
 **Purpose**: Credit wallet and send refund receipt
 
 **Signature**:
+
 ```typescript
 async processRefund(
   bookingId: string,
@@ -268,12 +278,14 @@ async processRefund(
 ```
 
 **Input**:
+
 - `bookingId`: ID of booking being refunded
 - `refundAmount`: Amount to refund (numeric value)
 - `refundCurrency`: Currency code (e.g., "AED", "USD")
 - `customerEmail`: Email to send receipt to
 
 **Output**:
+
 ```typescript
 {
   success: boolean;
@@ -292,6 +304,7 @@ async processRefund(
 ```
 
 **Actions Taken**:
+
 - ✅ Credit amount to customer wallet
 - ✅ Generate refund receipt
 - ✅ Send receipt via email
@@ -352,7 +365,7 @@ const result = await orchestrator.confirmBooking(bookingRequest, {
 
 ### Scenario 1: Standard Hotel Booking
 
-```
+```text
 1. Guest books hotel via booking engine
 2. Payment processed in LiteAPI
 3. confirmBooking() called
@@ -364,7 +377,7 @@ const result = await orchestrator.confirmBooking(bookingRequest, {
 
 ### Scenario 2: Guest Cancels Before Stay
 
-```
+```text
 1. Guest requests cancellation
 2. cancelBooking() called with full refund
    ├─ Credit note generated
@@ -377,7 +390,7 @@ const result = await orchestrator.confirmBooking(bookingRequest, {
 
 ### Scenario 3: Partial Refund After Cancellation
 
-```
+```text
 1. Booking cancelled with partial refund (e.g., 20% penalty)
 2. cancelBooking() called with partial amount
    ├─ Credit note generated (shows deduction reason)
@@ -439,7 +452,7 @@ npm run test:api:liteapi:orchestrator
 
 ### Output
 
-```
+```text
 ╔═══════════════════════════════════════════════╗
 ║     WORKFLOW ORCHESTRATOR TEST RESULTS        ║
 ╚═══════════════════════════════════════════════╝
@@ -475,6 +488,7 @@ const orchestrator = new HotelBookingWorkflowOrchestrator(true);
 **Cause**: Booking object missing required fields
 
 **Solution**: Ensure booking object has:
+
 ```typescript
 {
   id: string;              // Booking ID
@@ -501,14 +515,14 @@ const orchestrator = new HotelBookingWorkflowOrchestrator(true);
 
 ## Next: Service Integration
 
-### To activate real notifications:
+### To activate real notifications
 
 1. Open `hotelBookingWorkflowOrchestrator.ts`
 2. Find `async sendVoucherNotification()` method
 3. Replace placeholder with actual NotificationService call
 4. Repeat for other notification methods
 
-### To activate real wallet:
+### To activate real wallet
 
 1. Open `hotelBookingWorkflowOrchestrator.ts`
 2. Find `async recordWalletRefund()` method
@@ -519,7 +533,7 @@ const orchestrator = new HotelBookingWorkflowOrchestrator(true);
 
 ## Architecture
 
-```
+```text
 HotelBookingWorkflowOrchestrator
 ├── Public Methods (3)
 │   ├── confirmBooking()      → Generate docs + send emails
@@ -554,7 +568,7 @@ HotelBookingWorkflowOrchestrator
 **Need Help?**
 
 - 📖 Full Guide: [HOTEL_BOOKING_WORKFLOW_ORCHESTRATOR_GUIDE.md](./HOTEL_BOOKING_WORKFLOW_ORCHESTRATOR_GUIDE.md)
-- 📊 Status Report: [HOTEL_BOOKING_LIFECYCLE_STATUS_REPORT.md](./HOTEL_BOOKING_LIFECYCLE_STATUS_REPORT.md)
+- 📊 Status Report: [HOTEL_BOOKING_LIFECYCLE_STATUS_REPORT.md](../HOTEL_BOOKING_LIFECYCLE_STATUS_REPORT.md)
 - 🧪 Test Suite: `apps/booking-engine/tests/hotelBookingWorkflowOrchestrator.test.ts`
 - 💻 Source: `apps/booking-engine/src/services/hotelBookingWorkflowOrchestrator.ts`
 

@@ -1,355 +1,76 @@
-import { BasePage } from "./BasePage";
+import type { Page } from "@playwright/test";
 
-interface AutoTopUpConfig {
-  amount: number;
-  threshold: number;
-  paymentMethod: string;
-}
+/** Page Object Model for the /wallet, /wallet/topup, and /wallet/transfer routes. */
+export class WalletPage {
+  readonly page: Page;
 
-interface WithdrawalDetails {
-  amount: number;
-  bankAccount: string;
-  accountName: string;
-}
-
-export class WalletPage extends BasePage {
-  // Existing methods
-  async getBalance(): Promise<number> {
-    const balanceText = await this.getByTestId("wallet-balance").textContent();
-    return parseFloat(balanceText?.replace(/[^0-9.]/g, "") || "0");
+  constructor(page: Page) {
+    this.page = page;
   }
 
-  async verifyBalance() {
-    // Wait for element to exist in DOM (not checking visibility)
-    await this.getByTestId("wallet-balance").waitFor({ state: "attached" });
+  // ── Locators ──────────────────────────────────────────────────────────────
+
+  get balanceDisplay() {
+    return this.page.locator('[data-testid="wallet-balance"], [class*="balance"]').first();
   }
 
-  async viewTransactions() {
-    await this.getByTestId("wallet-transactions").click({ force: true });
+  get topUpButton() {
+    return this.page.getByRole("button", { name: /top.?up|add funds/i });
   }
 
-  // New methods for Day 5-6
-  async navigateToTopUp() {
-    await this.getByTestId("topup-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="topup-page"]', {
-      timeout: 10000,
-    });
+  get transferButton() {
+    return this.page.getByRole("button", { name: /transfer/i });
   }
 
-  async navigateToTransfer() {
-    await this.getByTestId("transfer-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="transfer-page"]', {
-      timeout: 10000,
-    });
+  get transactionHistory() {
+    return this.page.locator('[data-testid="transaction-list"], [class*="Transaction"]');
   }
 
-  async viewCurrencyBalances() {
-    await this.getByTestId("view-currencies-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="currency-balances"]', {
-      timeout: 10000,
-    });
+  get loadingIndicator() {
+    return this.page.locator('[data-testid="loading"], .animate-spin').first();
   }
 
-  async switchCurrency(currency: string) {
-    await this.setSelectValue("currency-selector", currency);
-    await this.page.waitForTimeout(500); // Wait for currency switch
+  // Top-up page locators
+  get topUpAmountInput() {
+    return this.page.locator('input[name="topup-amount"]').first();
   }
 
-  async filterTransactionsByType(type: string) {
-    await this.setSelectValue("transaction-type-filter", type);
-    await this.page.waitForTimeout(500);
+  get topUpSubmitButton() {
+    return this.page.getByRole("button", { name: /proceed|confirm|top.?up/i });
   }
 
-  async filterTransactionsByDate(dateFrom: string, dateTo: string) {
-    await this.getByTestId("transaction-date-from").fill(dateFrom, {
-      force: true,
-    });
-    await this.getByTestId("transaction-date-to").fill(dateTo, { force: true });
-    await this.getByTestId("apply-transaction-filter").click({ force: true });
-    await this.page.waitForTimeout(500);
+  // Transfer page locators
+  get transferRecipientInput() {
+    return this.page.locator('select[name="transfer-from-currency"]').first();
   }
 
-  async searchTransactions(searchTerm: string) {
-    await this.getByTestId("transaction-search").fill(searchTerm, {
-      force: true,
-    });
-    await this.getByTestId("search-transactions-btn").click({ force: true });
-    await this.page.waitForTimeout(500);
+  get transferAmountInput() {
+    return this.page.locator('input[name="transfer-amount"]').first();
   }
 
-  async navigateToScheduledTopUp() {
-    await this.getByTestId("scheduled-topup-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="auto-topup-config"]', {
-      timeout: 10000,
-    });
+  get transferSubmitButton() {
+    return this.page.getByRole("button", { name: /send|confirm transfer/i });
   }
 
-  async setupAutoTopUp(config: AutoTopUpConfig) {
-    await this.getByTestId("auto-topup-amount").fill(config.amount.toString(), {
-      force: true,
-    });
-    await this.getByTestId("auto-topup-threshold").fill(
-      config.threshold.toString(),
-      { force: true },
-    );
-    await this.setSelectValue(
-      "auto-topup-payment-method",
-      config.paymentMethod,
-    );
-    await this.getByTestId("save-auto-topup").click({ force: true });
-    await this.page.waitForSelector('[data-testid="auto-topup-configured"]', {
-      timeout: 10000,
-    });
+  // ── Actions ────────────────────────────────────────────────────────────────
+
+  async goto() {
+    await this.page.goto("/wallet");
+    await this.page.waitForLoadState("networkidle");
   }
 
-  async enterPIN(pin: string) {
-    await this.getByTestId("pin-input").fill(pin, { force: true });
-    await this.getByTestId("confirm-pin-btn").click({ force: true });
-    await this.page.waitForTimeout(1000);
+  async gotoTopUp() {
+    await this.page.goto("/wallet/topup");
+    await this.page.waitForLoadState("networkidle");
   }
 
-  async generateStatement(dateFrom: string, dateTo: string) {
-    await this.getByTestId("generate-statement-btn").click({ force: true });
-    await this.getByTestId("statement-date-from").fill(dateFrom, {
-      force: true,
-    });
-    await this.getByTestId("statement-date-to").fill(dateTo, { force: true });
-    await this.getByTestId("generate-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="statement-generated"]', {
-      timeout: 10000,
-    });
+  async gotoTransfer() {
+    await this.page.goto("/wallet/transfer");
+    await this.page.waitForLoadState("domcontentloaded");
   }
 
-  async downloadStatement() {
-    await this.getByTestId("download-statement-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="download-success"]', {
-      timeout: 10000,
-    });
-  }
-
-  async viewWalletLimits() {
-    await this.getByTestId("view-limits-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="wallet-limits"]', {
-      timeout: 10000,
-    });
-  }
-
-  async navigateToWithdrawal() {
-    await this.getByTestId("withdraw-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="withdrawal-page"]', {
-      timeout: 10000,
-    });
-  }
-
-  async enterWithdrawalDetails(details: WithdrawalDetails) {
-    await this.getByTestId("withdrawal-amount").fill(
-      details.amount.toString(),
-      { force: true },
-    );
-    await this.setSelectValue("bank-account-select", details.bankAccount);
-    await this.getByTestId("account-name").fill(details.accountName, {
-      force: true,
-    });
-  }
-
-  async confirmWithdrawal() {
-    await this.getByTestId("confirm-withdrawal-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="withdrawal-success"]', {
-      timeout: 10000,
-    });
-  }
-
-  async viewLoyaltyPoints() {
-    await this.getByTestId("loyalty-points-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="loyalty-points"]', {
-      timeout: 10000,
-    });
-  }
-
-  async convertPointsToCredit(points: number) {
-    await this.getByTestId("convert-points-btn").click({ force: true });
-    await this.getByTestId("points-to-convert").fill(points.toString(), {
-      force: true,
-    });
-    await this.getByTestId("confirm-conversion-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="points-converted"]', {
-      timeout: 10000,
-    });
-  }
-
-  // Utility methods
-  async getTransactionCount(): Promise<number> {
-    const rows = await this.page
-      .locator('[data-testid^="transaction-row-"]')
-      .count();
-    return rows;
-  }
-
-  async getFirstTransactionType(): Promise<string> {
-    const type = await this.getByTestId("transaction-type-0").textContent();
-    return type || "";
-  }
-
-  async verifyTransactionExists(type: string): Promise<boolean> {
-    const transaction = this.page.locator(
-      `[data-testid*="transaction"]:has-text("${type}")`,
-    );
-    return await transaction.isVisible().catch(() => false);
-  }
-
-  // Wallet transaction methods for notification tests
-  async addFunds(options: {
-    amount: number;
-    currency?: string;
-    paymentMethod?: string;
-  }) {
-    // Mock wallet credit by triggering an event
-    await this.page.evaluate((fundsData) => {
-      window.dispatchEvent(
-        new CustomEvent("mockWalletCredit", {
-          detail: {
-            ...fundsData,
-            newBalance: 500.0,
-          },
-        }),
-      );
-    }, options);
-
-    await this.page.waitForTimeout(1000);
-  }
-
-  async makePayment(amount: number, bookingId: string) {
-    // Mock wallet debit by triggering an event
-    await this.page.evaluate(
-      (paymentData) => {
-        window.dispatchEvent(
-          new CustomEvent("mockWalletDebit", {
-            detail: {
-              amount: paymentData.amount,
-              bookingId: paymentData.bookingId,
-              remainingBalance: 200.0,
-            },
-          }),
-        );
-      },
-      { amount, bookingId },
-    );
-
-    await this.page.waitForTimeout(1000);
-  }
-
-  async transferFunds(toWalletId: string, amount: number) {
-    // Mock wallet transfer by triggering an event
-    await this.page.evaluate(
-      (transferData) => {
-        window.dispatchEvent(
-          new CustomEvent("mockWalletTransfer", {
-            detail: {
-              toWalletId: transferData.toWalletId,
-              amount: transferData.amount,
-              remainingBalance: 300.0,
-            },
-          }),
-        );
-      },
-      { toWalletId, amount },
-    );
-
-    await this.page.waitForTimeout(1000);
-  }
-
-  async checkLowBalanceAlert(): Promise<boolean> {
-    // Mock low balance alert by triggering an event
-    await this.page.evaluate(() => {
-      window.dispatchEvent(
-        new CustomEvent("mockLowBalanceAlert", {
-          detail: {
-            currentBalance: 50.0,
-            threshold: 100.0,
-          },
-        }),
-      );
-    });
-
-    await this.page.waitForTimeout(500);
-    return true; // Always return true for mock
-  }
-
-  async viewTransactionHistory() {
-    await this.getByTestId("transaction-history-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="transaction-history"]', {
-      timeout: 10000,
-    });
-  }
-
-  async getTransactionHistoryCount(): Promise<number> {
-    await this.viewTransactionHistory();
-    const count = await this.page
-      .locator('[data-testid="transaction-item"]')
-      .count();
-    return count;
-  }
-
-  async initiateBankTransfer(options: {
-    bankName: string;
-    accountLast4: string;
-    amount: number;
-  }) {
-    await this.getByTestId("bank-transfer-btn").click({ force: true });
-    await this.setSelectValue("bank-name", options.bankName);
-    await this.getByTestId("account-last4").fill(options.accountLast4);
-    await this.getByTestId("transfer-amount").fill(options.amount.toString());
-    await this.getByTestId("initiate-transfer").click({ force: true });
-    await this.page.waitForSelector('[data-testid="transfer-initiated"]', {
-      timeout: 10000,
-    });
-  }
-
-  async requestWireTransferDetails() {
-    await this.getByTestId("wire-transfer-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="wire-details-modal"]', {
-      timeout: 5000,
-    });
-  }
-
-  async verifyBankAccount(bankName: string, accountLast4: string) {
-    await this.getByTestId("verify-account-btn").click({ force: true });
-    await this.setSelectValue("bank-name", bankName);
-    await this.getByTestId("account-last4").fill(accountLast4);
-    await this.getByTestId("verify-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="account-verified"]', {
-      timeout: 10000,
-    });
-  }
-
-  // Notification verification methods
-  async verifyNotificationReceived(type: string): Promise<boolean> {
-    const notification = this.page.locator(
-      `[data-testid="notification-${type}"]`,
-    );
-    return await notification.isVisible().catch(() => false);
-  }
-
-  async getNotificationCount(): Promise<number> {
-    const count = await this.page
-      .locator('[data-testid="notification-item"]')
-      .count();
-    return count;
-  }
-
-  async markNotificationAsRead(notificationId: string) {
-    await this.page
-      .locator(
-        `[data-testid="notification-${notificationId}"] [data-testid="mark-read-btn"]`,
-      )
-      .click({ force: true });
-    await this.page.waitForTimeout(500);
-  }
-
-  async clearAllNotifications() {
-    await this.getByTestId("clear-notifications-btn").click({ force: true });
-    await this.page.waitForSelector('[data-testid="no-notifications"]', {
-      timeout: 5000,
-    });
+  async waitForBalance() {
+    await this.loadingIndicator.waitFor({ state: "hidden", timeout: 15000 }).catch(() => {});
+    await this.balanceDisplay.waitFor({ state: "visible", timeout: 10000 });
   }
 }

@@ -1,44 +1,31 @@
 import { Router, Response } from "express";
-import axios from "axios";
 import { randomUUID } from "node:crypto";
 import prisma, { Decimal } from "../database.js";
-import { Prisma } from "@prisma/client";
+import { staticDbPool } from "../static-db.js";
 import { validateLiteApiId } from "../utils/validation.js";
+import {
+  liteapiDataClient,
+  liteapiBookClient,
+  liteapiProdDataClient,
+} from "../utils/liteapiClient.js";
 
 const router: Router = Router();
 
-// LITEAPI configuration
-const LITEAPI_BASE_URL =
-  process.env.LITEAPI_BASE_URL || "https://api.liteapi.travel";
-const LITEAPI_API_KEY = process.env.LITEAPI_API_KEY || "";
-
-// Helper for LITEAPI requests
+// Helper for LITEAPI requests using centralized clients
 async function liteApiRequest<T>(
   endpoint: string,
   params: Record<string, any> = {},
 ): Promise<T> {
-  const response = await axios.get(`${LITEAPI_BASE_URL}${endpoint}`, {
-    headers: {
-      "X-API-Key": LITEAPI_API_KEY,
-      Accept: "application/json",
-    },
-    params,
-  });
-  return response.data;
+  const response = await liteapiDataClient.get(endpoint, { params });
+  return response.data as T;
 }
 
 async function liteApiPost<T>(
   endpoint: string,
   data: Record<string, any>,
 ): Promise<T> {
-  const response = await axios.post(`${LITEAPI_BASE_URL}${endpoint}`, data, {
-    headers: {
-      "X-API-Key": LITEAPI_API_KEY,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-  });
-  return response.data;
+  const response = await liteapiBookClient.post(endpoint, data);
+  return response.data as T;
 }
 
 // POST /api/hotels/search - Search for hotels
@@ -173,7 +160,7 @@ router.post("/book", async (req, res: Response) => {
     });
 
     // Create prebook session
-    const prebookResponse = await liteApiPost<any>("/v3.0/hotels/prebook", {
+    const prebookResponse = await liteApiPost<any>("/rates/prebook", {
       offerId,
       guestInfo: {
         email: guestInfo?.email,
@@ -183,27 +170,39 @@ router.post("/book", async (req, res: Response) => {
       },
     });
 
-    if (!prebookResponse.success && !prebookResponse.data) {
+    if (!prebookResponse.data || !prebookResponse.data.prebookId) {
       return res.status(400).json({
         success: false,
         error: prebookResponse.message || "Failed to prebook hotel",
       });
     }
 
-    // Extract values with proper typing
     const prebookData = prebookResponse.data;
-    const baseAmount = Number(
-      prebookData?.baseAmount || prebookData?.price || 0,
-    );
-    const taxAmount = Number(prebookData?.taxAmount || 0);
-    const totalAmount = Number(
-      prebookData?.totalAmount || prebookData?.price || 0,
-    );
-    const currency = String(prebookData?.currency || "USD");
-    const prebookId = String(
-      prebookData?.prebookId || prebookData?.id || randomUUID(),
-    );
-    const hotelName = String(prebookData?.hotelName || "");
+    const prebookId = prebookData.prebookId;
+
+    // NOW: Complete the booking with LITEAPI
+    const bookResponse = await liteApiPost<any>("/rates/book", {
+      prebookId,
+    });
+
+    if (!bookResponse.data || !bookResponse.data.bookingId) {
+      // If booking fails, we still have the prebook session, but the booking is failed
+      console.error("[Hotels] LITEAPI Book failed:", bookResponse.message);
+      return res.status(400).json({
+        success: false,
+        error: bookResponse.message || "Failed to complete LITEAPI booking",
+      });
+    }
+
+    const bookData = bookResponse.data;
+    const liteapiBookingId = bookData.bookingId;
+
+    // Extract values with proper typing
+    const baseAmount = Number(bookData.totalPrice || prebookData.price || 0);
+    const taxAmount = Number(bookData.taxAmount || prebookData.taxAmount || 0);
+    const totalAmount = Number(bookData.totalPrice || prebookData.price || 0);
+    const currency = String(bookData.currency || prebookData.currency || "USD");
+    const hotelName = String(bookData.hotelName || prebookData.hotelName || "");
 
     // Create local booking record
     const bookingRef = `HTL-${Date.now().toString(36).toUpperCase()}`;
@@ -228,13 +227,36 @@ router.post("/book", async (req, res: Response) => {
         metadata: {
           hotelId,
           offerId,
-          prebookId: prebookId,
+          prebookId,
+          liteapiBookingId,
           rooms,
           specialRequests,
           ...metadata,
         },
       },
     });
+
+    // Create LiteApiBooking record for persistence
+    await prisma.liteApiBooking.create({
+      data: {
+        bookingId: liteapiBookingId,
+        prebookId,
+        localBookingId: booking.id,
+        status: "confirmed",
+        hotelId,
+        hotelName,
+        checkIn: new Date(checkIn),
+        checkOut: new Date(checkOut),
+        totalAmount: new Decimal(totalAmount),
+        currency,
+        metadata: {
+          bookData,
+          prebookData
+        }
+      }
+    });
+
+    // Create booking segment...
 
     // Create booking segment
     await prisma.bookingSegment.create({
@@ -424,23 +446,27 @@ router.get("/destinations/search", async (req, res: Response) => {
       });
     }
 
-    // Search in destinations table
-    const destinations = await prisma.destination.findMany({
-      where: {
-        OR: [
-          { name: { contains: search.toString() } },
-          { code: { contains: search.toString().toUpperCase() } },
-          { countryCode: { contains: search.toString().toUpperCase() } },
-        ],
-        isActive: true,
-      },
-      take: 20,
-      orderBy: { createdAt: "desc" },
-    });
+    const query = `
+      SELECT 
+        id, 
+        name, 
+        country_code as "countryCode", 
+        latitude, 
+        longitude, 
+        'city' as type,
+        true as "isActive"
+      FROM hotel.cities
+      WHERE 
+        name ILIKE $1 OR 
+        country_code ILIKE $1
+      ORDER BY name ASC
+      LIMIT 20
+    `;
+    const result = await staticDbPool.query(query, [`%${search}%`]);
 
     res.json({
       success: true,
-      data: destinations,
+      data: result.rows,
     });
   } catch (error: any) {
     console.error("[Hotels] Destination search error:", error.message);
@@ -454,14 +480,12 @@ router.get("/destinations/search", async (req, res: Response) => {
 // GET /api/hotels/amenities - Get hotel amenities
 router.get("/amenities", async (req, res: Response) => {
   try {
-    const amenities = await prisma.hotelAmenity.findMany({
-      where: { isActive: true },
-      orderBy: { category: "asc" },
-    });
+    const query = 'SELECT id, name, category, true as "isActive" FROM hotel.facilities ORDER BY category ASC, name ASC';
+    const result = await staticDbPool.query(query);
 
     res.json({
       success: true,
-      data: amenities,
+      data: result.rows,
     });
   } catch (error: any) {
     console.error("[Hotels] Get amenities error:", error.message);
@@ -493,7 +517,7 @@ router.get("/board-types", async (req, res: Response) => {
   }
 });
 
- // GET /api/hotels/:hotelId - Get hotel details
+// GET /api/hotels/:hotelId - Get hotel details
 router.get("/:hotelId", async (req, res: Response) => {
   try {
     const { hotelId } = req.params;

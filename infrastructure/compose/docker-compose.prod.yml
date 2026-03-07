@@ -1,0 +1,330 @@
+version: '3.9'
+
+services:
+  # API Gateway - Main entry point
+  api-gateway:
+    image: tripalfa/api-gateway:${APP_VERSION:-latest}
+    container_name: tripalfa-api-gateway
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - API_GATEWAY_PORT=3000
+      - LOG_LEVEL=info
+      - DATABASE_URL=${DATABASE_URL}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - BOOKING_SERVICE_URL=http://booking-service:3001
+      - USER_SERVICE_URL=http://user-service:3005
+      - PAYMENT_SERVICE_URL=http://payment-service:3006
+      - WALLET_SERVICE_URL=http://wallet-service:3007
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - booking-service
+      - user-service
+      - payment-service
+    networks:
+      - tripalfa-network
+    volumes:
+      - ./logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Booking Service
+  booking-service:
+    image: tripalfa/booking-service:${APP_VERSION:-latest}
+    container_name: tripalfa-booking-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SERVICE_PORT=3001
+      - LOG_LEVEL=info
+      - DATABASE_URL=${DATABASE_URL}
+      - DUFFEL_API_TOKEN=${DUFFEL_API_TOKEN}
+      - AMADEUS_CLIENT_ID=${AMADEUS_CLIENT_ID}
+      - AMADEUS_CLIENT_SECRET=${AMADEUS_CLIENT_SECRET}
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # User Service
+  user-service:
+    image: tripalfa/user-service:${APP_VERSION:-latest}
+    container_name: tripalfa-user-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SERVICE_PORT=3005
+      - LOG_LEVEL=info
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - EMAIL_SERVICE_URL=${EMAIL_SERVICE_URL}
+    expose:
+      - "3005"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Payment Service
+  payment-service:
+    image: tripalfa/payment-service:${APP_VERSION:-latest}
+    container_name: tripalfa-payment-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SERVICE_PORT=3006
+      - LOG_LEVEL=info
+      - DATABASE_URL=${DATABASE_URL}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+    expose:
+      - "3006"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3006/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Wallet Service
+  wallet-service:
+    image: tripalfa/wallet-service:${APP_VERSION:-latest}
+    container_name: tripalfa-wallet-service
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - SERVICE_PORT=3007
+      - LOG_LEVEL=info
+      - DATABASE_URL=${DATABASE_URL}
+    expose:
+      - "3007"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3007/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Static Data Service
+  static-data:
+    image: tripalfa/static-data:${APP_VERSION:-latest}
+    container_name: tripalfa-static-data
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - STATIC_DATA_PORT=3002
+      - LOG_LEVEL=info
+      - DATABASE_URL=${DATABASE_URL}
+    ports:
+      - "3002:3002"
+    expose:
+      - "3002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Booking Engine Frontend (served by nginx)
+  booking-engine:
+    image: tripalfa/booking-engine:${APP_VERSION:-latest}
+    container_name: tripalfa-booking-engine
+    restart: always
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Reverse Proxy - Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: tripalfa-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infrastructure/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - api-gateway
+      - static-data
+      - booking-engine
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # PostgreSQL (if using local database - otherwise use Neon)
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: tripalfa-postgres
+  #   restart: always
+  #   environment:
+  #     - POSTGRES_USER=${DB_USER:-postgres}
+  #     - POSTGRES_PASSWORD=${DB_PASSWORD}
+  #     - POSTGRES_DB=${DB_NAME:-tripalfa}
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - tripalfa-network
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "10m"
+  #       max-file: "10"
+
+  # Redis Cache (optional, for performance)
+  redis:
+    image: redis:7-alpine
+    container_name: tripalfa-redis
+    restart: always
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tripalfa-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: tripalfa-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+  # Grafana - Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: tripalfa-grafana
+    restart: always
+    ports:
+      - "3010:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - tripalfa-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "10"
+
+networks:
+  tripalfa-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:

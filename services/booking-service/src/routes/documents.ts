@@ -1,4 +1,5 @@
 import express, { Request, Response, Router } from "express";
+import { prisma } from "@tripalfa/shared-database";
 
 const router: Router = express.Router();
 
@@ -133,18 +134,20 @@ const DEFAULT_COMPANY_INFO: DocumentCompanyInfo = {
 };
 
 const DOCUMENT_THEME_COLORS = {
-  textPrimary: "rgb(51, 51, 51)",
-  textSecondary: "rgb(102, 102, 102)",
-  brandPrimary: "rgb(0, 102, 204)",
-  brandPrimaryDark: "rgb(0, 82, 163)",
-  surfaceMuted: "rgb(249, 249, 249)",
-  surfaceInfo: "rgb(240, 248, 255)",
-  success: "rgb(40, 167, 69)",
-  successDark: "rgb(32, 201, 151)",
-  danger: "rgb(220, 53, 69)",
-  dangerDark: "rgb(200, 35, 51)",
-  warning: "rgb(253, 126, 20)",
-  warningDark: "rgb(230, 126, 34)",
+  textPrimary: "rgb(21, 31, 102)", // Deep Navy from brand
+  textSecondary: "rgb(102, 112, 133)", // Muted Slate
+  brandPrimary: "rgb(21, 31, 102)", // Primary Navy
+  brandPrimaryDark: "rgb(15, 22, 73)", // Darker Navy
+  brandSecondary: "rgb(237, 107, 74)", // Coral
+  brandAccent: "rgb(40, 220, 203)", // Cyan
+  surfaceMuted: "rgb(242, 244, 247)",
+  surfaceInfo: "rgb(230, 242, 255)",
+  success: "rgb(18, 183, 106)",
+  successDark: "rgb(10, 132, 78)",
+  danger: "rgb(240, 68, 56)",
+  dangerDark: "rgb(180, 35, 24)",
+  warning: "rgb(247, 144, 9)",
+  warningDark: "rgb(181, 71, 8)",
 } as const;
 
 // ============================================================================
@@ -172,19 +175,22 @@ function generateFlightItineraryHtml(
   const segmentsHtml = booking.segments
     .map(
       (segment, index) => `
-    <div style="margin-bottom: 30px; padding: 20px; background-color: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 8px;">
-      <h3 style="margin: 0 0 15px 0; color: ${DOCUMENT_THEME_COLORS.textPrimary};">Flight ${index + 1}: ${segment.airline} ${segment.flightNumber}</h3>
+    <div style="margin-bottom: 30px; padding: 20px; background-color: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 12px; border-left: 4px solid ${DOCUMENT_THEME_COLORS.brandSecondary};">
+      <h3 style="margin: 0 0 15px 0; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">Flight ${index + 1}: ${segment.airline} ${segment.flightNumber}</h3>
       <table style="width: 100%;">
         <tr>
           <td style="padding: 10px;">
             <div style="font-size: 24px; font-weight: bold; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">${formatTime(segment.departureTime)}</div>
-            <div>${segment.departureCity} (${segment.departureAirportCode})</div>
+            <div style="font-weight: 600;">${segment.departureCity} (${segment.departureAirportCode})</div>
             <div style="font-size: 12px; color: ${DOCUMENT_THEME_COLORS.textSecondary};">${formatDate(segment.departureDate)}${segment.departureTerminal ? ` - Terminal ${segment.departureTerminal}` : ""}</div>
           </td>
-          <td style="padding: 10px; text-align: center;">✈ ${segment.duration || ""}</td>
+          <td style="padding: 10px; text-align: center; color: ${DOCUMENT_THEME_COLORS.brandSecondary};">
+             <div style="font-size: 20px;">✈</div>
+             <div style="font-size: 11px; font-weight: 600;">${segment.duration || ""}</div>
+          </td>
           <td style="padding: 10px; text-align: right;">
             <div style="font-size: 24px; font-weight: bold; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">${formatTime(segment.arrivalTime)}</div>
-            <div>${segment.arrivalCity} (${segment.arrivalAirportCode})</div>
+            <div style="font-weight: 600;">${segment.arrivalCity} (${segment.arrivalAirportCode})</div>
           </td>
         </tr>
       </table>
@@ -233,11 +239,11 @@ function generateHotelItineraryHtml(
   const roomsHtml = booking.rooms
     .map(
       (room) => `
-    <div style="padding: 15px; background: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 8px; margin-bottom: 15px;">
-      <h4>${room.roomName}</h4>
-      <p>${room.adults} Adults, ${room.children} Children | ${room.numberOfNights} Nights | $${room.ratePerNight}/night</p>
-      <p><strong>Total: $${room.totalRate.toFixed(2)}</strong></p>
-      ${room.inclusions?.length ? `<p>Inclusions: ${room.inclusions.join(", ")}</p>` : ""}
+    <div style="padding: 15px; background: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid ${DOCUMENT_THEME_COLORS.brandSecondary};">
+      <h4 style="margin: 0 0 10px 0; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">${room.roomName}</h4>
+      <p style="margin: 5px 0;">${room.adults} Adults, ${room.children} Children | ${room.numberOfNights} Nights</p>
+      <p style="margin: 5px 0; font-weight: bold; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">Total: $${room.totalRate.toFixed(2)}</p>
+      ${room.inclusions?.length ? `<p style="margin: 5px 0; font-size: 12px; color: ${DOCUMENT_THEME_COLORS.brandAccent}; font-weight: 600;">✨ Inclusions: ${room.inclusions.join(", ")}</p>` : ""}
     </div>
   `,
     )
@@ -284,8 +290,8 @@ function generateFlightETicketHtml(
       <h3>Passenger: ${customer.name}</h3>
       <p>Email: ${customer.email}</p>
       ${booking.segments
-        .map(
-          (s, i) => `
+      .map(
+        (s, i) => `
         <div style="padding: 15px; background: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 8px; margin: 10px 0;">
           <strong>Flight ${i + 1}:</strong> ${s.airline} ${s.flightNumber}<br>
           <strong>From:</strong> ${s.departureCity} (${s.departureAirportCode}) at ${s.departureTime}<br>
@@ -293,8 +299,8 @@ function generateFlightETicketHtml(
           <strong>Class:</strong> ${s.cabinClass}
         </div>
       `,
-        )
-        .join("")}
+      )
+      .join("")}
     </div>
   </div>
 </body></html>
@@ -537,115 +543,134 @@ function generateDebitNoteHtml(
 }
 
 // ============================================================================
-// SAMPLE DATA GENERATORS
+// DATA FETCHERS - Real-time Database Access
 // ============================================================================
 
-function getSampleFlightData(bookingId: string) {
-  const customer: DocumentCustomerInfo = {
-    id: "cust-001",
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+971 50 123 4567",
-  };
-
-  const booking: FlightBooking = {
-    id: bookingId,
-    bookingReference: bookingId,
-    pnr: "ABC123",
-    ticketNumber: "176-2345678901",
-    passengers: [
-      { id: "p1", firstName: "John", lastName: "Doe", type: "adult" },
-    ],
-    segments: [
-      {
-        id: "s1",
-        flightNumber: "EK2",
-        airline: "Emirates",
-        airlineIata: "EK",
-        departureAirport: "Dubai International",
-        departureAirportCode: "DXB",
-        departureCity: "Dubai",
-        departureTerminal: "3",
-        departureTime: "2026-03-15T08:30:00",
-        departureDate: "2026-03-15",
-        arrivalAirport: "London Heathrow",
-        arrivalAirportCode: "LHR",
-        arrivalCity: "London",
-        arrivalTerminal: "3",
-        arrivalTime: "2026-03-15T12:45:00",
-        duration: "7h 15m",
-        cabinClass: "Economy",
+async function getBookingData(bookingId: string) {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      bookingSegments: true,
+      bookingPassengers: true,
+      invoices: {
+        include: {
+          payments: true,
+        },
       },
-    ],
-    totalAmount: 1250.0,
-    baseFare: 1000.0,
-    taxes: 250.0,
-    currency: "USD",
-  };
+    },
+  });
 
-  const payment: PaymentBreakdown = {
-    baseFare: 1000.0,
-    taxes: 250.0,
-    fees: 0,
-    total: 1250.0,
-    currency: "USD",
-    paymentMethod: "credit_card",
-    paidAmount: 1250.0,
-  };
+  if (!booking) return null;
 
-  return { booking, customer, payment };
-}
-
-function getSampleHotelData(bookingId: string) {
+  // Fetch or map customer info
+  // For now, use data from booking metadata or fallback
+  const metadata = (booking.metadata as any) || {};
   const customer: DocumentCustomerInfo = {
-    id: "cust-002",
-    name: "Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+971 50 987 6543",
+    id: booking.userId,
+    name: metadata.customerName || booking.customerEmail || "Guest",
+    email: booking.customerEmail || "guest@example.com",
+    phone: booking.customerPhone || "N/A",
   };
 
-  const booking: HotelBooking = {
-    id: bookingId,
-    hotelName: "Grand Plaza Hotel",
-    hotelAddress: "Sheikh Zayed Road",
-    hotelCity: "Dubai",
-    hotelCountry: "UAE",
-    hotelPhone: "+971 4 123 4567",
-    checkInDate: "2026-03-15",
-    checkOutDate: "2026-03-18",
-    numberOfNights: 3,
-    rooms: [
-      {
-        id: "r1",
-        roomType: "Deluxe King",
-        roomName: "Deluxe King Room",
-        adults: 2,
-        children: 0,
-        checkIn: "2026-03-15",
-        checkOut: "2026-03-18",
-        numberOfNights: 3,
-        ratePerNight: 200.0,
-        totalRate: 600.0,
-        inclusions: ["Breakfast", "WiFi"],
-      },
-    ],
-    guestName: "Jane Smith",
-    totalGuests: 2,
-    voucherNumber: `VCH-${bookingId}`,
-    confirmationNumber: bookingId,
-  };
+  // Map to Document types
+  const isHotel = booking.serviceType.toLowerCase() === "hotel";
 
-  const payment: PaymentBreakdown = {
-    baseFare: 600.0,
-    taxes: 60.0,
-    fees: 0,
-    total: 660.0,
-    currency: "USD",
-    paymentMethod: "credit_card",
-    paidAmount: 660.0,
-  };
+  if (isHotel) {
+    const hotelSegment = booking.bookingSegments[0]; // Assume first segment for simple voucher
+    const hotelBooking: HotelBooking = {
+      id: booking.id,
+      hotelName: hotelSegment?.hotelName || "Hotel",
+      hotelAddress: metadata.hotelAddress || "Address",
+      hotelCity: metadata.hotelCity || "City",
+      hotelCountry: metadata.hotelCountry || "Country",
+      checkInDate: hotelSegment?.checkInDate?.toISOString() || "",
+      checkOutDate: hotelSegment?.checkOutDate?.toISOString() || "",
+      numberOfNights: hotelSegment ? Math.ceil((hotelSegment.checkOutDate!.getTime() - hotelSegment.checkInDate!.getTime()) / (1000 * 3600 * 24)) : 0,
+      rooms: [
+        {
+          id: hotelSegment?.id || "room-1",
+          roomType: hotelSegment?.roomType || "Standard",
+          roomName: hotelSegment?.roomType || "Standard Room",
+          adults: metadata.adults || 1,
+          children: metadata.children || 0,
+          checkIn: hotelSegment?.checkInDate?.toISOString() || "",
+          checkOut: hotelSegment?.checkOutDate?.toISOString() || "",
+          numberOfNights: hotelSegment ? Math.ceil((hotelSegment.checkOutDate!.getTime() - hotelSegment.checkInDate!.getTime()) / (1000 * 3600 * 24)) : 0,
+          ratePerNight: Number(booking.baseAmount) / (metadata.nights || 1),
+          totalRate: Number(booking.baseAmount),
+        },
+      ],
+      guestName: customer.name,
+      totalGuests: (metadata.adults || 0) + (metadata.children || 0),
+      voucherNumber: metadata.voucherNumber || booking.bookingRef,
+      confirmationNumber: booking.bookingRef,
+    };
 
-  return { booking, customer, payment };
+    const latestInvoice = booking.invoices[0];
+    const latestPayment = latestInvoice?.payments[0];
+
+    const payment: PaymentBreakdown = {
+      baseFare: Number(booking.baseAmount),
+      taxes: Number(booking.taxAmount),
+      fees: Number(booking.markupAmount),
+      total: Number(booking.totalAmount),
+      currency: booking.currency,
+      paymentMethod: latestPayment?.paymentMethod || metadata.paymentMethod || "Credit Card",
+      paidAmount: latestPayment ? Number(latestPayment.amount) : Number(booking.totalAmount),
+    };
+
+    return { booking: hotelBooking, customer, payment, isHotel: true };
+  } else {
+    // Flight mapping
+    const flightBooking: FlightBooking = {
+      id: booking.id,
+      bookingReference: booking.bookingRef,
+      pnr: metadata.pnr || booking.bookingRef,
+      ticketNumber: metadata.ticketNumber,
+      passengers: booking.bookingPassengers.map((p) => ({
+        id: p.id,
+        firstName: p.firstName || "",
+        lastName: p.lastName || "",
+        type: (p.passengerType as any) || "adult",
+      })),
+      segments: booking.bookingSegments.map((s) => ({
+        id: s.id,
+        flightNumber: s.flightNumber || "",
+        airline: s.airline || "",
+        airlineIata: metadata.airlineCode || "",
+        departureAirport: s.departureAirport || "",
+        departureAirportCode: metadata.departureCode || s.departureAirport || "",
+        departureCity: metadata.departureCity || "",
+        departureTime: s.departureTime?.toISOString() || "",
+        departureDate: s.departureTime?.toISOString().split("T")[0] || "",
+        arrivalAirport: s.arrivalAirport || "",
+        arrivalAirportCode: metadata.arrivalCode || s.arrivalAirport || "",
+        arrivalCity: metadata.arrivalCity || "",
+        arrivalTime: s.arrivalTime?.toISOString() || "",
+        duration: metadata.duration,
+        cabinClass: metadata.cabinClass || "Economy",
+      })),
+      totalAmount: Number(booking.totalAmount),
+      baseFare: Number(booking.baseAmount),
+      taxes: Number(booking.taxAmount),
+      currency: booking.currency,
+    };
+
+    const latestInvoice = booking.invoices[0];
+    const latestPayment = latestInvoice?.payments[0];
+
+    const payment: PaymentBreakdown = {
+      baseFare: Number(booking.baseAmount),
+      taxes: Number(booking.taxAmount),
+      fees: Number(booking.markupAmount),
+      total: Number(booking.totalAmount),
+      currency: booking.currency,
+      paymentMethod: latestPayment?.paymentMethod || metadata.paymentMethod || "Credit Card",
+      paidAmount: latestPayment ? Number(latestPayment.amount) : Number(booking.totalAmount),
+    };
+
+    return { booking: flightBooking, customer, payment, isHotel: false };
+  }
 }
 
 // ============================================================================
@@ -665,105 +690,105 @@ router.get("/:bookingId", async (req: Request, res: Response) => {
     // In production, fetch from database based on booking status
     const documents = isHotel
       ? [
-          {
-            id: `doc-itin-${bookingId}`,
-            type: "itinerary",
-            name: "Hotel Itinerary",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/itinerary?bookingType=hotel`,
-            available: true,
-          },
-          {
-            id: `doc-inv-${bookingId}`,
-            type: "invoice",
-            name: "Hotel Invoice",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/invoice?bookingType=hotel`,
-            available: true,
-          },
-          {
-            id: `doc-vch-${bookingId}`,
-            type: "voucher",
-            name: "Hotel Voucher",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/voucher?bookingType=hotel`,
-            available: true,
-          },
-          {
-            id: `doc-rct-${bookingId}`,
-            type: "receipt",
-            name: "Payment Receipt",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/receipt?bookingType=hotel`,
-            available: true,
-          },
-          {
-            id: `doc-ref-${bookingId}`,
-            type: "refund",
-            name: "Refund Note",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/refund?bookingType=hotel`,
-            available: true,
-          },
-          {
-            id: `doc-dbt-${bookingId}`,
-            type: "debit",
-            name: "Debit Note",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/debit?bookingType=hotel`,
-            available: true,
-          },
-        ]
+        {
+          id: `doc-itin-${bookingId}`,
+          type: "itinerary",
+          name: "Hotel Itinerary",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/itinerary?bookingType=hotel`,
+          available: true,
+        },
+        {
+          id: `doc-inv-${bookingId}`,
+          type: "invoice",
+          name: "Hotel Invoice",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/invoice?bookingType=hotel`,
+          available: true,
+        },
+        {
+          id: `doc-vch-${bookingId}`,
+          type: "voucher",
+          name: "Hotel Voucher",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/voucher?bookingType=hotel`,
+          available: true,
+        },
+        {
+          id: `doc-rct-${bookingId}`,
+          type: "receipt",
+          name: "Payment Receipt",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/receipt?bookingType=hotel`,
+          available: true,
+        },
+        {
+          id: `doc-ref-${bookingId}`,
+          type: "refund",
+          name: "Refund Note",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/refund?bookingType=hotel`,
+          available: true,
+        },
+        {
+          id: `doc-dbt-${bookingId}`,
+          type: "debit",
+          name: "Debit Note",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/debit?bookingType=hotel`,
+          available: true,
+        },
+      ]
       : [
-          {
-            id: `doc-itin-${bookingId}`,
-            type: "itinerary",
-            name: "Flight Itinerary",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/itinerary`,
-            available: true,
-          },
-          {
-            id: `doc-inv-${bookingId}`,
-            type: "invoice",
-            name: "Commercial Invoice",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/invoice`,
-            available: true,
-          },
-          {
-            id: `doc-tkt-${bookingId}`,
-            type: "ticket",
-            name: "E-Ticket",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/ticket`,
-            available: false,
-          },
-          {
-            id: `doc-rct-${bookingId}`,
-            type: "receipt",
-            name: "Payment Receipt",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/receipt`,
-            available: false,
-          },
-          {
-            id: `doc-ref-${bookingId}`,
-            type: "refund",
-            name: "Refund Note",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/refund`,
-            available: false,
-          },
-          {
-            id: `doc-dbt-${bookingId}`,
-            type: "debit",
-            name: "Debit Note",
-            format: "PDF",
-            url: `/api/documents/${bookingId}/download/debit`,
-            available: false,
-          },
-        ];
+        {
+          id: `doc-itin-${bookingId}`,
+          type: "itinerary",
+          name: "Flight Itinerary",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/itinerary`,
+          available: true,
+        },
+        {
+          id: `doc-inv-${bookingId}`,
+          type: "invoice",
+          name: "Commercial Invoice",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/invoice`,
+          available: true,
+        },
+        {
+          id: `doc-tkt-${bookingId}`,
+          type: "ticket",
+          name: "E-Ticket",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/ticket`,
+          available: false,
+        },
+        {
+          id: `doc-rct-${bookingId}`,
+          type: "receipt",
+          name: "Payment Receipt",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/receipt`,
+          available: false,
+        },
+        {
+          id: `doc-ref-${bookingId}`,
+          type: "refund",
+          name: "Refund Note",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/refund`,
+          available: false,
+        },
+        {
+          id: `doc-dbt-${bookingId}`,
+          type: "debit",
+          name: "Debit Note",
+          format: "PDF",
+          url: `/api/documents/${bookingId}/download/debit`,
+          available: false,
+        },
+      ];
 
     res.json({ success: true, data: { documents } });
   } catch (error: any) {
@@ -791,10 +816,16 @@ router.get(
         `[Documents] Generating ${documentType} for booking ${bookingId}, isHotel: ${isHotel}`,
       );
 
-      // Get sample data (in production, fetch from database)
-      const { booking, customer, payment } = isHotel
-        ? getSampleHotelData(bookingId)
-        : getSampleFlightData(bookingId);
+      // Get real data from database
+      const result = await getBookingData(bookingId);
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          error: "Booking not found",
+        });
+      }
+
+      const { booking, customer, payment } = result;
 
       let htmlContent = "";
       let documentName = "";
@@ -810,15 +841,15 @@ router.get(
           documentName = isHotel ? "Hotel_Invoice" : "Flight_Invoice";
           htmlContent = isHotel
             ? generateHotelInvoiceHtml(
-                booking as HotelBooking,
-                customer,
-                payment,
-              )
+              booking as HotelBooking,
+              customer,
+              payment,
+            )
             : generateFlightInvoiceHtml(
-                booking as FlightBooking,
-                customer,
-                payment,
-              );
+              booking as FlightBooking,
+              customer,
+              payment,
+            );
           break;
         case "ticket":
           documentName = "E-Ticket";
@@ -838,15 +869,15 @@ router.get(
           documentName = "Payment_Receipt";
           htmlContent = isHotel
             ? generateHotelReceiptHtml(
-                booking as HotelBooking,
-                customer,
-                payment,
-              )
+              booking as HotelBooking,
+              customer,
+              payment,
+            )
             : generateFlightReceiptHtml(
-                booking as FlightBooking,
-                customer,
-                payment,
-              );
+              booking as FlightBooking,
+              customer,
+              payment,
+            );
           break;
         case "refund":
           documentName = "Refund_Note";

@@ -7,7 +7,7 @@
 
 ## Overview
 
-The Real-Time Booking API implements the complete LiteAPI hotel booking flow according to the official LiteAPI documentation: https://docs.liteapi.travel/docs/booking-a-room
+The Real-Time Booking API implements the complete LiteAPI hotel booking flow according to the official LiteAPI documentation: <https://docs.liteapi.travel/docs/booking-a-room>
 
 This API enables end-to-end hotel booking with real-time rate locking, payment processing, and booking management directly integrated with NEON database for persistent storage.
 
@@ -662,7 +662,7 @@ All operations logged with prefix `[RealtimeBooking]`:
 
 For issues or questions:
 
-- **LiteAPI Documentation**: https://docs.liteapi.travel/docs/booking-a-room
+- **LiteAPI Documentation**: <https://docs.liteapi.travel/docs/booking-a-room>
 - **Database**: NEON PostgreSQL (see connection string in `.env`)
 - **Cache**: Redis (see Redis configuration in services/booking-service)
 - **Status Page**: Check `/health` endpoint

@@ -2,7 +2,7 @@ import { Plane, Building2, Package, Car, Bell, Gift } from "lucide-react";
 
 export const APP_NAME = "Travel Kingdom";
 
-// Dev: Use relative paths so Vite proxy intercepts requests (http://localhost:3000)
+// Dev: Use relative paths so Vite proxy intercepts requests (http://localhost:3001)
 // Prod: Use full URL via VITE_API_BASE_URL environment variable
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 

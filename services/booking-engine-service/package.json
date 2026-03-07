@@ -8,7 +8,7 @@
     "dev": "pnpm dlx tsx watch src/index.ts",
     "build": "pnpm exec tsc",
     "start": "node dist/index.js",
-    "lint": "pnpm exec eslint src --ext .ts",
+    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
     "test": "pnpm exec vitest --passWithNoTests"
   },
   "dependencies": {

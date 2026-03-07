@@ -45,22 +45,7 @@ type Booking = {
   details?: any;
 };
 
-const initialMockBookings: Booking[] = [
-  {
-    id: "TL-000101",
-    type: "flight",
-    date: "2025-12-01",
-    status: "Ticketed",
-    amount: 120.0,
-  },
-  {
-    id: "TL-000102",
-    type: "hotel",
-    date: "2025-11-20",
-    status: "Vouchered",
-    amount: 250.0,
-  },
-];
+// Initial mock removed, empty array applied below for strict data representation
 
 // Default tier for fallback
 const defaultTier: TierBenefits = {
@@ -162,7 +147,7 @@ export default function Profile(): React.JSX.Element {
   const [loyaltyNumber, setLoyaltyNumber] = useState("");
 
   // Bookings & login history
-  const [bookings, setBookings] = useState<Booking[]>(initialMockBookings);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loginHistory, setLoginHistory] = useState<any[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -215,15 +200,15 @@ export default function Profile(): React.JSX.Element {
           setPassportExpiry(user.passportExpiry || "");
           setPassportIssuingCountry(
             user.passportIssuingCountry ||
-              contentOptions.countries[0] ||
-              "United States",
+            contentOptions.countries[0] ||
+            "United States",
           );
           setResidencyNo(user.residencyNo || "");
           setResidencyExpiry(user.residencyExpiry || "");
           setResidencyIssuingCountry(
             user.residencyIssuingCountry ||
-              contentOptions.countries[0] ||
-              "United States",
+            contentOptions.countries[0] ||
+            "United States",
           );
 
           setAirlinePref(user.airlinePref || "");
@@ -237,8 +222,8 @@ export default function Profile(): React.JSX.Element {
           );
           setHotelCategoryPref(
             user.hotelCategoryPref ||
-              contentOptions.hotelCategories[0] ||
-              "Any",
+            contentOptions.hotelCategories[0] ||
+            "Any",
           );
           setLocationPrefs(
             createLocationPrefs(
@@ -330,7 +315,8 @@ export default function Profile(): React.JSX.Element {
             })),
           );
       } catch {
-        // keep mock
+        // no fallback to mock, leave as empty array
+        setBookings([]);
       }
 
       // load documents
@@ -1220,12 +1206,12 @@ export default function Profile(): React.JSX.Element {
                     {(languageOptions.length
                       ? languageOptions
                       : [
-                          {
-                            code: languagePref || "en",
-                            name: languagePref || "en",
-                            flag: "🌐",
-                          },
-                        ]
+                        {
+                          code: languagePref || "en",
+                          name: languagePref || "en",
+                          flag: "🌐",
+                        },
+                      ]
                     ).map((l) => (
                       <option
                         key={l.code}

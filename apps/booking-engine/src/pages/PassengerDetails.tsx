@@ -44,10 +44,21 @@ import { formatCurrency } from "@tripalfa/ui-components";
 import { api } from "../lib/api";
 import { TripLogerLayout } from "../components/layout/TripLogerLayout";
 import { FareRulesPopup } from "../components/FareRulesPopup";
-import { SeatSelectionPopup } from "../components/SeatSelectionPopup";
-import { AdditionalBaggagePopup } from "../components/AdditionalBaggagePopup";
-import { MealSelectionPopup } from "../components/MealSelectionPopup";
-import { SpecialRequestPopup } from "../components/SpecialRequestPopup";
+import {
+  SeatSelectionPopup,
+  BaggageSelectionPopup,
+  MealSelectionPopup,
+  SpecialServicesPopup,
+} from "../components/ancillary";
+import {
+  type SelectedSeat,
+  type SelectedBaggage,
+  type SelectedMeal,
+  type SelectedSpecialService,
+  calculateAncillarySummary,
+  formatFlightSegments,
+  formatPassengersFromBooking,
+} from "../lib/ancillary-types";
 import {
   PassengerForm,
   activePassengerSchema,
@@ -98,6 +109,8 @@ export default function PassengerDetails() {
   const [isMealSelectionOpen, setIsMealSelectionOpen] = useState(false);
   const [isSpecialRequestOpen, setIsSpecialRequestOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const urlAdults = parseInt(searchParams.get("adults") || "1", 10);
+  const urlChildren = parseInt(searchParams.get("children") || "0", 10);
 
   // Loyalty hook for tier discount calculations
   const { balance } = useLoyaltyBalance();
@@ -108,41 +121,38 @@ export default function PassengerDetails() {
   const couponData = validationResult;
 
   // ── Ancillary state – initialised from FlightAddons navigation state ──────
-  // selectedServices: [{id, quantity}]  – Duffel available_service IDs
-  // mealSSRs: string[]                  – IATA meal SSR codes (e.g. 'VGML')
-  // specialSSRs: string[]               – IATA assistance SSR codes (e.g. 'WCHR')
-  // passengersCount: { adults, children, infants } – passed from FlightSearch/FlightAddons
-  const passedSelectedServices: Array<{ id: string; quantity: number }> =
-    location.state?.selectedServices || [];
-  const passedMealSSRs: string[] = location.state?.mealSSRs || [];
-  const passedSpecialSSRs: string[] = location.state?.specialSSRs || [];
-  // Passenger counts from the search form (adults + children used for popup selectors)
+  const passedAncillarySelections = location.state?.ancillarySelections || {
+    seats: [],
+    baggage: [],
+    meals: [],
+    specialServices: [],
+  };
+
+  const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>(passedAncillarySelections.seats);
+  const [selectedBaggage, setSelectedBaggage] = useState<SelectedBaggage[]>(passedAncillarySelections.baggage);
+  const [selectedMeals, setSelectedMeals] = useState<SelectedMeal[]>(passedAncillarySelections.meals);
+  const [selectedSpecialServices, setSelectedSpecialServices] = useState<SelectedSpecialService[]>(passedAncillarySelections.specialServices);
+
+  const ancillarySummary = useMemo(() => calculateAncillarySummary({
+    seats: selectedSeats,
+    baggage: selectedBaggage,
+    meals: selectedMeals,
+    specialServices: selectedSpecialServices
+  }), [selectedSeats, selectedBaggage, selectedMeals, selectedSpecialServices]);
+
+  const seatsTotal = ancillarySummary.seats;
+  const baggageTotal = ancillarySummary.baggage;
+  const mealsTotal = ancillarySummary.meals;
+  const ssrTotal = ancillarySummary.specialServices;
+  const ancillaryTotal = ancillarySummary.total;
+
   const passengersCount: {
     adults: number;
     children: number;
     infants: number;
   } | null = location.state?.passengersCount ?? null;
 
-  // baggageTotal is the sum of priced Duffel services – pre-computed in FlightAddons
-  // We re-derive from totalPrice - flight.amount to stay consistent
-  const passedTotalPrice: number = location.state?.totalPrice ?? 0;
-  const passedFlight2 = location.state?.flight;
-  const derivedBaggageTotal =
-    passedTotalPrice > 0 && passedFlight2?.amount
-      ? Math.max(0, passedTotalPrice - passedFlight2.amount)
-      : 0;
-
-  const [seatsTotal, setSeatsTotal] = useState(0);
-  const [baggageTotal, setBaggageTotal] = useState(derivedBaggageTotal);
-  const [mealsTotal, setMealsTotal] = useState(0);
-  // SSR requests merged from both meal + special requests
-  const [ssrRequests, setSsrRequests] = useState<any[]>([
-    ...passedMealSSRs.map((code: string) => ({ type: "meal", code })),
-    ...passedSpecialSSRs.map((code: string) => ({
-      type: "special_assistance",
-      code,
-    })),
-  ]);
+  const passedFlight = location.state?.flight;
   const [paymentModeState, setPaymentModeState] =
     useState<PaymentMode>("wallet");
 
@@ -209,10 +219,11 @@ export default function PassengerDetails() {
           hotel: hotelSummary,
           flight: isHotel ? null : flightSummary,
           ancillaries: {
-            seats: seatsTotal,
-            baggage: baggageTotal,
-            meals: mealsTotal,
-            ssr: ssrRequests,
+            seats: selectedSeats,
+            baggage: selectedBaggage,
+            meals: selectedMeals,
+            specialServices: selectedSpecialServices,
+            total: ancillaryTotal,
           },
           totals: {
             subtotal,
@@ -234,10 +245,11 @@ export default function PassengerDetails() {
           flight: passedFlight,
           hotel: hotelSummary,
           ancillaries: {
-            seats: seatsTotal,
-            baggage: baggageTotal,
-            meals: mealsTotal,
-            ssr: ssrRequests,
+            seats: selectedSeats,
+            baggage: selectedBaggage,
+            meals: selectedMeals,
+            specialServices: selectedSpecialServices,
+            total: ancillaryTotal,
           },
           isRefundable: isRefundable,
         };
@@ -365,7 +377,7 @@ export default function PassengerDetails() {
     allowedPaymentMethods.includes("wallet");
   const holdPaymentEnabled = allowedPaymentMethods.length > 0;
 
-  const passedFlight = location.state?.flight;
+  // const passedFlight = location.state?.flight; // Duplicate removed
 
   // ── Map Duffel segment fields to the display format used by the sidebar ──
   // Duffel segment keys: origin, destination, departureTime, arrivalTime, airline, flightNumber
@@ -391,44 +403,40 @@ export default function PassengerDetails() {
 
   const flightSummary = passedFlight
     ? {
-        cabin: passedFlight.cabin || "Economy",
-        route: `${passedFlight.origin || ""} — ${passedFlight.destination || ""}`,
-        price: passedFlight.amount || 0,
-        taxes: passedFlight.taxes || 0,
-        isLCC: passedFlight.isLCC || false,
-        airlineLogo: passedFlight.airlineLogo,
-        airlineName: passedFlight.airline || "",
-        segments: (passedFlight.segments || []).map(mapSegment),
-      }
+      cabin: passedFlight.cabin || "Economy",
+      route: `${passedFlight.origin || ""} — ${passedFlight.destination || ""}`,
+      price: passedFlight.amount || 0,
+      taxes: passedFlight.taxes || 0,
+      isLCC: passedFlight.isLCC || false,
+      airlineLogo: passedFlight.airlineLogo,
+      airlineName: passedFlight.airline || "",
+      segments: (passedFlight.segments || []).map(mapSegment),
+    }
     : summary?.flight || {
-        // No flight in state → empty / null summary (no hardcoded data)
-        cabin: "",
-        route: "",
-        price: 0,
-        taxes: 0,
-        isLCC: false,
-        airlineName: "",
-        segments: [],
-      };
+      // No flight in state → empty / null summary (no hardcoded data)
+      cabin: "",
+      route: "",
+      price: 0,
+      taxes: 0,
+      isLCC: false,
+      airlineName: "",
+      segments: [],
+    };
 
   const hotelSummary = summary?.hotel
     ? {
-        name: summary.hotel.name,
-        location: summary.hotel.location,
-        price: summary.accommodation?.price || 5500,
-        taxes: 0,
-        image: summary.hotel.image,
-      }
+      name: summary.hotel.name,
+      location: summary.hotel.location,
+      price: summary.accommodation?.price || 5500,
+      taxes: 0,
+      image: summary.hotel.image,
+    }
     : null;
 
   // Dynamic Calculations with tier discount
   const subtotal = isHotel
     ? hotelSummary?.price || 0
-    : flightSummary.price +
-      flightSummary.taxes +
-      seatsTotal +
-      baggageTotal +
-      mealsTotal;
+    : (flightSummary.price || 0) + (flightSummary.taxes || 0) + ancillaryTotal;
   const tierDiscountPercent = balance?.tier.discountPercentage || 0;
   const tierDiscountAmount = (subtotal * tierDiscountPercent) / 100;
   const couponDiscountAmount = (subtotal * couponDiscount) / 100;
@@ -624,7 +632,7 @@ export default function PassengerDetails() {
                   <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
                     Special RR
                   </span>
-                  {ssrRequests.length > 0 && (
+                  {selectedSpecialServices.length > 0 && (
                     <span className="text-[9px] font-bold text-orange-500 uppercase tracking-widest italic flex items-center gap-1">
                       <Clock size={8} /> Pending
                     </span>
@@ -994,66 +1002,94 @@ export default function PassengerDetails() {
       <SeatSelectionPopup
         isOpen={isSeatSelectionOpen}
         onClose={() => setIsSeatSelectionOpen(false)}
-        isLCC={flightSummary.isLCC}
+        isLCC={passedFlight?.isLCC}
         offerId={passedFlight?.id}
+        passengers={formatPassengersFromBooking(
+          passengersCount || { adults: urlAdults, children: urlChildren, infants: 0 },
+          fields,
+        )}
+        segments={formatFlightSegments(passedFlight?.segments || [])}
         onConfirm={(seats) => {
-          setSeatsTotal(
-            seats.reduce((sum: number, s: any) => sum + s.price, 0),
-          );
+          setSelectedSeats(seats);
           setIsSeatSelectionOpen(false);
         }}
+        existingSelections={selectedSeats}
       />
-      <AdditionalBaggagePopup
+      <BaggageSelectionPopup
         isOpen={isBaggageOpen}
         onClose={() => setIsBaggageOpen(false)}
-        isLCC={flightSummary.isLCC}
-        // Pass real Duffel ancillary services (baggage type) from the offer
-        availableServices={passedFlight?.ancillaries
+        isLCC={passedFlight?.isLCC}
+        passengers={formatPassengersFromBooking(
+          passengersCount || { adults: urlAdults, children: urlChildren, infants: 0 },
+          fields,
+        ).filter(p => p.type !== 'Infant')}
+        segments={formatFlightSegments(passedFlight?.segments || [])}
+        availableOptions={passedFlight?.ancillaries
           ?.filter((a: any) => a.type === "baggage")
-          .map((a: any) => a.raw)
-          .filter(Boolean)}
-        // Total passengers from FlightAddons state (adults + children)
-        passengerCount={
-          passedSelectedServices?.length > 0 || passengersCount
-            ? (passengersCount?.adults || 1) + (passengersCount?.children || 0)
-            : fields.length || 1
-        }
+          .map((a: any) => ({
+            id: a.id,
+            type: "checked",
+            weight: a.raw?.metadata?.weight || 23,
+            weightUnit: a.raw?.metadata?.weight_unit || "kg",
+            price: a.price,
+            currency: a.currency,
+            description: a.name,
+          }))}
         onConfirm={(bags) => {
-          setBaggageTotal(
-            bags.reduce((sum: number, b: any) => sum + (b.price || 0), 0),
-          );
+          setSelectedBaggage(bags);
           setIsBaggageOpen(false);
         }}
+        existingSelections={selectedBaggage}
       />
       <MealSelectionPopup
         isOpen={isMealSelectionOpen}
         onClose={() => setIsMealSelectionOpen(false)}
-        isLCC={flightSummary.isLCC}
-        // Meal services from Duffel (if any)
-        availableServices={passedFlight?.ancillaries
-          ?.filter((a: any) => a.raw?.type === "meal")
-          .map((a: any) => a.raw)
-          .filter(Boolean)}
-        // Total passengers from FlightAddons state (adults + children)
-        passengerCount={
-          passengersCount
-            ? (passengersCount?.adults || 1) + (passengersCount?.children || 0)
-            : fields.length || 1
-        }
+        isLCC={passedFlight?.isLCC}
+        passengers={formatPassengersFromBooking(
+          passengersCount || { adults: urlAdults, children: urlChildren, infants: 0 },
+          fields,
+        )}
+        segments={formatFlightSegments(passedFlight?.segments || [])}
+        availableMeals={passedFlight?.ancillaries
+          ?.filter((a: any) => a.type === "meal")
+          .map((a: any) => ({
+            id: a.id,
+            code: a.raw?.metadata?.type || "MEAL",
+            name: a.name,
+            description: a.raw?.metadata?.description,
+            type: "special",
+            price: a.price,
+            currency: a.currency,
+          }))}
         onConfirm={(meals) => {
-          setMealsTotal(
-            meals.reduce((sum: number, m: any) => sum + (m.price || 0), 0),
-          );
+          setSelectedMeals(meals);
           setIsMealSelectionOpen(false);
         }}
+        existingSelections={selectedMeals}
       />
-      <SpecialRequestPopup
+      <SpecialServicesPopup
         isOpen={isSpecialRequestOpen}
         onClose={() => setIsSpecialRequestOpen(false)}
+        passengers={formatPassengersFromBooking(
+          passengersCount || { adults: urlAdults, children: urlChildren, infants: 0 },
+          fields,
+        )}
+        segments={formatFlightSegments(passedFlight?.segments || [])}
+        availableServices={passedFlight?.ancillaries
+          ?.filter((a: any) => a.type === "other")
+          .map((a: any) => ({
+            id: a.id,
+            code: a.raw?.metadata?.type || "SSR",
+            name: a.name,
+            description: a.raw?.metadata?.description,
+            price: a.price,
+            currency: a.currency,
+          }))}
         onConfirm={(reqs) => {
-          setSsrRequests(Object.values(reqs).flat() as any[]);
+          setSelectedSpecialServices(reqs);
           setIsSpecialRequestOpen(false);
         }}
+        existingSelections={selectedSpecialServices}
       />
     </TripLogerLayout>
   );

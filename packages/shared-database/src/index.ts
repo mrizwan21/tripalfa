@@ -8,7 +8,7 @@ const moduleDirname = dirname(moduleFilename);
 const rootDir = resolve(moduleDirname, "../../../");
 dotenv.config({ path: resolve(rootDir, ".env") });
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./generated/index.js";
 import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -23,6 +23,9 @@ function createPrismaClient(databaseUrl: string, useSsl: boolean): PrismaClient 
       ? { ssl: { rejectUnauthorized: strictSsl } }
       : {}),
     max: parseInt(process.env.DB_POOL_MAX || "10", 10),
+    idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT_MS || "30000", 10),
+    connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT_MS || "10000", 10),
+    statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT_MS || "30000", 10),
   });
 
   const adapter = new PrismaPg(pool);
@@ -31,9 +34,12 @@ function createPrismaClient(databaseUrl: string, useSsl: boolean): PrismaClient 
   // a different internal type signature than the standard PrismaClient.
   // This is a known pattern when using database adapters with Prisma.
   // The cast is safe because the adapter provides a fully compatible API.
+  const isDev = process.env.NODE_ENV !== "production";
   return new PrismaClient({
     adapter,
-    log: ["error", "warn"],
+    log: isDev
+      ? ["error", "warn", { emit: "event", level: "query" }]
+      : ["error", "warn"],
   }) as unknown as PrismaClient;
 }
 
@@ -49,7 +55,7 @@ function initPrisma(): PrismaClient {
     const availableEnvVars = Object.keys(process.env).filter(
       (k) => k.includes("DATABASE") || k.includes("DB") || k.includes("POSTGRES")
     );
-    
+
     console.error("=".repeat(60));
     console.error("DATABASE CONFIGURATION ERROR");
     console.error("=".repeat(60));
@@ -64,7 +70,7 @@ function initPrisma(): PrismaClient {
     console.error("\nExample .env entry:");
     console.error('  DIRECT_DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"');
     console.error("=".repeat(60));
-    
+
     throw new Error(
       "Database configuration error: Set DIRECT_DATABASE_URL or DATABASE_URL environment variable. " +
       "See console output above for details.",
@@ -85,7 +91,7 @@ function initPrisma(): PrismaClient {
     }
   }
 
-  // For standard PostgreSQL (Docker, local, etc.)
+  // For standard PostgreSQL (local, cloud, etc.)
   try {
     return createPrismaClient(databaseUrl, false);
   } catch (e) {
@@ -98,5 +104,76 @@ export const prisma = globalForPrisma.prisma || initPrisma();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export * from "@prisma/client";
+// ============================================
+// Graceful Shutdown
+// ============================================
+
+async function gracefulShutdown(signal: string) {
+  console.log(`\n[shared-database] Received ${signal}, disconnecting Prisma...`);
+  try {
+    await prisma.$disconnect();
+    console.log("[shared-database] Prisma disconnected cleanly.");
+  } catch (e) {
+    console.error("[shared-database] Error during disconnect:", e);
+  }
+  process.exit(0);
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// ============================================
+// Retry Wrapper for Neon Cold-Start Transients
+// ============================================
+
+/**
+ * Wraps a database operation with automatic retry logic for transient
+ * Neon connection failures (cold-start wake-up takes ~300ms).
+ *
+ * Retries on:
+ *  - XX000: Internal error (Neon compute waking up)
+ *  - 57P01: Admin shutdown (connection recycled)
+ *  - 08006: Connection failure
+ *  - ECONNRESET: TCP reset
+ *
+ * @param fn - Async function performing the database operation
+ * @param retries - Max retry attempts (default: 3)
+ * @param delayMs - Base delay in ms, multiplied by attempt number (default: 500)
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delayMs = 500,
+): Promise<T> {
+  const RETRYABLE_CODES = new Set(["XX000", "57P01", "08006", "ECONNRESET"]);
+
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      const errCode =
+        (error as { code?: string })?.code ??
+        (error as { message?: string })?.message ?? "";
+
+      const isRetryable =
+        RETRYABLE_CODES.has(errCode) ||
+        (typeof errCode === "string" && errCode.includes("ECONNRESET"));
+
+      if (attempt === retries || !isRetryable) {
+        throw error;
+      }
+
+      const waitMs = delayMs * attempt;
+      console.warn(
+        `[shared-database] Transient error (${errCode}), retrying in ${waitMs}ms (attempt ${attempt}/${retries})...`,
+      );
+      await new Promise((r) => setTimeout(r, waitMs));
+    }
+  }
+
+  throw new Error("withRetry: unreachable");
+}
+
+export * from "./generated/index.js";
+export { checkDatabaseHealth, type DatabaseHealthResult } from "./health.js";
 export default prisma;

@@ -266,7 +266,7 @@ orchestrator.printSummary();
 
 ### Booking Confirmation Email
 
-**To**: john.doe@example.com  
+**To**: <john.doe@example.com>  
 **Subject**: Your Hotel Booking Confirmation - Luxury 5-Star Hotel Paris
 
 **Attachments**:
@@ -282,7 +282,7 @@ orchestrator.printSummary();
 
 ### Cancellation & Refund Email
 
-**To**: john.doe@example.com  
+**To**: <john.doe@example.com>  
 **Subject**: Booking Cancellation Confirmation - Refund Processed
 
 **Refund Details**:
@@ -301,7 +301,7 @@ orchestrator.printSummary();
 
 ### Refund Processed Notification
 
-**To**: john.doe@example.com  
+**To**: <john.doe@example.com>  
 **Subject**: Refund Processed - Amount Credited to Your Wallet
 
 **Content**:

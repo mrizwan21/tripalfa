@@ -1,8 +1,8 @@
-import { Router, Request, Response, NextFunction } from "express";
-import type { Router as ExpressRouter } from "express";
-import multer from "multer";
-import type { Express } from "express";
-import path from "path";
+import { fileURLToPath } from "url";
+import path, { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 type MulterFile = Express.Multer.File;
 

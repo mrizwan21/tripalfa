@@ -4,26 +4,24 @@
  * Hybrid data fetching service for hotel search and details.
  *
  * Strategy:
- * 1. Static data (95%) - from Postgres static DB (hotel schema)
+ * 1. Static data (95%) - from Postgres static DB (liteapi schema)
  * 2. Live data (rates/availability) - from LITEAPI
  * 3. Fallback - LITEAPI if static DB has no data
  *
  * Tables used from Postgres:
- * - hotel.hotels (main hotel data)
- * - hotel.images (hotel gallery)
- * - hotel.facilities + hotel.hotel_facility_map (amenities)
- * - hotel.rooms (room types)
- * - hotel.reviews (guest reviews)
+ * - liteapi_hotels (main hotel data + metadata)
+ * - liteapi_facilities (lookup)
+ * - liteapi_reviews (synced reviews)
  */
 
 import { Pool } from "pg";
 import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
 
-// Database connection — MUST point to the static Docker DB for hotel & flight reference data, never Neon
+// Database connection — MUST point to the static PostgreSQL instance for hotel & flight reference data, never Neon
 const STATIC_DATABASE_URL = process.env.STATIC_DATABASE_URL;
 if (!STATIC_DATABASE_URL) {
   throw new Error(
-    "STATIC_DATABASE_URL env var must be set for hotel & flight static data (Docker static DB on port 5433)",
+    "STATIC_DATABASE_URL env var must be set for hotel & flight static data (local PostgreSQL instance on port 5433)",
   );
 }
 const pool = new Pool({
@@ -255,13 +253,13 @@ export interface RoomRate {
     currency: string;
   };
   taxesAndFees?:
-    | {
-        included: boolean;
-        description?: string;
-        amount: number;
-        currency: string;
-      }[]
-    | null;
+  | {
+    included: boolean;
+    description?: string;
+    amount: number;
+    currency: string;
+  }[]
+  | null;
   priceType?: string; // 'commission' or 'net'
   isRefundable: boolean;
   refundableTag?: "RFN" | "NRFN";
@@ -502,43 +500,27 @@ async function searchHotelsFromDB(params: {
       SELECT 
         h.id,
         h.name,
-        h.description,
+        h.hotel_description as description,
         h.city,
         h.country_code,
         h.address,
         h.latitude,
         h.longitude,
-        h.stars,
-        h.rating,
-        h.review_count,
-        h.main_photo,
-        h.thumbnail,
-        h.chain_id,
-        h.hotel_type_id,
-        h.currency_code,
-        h.checkin_start,
-        h.checkout,
-        h.phone,
-        h.email,
+        h.star_rating as stars,
+        h.metadata->>'rating' as rating,
+        h.metadata->>'reviewCount' as review_count,
+        h.metadata->'hotelImages' as images,
         COALESCE(
-          json_agg(DISTINCT hi.url) FILTER (WHERE hi.url IS NOT NULL),
+          (SELECT json_agg(f->'name') FROM jsonb_array_elements(h.metadata->'facilities') f),
           '[]'::json
-        ) as images,
+        ) as facility_names,
         COALESCE(
-          json_agg(DISTINCT f.id) FILTER (WHERE f.id IS NOT NULL),
+          (SELECT json_agg(f->'facilityId') FROM jsonb_array_elements(h.metadata->'facilities') f),
           '[]'::json
-        ) as facility_ids,
-        COALESCE(
-          json_agg(DISTINCT f.name) FILTER (WHERE f.name IS NOT NULL),
-          '[]'::json
-        ) as facility_names
-      FROM hotel.hotels h
-      LEFT JOIN hotel.images hi ON h.id = hi.hotel_id
-      LEFT JOIN hotel.hotel_facility_map hfm ON h.id = hfm.hotel_id
-      LEFT JOIN hotel.facilities f ON hfm.facility_id = f.id
+        ) as facility_ids
+      FROM liteapi_hotels h
       WHERE ${whereClause}
-      GROUP BY h.id
-      ORDER BY h.rating DESC NULLS LAST, h.review_count DESC NULLS LAST
+      ORDER BY (h.metadata->>'rating')::numeric DESC NULLS LAST
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
@@ -546,27 +528,28 @@ async function searchHotelsFromDB(params: {
 
     const result = await client.query(query, queryParams);
 
-    return result.rows.map((row) => ({
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      image: row.main_photo || row.thumbnail || "/images/placeholder-hotel.jpg",
-      images: row.images || [],
-      location: row.address || row.city || "",
-      city: row.city,
-      country: row.country_code,
-      countryCode: row.country_code,
-      rating: parseFloat(row.rating) || 0,
-      starRating: parseFloat(row.stars) || undefined,
-      reviewCount: row.review_count || 0,
-      latitude: row.latitude,
-      longitude: row.longitude,
-      amenities: row.facility_names || [],
-      facilityIds: row.facility_ids || [],
-      provider: "StaticDB",
-      chainId: row.chain_id,
-      hotelTypeId: row.hotel_type_id,
-    }));
+    return result.rows.map((row) => {
+      const images = Array.isArray(row.images) ? row.images.map((img: any) => img.url || img) : [];
+      return {
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        image: images[0] || "/images/placeholder-hotel.jpg",
+        images: images,
+        location: row.address || row.city || "",
+        city: row.city,
+        country: row.country_code,
+        countryCode: row.country_code,
+        rating: parseFloat(row.rating) || 0,
+        starRating: parseFloat(row.stars) || undefined,
+        reviewCount: parseInt(row.review_count) || 0,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        amenities: row.facility_names || [],
+        facilityIds: row.facility_ids || [],
+        provider: "LiteAPI-Static",
+      };
+    });
   } finally {
     client.release();
   }
@@ -583,34 +566,11 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
     const hotelQuery = `
       SELECT 
         h.*,
-        COALESCE(
-          json_agg(DISTINCT hi.url) FILTER (WHERE hi.url IS NOT NULL),
-          '[]'::json
-        ) as images,
-        COALESCE(
-          json_agg(DISTINCT jsonb_build_object('id', f.id, 'name', f.name)) 
-          FILTER (WHERE f.id IS NOT NULL),
-          '[]'::json
-        ) as facilities,
-        COALESCE(
-          json_agg(DISTINCT jsonb_build_object(
-            'id', r.id,
-            'name', r.room_name,
-            'description', r.description,
-            'maxOccupancy', r.max_occupancy,
-            'maxAdults', r.max_adults,
-            'maxChildren', r.max_children,
-            'sizeSqm', r.size_sqm
-          )) FILTER (WHERE r.id IS NOT NULL),
-          '[]'::json
-        ) as rooms
-      FROM hotel.hotels h
-      LEFT JOIN hotel.images hi ON h.id = hi.hotel_id
-      LEFT JOIN hotel.hotel_facility_map hfm ON h.id = hfm.hotel_id
-      LEFT JOIN hotel.facilities f ON hfm.facility_id = f.id
-      LEFT JOIN hotel.rooms r ON h.id = r.hotel_id
-      WHERE h.id = $1 AND h.is_deleted = FALSE
-      GROUP BY h.id
+        h.metadata->'hotelImages' as images,
+        h.metadata->'facilities' as facilities,
+        h.metadata->'rooms' as rooms
+      FROM liteapi_hotels h
+      WHERE h.id = $1
     `;
 
     const hotelResult = await client.query(hotelQuery, [hotelId]);
@@ -621,84 +581,60 @@ async function getHotelFromDB(hotelId: string): Promise<HotelDetail | null> {
 
     const row = hotelResult.rows[0];
 
-    // Get policies
-    const policiesQuery = `
-      SELECT policy_type, name, description 
-      FROM hotel.policies 
-      WHERE hotel_id = $1
-    `;
-    const policiesResult = await client.query(policiesQuery, [hotelId]);
+    // Policies and accessibility are now in metadata
+    const metadata = row.metadata || {};
 
-    // Get accessibility
-    const accessibilityQuery = `
-      SELECT attributes 
-      FROM hotel.accessibility 
-      WHERE hotel_id = $1
-    `;
-    const accessibilityResult = await client.query(accessibilityQuery, [
-      hotelId,
-    ]);
 
     // Get recent reviews
     const reviewsQuery = `
-      SELECT 
-        id, reviewer_name, average_score, review_date, headline, 
-        pros, cons, traveler_type, language_code
-      FROM hotel.reviews 
+      SELECT id, author, rating, text, date 
+      FROM liteapi_reviews 
       WHERE hotel_id = $1
-      ORDER BY review_date DESC NULLS LAST
+      ORDER BY date DESC NULLS LAST
       LIMIT 10
     `;
     const reviewsResult = await client.query(reviewsQuery, [hotelId]);
 
+    const images = Array.isArray(row.images) ? row.images.map((img: any) => img.url || img) : [];
+
     return {
       id: row.id,
       name: row.name,
-      description: row.description,
-      image: row.main_photo || row.thumbnail || "/images/placeholder-hotel.jpg",
-      images: row.images || [],
+      description: row.hotel_description || row.metadata?.hotelDescription,
+      image: images[0] || "/images/placeholder-hotel.jpg",
+      images: images,
       location: row.address || "",
       city: row.city,
       country: row.country_code,
       countryCode: row.country_code,
       address: row.address,
-      zip: row.zip,
-      rating: parseFloat(row.rating) || 0,
-      starRating: parseFloat(row.stars) || undefined,
-      reviewCount: row.review_count || 0,
+      rating: parseFloat(row.metadata?.rating) || 0,
+      starRating: parseFloat(row.star_rating) || undefined,
+      reviewCount: parseInt(row.metadata?.reviewCount) || 0,
       latitude: row.latitude,
       longitude: row.longitude,
       phone: row.phone,
       email: row.email,
-      checkInTime: row.checkin_start,
-      checkOutTime: row.checkout,
-      amenities: (row.facilities || []).map((f: any) => f.name),
-      facilityIds: (row.facilities || []).map((f: any) => f.id),
-      provider: "StaticDB",
-      chainId: row.chain_id,
-      hotelTypeId: row.hotel_type_id,
-      policies: policiesResult.rows.map((p) => ({
-        type: p.policy_type,
-        name: p.name,
-        description: p.description,
-      })),
+      checkInTime: row.checkin_time,
+      checkOutTime: row.checkout_time,
+      amenities: (row.facilities || []).map((f: any) => f.name || f.facility),
+      facilityIds: (row.facilities || []).map((f: any) => f.id || f.facilityId),
+      provider: "LiteAPI-Static",
+      policies: metadata.policies || [],
       reviews: reviewsResult.rows.map((r) => ({
-        id: r.id.toString(),
-        reviewerName: r.reviewer_name,
-        rating: r.average_score ? parseFloat(r.average_score) : undefined,
-        date: r.review_date,
-        headline: r.headline,
-        pros: r.pros,
-        cons: r.cons,
-        travelerType: r.traveler_type,
+        id: r.id,
+        reviewerName: r.author,
+        rating: r.rating,
+        date: r.date,
+        text: r.text,
       })),
-      accessibility: accessibilityResult.rows[0]?.attributes || null,
+      accessibility: metadata.accessibility || null,
       roomTypes: (row.rooms || []).map((r: any) => ({
-        id: r.id?.toString() || "",
-        name: r.name,
+        id: r.id || r.roomId || "",
+        name: r.name || r.roomName,
         description: r.description,
-        maxOccupancy: r.maxOccupancy,
-        rates: [], // Rates come from live API
+        maxOccupancy: r.maxOccupancy || (r.maxAdults + r.maxChildren),
+        rates: [],
       })),
     };
   } finally {
@@ -716,8 +652,8 @@ async function getFacilitiesFromDB(): Promise<
 
   try {
     const query = `
-      SELECT id, name, name as code
-      FROM hotel.facilities
+      SELECT id, name
+      FROM liteapi_facilities
       ORDER BY name
     `;
 
@@ -797,12 +733,12 @@ async function getLiveRates(params: {
           // Parse cancellation policy
           const cancellationPolicy = rate.cancellationPolicies
             ? {
-                cancelPolicyInfos:
-                  rate.cancellationPolicies.cancelPolicyInfos || [],
-                hotelRemarks: rate.cancellationPolicies.hotelRemarks || [],
-                refundableTag:
-                  rate.cancellationPolicies.refundableTag || "NRFN",
-              }
+              cancelPolicyInfos:
+                rate.cancellationPolicies.cancelPolicyInfos || [],
+              hotelRemarks: rate.cancellationPolicies.hotelRemarks || [],
+              refundableTag:
+                rate.cancellationPolicies.refundableTag || "NRFN",
+            }
             : undefined;
 
           rates.push({
@@ -830,24 +766,24 @@ async function getLiveRates(params: {
             // Suggested selling price (public facing price)
             suggestedSellingPrice: rate.suggestedSellingPrice?.[0]
               ? {
-                  amount: rate.suggestedSellingPrice[0].amount,
-                  currency: rate.suggestedSellingPrice[0].currency,
-                  source: rate.suggestedSellingPrice[0].source,
-                }
+                amount: rate.suggestedSellingPrice[0].amount,
+                currency: rate.suggestedSellingPrice[0].currency,
+                source: rate.suggestedSellingPrice[0].source,
+              }
               : rate.suggestedSellingPrice
                 ? {
-                    amount: rate.suggestedSellingPrice.amount,
-                    currency: rate.suggestedSellingPrice.currency,
-                    source: rate.suggestedSellingPrice.source,
-                  }
+                  amount: rate.suggestedSellingPrice.amount,
+                  currency: rate.suggestedSellingPrice.currency,
+                  source: rate.suggestedSellingPrice.source,
+                }
                 : undefined,
 
             // Initial price (direct hotel discount)
             initialPrice: rate.initialPrice?.[0]
               ? {
-                  amount: rate.initialPrice[0].amount,
-                  currency: rate.initialPrice[0].currency,
-                }
+                amount: rate.initialPrice[0].amount,
+                currency: rate.initialPrice[0].currency,
+              }
               : undefined,
 
             // Taxes and fees
@@ -1044,26 +980,26 @@ export const HotelDataService = {
             ...hotel,
             price: rateData.cheapestPrice
               ? {
-                  amount: rateData.cheapestPrice,
-                  currency: "USD",
-                }
+                amount: rateData.cheapestPrice,
+                currency: "USD",
+              }
               : hotel.price,
             roomTypes:
               rateData.rates.length > 0
                 ? rateData.rates.map((r) => ({
-                    id: r.roomTypeId || "",
-                    name: r.roomName || "Room",
-                    boardType: r.boardType,
-                    boardName: r.boardName,
-                    rates: [
-                      {
-                        offerId: r.offerId,
-                        price: r.price,
-                        isRefundable: r.isRefundable,
-                        cancellationPolicy: r.cancellationPolicy,
-                      },
-                    ],
-                  }))
+                  id: r.roomTypeId || "",
+                  name: r.roomName || "Room",
+                  boardType: r.boardType,
+                  boardName: r.boardName,
+                  rates: [
+                    {
+                      offerId: r.offerId,
+                      price: r.price,
+                      isRefundable: r.isRefundable,
+                      cancellationPolicy: r.cancellationPolicy,
+                    },
+                  ],
+                }))
                 : hotel.roomTypes,
           };
         }
@@ -1284,9 +1220,9 @@ export const HotelDataService = {
         }));
         hotel.price = rateData.cheapestPrice
           ? {
-              amount: rateData.cheapestPrice,
-              currency: "USD",
-            }
+            amount: rateData.cheapestPrice,
+            currency: "USD",
+          }
           : undefined;
       }
     }

@@ -296,7 +296,8 @@ pnpm report --baseline benchmark-results/previous.json
 ### High Variance in Results
 
 **Cause**: System load, environment noise  
-**Solution**: 
+**Solution**:
+
 - Run on dedicated machine
 - Increase sample size: `sample: 1000`
 - Check for background processes
@@ -305,6 +306,7 @@ pnpm report --baseline benchmark-results/previous.json
 
 **Cause**: Legitimate slowdown or false high variance  
 **Solution**:
+
 - Profile code with DevTools
 - Review recent commits
 - Consider adjusting thresholds if justified
@@ -312,7 +314,8 @@ pnpm report --baseline benchmark-results/previous.json
 ### Baseline Mismatch
 
 **Cause**: Comparing against outdated baseline  
-**Solution**: 
+**Solution**:
+
 - Run `pnpm baseline:init`
 - Merge main before PR testing
 
@@ -320,6 +323,7 @@ pnpm report --baseline benchmark-results/previous.json
 
 **Cause**: Critical regression detected  
 **Solution**:
+
 - Review Changes since last baseline
 - Run `pnpm report:compare` locally
 - Either optimize code or justify threshold change
@@ -365,6 +369,7 @@ Results are automatically tracked and stored. Review:
 ## Support
 
 For issues or questions:
+
 - Review this documentation
 - Check benchmark output for hints
 - Profile with Node.js DevTools

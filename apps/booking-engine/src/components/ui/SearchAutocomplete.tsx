@@ -137,7 +137,7 @@ export function SearchAutocomplete({
 
   return (
     <div
-      className="relative w-full h-12 bg-card rounded-xl border-2 border-border hover:border-border/80 transition-all group"
+      className="relative w-full h-full min-h-[48px] bg-card rounded-xl border-2 border-border hover:border-border/80 transition-all group"
       ref={wrapperRef}
     >
       <div className="relative h-full flex items-center px-4 gap-2">

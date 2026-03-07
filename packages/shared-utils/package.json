@@ -47,7 +47,7 @@
   "scripts": {
     "build": "pnpm exec tsc -p tsconfig.json",
     "dev": "pnpm exec tsc -p tsconfig.build.json --watch",
-    "lint": "pnpm exec eslint src --ext .ts,.tsx",
+    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
     "type-check": "pnpm exec tsc -p tsconfig.build.json --noEmit",
     "clean": "rm -rf dist"
   },
@@ -55,7 +55,9 @@
     "@tripalfa/shared-types": "workspace:*",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
+    "express-rate-limit": "^8.0.0",
     "pino": "^9.0.0",
+    "winston": "^3.13.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

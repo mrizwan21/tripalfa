@@ -85,7 +85,7 @@ class LoyaltyApi {
   private constructor() {
     // Use booking-service through API gateway
     this.baseUrl =
-      import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:3000";
+      import.meta.env.VITE_API_GATEWAY_URL || "http://localhost:3001";
   }
 
   static getInstance(): LoyaltyApi {

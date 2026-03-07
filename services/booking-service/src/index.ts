@@ -22,10 +22,17 @@ import liteApiRoutes from "./routes/liteapi.js";
 import airlineCreditsRoutes from "./routes/airlineCredits.js";
 import webhookRoutes from "./routes/webhooks.js";
 import duffelRoutes from "./routes/duffel.js";
+import duffelEnhancedRoutes from "./routes/duffel-enhanced.js";
 import flightBookingRoutes from "./routes/flight-booking.js";
 import hotelBookingRoutes from "./routes/hotel-booking.js";
 import realtimeBookingRoutes from "./routes/realtime-booking.js";
 import hotelRoutes from "./routes/hotels.js";
+import locationRoutes from "./routes/location.js";
+import staticRoutes from "./routes/static.routes.js";
+import contentRoutes from "./routes/content.routes.js";
+import hotelStaticRoutes from "./routes/hotels.static.routes.js";
+import { randomUUID } from "crypto";
+import { CacheService } from "./cache/redis.js";
 
 // Duffel API configuration
 const DUFFEL_API_URL = process.env.DUFFEL_API_URL || "https://api.duffel.com";
@@ -198,6 +205,12 @@ app.post("/bookings/flight/order", async (req: Request, res: Response) => {
           .json({ error: "selectedOffers is required for hold orders" });
       }
 
+      // Validate offer ID format to prevent path injection/SSRF
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (typeof firstOfferId !== 'string' || !UUID_REGEX.test(firstOfferId)) {
+        return res.status(400).json({ error: "Invalid offer ID format. Must be a valid UUID." });
+      }
+
       const offerResponse = await duffelApi<any>(`/air/offers/${firstOfferId}`);
       const requiresInstantPayment =
         offerResponse?.data?.payment_requirements?.requires_instant_payment;
@@ -219,23 +232,23 @@ app.post("/bookings/flight/order", async (req: Request, res: Response) => {
         passengers: mappedPassengers,
         ...(!createUnpaidHold
           ? {
-              payments: [
-                {
-                  type:
-                    paymentMethod?.type === "balance"
-                      ? "balance"
-                      : "arc_bsp_cash",
-                  amount: normalizePaymentAmount(
-                    paymentMethod?.amount?.amount || paymentMethod?.amount,
-                  ),
-                  currency: String(
-                    paymentMethod?.amount?.currency ||
-                      paymentMethod?.currency ||
-                      "USD",
-                  ).toUpperCase(),
-                },
-              ],
-            }
+            payments: [
+              {
+                type:
+                  paymentMethod?.type === "balance"
+                    ? "balance"
+                    : "arc_bsp_cash",
+                amount: normalizePaymentAmount(
+                  paymentMethod?.amount?.amount || paymentMethod?.amount,
+                ),
+                currency: String(
+                  paymentMethod?.amount?.currency ||
+                  paymentMethod?.currency ||
+                  "USD",
+                ).toUpperCase(),
+              },
+            ],
+          }
           : {}),
       },
     });
@@ -259,6 +272,13 @@ app.get(
   async (req: Request, res: Response) => {
     try {
       const { orderId } = req.params;
+
+      // Validate order ID format to prevent path injection/SSRF
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!orderId || typeof orderId !== 'string' || !UUID_REGEX.test(orderId)) {
+        return res.status(400).json({ error: "Invalid order ID format. Must be a valid UUID." });
+      }
+
       const duffelResponse = await duffelApi<any>(`/air/orders/${orderId}`);
 
       res.json({
@@ -333,6 +353,12 @@ app.post(
     try {
       const { orderId } = req.params;
 
+      // Validate order ID format to prevent path injection/SSRF
+      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!orderId || typeof orderId !== 'string' || !UUID_REGEX.test(orderId)) {
+        return res.status(400).json({ error: "Invalid order ID format. Must be a valid UUID." });
+      }
+
       let confirmResponse: any = null;
       try {
         confirmResponse = await duffelApi<any>(
@@ -359,32 +385,15 @@ app.post(
   },
 );
 
-app.post("/search/flights", async (req: Request, res: Response) => {
+app.post("/api/flights/search", async (req: Request, res: Response) => {
   try {
     const {
       slices,
       passengers,
       cabin_class,
-      // Pagination parameters
-      limit = 20,
-      offset = 0,
-      // Filter parameters
-      maxPrice,
-      stops,
-      airlines,
-      departureTime,
-      // Sort parameters
-      sortBy,
-      sortOrder,
     } = req.body;
 
-    console.log("[Search] Flight search:", {
-      slices,
-      passengers,
-      cabin_class,
-      limit,
-      offset,
-    });
+    console.log("[Search] Flight search init:", { slices, passengers, cabin_class });
 
     const duffelResponse = await duffelApi<any>("/air/offer_requests", "POST", {
       data: {
@@ -397,58 +406,123 @@ app.post("/search/flights", async (req: Request, res: Response) => {
 
     let offers = duffelResponse.data?.offers || [];
 
-    // Transform offers for frontend
-    let transformedOffers = offers.map((offer: any) => {
-      const firstSlice = offer.slices?.[0];
-      const firstSegment = firstSlice?.segments?.[0];
-      const lastSegment =
-        firstSlice?.segments?.[firstSlice.segments.length - 1];
+    // Grouping by itinerary identity to derive upsells (fare tiers)
+    const groups: Record<string, any[]> = {};
 
-      return {
+    offers.forEach((offer: any) => {
+      const slice = offer.slices?.[0];
+      if (!slice || !slice.segments || slice.segments.length === 0) return;
+
+      // Unique identifier for the flight itinerary
+      const identity = slice.segments
+        .map(
+          (s: any) =>
+            `${s.marketing_carrier?.iata_code || "UNKNOWN"}${s.marketing_carrier_flight_number || ""}-${s.departing_at}`
+        )
+        .join("|");
+
+      if (!groups[identity]) groups[identity] = [];
+
+      // Map single offer to FlightResult format
+      const mapped = {
         id: offer.id,
         offerId: offer.id,
-        airline:
-          firstSegment?.operating_carrier?.name ||
-          firstSegment?.marketing_carrier?.name ||
-          "Unknown",
-        airlineCode: firstSegment?.marketing_carrier?.iata_code || "",
-        flightNumber: firstSegment?.marketing_carrier_flight_number || "",
-        carrierCode: firstSegment?.marketing_carrier?.iata_code || "",
-        departureTime: firstSegment?.departing_at || "",
-        arrivalTime: lastSegment?.arriving_at || "",
-        origin: firstSegment?.origin?.iata_code || "",
-        destination: lastSegment?.destination?.iata_code || "",
-        duration: firstSlice?.duration || "",
-        stops: (firstSlice?.segments?.length || 1) - 1,
+        airline: offer.owner?.name || "Unknown",
+        airlineCode: offer.owner?.iata_code || "",
+        flightNumber: slice.segments[0]?.marketing_carrier_flight_number || "",
+        carrierCode: offer.owner?.iata_code || "",
+        departureTime: slice.segments[0]?.departing_at || "",
+        arrivalTime: slice.segments[slice.segments.length - 1]?.arriving_at || "",
+        origin: slice.segments[0]?.origin?.iata_code || "",
+        destination: slice.segments[slice.segments.length - 1]?.destination?.iata_code || "",
+        duration: slice.duration || "",
+        stops: slice.segments.length - 1,
         amount: parseFloat(offer.total_amount) || 0,
         currency: offer.total_currency || "USD",
-        cabin:
-          firstSegment?.passengers?.[0]?.cabin_class ||
-          cabin_class ||
-          "economy",
+        cabin: slice.segments[0]?.passengers?.[0]?.cabin_class || cabin_class || "economy",
         refundable: offer.conditions?.refund_before_departure?.allowed || false,
         changeable: offer.conditions?.change_before_departure?.allowed || false,
-        refundPenalty: offer.conditions?.refund_before_departure?.penalty_amount
-          ? `${offer.conditions.refund_before_departure.penalty_currency || "USD"} ${offer.conditions.refund_before_departure.penalty_amount}`
-          : null,
-        changePenalty: offer.conditions?.change_before_departure?.penalty_amount
-          ? `${offer.conditions.change_before_departure.penalty_currency || "USD"} ${offer.conditions.change_before_departure.penalty_amount}`
-          : null,
-        segments:
-          firstSlice?.segments?.map((seg: any) => ({
-            origin: seg.origin?.iata_code,
-            destination: seg.destination?.iata_code,
-            departureTime: seg.departing_at,
-            arrivalTime: seg.arriving_at,
-            carrierCode: seg.marketing_carrier?.iata_code,
-            flightNumber: seg.marketing_carrier_flight_number,
-            carrier: seg.marketing_carrier?.name,
-            duration: seg.duration,
-            aircraft: seg.aircraft?.name,
-          })) || [],
-        rawOffer: offer,
+        segments: slice.segments.map((seg: any) => ({
+          origin: seg.origin?.iata_code,
+          destination: seg.destination?.iata_code,
+          departureTime: seg.departing_at,
+          arrivalTime: seg.arriving_at,
+          carrierCode: seg.marketing_carrier?.iata_code,
+          flightNumber: seg.marketing_carrier_flight_number,
+          carrier: seg.marketing_carrier?.name,
+          duration: seg.duration,
+          aircraft: seg.aircraft?.name,
+          originCity: seg.origin?.city_name || seg.origin?.name || seg.origin?.iata_code,
+          destinationCity: seg.destination?.city_name || seg.destination?.name || seg.destination?.iata_code,
+        })),
+        ancillaries: (offer.available_services || []).map((s: any) => ({
+          id: s.id,
+          name: s.metadata?.name || s.type,
+          price: parseFloat(s.total_amount || "0"),
+          currency: s.total_currency,
+          type: s.type === "baggage" ? "baggage" : s.type === "seat" ? "seat" : "other",
+          raw: s
+        })),
+        rawOffer: offer
       };
+
+      groups[identity].push(mapped);
     });
+
+    // Pick the cheapest as main and rest as upsells
+    const transformedOffers = Object.values(groups)
+      .filter(g => g.length > 0)
+      .map((group: any[]) => {
+        const sorted = group.sort((a, b) => a.amount - b.amount);
+        const bestOffer = sorted[0];
+        bestOffer.upsells = sorted.slice(1);
+        return bestOffer;
+      });
+
+    const searchId = randomUUID();
+    const cacheKey = `flight_search:${searchId}`;
+
+    // Store in Redis (1800s = 30 mins)
+    await CacheService.set(cacheKey, {
+      offers: transformedOffers,
+      offer_request_id: duffelResponse.data?.id,
+      expires_at: duffelResponse.data?.expires_at
+    }, 1800);
+
+    res.json({
+      searchId,
+      total: transformedOffers.length,
+      offer_request_id: duffelResponse.data?.id,
+      expires_at: duffelResponse.data?.expires_at,
+    });
+  } catch (error: any) {
+    console.error("[Search] Flight search error:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/api/flights/search/results/:searchId", async (req: Request, res: Response) => {
+  try {
+    const { searchId } = req.params;
+    const {
+      limit = 20,
+      offset = 0,
+      maxPrice,
+      stops,
+      airlines,
+      departureTime,
+      sortBy,
+      sortOrder,
+    } = req.body;
+
+    const cacheKey = `flight_search:${searchId}`;
+    const cachedData = await CacheService.get<any>(cacheKey);
+
+    if (!cachedData) {
+      return res.status(404).json({ error: "Search session expired or not found. Please search again." });
+    }
+
+    let transformedOffers = [...cachedData.offers];
 
     // Apply filters
     if (maxPrice !== undefined) {
@@ -474,18 +548,17 @@ app.post("/search/flights", async (req: Request, res: Response) => {
 
     // Apply sorting
     if (sortBy) {
-      const isAsc = sortOrder === "asc";
+      const isAsc = sortOrder !== "desc";
 
       transformedOffers.sort((a: any, b: any) => {
         let aVal: any, bVal: any;
 
-        switch (sortBy) {
+        switch (sortBy.toLowerCase()) {
           case "price":
             aVal = a.amount;
             bVal = b.amount;
             break;
           case "duration":
-            // Parse duration (e.g., "PT2H30M" -> minutes)
             aVal = parseDuration(a.duration);
             bVal = parseDuration(b.duration);
             break;
@@ -497,6 +570,11 @@ app.post("/search/flights", async (req: Request, res: Response) => {
             aVal = a.airline || "";
             bVal = b.airline || "";
             return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+          case "best value":
+            // Heuristic: Price + (Duration in mins * some factor)
+            aVal = a.amount + (parseDuration(a.duration) * 0.5);
+            bVal = b.amount + (parseDuration(b.duration) * 0.5);
+            break;
           default:
             return 0;
         }
@@ -518,11 +596,11 @@ app.post("/search/flights", async (req: Request, res: Response) => {
     res.json({
       results: transformedOffers,
       total,
-      offer_request_id: duffelResponse.data?.id,
-      expires_at: duffelResponse.data?.expires_at,
+      offer_request_id: cachedData.offer_request_id,
+      expires_at: cachedData.expires_at,
     });
   } catch (error: any) {
-    console.error("[Search] Flight search error:", error.message);
+    console.error("[Search] Flight results error:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -564,6 +642,10 @@ app.use("/api/webhooks", webhookRoutes);
 // Duffel Flight API Routes (Offers, Orders, Cancellations, Changes)
 app.use("/api/duffel", duffelRoutes);
 
+// Enhanced Duffel Flight API Routes (Partial Offers, Batch Requests, Order Changes, Airline Credits, Services, Payments)
+// Mounted on /api/flights for cleaner REST API design
+app.use("/api/flights", duffelEnhancedRoutes);
+
 // Flight Booking Orchestrator Routes (E2E booking flow)
 app.use("/api/flight-booking", flightBookingRoutes);
 
@@ -575,6 +657,18 @@ app.use("/api/realtime-booking", realtimeBookingRoutes);
 
 // Hotel Routes (Hybrid: Static DB + Live Rates from LiteAPI)
 app.use("/api/hotels", hotelRoutes);
+
+// Location Routes (IP Geolocation & Timezone)
+app.use("/api/location", locationRoutes);
+
+// Static Data Routes (Airports, Airlines, Countries, Currencies, etc.)
+app.use("/api/static", staticRoutes);
+
+// Content Routes (Popular Destinations, Promotions, Legal, Insurance)
+app.use("/api/content", contentRoutes);
+
+// Hotel Static Routes (Destination search, Static hotel details, Reviews)
+app.use("/api", hotelStaticRoutes);
 
 // 404 Handler
 app.use((req, res) => {

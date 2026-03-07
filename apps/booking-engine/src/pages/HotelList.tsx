@@ -17,6 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import { useLiteApiHotels } from "../hooks/useLiteApiHotels";
+import { fetchHotelResults } from "../services/liteApiManager";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { SearchAutocomplete } from "../components/ui/SearchAutocomplete";
@@ -61,10 +62,14 @@ export default function HotelList() {
   const navigate = useNavigate();
 
   // Use LiteAPI Hotels hook for search with Redis caching
-  const { hotels, loading, error, search, isCached, total } = useLiteApiHotels({
+  const { hotels: initialHotels, loading: searchLoading, error, search, isCached, total, searchId } = useLiteApiHotels({
     enableCache: true,
     cacheTTL: 15 * 60 * 1000, // 15 min cache
   });
+
+  const [displayHotels, setDisplayHotels] = useState<Hotel[]>([]);
+  const [totalHotels, setTotalHotels] = useState(0);
+  const [filterLoading, setFilterLoading] = useState(false);
 
   // Use DB-backed hooks for filter options via React Query
   const amenitiesQuery = useHotelAmenities();
@@ -111,19 +116,24 @@ export default function HotelList() {
     search(searchParamsLite);
   }, [searchParams]);
 
-  // Map LiteAPI results to Hotel interface
-  const mappedHotels: Hotel[] = useMemo(() => {
-    return hotels.map((h) => ({
-      id: h.id,
-      name: h.name,
-      location: h.location,
-      image: h.image,
-      price: h.price,
-      stars: h.rating,
-      rating: h.rating,
-      facilities: h.amenities,
-    }));
-  }, [hotels]);
+  // We can remove mappedHotels as a standalone memo because we handle it in fetch results.
+  // We keep it just to map initial results if needed.
+  useEffect(() => {
+    if (initialHotels && initialHotels.length > 0 && displayHotels.length === 0) {
+      const mapped = initialHotels.map((h: any) => ({
+        id: h.id,
+        name: h.name,
+        location: h.location,
+        image: h.image,
+        price: h.price,
+        stars: h.rating,
+        rating: h.rating,
+        facilities: h.amenities,
+      }));
+      setDisplayHotels(mapped);
+      setTotalHotels(initialHotels.length); // will be corrected by Redis
+    }
+  }, [initialHotels]);
 
   // Update destination state when URL changes
   useEffect(() => {
@@ -132,6 +142,7 @@ export default function HotelList() {
 
   // Interactive Filter State
   const [activeFilter, setActiveFilter] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState("Recommended");
   const [filters, setFilters] = useState<FilterState>({
     stars: [],
     price: [],
@@ -164,68 +175,64 @@ export default function HotelList() {
     });
   };
 
-  const filteredHotels = React.useMemo(() => {
-    return mappedHotels.filter((h) => {
-      // Price Filter
-      if (filters.price.length > 0) {
-        const price = h.price?.amount || 0;
-        const matchesPrice = filters.price.some((range) => {
-          if (range === "Under $100") return price < 100;
-          if (range === "$100 - $300") return price >= 100 && price <= 300;
-          if (range === "$300 - $500") return price > 300 && price <= 500;
-          if (range === "$500+") return price > 500;
-          return true;
-        });
-        if (!matchesPrice) return false;
-      }
+  // Fetch results from Redis session when filters or sort change
+  useEffect(() => {
+    if (!searchId) return;
 
-      // Star Rating Filter (Assuming h.stars is present in data, defaulting to match if missing)
-      if (filters.stars.length > 0) {
-        const starCount = h.stars || 0;
-        const matchesStars = filters.stars.some((s) => {
-          if (s === "1 Star") return starCount === 1;
-          if (s === "2 Stars") return starCount === 2;
-          if (s === "3 Stars") return starCount === 3;
-          if (s === "4 Stars") return starCount === 4;
-          if (s === "5 Stars") return starCount === 5;
-          return true;
-        });
-        if (!matchesStars) return false;
-      }
+    setFilterLoading(true);
 
-      // Guest Rating Filter
-      if (filters.rating.length > 0) {
-        const rating = h.rating || 0;
-        const matchesRating = filters.rating.some((r) => {
-          if (r.startsWith("7+")) return rating >= 7;
-          if (r.startsWith("8+")) return rating >= 8;
-          if (r.startsWith("9+")) return rating >= 9;
-          return true;
-        });
-        if (!matchesRating) return false;
-      }
+    const payload: any = {
+      limit: 20,
+      offset: 0,
+      sortBy: sortBy === "Price: Low to High" ? "price" : sortBy === "Price: High to Low" ? "price" : sortBy === "Rating: High to Low" ? "rating" : "recommended",
+      sortOrder: sortBy.includes("High to Low") ? "desc" : "asc",
+    };
 
-      // Property Type
-      if (filters.type.length > 0) {
-        // Assuming h.type or h.propertyType exists
-        const type = h.type || h.propertyType || "";
-        if (!filters.type.includes(type)) return false;
+    if (filters.price.length > 0) {
+      let minP = 99999;
+      let maxP = 0;
+      for (const p of filters.price) {
+        if (p === "Under $100") { minP = Math.min(minP, 0); maxP = Math.max(maxP, 100); }
+        if (p === "$100 - $300") { minP = Math.min(minP, 100); maxP = Math.max(maxP, 300); }
+        if (p === "$300 - $500") { minP = Math.min(minP, 300); maxP = Math.max(maxP, 500); }
+        if (p === "$500+") { minP = Math.min(minP, 500); maxP = Math.max(maxP, 99999); }
       }
+      if (minP !== 99999) payload.minPrice = minP;
+      if (maxP !== 0) payload.maxPrice = maxP;
+    }
 
-      // Facilities
-      if (filters.facilities.length > 0) {
-        const hotelFacilities = (h.facilities || []).map((f: string) =>
-          f.toLowerCase(),
-        );
-        const matchesFacilities = filters.facilities.every((f) =>
-          hotelFacilities.includes(f.toLowerCase()),
-        );
-        if (!matchesFacilities) return false;
-      }
+    if (filters.rating.length > 0) {
+      let minR = 0;
+      if (filters.rating.some(r => r.startsWith("9+"))) minR = 9;
+      else if (filters.rating.some(r => r.startsWith("8+"))) minR = 8;
+      else if (filters.rating.some(r => r.startsWith("7+"))) minR = 7;
+      if (minR > 0) payload.minRating = minR;
+    }
 
-      return true;
+    if (filters.facilities.length > 0) {
+      payload.amenities = filters.facilities;
+    }
+
+    fetchHotelResults(searchId, payload).then((res) => {
+      const mapped = res.results.map((h: any) => ({
+        id: h.id,
+        name: h.name,
+        location: h.location,
+        image: h.image,
+        price: h.price,
+        stars: h.rating,
+        rating: h.rating,
+        facilities: h.amenities,
+      }));
+      setDisplayHotels(mapped);
+      setTotalHotels(res.total);
+      setFilterLoading(false);
+    }).catch((err) => {
+      console.error("Failed to fetch hotel results:", err);
+      setFilterLoading(false);
     });
-  }, [hotels, filters]);
+
+  }, [searchId, filters, sortBy]);
 
   useEffect(() => {
     const handleClick = () => setActiveFilter(null);
@@ -233,7 +240,7 @@ export default function HotelList() {
     return () => window.removeEventListener("click", handleClick);
   }, []);
 
-  if (loading) {
+  if (searchLoading) {
     return (
       <TripLogerLayout>
         <div className="container mx-auto px-4 py-40 flex flex-col items-center gap-4">
@@ -442,44 +449,44 @@ export default function HotelList() {
                     <div className="absolute top-full left-0 mt-2 w-48 bg-card/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-border p-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
                       <div className="max-h-60 overflow-y-auto no-scrollbar space-y-2">
                         {isLoadingFilters &&
-                        (f.id === "facilities" || f.id === "type")
+                          (f.id === "facilities" || f.id === "type")
                           ? // Loading skeleton for amenities and types filters
-                            Array.from({ length: 4 }).map((_, idx) => (
-                              <div key={idx} className="px-4 py-2.5 rounded-xl">
-                                <div className="h-4 bg-muted rounded animate-pulse" />
-                              </div>
-                            ))
+                          Array.from({ length: 4 }).map((_, idx) => (
+                            <div key={idx} className="px-4 py-2.5 rounded-xl">
+                              <div className="h-4 bg-muted rounded animate-pulse" />
+                            </div>
+                          ))
                           : f.options.map((opt, idx) => {
-                              const isSelected =
-                                filters[f.id as keyof typeof filters].includes(
-                                  opt,
-                                );
-                              return (
-                                <div
-                                  key={idx}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    toggleFilter(
-                                      f.id as keyof typeof filters,
-                                      opt,
-                                    );
-                                  }}
-                                  className={`px-4 py-2.5 rounded-xl hover:bg-muted/10 flex items-center justify-between group cursor-pointer transition-colors ${isSelected ? "bg-indigo-50" : ""}`}
-                                >
-                                  <span
-                                    className={`text-xs font-bold ${isSelected ? "text-[hsl(var(--secondary))]" : "text-foreground"}`}
-                                  >
-                                    {opt}
-                                  </span>
-                                  {isSelected && (
-                                    <Check
-                                      size={12}
-                                      className="text-[hsl(var(--secondary))]"
-                                    />
-                                  )}
-                                </div>
+                            const isSelected =
+                              filters[f.id as keyof typeof filters].includes(
+                                opt,
                               );
-                            })}
+                            return (
+                              <div
+                                key={idx}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFilter(
+                                    f.id as keyof typeof filters,
+                                    opt,
+                                  );
+                                }}
+                                className={`px-4 py-2.5 rounded-xl hover:bg-muted/10 flex items-center justify-between group cursor-pointer transition-colors ${isSelected ? "bg-indigo-50" : ""}`}
+                              >
+                                <span
+                                  className={`text-xs font-bold ${isSelected ? "text-[hsl(var(--secondary))]" : "text-foreground"}`}
+                                >
+                                  {opt}
+                                </span>
+                                {isSelected && (
+                                  <Check
+                                    size={12}
+                                    className="text-[hsl(var(--secondary))]"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
                       </div>
                     </div>
                   )}
@@ -497,12 +504,31 @@ export default function HotelList() {
                     Recommended Stays
                   </h2>
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                    Based on {hotels.length} verified properties found
+                    Based on {totalHotels} verified properties found
                   </p>
+                </div>
+                <div className="flex items-center gap-4 hidden sm:flex">
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    Sort by:
+                  </span>
+                  <select
+                    id="hotel-list-sort"
+                    name="hotel-list-sort"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-transparent text-xs font-black text-foreground uppercase tracking-widest outline-none cursor-pointer border px-3 py-2 rounded-xl border-border focus:border-[hsl(var(--secondary))]"
+                  >
+                    <option value="Recommended">Recommended</option>
+                    <option value="Price: Low to High">Price: Low to High</option>
+                    <option value="Price: High to Low">Price: High to Low</option>
+                    <option value="Rating: High to Low">Rating: High to Low</option>
+                  </select>
                 </div>
               </div>
 
-              {filteredHotels.map((h) => (
+              {filterLoading ? (
+                <div className="flex justify-center p-8"><div className="w-8 h-8 rounded-full border-4 border-t-indigo-500 animate-spin" /></div>
+              ) : displayHotels.map((h) => (
                 <Card
                   key={h.id}
                   className="group overflow-hidden border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 flex h-64 bg-card rounded-3xl"
@@ -655,10 +681,9 @@ export default function HotelList() {
                 </Button>
               </div>
 
-              {/* Real Mapbox map showing hotel locations */}
               <HotelMap
-                hotels={filteredHotels
-                  .filter((h) => h.latitude != null && h.longitude != null)
+                hotels={displayHotels
+                  .filter((h: any) => h.latitude != null && h.longitude != null)
                   .map((h) => ({
                     id: String(h.id),
                     name: h.name || "Hotel",

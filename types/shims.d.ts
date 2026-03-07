@@ -3,19 +3,7 @@
    runtime namespaces so tsc can proceed. Replace with proper types over time.
 */
 
-/* Minimal module shims */
-declare module "joi" {
-  const Joi: any;
-  export = Joi;
-}
-declare module "p-limit" {
-  const pLimit: any;
-  export default pLimit;
-}
-declare module "cheerio" {
-  const cheerio: any;
-  export default cheerio;
-}
+/* Minimal module shims for packages without proper TypeScript definitions */
 declare module "string-similarity" {
   const ss: any;
   export default ss;
@@ -28,33 +16,9 @@ declare module "perf_hooks" {
   const perf: any;
   export default perf;
 }
-declare module "fastify" {
-  const fastify: any;
-  export default fastify;
-}
 declare module "express-rate-limit" {
   const rl: any;
   export default rl;
-}
-declare module "compression" {
-  const compression: any;
-  export default compression;
-}
-declare module "multer" {
-  const mul: any;
-  export default mul;
-}
-declare module "helmet" {
-  const helmet: any;
-  export default helmet;
-}
-declare module "ioredis" {
-  const IORedis: any;
-  export default IORedis;
-}
-declare module "node-fetch" {
-  const fetch: any;
-  export default fetch;
 }
 declare module "@prisma/client/runtime/library" {
   const PrismaRuntime: any;
@@ -67,26 +31,6 @@ declare module "@prisma/client" {
   export type PrismaClient = any;
   export const Prisma: any;
   export default PrismaClient;
-}
-
-/* Generic shims for many third-party packages referenced across repo */
-declare module "dotenv" {
-  const d: any;
-  export default d;
-}
-declare module "uuid" {
-  const uuid: any;
-  export default uuid;
-}
-declare module "axios" {
-  const axios: any;
-  export default axios;
-  export type AxiosInstance = any;
-  export type AxiosError = any;
-}
-declare module "jsonwebtoken" {
-  const jwt: any;
-  export default jwt;
 }
 
 /* DB / pg / redis shims */

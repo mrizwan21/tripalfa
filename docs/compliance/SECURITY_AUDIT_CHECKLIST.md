@@ -5,6 +5,7 @@
 ### 1. API Key Security
 
 #### Stripe
+
 - [ ] API key is LIVE key (starts with `sk_live_`)
 - [ ] API key has NEVER been used in staging/test environments
 - [ ] API key is NOT visible in any logs, version control, or backups
@@ -15,6 +16,7 @@
 - [ ] API key access is logged and audited
 
 #### PayPal
+
 - [ ] Client ID is from production account
 - [ ] Client Secret has NEVER been exposed in logs/version control
 - [ ] Webhook ID is production webhook ID
@@ -291,4 +293,3 @@
 **Document Version**: 4.4.0  
 **Last Updated**: March 2, 2026  
 **Status**: Security Audit Checklist for Production Deployment
-

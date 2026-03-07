@@ -38,24 +38,24 @@ export default function Sidebar() {
     <aside className="hidden lg:block w-72 shrink-0">
       <div className="sticky top-24 space-y-6">
         {/* Profile Card Mini */}
-        <div className="bg-slate-900 rounded-3xl p-5 shadow-xl shadow-slate-900/10 relative overflow-hidden group">
+        <div className="bg-primary rounded-3xl p-5 shadow-xl shadow-primary/10 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
-            <ShieldCheck size={48} className="text-emerald-500" />
+            <ShieldCheck size={48} className="text-secondary" />
           </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-bold text-primary-foreground/70 uppercase tracking-widest mb-1">
             Verify Status
           </p>
-          <h4 className="text-sm font-bold text-white flex items-center gap-2">
+          <h4 className="text-sm font-bold text-primary-foreground flex items-center gap-2">
             Level 2 Account{" "}
-            <Zap size={12} className="text-amber-400 fill-amber-400" />
+            <Zap size={12} className="text-secondary fill-secondary" />
           </h4>
-          <div className="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full w-2/3 bg-emerald-500 rounded-full" />
+          <div className="mt-4 h-1.5 w-full bg-primary-foreground/10 rounded-full overflow-hidden">
+            <div className="h-full w-2/3 bg-secondary rounded-full" />
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-3">
+        <div className="bg-card rounded-[2rem] border border-border shadow-sm p-3">
           <nav className="space-y-2">
             {SIDEBAR_LINKS.map((ln) => {
               const Icon = ln.icon;
@@ -68,8 +68,8 @@ export default function Sidebar() {
                   className={cn(
                     "group flex items-center justify-between p-3 rounded-2xl transition-all duration-200",
                     active
-                      ? "bg-slate-50 text-slate-900 shadow-inner"
-                      : "text-slate-500 hover:bg-slate-50/50 hover:text-slate-900",
+                      ? "bg-muted text-primary shadow-inner"
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -77,8 +77,8 @@ export default function Sidebar() {
                       className={cn(
                         "flex items-center justify-center w-8 h-8 rounded-xl transition-colors",
                         active
-                          ? "bg-white shadow-sm text-primary"
-                          : "bg-slate-100 group-hover:bg-white text-slate-400",
+                          ? "bg-card shadow-sm text-primary"
+                          : "bg-muted group-hover:bg-card text-muted-foreground",
                       )}
                     >
                       <Icon size={16} />

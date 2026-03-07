@@ -35,7 +35,7 @@ interface PaymentRecordResponse {
 
 class OfflineRequestApi {
   private api: AxiosInstance;
-  private baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+  private baseURL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
   constructor() {
     this.api = axios.create({
@@ -68,8 +68,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to create offline request",
+        error.message ||
+        "Failed to create offline request",
       );
     }
   }
@@ -88,8 +88,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch offline request",
+        error.message ||
+        "Failed to fetch offline request",
       );
     }
   }
@@ -108,8 +108,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch offline request",
+        error.message ||
+        "Failed to fetch offline request",
       );
     }
   }
@@ -133,8 +133,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch customer requests",
+        error.message ||
+        "Failed to fetch customer requests",
       );
     }
   }
@@ -158,8 +158,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch staff queue",
+        error.message ||
+        "Failed to fetch staff queue",
       );
     }
   }
@@ -181,8 +181,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to submit pricing",
+        error.message ||
+        "Failed to submit pricing",
       );
     }
   }
@@ -211,8 +211,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to approve request",
+        error.message ||
+        "Failed to approve request",
       );
     }
   }
@@ -251,8 +251,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to process payment",
+        error.message ||
+        "Failed to process payment",
       );
     }
   }
@@ -274,8 +274,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to complete request",
+        error.message ||
+        "Failed to complete request",
       );
     }
   }
@@ -297,8 +297,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to cancel request",
+        error.message ||
+        "Failed to cancel request",
       );
     }
   }
@@ -354,8 +354,8 @@ class OfflineRequestApi {
     } catch (error: any) {
       throw new Error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to fetch audit log",
+        error.message ||
+        "Failed to fetch audit log",
       );
     }
   }

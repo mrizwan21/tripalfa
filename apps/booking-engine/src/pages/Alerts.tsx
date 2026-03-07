@@ -37,12 +37,12 @@ import type { TenantContentConfig } from "../types/contentConfig";
 interface Alert {
   id: string;
   type:
-    | "price_drop"
-    | "price_increase"
-    | "booking_status"
-    | "reminder"
-    | "promotion"
-    | "system";
+  | "price_drop"
+  | "price_increase"
+  | "booking_status"
+  | "reminder"
+  | "promotion"
+  | "system";
   title: string;
   message: string;
   productType: "flight" | "hotel" | "car" | "all";
@@ -216,9 +216,9 @@ export default function Alerts(): React.JSX.Element {
       prev.map((sub) =>
         sub.id === subscriptionId
           ? {
-              ...sub,
-              channels: { ...sub.channels, [channel]: !sub.channels[channel] },
-            }
+            ...sub,
+            channels: { ...sub.channels, [channel]: !sub.channels[channel] },
+          }
           : sub,
       ),
     );
@@ -234,7 +234,7 @@ export default function Alerts(): React.JSX.Element {
     switch (status) {
       case "active":
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
             <Bell className="w-3 h-3" /> Active
           </span>
         );
@@ -305,8 +305,8 @@ export default function Alerts(): React.JSX.Element {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-50">
-              <Bell className="w-5 h-5 text-blue-600" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Bell className="w-5 h-5 text-primary" />
             </div>
             <div>
               <div className="text-2xl font-semibold">{alerts.length}</div>
@@ -327,8 +327,8 @@ export default function Alerts(): React.JSX.Element {
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-50">
-              <AlertTriangle className="w-5 h-5 text-blue-600" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <AlertTriangle className="w-5 h-5 text-primary" />
             </div>
             <div>
               <div className="text-2xl font-semibold">{activeCount}</div>
@@ -458,9 +458,9 @@ export default function Alerts(): React.JSX.Element {
                           : alert.type === "price_increase"
                             ? "bg-red-50"
                             : alert.type === "booking_status"
-                              ? "bg-blue-50"
+                              ? "bg-primary/10 text-primary"
                               : alert.type === "reminder"
-                                ? "bg-purple-50"
+                                ? "bg-muted text-muted-foreground"
                                 : "bg-muted",
                       )}
                     >

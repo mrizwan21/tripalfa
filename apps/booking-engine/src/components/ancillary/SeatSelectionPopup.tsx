@@ -92,11 +92,8 @@ export const SeatSelectionPopup = ({
   useEffect(() => {
     if (seatMapsResponse?.success && seatMapsResponse.data?.seatMaps) {
       setProcessedSeatMaps(seatMapsResponse.data.seatMaps);
-    } else if (!isLoading && !seatMapsResponse?.success) {
-      // Generate mock seats if no real data available
-      setProcessedSeatMaps([]);
     }
-  }, [seatMapsResponse, isLoading]);
+  }, [seatMapsResponse]);
 
   // Get current processed seat map for selected segment
   const currentSeatMap = useMemo(() => {
@@ -123,57 +120,8 @@ export const SeatSelectionPopup = ({
     return getSeatPattern(currentSeatMap);
   }, [currentSeatMap]);
 
-  // Generate mock seats if no real data
-  const mockSeatsByRow = useMemo(() => {
-    if (currentSeatMap || !isOpen) return new Map<number, FlattenedSeat[]>();
-
-    const mockMap = new Map<number, FlattenedSeat[]>();
-    const numRows = 15;
-
-    for (let row = 1; row <= numRows; row++) {
-      const seats: FlattenedSeat[] = [];
-      const isExitRow = row >= 10 && row <= 11;
-
-      ["A", "B", "C", "D", "E", "F"].forEach((col, idx) => {
-        const isAvailable = Math.random() > 0.25;
-        const price = isLCC
-          ? row < 4
-            ? 25
-            : isExitRow
-              ? 35
-              : 15
-          : row < 4
-            ? 50
-            : isExitRow
-              ? 45
-              : 0;
-
-        seats.push({
-          designator: `${row}${col}`,
-          available: isAvailable,
-          price: isAvailable ? price : null,
-          currency: "USD",
-          serviceId: isAvailable ? `mock_${row}${col}` : null,
-          passengerId: null,
-          name: isExitRow ? "Exit Row" : null,
-          disclosures: [],
-          isExitRow,
-          isOverWing: row >= 8 && row <= 12,
-          rowNumber: row,
-          columnLetter: col,
-          sectionIndex: idx < 3 ? 0 : 1,
-          elementIndex: idx < 3 ? idx : idx - 3,
-        });
-      });
-
-      mockMap.set(row, seats);
-    }
-
-    return mockMap;
-  }, [currentSeatMap, isOpen, isLCC]);
-
-  // Use either real or mock seats
-  const displaySeatsByRow = seatsByRow.size > 0 ? seatsByRow : mockSeatsByRow;
+  // Use real seats
+  const displaySeatsByRow = seatsByRow;
 
   const currentPassenger = passengers[selectedPassengerIdx];
   const currentSegment = segments[selectedSegmentIdx];
@@ -379,11 +327,10 @@ export const SeatSelectionPopup = ({
                     size="md"
                     key={p.id}
                     onClick={() => setSelectedPassengerIdx(idx)}
-                    className={`px-6 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${
-                      selectedPassengerIdx === idx
-                        ? "bg-accent border-accent text-accent-foreground shadow-xl shadow-accent/20 scale-105"
-                        : "border-gray-100 text-gray-400"
-                    }`}
+                    className={`px-6 h-14 rounded-[2rem] flex items-center gap-4 border transition-all ${selectedPassengerIdx === idx
+                      ? "bg-accent border-accent text-accent-foreground shadow-xl shadow-accent/20 scale-105"
+                      : "border-gray-100 text-gray-400"
+                      }`}
                   >
                     <img
                       src={p.avatar || getPassengerAvatar(p.firstName)}
@@ -431,11 +378,10 @@ export const SeatSelectionPopup = ({
                   size="md"
                   key={seg.id}
                   onClick={() => setSelectedSegmentIdx(idx)}
-                  className={`px-6 py-3 rounded-xl text-xs font-black flex items-center gap-3 transition-all ${
-                    selectedSegmentIdx === idx
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "border border-primary text-primary hover:bg-primary/10"
-                  }`}
+                  className={`px-6 py-3 rounded-xl text-xs font-black flex items-center gap-3 transition-all ${selectedSegmentIdx === idx
+                    ? "bg-primary text-primary-foreground shadow-lg"
+                    : "border border-primary text-primary hover:bg-primary/10"
+                    }`}
                 >
                   <span>{seg.origin}</span>
                   <Plane
@@ -565,18 +511,17 @@ export const SeatSelectionPopup = ({
                                   title={
                                     seat.disclosures?.join(". ") || undefined
                                   }
-                                  className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 flex flex-col items-center justify-center text-[6px] font-black ${
-                                    !seat.available
-                                      ? "bg-gray-200 border-gray-200 text-gray-400 cursor-not-allowed"
-                                      : currentSeatSelection?.seatDesignator ===
-                                          seat.designator
-                                        ? "bg-accent border-accent text-accent-foreground shadow-lg"
-                                        : isSeatSelectedByOther(seat.designator)
-                                          ? "bg-green-400 border-green-400 text-white cursor-not-allowed"
-                                          : seat.isExitRow
-                                            ? "bg-purple-200 border-purple-200 text-purple-700 hover:bg-purple-300"
-                                            : "bg-white border-gray-100 text-primary hover:border-primary"
-                                  }`}
+                                  className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 flex flex-col items-center justify-center text-[6px] font-black ${!seat.available
+                                    ? "bg-gray-200 border-gray-200 text-gray-400 cursor-not-allowed"
+                                    : currentSeatSelection?.seatDesignator ===
+                                      seat.designator
+                                      ? "bg-accent border-accent text-accent-foreground shadow-lg"
+                                      : isSeatSelectedByOther(seat.designator)
+                                        ? "bg-green-400 border-green-400 text-white cursor-not-allowed"
+                                        : seat.isExitRow
+                                          ? "bg-purple-200 border-purple-200 text-purple-700 hover:bg-purple-300"
+                                          : "bg-white border-gray-100 text-primary hover:border-primary"
+                                    }`}
                                 >
                                   <span>{seat.designator}</span>
                                   {seat.price !== null && seat.price > 0 && (
@@ -602,18 +547,17 @@ export const SeatSelectionPopup = ({
                                   title={
                                     seat.disclosures?.join(". ") || undefined
                                   }
-                                  className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 flex flex-col items-center justify-center text-[6px] font-black ${
-                                    !seat.available
-                                      ? "bg-gray-200 border-gray-200 text-gray-400 cursor-not-allowed"
-                                      : currentSeatSelection?.seatDesignator ===
-                                          seat.designator
-                                        ? "bg-accent border-accent text-accent-foreground shadow-lg"
-                                        : isSeatSelectedByOther(seat.designator)
-                                          ? "bg-green-400 border-green-400 text-white cursor-not-allowed"
-                                          : seat.isExitRow
-                                            ? "bg-purple-200 border-purple-200 text-purple-700 hover:bg-purple-300"
-                                            : "bg-white border-gray-100 text-primary hover:border-primary"
-                                  }`}
+                                  className={`w-8 h-8 rounded-lg border-2 transition-all hover:scale-110 active:scale-95 flex flex-col items-center justify-center text-[6px] font-black ${!seat.available
+                                    ? "bg-gray-200 border-gray-200 text-gray-400 cursor-not-allowed"
+                                    : currentSeatSelection?.seatDesignator ===
+                                      seat.designator
+                                      ? "bg-accent border-accent text-accent-foreground shadow-lg"
+                                      : isSeatSelectedByOther(seat.designator)
+                                        ? "bg-green-400 border-green-400 text-white cursor-not-allowed"
+                                        : seat.isExitRow
+                                          ? "bg-purple-200 border-purple-200 text-purple-700 hover:bg-purple-300"
+                                          : "bg-white border-gray-100 text-primary hover:border-primary"
+                                    }`}
                                 >
                                   <span>{seat.designator}</span>
                                   {seat.price !== null && seat.price > 0 && (

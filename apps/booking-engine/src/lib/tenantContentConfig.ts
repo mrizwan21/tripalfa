@@ -372,7 +372,7 @@ export const DEFAULT_CONTENT_CONFIG: TenantContentConfig = {
         checkIn: "Check-in",
         checkOut: "Check-out",
         destinationPlaceholder: "City, Property, District or Address",
-        searchCtaLabel: "Search Hotels",
+        searchCtaLabel: "Search",
         loadingDestinationsLabel: "Loading destinations...",
         errorLoadingDestinationsLabel:
           "Unable to load destinations. Please try again later.",
@@ -485,8 +485,8 @@ export const DEFAULT_CONTENT_CONFIG: TenantContentConfig = {
         toPlaceholder: "To where?",
         legFromLabel: "From",
         legToLabel: "To",
-        searchCtaLabel: "Search Flights",
-        searchMultiCityCtaLabel: "Search Multi-City",
+        searchCtaLabel: "Search",
+        searchMultiCityCtaLabel: "Search",
         removeLegLabel: "Remove",
         addLegLabel: "+ Add another leg",
       },
@@ -531,26 +531,26 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
 
   const categories = Array.isArray(helpCenter.categories)
     ? helpCenter.categories
-        .filter(isObject)
-        .map((item) => ({
-          title: typeof item.title === "string" ? item.title : "",
-          desc: typeof item.desc === "string" ? item.desc : "",
-          icon:
-            typeof item.icon === "string" && item.icon.trim()
-              ? item.icon
-              : "❔",
-        }))
-        .filter((item) => item.title && item.desc)
+      .filter(isObject)
+      .map((item) => ({
+        title: typeof item.title === "string" ? item.title : "",
+        desc: typeof item.desc === "string" ? item.desc : "",
+        icon:
+          typeof item.icon === "string" && item.icon.trim()
+            ? item.icon
+            : "❔",
+      }))
+      .filter((item) => item.title && item.desc)
     : DEFAULT_CONTENT_CONFIG.helpCenter.categories;
 
   const faqs = Array.isArray(helpCenter.faqs)
     ? helpCenter.faqs
-        .filter(isObject)
-        .map((item) => ({
-          q: typeof item.q === "string" ? item.q : "",
-          a: typeof item.a === "string" ? item.a : "",
-        }))
-        .filter((item) => item.q && item.a)
+      .filter(isObject)
+      .map((item) => ({
+        q: typeof item.q === "string" ? item.q : "",
+        a: typeof item.a === "string" ? item.a : "",
+      }))
+      .filter((item) => item.q && item.a)
     : DEFAULT_CONTENT_CONFIG.helpCenter.faqs;
 
   const contact = isObject(helpCenter.contact) ? helpCenter.contact : {};
@@ -684,24 +684,24 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
 
   const subscriptions = Array.isArray(alerts.subscriptions)
     ? alerts.subscriptions
-        .filter(isObject)
-        .map((item) => ({
-          id: typeof item.id === "string" ? item.id : "",
-          name: typeof item.name === "string" ? item.name : "",
-          description:
-            typeof item.description === "string" ? item.description : "",
-          enabled: item.enabled !== false,
-          channels: {
-            email: isObject(item.channels)
-              ? item.channels.email !== false
-              : true,
-            push: isObject(item.channels) ? item.channels.push !== false : true,
-            sms: isObject(item.channels) ? item.channels.sms === true : false,
-          },
-          category:
-            typeof item.category === "string" ? item.category : "system",
-        }))
-        .filter((item) => item.id && item.name)
+      .filter(isObject)
+      .map((item) => ({
+        id: typeof item.id === "string" ? item.id : "",
+        name: typeof item.name === "string" ? item.name : "",
+        description:
+          typeof item.description === "string" ? item.description : "",
+        enabled: item.enabled !== false,
+        channels: {
+          email: isObject(item.channels)
+            ? item.channels.email !== false
+            : true,
+          push: isObject(item.channels) ? item.channels.push !== false : true,
+          sms: isObject(item.channels) ? item.channels.sms === true : false,
+        },
+        category:
+          typeof item.category === "string" ? item.category : "system",
+      }))
+      .filter((item) => item.id && item.name)
     : DEFAULT_CONTENT_CONFIG.alerts.subscriptions;
 
   const alertTypes = [
@@ -717,61 +717,61 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
 
   const items: AlertsItemConfig[] = Array.isArray(alerts.items)
     ? alerts.items
-        .filter(isObject)
-        .map((item) => {
-          const type =
-            typeof item.type === "string" &&
+      .filter(isObject)
+      .map((item) => {
+        const type =
+          typeof item.type === "string" &&
             (alertTypes as readonly string[]).includes(item.type)
-              ? (item.type as AlertsItemConfig["type"])
-              : ("system" as AlertsItemConfig["type"]);
-          const productType =
-            typeof item.productType === "string" &&
+            ? (item.type as AlertsItemConfig["type"])
+            : ("system" as AlertsItemConfig["type"]);
+        const productType =
+          typeof item.productType === "string" &&
             (alertProductTypes as readonly string[]).includes(item.productType)
-              ? (item.productType as AlertsItemConfig["productType"])
-              : ("all" as AlertsItemConfig["productType"]);
-          const status =
-            typeof item.status === "string" &&
+            ? (item.productType as AlertsItemConfig["productType"])
+            : ("all" as AlertsItemConfig["productType"]);
+        const status =
+          typeof item.status === "string" &&
             (alertStatuses as readonly string[]).includes(item.status)
-              ? (item.status as AlertsItemConfig["status"])
-              : ("active" as AlertsItemConfig["status"]);
+            ? (item.status as AlertsItemConfig["status"])
+            : ("active" as AlertsItemConfig["status"]);
 
-          const criteria = isObject(item.criteria) ? item.criteria : {};
+        const criteria = isObject(item.criteria) ? item.criteria : {};
 
-          return {
-            id: typeof item.id === "string" ? item.id : "",
-            type,
-            title: typeof item.title === "string" ? item.title : "",
-            message: typeof item.message === "string" ? item.message : "",
-            productType,
-            status,
-            createdAt: typeof item.createdAt === "string" ? item.createdAt : "",
-            triggeredAt:
-              typeof item.triggeredAt === "string"
-                ? item.triggeredAt
+        return {
+          id: typeof item.id === "string" ? item.id : "",
+          type,
+          title: typeof item.title === "string" ? item.title : "",
+          message: typeof item.message === "string" ? item.message : "",
+          productType,
+          status,
+          createdAt: typeof item.createdAt === "string" ? item.createdAt : "",
+          triggeredAt:
+            typeof item.triggeredAt === "string"
+              ? item.triggeredAt
+              : undefined,
+          expiresAt:
+            typeof item.expiresAt === "string" ? item.expiresAt : undefined,
+          criteria: {
+            origin:
+              typeof criteria.origin === "string"
+                ? criteria.origin
                 : undefined,
-            expiresAt:
-              typeof item.expiresAt === "string" ? item.expiresAt : undefined,
-            criteria: {
-              origin:
-                typeof criteria.origin === "string"
-                  ? criteria.origin
-                  : undefined,
-              destination:
-                typeof criteria.destination === "string"
-                  ? criteria.destination
-                  : undefined,
-              maxPrice:
-                typeof criteria.maxPrice === "number"
-                  ? criteria.maxPrice
-                  : undefined,
-              minPrice:
-                typeof criteria.minPrice === "number"
-                  ? criteria.minPrice
-                  : undefined,
-            },
-          };
-        })
-        .filter((item) => item.id && item.title && item.message)
+            destination:
+              typeof criteria.destination === "string"
+                ? criteria.destination
+                : undefined,
+            maxPrice:
+              typeof criteria.maxPrice === "number"
+                ? criteria.maxPrice
+                : undefined,
+            minPrice:
+              typeof criteria.minPrice === "number"
+                ? criteria.minPrice
+                : undefined,
+          },
+        };
+      })
+      .filter((item) => item.id && item.title && item.message)
     : DEFAULT_CONTENT_CONFIG.alerts.items;
 
   const parseStringList = (raw: unknown, fallback: string[]) => {
@@ -821,58 +821,58 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
 
   const coupons = Array.isArray(loyalty.coupons)
     ? loyalty.coupons
-        .filter(isObject)
-        .map((item) => ({
-          id: typeof item.id === "string" ? item.id : "",
-          type: typeof item.type === "string" ? item.type : "",
-          discount: typeof item.discount === "string" ? item.discount : "",
-          desc: typeof item.desc === "string" ? item.desc : "",
-          valid: typeof item.valid === "string" ? item.valid : "",
-        }))
-        .filter((item) => item.id && item.desc)
+      .filter(isObject)
+      .map((item) => ({
+        id: typeof item.id === "string" ? item.id : "",
+        type: typeof item.type === "string" ? item.type : "",
+        discount: typeof item.discount === "string" ? item.discount : "",
+        desc: typeof item.desc === "string" ? item.desc : "",
+        valid: typeof item.valid === "string" ? item.valid : "",
+      }))
+      .filter((item) => item.id && item.desc)
     : DEFAULT_CONTENT_CONFIG.loyalty.coupons;
 
   const transactionHistory = Array.isArray(loyalty.transactionHistory)
     ? loyalty.transactionHistory
-        .filter(isObject)
-        .map((item) => ({
-          id: typeof item.id === "string" ? item.id : "",
-          type: typeof item.type === "string" ? item.type : "earn",
-          points: typeof item.points === "number" ? item.points : 0,
-          description:
-            typeof item.description === "string" ? item.description : "",
-          date: typeof item.date === "string" ? item.date : "",
-          status: typeof item.status === "string" ? item.status : "Completed",
-        }))
-        .filter((item) => item.id && item.description)
+      .filter(isObject)
+      .map((item) => ({
+        id: typeof item.id === "string" ? item.id : "",
+        type: typeof item.type === "string" ? item.type : "earn",
+        points: typeof item.points === "number" ? item.points : 0,
+        description:
+          typeof item.description === "string" ? item.description : "",
+        date: typeof item.date === "string" ? item.date : "",
+        status: typeof item.status === "string" ? item.status : "Completed",
+      }))
+      .filter((item) => item.id && item.description)
     : DEFAULT_CONTENT_CONFIG.loyalty.transactionHistory;
 
   const accountSavedCards = Array.isArray(
     accountSettingsPaymentsDefaults.savedCards,
   )
     ? accountSettingsPaymentsDefaults.savedCards
-        .filter(isObject)
-        .map((item) => ({
-          id: typeof item.id === "string" ? item.id : "",
-          brand: typeof item.brand === "string" ? item.brand : "",
-          last4: typeof item.last4 === "string" ? item.last4 : "",
-          exp: typeof item.exp === "string" ? item.exp : "",
-          currency: typeof item.currency === "string" ? item.currency : "USD",
-          balance: typeof item.balance === "number" ? item.balance : undefined,
-        }))
-        .filter((item) => item.id && item.brand && item.last4)
+      .filter(isObject)
+      .map((item) => ({
+        id: typeof item.id === "string" ? item.id : "",
+        brand: typeof item.brand === "string" ? item.brand : "",
+        last4: typeof item.last4 === "string" ? item.last4 : "",
+        exp: typeof item.exp === "string" ? item.exp : "",
+        currency: typeof item.currency === "string" ? item.currency : "USD",
+        balance: typeof item.balance === "number" ? item.balance : undefined,
+      }))
+      .filter((item) => item.id && item.brand && item.last4)
     : DEFAULT_CONTENT_CONFIG.accountSettings.paymentsDefaults.savedCards;
 
   const accountApiDefaults = Array.isArray(accountSettings.apiDefaults)
     ? accountSettings.apiDefaults
-        .filter(isObject)
-        .map((item) => ({
-          id: typeof item.id === "string" ? item.id : "",
-          label: typeof item.label === "string" ? item.label : "",
-          key: typeof item.key === "string" ? item.key : "",
-          created: typeof item.created === "string" ? item.created : "",
-        }))
-        .filter((item) => item.id && item.label && item.key)
+      .filter(isObject)
+      .map((item) => ({
+        id: typeof item.id === "string" ? item.id : "",
+        label: typeof item.label === "string" ? item.label : "",
+        key: typeof item.key === "string" ? item.key : "",
+        created: typeof item.created === "string" ? item.created : "",
+      }))
+      .filter((item) => item.id && item.label && item.key)
     : DEFAULT_CONTENT_CONFIG.accountSettings.apiDefaults;
 
   return {
@@ -1129,18 +1129,18 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
           typeof accountSettingsNotificationsDefaults.marketing === "boolean"
             ? accountSettingsNotificationsDefaults.marketing
             : DEFAULT_CONTENT_CONFIG.accountSettings.notificationsDefaults
-                .marketing,
+              .marketing,
         bookingUpdates:
           typeof accountSettingsNotificationsDefaults.bookingUpdates ===
-          "boolean"
+            "boolean"
             ? accountSettingsNotificationsDefaults.bookingUpdates
             : DEFAULT_CONTENT_CONFIG.accountSettings.notificationsDefaults
-                .bookingUpdates,
+              .bookingUpdates,
         promoSms:
           typeof accountSettingsNotificationsDefaults.promoSms === "boolean"
             ? accountSettingsNotificationsDefaults.promoSms
             : DEFAULT_CONTENT_CONFIG.accountSettings.notificationsDefaults
-                .promoSms,
+              .promoSms,
       },
       apiDefaults: accountApiDefaults.length
         ? accountApiDefaults
@@ -1209,94 +1209,94 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
         searchFormLabels: {
           flight: isObject(marketingHomeSearchFormLabels.flight)
             ? {
-                from:
-                  typeof marketingHomeSearchFormLabels.flight.from === "string"
-                    ? marketingHomeSearchFormLabels.flight.from
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.from,
-                originPlaceholder:
-                  typeof marketingHomeSearchFormLabels.flight
-                    .originPlaceholder === "string"
-                    ? marketingHomeSearchFormLabels.flight.originPlaceholder
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.originPlaceholder,
-                to:
-                  typeof marketingHomeSearchFormLabels.flight.to === "string"
-                    ? marketingHomeSearchFormLabels.flight.to
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.to,
-                destinationPlaceholder:
-                  typeof marketingHomeSearchFormLabels.flight
-                    .destinationPlaceholder === "string"
-                    ? marketingHomeSearchFormLabels.flight
-                        .destinationPlaceholder
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.destinationPlaceholder,
-                departure:
-                  typeof marketingHomeSearchFormLabels.flight.departure ===
+              from:
+                typeof marketingHomeSearchFormLabels.flight.from === "string"
+                  ? marketingHomeSearchFormLabels.flight.from
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.from,
+              originPlaceholder:
+                typeof marketingHomeSearchFormLabels.flight
+                  .originPlaceholder === "string"
+                  ? marketingHomeSearchFormLabels.flight.originPlaceholder
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.originPlaceholder,
+              to:
+                typeof marketingHomeSearchFormLabels.flight.to === "string"
+                  ? marketingHomeSearchFormLabels.flight.to
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.to,
+              destinationPlaceholder:
+                typeof marketingHomeSearchFormLabels.flight
+                  .destinationPlaceholder === "string"
+                  ? marketingHomeSearchFormLabels.flight
+                    .destinationPlaceholder
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.destinationPlaceholder,
+              departure:
+                typeof marketingHomeSearchFormLabels.flight.departure ===
                   "string"
-                    ? marketingHomeSearchFormLabels.flight.departure
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.departure,
-                return:
-                  typeof marketingHomeSearchFormLabels.flight.return ===
+                  ? marketingHomeSearchFormLabels.flight.departure
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.departure,
+              return:
+                typeof marketingHomeSearchFormLabels.flight.return ===
                   "string"
-                    ? marketingHomeSearchFormLabels.flight.return
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.return,
-                searchCtaLabel:
-                  typeof marketingHomeSearchFormLabels.flight.searchCtaLabel ===
+                  ? marketingHomeSearchFormLabels.flight.return
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.return,
+              searchCtaLabel:
+                typeof marketingHomeSearchFormLabels.flight.searchCtaLabel ===
                   "string"
-                    ? marketingHomeSearchFormLabels.flight.searchCtaLabel
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.searchCtaLabel,
-                disabledLabel:
-                  typeof marketingHomeSearchFormLabels.flight.disabledLabel ===
+                  ? marketingHomeSearchFormLabels.flight.searchCtaLabel
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.searchCtaLabel,
+              disabledLabel:
+                typeof marketingHomeSearchFormLabels.flight.disabledLabel ===
                   "string"
-                    ? marketingHomeSearchFormLabels.flight.disabledLabel
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .flight.disabledLabel,
-              }
+                  ? marketingHomeSearchFormLabels.flight.disabledLabel
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .flight.disabledLabel,
+            }
             : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels.flight,
           hotel: isObject(marketingHomeSearchFormLabels.hotel)
             ? {
-                destination:
-                  typeof marketingHomeSearchFormLabels.hotel.destination ===
+              destination:
+                typeof marketingHomeSearchFormLabels.hotel.destination ===
                   "string"
-                    ? marketingHomeSearchFormLabels.hotel.destination
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .hotel.destination,
-                destinationPlaceholder:
-                  typeof marketingHomeSearchFormLabels.hotel
-                    .destinationPlaceholder === "string"
-                    ? marketingHomeSearchFormLabels.hotel.destinationPlaceholder
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .hotel.destinationPlaceholder,
-                checkIn:
-                  typeof marketingHomeSearchFormLabels.hotel.checkIn ===
+                  ? marketingHomeSearchFormLabels.hotel.destination
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .hotel.destination,
+              destinationPlaceholder:
+                typeof marketingHomeSearchFormLabels.hotel
+                  .destinationPlaceholder === "string"
+                  ? marketingHomeSearchFormLabels.hotel.destinationPlaceholder
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .hotel.destinationPlaceholder,
+              checkIn:
+                typeof marketingHomeSearchFormLabels.hotel.checkIn ===
                   "string"
-                    ? marketingHomeSearchFormLabels.hotel.checkIn
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .hotel.checkIn,
-                checkOut:
-                  typeof marketingHomeSearchFormLabels.hotel.checkOut ===
+                  ? marketingHomeSearchFormLabels.hotel.checkIn
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .hotel.checkIn,
+              checkOut:
+                typeof marketingHomeSearchFormLabels.hotel.checkOut ===
                   "string"
-                    ? marketingHomeSearchFormLabels.hotel.checkOut
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .hotel.checkOut,
-                searchCtaLabel:
-                  typeof marketingHomeSearchFormLabels.hotel.searchCtaLabel ===
+                  ? marketingHomeSearchFormLabels.hotel.checkOut
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .hotel.checkOut,
+              searchCtaLabel:
+                typeof marketingHomeSearchFormLabels.hotel.searchCtaLabel ===
                   "string"
-                    ? marketingHomeSearchFormLabels.hotel.searchCtaLabel
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .hotel.searchCtaLabel,
-                disabledLabel:
-                  typeof marketingHomeSearchFormLabels.hotel.disabledLabel ===
+                  ? marketingHomeSearchFormLabels.hotel.searchCtaLabel
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .hotel.searchCtaLabel,
+              disabledLabel:
+                typeof marketingHomeSearchFormLabels.hotel.disabledLabel ===
                   "string"
-                    ? marketingHomeSearchFormLabels.hotel.disabledLabel
-                    : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
-                        .hotel.disabledLabel,
-              }
+                  ? marketingHomeSearchFormLabels.hotel.disabledLabel
+                  : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels
+                    .hotel.disabledLabel,
+            }
             : DEFAULT_CONTENT_CONFIG.marketing.home.searchFormLabels.hotel,
         },
         packages: {
@@ -1336,45 +1336,45 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingHomePopularDestinations.subtitle === "string"
               ? marketingHomePopularDestinations.subtitle
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .subtitle,
+                .subtitle,
           viewAllLabel:
             typeof marketingHomePopularDestinations.viewAllLabel === "string"
               ? marketingHomePopularDestinations.viewAllLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .viewAllLabel,
+                .viewAllLabel,
           nameLabel:
             typeof marketingHomePopularDestinations.nameLabel === "string"
               ? marketingHomePopularDestinations.nameLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .nameLabel,
+                .nameLabel,
           priceLabel:
             typeof marketingHomePopularDestinations.priceLabel === "string"
               ? marketingHomePopularDestinations.priceLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .priceLabel,
+                .priceLabel,
           flightsFromLabel:
             typeof marketingHomePopularDestinations.flightsFromLabel ===
-            "string"
+              "string"
               ? marketingHomePopularDestinations.flightsFromLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .flightsFromLabel,
+                .flightsFromLabel,
           dataSourceSuffixLabel:
             typeof marketingHomePopularDestinations.dataSourceSuffixLabel ===
-            "string"
+              "string"
               ? marketingHomePopularDestinations.dataSourceSuffixLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .dataSourceSuffixLabel,
+                .dataSourceSuffixLabel,
           viewDetailsLabel:
             typeof marketingHomePopularDestinations.viewDetailsLabel ===
-            "string"
+              "string"
               ? marketingHomePopularDestinations.viewDetailsLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .viewDetailsLabel,
+                .viewDetailsLabel,
           featuredLabel:
             typeof marketingHomePopularDestinations.featuredLabel === "string"
               ? marketingHomePopularDestinations.featuredLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.popularDestinations
-                  .featuredLabel,
+                .featuredLabel,
         },
         featuredFlights: {
           title:
@@ -1385,27 +1385,27 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingHomeFeaturedFlights.emptyLabel === "string"
               ? marketingHomeFeaturedFlights.emptyLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.featuredFlights
-                  .emptyLabel,
+                .emptyLabel,
           perPersonLabel:
             typeof marketingHomeFeaturedFlights.perPersonLabel === "string"
               ? marketingHomeFeaturedFlights.perPersonLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.featuredFlights
-                  .perPersonLabel,
+                .perPersonLabel,
           directLabel:
             typeof marketingHomeFeaturedFlights.directLabel === "string"
               ? marketingHomeFeaturedFlights.directLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.featuredFlights
-                  .directLabel,
+                .directLabel,
           stopSuffix:
             typeof marketingHomeFeaturedFlights.stopSuffix === "string"
               ? marketingHomeFeaturedFlights.stopSuffix
               : DEFAULT_CONTENT_CONFIG.marketing.home.featuredFlights
-                  .stopSuffix,
+                .stopSuffix,
           viewDetailsLabel:
             typeof marketingHomeFeaturedFlights.viewDetailsLabel === "string"
               ? marketingHomeFeaturedFlights.viewDetailsLabel
               : DEFAULT_CONTENT_CONFIG.marketing.home.featuredFlights
-                  .viewDetailsLabel,
+                .viewDetailsLabel,
         },
       },
       flightHome: {
@@ -1445,97 +1445,97 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
         ),
         searchFormLabels: isObject(marketingFlightHome.searchFormLabels)
           ? {
-              departure:
-                typeof marketingFlightHome.searchFormLabels.departure ===
+            departure:
+              typeof marketingFlightHome.searchFormLabels.departure ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.departure
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .departure,
-              return:
-                typeof marketingFlightHome.searchFormLabels.return === "string"
-                  ? marketingFlightHome.searchFormLabels.return
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .return,
-              fromPlaceholder:
-                typeof marketingFlightHome.searchFormLabels.fromPlaceholder ===
+                ? marketingFlightHome.searchFormLabels.departure
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .departure,
+            return:
+              typeof marketingFlightHome.searchFormLabels.return === "string"
+                ? marketingFlightHome.searchFormLabels.return
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .return,
+            fromPlaceholder:
+              typeof marketingFlightHome.searchFormLabels.fromPlaceholder ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.fromPlaceholder
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .fromPlaceholder,
-              toPlaceholder:
-                typeof marketingFlightHome.searchFormLabels.toPlaceholder ===
+                ? marketingFlightHome.searchFormLabels.fromPlaceholder
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .fromPlaceholder,
+            toPlaceholder:
+              typeof marketingFlightHome.searchFormLabels.toPlaceholder ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.toPlaceholder
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .toPlaceholder,
-              legFromLabel:
-                typeof marketingFlightHome.searchFormLabels.legFromLabel ===
+                ? marketingFlightHome.searchFormLabels.toPlaceholder
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .toPlaceholder,
+            legFromLabel:
+              typeof marketingFlightHome.searchFormLabels.legFromLabel ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.legFromLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .legFromLabel,
-              legToLabel:
-                typeof marketingFlightHome.searchFormLabels.legToLabel ===
+                ? marketingFlightHome.searchFormLabels.legFromLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .legFromLabel,
+            legToLabel:
+              typeof marketingFlightHome.searchFormLabels.legToLabel ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.legToLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .legToLabel,
-              searchCtaLabel:
-                typeof marketingFlightHome.searchFormLabels.searchCtaLabel ===
+                ? marketingFlightHome.searchFormLabels.legToLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .legToLabel,
+            searchCtaLabel:
+              typeof marketingFlightHome.searchFormLabels.searchCtaLabel ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.searchCtaLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .searchCtaLabel,
-              searchMultiCityCtaLabel:
-                typeof marketingFlightHome.searchFormLabels
-                  .searchMultiCityCtaLabel === "string"
-                  ? marketingFlightHome.searchFormLabels.searchMultiCityCtaLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .searchMultiCityCtaLabel,
-              removeLegLabel:
-                typeof marketingFlightHome.searchFormLabels.removeLegLabel ===
+                ? marketingFlightHome.searchFormLabels.searchCtaLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .searchCtaLabel,
+            searchMultiCityCtaLabel:
+              typeof marketingFlightHome.searchFormLabels
+                .searchMultiCityCtaLabel === "string"
+                ? marketingFlightHome.searchFormLabels.searchMultiCityCtaLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .searchMultiCityCtaLabel,
+            removeLegLabel:
+              typeof marketingFlightHome.searchFormLabels.removeLegLabel ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.removeLegLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .removeLegLabel,
-              addLegLabel:
-                typeof marketingFlightHome.searchFormLabels.addLegLabel ===
+                ? marketingFlightHome.searchFormLabels.removeLegLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .removeLegLabel,
+            addLegLabel:
+              typeof marketingFlightHome.searchFormLabels.addLegLabel ===
                 "string"
-                  ? marketingFlightHome.searchFormLabels.addLegLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
-                      .addLegLabel,
-            }
+                ? marketingFlightHome.searchFormLabels.addLegLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels
+                  .addLegLabel,
+          }
           : DEFAULT_CONTENT_CONFIG.marketing.flightHome.searchFormLabels,
         tripTypeLabels: isObject(marketingFlightHome.tripTypeLabels)
           ? {
-              oneWay:
-                typeof marketingFlightHome.tripTypeLabels.oneWay === "string"
-                  ? marketingFlightHome.tripTypeLabels.oneWay
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels
-                      .oneWay,
-              roundTrip:
-                typeof marketingFlightHome.tripTypeLabels.roundTrip === "string"
-                  ? marketingFlightHome.tripTypeLabels.roundTrip
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels
-                      .roundTrip,
-              multiCity:
-                typeof marketingFlightHome.tripTypeLabels.multiCity === "string"
-                  ? marketingFlightHome.tripTypeLabels.multiCity
-                  : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels
-                      .multiCity,
-            }
+            oneWay:
+              typeof marketingFlightHome.tripTypeLabels.oneWay === "string"
+                ? marketingFlightHome.tripTypeLabels.oneWay
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels
+                  .oneWay,
+            roundTrip:
+              typeof marketingFlightHome.tripTypeLabels.roundTrip === "string"
+                ? marketingFlightHome.tripTypeLabels.roundTrip
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels
+                  .roundTrip,
+            multiCity:
+              typeof marketingFlightHome.tripTypeLabels.multiCity === "string"
+                ? marketingFlightHome.tripTypeLabels.multiCity
+                : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels
+                  .multiCity,
+          }
           : DEFAULT_CONTENT_CONFIG.marketing.flightHome.tripTypeLabels,
         popularFlights: {
           title:
             typeof marketingFlightPopularFlights.title === "string"
               ? marketingFlightPopularFlights.title
               : DEFAULT_CONTENT_CONFIG.marketing.flightHome.popularFlights
-                  .title,
+                .title,
           subtitle:
             typeof marketingFlightPopularFlights.subtitle === "string"
               ? marketingFlightPopularFlights.subtitle
               : DEFAULT_CONTENT_CONFIG.marketing.flightHome.popularFlights
-                  .subtitle,
+                .subtitle,
         },
         featuredGuide: {
           title:
@@ -1546,12 +1546,12 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingFlightFeaturedGuide.subtitle === "string"
               ? marketingFlightFeaturedGuide.subtitle
               : DEFAULT_CONTENT_CONFIG.marketing.flightHome.featuredGuide
-                  .subtitle,
+                .subtitle,
           poweredByLabel:
             typeof marketingFlightFeaturedGuide.poweredByLabel === "string"
               ? marketingFlightFeaturedGuide.poweredByLabel
               : DEFAULT_CONTENT_CONFIG.marketing.flightHome.featuredGuide
-                  .poweredByLabel,
+                .poweredByLabel,
         },
         trending: {
           title:
@@ -1571,67 +1571,67 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
       hotelHome: {
         searchFormLabels: isObject(marketingHotelHome.searchFormLabels)
           ? {
-              checkIn:
-                typeof marketingHotelHome.searchFormLabels.checkIn === "string"
-                  ? marketingHotelHome.searchFormLabels.checkIn
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .checkIn,
-              checkOut:
-                typeof marketingHotelHome.searchFormLabels.checkOut === "string"
-                  ? marketingHotelHome.searchFormLabels.checkOut
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .checkOut,
-              destinationPlaceholder:
-                typeof marketingHotelHome.searchFormLabels
-                  .destinationPlaceholder === "string"
-                  ? marketingHotelHome.searchFormLabels.destinationPlaceholder
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .destinationPlaceholder,
-              searchCtaLabel:
-                typeof marketingHotelHome.searchFormLabels.searchCtaLabel ===
+            checkIn:
+              typeof marketingHotelHome.searchFormLabels.checkIn === "string"
+                ? marketingHotelHome.searchFormLabels.checkIn
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .checkIn,
+            checkOut:
+              typeof marketingHotelHome.searchFormLabels.checkOut === "string"
+                ? marketingHotelHome.searchFormLabels.checkOut
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .checkOut,
+            destinationPlaceholder:
+              typeof marketingHotelHome.searchFormLabels
+                .destinationPlaceholder === "string"
+                ? marketingHotelHome.searchFormLabels.destinationPlaceholder
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .destinationPlaceholder,
+            searchCtaLabel:
+              typeof marketingHotelHome.searchFormLabels.searchCtaLabel ===
                 "string"
-                  ? marketingHotelHome.searchFormLabels.searchCtaLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .searchCtaLabel,
-              loadingDestinationsLabel:
-                typeof marketingHotelHome.searchFormLabels
-                  .loadingDestinationsLabel === "string"
-                  ? marketingHotelHome.searchFormLabels.loadingDestinationsLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .loadingDestinationsLabel,
-              errorLoadingDestinationsLabel:
-                typeof marketingHotelHome.searchFormLabels
-                  .errorLoadingDestinationsLabel === "string"
-                  ? marketingHotelHome.searchFormLabels
-                      .errorLoadingDestinationsLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .errorLoadingDestinationsLabel,
-              loadingHotelsLabel:
-                typeof marketingHotelHome.searchFormLabels
-                  .loadingHotelsLabel === "string"
-                  ? marketingHotelHome.searchFormLabels.loadingHotelsLabel
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
-                      .loadingHotelsLabel,
-            }
+                ? marketingHotelHome.searchFormLabels.searchCtaLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .searchCtaLabel,
+            loadingDestinationsLabel:
+              typeof marketingHotelHome.searchFormLabels
+                .loadingDestinationsLabel === "string"
+                ? marketingHotelHome.searchFormLabels.loadingDestinationsLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .loadingDestinationsLabel,
+            errorLoadingDestinationsLabel:
+              typeof marketingHotelHome.searchFormLabels
+                .errorLoadingDestinationsLabel === "string"
+                ? marketingHotelHome.searchFormLabels
+                  .errorLoadingDestinationsLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .errorLoadingDestinationsLabel,
+            loadingHotelsLabel:
+              typeof marketingHotelHome.searchFormLabels
+                .loadingHotelsLabel === "string"
+                ? marketingHotelHome.searchFormLabels.loadingHotelsLabel
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels
+                  .loadingHotelsLabel,
+          }
           : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.searchFormLabels,
         tripTypeLabels: isObject(marketingHotelHome.tripTypeLabels)
           ? {
-              oneWay:
-                typeof marketingHotelHome.tripTypeLabels.oneWay === "string"
-                  ? marketingHotelHome.tripTypeLabels.oneWay
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels
-                      .oneWay,
-              roundTrip:
-                typeof marketingHotelHome.tripTypeLabels.roundTrip === "string"
-                  ? marketingHotelHome.tripTypeLabels.roundTrip
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels
-                      .roundTrip,
-              multiCity:
-                typeof marketingHotelHome.tripTypeLabels.multiCity === "string"
-                  ? marketingHotelHome.tripTypeLabels.multiCity
-                  : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels
-                      .multiCity,
-            }
+            oneWay:
+              typeof marketingHotelHome.tripTypeLabels.oneWay === "string"
+                ? marketingHotelHome.tripTypeLabels.oneWay
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels
+                  .oneWay,
+            roundTrip:
+              typeof marketingHotelHome.tripTypeLabels.roundTrip === "string"
+                ? marketingHotelHome.tripTypeLabels.roundTrip
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels
+                  .roundTrip,
+            multiCity:
+              typeof marketingHotelHome.tripTypeLabels.multiCity === "string"
+                ? marketingHotelHome.tripTypeLabels.multiCity
+                : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels
+                  .multiCity,
+          }
           : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.tripTypeLabels,
         badge:
           typeof marketingHotelHome.badge === "string"
@@ -1689,7 +1689,7 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingHotelDeals.spotlightDescription === "string"
               ? marketingHotelDeals.spotlightDescription
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.deals
-                  .spotlightDescription,
+                .spotlightDescription,
           imageUrls: parseStringList(
             marketingHotelDealsImages,
             DEFAULT_CONTENT_CONFIG.marketing.hotelHome.deals.imageUrls,
@@ -1700,39 +1700,39 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingHotelPopularDestinations.title === "string"
               ? marketingHotelPopularDestinations.title
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .title,
+                .title,
           subtitle:
             typeof marketingHotelPopularDestinations.subtitle === "string"
               ? marketingHotelPopularDestinations.subtitle
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .subtitle,
+                .subtitle,
           nameLabel:
             typeof marketingHotelPopularDestinations.nameLabel === "string"
               ? marketingHotelPopularDestinations.nameLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .nameLabel,
+                .nameLabel,
           priceLabel:
             typeof marketingHotelPopularDestinations.priceLabel === "string"
               ? marketingHotelPopularDestinations.priceLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .priceLabel,
+                .priceLabel,
           dataSourceSuffixLabel:
             typeof marketingHotelPopularDestinations.dataSourceSuffixLabel ===
-            "string"
+              "string"
               ? marketingHotelPopularDestinations.dataSourceSuffixLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .dataSourceSuffixLabel,
+                .dataSourceSuffixLabel,
           viewDetailsLabel:
             typeof marketingHotelPopularDestinations.viewDetailsLabel ===
-            "string"
+              "string"
               ? marketingHotelPopularDestinations.viewDetailsLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .viewDetailsLabel,
+                .viewDetailsLabel,
           featuredLabel:
             typeof marketingHotelPopularDestinations.featuredLabel === "string"
               ? marketingHotelPopularDestinations.featuredLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.popularDestinations
-                  .featuredLabel,
+                .featuredLabel,
         },
         featuredHotels: {
           title:
@@ -1743,12 +1743,12 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingHotelFeaturedHotels.subtitle === "string"
               ? marketingHotelFeaturedHotels.subtitle
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.featuredHotels
-                  .subtitle,
+                .subtitle,
           emptyLabel:
             typeof marketingHotelFeaturedHotels.emptyLabel === "string"
               ? marketingHotelFeaturedHotels.emptyLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.featuredHotels
-                  .emptyLabel,
+                .emptyLabel,
         },
         featuredGuide: {
           title:
@@ -1759,12 +1759,12 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
             typeof marketingHotelFeaturedGuide.subtitle === "string"
               ? marketingHotelFeaturedGuide.subtitle
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.featuredGuide
-                  .subtitle,
+                .subtitle,
           poweredByLabel:
             typeof marketingHotelFeaturedGuide.poweredByLabel === "string"
               ? marketingHotelFeaturedGuide.poweredByLabel
               : DEFAULT_CONTENT_CONFIG.marketing.hotelHome.featuredGuide
-                  .poweredByLabel,
+                .poweredByLabel,
         },
         trending: {
           title:

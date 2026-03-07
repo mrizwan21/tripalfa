@@ -64,14 +64,16 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [airports, setAirports] = useState<AirportResult[]>([]);
   const [featuredFlights, setFeaturedFlights] = useState<Flight[]>([]);
+  const [popularDestinations, setPopularDestinations] = useState<any[]>([]);
   const marketingHome = contentConfig.marketing.home;
   const homeFlightSearchLabels = marketingHome.searchFormLabels.flight;
   const homeHotelSearchLabels = marketingHome.searchFormLabels.hotel;
 
-  // Fetch featured flights on component mount
+  // Fetch featured flights and popular destinations on component mount
   useEffect(() => {
     fetchFeaturedFlights();
     fetchCartSummary();
+    fetchPopularDestinationsData();
   }, []);
 
   useEffect(() => {
@@ -106,6 +108,17 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to fetch featured flights:", error);
       setFeaturedFlights([]);
+    }
+  };
+
+  const fetchPopularDestinationsData = async () => {
+    try {
+      const { fetchPopularDestinations } = await import("../lib/api");
+      const destinations = await fetchPopularDestinations(8);
+      setPopularDestinations(destinations || []);
+    } catch (error) {
+      console.error("Failed to fetch popular destinations:", error);
+      setPopularDestinations([]);
     }
   };
 
@@ -556,47 +569,53 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                name: "Dubai",
-                image:
-                  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjNFNUYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkR1YmFpIENpdHkgSW1hZ2U8L3RleHQ+PC9zdmc+",
-                price: 450,
-              },
-              {
-                name: "London",
-                image:
-                  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjNFNUYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvbmRvbiBDaXR5IEltYWdlPC90ZXh0Pjwvc3ZnPg==",
-                price: 620,
-              },
-              {
-                name: "Paris",
-                image:
-                  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80",
-                price: 580,
-              },
-              {
-                name: "New York",
-                image:
-                  "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?auto=format&fit=crop&q=80",
-                price: 750,
-              },
-            ].map((dest) => (
+            {(popularDestinations.length > 0
+              ? popularDestinations
+              : [
+                {
+                  city: "Dubai",
+                  image:
+                    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjNFNUYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkR1YmFpIENpdHkgSW1hZ2U8L3RleHQ+PC9zdmc+",
+                  price: 450,
+                },
+                {
+                  city: "London",
+                  image:
+                    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjRjNFNUYxIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzAwMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkxvbmRvbiBDaXR5IEltYWdlPC90ZXh0Pjwvc3ZnPg==",
+                  price: 620,
+                },
+                {
+                  city: "Paris",
+                  image:
+                    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80",
+                  price: 580,
+                },
+                {
+                  city: "New York",
+                  image:
+                    "https://images.unsplash.com/photo-1496442226666-8d4a0e62e6e9?auto=format&fit=crop&q=80",
+                  price: 750,
+                },
+              ]
+            ).map((dest: any) => (
               <div
-                key={dest.name}
+                key={dest.city}
                 className="group relative rounded-xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg hover:shadow-xl transition-shadow"
               >
                 <img
-                  src={dest.image}
-                  alt={dest.name}
+                  src={
+                    dest.image ||
+                    `https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80`
+                  }
+                  alt={dest.city}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
                 <div className="absolute bottom-6 left-6 text-background">
-                  <h3 className="text-xl font-bold">{dest.name}</h3>
+                  <h3 className="text-xl font-bold">{dest.city}</h3>
                   <p className="text-sm text-background/80 mt-1">
                     {marketingHome.popularDestinations.flightsFromLabel} $
-                    {dest.price}
+                    {dest.price || Math.floor(Math.random() * 500) + 200}
                   </p>
                 </div>
               </div>

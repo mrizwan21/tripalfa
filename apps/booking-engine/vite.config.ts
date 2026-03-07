@@ -69,45 +69,48 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/kiwi/, ""),
       },
       "/search": {
-        target: "http://localhost:3001",
+        target: "http://localhost:3030",
         changeOrigin: true,
         // Booking-service mounts liteApiRoutes at /api — rewrite /search/... → /api/search/...
         rewrite: (p) => `/api${p}`,
       },
       "/route": {
-        target: "http://localhost:3001",
+        target: "http://localhost:3030",
         changeOrigin: true,
       },
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3030",
         changeOrigin: true,
       },
       // LiteAPI: hotel rates & hotel search endpoints
       // Booking-service mounts liteApiRoutes at /api, so /hotels/rates → /api/hotels/rates
       "/hotels": {
-        target: "http://localhost:3001",
+        target: "http://localhost:3030",
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
       // LiteAPI: prebook & book endpoints (/rates/prebook → /api/rates/prebook)
       "/rates": {
-        target: "http://localhost:3001",
+        target: "http://localhost:3030",
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
       "/bookings": {
-        target: "http://localhost:3001",
+        target: "http://localhost:3030",
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
       "/duffel": {
-        target: "http://localhost:3001",
+        target: "http://localhost:3030",
         changeOrigin: true,
         rewrite: (p) => `/api${p}`,
       },
-      // Note: /static and /inventory proxies removed - static-data-service deleted
-      // Static data now comes from packages/static-data via in-memory fallbacks
-      // When /static/* calls fail, api.ts falls back to HOTEL_STATIC_DATA constants
+      // Static data direct access to packages/static-data running on port 3002
+      "/api/static": {
+        target: "http://localhost:3002",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api\/static/, "/api"),
+      },
     },
   },
 });

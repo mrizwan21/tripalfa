@@ -59,21 +59,25 @@ pnpm coverage:baseline            # Create/update baseline
 ## Understanding Coverage Metrics
 
 ### **Statements**
+
 - Percentage of code statements executed by tests
 - **Highest Priority** - Most reliable metric
 - Target: 80-88% depending on service
 
 ### **Branches**
+
 - Percentage of conditional branches (if/else, ternary, etc.) tested
 - **Most Challenging** - Requires testing all paths
 - Target: 60-85% depending on service
 
 ### **Functions**
+
 - Percentage of functions that are called by tests
 - **Quality Indicator** - Shows public API coverage
 - Target: 75-88%
 
 ### **Lines**
+
 - Percentage of lines of code executed
 - **Total Picture** - Complementary to statements
 - Target: 75-88%
@@ -248,6 +252,7 @@ git commit -m "feat: improve payment-service coverage to 87%"
 **Problem**: Coverage fluctuates between runs  
 **Cause**: Non-deterministic tests, flaky code  
 **Solution**:
+
 - Fix flaky tests first
 - Use consistent test data
 - Avoid timing-dependent assertions
@@ -257,6 +262,7 @@ git commit -m "feat: improve payment-service coverage to 87%"
 **Problem**: Hard to increase from 75% to 80%  
 **Cause**: Uncoverable code (error paths, deprecated code)  
 **Solution**:
+
 - Focus on important paths first
 - Use `/* c8 ignore */` for genuinely untestable code
 - Consider architectural changes
@@ -266,6 +272,7 @@ git commit -m "feat: improve payment-service coverage to 87%"
 **Problem**: PR fails due to coverage regression  
 **Cause**: Tests removed or broken  
 **Solution**:
+
 - Run `pnpm coverage` locally before pushing
 - Check report for regressions
 - Add tests before removing existing ones
@@ -343,11 +350,13 @@ pnpm coverage:report
 Location: `.github/workflows/coverage.yml`
 
 **Triggers**:
+
 - Every PR to main/develop
 - Daily schedule (trends)
 - Manual dispatch option
 
 **Actions**:
+
 1. Install dependencies
 2. Run test suite with coverage
 3. Generate coverage report

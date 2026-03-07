@@ -803,3 +803,49 @@ export async function searchAirports(query: string): Promise<any> {
     throw error;
   }
 }
+// ============================================================================
+// LITEAPI HOTEL CANCELLATIONS
+// ============================================================================
+
+/**
+ * Cancel a hotel booking (LiteAPI)
+ * PUT /api/booking/bookings/:id
+ */
+export async function cancelHotelBooking(
+  bookingId: string,
+  reason?: string,
+): Promise<any> {
+  try {
+    return await api.put(`/api/booking/bookings/${bookingId}`, {
+      status: "cancelled",
+      cancellationReason: reason || "User requested cancellation",
+    });
+  } catch (error) {
+    console.error(
+      "[Hotel API Manager] Cancel hotel booking error:",
+      (error as any)?.message,
+    );
+    throw error;
+  }
+}
+/**
+ * Download a specific document
+ * GET /api/bookings/:bookingId/documents/:documentType/download
+ */
+export async function downloadDocument(
+  bookingId: string,
+  documentType: string,
+): Promise<{ downloadUrl: string; expiresAt: string }> {
+  try {
+    const res = await api.get<{
+      data: { downloadUrl: string; expiresAt: string };
+    }>(`/api/bookings/${bookingId}/documents/${documentType}/download`);
+    return (res as any).data;
+  } catch (error) {
+    console.error(
+      `[API Manager] Download document error (${documentType}):`,
+      (error as any)?.message,
+    );
+    throw error;
+  }
+}

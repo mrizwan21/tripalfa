@@ -1,4 +1,3 @@
-// @ts-ignore
 import { PrismaClient } from "@prisma/client";
 import { MarkupRule, CommissionRule, RuleMatchContext } from "../types";
 import {

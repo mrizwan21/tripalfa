@@ -534,7 +534,7 @@ MIT
 
 ## Support
 
-For issues, questions, or contributions, contact: dev-team@tripalfa.com
+For issues, questions, or contributions, contact: <dev-team@tripalfa.com>
 
 ## Changelog
 

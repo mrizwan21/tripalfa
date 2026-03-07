@@ -19,7 +19,7 @@ import {
 } from "../lib/tenantContentConfig";
 
 /**
- * Lightweight dashboard: summary cards + simple SVG charts using mock-api data.
+ * Lightweight dashboard: summary cards + simple SVG charts using actual API data.
  * This is intended as a first iteration — we can replace charts with a charting
  * library (e.g. Chart.js, Recharts) if you want richer visuals.
  */
@@ -55,33 +55,15 @@ export default function Dashboard(): React.JSX.Element {
 
       try {
         const w = await fetchWallets();
-        // Use fetched wallets or fallback to default USD wallet for demo/testing
+        // Use fetched wallets
         if (!w || w.length === 0) {
-          setWallets([
-            {
-              id: "default-usd-wallet",
-              currency: "USD",
-              currentBalance: 2500.0,
-              status: "active",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-          ]);
+          setWallets([]);
         } else {
           setWallets(w);
         }
       } catch {
-        // Fallback to default wallet on error
-        setWallets([
-          {
-            id: "default-usd-wallet",
-            currency: "USD",
-            currentBalance: 2500.0,
-            status: "active",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-        ]);
+        // Fallback to empty
+        setWallets([]);
       }
 
       try {
@@ -162,8 +144,8 @@ export default function Dashboard(): React.JSX.Element {
                 {dashboardContent.cards.cars}: {summary.cars}
               </div>
             </div>
-            <div className="p-2 rounded bg-blue-50">
-              <BarChart className="w-5 h-5 text-blue-600" />
+            <div className="p-2 rounded bg-primary/10">
+              <BarChart className="w-5 h-5 text-primary" />
             </div>
           </div>
         </Card>

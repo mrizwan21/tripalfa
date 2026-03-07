@@ -25,12 +25,12 @@
 
 ### 1.3 Database Architecture (DUAL SOURCE)
 
-| Database            | Purpose                             | Access Method                |
-| ------------------- | ----------------------------------- | ---------------------------- |
-| **Static Database** | All static/reference data           | PostgreSQL on Docker (local) |
-| **Neon Database**   | Realtime API data, application data | MCP Server                   |
+| Database            | Purpose                             | Access Method              |
+| ------------------- | ----------------------------------- | -------------------------- |
+| **Static Database** | All static/reference data           | Local PostgreSQL instance  |
+| **Neon Database**   | Realtime API data, application data | MCP Server                 |
 
-- **Static Data** → Source from local PostgreSQL static database
+- **Static Data** → Source from local PostgreSQL instance
 - **Dynamic/Realtime Data** → Source from Neon database via MCP
 
 ### 1.4 System Architecture

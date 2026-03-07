@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { useTenantRuntime } from "./components/providers/TenantRuntimeProvider";
+import { useBootstrapStaticData } from "./hooks/useBootstrapStaticData";
 
 // Lazy Loaded Pages
 const FlightHome = lazy(() => import("./pages/FlightHome"));
@@ -67,6 +68,10 @@ function FeatureRoute({
 
 function App() {
   const { config: runtimeConfig } = useTenantRuntime();
+  
+  // Bootstrap all static data on app mount (prefetch 13 critical datasets)
+  useBootstrapStaticData();
+  
   const defaultLandingRoute = runtimeConfig.features.flightBookingEnabled
     ? "/flights"
     : runtimeConfig.features.hotelBookingEnabled

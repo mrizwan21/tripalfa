@@ -6,7 +6,7 @@
 
 ## 📊 Test Results at a Glance
 
-```
+```text
 ┌────────────────────────────────────────────┐
 │  TOTAL SCENARIOS: 111/111 PASSING (100%)   │
 ├────────────────────────────────────────────┤
@@ -54,11 +54,11 @@ npm run test:api
 ## 📁 Key Files Created
 
 | File | Purpose | Size |
-|------|---------|------|
+| --- | --- | --- |
 | `scripts/supplier-wallet-management-e2e.ts` | Full E2E test suite | 1000+ lines |
 | `scripts/mock-wallet-api.ts` | Settlement endpoint (updated) | +120 lines |
-| `PHASE_COMPLETION_SUMMARY.md` | Executive summary | 19KB |
-| `SUPPLIER_WALLET_E2E_TESTING_COMPLETE.md` | Detailed documentation | 15KB |
+| `docs/SESSION7_INTEGRATION_SUMMARY.md` | Executive/session summary | 13KB |
+| `docs/development/QUICK_REFERENCE.md` | Developer quick reference | This file |
 | `test-reports/supplier-wallet-e2e-2026-03-02.json` | Test results | 8.7KB |
 | `package.json` | NPM scripts (updated) | +3 scripts |
 
@@ -91,7 +91,7 @@ npm run test:api
 ## 💰 Financial Metrics (Phase 3)
 
 | Metric | Value |
-|--------|-------|
+| --- | --- |
 | Total Volume Tested | $25,000 USD |
 | Commissions Tracked | $1,775 USD |
 | Currencies | 7 |
@@ -104,7 +104,7 @@ npm run test:api
 
 ## 🏗️ Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────┐
 │   Microservices                     │
 │   (API Gateway, Booking, Wallet)    │
@@ -114,16 +114,16 @@ npm run test:api
         │                 │
         ▼                 ▼
    ┌─────────────┐   ┌──────────────┐
-   │ Static DB   │   │ NEON Cloud   │
-   │ (Docker)    │   │              │
-   │ Port 5433   │   │ App Data     │
+     │ Static DB   │   │ NEON Cloud   │
+     │ (Local)     │   │              │
+     │ Endpoint    │   │ App Data     │
    │             │   │              │
    │ • FX Rates  │   │ • Users      │
    │ • Analytics │   │ • Bookings   │
    │             │   │ • Wallets    │
    └─────────────┘   │ • Transaksi  │
                      └──────────────┘
-```
+```text
 
 ---
 
@@ -168,13 +168,13 @@ lsof -ti:3001 | xargs kill -9
 
 # Restart API
 npm run start:wallet:api
-```
+```text
 
 ### Issue: Database Connection Failed
 
 ```bash
-# Verify Docker container is running
-docker ps | grep postgres
+# Verify static DB endpoint is reachable
+nc -z localhost 5435
 
 # Check NEON connection string
 echo $DATABASE_URL
@@ -194,11 +194,11 @@ npm run test:api:supplier-wallet:e2e:verbose
 
 ## 📚 Documentation Files
 
-1. **[PHASE_COMPLETION_SUMMARY.md](PHASE_COMPLETION_SUMMARY.md)** - Executive overview with deployment checklist
-2. **[SUPPLIER_WALLET_E2E_TESTING_COMPLETE.md](SUPPLIER_WALLET_E2E_TESTING_COMPLETE.md)** - Detailed guide with scenarios
-3. **[BACKEND_SERVICES.md](docs/BACKEND_SERVICES.md)** - Backend architecture
-4. **[API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)** - API reference
-5. **[deployment.md](docs/deployment.md)** - Deployment guide
+1. **[SESSION7_INTEGRATION_SUMMARY.md](../SESSION7_INTEGRATION_SUMMARY.md)** - Executive overview with implementation status
+2. **[BACKEND_SERVICES.md](../architecture/BACKEND_SERVICES.md)** - Backend architecture
+3. **[API_DOCUMENTATION.md](../API_DOCUMENTATION.md)** - API reference
+4. **[deployment.md](../operations/deployment.md)** - Deployment guide
+5. **[README_DEVELOPMENT.md](../README_DEVELOPMENT.md)** - Local development guide
 
 ---
 
@@ -206,7 +206,7 @@ npm run test:api:supplier-wallet:e2e:verbose
 
 ### Wallet Endpoints
 
-```
+```text
 POST   /api/wallet/create              Create wallet
 POST   /api/wallet/topup               Deposit funds
 GET    /api/wallet/balance/:userId     Check balance
@@ -218,7 +218,7 @@ GET    /api/wallet/transactions        Transaction history
 
 ### FX Endpoints
 
-```
+```text
 GET    /api/fx/health                  System health
 GET    /api/fx/rates                   Current rates (36+ currencies)
 POST   /api/fx/convert                 Convert currencies
@@ -241,7 +241,7 @@ GET    /api/fx/analytics               Analytics data
 ## 📈 Performance Metrics
 
 | Operation | Time |
-|-----------|------|
+| --- | --- |
 | Total test suite | 6 seconds |
 | Supplier wallet E2E | 2.0 seconds |
 | API request | <100ms |
@@ -255,14 +255,14 @@ GET    /api/fx/analytics               Analytics data
 ### For New Team Members
 
 1. Start with `README.md` (project overview)
-2. Read `docs/BACKEND_SERVICES.md` (architecture)
+2. Read `docs/architecture/BACKEND_SERVICES.md` (architecture)
 3. Review `docs/API_DOCUMENTATION.md` (API endpoints)
-4. Check `PHASE_COMPLETION_SUMMARY.md` (latest status)
+4. Check `docs/SESSION7_INTEGRATION_SUMMARY.md` (latest status)
 
 ### For Operations
 
-1. `docs/deployment.md` - How to deploy
-2. `docs/deployment-optimization-guide.md` - Optimization tips
+1. `docs/operations/deployment.md` - How to deploy
+2. `docs/README_DEVELOPMENT.md` - Runtime and local setup reference
 3. `services/wallet-service/` - Service structure
 4. `test-reports/` - Test results
 

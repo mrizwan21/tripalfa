@@ -42,9 +42,6 @@
     "value": "localhost"
   },
   "PORTAL_STORAGE_PGHOST": {
-    "value": "${DOCKER_HOST}"
-  },
-  "DOCKER_HOST": {
-    "value": "host.docker.internal"
+    "value": "localhost"
   }
 }

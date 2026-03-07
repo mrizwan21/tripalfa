@@ -116,5 +116,5 @@ This document outlines the implementation of two new submodules under the Financ
 
 ## Reference
 
-- Money library: https://github.com/devAbreu/moneyx
+- Money library: <https://github.com/devAbreu/moneyx>
 - Key features: Decimal precision, multiple rounding modes, currency validation

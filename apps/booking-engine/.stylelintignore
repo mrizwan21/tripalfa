@@ -1,5 +1,0 @@
-**/*.ts
-**/*.tsx
-node_modules
-dist
-.vite

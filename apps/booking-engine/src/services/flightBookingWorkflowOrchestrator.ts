@@ -122,7 +122,7 @@ class FlightBookingWorkflowOrchestrator {
     walletApiUrl =
       import.meta.env.VITE_API_URL ||
       process.env.API_GATEWAY_URL ||
-      "http://localhost:3000/api",
+      "http://localhost:3001/api",
     verbose = false,
     authToken: string | null = null,
   ) {
@@ -784,9 +784,8 @@ class FlightBookingWorkflowOrchestrator {
               <tr><td class="label">Flight Fare:</td><td><span class="amount">${escapeHtml(booking.currency)} ${escapeHtml(booking.fare.toFixed(2))}</span></td></tr>
             </table>
 
-            ${
-              customerCurrency !== booking.currency
-                ? `
+            ${customerCurrency !== booking.currency
+        ? `
             <div class="fx-section">
               <div style="font-weight: bold; margin-bottom: 10px;">Currency Conversion</div>
               <table style="margin: 0;">
@@ -797,8 +796,8 @@ class FlightBookingWorkflowOrchestrator {
               </table>
             </div>
             `
-                : ""
-            }
+        : ""
+      }
 
             <p style="color: #666; margin-top: 20px;">Payment method: Wallet Account</p>
           </div>
@@ -844,9 +843,8 @@ class FlightBookingWorkflowOrchestrator {
               <tr><td class="label">Flight Fare:</td><td><span class="amount">${escapeHtml(fareCurrency)} ${escapeHtml(fare.toFixed(2))}</span></td></tr>
             </table>
 
-            ${
-              customerCurrency !== fareCurrency
-                ? `
+            ${customerCurrency !== fareCurrency
+        ? `
             <div class="fx-section">
               <div style="font-weight: bold; margin-bottom: 10px;">Currency Conversion</div>
               <table style="margin: 0;">
@@ -856,8 +854,8 @@ class FlightBookingWorkflowOrchestrator {
               </table>
             </div>
             `
-                : ""
-            }
+        : ""
+      }
 
             <p style="color: #666; margin-top: 20px;">Date: ${escapeHtml(new Date().toLocaleString())}</p>
           </div>
@@ -1014,16 +1012,15 @@ class FlightBookingWorkflowOrchestrator {
               <div class="amount">${escapeHtml(refundCurrency)} ${escapeHtml(refundAmount.toFixed(2))}</div>
             </div>
 
-            ${
-              passengerCurrency !== refundCurrency
-                ? `
+            ${passengerCurrency !== refundCurrency
+        ? `
             <div class="detail-item">
               <div style="font-weight: bold;">Amount in Your Currency:</div>
               <div class="amount">${escapeHtml(passengerCurrency)} ${escapeHtml(refundInPassengerCurrency.toFixed(2))}</div>
             </div>
             `
-                : ""
-            }
+        : ""
+      }
 
             <p style="color: #666; margin-top: 20px;">The refund has been credited to your wallet account and is available for future bookings.</p>
           </div>

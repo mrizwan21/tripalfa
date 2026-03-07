@@ -124,7 +124,7 @@ Tests transaction tracking and audit trail.
 
 ### Report Location
 
-```
+```text
 test-reports/wallet-orchestrator-YYYY-MM-DD.json
 ```
 
@@ -262,7 +262,7 @@ npm run test:api:wallet:orchestrator
 
 When services are running, you should see:
 
-```
+```text
 ✓ Create USD wallet (25ms)
 ✓ Create EUR wallet (22ms)
 ✓ Create GBP wallet (19ms)
@@ -345,7 +345,7 @@ The orchestrator collects and reports:
 
 Example metrics:
 
-```
+```text
 Test Duration Breakdown:
 ├─ Wallet Creation: 82ms (4 tests)
 ├─ Top-Up Flow: 245ms (6 tests)
@@ -381,7 +381,7 @@ curl http://localhost:3000/api/wallet/balance/USER_ID?currency=USD
 
 **Solution**: This is expected behavior. The test validates idempotency:
 
-```
+```text
 ✓ Idempotency: duplicate topup returns same transaction
 ```
 
@@ -425,7 +425,7 @@ WALLET_API_URL=http://custom-host:8080 npm run test:api:wallet:orchestrator
 Similar to the Hotel Booking Workflow Orchestrator (`booking-workflow-orchestrator.ts`), the Wallet Management Orchestrator:
 
 | Feature | Booking | Wallet |
-|---------|---------|--------|
+| --------- | --------- | -------- |
 | **Type** | E2E workflow test | E2E transaction test |
 | **Coverage** | Complete booking lifecycle | Complete wallet lifecycle |
 | **Flows** | Confirmation, cancellation, refund | Top-up, payment, transfer, refund |
@@ -462,10 +462,10 @@ Similar to the Hotel Booking Workflow Orchestrator (`booking-workflow-orchestrat
 
 ## Related Documentation
 
-- [Wallet Service Architecture](../services/wallet-service/README.md)
-- [Payment Service Integration](../services/payment-service/README.md)
 - [Wallet API Contract](./api/WALLET_API_CONTRACT.md)
-- [Hotel Booking Orchestrator](./booking-workflow-orchestrator.ts) (similar pattern)
+- [API Integration Testing Guide](./API_INTEGRATION_TESTING_GUIDE.md)
+- [Wallet API Contract](./api/WALLET_API_CONTRACT.md)
+- [Hotel Booking Orchestrator](../scripts/booking-workflow-orchestrator.ts) (similar pattern)
 
 ## Support & Contact
 

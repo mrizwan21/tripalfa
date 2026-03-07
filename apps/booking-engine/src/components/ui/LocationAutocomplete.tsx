@@ -39,73 +39,21 @@ export function LocationAutocomplete({
   useEffect(() => {
     const loadStaticLocations = async () => {
       try {
-        // Get a list of popular locations by fetching with common characters
-        const popularCodes = ["LHR", "JFK", "DXB", "SIN", "HKG"];
-        const locations: Location[] = [];
+        const { fetchInitialSuggestions } = await import("../../lib/api");
+        const locations = await fetchInitialSuggestions(20);
 
-        // Manually add popular airports - fallback data
-        const defaults: Location[] = [
-          {
-            code: "LHR",
-            name: "London Heathrow",
-            city: "London",
-            country: "United Kingdom",
-            type: "airport",
-          },
-          {
-            code: "JFK",
-            name: "John F. Kennedy",
-            city: "New York",
-            country: "United States",
-            type: "airport",
-          },
-          {
-            code: "DXB",
-            name: "Dubai International",
-            city: "Dubai",
-            country: "UAE",
-            type: "airport",
-          },
-          {
-            code: "SIN",
-            name: "Singapore Changi",
-            city: "Singapore",
-            country: "Singapore",
-            type: "airport",
-          },
-          {
-            code: "HKG",
-            name: "Hong Kong",
-            city: "Hong Kong",
-            country: "Hong Kong",
-            type: "airport",
-          },
-          {
-            code: "",
-            name: "London",
-            city: "London",
-            country: "United Kingdom",
-            type: "city",
-          },
-          {
-            code: "",
-            name: "New York",
-            city: "New York",
-            country: "United States",
-            type: "city",
-          },
-          {
-            code: "",
-            name: "Dubai",
-            city: "Dubai",
-            country: "UAE",
-            type: "city",
-          },
-        ];
+        // Map to our internal Location interface if needed
+        const mapped: Location[] = locations.map((loc: any) => ({
+          code: loc.code || "XXX",
+          name: loc.title || loc.name || "",
+          city: loc.city || "",
+          country: loc.country || "",
+          type: (loc.type?.toLowerCase() === "city" ? "city" : "airport") as "city" | "airport",
+        }));
 
-        setStaticLocations(defaults);
+        setStaticLocations(mapped);
       } catch (error) {
-        console.error("Failed to load static locations:", error);
+        console.error("Failed to load initial static locations:", error);
       }
     };
 

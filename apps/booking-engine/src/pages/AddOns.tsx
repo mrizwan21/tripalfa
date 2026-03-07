@@ -43,6 +43,9 @@ import {
   type SelectedBaggage,
   type SelectedMeal,
   type SelectedSpecialService,
+  type BaggageOption,
+  type SpecialServiceOption,
+  type MealOption,
 } from "../lib/ancillary-types";
 
 type FlightSegment = Record<string, any>;
@@ -59,7 +62,7 @@ export default function AddOns() {
   const location = useLocation();
 
   // Extract dynamic data from navigation state
-  const { flight, selectedFare, passengers } = location.state || {};
+  const { flight, selectedFare, passengers, selectedAncillaries: quickAddIds } = location.state || {};
 
   // Loyalty hook for tier and points calculations
   const { balance: loyaltyStatus } = useLoyaltyBalance();
@@ -172,6 +175,90 @@ export default function AddOns() {
   // Check if flight is LCC (low cost carrier)
   const isLCC = flight?.isLCC || flight?.carrierType === "LCC" || false;
 
+  // Real-time ancillary options derived from flight data
+  const availableBaggageOptions: BaggageOption[] = useMemo(() => {
+    return (flight?.ancillaries || [])
+      .filter((s: any) => s.type === "baggage")
+      .map((s: any) => ({
+        id: s.id,
+        type: "checked",
+        weight: s.raw?.metadata?.weight || 23,
+        weightUnit: s.raw?.metadata?.weight_unit || "kg",
+        price: s.price,
+        currency: s.currency,
+        description: s.name,
+      }));
+  }, [flight]);
+
+  const availableMealsOptions: MealOption[] = useMemo(() => {
+    return (flight?.ancillaries || [])
+      .filter((s: any) => s.type === "meal")
+      .map((s: any) => ({
+        id: s.id,
+        code: s.raw?.metadata?.type || "MEAL",
+        name: s.name,
+        description: s.raw?.metadata?.description,
+        type: "special",
+        price: s.price,
+        currency: s.currency,
+      }));
+  }, [flight]);
+
+  const availableSpecialServicesOptions: SpecialServiceOption[] = useMemo(() => {
+    return (flight?.ancillaries || [])
+      .filter((s: any) => s.type === "other")
+      .map((s: any) => ({
+        id: s.id,
+        code: s.raw?.metadata?.type || "SSR",
+        name: s.name,
+        description: s.raw?.metadata?.description,
+        price: s.price,
+        currency: s.currency,
+      }));
+  }, [flight]);
+
+  // Pre-populate selections from FlightList quick-add
+  useEffect(() => {
+    if (quickAddIds && quickAddIds.length > 0 && flight?.ancillaries) {
+      const baggage: SelectedBaggage[] = [];
+      const special: SelectedSpecialService[] = [];
+
+      quickAddIds.forEach((id: string) => {
+        const service = flight.ancillaries.find((s: any) => s.id === id);
+        if (!service) return;
+
+        if (service.type === "baggage") {
+          baggage.push({
+            passengerId: formattedPassengers[0]?.id || "adult-1",
+            passengerName: formattedPassengers[0]?.firstName || "Adult 1",
+            segmentId: formattedSegments[0]?.id || "segment-1",
+            flightNumber: formattedSegments[0]?.flightNumber || "FL101",
+            baggageId: service.id,
+            weight: service.raw?.metadata?.weight || 23,
+            weightUnit: service.raw?.metadata?.weight_unit || "kg",
+            price: service.price,
+            currency: service.currency,
+          });
+        } else {
+          special.push({
+            passengerId: formattedPassengers[0]?.id || "adult-1",
+            passengerName: formattedPassengers[0]?.firstName || "Adult 1",
+            segmentId: formattedSegments[0]?.id || "segment-1",
+            flightNumber: formattedSegments[0]?.flightNumber || "FL101",
+            serviceId: service.id,
+            serviceCode: service.raw?.metadata?.type || "SSR",
+            serviceName: service.name,
+            price: service.price,
+            currency: service.currency,
+          });
+        }
+      });
+
+      if (baggage.length > 0) setSelectedBaggage(baggage);
+      if (special.length > 0) setSelectedSpecialServices(special);
+    }
+  }, [quickAddIds, flight, formattedPassengers, formattedSegments]);
+
   // Calculate ancillary totals
   const ancillarySummary = calculateAncillarySummary({
     seats: selectedSeats,
@@ -195,7 +282,7 @@ export default function AddOns() {
   };
 
   const calculateAddonTotal = () => {
-    // Dynamic addon pricing (mocked per passenger for now)
+    // Fixed partner addon pricing
     return selectedAddons.length * 240 * adults;
   };
 
@@ -402,11 +489,10 @@ export default function AddOns() {
                         variant="outline"
                         size="md"
                         onClick={() => toggleAddon("refund")}
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                          selectedAddons.includes("refund")
-                            ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200"
-                            : "border-2 border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                        }`}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedAddons.includes("refund")
+                          ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200"
+                          : "border-2 border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                          }`}
                       >
                         {selectedAddons.includes("refund")
                           ? "Selected"
@@ -419,11 +505,10 @@ export default function AddOns() {
                           selectedAddons.includes("refund") &&
                           toggleAddon("refund")
                         }
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
-                          !selectedAddons.includes("refund")
-                            ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-purple-50"
-                            : "border-border text-muted-foreground"
-                        }`}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${!selectedAddons.includes("refund")
+                          ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-purple-50"
+                          : "border-border text-muted-foreground"
+                          }`}
                       >
                         No thanks
                       </Button>
@@ -492,11 +577,10 @@ export default function AddOns() {
                         size="md"
                         data-testid="baggage-addon"
                         onClick={() => toggleAddon("baggage")}
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
-                          selectedAddons.includes("baggage")
-                            ? "bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200"
-                            : "border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                        }`}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${selectedAddons.includes("baggage")
+                          ? "bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200"
+                          : "border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
+                          }`}
                       >
                         {selectedAddons.includes("baggage")
                           ? "Selected"
@@ -509,11 +593,10 @@ export default function AddOns() {
                           selectedAddons.includes("baggage") &&
                           toggleAddon("baggage")
                         }
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
-                          !selectedAddons.includes("baggage")
-                            ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-purple-50"
-                            : "border-border text-muted-foreground"
-                        }`}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${!selectedAddons.includes("baggage")
+                          ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-purple-50"
+                          : "border-border text-muted-foreground"
+                          }`}
                       >
                         No thanks
                       </Button>
@@ -917,8 +1000,8 @@ export default function AddOns() {
                             {ancillarySummary.specialServices === 0
                               ? "Free"
                               : formatCurrency(
-                                  ancillarySummary.specialServices,
-                                )}
+                                ancillarySummary.specialServices,
+                              )}
                           </span>
                         </div>
                       )}
@@ -1141,8 +1224,8 @@ export default function AddOns() {
                       >
                         {selectedProgram
                           ? loyaltyPrograms.find(
-                              (p) => p.id === selectedProgram,
-                            )?.programName
+                            (p) => p.id === selectedProgram,
+                          )?.programName
                           : "Select Loyalty Program"}
                       </span>
                       <ChevronDown
@@ -1166,11 +1249,10 @@ export default function AddOns() {
                                 setSelectedProgram(program.id);
                                 setLoyaltyDropdownOpen(false);
                               }}
-                              className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors ${
-                                selectedProgram === program.id
-                                  ? "bg-purple-50"
-                                  : ""
-                              }`}
+                              className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors ${selectedProgram === program.id
+                                ? "bg-purple-50"
+                                : ""
+                                }`}
                             >
                               <div className="text-sm font-bold text-foreground">
                                 {program.programName}
@@ -1278,6 +1360,7 @@ export default function AddOns() {
         isLCC={isLCC}
         passengers={formattedPassengers.filter((p) => p.type !== "Infant")}
         segments={formattedSegments}
+        availableOptions={availableBaggageOptions}
         existingSelections={selectedBaggage}
       />
 
@@ -1291,6 +1374,7 @@ export default function AddOns() {
         isLCC={isLCC}
         passengers={formattedPassengers}
         segments={formattedSegments}
+        availableMeals={availableMealsOptions}
         existingSelections={selectedMeals}
       />
 
@@ -1303,6 +1387,7 @@ export default function AddOns() {
         }}
         passengers={formattedPassengers}
         segments={formattedSegments}
+        availableServices={availableSpecialServicesOptions}
         existingSelections={selectedSpecialServices}
       />
     </TripLogerLayout>

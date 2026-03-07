@@ -68,7 +68,7 @@ export function BookingFilters({ onFilter }: { onFilter: (f: any) => void }) {
         <Button
           variant="default"
           size="sm"
-          className="h-10 px-5 bg-primary hover:bg-accent text-primary-foreground rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 whitespace-nowrap"
+          className="h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 whitespace-nowrap"
         >
           <Filter className="w-4 h-4" />
           <span>Apply</span>

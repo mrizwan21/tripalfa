@@ -125,6 +125,7 @@ packages/performance-testing/
 ## Emergency Response
 
 **If Critical Regression Detected**:
+
 1. Don't merge to main
 2. Run `pnpm perf:<service>` to identify benchmark
 3. Review recent commits affecting that path

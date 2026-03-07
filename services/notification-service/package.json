@@ -8,7 +8,7 @@
     "build": "pnpm exec tsc",
     "dev": "pnpm dlx tsx watch src/index.ts",
     "start": "node dist/index.js",
-    "lint": "pnpm exec eslint src --ext .ts,.tsx",
+    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
     "type-check": "pnpm exec tsc --noEmit",
     "clean": "rm -rf dist"
   },

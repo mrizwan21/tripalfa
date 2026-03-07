@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getBookingById } from "../lib/api";
+import {
+  createOrderCancellation,
+  confirmOrderCancellation,
+  addOrderServices,
+  cancelHotelBooking,
+  downloadDocument,
+} from "../services/duffelApiManager";
 import { TripLogerLayout } from "../components/layout/TripLogerLayout";
 import {
   ArrowLeft,
@@ -14,6 +21,7 @@ import {
   AlertCircle,
   Download,
   Printer,
+  RefreshCcw,
   Map,
   Luggage,
   Utensils,
@@ -21,14 +29,25 @@ import {
   Shield,
   Sparkles,
   ChevronDown,
-  ChevronRight,
   Info,
+  Hotel,
+  Bed,
 } from "lucide-react";
 import { formatCurrency } from "@tripalfa/ui-components";
-import { SeatSelectionPopup } from "../components/SeatSelectionPopup";
-import { AdditionalBaggagePopup } from "../components/AdditionalBaggagePopup";
-import { MealSelectionPopup } from "../components/MealSelectionPopup";
-import { SpecialRequestPopup } from "../components/SpecialRequestPopup";
+import {
+  SeatSelectionPopup,
+  BaggageSelectionPopup,
+  MealSelectionPopup,
+  SpecialServicesPopup
+} from "../components/ancillary";
+import {
+  formatPassengersFromBooking,
+  formatFlightSegments,
+  type Passenger,
+  type FlightSegmentInfo,
+  type SelectedMeal,
+  type SelectedSpecialService,
+} from "../lib/ancillary-types";
 import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
 import { Button } from "@/components/ui/button";
 
@@ -40,12 +59,31 @@ export default function BookingDetail() {
   const { config: runtimeConfig } = useTenantRuntime();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancellationInfo, setCancellationInfo] = useState<any>(null);
+
+  // Toast/notification state for user feedback
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // Ancillary Popups
   const [isSeatSelectionOpen, setIsSeatSelectionOpen] = useState(false);
   const [isBaggageOpen, setIsBaggageOpen] = useState(false);
   const [isMealSelectionOpen, setIsMealSelectionOpen] = useState(false);
   const [isSpecialRequestOpen, setIsSpecialRequestOpen] = useState(false);
+
+  const refreshBooking = async () => {
+    setIsRefreshing(true);
+    try {
+      const b = await getBookingById(id || "");
+      setBooking(b as any);
+    } catch (error) {
+      console.error("Failed to refresh booking:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -59,6 +97,114 @@ export default function BookingDetail() {
     }
     load();
   }, [id]);
+
+  const handleCancelBooking = async () => {
+    if (!booking || !id) return;
+    setIsCancelling(true);
+    try {
+      if (isHotel) {
+        // Hotel Cancellation (LiteAPI) - show confirmation dialog
+        setShowCancelConfirm(true);
+      } else {
+        // Flight Cancellation (Duffel) - 2-step flow
+        const res = await createOrderCancellation(booking.bookingId || booking.id);
+        setCancellationInfo(res.data);
+      }
+    } catch (error) {
+      console.error("Failed to cancel booking:", error);
+      setNotification({ type: 'error', message: "This booking cannot be cancelled online at this time." });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleConfirmHotelCancel = async () => {
+    if (!booking || !id) return;
+    setShowCancelConfirm(false);
+    setIsCancelling(true);
+    try {
+      await cancelHotelBooking(booking.bookingId || booking.id);
+      await refreshBooking();
+      setNotification({ type: 'success', message: "Hotel booking cancelled successfully." });
+    } catch (error) {
+      console.error("Failed to cancel hotel booking:", error);
+      setNotification({ type: 'error', message: "Failed to cancel hotel booking. Please try again." });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const confirmCancellation = async () => {
+    if (!cancellationInfo) return;
+    setIsCancelling(true);
+    try {
+      await confirmOrderCancellation(cancellationInfo.id);
+      await refreshBooking();
+      setCancellationInfo(null);
+      setNotification({ type: 'success', message: "Booking cancelled successfully." });
+    } catch (error) {
+      console.error("Failed to confirm cancellation:", error);
+      setNotification({ type: 'error', message: "Failed to confirm cancellation. Please try again or contact support." });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleAddServices = async (services: any[]) => {
+    if (!booking) return;
+    try {
+      await addOrderServices({
+        order_id: booking.bookingId || booking.id,
+        services: services.map(s => ({
+          id: s.id,
+          passenger_id: s.passengerId,
+          quantity: 1
+        }))
+      });
+      await refreshBooking();
+      setNotification({ type: 'success', message: "Services added successfully!" });
+    } catch (error) {
+      console.error("Failed to add services:", error);
+      setNotification({ type: 'error', message: "Failed to add services. Some services might not be available for this booking." });
+    }
+  };
+
+  const handleDownload = async (type: string) => {
+    if (!booking) return;
+    try {
+      const res = await downloadDocument(booking.bookingId || booking.id, type);
+      if (res && res.downloadUrl) {
+        window.open(res.downloadUrl, "_blank");
+      } else {
+        setNotification({ type: 'error', message: "Document is not yet available for download." });
+      }
+    } catch (error) {
+      console.error(`Failed to download ${type}:`, error);
+      setNotification({ type: 'error', message: `Failed to download ${type}. Please try again later.` });
+    }
+  };
+
+  // Clear notification after 5 seconds
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  // Map real-time data for ancillaries
+  const passengers: Passenger[] = React.useMemo(() => {
+    if (!booking) return [];
+    return formatPassengersFromBooking(
+      booking.passengers || { adults: 1, children: 0, infants: 0 },
+      booking.details?.passengers || (booking.details?.flight?.passengers)
+    );
+  }, [booking]);
+
+  const segments: FlightSegmentInfo[] = React.useMemo(() => {
+    if (!booking || !booking.details?.flight?.segments) return [];
+    return formatFlightSegments(booking.details.flight.segments);
+  }, [booking]);
 
   if (loading)
     return (
@@ -77,9 +223,10 @@ export default function BookingDetail() {
   if (!booking) return <div>No booking found</div>;
 
   // Tactical Status Logic
+  const isHotel = booking.product === "hotel" || !!booking.hotel;
   const isTicketed =
-    booking.status === "Ticketed" || booking.status === "Issued";
-  const isLCC = booking.details?.isLCC || false; // Mock LCC logic persistence
+    booking.status === "Ticketed" || booking.status === "Issued" || booking.status === "confirmed";
+  const isLCC = !isHotel && (booking.details?.isLCC || booking.details?.carrierType === "LCC" || false);
   const allowedPaymentMethods = runtimeConfig.checkout.enforceSupplierWallet
     ? ["wallet"]
     : runtimeConfig.checkout.allowedPaymentMethods;
@@ -102,6 +249,53 @@ export default function BookingDetail() {
 
   return (
     <TripLogerLayout>
+      {/* Toast Notification */}
+      {notification && (
+        <div className={`fixed top-24 right-4 z-50 p-4 rounded-lg shadow-lg animate-in slide-in-from-right {
+          notification.type === 'success' 
+            ? 'bg-green-600 text-white' 
+            : 'bg-red-600 text-white'
+        }`}>
+          <div className="flex items-center gap-2">
+            {notification.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+            <span>{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="ml-4 hover:opacity-80"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Hotel Cancellation Confirmation Dialog */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Confirm Cancellation</h3>
+            <p className="text-slate-600 dark:text-slate-300 mb-6">
+              Are you sure you want to cancel this hotel booking? This action cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelConfirm(false)}
+              >
+                Keep Booking
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmHotelCancel}
+                disabled={isCancelling}
+              >
+                {isCancelling ? 'Cancelling...' : 'Confirm Cancel'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         className="bg-[hsl(var(--background))] min-h-screen pb-32 font-sans"
         data-testid="booking-detail-page"
@@ -112,9 +306,9 @@ export default function BookingDetail() {
           <div className="container mx-auto px-4 max-w-7xl relative z-10">
             <Button
               variant="outline"
-              size="default"
+              size="sm"
               onClick={() => navigate("/bookings")}
-              className="flex items-center gap-2 text-primary-foreground/50 hover:text-primary-foreground font-black text-[10px] uppercase tracking-[0.2em] mb-10 transition-colors group"
+              className="mb-10 flex items-center gap-2 transition-colors group"
             >
               <ArrowLeft
                 size={16}
@@ -127,320 +321,368 @@ export default function BookingDetail() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className={`px-4 py-1.5 rounded-full border ${isTicketed ? "bg-green-500/10 border-green-500 text-green-400" : "bg-orange-500/10 border-orange-500 text-orange-400"} text-[10px] font-black uppercase tracking-widest`}
+                    className={`px-4 py-1.5 rounded-full border text-xs font-semibold uppercase tracking-wider flex items-center gap-2 ${isTicketed ? "bg-green-500/10 border-green-500 text-green-400" : "bg-orange-500/10 border-orange-500 text-orange-400"}`}
                   >
+                    {isHotel ? <Hotel size={12} /> : <Plane size={12} />}
                     {booking.status}
+                    <button
+                      onClick={refreshBooking}
+                      disabled={isRefreshing}
+                      className={`hover:text-white transition-all ml-1 ${isRefreshing ? 'animate-spin' : ''}`}
+                    >
+                      <RefreshCcw size={12} />
+                    </button>
                   </div>
-                  <span className="text-[10px] font-black text-primary-foreground/40 uppercase tracking-widest">
+                  <span className="text-sm font-semibold text-primary-foreground/60 uppercase tracking-widest">
                     Reference: {booking.reference || booking.bookingId}
                   </span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black text-primary-foreground tracking-tight leading-none">
-                  {flight.route || "Flight Booking"}
+                  {isHotel ? (booking.details?.hotel?.name || "Hotel Reservation") : (flight.route || "Flight Booking")}
                 </h1>
                 <div className="flex items-center gap-6 text-primary-foreground/60">
                   <div className="flex items-center gap-2">
                     <Calendar size={14} />
-                    <span className="text-xs font-bold">15 Feb 2026</span>
+                    <span className="text-xs font-bold">
+                      {isHotel
+                        ? (booking.details?.hotel?.checkIn || "TBA")
+                        : (flight.segments?.[0]?.date || "TBA")
+                      }
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <User size={14} />
-                    <span className="text-xs font-bold">2 Passengers</span>
+                    {isHotel ? <Bed size={14} /> : <User size={14} />}
+                    <span className="text-xs font-bold">
+                      {isHotel
+                        ? (booking.details?.hotel?.guests || "N/A")
+                        : (booking.passengers?.adults + (booking.passengers?.children || 0) + " Passengers")
+                      }
+                    </span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                {isTicketed && (
+                {isTicketed ? (
                   <>
                     <Button
-                      variant="default"
-                      size="default"
-                      className="h-12 px-6 rounded-xl bg-background/5 border border-border/10 text-primary-foreground font-black text-[10px] uppercase tracking-widest hover:bg-background/10 transition-all flex items-center gap-2"
+                      variant="destructive"
+                      onClick={handleCancelBooking}
+                      disabled={isCancelling}
                     >
-                      <Download size={16} /> E-Ticket
+                      {isCancelling ? "Processing..." : "Cancel Booking"}
                     </Button>
                     <Button
-                      variant="default"
-                      size="default"
-                      className="h-12 px-6 rounded-xl bg-background/5 border border-border/10 text-primary-foreground font-black text-[10px] uppercase tracking-widest hover:bg-background/10 transition-all flex items-center gap-2"
+                      variant="secondary"
+                      onClick={() => handleDownload(isHotel ? "voucher" : "ticket")}
+                      className="flex items-center gap-2"
                     >
-                      <Printer size={16} /> Receipt
+                      <Download size={16} /> {isHotel ? "Voucher" : "E-Ticket"}
                     </Button>
                   </>
-                )}
-                {!isTicketed && (
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={() => {
-                      if (!holdPaymentEnabled) {
-                        return;
-                      }
-                      navigate("/booking-checkout", {
-                        state: {
-                          bookingId: booking.bookingId || booking.id || id,
-                          isHoldPayment: true,
-                        },
-                      });
-                    }}
-                    disabled={!holdPaymentEnabled}
-                    className="h-12 px-8 rounded-xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] font-black text-[10px] uppercase tracking-widest hover:bg-[hsl(var(--primary)/0.9)] shadow-xl shadow-purple-900/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {holdPaymentEnabled
-                      ? "Complete Payment"
-                      : "Payment Disabled"}
-                  </Button>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="ghost"
+                      onClick={handleCancelBooking}
+                      disabled={isCancelling}
+                      className="text-red-400/70 hover:text-red-400 hover:bg-red-500/10"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (!holdPaymentEnabled) return;
+                        navigate("/booking-checkout", {
+                          state: {
+                            bookingId: booking.bookingId || booking.id || id,
+                            isHoldPayment: true,
+                          },
+                        });
+                      }}
+                      disabled={!holdPaymentEnabled}
+                    >
+                      {holdPaymentEnabled ? "Complete Payment" : "Payment Disabled"}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 max-w-7xl -mt-24 relative z-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        <div className="container mx-auto px-4 max-w-7xl -mt-16 relative z-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-8 space-y-10">
+            <div className="lg:col-span-8 space-y-8">
               {/* Manage Services Card */}
-              <div className="bg-card rounded-[2.5rem] p-10 shadow-sm border border-border relative overflow-hidden">
-                <div className="flex items-center justify-between mb-8 gap-2">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-[hsl(var(--primary))] gap-2">
-                      <Sparkles size={24} />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-black text-foreground tracking-tight text-2xl font-semibold tracking-tight">
-                        Manage Services
-                      </h2>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                        Customize your journey
-                      </p>
-                    </div>
-                  </div>
-                  {isTicketed && (
-                    <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full">
-                      modifications allowed
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={() =>
-                      runtimeConfig.features.seatSelectionEnabled &&
-                      setIsSeatSelectionOpen(true)
-                    }
-                    data-testid="seat-selection-button"
-                    disabled={!runtimeConfig.features.seatSelectionEnabled}
-                    className="group p-6 rounded-[2rem] border-2 border-border hover:border-[hsl(var(--primary))] transition-all bg-card hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-[hsl(var(--primary))] group-hover:text-[hsl(var(--primary-foreground))] transition-all gap-2">
-                      <Map size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-[10px] font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
-                        Seats
-                      </h3>
-                      <p className="text-[9px] font-bold text-muted-foreground mt-1">
-                        Select / Change
-                      </p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={() =>
-                      runtimeConfig.features.ancillariesEnabled &&
-                      setIsBaggageOpen(true)
-                    }
-                    data-testid="baggage-modification-button"
-                    disabled={!runtimeConfig.features.ancillariesEnabled}
-                    className="group p-6 rounded-[2rem] border-2 border-border hover:border-[hsl(var(--primary))] transition-all bg-card hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-[hsl(var(--primary))] group-hover:text-[hsl(var(--primary-foreground))] transition-all gap-2">
-                      <Luggage size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-[10px] font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
-                        Baggage
-                      </h3>
-                      <p className="text-[9px] font-bold text-muted-foreground mt-1">
-                        Add Extra Weight
-                      </p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={() =>
-                      runtimeConfig.features.ancillariesEnabled &&
-                      setIsMealSelectionOpen(true)
-                    }
-                    disabled={!runtimeConfig.features.ancillariesEnabled}
-                    className="group p-6 rounded-[2rem] border-2 border-border hover:border-[hsl(var(--primary))] transition-all bg-card hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-[hsl(var(--primary))] group-hover:text-[hsl(var(--primary-foreground))] transition-all gap-2">
-                      <Utensils size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-[10px] font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
-                        Meals
-                      </h3>
-                      <p className="text-[9px] font-bold text-muted-foreground mt-1">
-                        Dietary Prefs
-                      </p>
-                    </div>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="default"
-                    onClick={() =>
-                      runtimeConfig.features.ancillariesEnabled &&
-                      setIsSpecialRequestOpen(true)
-                    }
-                    disabled={!runtimeConfig.features.ancillariesEnabled}
-                    className="group p-6 rounded-[2rem] border-2 border-border hover:border-[hsl(var(--primary))] transition-all bg-card hover:shadow-xl flex flex-col items-center gap-4 text-center relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-[hsl(var(--primary))] group-hover:text-[hsl(var(--primary-foreground))] transition-all gap-2">
-                      <Heart size={24} />
-                    </div>
-                    <div>
-                      <h3 className="text-[10px] font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
-                        Special RR
-                      </h3>
-                      <p className="text-[9px] font-bold text-muted-foreground mt-1">
-                        Assistance
-                      </p>
-                    </div>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Flight Summary */}
-              <div className="bg-card rounded-[2.5rem] p-10 shadow-sm border border-border">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 gap-2">
-                    <Plane size={24} />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black text-foreground tracking-tight text-2xl font-semibold tracking-tight">
-                      Flight Segments
-                    </h2>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      Journey Details
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-6">
-                  {flight.segments?.map((seg: any, i: number) => (
-                    <div
-                      key={i}
-                      className="bg-muted rounded-[2rem] p-8 relative overflow-hidden"
-                    >
-                      <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background/50 to-transparent" />
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-background rounded-xl shadow-sm flex items-center justify-center text-2xl font-black text-foreground gap-2">
-                            {seg.carrier.charAt(0)}
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-black text-foreground">
-                              {seg.carrier}
-                            </h3>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                              {seg.code} • Business Class
-                            </p>
-                          </div>
+              {!isHotel && (
+                <div className="card shadow-md">
+                  <div className="card-header border-b border-border/50">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary gap-2">
+                          <Sparkles size={20} />
                         </div>
-                        <div className="flex-1 flex items-center justify-center gap-8">
-                          <div className="text-center">
-                            <p className="text-2xl font-black text-foreground">
-                              {seg.time.split(" - ")[0]}
-                            </p>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
-                              {seg.from} T{seg.terminal || "1"}
-                            </p>
-                          </div>
-                          <div className="flex flex-col items-center gap-2">
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                              {seg.duration}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-border" />
-                              <div className="w-16 h-0.5 bg-border" />
-                              <div className="w-2 h-2 rounded-full bg-border" />
-                            </div>
-                            <p className="text-[9px] font-black text-green-500 uppercase tracking-widest">
-                              Confimed
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-2xl font-black text-foreground">
-                              {seg.time.split(" - ")[1]}
-                            </p>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
-                              {seg.to}
-                            </p>
-                          </div>
+                        <div>
+                          <h2 className="card-title">
+                            Manage Services
+                          </h2>
+                          <p className="card-description">
+                            Customize your journey
+                          </p>
+                        </div>
+                      </div>
+                      {isTicketed && (
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1 rounded-full">
+                          modifications allowed
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="card-content pt-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => runtimeConfig.features.seatSelectionEnabled && setIsSeatSelectionOpen(true)}
+                        data-testid="seat-selection-button"
+                        disabled={!runtimeConfig.features.seatSelectionEnabled}
+                        className="h-auto py-6 flex flex-col items-center gap-3 active:scale-95 transition-transform"
+                      >
+                        <Map size={24} className="text-muted-foreground" />
+                        <div className="text-center space-y-1">
+                          <span className="block text-sm font-semibold">Seats</span>
+                          <span className="block text-xs text-muted-foreground font-normal">Select / Change</span>
+                        </div>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => runtimeConfig.features.ancillariesEnabled && setIsBaggageOpen(true)}
+                        data-testid="baggage-modification-button"
+                        disabled={!runtimeConfig.features.ancillariesEnabled}
+                        className="h-auto py-6 flex flex-col items-center gap-3 active:scale-95 transition-transform"
+                      >
+                        <Luggage size={24} className="text-muted-foreground" />
+                        <div className="text-center space-y-1">
+                          <span className="block text-sm font-semibold">Baggage</span>
+                          <span className="block text-xs text-muted-foreground font-normal">Add Weight</span>
+                        </div>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => runtimeConfig.features.ancillariesEnabled && setIsMealSelectionOpen(true)}
+                        disabled={!runtimeConfig.features.ancillariesEnabled}
+                        className="h-auto py-6 flex flex-col items-center gap-3 active:scale-95 transition-transform"
+                      >
+                        <Utensils size={24} className="text-muted-foreground" />
+                        <div className="text-center space-y-1">
+                          <span className="block text-sm font-semibold">Meals</span>
+                          <span className="block text-xs text-muted-foreground font-normal">Dietary Prefs</span>
+                        </div>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => runtimeConfig.features.ancillariesEnabled && setIsSpecialRequestOpen(true)}
+                        disabled={!runtimeConfig.features.ancillariesEnabled}
+                        className="h-auto py-6 flex flex-col items-center gap-3 active:scale-95 transition-transform"
+                      >
+                        <Heart size={24} className="text-muted-foreground" />
+                        <div className="text-center space-y-1">
+                          <span className="block text-sm font-semibold">Needs</span>
+                          <span className="block text-xs text-muted-foreground font-normal">Assistance</span>
+                        </div>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Product Summary (Flight or Hotel) */}
+              <div className="card shadow-md">
+                {isHotel ? (
+                  <>
+                    <div className="card-header border-b border-border/50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary gap-2">
+                          <Hotel size={20} />
+                        </div>
+                        <div>
+                          <h2 className="card-title">
+                            Hotel Details
+                          </h2>
+                          <p className="card-description">
+                            Stay Information
+                          </p>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="card-content pt-6 space-y-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="text-2xl font-black text-foreground">
+                            {booking.details?.hotel?.name || "Premium Hotel Stay"}
+                          </h3>
+                          <p className="text-sm font-medium text-muted-foreground mt-1">
+                            {booking.details?.hotel?.address || "City Center, Selection"}
+                          </p>
+                        </div>
+                        <div className="px-4 py-2 bg-background rounded-xl border border-border flex flex-col items-center">
+                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rating</span>
+                          <span className="text-lg font-black text-foreground">
+                            {booking.details?.hotel?.stars || "4.5"} ★
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 border-t border-border/50">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Check-In</p>
+                          <p className="font-bold text-foreground">{booking.details?.hotel?.checkIn || "TBA"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Check-Out</p>
+                          <p className="font-bold text-foreground">{booking.details?.hotel?.checkOut || "TBA"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Guests</p>
+                          <p className="font-bold text-foreground">{booking.details?.hotel?.guests || "2 Adults"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Rooms</p>
+                          <p className="font-bold text-foreground">1 Superior Room</p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="card-header border-b border-border/50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary gap-2">
+                          <Plane size={20} />
+                        </div>
+                        <div>
+                          <h2 className="card-title">
+                            Flight Segments
+                          </h2>
+                          <p className="card-description">
+                            Journey Details
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="card-content pt-6 space-y-4">
+                      {flight.segments?.map((seg: any, i: number) => (
+                        <div
+                          key={i}
+                          className="bg-muted rounded-[2rem] p-8 relative overflow-hidden"
+                        >
+                          <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-background/50 to-transparent" />
+                          <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                            <div className="flex items-center gap-4 min-w-[150px]">
+                              <div className="w-10 h-10 bg-background rounded-xl border border-border flex items-center justify-center text-xl font-black text-foreground gap-2">
+                                {seg.carrier.charAt(0)}
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-foreground">
+                                  {seg.carrier}
+                                </h3>
+                                <p className="text-xs text-muted-foreground font-medium">
+                                  {seg.code} • Business Class
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex-1 flex items-center justify-center gap-6 w-full md:w-auto mt-4 md:mt-0">
+                              <div className="text-center w-24">
+                                <p className="text-xl font-bold text-foreground">
+                                  {seg.time.split(" - ")[0]}
+                                </p>
+                                <p className="text-xs font-semibold text-muted-foreground mt-1 border border-border/50 bg-background rounded-full px-2 py-0.5 inline-block">
+                                  {seg.from} T{seg.terminal || "1"}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-center gap-1.5 flex-1 max-w-[120px]">
+                                <p className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                                  {seg.duration}
+                                </p>
+                                <div className="flex items-center w-full gap-1">
+                                  <div className="w-1.5 h-1.5 rounded-full border border-primary bg-background" />
+                                  <div className="flex-1 h-px bg-primary/30 relative">
+                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary/50">
+                                      <Plane size={12} />
+                                    </div>
+                                  </div>
+                                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                </div>
+                                <p className="text-[10px] font-bold text-green-500/80 uppercase tracking-widest">
+                                  Confirmed
+                                </p>
+                              </div>
+                              <div className="text-center w-24">
+                                <p className="text-xl font-bold text-foreground">
+                                  {seg.time.split(" - ")[1]}
+                                </p>
+                                <p className="text-xs font-semibold text-muted-foreground mt-1 border border-border/50 bg-background rounded-full px-2 py-0.5 inline-block">
+                                  {seg.to}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Sidebar: Payment Summary */}
-            <div className="lg:col-span-4 space-y-8">
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-sm p-8 sticky top-32">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600 gap-2">
-                      <CreditCard size={20} />
+            <div className="lg:col-span-4 space-y-6">
+              <div className="card shadow-md sticky top-32">
+                <div className="card-header border-b border-border/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-600 gap-2">
+                      <CreditCard size={18} />
                     </div>
-                    <div>
-                      <h3 className="text-sm font-black text-foreground tracking-tight uppercase text-xl font-semibold tracking-tight">
-                        Payment Summary
-                      </h3>
-                    </div>
+                    <h3 className="card-title">
+                      Payment Summary
+                    </h3>
                   </div>
+                </div>
 
-                  <div className="space-y-4 pt-4 border-t border-border">
-                    <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest gap-4">
-                      <span>Base Fare</span>
-                      <span className="text-foreground">
-                        {formatCurrency(3220)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest gap-4">
-                      <span>Taxes & Fees</span>
-                      <span className="text-foreground">
-                        {formatCurrency(240)}
-                      </span>
-                    </div>
-                    <div className="h-px bg-border" />
-                    <div className="flex justify-between items-center gap-4">
-                      <span className="text-sm font-black text-foreground uppercase tracking-widest">
-                        Total Paid
-                      </span>
-                      <span className="text-2xl font-black text-[hsl(var(--primary))] tracking-tighter">
-                        {formatCurrency(booking.total?.amount || 0)}
-                      </span>
-                    </div>
+                <div className="card-content pt-6 space-y-4">
+                  <div className="flex justify-between items-center text-sm gap-4">
+                    <span className="text-muted-foreground">Base Fare</span>
+                    <span className="font-medium text-foreground">
+                      {formatCurrency(3220)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm gap-4">
+                    <span className="text-muted-foreground">Taxes & Fees</span>
+                    <span className="font-medium text-foreground">
+                      {formatCurrency(240)}
+                    </span>
+                  </div>
+                  <div className="h-px bg-border" />
+                  <div className="flex justify-between items-center gap-4">
+                    <span className="font-semibold text-foreground">
+                      Total Paid
+                    </span>
+                    <span className="text-xl font-bold text-primary tracking-tight">
+                      {formatCurrency(booking.total?.amount || 0)}
+                    </span>
                   </div>
 
                   {!isTicketed && (
-                    <div className="bg-orange-50 rounded-2xl p-4 flex items-start gap-3">
+                    <div className="bg-orange-500/10 border border-orange-500/20 rounded-xl p-4 mt-6 flex items-start gap-3">
                       <AlertCircle
                         size={16}
                         className="text-orange-500 mt-0.5 shrink-0"
                       />
                       <div>
-                        <p className="text-[10px] font-black text-orange-700 uppercase tracking-widest mb-1">
+                        <p className="text-xs font-bold text-orange-700 uppercase tracking-widest mb-1">
                           Payment Required
                         </p>
-                        <p className="text-[11px] font-bold text-orange-600/80 leading-relaxed">
+                        <p className="text-xs font-medium text-orange-700/80 leading-relaxed">
                           This booking is currently on hold. Confirm your
                           payment to issue e-tickets.
                         </p>
@@ -452,32 +694,102 @@ export default function BookingDetail() {
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Service Popups */}
-      <SeatSelectionPopup
-        isOpen={isSeatSelectionOpen}
-        onClose={() => setIsSeatSelectionOpen(false)}
-        isLCC={isLCC}
-        onConfirm={() => setIsSeatSelectionOpen(false)}
-      />
-      <AdditionalBaggagePopup
-        isOpen={isBaggageOpen}
-        onClose={() => setIsBaggageOpen(false)}
-        isLCC={isLCC}
-        onConfirm={() => setIsBaggageOpen(false)}
-      />
-      <MealSelectionPopup
-        isOpen={isMealSelectionOpen}
-        onClose={() => setIsMealSelectionOpen(false)}
-        isLCC={isLCC}
-        onConfirm={() => setIsMealSelectionOpen(false)}
-      />
-      <SpecialRequestPopup
-        isOpen={isSpecialRequestOpen}
-        onClose={() => setIsSpecialRequestOpen(false)}
-        onConfirm={() => setIsSpecialRequestOpen(false)}
-      />
+        {/* Service Popups */}
+        <SeatSelectionPopup
+          isOpen={isSeatSelectionOpen}
+          onClose={() => setIsSeatSelectionOpen(false)}
+          isLCC={isLCC}
+          passengers={passengers.filter(p => p.type !== 'Infant')}
+          segments={segments}
+          onConfirm={(seats) => {
+            handleAddServices(seats);
+            setIsSeatSelectionOpen(false);
+          }}
+        />
+        <BaggageSelectionPopup
+          isOpen={isBaggageOpen}
+          onClose={() => setIsBaggageOpen(false)}
+          isLCC={isLCC}
+          passengers={passengers.filter(p => p.type !== 'Infant')}
+          segments={segments}
+          onConfirm={(baggage) => {
+            handleAddServices(baggage);
+            setIsBaggageOpen(false);
+          }}
+        />
+        <MealSelectionPopup
+          isOpen={isMealSelectionOpen}
+          onClose={() => setIsMealSelectionOpen(false)}
+          isLCC={isLCC}
+          passengers={passengers}
+          segments={segments}
+          onConfirm={(meals) => {
+            handleAddServices(meals);
+            setIsMealSelectionOpen(false);
+          }}
+        />
+        <SpecialServicesPopup
+          isOpen={isSpecialRequestOpen}
+          onClose={() => setIsSpecialRequestOpen(false)}
+          passengers={passengers}
+          segments={segments}
+          onConfirm={(services) => {
+            handleAddServices(services);
+            setIsSpecialRequestOpen(false);
+          }}
+        />
+
+        {/* Cancellation Confirmation Modal */}
+        {cancellationInfo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+            <div className="bg-card w-full max-w-md rounded-[2.5rem] border border-border shadow-2xl p-8 animate-in fade-in zoom-in duration-300">
+              <div className="flex flex-col items-center text-center gap-6">
+                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                  <AlertCircle size={32} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-foreground tracking-tight">Confirm Cancellation</h3>
+                  <p className="text-sm font-medium text-muted-foreground mt-2">
+                    Are you sure you want to cancel this booking? This action cannot be undone.
+                  </p>
+                </div>
+
+                <div className="w-full bg-muted/50 rounded-2xl p-6 space-y-3">
+                  <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <span>Refund Amount</span>
+                    <span className="text-foreground text-sm">
+                      {formatCurrency(Number(cancellationInfo.refund_amount || 0))}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                    <span>Currency</span>
+                    <span className="text-foreground">{cancellationInfo.refund_currency}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 w-full">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCancellationInfo(null)}
+                    className="w-full"
+                  >
+                    Keep Booking
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={confirmCancellation}
+                    disabled={isCancelling}
+                    className="w-full"
+                  >
+                    {isCancelling ? "Cancelling..." : "Yes, Cancel"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </TripLogerLayout>
   );
 }

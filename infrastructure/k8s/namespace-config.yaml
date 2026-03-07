@@ -1,0 +1,191 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tripalfa
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: database-credentials
+  namespace: tripalfa
+type: Opaque
+stringData:
+  connection-url: "postgresql://neondb_owner:password@db.neon.tech/tripalfa?sslmode=require"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: tripalfa
+type: Opaque
+stringData:
+  jwt-secret: "your-jwt-secret-here"
+  session-secret: "your-session-secret-here"
+  stripe-api-key: "sk_live_..."
+  duffel-api-token: "duffel_token_..."
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: tripalfa
+data:
+  LOG_LEVEL: "info"
+  NODE_ENV: "production"
+  API_GATEWAY_PORT: "3000"
+  BOOKING_SERVICE_URL: "http://booking-service:3001"
+  USER_SERVICE_URL: "http://user-service:3005"
+  PAYMENT_SERVICE_URL: "http://payment-service:3006"
+  WALLET_SERVICE_URL: "http://wallet-service:3007"
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tripalfa-network-policy
+  namespace: tripalfa
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: tripalfa
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+  egress:
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80
+    - protocol: TCP
+      port: 5432
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ServiceAccount
+metadata:
+  name: tripalfa-app
+  namespace: tripalfa
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tripalfa-app-role
+  namespace: tripalfa
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tripalfa-app-rolebinding
+  namespace: tripalfa
+subjects:
+- kind: ServiceAccount
+  name: tripalfa-app
+  namespace: tripalfa
+roleRef:
+  kind: Role
+  name: tripalfa-app-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: policy/v1
+kind: PodSecurityPolicy
+metadata:
+  name: tripalfa-restricted
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'MustRunAs'
+    seLinuxOptions:
+      level: "s0:c123,c456"
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      - min: 1000
+        max: 65535
+  readOnlyRootFilesystem: false
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: tripalfa-quota
+  namespace: tripalfa
+spec:
+  hard:
+    requests.cpu: "10"
+    requests.memory: "20Gi"
+    limits.cpu: "20"
+    limits.memory: "40Gi"
+    pods: "50"
+    services: "10"
+    persistentvolumeclaims: "5"
+
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: tripalfa-limits
+  namespace: tripalfa
+spec:
+  limits:
+  - type: Pod
+    max:
+      cpu: "2"
+      memory: "2Gi"
+    min:
+      cpu: "100m"
+      memory: "128Mi"
+  - type: Container
+    max:
+      cpu: "1"
+      memory: "1Gi"
+    min:
+      cpu: "50m"
+      memory: "64Mi"
+    default:
+      cpu: "500m"
+      memory: "512Mi"
+    defaultRequest:
+      cpu: "250m"
+      memory: "256Mi"

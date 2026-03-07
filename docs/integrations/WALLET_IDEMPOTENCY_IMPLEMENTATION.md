@@ -566,7 +566,7 @@ describe("Wallet Idempotency Integration", () => {
 ## Related Documentation
 
 - [WALLET_API_CONTRACT.md](../api/WALLET_API_CONTRACT.md) - Complete API specification
-- [docs/README.md](README.md) - General documentation index
+- [docs/README.md](../README.md) - General documentation index
 
 ---
 

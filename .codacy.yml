@@ -1,2 +1,21 @@
 exclude_paths:
+  # Configuration files (not code)
+  - ".codacy.yml"
+  - ".codacy/**"
+  - "**/.codacy.yml"
+  # JavaScript/TypeScript (no linting needed)
   - services/booking-service/dist/routes/duffel.js
+  # Documentation (markdown files - not code)
+  - "**/*.md"
+  - "**/*.mdx"
+  # SQL files (not Python - avoid Pylint false positives)
+  - "**/*.sql"
+  # Build outputs and generated files
+  - "**/dist/**"
+  - "**/build/**"
+  - "**/.next/**"
+  - "**/coverage/**"
+  # Lock files (external dependency management)
+  - "**/pnpm-lock.yaml"
+  - "**/package-lock.json"
+  - "**/yarn.lock"

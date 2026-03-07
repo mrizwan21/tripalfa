@@ -229,5 +229,5 @@ For issues or questions:
 
 - [Duffel API Documentation](https://duffel.com/docs/api/v2)
 - [Integration Guide](./DUFFEL_FLIGHT_MODULE_INTEGRATION.md)
-- [API Implementation Status](./docs/integrations/DUFFEL_API_INTEGRATION.md)
-- [Caching Guide](./docs/integrations/DUFFEL_CACHING_GUIDE.md)
+- [API Implementation Status](./integrations/DUFFEL_API_INTEGRATION.md)
+- [Caching Guide](./integrations/DUFFEL_CACHING_GUIDE.md)

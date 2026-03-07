@@ -139,7 +139,7 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify({ error: "Bad request" }));
     return;
   }
-  // Health check endpoint for Docker/Kubernetes
+  // Health check endpoint
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: "healthy", service: "user-service" }));
