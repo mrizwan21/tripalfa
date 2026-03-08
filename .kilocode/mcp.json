@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "wikivoyage": {
+      "command": "node",
+      "args": ["${env:MCP_WIKIVOYAGE_PATH}"],
+      "env": {}
+    }
+  }
+}
