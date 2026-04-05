@@ -1,47 +1,26 @@
-/**
- * Duffel Airline Credits API Routes
- *
- * Handles frequent flyer points/credits integration with Duffel API.
- * Documentation: https://duffel.com/docs/api/v2/airline-credits
- *
- * Endpoints:
- * - GET  /api/airline-credits - List all airline credits
- * - GET  /api/airline-credits/:id - Get single airline credit
- * - POST /api/airline-credits - Create airline credit
- */
-
-import { Router, Request, Response, NextFunction } from "express";
-import type { Router as ExpressRouter } from "express";
-import { prisma } from "@tripalfa/shared-database";
+import { Router, Request, Response, NextFunction } from 'express';
+import type { Router as ExpressRouter } from 'express';
+import { prisma } from '@tripalfa/shared-database';
 
 const router: ExpressRouter = Router();
 
-// Environment Configuration
-const DUFFEL_API_URL = process.env.DUFFEL_API_URL || "https://api.duffel.com";
-const DUFFEL_API_KEY =
-  process.env.DUFFEL_API_KEY || process.env.DUFFEL_TEST_TOKEN;
-const DUFFEL_VERSION = "v2";
+const DUFFEL_API_URL = process.env.DUFFEL_API_URL || 'https://api.duffel.com';
+const DUFFEL_API_KEY = process.env.DUFFEL_API_KEY || process.env.DUFFEL_TEST_TOKEN;
+const DUFFEL_VERSION = 'v2';
 
-// ============================================
-// Duffel API Helper Functions
-// ============================================
-
-/**
- * Make authenticated request to Duffel API
- */
 async function duffelRequest<T>(
   endpoint: string,
-  method: string = "GET",
-  body?: object,
+  method: string = 'GET',
+  body?: object
 ): Promise<T> {
   const url = `${DUFFEL_API_URL}${endpoint}`;
 
   const response = await fetch(url, {
     method,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${DUFFEL_API_KEY}`,
-      "Duffel-Version": DUFFEL_VERSION,
+      'Duffel-Version': DUFFEL_VERSION,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -55,10 +34,6 @@ async function duffelRequest<T>(
   return data.data;
 }
 
-// ============================================
-// Type Definitions
-// ============================================
-
 interface AirlineCredit {
   id: string;
   created_at: string;
@@ -68,7 +43,7 @@ interface AirlineCredit {
   frequent_flyer_number: string;
   total_points: number;
   available_points: number;
-  status: "active" | "expired" | "expiring_soon";
+  status: 'active' | 'expired' | 'expiring_soon';
   expiry_date?: string;
   program_name?: string;
   tier_status?: string;
@@ -84,33 +59,74 @@ interface CreateAirlineCreditRequest {
   metadata?: Record<string, any>;
 }
 
-// ============================================
-// API Routes
-// ============================================
-
-// GET /api/airline-credits - List all airline credits
-router.get("/", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits:
+ *   get:
+ *     summary: List all airline credits
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *       - in: query
+ *         name: customerId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: airlineIataCode
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Airline credits retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.get('/', async (req: Request, res: Response) => {
   try {
-    const {
-      limit = 50,
-      offset = 0,
-      customerId,
-      airlineIataCode,
-      status,
-    } = req.query;
+    const { limit = 50, offset = 0, customerId, airlineIataCode, status } = req.query;
 
     // Try Duffel API first
     try {
       const params = new URLSearchParams();
-      params.append("limit", String(limit));
-      params.append("offset", String(offset));
-      if (customerId) params.append("customer_id", String(customerId));
-      if (airlineIataCode)
-        params.append("airline_iata_code", String(airlineIataCode));
+      params.append('limit', String(limit));
+      params.append('offset', String(offset));
+      if (customerId) params.append('customer_id', String(customerId));
+      if (airlineIataCode) params.append('airline_iata_code', String(airlineIataCode));
 
-      const duffelCredits = await duffelRequest<any[]>(
-        `/air/airline_credits?${params}`,
-      );
+      const duffelCredits = await duffelRequest<any[]>(`/air/airline_credits?${params}`);
 
       return res.json({
         success: true,
@@ -122,39 +138,36 @@ router.get("/", async (req: Request, res: Response) => {
         },
       });
     } catch (duffelError: any) {
-      console.log(
-        "[AirlineCredits] Duffel API failed, falling back to database",
-      );
+      console.log('[AirlineCredits] Duffel API failed, falling back to database');
     }
 
     // Fallback: Get from database
     const where: any = {};
     if (customerId) where.userId = customerId;
     if (airlineIataCode) where.airlineCode = airlineIataCode;
-    if (status && status !== "all") where.status = status;
+    if (status && status !== 'all') where.status = status;
 
     const credits = await prisma.booking.findMany({
       where: {
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
         ...where,
       },
       take: Number(limit),
       skip: Number(offset),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     // Transform database records to airline credit format
-    const transformedCredits = credits.map((credit) => ({
+    const transformedCredits = credits.map(credit => ({
       id: credit.id,
       created_at: credit.createdAt.toISOString(),
       updated_at: credit.updatedAt.toISOString(),
       customer_id: credit.userId,
-      airline_iata_code: (credit.metadata as any)?.airlineCode || "XX",
-      frequent_flyer_number:
-        (credit.metadata as any)?.frequentFlyerNumber || "",
+      airline_iata_code: (credit.metadata as any)?.airlineCode || 'XX',
+      frequent_flyer_number: (credit.metadata as any)?.frequentFlyerNumber || '',
       total_points: Number(credit.totalAmount) || 0,
       available_points: Number(credit.totalAmount) || 0,
-      status: credit.status === "confirmed" ? "active" : "expired",
+      status: credit.status === 'confirmed' ? 'active' : 'expired',
       expiry_date: (credit.metadata as any)?.expiryDate,
       program_name: (credit.metadata as any)?.programName,
       tier_status: (credit.metadata as any)?.tierStatus,
@@ -170,18 +183,55 @@ router.get("/", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] List error:", error.message);
+    console.error('[AirlineCredits] List error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// GET /api/airline-credits/:id - Get single airline credit
-router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
+/**
+ * @swagger
+ * /api/airline-credits/{id}:
+ *   get:
+ *     summary: Get single airline credit
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Airline credit retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Airline credit not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = String(req.params.id);
 
     // Avoid shadowing static route segments like /customer/:customerId
-    if (id === "customer") {
+    if (id === 'customer') {
       return next();
     }
 
@@ -193,21 +243,21 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
         data: credit,
       });
     } catch (duffelError: any) {
-      console.log("[AirlineCredits] Duffel API fetch failed, trying database");
+      console.log('[AirlineCredits] Duffel API fetch failed, trying database');
     }
 
     // Fallback: Get from database
     const credit = await prisma.booking.findFirst({
       where: {
         OR: [{ id: String(id) }, { bookingRef: String(id) }],
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
     });
 
     if (!credit) {
       return res.status(404).json({
         success: false,
-        error: "Airline credit not found",
+        error: 'Airline credit not found',
       });
     }
 
@@ -216,12 +266,11 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
       created_at: credit.createdAt.toISOString(),
       updated_at: credit.updatedAt.toISOString(),
       customer_id: credit.userId,
-      airline_iata_code: (credit.metadata as any)?.airlineCode || "XX",
-      frequent_flyer_number:
-        (credit.metadata as any)?.frequentFlyerNumber || "",
+      airline_iata_code: (credit.metadata as any)?.airlineCode || 'XX',
+      frequent_flyer_number: (credit.metadata as any)?.frequentFlyerNumber || '',
       total_points: Number(credit.totalAmount) || 0,
       available_points: Number(credit.totalAmount) || 0,
-      status: credit.status === "confirmed" ? "active" : "expired",
+      status: credit.status === 'confirmed' ? 'active' : 'expired',
       expiry_date: (credit.metadata as any)?.expiryDate,
       program_name: (credit.metadata as any)?.programName,
       tier_status: (credit.metadata as any)?.tierStatus,
@@ -232,13 +281,67 @@ router.get("/:id", async (req: Request, res: Response, next: NextFunction) => {
       data: transformedCredit,
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Get error:", error.message);
+    console.error('[AirlineCredits] Get error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/airline-credits - Create airline credit
-router.post("/", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits:
+ *   post:
+ *     summary: Create airline credit
+ *     tags: [Airline Credits]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - customerId
+ *               - airlineIataCode
+ *               - frequentFlyerNumber
+ *             properties:
+ *               customerId:
+ *                 type: string
+ *               airlineIataCode:
+ *                 type: string
+ *               frequentFlyerNumber:
+ *                 type: string
+ *               totalPoints:
+ *                 type: number
+ *               programName:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Airline credit created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/', async (req: Request, res: Response) => {
   try {
     const {
       customerId,
@@ -252,34 +355,27 @@ router.post("/", async (req: Request, res: Response) => {
     if (!customerId || !airlineIataCode || !frequentFlyerNumber) {
       return res.status(400).json({
         success: false,
-        error:
-          "customerId, airlineIataCode, and frequentFlyerNumber are required",
+        error: 'customerId, airlineIataCode, and frequentFlyerNumber are required',
       });
     }
 
     // Try Duffel API first
     try {
-      const duffelCredit = await duffelRequest<any>(
-        "/air/airline_credits",
-        "POST",
-        {
-          customer_id: customerId,
-          airline_iata_code: airlineIataCode,
-          frequent_flyer_number: frequentFlyerNumber,
-          total_points: totalPoints,
-          program_name: programName,
-          metadata,
-        },
-      );
+      const duffelCredit = await duffelRequest<any>('/air/airline_credits', 'POST', {
+        customer_id: customerId,
+        airline_iata_code: airlineIataCode,
+        frequent_flyer_number: frequentFlyerNumber,
+        total_points: totalPoints,
+        program_name: programName,
+        metadata,
+      });
 
       return res.status(201).json({
         success: true,
         data: duffelCredit,
       });
     } catch (duffelError: any) {
-      console.log(
-        "[AirlineCredits] Duffel API create failed, storing in database",
-      );
+      console.log('[AirlineCredits] Duffel API create failed, storing in database');
     }
 
     // Fallback: Store in database
@@ -287,19 +383,19 @@ router.post("/", async (req: Request, res: Response) => {
       data: {
         userId: String(customerId),
         bookingRef: `AFC-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`,
-        serviceType: "airline_credit",
-        status: "confirmed",
+        serviceType: 'airline_credit',
+        status: 'confirmed',
         baseAmount: totalPoints,
         taxAmount: 0,
         markupAmount: 0,
         totalAmount: totalPoints,
-        currency: "POINTS",
+        currency: 'POINTS',
         metadata: {
           airlineCode: airlineIataCode,
           frequentFlyerNumber,
           programName,
           ...metadata,
-          source: "tripalfa_database",
+          source: 'tripalfa_database',
         },
       },
     });
@@ -314,35 +410,83 @@ router.post("/", async (req: Request, res: Response) => {
         frequent_flyer_number: frequentFlyerNumber,
         total_points: totalPoints,
         available_points: totalPoints,
-        status: "active",
+        status: 'active',
         program_name: programName,
       },
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Create error:", error.message);
+    console.error('[AirlineCredits] Create error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// PATCH /api/airline-credits/:id - Update airline credit
-router.patch("/:id", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits/{id}:
+ *   patch:
+ *     summary: Update airline credit
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               totalPoints:
+ *                 type: number
+ *               availablePoints:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *               expiryDate:
+ *                 type: string
+ *               tierStatus:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Airline credit updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Airline credit not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.patch('/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
-    const {
-      totalPoints,
-      availablePoints,
-      status,
-      expiryDate,
-      tierStatus,
-      metadata,
-    } = req.body;
+    const { totalPoints, availablePoints, status, expiryDate, tierStatus, metadata } = req.body;
 
     // Try Duffel API first (if supported)
     try {
       const updateData: any = {};
       if (totalPoints !== undefined) updateData.total_points = totalPoints;
-      if (availablePoints !== undefined)
-        updateData.available_points = availablePoints;
+      if (availablePoints !== undefined) updateData.available_points = availablePoints;
       if (status) updateData.status = status;
       if (expiryDate) updateData.expiry_date = expiryDate;
       if (tierStatus) updateData.tier_status = tierStatus;
@@ -350,8 +494,8 @@ router.patch("/:id", async (req: Request, res: Response) => {
 
       const duffelCredit = await duffelRequest<any>(
         `/air/airline_credits/${id}`,
-        "PATCH",
-        updateData,
+        'PATCH',
+        updateData
       );
 
       return res.json({
@@ -359,23 +503,21 @@ router.patch("/:id", async (req: Request, res: Response) => {
         data: duffelCredit,
       });
     } catch (duffelError: any) {
-      console.log(
-        "[AirlineCredits] Duffel API update failed, updating database",
-      );
+      console.log('[AirlineCredits] Duffel API update failed, updating database');
     }
 
     // Fallback: Update in database
     const existingCredit = await prisma.booking.findFirst({
       where: {
         OR: [{ id: String(id) }, { bookingRef: String(id) }],
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
     });
 
     if (!existingCredit) {
       return res.status(404).json({
         success: false,
-        error: "Airline credit not found",
+        error: 'Airline credit not found',
       });
     }
 
@@ -383,7 +525,7 @@ router.patch("/:id", async (req: Request, res: Response) => {
       where: { id: existingCredit.id },
       data: {
         totalAmount: totalPoints ?? existingCredit.totalAmount,
-        status: status === "active" ? "confirmed" : status,
+        status: status === 'active' ? 'confirmed' : status,
         metadata: {
           ...((existingCredit.metadata as object) || {}),
           ...(totalPoints !== undefined && { totalPoints }),
@@ -407,41 +549,74 @@ router.patch("/:id", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Update error:", error.message);
+    console.error('[AirlineCredits] Update error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// DELETE /api/airline-credits/:id - Delete airline credit
-router.delete("/:id", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits/{id}:
+ *   delete:
+ *     summary: Delete airline credit
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Airline credit deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       404:
+ *         description: Airline credit not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
 
     // Try Duffel API first
     try {
-      await duffelRequest<any>(`/air/airline_credits/${id}`, "DELETE");
+      await duffelRequest<any>(`/air/airline_credits/${id}`, 'DELETE');
       return res.json({
         success: true,
-        message: "Airline credit deleted from Duffel",
+        message: 'Airline credit deleted from Duffel',
       });
     } catch (duffelError: any) {
-      console.log(
-        "[AirlineCredits] Duffel API delete failed, deleting from database",
-      );
+      console.log('[AirlineCredits] Duffel API delete failed, deleting from database');
     }
 
     // Fallback: Delete from database
     const credit = await prisma.booking.findFirst({
       where: {
         OR: [{ id: String(id) }, { bookingRef: String(id) }],
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
     });
 
     if (!credit) {
       return res.status(404).json({
         success: false,
-        error: "Airline credit not found",
+        error: 'Airline credit not found',
       });
     }
 
@@ -451,20 +626,61 @@ router.delete("/:id", async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: "Airline credit deleted",
+      message: 'Airline credit deleted',
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Delete error:", error.message);
+    console.error('[AirlineCredits] Delete error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// ============================================
-// Additional Helper Endpoints
-// ============================================
-
-// GET /api/airline-credits/customer/:customerId - Get all credits for a customer
-router.get("/customer/:customerId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits/customer/{customerId}:
+ *   get:
+ *     summary: Get credits for a customer
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       200:
+ *         description: Customer credits retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.get('/customer/:customerId', async (req: Request, res: Response) => {
   try {
     const { customerId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
@@ -473,34 +689,29 @@ router.get("/customer/:customerId", async (req: Request, res: Response) => {
     const credits = await prisma.booking.findMany({
       where: {
         userId: String(customerId),
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
       take: Number(limit),
       skip: Number(offset),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     // Calculate totals
-    const totalPoints = credits.reduce(
-      (sum, c) => sum + Number(c.totalAmount),
-      0,
-    );
+    const totalPoints = credits.reduce((sum, c) => sum + Number(c.totalAmount), 0);
     const airlines = [
-      ...new Set(
-        credits.map((c) => (c.metadata as any)?.airlineCode).filter(Boolean),
-      ),
+      ...new Set(credits.map(c => (c.metadata as any)?.airlineCode).filter(Boolean)),
     ];
 
     res.json({
       success: true,
       data: {
         customerId,
-        credits: credits.map((credit) => ({
+        credits: credits.map(credit => ({
           id: credit.id,
           airline_iata_code: (credit.metadata as any)?.airlineCode,
           frequent_flyer_number: (credit.metadata as any)?.frequentFlyerNumber,
           points: Number(credit.totalAmount),
-          status: credit.status === "confirmed" ? "active" : "expired",
+          status: credit.status === 'confirmed' ? 'active' : 'expired',
           program_name: (credit.metadata as any)?.programName,
         })),
         summary: {
@@ -516,13 +727,68 @@ router.get("/customer/:customerId", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Customer credits error:", error.message);
+    console.error('[AirlineCredits] Customer credits error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/airline-credits/:id/transfer - Transfer points
-router.post("/:id/transfer", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits/{id}/transfer:
+ *   post:
+ *     summary: Transfer points
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - toCreditId
+ *               - points
+ *             properties:
+ *               toCreditId:
+ *                 type: string
+ *               points:
+ *                 type: number
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Points transferred successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or insufficient points
+ *       404:
+ *         description: Airline credit not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/:id/transfer', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
     const { toCreditId, points, reason } = req.body;
@@ -530,7 +796,7 @@ router.post("/:id/transfer", async (req: Request, res: Response) => {
     if (!toCreditId || !points) {
       return res.status(400).json({
         success: false,
-        error: "toCreditId and points are required",
+        error: 'toCreditId and points are required',
       });
     }
 
@@ -538,14 +804,14 @@ router.post("/:id/transfer", async (req: Request, res: Response) => {
     const sourceCredit = await prisma.booking.findFirst({
       where: {
         OR: [{ id: String(id) }, { bookingRef: String(id) }],
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
     });
 
     if (!sourceCredit) {
       return res.status(404).json({
         success: false,
-        error: "Source airline credit not found",
+        error: 'Source airline credit not found',
       });
     }
 
@@ -553,7 +819,7 @@ router.post("/:id/transfer", async (req: Request, res: Response) => {
     if (sourcePoints < points) {
       return res.status(400).json({
         success: false,
-        error: "Insufficient points for transfer",
+        error: 'Insufficient points for transfer',
       });
     }
 
@@ -561,14 +827,14 @@ router.post("/:id/transfer", async (req: Request, res: Response) => {
     const destCredit = await prisma.booking.findFirst({
       where: {
         OR: [{ id: toCreditId }, { bookingRef: toCreditId }],
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
     });
 
     if (!destCredit) {
       return res.status(404).json({
         success: false,
-        error: "Destination airline credit not found",
+        error: 'Destination airline credit not found',
       });
     }
 
@@ -607,7 +873,7 @@ router.post("/:id/transfer", async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: "Points transferred successfully",
+      message: 'Points transferred successfully',
       transfer: {
         from: id,
         to: toCreditId,
@@ -617,13 +883,68 @@ router.post("/:id/transfer", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Transfer error:", error.message);
+    console.error('[AirlineCredits] Transfer error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/airline-credits/:id/redeem - Redeem points for booking
-router.post("/:id/redeem", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airline-credits/{id}/redeem:
+ *   post:
+ *     summary: Redeem points for booking
+ *     tags: [Airline Credits]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bookingId
+ *               - points
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               points:
+ *                 type: number
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Points redeemed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or insufficient points
+ *       404:
+ *         description: Airline credit not found
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/:id/redeem', async (req: Request, res: Response) => {
   try {
     const id = String(req.params.id);
     const { bookingId, points, description } = req.body;
@@ -631,7 +952,7 @@ router.post("/:id/redeem", async (req: Request, res: Response) => {
     if (!bookingId || !points) {
       return res.status(400).json({
         success: false,
-        error: "bookingId and points are required",
+        error: 'bookingId and points are required',
       });
     }
 
@@ -639,14 +960,14 @@ router.post("/:id/redeem", async (req: Request, res: Response) => {
     const credit = await prisma.booking.findFirst({
       where: {
         OR: [{ id: String(id) }, { bookingRef: String(id) }],
-        serviceType: "airline_credit",
+        serviceType: 'airline_credit',
       },
     });
 
     if (!credit) {
       return res.status(404).json({
         success: false,
-        error: "Airline credit not found",
+        error: 'Airline credit not found',
       });
     }
 
@@ -654,7 +975,7 @@ router.post("/:id/redeem", async (req: Request, res: Response) => {
     if (availablePoints < points) {
       return res.status(400).json({
         success: false,
-        error: "Insufficient points for redemption",
+        error: 'Insufficient points for redemption',
         available: availablePoints,
         requested: points,
       });
@@ -673,20 +994,19 @@ router.post("/:id/redeem", async (req: Request, res: Response) => {
             description,
             date: new Date().toISOString(),
           },
-          totalRedeemed:
-            ((credit.metadata as any)?.totalRedeemed || 0) + points,
+          totalRedeemed: ((credit.metadata as any)?.totalRedeemed || 0) + points,
         },
       },
     });
 
     // Log the redemption
     console.log(
-      `[AirlineCredits] Redeemed ${points} points from credit ${id} for booking ${bookingId}`,
+      `[AirlineCredits] Redeemed ${points} points from credit ${id} for booking ${bookingId}`
     );
 
     res.json({
       success: true,
-      message: "Points redeemed successfully",
+      message: 'Points redeemed successfully',
       redemption: {
         creditId: id,
         bookingId,
@@ -697,7 +1017,7 @@ router.post("/:id/redeem", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[AirlineCredits] Redemption error:", error.message);
+    console.error('[AirlineCredits] Redemption error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });

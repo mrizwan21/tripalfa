@@ -3,11 +3,55 @@ import { prisma } from "@tripalfa/shared-database";
 
 const router: Router = Router();
 
-// ============================================
-// RULE ENGINE ENDPOINTS (13 Total)
-// ============================================
-
-// 1. POST /api/rules - Create rule
+/**
+ * @swagger
+ * /api/rules:
+ *   post:
+ *     summary: Create rule
+ *     tags: [Rules]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, condition, actions]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               trigger:
+ *                 type: string
+ *               triggerEvent:
+ *                 type: string
+ *               condition:
+ *                 type: object
+ *               actions:
+ *                 type: array
+ *               priority:
+ *                 type: number
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Rule created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *       500:
+ *         description: Server error
+ */
 router.post("/", async (req: Request, res: Response) => {
   try {
     const {
@@ -54,7 +98,48 @@ router.post("/", async (req: Request, res: Response) => {
   }
 });
 
-// 2. GET /api/rules - List rules
+/**
+ * @swagger
+ * /api/rules:
+ *   get:
+ *     summary: List rules
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *           default: "20"
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: string
+ *           default: "0"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get("/", async (req: Request, res: Response) => {
   try {
     const { status, category, limit = "20", offset = "0" } = req.query;
@@ -95,7 +180,35 @@ router.get("/", async (req: Request, res: Response) => {
   }
 });
 
-// 3. GET /api/rules/:id - Get rule details
+/**
+ * @swagger
+ * /api/rules/{id}:
+ *   get:
+ *     summary: Get rule details
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Rule not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/:id", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -118,7 +231,53 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// 4. PATCH /api/rules/:id - Update rule
+/**
+ * @swagger
+ * /api/rules/{id}:
+ *   patch:
+ *     summary: Update rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               condition:
+ *                 type: object
+ *               actions:
+ *                 type: array
+ *               priority:
+ *                 type: number
+ *               enabled:
+ *                 type: boolean
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Rule updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.patch("/:id", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -156,7 +315,24 @@ router.patch("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// 5. DELETE /api/rules/:id - Delete rule
+/**
+ * @swagger
+ * /api/rules/{id}:
+ *   delete:
+ *     summary: Delete rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Rule deleted
+ *       500:
+ *         description: Server error
+ */
 router.delete("/:id", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -175,7 +351,49 @@ router.delete("/:id", async (req: Request, res: Response) => {
   }
 });
 
-// 6. POST /api/rules/:id/execute - Execute rule
+/**
+ * @swagger
+ * /api/rules/{id}/execute:
+ *   post:
+ *     summary: Execute rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [data]
+ *             properties:
+ *               data:
+ *                 type: object
+ *               userId:
+ *                 type: string
+ *               testMode:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Rule executed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required field
+ *       500:
+ *         description: Server error
+ */
 router.post("/:id/execute", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -185,7 +403,6 @@ router.post("/:id/execute", async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Missing required field: data" });
     }
 
-    // Get the rule
     const rule = await prisma.rule.findUnique({
       where: { id },
     });
@@ -194,7 +411,6 @@ router.post("/:id/execute", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rule not found" });
     }
 
-    // Create execution record
     const execution = await prisma.ruleExecution.create({
       data: {
         ruleId: id,
@@ -205,11 +421,9 @@ router.post("/:id/execute", async (req: Request, res: Response) => {
       },
     });
 
-    // Simple condition evaluation (would be more complex in production)
     let conditionMet = true;
     let conditionEval = {};
 
-    // Update execution with results
     await prisma.ruleExecution.update({
       where: { id: execution.id },
       data: {
@@ -221,7 +435,6 @@ router.post("/:id/execute", async (req: Request, res: Response) => {
       },
     });
 
-    // Update rule statistics
     await prisma.rule.update({
       where: { id },
       data: {
@@ -249,7 +462,47 @@ router.post("/:id/execute", async (req: Request, res: Response) => {
   }
 });
 
-// 7. POST /api/rules/:id/debug - Debug rule
+/**
+ * @swagger
+ * /api/rules/{id}/debug:
+ *   post:
+ *     summary: Debug rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sampleData]
+ *             properties:
+ *               sampleData:
+ *                 type: object
+ *               includeActions:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Debug result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required field
+ *       500:
+ *         description: Server error
+ */
 router.post("/:id/debug", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -261,7 +514,6 @@ router.post("/:id/debug", async (req: Request, res: Response) => {
         .json({ error: "Missing required field: sampleData" });
     }
 
-    // Get the rule
     const rule = await prisma.rule.findUnique({
       where: { id },
     });
@@ -270,7 +522,6 @@ router.post("/:id/debug", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rule not found" });
     }
 
-    // Debug execution
     const debugResult = {
       ruleId: id,
       conditionEval: {},
@@ -288,7 +539,35 @@ router.post("/:id/debug", async (req: Request, res: Response) => {
   }
 });
 
-// 8. GET /api/rules/:id/analyze - Analyze rule
+/**
+ * @swagger
+ * /api/rules/{id}/analyze:
+ *   get:
+ *     summary: Analyze rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Analysis result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Rule not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/:id/analyze", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -301,7 +580,6 @@ router.get("/:id/analyze", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rule not found" });
     }
 
-    // Get existing analysis or create new one
     let analysis = await prisma.ruleAnalysis.findFirst({
       where: { ruleId: id },
       orderBy: { createdAt: "desc" },
@@ -330,12 +608,39 @@ router.get("/:id/analyze", async (req: Request, res: Response) => {
   }
 });
 
-// 9. POST /api/rules/:id/conflicts - Check for conflicts
+/**
+ * @swagger
+ * /api/rules/{id}/conflicts:
+ *   post:
+ *     summary: Check for conflicts
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Conflict check result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Rule not found
+ *       500:
+ *         description: Server error
+ */
 router.post("/:id/conflicts", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
-    // Get current rule
     const rule = await prisma.rule.findUnique({
       where: { id },
     });
@@ -344,7 +649,6 @@ router.post("/:id/conflicts", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rule not found" });
     }
 
-    // Check for conflicts with other rules
     const potentialConflicts = await prisma.rule.findMany({
       where: {
         id: { not: id },
@@ -372,7 +676,45 @@ router.post("/:id/conflicts", async (req: Request, res: Response) => {
   }
 });
 
-// 10. GET /api/rules/:id/executions - Get execution history
+/**
+ * @swagger
+ * /api/rules/{id}/executions:
+ *   get:
+ *     summary: Get execution history
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: string
+ *           default: "20"
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: string
+ *           default: "0"
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get("/:id/executions", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -408,7 +750,35 @@ router.get("/:id/executions", async (req: Request, res: Response) => {
   }
 });
 
-// 11. GET /api/executions/:id - Get specific execution
+/**
+ * @swagger
+ * /api/rules/executions/{id}:
+ *   get:
+ *     summary: Get specific execution
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Execution not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/executions/:id", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -431,13 +801,48 @@ router.get("/executions/:id", async (req: Request, res: Response) => {
   }
 });
 
-// 12. POST /api/rules/:id/duplicate - Duplicate rule
+/**
+ * @swagger
+ * /api/rules/{id}/duplicate:
+ *   post:
+ *     summary: Duplicate rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               newName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Rule duplicated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Rule not found
+ *       500:
+ *         description: Server error
+ */
 router.post("/:id/duplicate", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const { newName } = req.body;
 
-    // Get original rule
     const originalRule = await prisma.rule.findUnique({
       where: { id },
     });
@@ -446,7 +851,6 @@ router.post("/:id/duplicate", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rule not found" });
     }
 
-    // Create duplicate
     const duplicatedRule = await prisma.rule.create({
       data: {
         name: newName || `${originalRule.name} (Copy)`,
@@ -477,7 +881,35 @@ router.post("/:id/duplicate", async (req: Request, res: Response) => {
   }
 });
 
-// 13. GET /api/rules/:id/stats - Get rule statistics
+/**
+ * @swagger
+ * /api/rules/{id}/stats:
+ *   get:
+ *     summary: Get rule statistics
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Rule not found
+ *       500:
+ *         description: Server error
+ */
 router.get("/:id/stats", async (req: Request, res: Response) => {
   try {
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;

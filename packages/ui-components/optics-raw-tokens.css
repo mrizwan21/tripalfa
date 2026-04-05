@@ -1,0 +1,132 @@
+/* Raw Optics Design Tokens - Minimized for Tailwind Integration
+ * Extracted from @rolemodel/optics reference design system
+ * Provides the raw HSL channels, spacing, radius, and other design primitives
+ * without any component-level CSS (which Tailwind now handles).
+ * Import BEFORE optics-tripalfa-bridge.css.
+ */
+
+:root {
+  /* ============================================
+     COLOR CHANNELS - PRIMARY (Optics navy)
+     ============================================ */
+  --op-color-primary-h: 216;
+  --op-color-primary-s: 58%;
+  --op-color-primary-l: 48%;
+
+  /* ============================================
+     COLOR CHANNELS - NEUTRAL
+     ============================================ */
+  --op-color-neutral-h: var(--op-color-primary-h);
+  --op-color-neutral-s: 4%;
+  --op-color-neutral-l: var(--op-color-primary-l);
+
+  /* ============================================
+     COLOR CHANNELS - ALERTS
+     ============================================ */
+  --op-color-alerts-warning-h: 47;
+  --op-color-alerts-warning-s: 100%;
+  --op-color-alerts-warning-l: 61%;
+
+  --op-color-alerts-danger-h: 0;
+  --op-color-alerts-danger-s: 99%;
+  --op-color-alerts-danger-l: 76%;
+
+  --op-color-alerts-info-h: 216;
+  --op-color-alerts-info-s: 58%;
+  --op-color-alerts-info-l: 48%;
+
+  --op-color-alerts-notice-h: 130;
+  --op-color-alerts-notice-s: 61%;
+  --op-color-alerts-notice-l: 64%;
+
+  /* ============================================
+     DERIVED COLOR SCALES (computed at runtime)
+     ============================================ */
+  --op-color-primary-on-base: 216 58% 100%;
+  --op-color-primary-on-minus-two: 216 58% 90%;
+
+  --op-color-neutral-base: 216 4% 40%;
+  --op-color-neutral-on-minus-two: 216 33% 98%;
+  --op-color-neutral-plus-eight: 216 4% 98%;
+  --op-color-neutral-plus-seven: 216 4% 96%;
+  --op-color-neutral-plus-six: 216 4% 94%;
+  --op-color-neutral-plus-five: 216 32% 90%;
+  --op-color-neutral-on-plus-eight: 216 4% 4%;
+  --op-color-neutral-on-plus-seven-alt: 216 28% 60%;
+  --op-color-neutral-on-plus-six-alt: 216 36% 90%;
+  --op-color-neutral-on-plus-eight: 216 4% 4%;
+
+  --op-color-alerts-info-on-base: 216 58% 100%;
+  --op-color-alerts-danger-on-base: 0 99% 100%;
+  --op-color-alerts-danger-on-minus-two: 0 70% 90%;
+
+  --op-color-alerts-notice-on-base: 130 61% 100%;
+  --op-color-alerts-warning-on-base: 47 100% 12%;
+
+  /* ============================================
+     RADIUS
+     ============================================ */
+  --op-radius-small: 2px;
+  --op-radius-medium: 4px;
+  --op-radius-large: 8px;
+  --op-radius-x-large: 12px;
+  --op-radius-2x-large: 16px;
+  --op-radius-circle: 50%;
+  --op-radius-pill: 9999px;
+
+  /* ============================================
+     SPACING
+     ============================================ */
+  --op-space-2x-small: 0.4rem;
+  --op-space-x-small: 0.8rem;
+  --op-space-small: 1.2rem;
+  --op-space-medium: 1.6rem;
+  --op-space-large: 2rem;
+  --op-space-x-large: 2.4rem;
+  --op-space-2x-large: 2.8rem;
+  --op-space-3x-large: 4rem;
+  --op-space-4x-large: 8rem;
+
+  /* ============================================
+     SHADOWS
+     ============================================ */
+  --op-shadow-x-small: 0 1px 2px hsl(0deg 0% 0% / 3%), 0 1px 3px hsl(0deg 0% 0% / 15%);
+  --op-shadow-small: 0 1px 2px hsl(0deg 0% 0% / 3%), 0 2px 6px hsl(0deg 0% 0% / 15%);
+  --op-shadow-medium: 0 4px 8px hsl(0deg 0% 0% / 15%), 0 1px 3px hsl(0deg 0% 0% / 3%);
+  --op-shadow-large: 0 6px 10px hsl(0deg 0% 0% / 15%), 0 2px 3px hsl(0deg 0% 0% / 3%);
+  --op-shadow-x-large: 0 8px 12px hsl(0deg 0% 0% / 15%), 0 4px 4px hsl(0deg 0% 0% / 3%);
+
+  /* ============================================
+     Z-INDEX
+     ============================================ */
+  --op-z-index-header: 500;
+  --op-z-index-footer: 500;
+  --op-z-index-sidebar: 700;
+  --op-z-index-dialog: 800;
+  --op-z-index-dialog-backdrop: 801;
+  --op-z-index-dialog-content: 802;
+  --op-z-index-dropdown: 900;
+  --op-z-index-alert-group: 950;
+  --op-z-index-tooltip: 1000;
+
+  /* ============================================
+     TYPOGRAPHY
+     ============================================ */
+  --op-font-family: 'Inter', 'Noto Sans', sans-serif;
+  --op-font-family-alt: 'Noto Serif', serif;
+}
+
+/* ============================================
+   DARK MODE TOKENS
+   ============================================ */
+.dark {
+  --op-color-neutral-on-minus-two: 216 33% 8%;
+  --op-color-neutral-plus-eight: 216 4% 8%;
+  --op-color-neutral-plus-seven: 216 4% 6%;
+  --op-color-neutral-plus-six: 216 4% 10%;
+  --op-color-neutral-plus-five: 216 32% 18%;
+  --op-color-neutral-on-plus-eight: 216 4% 98%;
+  --op-color-neutral-on-plus-seven-alt: 216 28% 80%;
+  --op-color-neutral-on-plus-six-alt: 216 36% 70%;
+  --op-color-alerts-danger-on-minus-two: 0 70% 10%;
+}

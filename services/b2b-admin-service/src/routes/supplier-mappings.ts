@@ -8,16 +8,63 @@ import {
 
 const router: Router = Router();
 
-// All routes require authentication
 router.use(authMiddleware);
 
-// ============================================
-// PRODUCT MAPPINGS
-// ============================================
-
 /**
- * GET /:supplierId/mappings
- * List product mappings with filters
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings:
+ *   get:
+ *     summary: List product mappings
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: productType
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.get(
   "/:supplierId/mappings",
@@ -31,7 +78,6 @@ router.get(
       const limitNum = Number(limit) || 10;
       const skip = (pageNum - 1) * limitNum;
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -42,12 +88,10 @@ router.get(
         });
       }
 
-      // Build filter
       const where: any = { supplierId };
       if (status) where.status = status;
       if (productType) where.productType = productType;
 
-      // Get mappings
       const [mappings, total] = await Promise.all([
         prisma.supplierProductMapping.findMany({
           where,
@@ -80,8 +124,79 @@ router.get(
 );
 
 /**
- * POST /:supplierId/mappings
- * Create product mapping
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings:
+ *   post:
+ *     summary: Create product mapping
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - supplierProductId
+ *               - productType
+ *             properties:
+ *               supplierProductId:
+ *                 type: string
+ *               productType:
+ *                 type: string
+ *               platformProductId:
+ *                 type: string
+ *               marketNames:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               geographyZones:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               seasonalApplicable:
+ *                 type: string
+ *               businessRules:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.post(
   "/:supplierId/mappings",
@@ -99,7 +214,6 @@ router.post(
         businessRules,
       } = req.body;
 
-      // Verify required fields
       if (!supplierProductId || !productType) {
         return res.status(400).json({
           success: false,
@@ -107,7 +221,6 @@ router.post(
         });
       }
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -118,7 +231,6 @@ router.post(
         });
       }
 
-      // Verify product exists
       const product = await prisma.supplierProduct.findFirst({
         where: { id: supplierProductId, supplierId },
       });
@@ -129,7 +241,6 @@ router.post(
         });
       }
 
-      // Create mapping
       const mapping = await prisma.supplierProductMapping.create({
         data: {
           supplierId,
@@ -162,8 +273,51 @@ router.post(
 );
 
 /**
- * PUT /:supplierId/mappings/:mappingId
- * Update product mapping
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings/{mappingId}:
+ *   put:
+ *     summary: Update product mapping
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.put(
   "/:supplierId/mappings/:mappingId",
@@ -173,7 +327,6 @@ router.put(
       const { supplierId, mappingId } = req.params;
       const updateData = req.body;
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -184,7 +337,6 @@ router.put(
         });
       }
 
-      // Verify mapping exists
       const mapping = await prisma.supplierProductMapping.findFirst({
         where: { id: mappingId, supplierId },
       });
@@ -195,7 +347,6 @@ router.put(
         });
       }
 
-      // Update mapping
       const updated = await prisma.supplierProductMapping.update({
         where: { id: mappingId },
         data: updateData,
@@ -218,8 +369,56 @@ router.put(
 );
 
 /**
- * POST /:supplierId/mappings/:mappingId/approve
- * Admin approves product mapping
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings/{mappingId}/approve:
+ *   post:
+ *     summary: Admin approves product mapping
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               matchConfidence:
+ *                 type: number
+ *               approvalNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.post(
   "/:supplierId/mappings/:mappingId/approve",
@@ -230,7 +429,6 @@ router.post(
       const { matchConfidence, approvalNotes } = req.body;
       const approvedBy = req.user?.userId;
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -241,7 +439,6 @@ router.post(
         });
       }
 
-      // Verify mapping exists
       const mapping = await prisma.supplierProductMapping.findFirst({
         where: { id: mappingId, supplierId },
       });
@@ -252,7 +449,6 @@ router.post(
         });
       }
 
-      // Approve mapping
       const updated = await prisma.supplierProductMapping.update({
         where: { id: mappingId },
         data: {
@@ -280,8 +476,36 @@ router.post(
 );
 
 /**
- * DELETE /:supplierId/mappings/:mappingId
- * Deactivate product mapping
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings/{mappingId}:
+ *   delete:
+ *     summary: Deactivate product mapping
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Mapping deactivated successfully
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.delete(
   "/:supplierId/mappings/:mappingId",
@@ -290,7 +514,6 @@ router.delete(
     try {
       const { supplierId, mappingId } = req.params;
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -301,7 +524,6 @@ router.delete(
         });
       }
 
-      // Verify mapping exists
       const mapping = await prisma.supplierProductMapping.findFirst({
         where: { id: mappingId, supplierId },
       });
@@ -312,7 +534,6 @@ router.delete(
         });
       }
 
-      // Deactivate (not hard delete)
       await prisma.supplierProductMapping.update({
         where: { id: mappingId },
         data: { status: "inactive" },
@@ -329,13 +550,46 @@ router.delete(
   }
 );
 
-// ============================================
-// MAPPING PARAMETERS
-// ============================================
-
 /**
- * GET /:supplierId/mappings/:mappingId/parameters
- * List mapping parameters
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings/{mappingId}/parameters:
+ *   get:
+ *     summary: List mapping parameters
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.get(
   "/:supplierId/mappings/:mappingId/parameters",
@@ -344,7 +598,6 @@ router.get(
     try {
       const { supplierId, mappingId } = req.params;
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -355,7 +608,6 @@ router.get(
         });
       }
 
-      // Verify mapping exists
       const mapping = await prisma.supplierProductMapping.findFirst({
         where: { id: mappingId, supplierId },
       });
@@ -366,7 +618,6 @@ router.get(
         });
       }
 
-      // Get parameters
       const parameters = await prisma.productMappingParameter.findMany({
         where: { mappingId },
         orderBy: { createdAt: "desc" },
@@ -387,8 +638,83 @@ router.get(
 );
 
 /**
- * POST /:supplierId/mappings/:mappingId/parameters
- * Add mapping parameter
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings/{mappingId}/parameters:
+ *   post:
+ *     summary: Add mapping parameter
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - parameterType
+ *               - parameterName
+ *               - parameterValue
+ *             properties:
+ *               parameterType:
+ *                 type: string
+ *               parameterName:
+ *                 type: string
+ *               parameterValue:
+ *                 type: number
+ *               unit:
+ *                 type: string
+ *               marketName:
+ *                 type: string
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.post(
   "/:supplierId/mappings/:mappingId/parameters",
@@ -406,7 +732,6 @@ router.post(
         validTo,
       } = req.body;
 
-      // Verify required fields
       if (!parameterType || !parameterName || parameterValue === undefined) {
         return res.status(400).json({
           success: false,
@@ -415,7 +740,6 @@ router.post(
         });
       }
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -426,7 +750,6 @@ router.post(
         });
       }
 
-      // Verify mapping exists
       const mapping = await prisma.supplierProductMapping.findFirst({
         where: { id: mappingId, supplierId },
       });
@@ -437,7 +760,6 @@ router.post(
         });
       }
 
-      // Create parameter
       const parameter = await prisma.productMappingParameter.create({
         data: {
           mappingId,
@@ -467,8 +789,41 @@ router.post(
 );
 
 /**
- * DELETE /:supplierId/mappings/:mappingId/parameters/:parameterId
- * Remove mapping parameter
+ * @swagger
+ * /api/suppliers/{supplierId}/mappings/{mappingId}/parameters/{parameterId}:
+ *   delete:
+ *     summary: Remove mapping parameter
+ *     tags: [Supplier Mappings]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: parameterId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Parameter removed successfully
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.delete(
   "/:supplierId/mappings/:mappingId/parameters/:parameterId",
@@ -477,7 +832,6 @@ router.delete(
     try {
       const { supplierId, mappingId, parameterId } = req.params;
 
-      // Verify supplier exists
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
       });
@@ -488,7 +842,6 @@ router.delete(
         });
       }
 
-      // Verify mapping exists
       const mapping = await prisma.supplierProductMapping.findFirst({
         where: { id: mappingId, supplierId },
       });
@@ -499,7 +852,6 @@ router.delete(
         });
       }
 
-      // Verify parameter exists
       const parameter = await prisma.productMappingParameter.findFirst({
         where: { id: parameterId, mappingId },
       });
@@ -510,7 +862,6 @@ router.delete(
         });
       }
 
-      // Delete parameter
       await prisma.productMappingParameter.delete({
         where: { id: parameterId },
       });

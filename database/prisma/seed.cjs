@@ -2,21 +2,15 @@
 /* global process, console */
 require('dotenv').config();
 
-// After dotenv loads, immediately override with Neon Direct connection
-const directUrl = process.env.DIRECT_DATABASE_URL;
-if (directUrl) {
-  process.env.DATABASE_URL = directUrl;
-}
-
 const { PrismaClient } = require('@prisma/client');
 
 let opts = {};
 try {
-  const { PrismaNeon } = require('@prisma/adapter-neon');
-  const { Pool } = require('@neondatabase/serverless');
+  const { PrismaPg } = require('@prisma/adapter-pg');
+  const { Pool } = require('pg');
   const url = process.env.DATABASE_URL;
   if (url) {
-    opts.adapter = new PrismaNeon(new Pool({ connectionString: url }));
+    opts.adapter = new PrismaPg(new Pool({ connectionString: url }));
   }
 } catch (e) {
   //
@@ -68,7 +62,12 @@ async function main() {
         slug: 'booking-confirmation',
         category: 'booking',
         description: 'Template for booking confirmation notifications',
-        templates: { email: { subject: 'Your booking is confirmed!', body: 'Thank you for booking with us. Your booking reference is {{bookingRef}}.' } },
+        templates: {
+          email: {
+            subject: 'Your booking is confirmed!',
+            body: 'Thank you for booking with us. Your booking reference is {{bookingRef}}.',
+          },
+        },
         variables: ['bookingRef', 'customerName'],
         enabled: true,
       },
@@ -77,7 +76,12 @@ async function main() {
         slug: 'payment-confirmation',
         category: 'payment',
         description: 'Template for payment confirmation notifications',
-        templates: { email: { subject: 'Payment received!', body: 'Your payment of {{amount}} has been received.' } },
+        templates: {
+          email: {
+            subject: 'Payment received!',
+            body: 'Your payment of {{amount}} has been received.',
+          },
+        },
         variables: ['amount', 'transactionId'],
         enabled: true,
       },
@@ -88,8 +92,26 @@ async function main() {
   await prisma.commissionRule.createMany({
     skipDuplicates: true,
     data: [
-      { code: 'DEFAULT_FLIGHT', name: 'Default Flight Commission', serviceType: 'flight', ruleType: 'percentage', value: 5.0, currency: 'USD', isActive: true, priority: 100 },
-      { code: 'DEFAULT_HOTEL', name: 'Default Hotel Commission', serviceType: 'hotel', ruleType: 'percentage', value: 8.0, currency: 'USD', isActive: true, priority: 100 },
+      {
+        code: 'DEFAULT_FLIGHT',
+        name: 'Default Flight Commission',
+        serviceType: 'flight',
+        ruleType: 'percentage',
+        value: 5.0,
+        currency: 'USD',
+        isActive: true,
+        priority: 100,
+      },
+      {
+        code: 'DEFAULT_HOTEL',
+        name: 'Default Hotel Commission',
+        serviceType: 'hotel',
+        ruleType: 'percentage',
+        value: 8.0,
+        currency: 'USD',
+        isActive: true,
+        priority: 100,
+      },
     ],
   });
   console.log('  ✔ default commission rules');
@@ -97,8 +119,26 @@ async function main() {
   await prisma.markupRule.createMany({
     skipDuplicates: true,
     data: [
-      { code: 'DEFAULT_FLIGHT', name: 'Default Flight Markup', serviceType: 'flight', ruleType: 'percentage', value: 2.0, currency: 'USD', isActive: true, priority: 100 },
-      { code: 'DEFAULT_HOTEL', name: 'Default Hotel Markup', serviceType: 'hotel', ruleType: 'percentage', value: 3.0, currency: 'USD', isActive: true, priority: 100 },
+      {
+        code: 'DEFAULT_FLIGHT',
+        name: 'Default Flight Markup',
+        serviceType: 'flight',
+        ruleType: 'percentage',
+        value: 2.0,
+        currency: 'USD',
+        isActive: true,
+        priority: 100,
+      },
+      {
+        code: 'DEFAULT_HOTEL',
+        name: 'Default Hotel Markup',
+        serviceType: 'hotel',
+        ruleType: 'percentage',
+        value: 3.0,
+        currency: 'USD',
+        isActive: true,
+        priority: 100,
+      },
     ],
   });
   console.log('  ✔ default markup rules');
@@ -106,7 +146,9 @@ async function main() {
   console.log('\n🎉 Seed complete.');
 }
 
-main().catch(e => {
-  console.error('❌ Seed error:', e);
-  process.exit(1);
-}).finally(() => prisma.$disconnect());
+main()
+  .catch(e => {
+    console.error('❌ Seed error:', e);
+    process.exit(1);
+  })
+  .finally(() => prisma.$disconnect());

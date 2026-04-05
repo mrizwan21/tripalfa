@@ -24,21 +24,21 @@
  * - POST /api/hotel-booking/full-flow - Execute complete flow (testing)
  */
 
-import { Router, Request, Response, NextFunction } from "express";
-import type { Router as RouterType } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { Router, Request, Response, NextFunction } from 'express';
+import type { Router as RouterType } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 
 const router: RouterType = Router();
 
 const HOTEL_DOCUMENT_COLORS = {
-  textPrimary: "rgb(51, 51, 51)",
-  textMuted: "rgb(107, 114, 128)",
-  brandPrimary: "rgb(30, 27, 75)",
-  success: "rgb(5, 150, 105)",
-  danger: "rgb(220, 38, 38)",
-  border: "rgb(229, 231, 235)",
-  borderSoft: "rgb(243, 244, 246)",
-  surfaceMuted: "rgb(249, 250, 251)",
+  textPrimary: 'rgb(51, 51, 51)',
+  textMuted: 'rgb(107, 114, 128)',
+  brandPrimary: 'rgb(30, 27, 75)',
+  success: 'rgb(5, 150, 105)',
+  danger: 'rgb(220, 38, 38)',
+  border: 'rgb(229, 231, 235)',
+  borderSoft: 'rgb(243, 244, 246)',
+  surfaceMuted: 'rgb(249, 250, 251)',
 } as const;
 
 // ============================================================================
@@ -72,7 +72,7 @@ interface PaymentRequest {
   bookingId: string;
   amount: number;
   currency: string;
-  paymentMethod: "balance" | "card";
+  paymentMethod: 'balance' | 'card';
 }
 
 interface IssueVoucherRequest {
@@ -93,7 +93,7 @@ interface HotelWorkflowState {
   workflowId: string;
   bookingId: string;
   bookingReference: string;
-  status: "hold" | "paid" | "confirmed" | "cancelled" | "refunded";
+  status: 'hold' | 'paid' | 'confirmed' | 'cancelled' | 'refunded';
   createdAt: Date;
   updatedAt: Date;
   steps: {
@@ -141,9 +141,7 @@ const hotelWorkflowStates: Map<string, HotelWorkflowState> = new Map();
 function generateHotelItineraryHtml(booking: any, customer: any): string {
   const checkIn = new Date(booking.checkInDate);
   const checkOut = new Date(booking.checkOutDate);
-  const nights = Math.ceil(
-    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
 
   return `<!DOCTYPE html>
 <html>
@@ -197,9 +195,9 @@ function generateHotelItineraryHtml(booking: any, customer: any): string {
         Email: ${g.email}<br>
         Phone: ${g.phone_number}
       </div>
-    `,
+    `
         )
-        .join("") || ""
+        .join('') || ''
     }
   </div>
   
@@ -216,16 +214,10 @@ function generateHotelItineraryHtml(booking: any, customer: any): string {
 </html>`;
 }
 
-function generateHotelInvoiceHtml(
-  booking: any,
-  customer: any,
-  payment: any,
-): string {
+function generateHotelInvoiceHtml(booking: any, customer: any, payment: any): string {
   const checkIn = new Date(booking.checkInDate);
   const checkOut = new Date(booking.checkOutDate);
-  const numNights = Math.ceil(
-    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const numNights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
   const totalAmount = payment.total || booking.totalAmount || 0;
   const nightlyRate = totalAmount / Math.max(1, numNights);
   const taxes = totalAmount * 0.1;
@@ -287,15 +279,15 @@ function generateHotelInvoiceHtml(
       <tbody>
         <tr>
           <td>Room Charges (${booking.roomType})</td>
-          <td>${payment.currency || "USD"} ${baseFare.toFixed(2)}</td>
+          <td>${payment.currency || 'USD'} ${baseFare.toFixed(2)}</td>
         </tr>
         <tr>
           <td>Taxes & Fees (10%)</td>
-          <td>${payment.currency || "USD"} ${taxes.toFixed(2)}</td>
+          <td>${payment.currency || 'USD'} ${taxes.toFixed(2)}</td>
         </tr>
         <tr class="total-row">
           <td>Total</td>
-          <td>${payment.currency || "USD"} ${totalAmount.toFixed(2)}</td>
+          <td>${payment.currency || 'USD'} ${totalAmount.toFixed(2)}</td>
         </tr>
       </tbody>
     </table>
@@ -309,11 +301,7 @@ function generateHotelInvoiceHtml(
 </html>`;
 }
 
-function generateHotelReceiptHtml(
-  booking: any,
-  customer: any,
-  payment: any,
-): string {
+function generateHotelReceiptHtml(booking: any, customer: any, payment: any): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -331,7 +319,7 @@ function generateHotelReceiptHtml(
 <body>
   <div class="header">
     <h1>✅ Payment Received</h1>
-    <div class="amount">${payment.currency || "USD"} ${(payment.total || 0).toFixed(2)}</div>
+    <div class="amount">${payment.currency || 'USD'} ${(payment.total || 0).toFixed(2)}</div>
   </div>
   
   <div class="section">
@@ -350,7 +338,7 @@ function generateHotelReceiptHtml(
     </div>
     <div class="detail-row">
       <span>Payment Method:</span>
-      <strong>${payment.paymentMethod || "Card"}</strong>
+      <strong>${payment.paymentMethod || 'Card'}</strong>
     </div>
     <div class="detail-row">
       <span>Payment Date:</span>
@@ -371,16 +359,10 @@ function generateHotelReceiptHtml(
 </html>`;
 }
 
-function generateHotelVoucherHtml(
-  booking: any,
-  customer: any,
-  voucherInfo: any,
-): string {
+function generateHotelVoucherHtml(booking: any, customer: any, voucherInfo: any): string {
   const checkIn = new Date(booking.checkInDate);
   const checkOut = new Date(booking.checkOutDate);
-  const nights = Math.ceil(
-    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
-  );
+  const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
 
   return `<!DOCTYPE html>
 <html>
@@ -461,11 +443,7 @@ function generateHotelVoucherHtml(
 </html>`;
 }
 
-function generateHotelRefundNoteHtml(
-  booking: any,
-  customer: any,
-  refund: any,
-): string {
+function generateHotelRefundNoteHtml(booking: any, customer: any, refund: any): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -531,804 +509,1219 @@ function generateHotelRefundNoteHtml(
 // ============================================================================
 
 /**
- * POST /api/hotel-booking/hold
- * Create a hold booking (Step 1 of E2E flow)
+ * @swagger
+ * /api/hotel-booking/hold:
+ *   post:
+ *     summary: Create a hold booking for a hotel
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [offerId, hotelName, checkInDate, checkOutDate, guests, customerId, customerEmail, totalAmount, currency]
+ *             properties:
+ *               offerId:
+ *                 type: string
+ *               hotelName:
+ *                 type: string
+ *               roomType:
+ *                 type: string
+ *               checkInDate:
+ *                 type: string
+ *                 format: date
+ *               checkOutDate:
+ *                 type: string
+ *                 format: date
+ *               guests:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               customerId:
+ *                 type: string
+ *               customerEmail:
+ *                 type: string
+ *               customerPhone:
+ *                 type: string
+ *               totalAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               isRefundable:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Hold booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or non-refundable rate
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
-router.post(
-  "/hold",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const {
+router.post('/hold', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {
+      offerId,
+      hotelName,
+      roomType,
+      checkInDate,
+      checkOutDate,
+      guests,
+      customerId,
+      customerEmail,
+      customerPhone,
+      totalAmount,
+      currency,
+    } = req.body;
+
+    if (
+      !offerId ||
+      !hotelName ||
+      !checkInDate ||
+      !checkOutDate ||
+      !guests ||
+      !customerId ||
+      !customerEmail ||
+      !totalAmount ||
+      !currency
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields',
+      });
+    }
+
+    // Check if hold is allowed for this booking (only for refundable rates)
+    const isRefundable = req.body.isRefundable !== false; // Default to true if not specified
+    if (!isRefundable) {
+      return res.status(400).json({
+        success: false,
+        error:
+          'Hold booking is not available for non-refundable rates. Please select a refundable fare or pay now.',
+        holdAvailable: false,
+        reason: 'non_refundable_rate',
+      });
+    }
+
+    const workflowId = uuidv4();
+    const bookingReference = `HT${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const bookingId = `HBK-${Date.now()}`;
+
+    const customer = {
+      id: customerId,
+      name: `${guests[0]?.given_name || ''} ${guests[0]?.family_name || ''}`.trim(),
+      email: customerEmail,
+      phone: customerPhone,
+    };
+
+    const workflowState: HotelWorkflowState = {
+      workflowId,
+      bookingId,
+      bookingReference,
+      status: 'hold',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      steps: {
+        hold: { completed: true, timestamp: new Date() },
+        payment: { completed: false },
+        confirmation: { completed: false },
+        cancellation: { completed: false },
+        refund: { completed: false },
+      },
+      customer,
+      booking: {
         offerId,
         hotelName,
         roomType,
         checkInDate,
         checkOutDate,
         guests,
-        customerId,
-        customerEmail,
-        customerPhone,
         totalAmount,
         currency,
-      } = req.body;
+      },
+      documents: {},
+    };
 
-      if (
-        !offerId ||
-        !hotelName ||
-        !checkInDate ||
-        !checkOutDate ||
-        !guests ||
-        !customerId ||
-        !customerEmail ||
-        !totalAmount ||
-        !currency
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing required fields",
-        });
-      }
-
-      // Check if hold is allowed for this booking (only for refundable rates)
-      const isRefundable = req.body.isRefundable !== false; // Default to true if not specified
-      if (!isRefundable) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Hold booking is not available for non-refundable rates. Please select a refundable fare or pay now.",
-          holdAvailable: false,
-          reason: "non_refundable_rate",
-        });
-      }
-
-      const workflowId = uuidv4();
-      const bookingReference = `HT${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-      const bookingId = `HBK-${Date.now()}`;
-
-      const customer = {
-        id: customerId,
-        name: `${guests[0]?.given_name || ""} ${guests[0]?.family_name || ""}`.trim(),
-        email: customerEmail,
-        phone: customerPhone,
-      };
-
-      const workflowState: HotelWorkflowState = {
-        workflowId,
-        bookingId,
+    workflowState.documents!.itinerary = generateHotelItineraryHtml(
+      {
         bookingReference,
-        status: "hold",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        steps: {
-          hold: { completed: true, timestamp: new Date() },
-          payment: { completed: false },
-          confirmation: { completed: false },
-          cancellation: { completed: false },
-          refund: { completed: false },
-        },
-        customer,
-        booking: {
-          offerId,
-          hotelName,
-          roomType,
-          checkInDate,
-          checkOutDate,
-          guests,
-          totalAmount,
-          currency,
-        },
-        documents: {},
-      };
-
-      workflowState.documents!.itinerary = generateHotelItineraryHtml(
-        {
-          bookingReference,
-          hotelName,
-          roomType,
-          checkInDate,
-          checkOutDate,
-          guests,
-        },
-        customer,
-      );
-      workflowState.documents!.invoice = generateHotelInvoiceHtml(
-        {
-          bookingReference,
-          hotelName,
-          roomType,
-          checkInDate,
-          checkOutDate,
-          totalAmount,
-        },
-        customer,
-        { total: totalAmount, currency },
-      );
-
-      hotelWorkflowStates.set(workflowId, workflowState);
-
-      res.status(201).json({
-        success: true,
-        workflowId,
-        bookingId,
+        hotelName,
+        roomType,
+        checkInDate,
+        checkOutDate,
+        guests,
+      },
+      customer
+    );
+    workflowState.documents!.invoice = generateHotelInvoiceHtml(
+      {
         bookingReference,
-        status: "hold",
-        paymentRequiredBy: new Date(
-          Date.now() + 12 * 60 * 60 * 1000,
-        ).toISOString(),
+        hotelName,
+        roomType,
+        checkInDate,
+        checkOutDate,
         totalAmount,
-        currency,
-        documents: {
-          itinerary: workflowState.documents!.itinerary,
-          invoice: workflowState.documents!.invoice,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+      },
+      customer,
+      { total: totalAmount, currency }
+    );
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(201).json({
+      success: true,
+      workflowId,
+      bookingId,
+      bookingReference,
+      status: 'hold',
+      paymentRequiredBy: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
+      totalAmount,
+      currency,
+      documents: {
+        itinerary: workflowState.documents!.itinerary,
+        invoice: workflowState.documents!.invoice,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
- * POST /api/hotel-booking/payment
- * Process payment for hold booking (Step 2 of E2E flow)
+ * @swagger
+ * /api/hotel-booking/payment:
+ *   post:
+ *     summary: Process payment for hold booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId, amount, currency]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [balance, card]
+ *     responses:
+ *       200:
+ *         description: Payment processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or invalid status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Workflow not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
-router.post(
-  "/payment",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { bookingId, workflowId, amount, currency, paymentMethod } =
-        req.body;
+router.post('/payment', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId, workflowId, amount, currency, paymentMethod } = req.body;
 
-      if (!bookingId || !workflowId || !amount || !currency) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Missing required fields: bookingId, workflowId, amount, currency",
-        });
+    if (!bookingId || !workflowId || !amount || !currency) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: bookingId, workflowId, amount, currency',
+      });
+    }
+
+    const workflowState = hotelWorkflowStates.get(workflowId);
+    if (!workflowState) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workflow not found. Please create a hold booking first.',
+      });
+    }
+
+    if (workflowState.status !== 'hold') {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot process payment. Current status: ${workflowState.status}`,
+      });
+    }
+
+    const paymentReference = `PAY-${Date.now()}`;
+
+    workflowState.status = 'paid';
+    workflowState.updatedAt = new Date();
+    workflowState.steps.payment = {
+      completed: true,
+      timestamp: new Date(),
+      data: {
+        paymentReference,
+        amount,
+        currency,
+        paymentMethod: paymentMethod || 'card',
+      },
+    };
+
+    workflowState.documents!.receipt = generateHotelReceiptHtml(
+      {
+        bookingReference: workflowState.bookingReference,
+        hotelName: workflowState.booking!.hotelName,
+      },
+      workflowState.customer!,
+      { total: amount, currency, paymentMethod: paymentMethod || 'card' }
+    );
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(200).json({
+      success: true,
+      workflowId,
+      bookingId,
+      paymentReference,
+      paymentStatus: 'paid',
+      message: 'Payment successfully processed',
+      documents: {
+        receipt: workflowState.documents!.receipt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/{bookingId}:
+ *   get:
+ *     summary: Retrieve hotel booking details
+ *     tags: [Hotel Booking]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *       - in: query
+ *         name: workflowId
+ *         schema:
+ *           type: string
+ *         description: Optional workflow ID
+ *     responses:
+ *       200:
+ *         description: Booking details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Booking ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.get('/:bookingId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let { bookingId } = req.params;
+    if (Array.isArray(bookingId)) bookingId = bookingId[0];
+    const { workflowId } = req.query;
+
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking ID is required',
+      });
+    }
+
+    let workflowState: HotelWorkflowState | undefined;
+
+    const workflowIdStr = Array.isArray(workflowId) ? workflowId[0] : workflowId;
+    if (workflowIdStr) {
+      workflowState = hotelWorkflowStates.get(workflowIdStr);
+    } else {
+      for (const [_, state] of hotelWorkflowStates) {
+        if (state.bookingId === bookingId) {
+          workflowState = state;
+          break;
+        }
       }
+    }
 
-      const workflowState = hotelWorkflowStates.get(workflowId);
-      if (!workflowState) {
-        return res.status(404).json({
-          success: false,
-          error: "Workflow not found. Please create a hold booking first.",
-        });
-      }
+    if (!workflowState) {
+      return res.status(200).json({
+        success: true,
+        bookingId,
+        bookingReference: `HT${bookingId.slice(-6)}`,
+        status: 'hold',
+        message: 'Booking found (external)',
+      });
+    }
 
-      if (workflowState.status !== "hold") {
-        return res.status(400).json({
-          success: false,
-          error: `Cannot process payment. Current status: ${workflowState.status}`,
-        });
-      }
+    res.status(200).json({
+      success: true,
+      workflowId: workflowState.workflowId,
+      bookingId: workflowState.bookingId,
+      bookingReference: workflowState.bookingReference,
+      status: workflowState.status,
+      hotelName: workflowState.booking?.hotelName,
+      roomType: workflowState.booking?.roomType,
+      checkInDate: workflowState.booking?.checkInDate,
+      checkOutDate: workflowState.booking?.checkOutDate,
+      totalAmount: workflowState.booking?.totalAmount,
+      currency: workflowState.booking?.currency,
+      guests: workflowState.booking?.guests,
+      customer: workflowState.customer,
+      createdAt: workflowState.createdAt,
+      updatedAt: workflowState.updatedAt,
+      steps: workflowState.steps,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
+/**
+ * @swagger
+ * /api/hotel-booking/voucher:
+ *   post:
+ *     summary: Issue hotel voucher for confirmed booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               guests:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Voucher issued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or invalid status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Workflow not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/voucher', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId, workflowId, guests } = req.body;
+
+    if (!bookingId || !workflowId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: bookingId, workflowId',
+      });
+    }
+
+    const workflowState = hotelWorkflowStates.get(workflowId);
+    if (!workflowState) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workflow not found',
+      });
+    }
+
+    if (workflowState.status !== 'paid') {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot issue voucher. Current status: ${workflowState.status}. Payment required first.`,
+      });
+    }
+
+    const voucherNumber = `VOU${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+    workflowState.status = 'confirmed';
+    workflowState.updatedAt = new Date();
+    workflowState.steps.confirmation = {
+      completed: true,
+      timestamp: new Date(),
+      data: {
+        voucherNumber,
+        issuedAt: new Date(),
+      },
+    };
+
+    workflowState.documents!.voucher = generateHotelVoucherHtml(
+      {
+        bookingReference: workflowState.bookingReference,
+        hotelName: workflowState.booking!.hotelName,
+        roomType: workflowState.booking!.roomType,
+        checkInDate: workflowState.booking!.checkInDate,
+        checkOutDate: workflowState.booking!.checkOutDate,
+        guests: workflowState.booking!.guests,
+      },
+      workflowState.customer!,
+      { voucherNumber }
+    );
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(200).json({
+      success: true,
+      workflowId,
+      bookingId,
+      voucherNumber,
+      issuedAt: new Date().toISOString(),
+      status: 'confirmed',
+      documents: {
+        voucher: workflowState.documents!.voucher,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/cancel:
+ *   post:
+ *     summary: Cancel hotel booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId, reason]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Workflow not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/cancel', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId, workflowId, reason } = req.body;
+
+    if (!bookingId || !reason || !workflowId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: bookingId, reason, workflowId',
+      });
+    }
+
+    const workflowState = hotelWorkflowStates.get(workflowId);
+    if (!workflowState) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workflow not found',
+      });
+    }
+
+    workflowState.status = 'cancelled';
+    workflowState.updatedAt = new Date();
+    workflowState.steps.cancellation = {
+      completed: true,
+      timestamp: new Date(),
+      data: {
+        reason,
+        cancelledAt: new Date(),
+      },
+    };
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(200).json({
+      success: true,
+      workflowId,
+      bookingId,
+      bookingReference: workflowState.bookingReference,
+      cancellationId: `CNL-${Date.now()}`,
+      cancelledAt: new Date().toISOString(),
+      status: 'cancelled',
+      message: 'Hotel booking successfully cancelled',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/cancel:
+ *   post:
+ *     summary: Cancel hotel booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId, reason]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Workflow not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/refund', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId, workflowId, refundAmount, currency, reason } = req.body;
+
+    if (!bookingId || !workflowId || !refundAmount || !currency || !reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: bookingId, workflowId, refundAmount, currency, reason',
+      });
+    }
+
+    const workflowState = hotelWorkflowStates.get(workflowId);
+    if (!workflowState || !workflowState.steps.cancellation.completed) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking must be cancelled before generating refund note',
+      });
+    }
+
+    const refundNumber = `RFN-${Date.now()}`;
+
+    workflowState.status = 'refunded';
+    workflowState.updatedAt = new Date();
+    workflowState.steps.refund = {
+      completed: true,
+      timestamp: new Date(),
+      data: {
+        refundNumber,
+        amount: refundAmount,
+        currency,
+        reason,
+        processedAt: new Date(),
+      },
+    };
+
+    workflowState.documents!.refundNote = generateHotelRefundNoteHtml(
+      {
+        bookingReference: workflowState.bookingReference,
+        hotelName: workflowState.booking!.hotelName,
+      },
+      workflowState.customer!,
+      { refundNumber, amount: refundAmount, currency, reason }
+    );
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(200).json({
+      success: true,
+      workflowId,
+      bookingId,
+      refundNumber,
+      refundAmount,
+      currency,
+      processedAt: new Date().toISOString(),
+      status: 'refunded',
+      documents: {
+        refundNote: workflowState.documents!.refundNote,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/refund:
+ *   post:
+ *     summary: Generate refund note for cancelled booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId, refundAmount, currency, reason]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               refundAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Refund note generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or booking not cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.get('/workflow/:workflowId', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { workflowId } = req.params;
+
+    const workflowState = hotelWorkflowStates.get(workflowId);
+    if (!workflowState) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workflow not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: workflowState,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/refund:
+ *   post:
+ *     summary: Generate refund note for cancelled booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId, refundAmount, currency, reason]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               refundAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Refund note generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or booking not cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.get('/workflows', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const workflows = Array.from(hotelWorkflowStates.values());
+
+    res.status(200).json({
+      success: true,
+      data: workflows,
+      meta: {
+        total: workflows.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/cancel:
+ *   post:
+ *     summary: Cancel hotel booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId, reason]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Workflow not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post('/full-flow', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const {
+      offerId,
+      hotelName,
+      roomType,
+      checkInDate,
+      checkOutDate,
+      guests,
+      customerId,
+      customerEmail,
+      customerPhone,
+      totalAmount,
+      currency,
+      paymentMethod,
+      cancelAfterConfirmation,
+      refundAmount,
+    } = req.body;
+
+    if (
+      !offerId ||
+      !hotelName ||
+      !checkInDate ||
+      !checkOutDate ||
+      !guests ||
+      !customerId ||
+      !customerEmail ||
+      !totalAmount ||
+      !currency
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required booking fields',
+      });
+    }
+
+    const workflowId = uuidv4();
+    const bookingReference = `HT${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+    const bookingId = `HBK-${Date.now()}`;
+
+    const customer = {
+      id: customerId,
+      name: `${guests[0]?.given_name || ''} ${guests[0]?.family_name || ''}`.trim(),
+      email: customerEmail,
+      phone: customerPhone,
+    };
+
+    const workflowState: HotelWorkflowState = {
+      workflowId,
+      bookingId,
+      bookingReference,
+      status: 'hold',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      steps: {
+        hold: { completed: true, timestamp: new Date() },
+        payment: { completed: false },
+        confirmation: { completed: false },
+        cancellation: { completed: false },
+        refund: { completed: false },
+      },
+      customer,
+      booking: {
+        offerId,
+        hotelName,
+        roomType,
+        checkInDate,
+        checkOutDate,
+        guests,
+        totalAmount,
+        currency,
+      },
+      documents: {},
+    };
+
+    workflowState.documents!.itinerary = generateHotelItineraryHtml(
+      {
+        bookingReference,
+        hotelName,
+        roomType,
+        checkInDate,
+        checkOutDate,
+        guests,
+      },
+      customer
+    );
+    workflowState.documents!.invoice = generateHotelInvoiceHtml(
+      {
+        bookingReference,
+        hotelName,
+        roomType,
+        checkInDate,
+        checkOutDate,
+        totalAmount,
+      },
+      customer,
+      { total: totalAmount, currency }
+    );
+
+    const results: any = { steps: {} };
+
+    results.steps.hold = {
+      success: true,
+      workflowId,
+      bookingId,
+      bookingReference,
+      documents: {
+        itinerary: workflowState.documents!.itinerary,
+        invoice: workflowState.documents!.invoice,
+      },
+    };
+
+    if (paymentMethod) {
       const paymentReference = `PAY-${Date.now()}`;
 
-      workflowState.status = "paid";
+      workflowState.status = 'paid';
       workflowState.updatedAt = new Date();
       workflowState.steps.payment = {
         completed: true,
         timestamp: new Date(),
         data: {
           paymentReference,
-          amount,
+          amount: totalAmount,
           currency,
-          paymentMethod: paymentMethod || "card",
+          paymentMethod,
         },
       };
 
       workflowState.documents!.receipt = generateHotelReceiptHtml(
-        {
-          bookingReference: workflowState.bookingReference,
-          hotelName: workflowState.booking!.hotelName,
-        },
-        workflowState.customer!,
-        { total: amount, currency, paymentMethod: paymentMethod || "card" },
+        { bookingReference, hotelName },
+        customer,
+        { total: totalAmount, currency, paymentMethod }
       );
 
-      hotelWorkflowStates.set(workflowId, workflowState);
-
-      res.status(200).json({
+      results.steps.payment = {
         success: true,
         workflowId,
-        bookingId,
         paymentReference,
-        paymentStatus: "paid",
-        message: "Payment successfully processed",
+        paymentStatus: 'paid',
         documents: {
           receipt: workflowState.documents!.receipt,
         },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * GET /api/hotel-booking/:bookingId
- * Retrieve booking details (Step 3 of E2E flow)
- */
-router.get(
-  "/:bookingId",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      let { bookingId } = req.params;
-      if (Array.isArray(bookingId)) bookingId = bookingId[0];
-      const { workflowId } = req.query;
-
-      if (!bookingId) {
-        return res.status(400).json({
-          success: false,
-          error: "Booking ID is required",
-        });
-      }
-
-      let workflowState: HotelWorkflowState | undefined;
-
-      const workflowIdStr = Array.isArray(workflowId)
-        ? workflowId[0]
-        : workflowId;
-      if (workflowIdStr) {
-        workflowState = hotelWorkflowStates.get(workflowIdStr);
-      } else {
-        for (const [_, state] of hotelWorkflowStates) {
-          if (state.bookingId === bookingId) {
-            workflowState = state;
-            break;
-          }
-        }
-      }
-
-      if (!workflowState) {
-        return res.status(200).json({
-          success: true,
-          bookingId,
-          bookingReference: `HT${bookingId.slice(-6)}`,
-          status: "hold",
-          message: "Booking found (external)",
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        workflowId: workflowState.workflowId,
-        bookingId: workflowState.bookingId,
-        bookingReference: workflowState.bookingReference,
-        status: workflowState.status,
-        hotelName: workflowState.booking?.hotelName,
-        roomType: workflowState.booking?.roomType,
-        checkInDate: workflowState.booking?.checkInDate,
-        checkOutDate: workflowState.booking?.checkOutDate,
-        totalAmount: workflowState.booking?.totalAmount,
-        currency: workflowState.booking?.currency,
-        guests: workflowState.booking?.guests,
-        customer: workflowState.customer,
-        createdAt: workflowState.createdAt,
-        updatedAt: workflowState.updatedAt,
-        steps: workflowState.steps,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * POST /api/hotel-booking/voucher
- * Issue hotel voucher for confirmed booking (Step 4 of E2E flow)
- */
-router.post(
-  "/voucher",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { bookingId, workflowId, guests } = req.body;
-
-      if (!bookingId || !workflowId) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing required fields: bookingId, workflowId",
-        });
-      }
-
-      const workflowState = hotelWorkflowStates.get(workflowId);
-      if (!workflowState) {
-        return res.status(404).json({
-          success: false,
-          error: "Workflow not found",
-        });
-      }
-
-      if (workflowState.status !== "paid") {
-        return res.status(400).json({
-          success: false,
-          error: `Cannot issue voucher. Current status: ${workflowState.status}. Payment required first.`,
-        });
-      }
+      };
 
       const voucherNumber = `VOU${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-      workflowState.status = "confirmed";
+      workflowState.status = 'confirmed';
       workflowState.updatedAt = new Date();
       workflowState.steps.confirmation = {
         completed: true,
         timestamp: new Date(),
-        data: {
-          voucherNumber,
-          issuedAt: new Date(),
-        },
+        data: { voucherNumber, issuedAt: new Date() },
       };
 
       workflowState.documents!.voucher = generateHotelVoucherHtml(
         {
-          bookingReference: workflowState.bookingReference,
-          hotelName: workflowState.booking!.hotelName,
-          roomType: workflowState.booking!.roomType,
-          checkInDate: workflowState.booking!.checkInDate,
-          checkOutDate: workflowState.booking!.checkOutDate,
-          guests: workflowState.booking!.guests,
+          bookingReference,
+          hotelName,
+          roomType,
+          checkInDate,
+          checkOutDate,
+          guests,
         },
-        workflowState.customer!,
-        { voucherNumber },
+        customer,
+        { voucherNumber }
       );
 
-      hotelWorkflowStates.set(workflowId, workflowState);
-
-      res.status(200).json({
+      results.steps.confirmation = {
         success: true,
         workflowId,
-        bookingId,
         voucherNumber,
-        issuedAt: new Date().toISOString(),
-        status: "confirmed",
+        status: 'confirmed',
         documents: {
           voucher: workflowState.documents!.voucher,
         },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * POST /api/hotel-booking/cancel
- * Cancel hotel booking (Step 5 of E2E flow)
- */
-router.post(
-  "/cancel",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { bookingId, workflowId, reason } = req.body;
-
-      if (!bookingId || !reason || !workflowId) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing required fields: bookingId, reason, workflowId",
-        });
-      }
-
-      const workflowState = hotelWorkflowStates.get(workflowId);
-      if (!workflowState) {
-        return res.status(404).json({
-          success: false,
-          error: "Workflow not found",
-        });
-      }
-
-      workflowState.status = "cancelled";
-      workflowState.updatedAt = new Date();
-      workflowState.steps.cancellation = {
-        completed: true,
-        timestamp: new Date(),
-        data: {
-          reason,
-          cancelledAt: new Date(),
-        },
       };
 
-      hotelWorkflowStates.set(workflowId, workflowState);
+      if (cancelAfterConfirmation) {
+        const cancellationReason =
+          cancelAfterConfirmation.reason || 'Customer requested cancellation';
 
-      res.status(200).json({
-        success: true,
-        workflowId,
-        bookingId,
-        bookingReference: workflowState.bookingReference,
-        cancellationId: `CNL-${Date.now()}`,
-        cancelledAt: new Date().toISOString(),
-        status: "cancelled",
-        message: "Hotel booking successfully cancelled",
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * POST /api/hotel-booking/refund
- * Generate refund note (Step 6 of E2E flow)
- */
-router.post(
-  "/refund",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { bookingId, workflowId, refundAmount, currency, reason } =
-        req.body;
-
-      if (!bookingId || !workflowId || !refundAmount || !currency || !reason) {
-        return res.status(400).json({
-          success: false,
-          error:
-            "Missing required fields: bookingId, workflowId, refundAmount, currency, reason",
-        });
-      }
-
-      const workflowState = hotelWorkflowStates.get(workflowId);
-      if (!workflowState || !workflowState.steps.cancellation.completed) {
-        return res.status(400).json({
-          success: false,
-          error: "Booking must be cancelled before generating refund note",
-        });
-      }
-
-      const refundNumber = `RFN-${Date.now()}`;
-
-      workflowState.status = "refunded";
-      workflowState.updatedAt = new Date();
-      workflowState.steps.refund = {
-        completed: true,
-        timestamp: new Date(),
-        data: {
-          refundNumber,
-          amount: refundAmount,
-          currency,
-          reason,
-          processedAt: new Date(),
-        },
-      };
-
-      workflowState.documents!.refundNote = generateHotelRefundNoteHtml(
-        {
-          bookingReference: workflowState.bookingReference,
-          hotelName: workflowState.booking!.hotelName,
-        },
-        workflowState.customer!,
-        { refundNumber, amount: refundAmount, currency, reason },
-      );
-
-      hotelWorkflowStates.set(workflowId, workflowState);
-
-      res.status(200).json({
-        success: true,
-        workflowId,
-        bookingId,
-        refundNumber,
-        refundAmount,
-        currency,
-        processedAt: new Date().toISOString(),
-        status: "refunded",
-        documents: {
-          refundNote: workflowState.documents!.refundNote,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * GET /api/hotel-booking/workflow/:workflowId
- * Get workflow state
- */
-router.get(
-  "/workflow/:workflowId",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { workflowId } = req.params;
-
-      const workflowState = hotelWorkflowStates.get(workflowId);
-      if (!workflowState) {
-        return res.status(404).json({
-          success: false,
-          error: "Workflow not found",
-        });
-      }
-
-      res.status(200).json({
-        success: true,
-        data: workflowState,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * GET /api/hotel-booking/workflows
- * List all active workflows
- */
-router.get(
-  "/workflows",
-  async (_req: Request, res: Response, next: NextFunction) => {
-    try {
-      const workflows = Array.from(hotelWorkflowStates.values());
-
-      res.status(200).json({
-        success: true,
-        data: workflows,
-        meta: {
-          total: workflows.length,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/**
- * POST /api/hotel-booking/full-flow
- * Execute complete end-to-end hotel booking flow (for testing)
- */
-router.post(
-  "/full-flow",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const {
-        offerId,
-        hotelName,
-        roomType,
-        checkInDate,
-        checkOutDate,
-        guests,
-        customerId,
-        customerEmail,
-        customerPhone,
-        totalAmount,
-        currency,
-        paymentMethod,
-        cancelAfterConfirmation,
-        refundAmount,
-      } = req.body;
-
-      if (
-        !offerId ||
-        !hotelName ||
-        !checkInDate ||
-        !checkOutDate ||
-        !guests ||
-        !customerId ||
-        !customerEmail ||
-        !totalAmount ||
-        !currency
-      ) {
-        return res.status(400).json({
-          success: false,
-          error: "Missing required booking fields",
-        });
-      }
-
-      const workflowId = uuidv4();
-      const bookingReference = `HT${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-      const bookingId = `HBK-${Date.now()}`;
-
-      const customer = {
-        id: customerId,
-        name: `${guests[0]?.given_name || ""} ${guests[0]?.family_name || ""}`.trim(),
-        email: customerEmail,
-        phone: customerPhone,
-      };
-
-      const workflowState: HotelWorkflowState = {
-        workflowId,
-        bookingId,
-        bookingReference,
-        status: "hold",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        steps: {
-          hold: { completed: true, timestamp: new Date() },
-          payment: { completed: false },
-          confirmation: { completed: false },
-          cancellation: { completed: false },
-          refund: { completed: false },
-        },
-        customer,
-        booking: {
-          offerId,
-          hotelName,
-          roomType,
-          checkInDate,
-          checkOutDate,
-          guests,
-          totalAmount,
-          currency,
-        },
-        documents: {},
-      };
-
-      workflowState.documents!.itinerary = generateHotelItineraryHtml(
-        {
-          bookingReference,
-          hotelName,
-          roomType,
-          checkInDate,
-          checkOutDate,
-          guests,
-        },
-        customer,
-      );
-      workflowState.documents!.invoice = generateHotelInvoiceHtml(
-        {
-          bookingReference,
-          hotelName,
-          roomType,
-          checkInDate,
-          checkOutDate,
-          totalAmount,
-        },
-        customer,
-        { total: totalAmount, currency },
-      );
-
-      const results: any = { steps: {} };
-
-      results.steps.hold = {
-        success: true,
-        workflowId,
-        bookingId,
-        bookingReference,
-        documents: {
-          itinerary: workflowState.documents!.itinerary,
-          invoice: workflowState.documents!.invoice,
-        },
-      };
-
-      if (paymentMethod) {
-        const paymentReference = `PAY-${Date.now()}`;
-
-        workflowState.status = "paid";
+        workflowState.status = 'cancelled';
         workflowState.updatedAt = new Date();
-        workflowState.steps.payment = {
+        workflowState.steps.cancellation = {
           completed: true,
           timestamp: new Date(),
-          data: {
-            paymentReference,
-            amount: totalAmount,
-            currency,
-            paymentMethod,
-          },
+          data: { reason: cancellationReason, cancelledAt: new Date() },
         };
 
-        workflowState.documents!.receipt = generateHotelReceiptHtml(
-          { bookingReference, hotelName },
-          customer,
-          { total: totalAmount, currency, paymentMethod },
-        );
-
-        results.steps.payment = {
+        results.steps.cancellation = {
           success: true,
           workflowId,
-          paymentReference,
-          paymentStatus: "paid",
-          documents: {
-            receipt: workflowState.documents!.receipt,
-          },
+          cancellationId: `CNL-${Date.now()}`,
+          status: 'cancelled',
         };
 
-        const voucherNumber = `VOU${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        if (refundAmount) {
+          const refundNumber = `RFN-${Date.now()}`;
 
-        workflowState.status = "confirmed";
-        workflowState.updatedAt = new Date();
-        workflowState.steps.confirmation = {
-          completed: true,
-          timestamp: new Date(),
-          data: { voucherNumber, issuedAt: new Date() },
-        };
-
-        workflowState.documents!.voucher = generateHotelVoucherHtml(
-          {
-            bookingReference,
-            hotelName,
-            roomType,
-            checkInDate,
-            checkOutDate,
-            guests,
-          },
-          customer,
-          { voucherNumber },
-        );
-
-        results.steps.confirmation = {
-          success: true,
-          workflowId,
-          voucherNumber,
-          status: "confirmed",
-          documents: {
-            voucher: workflowState.documents!.voucher,
-          },
-        };
-
-        if (cancelAfterConfirmation) {
-          const cancellationReason =
-            cancelAfterConfirmation.reason || "Customer requested cancellation";
-
-          workflowState.status = "cancelled";
+          workflowState.status = 'refunded';
           workflowState.updatedAt = new Date();
-          workflowState.steps.cancellation = {
+          workflowState.steps.refund = {
             completed: true,
             timestamp: new Date(),
-            data: { reason: cancellationReason, cancelledAt: new Date() },
+            data: {
+              refundNumber,
+              amount: refundAmount,
+              currency,
+              reason: cancellationReason,
+              processedAt: new Date(),
+            },
           };
 
-          results.steps.cancellation = {
+          workflowState.documents!.refundNote = generateHotelRefundNoteHtml(
+            { bookingReference, hotelName },
+            customer,
+            {
+              refundNumber,
+              amount: refundAmount,
+              currency,
+              reason: cancellationReason,
+            }
+          );
+
+          results.steps.refund = {
             success: true,
             workflowId,
-            cancellationId: `CNL-${Date.now()}`,
-            status: "cancelled",
+            refundNumber,
+            refundAmount,
+            currency,
+            status: 'refunded',
+            documents: {
+              refundNote: workflowState.documents!.refundNote,
+            },
           };
-
-          if (refundAmount) {
-            const refundNumber = `RFN-${Date.now()}`;
-
-            workflowState.status = "refunded";
-            workflowState.updatedAt = new Date();
-            workflowState.steps.refund = {
-              completed: true,
-              timestamp: new Date(),
-              data: {
-                refundNumber,
-                amount: refundAmount,
-                currency,
-                reason: cancellationReason,
-                processedAt: new Date(),
-              },
-            };
-
-            workflowState.documents!.refundNote = generateHotelRefundNoteHtml(
-              { bookingReference, hotelName },
-              customer,
-              {
-                refundNumber,
-                amount: refundAmount,
-                currency,
-                reason: cancellationReason,
-              },
-            );
-
-            results.steps.refund = {
-              success: true,
-              workflowId,
-              refundNumber,
-              refundAmount,
-              currency,
-              status: "refunded",
-              documents: {
-                refundNote: workflowState.documents!.refundNote,
-              },
-            };
-          }
         }
       }
-
-      hotelWorkflowStates.set(workflowId, workflowState);
-
-      res.status(200).json({
-        success: true,
-        workflowId,
-        bookingId,
-        bookingReference,
-        status: workflowState.status,
-        flowCompleted: cancelAfterConfirmation ? true : false,
-        results: results,
-      });
-    } catch (error) {
-      next(error);
     }
-  },
-);
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(200).json({
+      success: true,
+      workflowId,
+      bookingId,
+      bookingReference,
+      status: workflowState.status,
+      flowCompleted: cancelAfterConfirmation ? true : false,
+      results: results,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

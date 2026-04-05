@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "ignore": [
+    "apps/b2b-admin/src/components/optics/**"
+  ],
+  "ignoreBinaries": [
+    "prisma",
+    "playwright"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": []
+}

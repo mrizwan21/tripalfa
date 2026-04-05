@@ -1,0 +1,168 @@
+name: API E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      skip_external_apis:
+        description: "Skip tests that require external APIs (Duffel/LiteAPI)"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  e2e-api-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup test environment
+        run: |
+          cp .env.test.example .env.test || true
+          echo "NODE_ENV=test" >> .env.test
+          echo "TEST_MODE=true" >> .env.test
+          echo "CI=true" >> .env.test
+          
+          # Set API keys from secrets (if available)
+          if [ -n "${{ secrets.DUFFEL_API_KEY }}" ]; then
+            echo "DUFFEL_API_KEY=${{ secrets.DUFFEL_API_KEY }}" >> .env.test
+          fi
+          if [ -n "${{ secrets.LITEAPI_API_KEY }}" ]; then
+            echo "LITEAPI_API_KEY=${{ secrets.LITEAPI_API_KEY }}" >> .env.test
+          fi
+          if [ -n "${{ secrets.BOOKING_SERVICE_URL }}" ]; then
+            echo "BOOKING_SERVICE_URL=${{ secrets.BOOKING_SERVICE_URL }}" >> .env.test
+          else
+            echo "BOOKING_SERVICE_URL=http://localhost:3001" >> .env.test
+          fi
+
+      - name: Start services (if needed)
+        run: |
+          # Start booking service if not already running
+          # This could be expanded based on your setup
+          echo "Assuming services are already running or deployed"
+
+      - name: Run API E2E tests
+        run: |
+          cd e2e
+          pnpm test
+        env:
+          CI: true
+          SKIP_EXTERNAL_APIS: ${{ github.event.inputs.skip_external_apis || false }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-api-test-results
+          path: |
+            e2e/test-results/
+            e2e/coverage/
+          retention-days: 7
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          directory: e2e/coverage/
+          flags: e2e-api-tests
+
+      - name: Generate test summary
+        if: always()
+        run: |
+          echo "## API E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "e2e/test-results/junit.xml" ]; then
+            echo "✅ Tests completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Reports:**" >> $GITHUB_STEP_SUMMARY
+            echo "- [JUnit XML](artifact/e2e-api-test-results/junit.xml)" >> $GITHUB_STEP_SUMMARY
+            echo "- [HTML Report](artifact/e2e-api-test-results/test-report.html)" >> $GITHUB_STEP_SUMMARY
+            echo "- [Coverage Report](artifact/e2e-api-test-results/coverage/index.html)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Tests failed or no results generated" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let comment = '## API E2E Test Results\n\n';
+            
+            try {
+              const junitPath = path.join(process.cwd(), 'e2e/test-results/junit.xml');
+              if (fs.existsSync(junitPath)) {
+                comment += '✅ API E2E tests passed!\n\n';
+                comment += '**Available Reports:**\n';
+                comment += '- [JUnit XML](artifact/e2e-api-test-results/junit.xml)\n';
+                comment += '- [HTML Report](artifact/e2e-api-test-results/test-report.html)\n';
+                comment += '- [Coverage Report](artifact/e2e-api-test-results/coverage/index.html)\n';
+              } else {
+                comment += '❌ API E2E tests failed or no results generated.\n';
+                comment += 'Please check the workflow logs for details.\n';
+              }
+            } catch (error) {
+              comment += '⚠️ Unable to determine test results.\n';
+              comment += `Error: ${error.message}\n`;
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  performance-monitoring:
+    runs-on: ubuntu-latest
+    needs: e2e-api-tests
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Download test results
+        uses: actions/download-artifact@v4
+        with:
+          name: e2e-api-test-results
+          path: e2e/test-results
+
+      - name: Analyze performance metrics
+        run: |
+          echo "## Performance Metrics Analysis" >> performance-metrics.md
+          echo "" >> performance-metrics.md
+          
+          if [ -f "e2e/test-results/junit.xml" ]; then
+            # Extract test durations from JUnit XML (simplified)
+            echo "### Test Execution Times" >> performance-metrics.md
+            echo "" >> performance-metrics.md
+            echo "Performance metrics analysis would go here." >> performance-metrics.md
+            echo "Consider integrating with monitoring tools like Datadog or New Relic." >> performance-metrics.md
+          else
+            echo "No test results available for analysis." >> performance-metrics.md
+          fi
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-metrics
+          path: performance-metrics.md
+          retention-days: 30

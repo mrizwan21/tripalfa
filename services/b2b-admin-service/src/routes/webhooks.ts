@@ -3,40 +3,65 @@
  * Processes webhooks from payment gateways and updates payment status
  */
 
-import { Router, Request, Response } from "express";
-import { prisma } from "../database.js";
-import PaymentGatewayFactory from "../services/payment-gateway/factory.js";
-import { PaymentWebhook } from "../services/payment-gateway/types.js";
+import { Router, Request, Response } from 'express';
+import { prisma } from '../database.js';
+import PaymentGatewayFactory from '../services/payment-gateway/factory.js';
+import { PaymentWebhook } from '../services/payment-gateway/types.js';
 
 const router: Router = Router();
 
 /**
- * POST /webhooks/stripe
- * Stripe webhook endpoint for payment confirmations
+ * @swagger
+ * /api/suppliers/webhooks/stripe:
+ *   post:
+ *     summary: Stripe webhook endpoint for payment confirmations
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Webhook received
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 received:
+ *                   type: boolean
+ *       400:
+ *         description: Missing Stripe signature
+ *       401:
+ *         description: Invalid signature
+ *       500:
+ *         description: Webhook processing failed
  */
-router.post("/stripe", async (req: Request, res: Response) => {
+router.post('/stripe', async (req: Request, res: Response) => {
   try {
-    const signature = req.headers["stripe-signature"] as string;
+    const signature = req.headers['stripe-signature'] as string;
 
     if (!signature) {
-      res.status(400).json({ error: "Missing Stripe signature" });
+      res.status(400).json({ error: 'Missing Stripe signature' });
       return;
     }
 
     // Verify webhook signature
     const gatewayConfig = {
-      provider: "stripe",
-      apiKey: process.env.STRIPE_API_KEY || "",
-      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
-      testMode: process.env.NODE_ENV !== "production",
+      provider: 'stripe',
+      apiKey: process.env.STRIPE_API_KEY || '',
+      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+      testMode: process.env.NODE_ENV !== 'production',
     };
 
     const gateway = PaymentGatewayFactory.getGateway(gatewayConfig as any);
     const isValid = gateway.verifyWebhook(req.body, signature);
 
     if (!isValid) {
-      console.warn("Invalid Stripe webhook signature");
-      res.status(401).json({ error: "Invalid signature" });
+      console.warn('Invalid Stripe webhook signature');
+      res.status(401).json({ error: 'Invalid signature' });
       return;
     }
 
@@ -48,31 +73,89 @@ router.post("/stripe", async (req: Request, res: Response) => {
 
     res.json({ received: true });
   } catch (error: any) {
-    console.error("Webhook processing error:", error);
-    res.status(500).json({ error: "Webhook processing failed" });
+    console.error('Webhook processing error:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 
 /**
- * POST /webhooks/paypal
- * PayPal webhook endpoint placeholder
+ * @swagger
+ * /api/suppliers/webhooks/paypal:
+ *   post:
+ *     summary: PayPal webhook endpoint (placeholder)
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       501:
+ *         description: PayPal webhooks not yet implemented
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.post("/paypal", async (req: Request, res: Response) => {
+router.post('/paypal', async (req: Request, res: Response) => {
   // TODO: Implement PayPal webhook handler
-  res.status(501).json({ error: "PayPal webhooks not yet implemented" });
+  res.status(501).json({ error: 'PayPal webhooks not yet implemented' });
 });
 
 /**
- * POST /webhooks/test
- * Test webhook endpoint for development
+ * @swagger
+ * /api/suppliers/webhooks/test:
+ *   post:
+ *     summary: Test webhook endpoint for development
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Test webhook processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 received:
+ *                   type: boolean
+ *                 webhook:
+ *                   type: string
+ *                 processed:
+ *                   type: boolean
+ *       500:
+ *         description: Test webhook processing error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.post("/test", async (req: Request, res: Response) => {
+router.post('/test', async (req: Request, res: Response) => {
   try {
-    console.log("📨 Test webhook received:", req.body);
+    console.log('📨 Test webhook received:', req.body);
 
     const webhook = {
-      id: req.body.id || "test_webhook",
-      type: req.body.type || "test.event",
+      id: req.body.id || 'test_webhook',
+      type: req.body.type || 'test.event',
       data: req.body.data || {},
       timestamp: new Date(),
     };
@@ -85,15 +168,63 @@ router.post("/test", async (req: Request, res: Response) => {
       processed: true,
     });
   } catch (error: any) {
-    console.error("Test webhook error:", error);
+    console.error('Test webhook error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * Get webhook events for a payment
+ * @swagger
+ * /api/suppliers/webhooks/payment/{paymentId}/events:
+ *   get:
+ *     summary: Get webhook events for a payment
+ *     tags: [Webhooks]
+ *     parameters:
+ *       - in: path
+ *         name: paymentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The payment ID
+ *     responses:
+ *       200:
+ *         description: Webhook events retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 paymentId:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                 webhookEvents:
+ *                   type: array
+ *                 transactionId:
+ *                   type: string
+ *                 lastUpdate:
+ *                   type: string
+ *                   format: date-time
+ *       404:
+ *         description: Payment not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Failed to fetch webhook events
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.get("/payment/:paymentId/events", async (req: Request, res: Response) => {
+router.get('/payment/:paymentId/events', async (req: Request, res: Response) => {
   try {
     const { paymentId } = req.params;
 
@@ -102,7 +233,7 @@ router.get("/payment/:paymentId/events", async (req: Request, res: Response) => 
     });
 
     if (!payment) {
-      res.status(404).json({ error: "Payment not found" });
+      res.status(404).json({ error: 'Payment not found' });
       return;
     }
 
@@ -116,8 +247,8 @@ router.get("/payment/:paymentId/events", async (req: Request, res: Response) => 
       lastUpdate: payment.updatedAt,
     });
   } catch (error: any) {
-    console.error("Error fetching webhook events:", error);
-    res.status(500).json({ error: "Failed to fetch webhook events" });
+    console.error('Error fetching webhook events:', error);
+    res.status(500).json({ error: 'Failed to fetch webhook events' });
   }
 });
 
@@ -132,11 +263,11 @@ async function handleStripeWebhook(webhook: PaymentWebhook): Promise<void> {
   console.log(`📨 Processing Stripe webhook: ${webhook.type}`);
 
   const handlers: Record<string, (data: any) => Promise<void>> = {
-    "charge.succeeded": handleChargeSucceeded,
-    "charge.failed": handleChargeFailed,
-    "payout.completed": handlePayoutCompleted,
-    "payout.failed": handlePayoutFailed,
-    "payout.paid": handlePayoutPaid,
+    'charge.succeeded': handleChargeSucceeded,
+    'charge.failed': handleChargeFailed,
+    'payout.completed': handlePayoutCompleted,
+    'payout.failed': handlePayoutFailed,
+    'payout.paid': handlePayoutPaid,
   };
 
   const handler = handlers[webhook.type];
@@ -152,7 +283,7 @@ async function handleStripeWebhook(webhook: PaymentWebhook): Promise<void> {
  * Handle charge.succeeded webhook
  */
 async function handleChargeSucceeded(data: any): Promise<void> {
-  console.log("✅ Charge succeeded:", data.id);
+  console.log('✅ Charge succeeded:', data.id);
 
   // Find payment by transaction ID
   const payment = await prisma.supplierPayment.findFirst({
@@ -167,12 +298,12 @@ async function handleChargeSucceeded(data: any): Promise<void> {
   }
 
   // Update payment status
-  await updatePaymentStatus(payment.id, "completed", data.id, {
+  await updatePaymentStatus(payment.id, 'completed', data.id, {
     chargeId: data.id,
     amount: (data.amount || 0) / 100,
     currency: data.currency,
     receiptUrl: data.receipt_url,
-    webhookType: "charge.succeeded",
+    webhookType: 'charge.succeeded',
   });
 
   // Update wallet balance
@@ -180,7 +311,7 @@ async function handleChargeSucceeded(data: any): Promise<void> {
     where: { id: payment.walletId },
   });
 
-  if (wallet && payment.paymentType === "payout") {
+  if (wallet && payment.paymentType === 'payout') {
     const currentBalance = Number(wallet.balance);
     await prisma.supplierWallet.update({
       where: { id: payment.walletId },
@@ -195,7 +326,7 @@ async function handleChargeSucceeded(data: any): Promise<void> {
  * Handle charge.failed webhook
  */
 async function handleChargeFailed(data: any): Promise<void> {
-  console.log("❌ Charge failed:", data.id);
+  console.log('❌ Charge failed:', data.id);
 
   const payment = await prisma.supplierPayment.findFirst({
     where: {
@@ -208,11 +339,11 @@ async function handleChargeFailed(data: any): Promise<void> {
     return;
   }
 
-  await updatePaymentStatus(payment.id, "failed", data.id, {
+  await updatePaymentStatus(payment.id, 'failed', data.id, {
     error: data.failure_message,
     errorCode: data.failure_code,
     reason: data.failure_reason,
-    webhookType: "charge.failed",
+    webhookType: 'charge.failed',
   });
 }
 
@@ -220,7 +351,7 @@ async function handleChargeFailed(data: any): Promise<void> {
  * Handle payout.paid webhook
  */
 async function handlePayoutPaid(data: any): Promise<void> {
-  console.log("✅ Payout paid:", data.id);
+  console.log('✅ Payout paid:', data.id);
 
   const payment = await prisma.supplierPayment.findFirst({
     where: {
@@ -233,12 +364,12 @@ async function handlePayoutPaid(data: any): Promise<void> {
     return;
   }
 
-  await updatePaymentStatus(payment.id, "completed", data.id, {
+  await updatePaymentStatus(payment.id, 'completed', data.id, {
     payoutId: data.id,
     amount: (data.amount || 0) / 100,
     currency: data.currency,
     arrivalDate: data.arrival_date,
-    webhookType: "payout.paid",
+    webhookType: 'payout.paid',
   });
 }
 
@@ -246,7 +377,7 @@ async function handlePayoutPaid(data: any): Promise<void> {
  * Handle payout.completed webhook
  */
 async function handlePayoutCompleted(data: any): Promise<void> {
-  console.log("✅ Payout completed:", data.id);
+  console.log('✅ Payout completed:', data.id);
 
   const payment = await prisma.supplierPayment.findFirst({
     where: {
@@ -259,10 +390,10 @@ async function handlePayoutCompleted(data: any): Promise<void> {
     return;
   }
 
-  await updatePaymentStatus(payment.id, "processing", data.id, {
+  await updatePaymentStatus(payment.id, 'processing', data.id, {
     payoutId: data.id,
     status: data.status,
-    webhookType: "payout.completed",
+    webhookType: 'payout.completed',
   });
 }
 
@@ -270,7 +401,7 @@ async function handlePayoutCompleted(data: any): Promise<void> {
  * Handle payout.failed webhook
  */
 async function handlePayoutFailed(data: any): Promise<void> {
-  console.log("❌ Payout failed:", data.id);
+  console.log('❌ Payout failed:', data.id);
 
   const payment = await prisma.supplierPayment.findFirst({
     where: {
@@ -283,10 +414,10 @@ async function handlePayoutFailed(data: any): Promise<void> {
     return;
   }
 
-  await updatePaymentStatus(payment.id, "failed", data.id, {
+  await updatePaymentStatus(payment.id, 'failed', data.id, {
     failureReason: data.failure_reason,
     failureCode: data.failure_code,
-    webhookType: "payout.failed",
+    webhookType: 'payout.failed',
   });
 }
 
@@ -315,7 +446,7 @@ async function updatePaymentStatus(
     data: {
       status,
       transactionReference: transactionId,
-      processedAt: status === "completed" ? new Date() : payment.processedAt,
+      processedAt: status === 'completed' ? new Date() : payment.processedAt,
       metadata: {
         ...currentMetadata,
         ...metadata,
@@ -338,9 +469,9 @@ async function updatePaymentStatus(
       supplierId: payment.supplierId,
       walletId: payment.walletId,
       paymentId,
-      action: status === "completed" ? "processed" : "failed",
-      actorType: "system",
-      actorId: "webhook:stripe",
+      action: status === 'completed' ? 'processed' : 'failed',
+      actorType: 'system',
+      actorId: 'webhook:stripe',
       notes: `Webhook processed: ${metadata.webhookType}`,
       metadata: {
         webhookType: metadata.webhookType,

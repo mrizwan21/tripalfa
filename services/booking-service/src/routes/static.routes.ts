@@ -1,13 +1,48 @@
-import { Router, Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Router, Request, Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// ── Airports autocomplete (public static lookup) ────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/airports", async (req: Request, res: Response) => {
-  const q = String(req.query.q ?? "").trim();
+/**
+ * @swagger
+ * /api/airports:
+ *   get:
+ *     summary: Search airports by IATA code, city, or name
+ *     tags: [Static Data]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query (min 2 characters)
+ *     responses:
+ *       200:
+ *         description: Airports retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       iata_code:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       city:
+ *                         type: string
+ *                       country:
+ *                         type: string
+ */
+router.get('/airports', async (req: Request, res: Response) => {
+  const q = String(req.query.q ?? '').trim();
   if (q.length < 2) return res.json({ data: [] });
 
   const pattern = `%${q}%`;
@@ -18,21 +53,53 @@ router.get("/airports", async (req: Request, res: Response) => {
     SELECT iata_code, name, city, country
     FROM airports
     WHERE (
-      iata_code ILIKE ${upperQ + "%"}
+      iata_code ILIKE ${upperQ + '%'}
       OR city ILIKE ${pattern}
       OR name ILIKE ${pattern}
     )
     ORDER BY
-      CASE WHEN iata_code ILIKE ${upperQ + "%"} THEN 0 ELSE 1 END,
+      CASE WHEN iata_code ILIKE ${upperQ + '%'} THEN 0 ELSE 1 END,
       city ASC
     LIMIT 10
   `;
   return res.json({ data: rows });
 });
 
-// ── Airlines (public static lookup) ────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/airlines", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airlines:
+ *   get:
+ *     summary: List all active airlines
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Airlines retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       iata_code:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       logo_url:
+ *                         type: string
+ *                       country:
+ *                         type: string
+ *                       alliance:
+ *                         type: string
+ *                       checkin_url:
+ *                         type: string
+ */
+router.get('/airlines', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       iata_code: string;
@@ -48,9 +115,9 @@ router.get("/airlines", async (_req: Request, res: Response) => {
     WHERE is_active = true
     ORDER BY name ASC
   `;
-  
+
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       iata_code: r.iata_code,
       name: r.name,
       logo_url: r.logo_url,
@@ -61,9 +128,35 @@ router.get("/airlines", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Airline detail (public static lookup) ───────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/airlines/:code", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/airlines/{code}:
+ *   get:
+ *     summary: Get airline details by IATA code
+ *     tags: [Static Data]
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Airline IATA code
+ *     responses:
+ *       200:
+ *         description: Airline details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Airline not found
+ */
+router.get('/airlines/:code', async (req: Request, res: Response) => {
   const [airline] = await prisma.$queryRaw<
     {
       iata_code: string;
@@ -80,8 +173,7 @@ router.get("/airlines/:code", async (req: Request, res: Response) => {
     LIMIT 1
   `;
 
-  if (!airline)
-    return res.status(404).json({ error: "Airline not found" });
+  if (!airline) return res.status(404).json({ error: 'Airline not found' });
 
   const loyalties = await prisma.$queryRaw<
     { id: number; airline_id: string; program_name: string }[]
@@ -96,7 +188,7 @@ router.get("/airlines/:code", async (req: Request, res: Response) => {
     country: airline.country,
     alliance: airline.alliance,
     checkinUrl: airline.checkin_url,
-    loyaltyPrograms: loyalties.map((l) => ({
+    loyaltyPrograms: loyalties.map(l => ({
       id: l.id,
       airlineId: l.airline_id,
       programName: l.program_name,
@@ -104,9 +196,26 @@ router.get("/airlines/:code", async (req: Request, res: Response) => {
   });
 });
 
-// ── Aircraft types (public static lookup) ──────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/aircraft-types", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/aircraft-types:
+ *   get:
+ *     summary: List all aircraft types
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Aircraft types retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/aircraft-types', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       iata_code: string;
@@ -123,7 +232,7 @@ router.get("/aircraft-types", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       iata_code: r.iata_code,
       name: r.name,
       manufacturer: r.manufacturer,
@@ -134,9 +243,26 @@ router.get("/aircraft-types", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Aircraft type detail (public static lookup) ────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/aircraft-types/:code", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/aircraft-types/{code}:
+ *   get:
+ *     summary: Get aircraft type details by IATA code
+ *     tags: [Static Data]
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Aircraft type IATA code
+ *     responses:
+ *       200:
+ *         description: Aircraft type details retrieved successfully
+ *       404:
+ *         description: Aircraft type not found
+ */
+router.get('/aircraft-types/:code', async (req: Request, res: Response) => {
   const [data] = await prisma.$queryRaw<
     {
       iata_code: string;
@@ -153,8 +279,7 @@ router.get("/aircraft-types/:code", async (req: Request, res: Response) => {
     LIMIT 1
   `;
 
-  if (!data)
-    return res.status(404).json({ error: "Aircraft type not found" });
+  if (!data) return res.status(404).json({ error: 'Aircraft type not found' });
 
   return res.json({
     iataCode: data.iata_code,
@@ -166,9 +291,26 @@ router.get("/aircraft-types/:code", async (req: Request, res: Response) => {
   });
 });
 
-// ── Countries (public static lookup) ───────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/countries", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/countries:
+ *   get:
+ *     summary: List all active countries
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Countries retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/countries', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -185,7 +327,7 @@ router.get("/countries", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       code: r.code,
       name: r.name,
       dial_code: r.dial_code,
@@ -195,9 +337,33 @@ router.get("/countries", async (_req: Request, res: Response) => {
   });
 });
 
-// ── States by country (public static lookup) ────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/countries/:code/states", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/countries/{code}/states:
+ *   get:
+ *     summary: List states by country code
+ *     tags: [Static Data]
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Country code
+ *     responses:
+ *       200:
+ *         description: States retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/countries/:code/states', async (req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       id: number;
@@ -213,7 +379,7 @@ router.get("/countries/:code/states", async (req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       id: r.id,
       country_code: r.country_code,
       code: r.code,
@@ -222,9 +388,26 @@ router.get("/countries/:code/states", async (req: Request, res: Response) => {
   });
 });
 
-// ── Currencies (public static lookup) ──────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/currencies", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/currencies:
+ *   get:
+ *     summary: List all active currencies
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Currencies retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/currencies', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -241,7 +424,7 @@ router.get("/currencies", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       code: r.code,
       name: r.name,
       symbol: r.symbol,
@@ -251,14 +434,31 @@ router.get("/currencies", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Languages (public static lookup) ───────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/languages", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/languages:
+ *   get:
+ *     summary: List all active languages
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Languages retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/languages', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
       name: string;
-      direction: "ltr" | "rtl";
+      direction: 'ltr' | 'rtl';
       is_active: boolean;
     }[]
   >`
@@ -269,7 +469,7 @@ router.get("/languages", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       code: r.code,
       name: r.name,
       direction: r.direction,
@@ -278,9 +478,26 @@ router.get("/languages", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Salutations (public static lookup) ─────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/salutations", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/salutations:
+ *   get:
+ *     summary: List all salutations
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Salutations retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/salutations', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -294,7 +511,7 @@ router.get("/salutations", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       code: r.code,
       label: r.label,
       display_order: r.display_order,
@@ -302,20 +519,52 @@ router.get("/salutations", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Genders (public static lookup) ────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/genders", async (_req: Request, res: Response) => {
-  const data = await prisma.$queryRaw<
-    { code: string; label: string }[]
-  >`
+/**
+ * @swagger
+ * /api/genders:
+ *   get:
+ *     summary: List all gender options
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Genders retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/genders', async (_req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<{ code: string; label: string }[]>`
     SELECT code, label FROM genders
   `;
   return res.json({ data });
 });
 
-// ── Cabin classes (public static lookup) ──────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/cabin-classes", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/cabin-classes:
+ *   get:
+ *     summary: List all cabin classes
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Cabin classes retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/cabin-classes', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -329,7 +578,7 @@ router.get("/cabin-classes", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       code: r.code,
       name: r.name,
       display_order: r.display_order,
@@ -337,9 +586,26 @@ router.get("/cabin-classes", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Meal preferences (public static lookup) ───────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/meal-preferences", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/meal-preferences:
+ *   get:
+ *     summary: List all meal preference options
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Meal preferences retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/meal-preferences', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -354,9 +620,26 @@ router.get("/meal-preferences", async (_req: Request, res: Response) => {
   return res.json({ data });
 });
 
-// ── Special assistance (public static lookup) ────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/special-assistance", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/special-assistance:
+ *   get:
+ *     summary: List all special assistance options
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Special assistance options retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/special-assistance', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -371,9 +654,26 @@ router.get("/special-assistance", async (_req: Request, res: Response) => {
   return res.json({ data });
 });
 
-// ── Board basis (public static lookup) ────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/board-basis", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/board-basis:
+ *   get:
+ *     summary: List all board basis types
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Board basis types retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/board-basis', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -385,9 +685,26 @@ router.get("/board-basis", async (_req: Request, res: Response) => {
   return res.json({ data });
 });
 
-// ── Property types (public static lookup) ──────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/property-types", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/property-types:
+ *   get:
+ *     summary: List all property types
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Property types retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/property-types', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       code: string;
@@ -399,9 +716,26 @@ router.get("/property-types", async (_req: Request, res: Response) => {
   return res.json({ data });
 });
 
-// ── Payment methods (public static lookup) ─────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/payment-methods", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/payment-methods:
+ *   get:
+ *     summary: List all active payment methods
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Payment methods retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/payment-methods', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       id: number;
@@ -419,7 +753,7 @@ router.get("/payment-methods", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       id: r.id,
       code: r.code,
       label: r.label,
@@ -430,20 +764,43 @@ router.get("/payment-methods", async (_req: Request, res: Response) => {
   });
 });
 
-// ── Amenities (public static lookup) ───────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/amenities", async (req: Request, res: Response) => {
-  const filterableOnly = req.query.filterable === "true";
-  
+/**
+ * @swagger
+ * /api/amenities:
+ *   get:
+ *     summary: List all amenities
+ *     tags: [Static Data]
+ *     parameters:
+ *       - in: query
+ *         name: filterable
+ *         schema:
+ *           type: boolean
+ *         description: If true, returns only filterable amenities
+ *     responses:
+ *       200:
+ *         description: Amenities retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/amenities', async (req: Request, res: Response) => {
+  const filterableOnly = req.query.filterable === 'true';
+
   let query = `
     SELECT id, name, icon, category, filterable, display_order
     FROM amenities
   `;
-  
+
   if (filterableOnly) {
     query += ` WHERE filterable = true`;
   }
-  
+
   query += ` ORDER BY category ASC, display_order ASC`;
 
   const data = await prisma.$queryRawUnsafe<
@@ -458,7 +815,7 @@ router.get("/amenities", async (req: Request, res: Response) => {
   >(query);
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       id: r.id,
       name: r.name,
       icon: r.icon,
@@ -469,9 +826,26 @@ router.get("/amenities", async (req: Request, res: Response) => {
   });
 });
 
-// ── Cancellation policies (public static lookup) ────────────────
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/cancellation-policies", async (_req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/cancellation-policies:
+ *   get:
+ *     summary: List all cancellation policies
+ *     tags: [Static Data]
+ *     responses:
+ *       200:
+ *         description: Cancellation policies retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ */
+router.get('/cancellation-policies', async (_req: Request, res: Response) => {
   const data = await prisma.$queryRaw<
     {
       id: number;
@@ -486,7 +860,7 @@ router.get("/cancellation-policies", async (_req: Request, res: Response) => {
   `;
 
   return res.json({
-    data: data.map((r) => ({
+    data: data.map(r => ({
       id: r.id,
       type: r.type,
       description: r.description,

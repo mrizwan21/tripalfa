@@ -1,10 +1,55 @@
-import { Router, Response } from "express";
-import prisma from "../database.js";
+import { Router, Response } from 'express';
+import prisma from '../database.js';
 
 const router: Router = Router();
 
-// POST /api/offline-requests - Create offline request
-router.post("/", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests:
+ *   post:
+ *     summary: Create an offline change request
+ *     tags: [Offline Requests]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, bookingRef, requestType]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               bookingRef:
+ *                 type: string
+ *               requestType:
+ *                 type: string
+ *               originalDetails:
+ *                 type: object
+ *               requestedChanges:
+ *                 type: object
+ *               priority:
+ *                 type: string
+ *                 default: medium
+ *               customerId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Offline request created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/', async (req, res: Response) => {
   try {
     const {
       bookingId,
@@ -12,13 +57,13 @@ router.post("/", async (req, res: Response) => {
       requestType,
       originalDetails,
       requestedChanges,
-      priority = "medium",
+      priority = 'medium',
     } = req.body;
 
     if (!bookingId || !bookingRef || !requestType) {
       return res.status(400).json({
         success: false,
-        error: "Booking ID, booking reference, and request type are required",
+        error: 'Booking ID, booking reference, and request type are required',
       });
     }
 
@@ -32,16 +77,16 @@ router.post("/", async (req, res: Response) => {
         bookingRef,
         requestType,
         priority,
-        submittedBy: req.body.customerId || "customer",
+        submittedBy: req.body.customerId || 'customer',
         requestDetails: {
-          customerId: req.body.customerId || "customer",
+          customerId: req.body.customerId || 'customer',
           originalDetails: originalDetails || {},
           requestedChanges: requestedChanges || {},
           timeline: {
             requestedAt: new Date().toISOString(),
           },
         },
-        status: "pending_staff",
+        status: 'pending_staff',
       },
     });
 
@@ -49,9 +94,9 @@ router.post("/", async (req, res: Response) => {
     await prisma.offlineRequestAuditLog.create({
       data: {
         offlineRequestId: offlineRequest.id,
-        action: "created",
-        actorId: req.body.customerId || "customer",
-        actorType: "customer",
+        action: 'created',
+        actorId: req.body.customerId || 'customer',
+        actorType: 'customer',
         newStatus: offlineRequest.status,
         metadata: offlineRequest,
       },
@@ -60,28 +105,89 @@ router.post("/", async (req, res: Response) => {
     res.status(201).json({
       success: true,
       data: offlineRequest,
-      message: "Offline request created successfully",
+      message: 'Offline request created successfully',
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Create error:", error.message);
+    console.error('[OfflineRequests] Create error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to create offline request",
+      error: 'Failed to create offline request',
     });
   }
 });
 
-// GET /api/offline-requests - List offline requests
-router.get("/", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests:
+ *   get:
+ *     summary: List offline change requests
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Items per page (max 200)
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by status
+ *       - in: query
+ *         name: requestType
+ *         schema:
+ *           type: string
+ *         description: Filter by request type
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *         description: Filter by priority
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by requestRef or bookingRef
+ *     responses:
+ *       200:
+ *         description: List of offline requests with pagination
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.get('/', async (req, res: Response) => {
   try {
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      requestType,
-      priority,
-      search,
-    } = req.query;
+    const { page = 1, limit = 20, status, requestType, priority, search } = req.query;
 
     const parsedPage = Number(page);
     const parsedLimit = Number(limit);
@@ -95,7 +201,7 @@ router.get("/", async (req, res: Response) => {
     ) {
       return res.status(400).json({
         success: false,
-        error: "Invalid pagination values: page >= 1, limit in [1, 200]",
+        error: 'Invalid pagination values: page >= 1, limit in [1, 200]',
       });
     }
 
@@ -115,8 +221,8 @@ router.get("/", async (req, res: Response) => {
 
     if (search) {
       where.OR = [
-        { requestRef: { contains: search.toString(), mode: "insensitive" } },
-        { bookingRef: { contains: search.toString(), mode: "insensitive" } },
+        { requestRef: { contains: search.toString(), mode: 'insensitive' } },
+        { bookingRef: { contains: search.toString(), mode: 'insensitive' } },
       ];
     }
 
@@ -125,11 +231,11 @@ router.get("/", async (req, res: Response) => {
         where,
         skip: (parsedPage - 1) * parsedLimit,
         take: parsedLimit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         include: {
           auditLogs: {
             take: 5,
-            orderBy: { createdAt: "desc" },
+            orderBy: { createdAt: 'desc' },
           },
         },
       }),
@@ -147,16 +253,45 @@ router.get("/", async (req, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] List error:", error.message);
+    console.error('[OfflineRequests] List error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to list offline requests",
+      error: 'Failed to list offline requests',
     });
   }
 });
 
-// GET /api/offline-requests/:id - Get offline request details
-router.get("/:id", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests/{id}:
+ *   get:
+ *     summary: Get offline request details
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The offline request ID
+ *     responses:
+ *       200:
+ *         description: Offline request details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Offline request not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id', async (req, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -164,11 +299,11 @@ router.get("/:id", async (req, res: Response) => {
       where: { id },
       include: {
         auditLogs: {
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         },
         notifications: {
           take: 10,
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
@@ -176,7 +311,7 @@ router.get("/:id", async (req, res: Response) => {
     if (!offlineRequest) {
       return res.status(404).json({
         success: false,
-        error: "Offline request not found",
+        error: 'Offline request not found',
       });
     }
 
@@ -185,24 +320,73 @@ router.get("/:id", async (req, res: Response) => {
       data: offlineRequest,
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Get error:", error.message);
+    console.error('[OfflineRequests] Get error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get offline request",
+      error: 'Failed to get offline request',
     });
   }
 });
 
-// PUT /api/offline-requests/:id/pricing - Submit pricing (staff action)
-router.put("/:id/pricing", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests/{id}/pricing:
+ *   put:
+ *     summary: Submit pricing for offline request
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The offline request ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [staffId]
+ *             properties:
+ *               staffId:
+ *                 type: string
+ *               staffPricing:
+ *                 type: object
+ *               priceDifference:
+ *                 type: number
+ *               staffNotes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Pricing submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Offline request not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/pricing', async (req, res: Response) => {
   try {
     const { id } = req.params;
     const { staffPricing, priceDifference, staffNotes, staffId } = req.body;
 
-    if (!staffId || typeof staffId !== "string") {
+    if (!staffId || typeof staffId !== 'string') {
       return res.status(400).json({
         success: false,
-        error: "staffId is required",
+        error: 'staffId is required',
       });
     }
 
@@ -213,14 +397,14 @@ router.put("/:id/pricing", async (req, res: Response) => {
     if (!offlineRequest) {
       return res.status(404).json({
         success: false,
-        error: "Offline request not found",
+        error: 'Offline request not found',
       });
     }
 
-    if (offlineRequest.status !== "pending_staff") {
+    if (offlineRequest.status !== 'pending_staff') {
       return res.status(400).json({
         success: false,
-        error: "Request is not in pending_staff status",
+        error: 'Request is not in pending_staff status',
       });
     }
 
@@ -234,7 +418,7 @@ router.put("/:id/pricing", async (req, res: Response) => {
           staffPricedAt: new Date().toISOString(),
           staffId,
         },
-        status: "pricing_submitted",
+        status: 'pricing_submitted',
         notes: staffNotes,
       },
     });
@@ -243,11 +427,11 @@ router.put("/:id/pricing", async (req, res: Response) => {
     await prisma.offlineRequestAuditLog.create({
       data: {
         offlineRequestId: id,
-        action: "pricing_submitted",
+        action: 'pricing_submitted',
         actorId: staffId,
-        actorType: "staff",
+        actorType: 'staff',
         previousStatus: offlineRequest.status,
-        newStatus: "pricing_submitted",
+        newStatus: 'pricing_submitted',
         notes: staffNotes,
         metadata: { staffPricing, priceDifference },
       },
@@ -258,9 +442,9 @@ router.put("/:id/pricing", async (req, res: Response) => {
     await prisma.offlineRequestNotificationQueue.create({
       data: {
         offlineRequestId: id,
-        status: "pending",
-        notificationType: "offline_request_priced",
-        recipientId: requestDetails?.customerId || "customer",
+        status: 'pending',
+        notificationType: 'offline_request_priced',
+        recipientId: requestDetails?.customerId || 'customer',
         payload: {
           requestRef: offlineRequest.requestRef,
           priceDifference,
@@ -271,34 +455,81 @@ router.put("/:id/pricing", async (req, res: Response) => {
     res.json({
       success: true,
       data: updatedRequest,
-      message: "Pricing submitted successfully",
+      message: 'Pricing submitted successfully',
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Pricing error:", error.message);
+    console.error('[OfflineRequests] Pricing error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to submit pricing",
+      error: 'Failed to submit pricing',
     });
   }
 });
 
-// PUT /api/offline-requests/:id/approve - Customer approval
-router.put("/:id/approve", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests/{id}/approve:
+ *   put:
+ *     summary: Approve or reject offline request
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The offline request ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [approved, customerId]
+ *             properties:
+ *               approved:
+ *                 type: boolean
+ *               customerId:
+ *                 type: string
+ *               rejectionReason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Approval processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Offline request not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/approve', async (req, res: Response) => {
   try {
     const { id } = req.params;
     const { approved, rejectionReason, customerId } = req.body;
 
-    if (!customerId || typeof customerId !== "string") {
+    if (!customerId || typeof customerId !== 'string') {
       return res.status(400).json({
         success: false,
-        error: "customerId is required",
+        error: 'customerId is required',
       });
     }
 
-    if (typeof approved !== "boolean") {
+    if (typeof approved !== 'boolean') {
       return res.status(400).json({
         success: false,
-        error: "approved must be a boolean",
+        error: 'approved must be a boolean',
       });
     }
 
@@ -309,18 +540,18 @@ router.put("/:id/approve", async (req, res: Response) => {
     if (!offlineRequest) {
       return res.status(404).json({
         success: false,
-        error: "Offline request not found",
+        error: 'Offline request not found',
       });
     }
 
-    if (offlineRequest.status !== "pricing_submitted") {
+    if (offlineRequest.status !== 'pricing_submitted') {
       return res.status(400).json({
         success: false,
-        error: "Request is not in pricing_submitted status",
+        error: 'Request is not in pricing_submitted status',
       });
     }
 
-    const finalStatus = approved ? "payment_pending" : "rejected";
+    const finalStatus = approved ? 'payment_pending' : 'rejected';
     const updateData: any = {
       status: finalStatus,
       resolution: {
@@ -342,9 +573,9 @@ router.put("/:id/approve", async (req, res: Response) => {
     await prisma.offlineRequestAuditLog.create({
       data: {
         offlineRequestId: id,
-        action: approved ? "approved" : "rejected",
+        action: approved ? 'approved' : 'rejected',
         actorId: customerId,
-        actorType: "customer",
+        actorType: 'customer',
         previousStatus: offlineRequest.status,
         newStatus: finalStatus,
         metadata: { approved },
@@ -354,21 +585,68 @@ router.put("/:id/approve", async (req, res: Response) => {
     res.json({
       success: true,
       data: updatedRequest,
-      message: approved
-        ? "Request approved and moved to payment_pending"
-        : "Request rejected",
+      message: approved ? 'Request approved and moved to payment_pending' : 'Request rejected',
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Approval error:", error.message);
+    console.error('[OfflineRequests] Approval error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to process approval",
+      error: 'Failed to process approval',
     });
   }
 });
 
-// PUT /api/offline-requests/:id/payment - Process payment
-router.put("/:id/payment", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests/{id}/payment:
+ *   put:
+ *     summary: Process payment for offline request
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The offline request ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [paymentId, amount, method]
+ *             properties:
+ *               paymentId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               method:
+ *                 type: string
+ *               transactionRef:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Payment processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Offline request not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/payment', async (req, res: Response) => {
   try {
     const { id } = req.params;
     const { paymentId, amount, method, transactionRef } = req.body;
@@ -377,7 +655,7 @@ router.put("/:id/payment", async (req, res: Response) => {
     if (!paymentId || !method || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
       return res.status(400).json({
         success: false,
-        error: "paymentId, method, and positive numeric amount are required",
+        error: 'paymentId, method, and positive numeric amount are required',
       });
     }
 
@@ -388,14 +666,14 @@ router.put("/:id/payment", async (req, res: Response) => {
     if (!offlineRequest) {
       return res.status(404).json({
         success: false,
-        error: "Offline request not found",
+        error: 'Offline request not found',
       });
     }
 
-    if (offlineRequest.status !== "payment_pending") {
+    if (offlineRequest.status !== 'payment_pending') {
       return res.status(400).json({
         success: false,
-        error: "Request is not in payment_pending status",
+        error: 'Request is not in payment_pending status',
       });
     }
 
@@ -409,11 +687,11 @@ router.put("/:id/payment", async (req, res: Response) => {
             amount: parsedAmount,
             method,
             transactionRef,
-            status: "completed",
+            status: 'completed',
             paidAt: new Date().toISOString(),
           },
         },
-        status: "completed",
+        status: 'completed',
       },
     });
 
@@ -421,11 +699,11 @@ router.put("/:id/payment", async (req, res: Response) => {
     await prisma.offlineRequestAuditLog.create({
       data: {
         offlineRequestId: id,
-        action: "payment_processed",
-        actorId: "system",
-        actorType: "system",
+        action: 'payment_processed',
+        actorId: 'system',
+        actorType: 'system',
         previousStatus: offlineRequest.status,
-        newStatus: "completed",
+        newStatus: 'completed',
         metadata: { paymentId, amount: parsedAmount, method, transactionRef },
       },
     });
@@ -433,19 +711,70 @@ router.put("/:id/payment", async (req, res: Response) => {
     res.json({
       success: true,
       data: updatedRequest,
-      message: "Payment processed successfully",
+      message: 'Payment processed successfully',
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Payment error:", error.message);
+    console.error('[OfflineRequests] Payment error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to process payment",
+      error: 'Failed to process payment',
     });
   }
 });
 
-// PUT /api/offline-requests/:id/documents - Issue documents
-router.put("/:id/documents", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests/{id}/documents:
+ *   put:
+ *     summary: Issue documents for offline request
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The offline request ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ticketNumbers:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               voucherNumbers:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               invoiceId:
+ *                 type: string
+ *               documentUrls:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Documents issued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Offline request not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/documents', async (req, res: Response) => {
   try {
     const { id } = req.params;
     const { ticketNumbers, voucherNumbers, invoiceId, documentUrls } = req.body;
@@ -457,7 +786,7 @@ router.put("/:id/documents", async (req, res: Response) => {
     if (!offlineRequest) {
       return res.status(404).json({
         success: false,
-        error: "Offline request not found",
+        error: 'Offline request not found',
       });
     }
 
@@ -481,9 +810,9 @@ router.put("/:id/documents", async (req, res: Response) => {
     await prisma.offlineRequestAuditLog.create({
       data: {
         offlineRequestId: id,
-        action: "documents_issued",
-        actorId: "system",
-        actorType: "system",
+        action: 'documents_issued',
+        actorId: 'system',
+        actorType: 'system',
         metadata: { ticketNumbers, voucherNumbers, invoiceId },
       },
     });
@@ -491,25 +820,54 @@ router.put("/:id/documents", async (req, res: Response) => {
     res.json({
       success: true,
       data: updatedRequest,
-      message: "Documents issued successfully",
+      message: 'Documents issued successfully',
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Documents error:", error.message);
+    console.error('[OfflineRequests] Documents error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to issue documents",
+      error: 'Failed to issue documents',
     });
   }
 });
 
-// GET /api/offline-requests/:id/audit - Get audit log
-router.get("/:id/audit", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/offline-requests/{id}/audit:
+ *   get:
+ *     summary: Get audit log for offline request
+ *     tags: [Offline Requests]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The offline request ID
+ *     responses:
+ *       200:
+ *         description: Audit log entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/audit', async (req, res: Response) => {
   try {
     const { id } = req.params;
 
     const auditLog = await prisma.offlineRequestAuditLog.findMany({
       where: { offlineRequestId: id },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     res.json({
@@ -517,10 +875,10 @@ router.get("/:id/audit", async (req, res: Response) => {
       data: auditLog,
     });
   } catch (error: any) {
-    console.error("[OfflineRequests] Audit log error:", error.message);
+    console.error('[OfflineRequests] Audit log error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get audit log",
+      error: 'Failed to get audit log',
     });
   }
 });

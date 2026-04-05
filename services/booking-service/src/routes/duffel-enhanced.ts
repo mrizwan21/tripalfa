@@ -1,74 +1,84 @@
 /**
- * Enhanced Duffel Flight API Routes
- * Handles advanced Duffel API endpoints with Hybrid Caching
- *
- * New Endpoints:
- * - Partial Offer Requests (GET/POST /duffel/partial-offer-requests)
- * - Batch Offer Requests (GET/POST /duffel/batch-offer-requests)
- * - Order Changes (GET/POST /duffel/order-changes)
- * - Airline Credits (GET/POST /duffel/airline-credits)
- * - Services Management (GET/POST /duffel/services)
- * - Enhanced Payments (GET/POST /duffel/payments)
+ * @swagger
+ * /api/duffel/partial-offer-requests:
+ *   post:
+ *     summary: Create a partial offer request for segment-by-segment pricing
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [slices, passengers]
+ *             properties:
+ *               slices:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               passengers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               cabin_class:
+ *                 type: string
+ *                 default: economy
+ *               return_available_services:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       200:
+ *         description: Partial offer request created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-
-import { Router, Request, Response } from "express";
-import { prisma } from "@tripalfa/shared-database";
-import { duffelClient } from "../utils/duffelClient.js";
-
-const router: Router = Router();
-
-const DB_WRITE_TIMEOUT_MS = 1500;
-
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
-  ]);
-}
-
-// ============================================================================
-// PARTIAL OFFER REQUESTS - Advanced Flight Search
-// ============================================================================
-
-/**
- * POST /api/duffel/partial-offer-requests
- * Create a partial offer request for segment-by-segment pricing
- *
- * Use case: When you want to price individual flight segments separately
- * to get more granular control over pricing and availability
- */
-router.post("/partial-offer-requests", async (req: Request, res: Response) => {
+router.post('/partial-offer-requests', async (req: Request, res: Response) => {
   try {
-    const {
-      slices,
-      passengers,
-      cabin_class,
-      return_available_services,
-    } = req.body;
+    const { slices, passengers, cabin_class, return_available_services } = req.body;
 
     if (!slices || !Array.isArray(slices) || slices.length === 0) {
-      return res.status(400).json({ error: "slices is required" });
+      return res.status(400).json({ error: 'slices is required' });
     }
 
     if (!passengers || !Array.isArray(passengers) || passengers.length === 0) {
-      return res.status(400).json({ error: "passengers is required" });
+      return res.status(400).json({ error: 'passengers is required' });
     }
 
-    // Build partial offer request data
     const partialRequestData: any = {
       slices,
       passengers,
-      cabin_class: cabin_class || "economy",
+      cabin_class: cabin_class || 'economy',
       return_available_services: return_available_services ?? true,
     };
 
-    // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/partial_offer_requests",
+      method: 'POST',
+      url: '/air/partial_offer_requests',
       data: {
         data: partialRequestData,
       },
@@ -76,7 +86,6 @@ router.post("/partial-offer-requests", async (req: Request, res: Response) => {
 
     const requestId = duffelResponse.data.id;
 
-    // Store in database
     let partialRequest: { id?: string } | null = null;
     try {
       partialRequest = await withTimeout(
@@ -86,15 +95,15 @@ router.post("/partial-offer-requests", async (req: Request, res: Response) => {
             slices: slices,
             passengers: passengers,
             cabinClass: cabin_class,
-            status: "pending",
+            status: 'pending',
           },
         }),
-        DB_WRITE_TIMEOUT_MS,
+        DB_WRITE_TIMEOUT_MS
       );
     } catch (dbError: any) {
       console.warn(
-        "[Duffel] Partial offer request local persistence skipped:",
-        dbError?.message || dbError,
+        '[Duffel] Partial offer request local persistence skipped:',
+        dbError?.message || dbError
       );
     }
 
@@ -102,30 +111,68 @@ router.post("/partial-offer-requests", async (req: Request, res: Response) => {
       success: true,
       data: duffelResponse.data,
       localId: partialRequest?.id,
-      message: "Partial offer request created",
+      message: 'Partial offer request created',
     });
   } catch (error: any) {
-    console.error("[Duffel] Create partial offer request error:", error.message);
+    console.error('[Duffel] Create partial offer request error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * GET /api/duffel/partial-offer-requests/:id
- * Get partial offer request by ID
+ * @swagger
+ * /api/duffel/partial-offer-requests/{id}:
+ *   get:
+ *     summary: Get partial offer request by ID
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Partial offer request ID
+ *     responses:
+ *       200:
+ *         description: Partial offer request retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.get("/partial-offer-requests/:id", async (req: Request, res: Response) => {
+router.get('/partial-offer-requests/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Try Duffel API first
     try {
       const duffelResponse = await duffelClient.request({
-        method: "GET",
+        method: 'GET',
         url: `/air/partial_offer_requests/${id}`,
       });
 
-      // Store/update in database
       await prisma.duffelPartialOfferRequest.upsert({
         where: { externalId: String(id) },
         update: {
@@ -148,7 +195,6 @@ router.get("/partial-offer-requests/:id", async (req: Request, res: Response) =>
         data: duffelResponse.data,
       });
     } catch (duffelError) {
-      // Fallback to database
       const partialRequest = await prisma.duffelPartialOfferRequest.findUnique({
         where: { externalId: String(id) },
         include: { partialOfferFares: true },
@@ -161,29 +207,67 @@ router.get("/partial-offer-requests/:id", async (req: Request, res: Response) =>
         });
       }
 
-      return res.status(404).json({ error: "Partial offer request not found" });
+      return res.status(404).json({ error: 'Partial offer request not found' });
     }
   } catch (error: any) {
-    console.error("[Duffel] Get partial offer request error:", error.message);
+    console.error('[Duffel] Get partial offer request error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * GET /api/duffel/partial-offer-requests/:id/fares
- * Get fares for a partial offer request
+ * @swagger
+ * /api/duffel/partial-offer-requests/{id}/fares:
+ *   get:
+ *     summary: Get fares for a partial offer request
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Partial offer request ID
+ *     responses:
+ *       200:
+ *         description: Fares retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.get("/partial-offer-requests/:id/fares", async (req: Request, res: Response) => {
+router.get('/partial-offer-requests/:id/fares', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "GET",
+      method: 'GET',
       url: `/air/partial_offer_requests/${id}/fares`,
     });
 
-    // Store fares in database
     if (duffelResponse.data.data && Array.isArray(duffelResponse.data.data)) {
       await prisma.duffelPartialOfferFare.createMany({
         data: duffelResponse.data.data.map((fare: any) => ({
@@ -202,7 +286,7 @@ router.get("/partial-offer-requests/:id/fares", async (req: Request, res: Respon
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] Get partial offer fares error:", error.message);
+    console.error('[Duffel] Get partial offer fares error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -212,33 +296,64 @@ router.get("/partial-offer-requests/:id/fares", async (req: Request, res: Respon
 // ============================================================================
 
 /**
- * POST /api/duffel/batch-offer-requests
- * Create a batch offer request for multiple searches
- *
- * Use case: When you want to search multiple routes simultaneously
- * to compare prices and availability across different options
+ * @swagger
+ * /api/duffel/batch-offer-requests:
+ *   post:
+ *     summary: Create a batch offer request for multiple searches
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [requests]
+ *             properties:
+ *               requests:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Batch offer request created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  */
-router.post("/batch-offer-requests", async (req: Request, res: Response) => {
+router.post('/batch-offer-requests', async (req: Request, res: Response) => {
   try {
     const { requests } = req.body;
 
     if (!requests || !Array.isArray(requests) || requests.length === 0) {
-      return res.status(400).json({ error: "requests array is required" });
+      return res.status(400).json({ error: 'requests array is required' });
     }
 
-    // Build batch request data
     const batchRequestData: any = {
       requests: requests.map((req: any) => ({
         slices: req.slices,
         passengers: req.passengers,
-        cabin_class: req.cabin_class || "economy",
+        cabin_class: req.cabin_class || 'economy',
       })),
     };
 
-    // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/batch_offer_requests",
+      method: 'POST',
+      url: '/air/batch_offer_requests',
       data: {
         data: batchRequestData,
       },
@@ -246,7 +361,6 @@ router.post("/batch-offer-requests", async (req: Request, res: Response) => {
 
     const batchId = duffelResponse.data.id;
 
-    // Store in database
     let batchRequest: { id?: string } | null = null;
     try {
       batchRequest = await withTimeout(
@@ -254,15 +368,15 @@ router.post("/batch-offer-requests", async (req: Request, res: Response) => {
           data: {
             externalId: batchId,
             requests: requests,
-            status: "pending",
+            status: 'pending',
           },
         }),
-        DB_WRITE_TIMEOUT_MS,
+        DB_WRITE_TIMEOUT_MS
       );
     } catch (dbError: any) {
       console.warn(
-        "[Duffel] Batch offer request local persistence skipped:",
-        dbError?.message || dbError,
+        '[Duffel] Batch offer request local persistence skipped:',
+        dbError?.message || dbError
       );
     }
 
@@ -270,26 +384,151 @@ router.post("/batch-offer-requests", async (req: Request, res: Response) => {
       success: true,
       data: duffelResponse.data,
       localId: batchRequest?.id,
-      message: "Batch offer request created",
+      message: 'Batch offer request created',
     });
   } catch (error: any) {
-    console.error("[Duffel] Create batch offer request error:", error.message);
+    console.error('[Duffel] Create batch offer request error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
+// BATCH OFFER REQUESTS - Bulk Flight Search
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/duffel/batch-offer-requests:
+ *   post:
+ *     summary: Create a batch offer request for multiple searches
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [requests]
+ *             properties:
+ *               requests:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Batch offer request created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+router.post('/batch-offer-requests', async (req: Request, res: Response) => {
+  try {
+    const { requests } = req.body;
+
+    if (!requests || !Array.isArray(requests) || requests.length === 0) {
+      return res.status(400).json({ error: 'requests array is required' });
+    }
+
+    const batchRequestData: any = {
+      requests: requests.map((req: any) => ({
+        slices: req.slices,
+        passengers: req.passengers,
+        cabin_class: req.cabin_class || 'economy',
+      })),
+    };
+
+    const duffelResponse = await duffelClient.request({
+      method: 'POST',
+      url: '/air/batch_offer_requests',
+      data: {
+        data: batchRequestData,
+      },
+    });
+
+    const batchId = duffelResponse.data.id;
+
+    let batchRequest: { id?: string } | null = null;
+    try {
+      batchRequest = await withTimeout(
+        prisma.duffelBatchOfferRequest.create({
+          data: {
+            externalId: batchId,
+            requests: requests,
+            status: 'pending',
+          },
+        }),
+        DB_WRITE_TIMEOUT_MS
+      );
+    } catch (dbError: any) {
+      console.warn(
+        '[Duffel] Batch offer request local persistence skipped:',
+        dbError?.message || dbError
+      );
+    }
+
+    res.json({
+      success: true,
+      data: duffelResponse.data,
+      localId: batchRequest?.id,
+      message: 'Batch offer request created',
+    });
+  } catch (error: any) {
+    console.error('[Duffel] Create batch offer request error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * GET /api/duffel/batch-offer-requests/:id
- * Get batch offer request by ID
+ * @swagger
+ * /api/duffel/batch-offer-requests/{id}:
+ *   get:
+ *     summary: Get batch offer request by ID
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Batch offer request ID
+ *     responses:
+ *       200:
+ *         description: Batch offer request retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Batch offer request not found
  */
-router.get("/batch-offer-requests/:id", async (req: Request, res: Response) => {
+router.get('/batch-offer-requests/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     // Try Duffel API first
     try {
       const duffelResponse = await duffelClient.request({
-        method: "GET",
+        method: 'GET',
         url: `/air/batch_offer_requests/${id}`,
       });
 
@@ -332,10 +571,10 @@ router.get("/batch-offer-requests/:id", async (req: Request, res: Response) => {
         });
       }
 
-      return res.status(404).json({ error: "Batch offer request not found" });
+      return res.status(404).json({ error: 'Batch offer request not found' });
     }
   } catch (error: any) {
-    console.error("[Duffel] Get batch offer request error:", error.message);
+    console.error('[Duffel] Get batch offer request error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -345,25 +584,56 @@ router.get("/batch-offer-requests/:id", async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
- * POST /api/duffel/order-change-requests
- * Create an order change request
+ * @swagger
+ * /api/duffel/order-change-requests:
+ *   post:
+ *     summary: Create an order change request
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_id, slices]
+ *             properties:
+ *               order_id:
+ *                 type: string
+ *               slices:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Order change request created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.post("/order-change-requests", async (req: Request, res: Response) => {
+router.post('/order-change-requests', async (req: Request, res: Response) => {
   try {
     const { order_id, slices } = req.body;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     if (!slices) {
-      return res.status(400).json({ error: "slices is required" });
+      return res.status(400).json({ error: 'slices is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/order_change_requests",
+      method: 'POST',
+      url: '/air/order_change_requests',
       data: {
         data: {
           order_id,
@@ -386,7 +656,7 @@ router.post("/order-change-requests", async (req: Request, res: Response) => {
           orderId: order.id,
           requestedChanges: slices,
           changeOffers: changeData.order_change_offers,
-          status: "pending",
+          status: 'pending',
         },
       });
     }
@@ -396,23 +666,47 @@ router.post("/order-change-requests", async (req: Request, res: Response) => {
       data: changeData,
     });
   } catch (error: any) {
-    console.error("[Duffel] Create order change request error:", error.message);
+    console.error('[Duffel] Create order change request error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * GET /api/duffel/order-change-requests/:id
- * Get order change request by ID
+ * @swagger
+ * /api/duffel/order-change-requests/{id}:
+ *   get:
+ *     summary: Get order change request by ID
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order change request ID
+ *     responses:
+ *       200:
+ *         description: Order change request retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Order change request not found
  */
-router.get("/order-change-requests/:id", async (req: Request, res: Response) => {
+router.get('/order-change-requests/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     // Try Duffel API first
     try {
       const duffelResponse = await duffelClient.request({
-        method: "GET",
+        method: 'GET',
         url: `/air/order_change_requests/${id}`,
       });
 
@@ -460,32 +754,61 @@ router.get("/order-change-requests/:id", async (req: Request, res: Response) => 
         });
       }
 
-      return res.status(404).json({ error: "Order change request not found" });
+      return res.status(404).json({ error: 'Order change request not found' });
     }
   } catch (error: any) {
-    console.error("[Duffel] Get order change request error:", error.message);
+    console.error('[Duffel] Get order change request error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/duffel/order-changes
- * Create a pending order change
+ * @swagger
+ * /api/duffel/order-changes:
+ *   post:
+ *     summary: Create a pending order change
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [selected_order_change_offer]
+ *             properties:
+ *               selected_order_change_offer:
+ *                 type: object
+ *                 required: [id]
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *     responses:
+ *       200:
+ *         description: Order change created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.post("/order-changes", async (req: Request, res: Response) => {
+router.post('/order-changes', async (req: Request, res: Response) => {
   try {
     const { selected_order_change_offer } = req.body;
 
     if (!selected_order_change_offer?.id) {
-      return res
-        .status(400)
-        .json({ error: "selected_order_change_offer.id is required" });
+      return res.status(400).json({ error: 'selected_order_change_offer.id is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/order_changes",
+      method: 'POST',
+      url: '/air/order_changes',
       data: {
         data: {
           selected_order_change_offer,
@@ -498,27 +821,54 @@ router.post("/order-changes", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] Create order change error:", error.message);
+    console.error('[Duffel] Create order change error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/duffel/order-changes/confirm
- * Confirm an order change
+ * @swagger
+ * /api/duffel/order-changes/confirm:
+ *   post:
+ *     summary: Confirm an order change
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_change_id]
+ *             properties:
+ *               order_change_id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Order change confirmed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.post("/order-changes/confirm", async (req: Request, res: Response) => {
+router.post('/order-changes/confirm', async (req: Request, res: Response) => {
   try {
     const { order_change_id } = req.body;
 
     if (!order_change_id) {
-      return res.status(400).json({ error: "order_change_id is required" });
+      return res.status(400).json({ error: 'order_change_id is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/order_changes/confirm",
+      method: 'POST',
+      url: '/air/order_changes/confirm',
       data: {
         data: { order_change_id },
       },
@@ -528,7 +878,7 @@ router.post("/order-changes/confirm", async (req: Request, res: Response) => {
     await prisma.duffelOrderChangeRequest.updateMany({
       where: { externalId: order_change_id },
       data: {
-        status: "confirmed",
+        status: 'confirmed',
         updatedAt: new Date(),
       },
     });
@@ -538,7 +888,7 @@ router.post("/order-changes/confirm", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] Confirm order change error:", error.message);
+    console.error('[Duffel] Confirm order change error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -548,20 +898,44 @@ router.post("/order-changes/confirm", async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
- * GET /api/duffel/airline-credits
- * List airline credits for an order
+ * @swagger
+ * /api/duffel/airline-credits:
+ *   get:
+ *     summary: List airline credits for an order
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: query
+ *         name: order_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Airline credits retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.get("/airline-credits", async (req: Request, res: Response) => {
+router.get('/airline-credits', async (req: Request, res: Response) => {
   try {
     const { order_id } = req.query;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "GET",
+      method: 'GET',
       url: `/air/airline_credits?order_id=${order_id}`,
     });
 
@@ -592,31 +966,65 @@ router.get("/airline-credits", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] List airline credits error:", error.message);
+    console.error('[Duffel] List airline credits error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/duffel/airline-credits
- * Create an airline credit
+ * @swagger
+ * /api/duffel/airline-credits:
+ *   post:
+ *     summary: Create an airline credit
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_id, amount, currency]
+ *             properties:
+ *               order_id:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *                 default: Customer service
+ *     responses:
+ *       200:
+ *         description: Airline credit created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.post("/airline-credits", async (req: Request, res: Response) => {
+router.post('/airline-credits', async (req: Request, res: Response) => {
   try {
     const { order_id, amount, currency, reason } = req.body;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     if (!amount || !currency) {
-      return res.status(400).json({ error: "amount and currency are required" });
+      return res.status(400).json({ error: 'amount and currency are required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/airline_credits",
+      method: 'POST',
+      url: '/air/airline_credits',
       data: {
         data: {
           order_id,
@@ -624,7 +1032,7 @@ router.post("/airline-credits", async (req: Request, res: Response) => {
             amount: String(amount),
             currency: currency,
           },
-          reason: reason || "Customer service",
+          reason: reason || 'Customer service',
         },
       },
     });
@@ -644,9 +1052,7 @@ router.post("/airline-credits", async (req: Request, res: Response) => {
           amount: parseFloat(creditData.amount),
           currency: creditData.currency,
           reason: creditData.reason,
-          expiresAt: creditData.expires_at
-            ? new Date(creditData.expires_at)
-            : null,
+          expiresAt: creditData.expires_at ? new Date(creditData.expires_at) : null,
           status: creditData.status,
         },
       });
@@ -657,23 +1063,47 @@ router.post("/airline-credits", async (req: Request, res: Response) => {
       data: creditData,
     });
   } catch (error: any) {
-    console.error("[Duffel] Create airline credit error:", error.message);
+    console.error('[Duffel] Create airline credit error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * GET /api/duffel/airline-credits/:id
- * Get airline credit by ID
+ * @swagger
+ * /api/duffel/airline-credits/{id}:
+ *   get:
+ *     summary: Get airline credit by ID
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Airline credit ID
+ *     responses:
+ *       200:
+ *         description: Airline credit retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Airline credit not found
  */
-router.get("/airline-credits/:id", async (req: Request, res: Response) => {
+router.get('/airline-credits/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     // Try Duffel API first
     try {
       const duffelResponse = await duffelClient.request({
-        method: "GET",
+        method: 'GET',
         url: `/air/airline_credits/${id}`,
       });
 
@@ -693,9 +1123,7 @@ router.get("/airline-credits/:id", async (req: Request, res: Response) => {
               ? new Date(duffelResponse.data.expires_at)
               : null,
             status: duffelResponse.data.status,
-            usedAt: duffelResponse.data.used_at
-              ? new Date(duffelResponse.data.used_at)
-              : null,
+            usedAt: duffelResponse.data.used_at ? new Date(duffelResponse.data.used_at) : null,
           },
         });
       }
@@ -717,10 +1145,10 @@ router.get("/airline-credits/:id", async (req: Request, res: Response) => {
         });
       }
 
-      return res.status(404).json({ error: "Airline credit not found" });
+      return res.status(404).json({ error: 'Airline credit not found' });
     }
   } catch (error: any) {
-    console.error("[Duffel] Get airline credit error:", error.message);
+    console.error('[Duffel] Get airline credit error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -730,20 +1158,44 @@ router.get("/airline-credits/:id", async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
- * GET /api/duffel/services
- * List services for an order
+ * @swagger
+ * /api/duffel/services:
+ *   get:
+ *     summary: List services for an order
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: query
+ *         name: order_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Services retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.get("/services", async (req: Request, res: Response) => {
+router.get('/services', async (req: Request, res: Response) => {
   try {
     const { order_id } = req.query;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "GET",
+      method: 'GET',
       url: `/air/orders/${order_id}/services`,
     });
 
@@ -774,31 +1226,62 @@ router.get("/services", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] List services error:", error.message);
+    console.error('[Duffel] List services error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/duffel/services
- * Add services to an order
+ * @swagger
+ * /api/duffel/services:
+ *   post:
+ *     summary: Add services to an order
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_id, services]
+ *             properties:
+ *               order_id:
+ *                 type: string
+ *               services:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Services added
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.post("/services", async (req: Request, res: Response) => {
+router.post('/services', async (req: Request, res: Response) => {
   try {
     const { order_id, services } = req.body;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     if (!services || !Array.isArray(services)) {
-      return res.status(400).json({ error: "services array is required" });
+      return res.status(400).json({ error: 'services array is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/order_services",
+      method: 'POST',
+      url: '/air/order_services',
       data: {
         data: {
           order_id,
@@ -832,7 +1315,7 @@ router.post("/services", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] Add services error:", error.message);
+    console.error('[Duffel] Add services error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -842,20 +1325,44 @@ router.post("/services", async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
- * GET /api/duffel/payments
- * List payments for an order
+ * @swagger
+ * /api/duffel/payments:
+ *   get:
+ *     summary: List payments for an order
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: query
+ *         name: order_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     responses:
+ *       200:
+ *         description: Payments retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.get("/payments", async (req: Request, res: Response) => {
+router.get('/payments', async (req: Request, res: Response) => {
   try {
     const { order_id } = req.query;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "GET",
+      method: 'GET',
       url: `/air/orders/${order_id}/payments`,
     });
 
@@ -872,7 +1379,7 @@ router.get("/payments", async (req: Request, res: Response) => {
             orderId: order.id,
             amount: parseFloat(payment.amount),
             currency: payment.currency,
-            paymentMethod: payment.payment_method?.type || "unknown",
+            paymentMethod: payment.payment_method?.type || 'unknown',
             status: payment.status,
             gateway: payment.gateway,
             transactionId: payment.transaction_id,
@@ -887,31 +1394,60 @@ router.get("/payments", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] List payments error:", error.message);
+    console.error('[Duffel] List payments error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/duffel/payments
- * Create a payment for an order
+ * @swagger
+ * /api/duffel/payments:
+ *   post:
+ *     summary: Create a payment for an order
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_id, payment_method]
+ *             properties:
+ *               order_id:
+ *                 type: string
+ *               payment_method:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Payment created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.post("/payments", async (req: Request, res: Response) => {
+router.post('/payments', async (req: Request, res: Response) => {
   try {
     const { order_id, payment_method } = req.body;
 
     if (!order_id) {
-      return res.status(400).json({ error: "order_id is required" });
+      return res.status(400).json({ error: 'order_id is required' });
     }
 
     if (!payment_method) {
-      return res.status(400).json({ error: "payment_method is required" });
+      return res.status(400).json({ error: 'payment_method is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
-      url: "/air/payments",
+      method: 'POST',
+      url: '/air/payments',
       data: {
         data: {
           order_id,
@@ -934,7 +1470,7 @@ router.post("/payments", async (req: Request, res: Response) => {
           orderId: order.id,
           amount: parseFloat(paymentData.amount),
           currency: paymentData.currency,
-          paymentMethod: paymentData.payment_method?.type || "unknown",
+          paymentMethod: paymentData.payment_method?.type || 'unknown',
           status: paymentData.status,
           gateway: paymentData.gateway,
           transactionId: paymentData.transaction_id,
@@ -947,23 +1483,47 @@ router.post("/payments", async (req: Request, res: Response) => {
       data: paymentData,
     });
   } catch (error: any) {
-    console.error("[Duffel] Create payment error:", error.message);
+    console.error('[Duffel] Create payment error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * GET /api/duffel/payments/:id
- * Get payment by ID
+ * @swagger
+ * /api/duffel/payments/{id}:
+ *   get:
+ *     summary: Get payment by ID
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payment ID
+ *     responses:
+ *       200:
+ *         description: Payment retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Payment not found
  */
-router.get("/payments/:id", async (req: Request, res: Response) => {
+router.get('/payments/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     // Try Duffel API first
     try {
       const duffelResponse = await duffelClient.request({
-        method: "GET",
+        method: 'GET',
         url: `/air/payments/${id}`,
       });
 
@@ -978,7 +1538,7 @@ router.get("/payments/:id", async (req: Request, res: Response) => {
           data: {
             amount: parseFloat(duffelResponse.data.amount),
             currency: duffelResponse.data.currency,
-            paymentMethod: duffelResponse.data.payment_method?.type || "unknown",
+            paymentMethod: duffelResponse.data.payment_method?.type || 'unknown',
             status: duffelResponse.data.status,
             gateway: duffelResponse.data.gateway,
             transactionId: duffelResponse.data.transaction_id,
@@ -1003,10 +1563,10 @@ router.get("/payments/:id", async (req: Request, res: Response) => {
         });
       }
 
-      return res.status(404).json({ error: "Payment not found" });
+      return res.status(404).json({ error: 'Payment not found' });
     }
   } catch (error: any) {
-    console.error("[Duffel] Get payment error:", error.message);
+    console.error('[Duffel] Get payment error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1016,20 +1576,42 @@ router.get("/payments/:id", async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
- * GET /api/duffel/airline-initiated-changes
- * List airline-initiated changes
+ * @swagger
+ * /api/duffel/airline-initiated-changes:
+ *   get:
+ *     summary: List airline-initiated changes
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: query
+ *         name: order_id
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Order ID to filter changes
+ *     responses:
+ *       200:
+ *         description: Airline-initiated changes retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
  */
-router.get("/airline-initiated-changes", async (req: Request, res: Response) => {
+router.get('/airline-initiated-changes', async (req: Request, res: Response) => {
   try {
     const { order_id } = req.query;
 
     // Build query parameters
     const params = new URLSearchParams();
-    if (order_id) params.append("order_id", order_id as string);
+    if (order_id) params.append('order_id', order_id as string);
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "GET",
+      method: 'GET',
       url: `/air/airline_initiated_changes?${params}`,
     });
 
@@ -1050,9 +1632,7 @@ router.get("/airline-initiated-changes", async (req: Request, res: Response) => 
               details: change.details,
               actionTaken: change.action_taken,
               status: change.status,
-              expiresAt: change.expires_at
-                ? new Date(change.expires_at)
-                : null,
+              expiresAt: change.expires_at ? new Date(change.expires_at) : null,
             },
             create: {
               externalId: change.id,
@@ -1061,9 +1641,7 @@ router.get("/airline-initiated-changes", async (req: Request, res: Response) => 
               details: change.details,
               actionTaken: change.action_taken,
               status: change.status,
-              expiresAt: change.expires_at
-                ? new Date(change.expires_at)
-                : null,
+              expiresAt: change.expires_at ? new Date(change.expires_at) : null,
             },
           });
         }
@@ -1075,27 +1653,61 @@ router.get("/airline-initiated-changes", async (req: Request, res: Response) => 
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] List airline-initiated changes error:", error.message);
+    console.error('[Duffel] List airline-initiated changes error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * PATCH /api/duffel/airline-initiated-changes/:id
- * Update airline-initiated change response
+ * @swagger
+ * /api/duffel/airline-initiated-changes/{id}:
+ *   patch:
+ *     summary: Update airline-initiated change response
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Airline-initiated change ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [action_taken]
+ *             properties:
+ *               action_taken:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Airline-initiated change updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
  */
-router.patch("/airline-initiated-changes/:id", async (req: Request, res: Response) => {
+router.patch('/airline-initiated-changes/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { action_taken } = req.body;
 
     if (!action_taken) {
-      return res.status(400).json({ error: "action_taken is required" });
+      return res.status(400).json({ error: 'action_taken is required' });
     }
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "PATCH",
+      method: 'PATCH',
       url: `/air/airline_initiated_changes/${id}`,
       data: {
         data: { action_taken },
@@ -1117,22 +1729,44 @@ router.patch("/airline-initiated-changes/:id", async (req: Request, res: Respons
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] Update airline-initiated change error:", error.message);
+    console.error('[Duffel] Update airline-initiated change error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 /**
- * POST /api/duffel/airline-initiated-changes/:id/accept
- * Accept airline-initiated change
+ * @swagger
+ * /api/duffel/airline-initiated-changes/{id}/accept:
+ *   post:
+ *     summary: Accept airline-initiated change
+ *     tags: [Duffel Enhanced]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Airline-initiated change ID
+ *     responses:
+ *       200:
+ *         description: Airline-initiated change accepted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
  */
-router.post("/airline-initiated-changes/:id/accept", async (req: Request, res: Response) => {
+router.post('/airline-initiated-changes/:id/accept', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
     // Call Duffel API
     const duffelResponse = await duffelClient.request({
-      method: "POST",
+      method: 'POST',
       url: `/air/airline_initiated_changes/${id}/actions/accept`,
     });
 
@@ -1140,8 +1774,8 @@ router.post("/airline-initiated-changes/:id/accept", async (req: Request, res: R
     await prisma.duffelAirlineInitiatedChange.updateMany({
       where: { externalId: String(id) },
       data: {
-        actionTaken: "accept",
-        status: "accepted",
+        actionTaken: 'accept',
+        status: 'accepted',
         updatedAt: new Date(),
       },
     });
@@ -1151,7 +1785,7 @@ router.post("/airline-initiated-changes/:id/accept", async (req: Request, res: R
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Duffel] Accept airline-initiated change error:", error.message);
+    console.error('[Duffel] Accept airline-initiated change error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

@@ -24,23 +24,23 @@
  * - POST /api/flight-booking/full-flow - Execute complete flow (testing)
  */
 
-import { Router, Request, Response, NextFunction } from "express";
-import type { Router as RouterType } from "express";
-import { v4 as uuidv4 } from "uuid";
-import { CacheService, CACHE_TTL } from "../cache/redis";
-import { authMiddleware, optionalAuth, AuthRequest } from "../middleware/auth";
+import { Router, Request, Response, NextFunction } from 'express';
+import type { Router as RouterType } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { CacheService, CACHE_TTL } from '../cache/redis';
+import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
 
 const router: RouterType = Router();
 
 const FLIGHT_DOCUMENT_COLORS = {
-  textPrimary: "rgb(51, 51, 51)",
-  textMuted: "rgb(107, 114, 128)",
-  brandPrimary: "rgb(30, 27, 75)",
-  success: "rgb(5, 150, 105)",
-  danger: "rgb(220, 38, 38)",
-  border: "rgb(229, 231, 235)",
-  borderSoft: "rgb(243, 244, 246)",
-  surfaceMuted: "rgb(249, 250, 251)",
+  textPrimary: 'rgb(51, 51, 51)',
+  textMuted: 'rgb(107, 114, 128)',
+  brandPrimary: 'rgb(30, 27, 75)',
+  success: 'rgb(5, 150, 105)',
+  danger: 'rgb(220, 38, 38)',
+  border: 'rgb(229, 231, 235)',
+  borderSoft: 'rgb(243, 244, 246)',
+  surfaceMuted: 'rgb(249, 250, 251)',
 } as const;
 
 // ============================================================================
@@ -71,9 +71,7 @@ async function saveWorkflowState(state: BookingWorkflowState): Promise<void> {
 /**
  * Get workflow state from Redis
  */
-async function getWorkflowState(
-  workflowId: string,
-): Promise<BookingWorkflowState | null> {
+async function getWorkflowState(workflowId: string): Promise<BookingWorkflowState | null> {
   const key = WorkflowKeys.workflow(workflowId);
   return CacheService.get<BookingWorkflowState>(key);
 }
@@ -81,9 +79,7 @@ async function getWorkflowState(
 /**
  * Get workflow state by orderId
  */
-async function getWorkflowByOrderId(
-  orderId: string,
-): Promise<BookingWorkflowState | null> {
+async function getWorkflowByOrderId(orderId: string): Promise<BookingWorkflowState | null> {
   const key = WorkflowKeys.orderWorkflow(orderId);
   return CacheService.get<BookingWorkflowState>(key);
 }
@@ -117,7 +113,7 @@ interface PaymentRequest {
   orderId: string;
   amount: number;
   currency: string;
-  paymentMethod: "balance" | "card";
+  paymentMethod: 'balance' | 'card';
 }
 
 interface IssueTicketRequest {
@@ -140,7 +136,7 @@ interface BookingWorkflowState {
   workflowId: string;
   orderId: string;
   bookingReference: string;
-  status: "hold" | "paid" | "ticketed" | "cancelled" | "refunded";
+  status: 'hold' | 'paid' | 'ticketed' | 'cancelled' | 'refunded';
   createdAt: Date;
   updatedAt: Date;
   steps: {
@@ -207,9 +203,9 @@ function generateItineraryHtml(booking: any, customer: any): string {
         Email: ${p.email}<br>
         Phone: ${p.phone_number}
       </div>
-    `,
+    `
         )
-        .join("") || ""
+        .join('') || ''
     }
   </div>
   
@@ -243,11 +239,7 @@ function generateItineraryHtml(booking: any, customer: any): string {
 </html>`;
 }
 
-function generateInvoiceHtml(
-  booking: any,
-  customer: any,
-  payment: any,
-): string {
+function generateInvoiceHtml(booking: any, customer: any, payment: any): string {
   const totalAmount = payment.total || booking.totalAmount || 0;
   const baseFare = totalAmount * 0.85;
   const taxes = totalAmount * 0.15;
@@ -302,15 +294,15 @@ function generateInvoiceHtml(
       <tbody>
         <tr>
           <td>Base Fare (Flight DXB → LHR)</td>
-          <td>${payment.currency || "USD"} ${baseFare.toFixed(2)}</td>
+          <td>${payment.currency || 'USD'} ${baseFare.toFixed(2)}</td>
         </tr>
         <tr>
           <td>Taxes & Fees</td>
-          <td>${payment.currency || "USD"} ${taxes.toFixed(2)}</td>
+          <td>${payment.currency || 'USD'} ${taxes.toFixed(2)}</td>
         </tr>
         <tr class="total-row">
           <td>Total</td>
-          <td>${payment.currency || "USD"} ${totalAmount.toFixed(2)}</td>
+          <td>${payment.currency || 'USD'} ${totalAmount.toFixed(2)}</td>
         </tr>
       </tbody>
     </table>
@@ -324,11 +316,7 @@ function generateInvoiceHtml(
 </html>`;
 }
 
-function generateReceiptHtml(
-  booking: any,
-  customer: any,
-  payment: any,
-): string {
+function generateReceiptHtml(booking: any, customer: any, payment: any): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -346,7 +334,7 @@ function generateReceiptHtml(
 <body>
   <div class="header">
     <h1>✅ Payment Received</h1>
-    <div class="amount">${payment.currency || "USD"} ${(payment.total || 0).toFixed(2)}</div>
+    <div class="amount">${payment.currency || 'USD'} ${(payment.total || 0).toFixed(2)}</div>
   </div>
   
   <div class="section">
@@ -361,7 +349,7 @@ function generateReceiptHtml(
     </div>
     <div class="detail-row">
       <span>Payment Method:</span>
-      <strong>${payment.paymentMethod || "Card"}</strong>
+      <strong>${payment.paymentMethod || 'Card'}</strong>
     </div>
     <div class="detail-row">
       <span>Payment Date:</span>
@@ -382,11 +370,7 @@ function generateReceiptHtml(
 </html>`;
 }
 
-function generateETicketHtml(
-  booking: any,
-  customer: any,
-  ticketInfo: any,
-): string {
+function generateETicketHtml(booking: any, customer: any, ticketInfo: any): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -442,11 +426,7 @@ function generateETicketHtml(
 </html>`;
 }
 
-function generateRefundNoteHtml(
-  booking: any,
-  customer: any,
-  refund: any,
-): string {
+function generateRefundNoteHtml(booking: any, customer: any, refund: any): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -512,8 +492,120 @@ function generateRefundNoteHtml(
  * Create a hold booking (Step 1 of E2E flow)
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/hold:
+ *   post:
+ *     summary: Create a hold booking for a flight
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [offerId, passengers, customerId, customerEmail, totalAmount, currency]
+ *             properties:
+ *               offerId:
+ *                 type: string
+ *               passengers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               customerId:
+ *                 type: string
+ *               customerEmail:
+ *                 type: string
+ *               customerPhone:
+ *                 type: string
+ *               totalAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               isRefundable:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Hold booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or non-refundable rate
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+/**
+ * @swagger
+ * /api/flight-booking/hold:
+ *   post:
+ *     summary: Create a hold booking for a flight
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [offerId, passengers, customerId, customerEmail, totalAmount, currency]
+ *             properties:
+ *               offerId:
+ *                 type: string
+ *               passengers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               customerId:
+ *                 type: string
+ *               customerEmail:
+ *                 type: string
+ *               customerPhone:
+ *                 type: string
+ *               totalAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               isRefundable:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Hold booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields or non-refundable rate
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.post(
-  "/hold",
+  '/hold',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -528,18 +620,11 @@ router.post(
       } = req.body;
 
       // Validate required fields
-      if (
-        !offerId ||
-        !passengers ||
-        !customerId ||
-        !customerEmail ||
-        !totalAmount ||
-        !currency
-      ) {
+      if (!offerId || !passengers || !customerId || !customerEmail || !totalAmount || !currency) {
         return res.status(400).json({
           success: false,
           error:
-            "Missing required fields: offerId, passengers, customerId, customerEmail, totalAmount, currency",
+            'Missing required fields: offerId, passengers, customerId, customerEmail, totalAmount, currency',
         });
       }
 
@@ -549,9 +634,9 @@ router.post(
         return res.status(400).json({
           success: false,
           error:
-            "Hold booking is not available for non-refundable rates. Please select a refundable fare or pay now.",
+            'Hold booking is not available for non-refundable rates. Please select a refundable fare or pay now.',
           holdAvailable: false,
-          reason: "non_refundable_rate",
+          reason: 'non_refundable_rate',
         });
       }
 
@@ -561,7 +646,7 @@ router.post(
 
       const customer = {
         id: customerId,
-        name: `${passengers[0]?.given_name || ""} ${passengers[0]?.family_name || ""}`.trim(),
+        name: `${passengers[0]?.given_name || ''} ${passengers[0]?.family_name || ''}`.trim(),
         email: customerEmail,
         phone: customerPhone,
       };
@@ -571,7 +656,7 @@ router.post(
         workflowId,
         orderId,
         bookingReference,
-        status: "hold",
+        status: 'hold',
         createdAt: new Date(),
         updatedAt: new Date(),
         steps: {
@@ -594,12 +679,12 @@ router.post(
       // Generate itinerary and invoice
       workflowState.documents!.itinerary = generateItineraryHtml(
         { bookingReference, passengers },
-        customer,
+        customer
       );
       workflowState.documents!.invoice = generateInvoiceHtml(
         { bookingReference, totalAmount },
         customer,
-        { total: totalAmount, currency },
+        { total: totalAmount, currency }
       );
 
       // Persist workflow state to Redis
@@ -610,10 +695,8 @@ router.post(
         workflowId,
         orderId,
         bookingReference,
-        status: "hold",
-        paymentRequiredBy: new Date(
-          Date.now() + 12 * 60 * 60 * 1000,
-        ).toISOString(),
+        status: 'hold',
+        paymentRequiredBy: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
         totalAmount,
         currency,
         documents: {
@@ -624,7 +707,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -632,8 +715,57 @@ router.post(
  * Process payment for hold booking (Step 2 of E2E flow)
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/payment:
+ *   post:
+ *     summary: Process payment for hold booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId, amount, currency]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [balance, card]
+ *     responses:
+ *       200:
+ *         description: Payment processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing fields or invalid status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.post(
-  "/payment",
+  '/payment',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -642,8 +774,7 @@ router.post(
       if (!orderId || !workflowId || !amount || !currency) {
         return res.status(400).json({
           success: false,
-          error:
-            "Missing required fields: orderId, workflowId, amount, currency",
+          error: 'Missing required fields: orderId, workflowId, amount, currency',
         });
       }
 
@@ -651,11 +782,11 @@ router.post(
       if (!workflowState) {
         return res.status(404).json({
           success: false,
-          error: "Workflow not found. Please create a hold booking first.",
+          error: 'Workflow not found. Please create a hold booking first.',
         });
       }
 
-      if (workflowState.status !== "hold") {
+      if (workflowState.status !== 'hold') {
         return res.status(400).json({
           success: false,
           error: `Cannot process payment. Current status: ${workflowState.status}`,
@@ -666,7 +797,7 @@ router.post(
       const paymentReference = `PAY-${Date.now()}`;
 
       // Update workflow state
-      workflowState.status = "paid";
+      workflowState.status = 'paid';
       workflowState.updatedAt = new Date();
       workflowState.steps.payment = {
         completed: true,
@@ -675,7 +806,7 @@ router.post(
           paymentReference,
           amount,
           currency,
-          paymentMethod: paymentMethod || "card",
+          paymentMethod: paymentMethod || 'card',
         },
       };
 
@@ -683,7 +814,7 @@ router.post(
       workflowState.documents!.receipt = generateReceiptHtml(
         { bookingReference: workflowState.bookingReference },
         workflowState.customer!,
-        { total: amount, currency, paymentMethod: paymentMethod || "card" },
+        { total: amount, currency, paymentMethod: paymentMethod || 'card' }
       );
 
       // Persist updated workflow state to Redis
@@ -694,8 +825,8 @@ router.post(
         workflowId,
         orderId,
         paymentReference,
-        paymentStatus: "paid",
-        message: "Payment successfully processed",
+        paymentStatus: 'paid',
+        message: 'Payment successfully processed',
         documents: {
           receipt: workflowState.documents!.receipt,
         },
@@ -703,7 +834,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -711,8 +842,92 @@ router.post(
  * Retrieve booking details (Step 3 of E2E flow)
  * Optional authentication - returns more details if authenticated
  */
+/**
+ * @swagger
+ * /api/flight-booking/{orderId}:
+ *   get:
+ *     summary: Retrieve flight booking details
+ *     tags: [Flight Booking]
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The order ID
+ *       - in: query
+ *         name: workflowId
+ *         schema:
+ *           type: string
+ *         description: The workflow ID
+ *     responses:
+ *       200:
+ *         description: Booking details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Order ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+/**
+ * @swagger
+ * /api/flight-booking/{orderId}:
+ *   get:
+ *     summary: Retrieve flight booking details
+ *     tags: [Flight Booking]
+ *     parameters:
+ *       - in: path
+ *         name: orderId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The order ID
+ *       - in: query
+ *         name: workflowId
+ *         schema:
+ *           type: string
+ *         description: The workflow ID
+ *     responses:
+ *       200:
+ *         description: Booking details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Order ID is required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.get(
-  "/:orderId",
+  '/:orderId',
   optionalAuth,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -722,7 +937,7 @@ router.get(
       if (!orderId) {
         return res.status(400).json({
           success: false,
-          error: "Order ID is required",
+          error: 'Order ID is required',
         });
       }
 
@@ -741,8 +956,8 @@ router.get(
           success: true,
           orderId,
           bookingReference: `TA${orderId.slice(-6)}`,
-          status: "hold",
-          message: "Booking found (external)",
+          status: 'hold',
+          message: 'Booking found (external)',
         });
       }
 
@@ -763,7 +978,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -771,8 +986,100 @@ router.get(
  * Issue ticket for confirmed booking (Step 4 of E2E flow)
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/ticket:
+ *   post:
+ *     summary: Issue ticket for confirmed booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               passengers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Ticket issued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing fields or payment not completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+/**
+ * @swagger
+ * /api/flight-booking/ticket:
+ *   post:
+ *     summary: Issue ticket for confirmed booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               passengers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *     responses:
+ *       200:
+ *         description: Ticket issued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing fields or payment not completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.post(
-  "/ticket",
+  '/ticket',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -781,7 +1088,7 @@ router.post(
       if (!orderId || !workflowId) {
         return res.status(400).json({
           success: false,
-          error: "Missing required fields: orderId, workflowId",
+          error: 'Missing required fields: orderId, workflowId',
         });
       }
 
@@ -789,11 +1096,11 @@ router.post(
       if (!workflowState) {
         return res.status(404).json({
           success: false,
-          error: "Workflow not found",
+          error: 'Workflow not found',
         });
       }
 
-      if (workflowState.status !== "paid") {
+      if (workflowState.status !== 'paid') {
         return res.status(400).json({
           success: false,
           error: `Cannot issue ticket. Current status: ${workflowState.status}. Payment required first.`,
@@ -801,11 +1108,10 @@ router.post(
       }
 
       // Generate ticket numbers
-      const ticketNumber =
-        passengers?.[0]?.ticketNumber || `176${Date.now()}0001`;
+      const ticketNumber = passengers?.[0]?.ticketNumber || `176${Date.now()}0001`;
 
       // Update workflow state
-      workflowState.status = "ticketed";
+      workflowState.status = 'ticketed';
       workflowState.updatedAt = new Date();
       workflowState.steps.ticketing = {
         completed: true,
@@ -820,7 +1126,7 @@ router.post(
       workflowState.documents!.ticket = generateETicketHtml(
         { bookingReference: workflowState.bookingReference },
         workflowState.customer!,
-        { ticketNumber },
+        { ticketNumber }
       );
 
       // Persist updated workflow state to Redis
@@ -832,7 +1138,7 @@ router.post(
         orderId,
         ticketNumber,
         issuedAt: new Date().toISOString(),
-        status: "ticketed",
+        status: 'ticketed',
         documents: {
           ticket: workflowState.documents!.ticket,
         },
@@ -840,7 +1146,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -848,8 +1154,52 @@ router.post(
  * Cancel booking/ticket (Step 5 of E2E flow)
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/cancel:
+ *   post:
+ *     summary: Cancel flight booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId, reason]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.post(
-  "/cancel",
+  '/cancel',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -858,7 +1208,7 @@ router.post(
       if (!orderId || !reason || !workflowId) {
         return res.status(400).json({
           success: false,
-          error: "Missing required fields: orderId, reason, workflowId",
+          error: 'Missing required fields: orderId, reason, workflowId',
         });
       }
 
@@ -866,12 +1216,12 @@ router.post(
       if (!workflowState) {
         return res.status(404).json({
           success: false,
-          error: "Workflow not found",
+          error: 'Workflow not found',
         });
       }
 
       // Update workflow state
-      workflowState.status = "cancelled";
+      workflowState.status = 'cancelled';
       workflowState.updatedAt = new Date();
       workflowState.steps.cancellation = {
         completed: true,
@@ -892,13 +1242,13 @@ router.post(
         bookingReference: workflowState.bookingReference,
         cancellationId: `CNL-${Date.now()}`,
         cancelledAt: new Date().toISOString(),
-        status: "cancelled",
-        message: "Booking successfully cancelled",
+        status: 'cancelled',
+        message: 'Booking successfully cancelled',
       });
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -906,8 +1256,104 @@ router.post(
  * Generate refund note (Step 6 of E2E flow)
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/refund:
+ *   post:
+ *     summary: Generate refund note for cancelled booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId, refundAmount, currency, reason]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               refundAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Refund note generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing fields or booking not cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+/**
+ * @swagger
+ * /api/flight-booking/refund:
+ *   post:
+ *     summary: Generate refund note for cancelled booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId, refundAmount, currency, reason]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *               refundAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Refund note generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing fields or booking not cancelled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.post(
-  "/refund",
+  '/refund',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -916,8 +1362,7 @@ router.post(
       if (!orderId || !workflowId || !refundAmount || !currency || !reason) {
         return res.status(400).json({
           success: false,
-          error:
-            "Missing required fields: orderId, workflowId, refundAmount, currency, reason",
+          error: 'Missing required fields: orderId, workflowId, refundAmount, currency, reason',
         });
       }
 
@@ -925,7 +1370,7 @@ router.post(
       if (!workflowState || !workflowState.steps.cancellation.completed) {
         return res.status(400).json({
           success: false,
-          error: "Booking must be cancelled before generating refund note",
+          error: 'Booking must be cancelled before generating refund note',
         });
       }
 
@@ -933,7 +1378,7 @@ router.post(
       const refundNumber = `RFN-${Date.now()}`;
 
       // Update workflow state
-      workflowState.status = "refunded";
+      workflowState.status = 'refunded';
       workflowState.updatedAt = new Date();
       workflowState.steps.refund = {
         completed: true,
@@ -950,7 +1395,7 @@ router.post(
       workflowState.documents!.refundNote = generateRefundNoteHtml(
         { bookingReference: workflowState.bookingReference },
         workflowState.customer!,
-        { refundNumber, amount: refundAmount, currency, reason },
+        { refundNumber, amount: refundAmount, currency, reason }
       );
 
       // Persist updated workflow state to Redis
@@ -964,7 +1409,7 @@ router.post(
         refundAmount,
         currency,
         processedAt: new Date().toISOString(),
-        status: "refunded",
+        status: 'refunded',
         documents: {
           refundNote: workflowState.documents!.refundNote,
         },
@@ -972,7 +1417,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -980,8 +1425,45 @@ router.post(
  * Get workflow state
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/workflow/{workflowId}:
+ *   get:
+ *     summary: Get workflow state by workflow ID
+ *     tags: [Flight Booking]
+ *     parameters:
+ *       - in: path
+ *         name: workflowId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The workflow ID
+ *     responses:
+ *       200:
+ *         description: Workflow state retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Workflow not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.get(
-  "/workflow/:workflowId",
+  '/workflow/:workflowId',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -991,7 +1473,7 @@ router.get(
       if (!workflowState) {
         return res.status(404).json({
           success: false,
-          error: "Workflow not found",
+          error: 'Workflow not found',
         });
       }
 
@@ -1002,7 +1484,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -1010,16 +1492,58 @@ router.get(
  * List all active workflows
  * Requires authentication (admin only)
  */
+/**
+ * @swagger
+ * /api/flight-booking/workflows:
+ *   get:
+ *     summary: List all active flight booking workflows
+ *     tags: [Flight Booking]
+ *     responses:
+ *       200:
+ *         description: List of workflows retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ */
+/**
+ * @swagger
+ * /api/flight-booking/workflows:
+ *   get:
+ *     summary: List all active flight booking workflows
+ *     tags: [Flight Booking]
+ *     responses:
+ *       200:
+ *         description: List of workflows retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ */
 router.get(
-  "/workflows",
+  '/workflows',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
       // Note: Listing all workflows requires scanning Redis keys
       // This is a potentially expensive operation, so we limit it
-      const { getRedisClient } = await import("../cache/redis");
+      const { getRedisClient } = await import('../cache/redis');
       const client = await getRedisClient();
-      const keys = await client.keys("flight:workflow:*");
+      const keys = await client.keys('flight:workflow:*');
 
       const workflows: BookingWorkflowState[] = [];
       for (const key of keys.slice(0, 100)) {
@@ -1040,7 +1564,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 /**
@@ -1048,8 +1572,68 @@ router.get(
  * Execute complete end-to-end booking flow (for testing)
  * Requires authentication
  */
+/**
+ * @swagger
+ * /api/flight-booking/full-flow:
+ *   post:
+ *     summary: Execute complete end-to-end flight booking flow (testing)
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [offerId, passengers, customerId, customerEmail, totalAmount, currency]
+ *             properties:
+ *               offerId:
+ *                 type: string
+ *               passengers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               customerId:
+ *                 type: string
+ *               customerEmail:
+ *                 type: string
+ *               customerPhone:
+ *                 type: string
+ *               totalAmount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: string
+ *               cancelAfterTicketing:
+ *                 type: object
+ *               refundAmount:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Full flow executed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required booking fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
 router.post(
-  "/full-flow",
+  '/full-flow',
   authMiddleware,
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -1067,17 +1651,10 @@ router.post(
       } = req.body;
 
       // Validate required fields
-      if (
-        !offerId ||
-        !passengers ||
-        !customerId ||
-        !customerEmail ||
-        !totalAmount ||
-        !currency
-      ) {
+      if (!offerId || !passengers || !customerId || !customerEmail || !totalAmount || !currency) {
         return res.status(400).json({
           success: false,
-          error: "Missing required booking fields",
+          error: 'Missing required booking fields',
         });
       }
 
@@ -1090,7 +1667,7 @@ router.post(
 
       const customer = {
         id: customerId,
-        name: `${passengers[0]?.given_name || ""} ${passengers[0]?.family_name || ""}`.trim(),
+        name: `${passengers[0]?.given_name || ''} ${passengers[0]?.family_name || ''}`.trim(),
         email: customerEmail,
         phone: customerPhone,
       };
@@ -1099,7 +1676,7 @@ router.post(
         workflowId: holdWorkflowId,
         orderId,
         bookingReference,
-        status: "hold",
+        status: 'hold',
         createdAt: new Date(),
         updatedAt: new Date(),
         steps: {
@@ -1122,12 +1699,12 @@ router.post(
       // Generate itinerary and invoice
       workflowState.documents!.itinerary = generateItineraryHtml(
         { bookingReference, passengers },
-        customer,
+        customer
       );
       workflowState.documents!.invoice = generateInvoiceHtml(
         { bookingReference, totalAmount },
         customer,
-        { total: totalAmount, currency },
+        { total: totalAmount, currency }
       );
 
       // Persist workflow state to Redis
@@ -1148,7 +1725,7 @@ router.post(
       if (paymentMethod) {
         const paymentReference = `PAY-${Date.now()}`;
 
-        workflowState.status = "paid";
+        workflowState.status = 'paid';
         workflowState.updatedAt = new Date();
         workflowState.steps.payment = {
           completed: true,
@@ -1161,11 +1738,11 @@ router.post(
           },
         };
 
-        workflowState.documents!.receipt = generateReceiptHtml(
-          { bookingReference },
-          customer,
-          { total: totalAmount, currency, paymentMethod },
-        );
+        workflowState.documents!.receipt = generateReceiptHtml({ bookingReference }, customer, {
+          total: totalAmount,
+          currency,
+          paymentMethod,
+        });
 
         // Persist updated state to Redis
         await saveWorkflowState(workflowState);
@@ -1174,7 +1751,7 @@ router.post(
           success: true,
           workflowId: holdWorkflowId,
           paymentReference,
-          paymentStatus: "paid",
+          paymentStatus: 'paid',
           documents: {
             receipt: workflowState.documents!.receipt,
           },
@@ -1183,7 +1760,7 @@ router.post(
         // Step 4: Issue Ticket
         const ticketNumber = `176${Date.now()}0001`;
 
-        workflowState.status = "ticketed";
+        workflowState.status = 'ticketed';
         workflowState.updatedAt = new Date();
         workflowState.steps.ticketing = {
           completed: true,
@@ -1191,11 +1768,9 @@ router.post(
           data: { ticketNumber, issuedAt: new Date() },
         };
 
-        workflowState.documents!.ticket = generateETicketHtml(
-          { bookingReference },
-          customer,
-          { ticketNumber },
-        );
+        workflowState.documents!.ticket = generateETicketHtml({ bookingReference }, customer, {
+          ticketNumber,
+        });
 
         // Persist updated state to Redis
         await saveWorkflowState(workflowState);
@@ -1204,7 +1779,7 @@ router.post(
           success: true,
           workflowId: holdWorkflowId,
           ticketNumber,
-          status: "ticketed",
+          status: 'ticketed',
           documents: {
             ticket: workflowState.documents!.ticket,
           },
@@ -1213,9 +1788,9 @@ router.post(
         // Step 5 & 6: Cancel and Refund (if requested)
         if (cancelAfterTicketing) {
           const cancellationReason =
-            cancelAfterTicketing.reason || "Customer requested cancellation";
+            cancelAfterTicketing.reason || 'Customer requested cancellation';
 
-          workflowState.status = "cancelled";
+          workflowState.status = 'cancelled';
           workflowState.updatedAt = new Date();
           workflowState.steps.cancellation = {
             completed: true,
@@ -1230,13 +1805,13 @@ router.post(
             success: true,
             workflowId: holdWorkflowId,
             cancellationId: `CNL-${Date.now()}`,
-            status: "cancelled",
+            status: 'cancelled',
           };
 
           if (refundAmount) {
             const refundNumber = `RFN-${Date.now()}`;
 
-            workflowState.status = "refunded";
+            workflowState.status = 'refunded';
             workflowState.updatedAt = new Date();
             workflowState.steps.refund = {
               completed: true,
@@ -1258,7 +1833,7 @@ router.post(
                 amount: refundAmount,
                 currency,
                 reason: cancellationReason,
-              },
+              }
             );
 
             // Persist updated state to Redis
@@ -1270,7 +1845,7 @@ router.post(
               refundNumber,
               refundAmount,
               currency,
-              status: "refunded",
+              status: 'refunded',
               documents: {
                 refundNote: workflowState.documents!.refundNote,
               },
@@ -1291,7 +1866,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  },
+  }
 );
 
 export default router;

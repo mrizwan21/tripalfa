@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import {
   PricingCalculationRequest,
   PricingCalculationResponse,
@@ -31,9 +30,16 @@ export class PricingEngine {
   private ruleMatchingEngine: RuleMatchingEngine;
 
   constructor(ruleMatchingEngine?: RuleMatchingEngine) {
-    this.prisma = new PrismaClient();
+    this.prisma = null;
     this.ruleMatchingEngine =
       ruleMatchingEngine || new RuleMatchingEngine(true);
+  }
+
+  /**
+   * Set Prisma client (inject dependency)
+   */
+  setPrisma(prisma: any): void {
+    this.prisma = prisma;
   }
 
   /**

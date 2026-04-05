@@ -105,9 +105,4 @@ scrape_configs:
   # PostgreSQL Exporter (if added)
   - job_name: "postgres"
     static_configs:
-      - targets: ["postgres-static:5432"]
-
-  # Consul
-  - job_name: "consul"
-    static_configs:
-      - targets: ["consul:8500"]
+      - targets: ["localhost:5432"]

@@ -1,17 +1,18 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { PrismaNeon } from '@prisma/adapter-neon';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 
 // Get database URL from environment
-const databaseUrl = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
+const databaseUrl =
+  process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres';
 if (!databaseUrl) {
-  throw new Error(
-    'DATABASE_URL must be set. Check your .env.local file.'
-  );
+  throw new Error('DATABASE_URL must be set. Check your .env.local file.');
 }
 
-// Initialize Neon adapter for direct connection
-const adapter = new PrismaNeon({ connectionString: databaseUrl });
+// Initialize PostgreSQL adapter
+const pool = new Pool({ connectionString: databaseUrl });
+const adapter = new PrismaPg(pool);
 
 // Create Prisma client with adapter
 const prisma = new PrismaClient({ adapter });
@@ -150,7 +151,7 @@ async function main(): Promise<void> {
   });
   console.log('  ✔ default markup rules');
 
-  // Note: Static lookup tables (airports, airlines, countries, currencies, etc.) 
+  // Note: Static lookup tables (airports, airlines, countries, currencies, etc.)
   // are managed separately in the static database and should not be seeded here.
   // These tables are populated via dedicated import scripts in packages/static-data.
 
@@ -158,7 +159,7 @@ async function main(): Promise<void> {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌  Seed error:', e);
     process.exit(1);
   })

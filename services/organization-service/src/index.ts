@@ -1,9 +1,10 @@
-import express, { Express, Request, Response, NextFunction } from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import organizationRoutes from "./routes/organization.js";
-import brandingRoutes from "./routes/branding.js";
-import campaignsRoutes from "./routes/campaigns.js";
+import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import organizationRoutes from './routes/organization.js';
+import brandingRoutes from './routes/branding.js';
+import campaignsRoutes from './routes/campaigns.js';
+import { setupOrganizationSwagger } from './swagger.js';
 
 dotenv.config();
 
@@ -22,30 +23,31 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get("/health", (req, res) => {
-  res.json({ status: "healthy", service: "organization-service" });
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', service: 'organization-service' });
 });
 
 // API Routes
-app.use("/api/organization", organizationRoutes);
-app.use("/api/branding", brandingRoutes);
-app.use("/api/marketing/campaigns", campaignsRoutes);
+app.use('/api/organization', organizationRoutes);
+app.use('/api/branding', brandingRoutes);
+app.use('/api/marketing/campaigns', campaignsRoutes);
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
+  res.status(404).json({ error: 'Not Found' });
 });
 
 // Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("[OrganizationService] Error:", err);
+  console.error('[OrganizationService] Error:', err);
   res.status(500).json({
-    error: "Internal Server Error",
-    message: err.message || "Unknown error",
+    error: 'Internal Server Error',
+    message: err.message || 'Unknown error',
   });
 });
 
 // Start server
+setupOrganizationSwagger(app);
 app.listen(PORT, () => {
   console.log(`🚀 Organization Service running on port ${PORT}`);
 });

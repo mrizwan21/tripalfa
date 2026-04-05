@@ -1,42 +1,81 @@
-import { Router, Response } from "express";
-import { prisma } from "../database.js";
-import {
-  AuthRequest,
-  authMiddleware,
-  requirePermission,
-} from "../middleware/auth.js";
+import { Router, Response } from 'express';
+import { prisma } from '../database.js';
+import { AuthRequest, authMiddleware, requirePermission } from '../middleware/auth.js';
 import {
   validateZod,
   paginationSchema,
   createSupplierSchema,
   idParamSchema,
-} from "../middleware/validate.js";
-import { Prisma } from "@prisma/client";
+} from '../middleware/validate.js';
+import { Prisma } from '@prisma/client';
 
 // Import supplier management sub-routes
-import supplierProductsRoutes from "./supplier-products.js";
-import supplierMappingsRoutes from "./supplier-mappings.js";
-import supplierFinancialRoutes from "./supplier-financial.js";
-import supplierWalletsRoutes from "./supplier-wallets.js";
-import supplierPaymentsRoutes from "./supplier-payments-phase3.js"; // Phase 3: Payment gateway integration
-import webhookRoutes from "./webhooks.js"; // Phase 3: Payment gateway webhooks
+import supplierProductsRoutes from './supplier-products.js';
+import supplierMappingsRoutes from './supplier-mappings.js';
+import supplierFinancialRoutes from './supplier-financial.js';
+import supplierWalletsRoutes from './supplier-wallets.js';
+import supplierPaymentsRoutes from './supplier-payments-phase3.js';
+import webhookRoutes from './webhooks.js';
 
 const router: Router = Router();
 
-// All supplier routes require authentication
 router.use(authMiddleware);
 
-// GET /api/suppliers - List all suppliers
+/**
+ * @swagger
+ * /api/suppliers:
+ *   get:
+ *     summary: List all suppliers with pagination
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/",
-  requirePermission("suppliers:read"),
+  '/',
+  requirePermission('suppliers:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
       const { page, limit, sortBy, sortOrder, search } = req.query as any;
       const { type, status } = req.query;
-      
-      // Convert to numbers explicitly
+
       const pageNum = Number(page) || 1;
       const limitNum = Number(limit) || 10;
 
@@ -47,7 +86,7 @@ router.get(
       }
 
       if (status !== undefined) {
-        where.status = status === "true";
+        where.status = status === 'true';
       }
 
       if (search) {
@@ -62,7 +101,7 @@ router.get(
           where,
           skip: (pageNum - 1) * limitNum,
           take: limitNum,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
           include: {
             _count: {
               select: {
@@ -87,19 +126,47 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching suppliers:", error);
+      console.error('Error fetching suppliers:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch suppliers",
+        error: 'Failed to fetch suppliers',
       });
     }
-  },
+  }
 );
 
-// GET /api/suppliers/:id - Get supplier by ID
+/**
+ * @swagger
+ * /api/suppliers/{id}:
+ *   get:
+ *     summary: Get supplier by ID
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Supplier not found
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/:id",
-  requirePermission("suppliers:read"),
+  '/:id',
+  requirePermission('suppliers:read'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -109,11 +176,11 @@ router.get(
         where: { id },
         include: {
           credentials: {
-            orderBy: { createdAt: "desc" },
+            orderBy: { createdAt: 'desc' },
           },
           syncLogs: {
             take: 10,
-            orderBy: { createdAt: "desc" },
+            orderBy: { createdAt: 'desc' },
           },
           hotelMappings: {
             take: 20,
@@ -124,7 +191,7 @@ router.get(
       if (!supplier) {
         return res.status(404).json({
           success: false,
-          error: "Supplier not found",
+          error: 'Supplier not found',
         });
       }
 
@@ -133,25 +200,65 @@ router.get(
         data: supplier,
       });
     } catch (error) {
-      console.error("Error fetching supplier:", error);
+      console.error('Error fetching supplier:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch supplier",
+        error: 'Failed to fetch supplier',
       });
     }
-  },
+  }
 );
 
-// POST /api/suppliers - Create new supplier
+/**
+ * @swagger
+ * /api/suppliers:
+ *   post:
+ *     summary: Create new supplier
+ *     tags: [Suppliers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code, name]
+ *             properties:
+ *               code: { type: string }
+ *               name: { type: string }
+ *               type: { type: string }
+ *               apiBaseUrl: { type: string }
+ *               metadata: { type: object }
+ *               apiKey: { type: string }
+ *               apiSecret: { type: string }
+ *               apiCredentials: { type: object }
+ *               rateLimitPerMin: { type: integer }
+ *               rateLimitPerDay: { type: integer }
+ *               features: { type: object }
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/",
-  requirePermission("suppliers:create"),
+  '/',
+  requirePermission('suppliers:create'),
   validateZod(createSupplierSchema),
   async (req: AuthRequest, res: Response) => {
     try {
       const data = req.body;
 
-      // Check if code already exists
       const existingSupplier = await prisma.supplier.findUnique({
         where: { code: data.code },
       });
@@ -159,7 +266,7 @@ router.post(
       if (existingSupplier) {
         return res.status(400).json({
           success: false,
-          error: "Supplier with this code already exists",
+          error: 'Supplier with this code already exists',
         });
       }
 
@@ -170,8 +277,8 @@ router.post(
           supplierType: data.type,
           apiEndpoint: data.apiBaseUrl || null,
           supportedRoutes:
-            data.features && typeof data.features === "object"
-              ? Object.keys(data.features).filter((key) => Boolean(data.features[key]))
+            data.features && typeof data.features === 'object'
+              ? Object.keys(data.features).filter(key => Boolean(data.features[key]))
               : [],
           metadata: {
             ...(data.metadata || {}),
@@ -188,22 +295,68 @@ router.post(
       res.status(201).json({
         success: true,
         data: supplier,
-        message: "Supplier created successfully",
+        message: 'Supplier created successfully',
       });
     } catch (error) {
-      console.error("Error creating supplier:", error);
+      console.error('Error creating supplier:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to create supplier",
+        error: 'Failed to create supplier',
       });
     }
-  },
+  }
 );
 
-// PUT /api/suppliers/:id - Update supplier
+/**
+ * @swagger
+ * /api/suppliers/{id}:
+ *   put:
+ *     summary: Update supplier
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name: { type: string }
+ *               type: { type: string }
+ *               apiBaseUrl: { type: string }
+ *               metadata: { type: object }
+ *               apiKey: { type: string }
+ *               apiSecret: { type: string }
+ *               apiCredentials: { type: object }
+ *               rateLimitPerMin: { type: integer }
+ *               rateLimitPerDay: { type: integer }
+ *               syncEnabled: { type: boolean }
+ *               syncInterval: { type: string }
+ *               features: { type: object }
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Supplier not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/:id",
-  requirePermission("suppliers:update"),
+  '/:id',
+  requirePermission('suppliers:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -217,7 +370,7 @@ router.put(
       if (!supplier) {
         return res.status(404).json({
           success: false,
-          error: "Supplier not found",
+          error: 'Supplier not found',
         });
       }
 
@@ -228,8 +381,8 @@ router.put(
           supplierType: data.type,
           apiEndpoint: data.apiBaseUrl,
           supportedRoutes:
-            data.features && typeof data.features === "object"
-              ? Object.keys(data.features).filter((key) => Boolean(data.features[key]))
+            data.features && typeof data.features === 'object'
+              ? Object.keys(data.features).filter(key => Boolean(data.features[key]))
               : undefined,
           metadata:
             data.metadata ||
@@ -242,7 +395,7 @@ router.put(
             data.syncInterval !== undefined ||
             data.features
               ? {
-                  ...(supplier.metadata && typeof supplier.metadata === "object"
+                  ...(supplier.metadata && typeof supplier.metadata === 'object'
                     ? (supplier.metadata as Record<string, unknown>)
                     : {}),
                   ...(data.metadata || {}),
@@ -262,22 +415,60 @@ router.put(
       res.json({
         success: true,
         data: updatedSupplier,
-        message: "Supplier updated successfully",
+        message: 'Supplier updated successfully',
       });
     } catch (error) {
-      console.error("Error updating supplier:", error);
+      console.error('Error updating supplier:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update supplier",
+        error: 'Failed to update supplier',
       });
     }
-  },
+  }
 );
 
-// PUT /api/suppliers/:id/status - Toggle supplier status
+/**
+ * @swagger
+ * /api/suppliers/{id}/status:
+ *   put:
+ *     summary: Toggle supplier status
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Supplier not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/:id/status",
-  requirePermission("suppliers:update"),
+  '/:id/status',
+  requirePermission('suppliers:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -291,34 +482,66 @@ router.put(
       if (!supplier) {
         return res.status(404).json({
           success: false,
-          error: "Supplier not found",
+          error: 'Supplier not found',
         });
       }
 
       const updatedSupplier = await prisma.supplier.update({
         where: { id },
-        data: { status: status ? "active" : "inactive" },
+        data: { status: status ? 'active' : 'inactive' },
       });
 
       res.json({
         success: true,
         data: updatedSupplier,
-        message: `Supplier ${status ? "activated" : "deactivated"} successfully`,
+        message: `Supplier ${status ? 'activated' : 'deactivated'} successfully`,
       });
     } catch (error) {
-      console.error("Error updating supplier status:", error);
+      console.error('Error updating supplier status:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update supplier status",
+        error: 'Failed to update supplier status',
       });
     }
-  },
+  }
 );
 
-// DELETE /api/suppliers/:id - Delete supplier
+/**
+ * @swagger
+ * /api/suppliers/{id}:
+ *   delete:
+ *     summary: Delete supplier
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Cannot delete supplier with existing hotel mappings
+ *       404:
+ *         description: Supplier not found
+ *       409:
+ *         description: Cannot delete supplier with existing wallets
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/:id",
-  requirePermission("suppliers:delete"),
+  '/:id',
+  requirePermission('suppliers:delete'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -337,23 +560,22 @@ router.delete(
       if (!supplier) {
         return res.status(404).json({
           success: false,
-          error: "Supplier not found",
+          error: 'Supplier not found',
         });
       }
 
-      // Check if supplier has mappings
       if (supplier._count.hotelMappings > 0) {
         return res.status(400).json({
           success: false,
-          error: "Cannot delete supplier with existing hotel mappings",
+          error: 'Cannot delete supplier with existing hotel mappings',
         });
       }
 
-      // Check if supplier has wallets
       if (supplier.wallet) {
         return res.status(409).json({
           success: false,
-          error: "Cannot delete supplier with existing wallets. Clear all financial liabilities first.",
+          error:
+            'Cannot delete supplier with existing wallets. Clear all financial liabilities first.',
         });
       }
 
@@ -363,26 +585,52 @@ router.delete(
 
       res.json({
         success: true,
-        message: "Supplier deleted successfully",
+        message: 'Supplier deleted successfully',
       });
     } catch (error) {
-      console.error("Error deleting supplier:", error);
+      console.error('Error deleting supplier:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to delete supplier",
+        error: 'Failed to delete supplier',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Supplier Credentials Routes
 // ============================================
 
-// GET /api/suppliers/:id/credentials - Get supplier credentials
+/**
+ * @swagger
+ * /api/suppliers/{id}/credentials:
+ *   get:
+ *     summary: Get supplier credentials
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/:id/credentials",
-  requirePermission("suppliers:read"),
+  '/:id/credentials',
+  requirePermission('suppliers:read'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -390,15 +638,14 @@ router.get(
 
       const credentials = await prisma.supplierCredential.findMany({
         where: { supplierId: id },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       });
 
-      // Mask sensitive data
-      const maskedCredentials = credentials.map((cred) => ({
+      const maskedCredentials = credentials.map(cred => ({
         ...cred,
         name: cred.environment,
-        apiKey: cred.apiKey ? "••••••••" + cred.apiKey.slice(-4) : null,
-        apiSecret: cred.apiSecret ? "••••••••" : null,
+        apiKey: cred.apiKey ? '••••••••' + cred.apiKey.slice(-4) : null,
+        apiSecret: cred.apiSecret ? '••••••••' : null,
       }));
 
       res.json({
@@ -406,19 +653,58 @@ router.get(
         data: maskedCredentials,
       });
     } catch (error) {
-      console.error("Error fetching credentials:", error);
+      console.error('Error fetching credentials:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch credentials",
+        error: 'Failed to fetch credentials',
       });
     }
-  },
+  }
 );
 
-// POST /api/suppliers/:id/credentials - Add supplier credentials
+/**
+ * @swagger
+ * /api/suppliers/{id}/credentials:
+ *   post:
+ *     summary: Add supplier credentials
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, apiKey]
+ *             properties:
+ *               name: { type: string }
+ *               apiKey: { type: string }
+ *               apiSecret: { type: string }
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/:id/credentials",
-  requirePermission("suppliers:update"),
+  '/:id/credentials',
+  requirePermission('suppliers:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -428,11 +714,10 @@ router.post(
       if (!name || !apiKey) {
         return res.status(400).json({
           success: false,
-          error: "Name and API key are required",
+          error: 'Name and API key are required',
         });
       }
 
-      // Check if credential name already exists for this supplier
       const existing = await prisma.supplierCredential.findFirst({
         where: {
           supplierId: id,
@@ -443,7 +728,7 @@ router.post(
       if (existing) {
         return res.status(400).json({
           success: false,
-          error: "Credential with this name already exists",
+          error: 'Credential with this name already exists',
         });
       }
 
@@ -461,25 +746,67 @@ router.post(
         data: {
           ...credential,
           name: credential.environment,
-          apiKey: "••••••••" + credential.apiKey.slice(-4),
-          apiSecret: credential.apiSecret ? "••••••••" : null,
+          apiKey: '••••••••' + credential.apiKey.slice(-4),
+          apiSecret: credential.apiSecret ? '••••••••' : null,
         },
-        message: "Credential added successfully",
+        message: 'Credential added successfully',
       });
     } catch (error) {
-      console.error("Error adding credential:", error);
+      console.error('Error adding credential:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to add credential",
+        error: 'Failed to add credential',
       });
     }
-  },
+  }
 );
 
-// PUT /api/suppliers/:id/credentials/:credId - Update credential
+/**
+ * @swagger
+ * /api/suppliers/{id}/credentials/{credId}:
+ *   put:
+ *     summary: Update credential
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: credId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               apiKey: { type: string }
+ *               apiSecret: { type: string }
+ *               status: { type: string }
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Credential not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/:id/credentials/:credId",
-  requirePermission("suppliers:update"),
+  '/:id/credentials/:credId',
+  requirePermission('suppliers:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id, credId } = req.params;
@@ -492,14 +819,14 @@ router.put(
       if (!credential) {
         return res.status(404).json({
           success: false,
-          error: "Credential not found",
+          error: 'Credential not found',
         });
       }
 
       const updateData: any = {};
       if (apiKey) updateData.apiKey = apiKey;
       if (apiSecret) updateData.apiSecret = apiSecret;
-      if (status) updateData.isActive = status === "active";
+      if (status) updateData.isActive = status === 'active';
 
       const updatedCredential = await prisma.supplierCredential.update({
         where: { id: credId },
@@ -511,25 +838,58 @@ router.put(
         data: {
           ...updatedCredential,
           name: updatedCredential.environment,
-          apiKey: "••••••••" + updatedCredential.apiKey.slice(-4),
-          apiSecret: updatedCredential.apiSecret ? "••••••••" : null,
+          apiKey: '••••••••' + updatedCredential.apiKey.slice(-4),
+          apiSecret: updatedCredential.apiSecret ? '••••••••' : null,
         },
-        message: "Credential updated successfully",
+        message: 'Credential updated successfully',
       });
     } catch (error) {
-      console.error("Error updating credential:", error);
+      console.error('Error updating credential:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update credential",
+        error: 'Failed to update credential',
       });
     }
-  },
+  }
 );
 
-// DELETE /api/suppliers/:id/credentials/:credId - Delete credential
+/**
+ * @swagger
+ * /api/suppliers/{id}/credentials/{credId}:
+ *   delete:
+ *     summary: Delete credential
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: credId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Credential not found
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/:id/credentials/:credId",
-  requirePermission("suppliers:update"),
+  '/:id/credentials/:credId',
+  requirePermission('suppliers:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id, credId } = req.params;
@@ -541,7 +901,7 @@ router.delete(
       if (!credential) {
         return res.status(404).json({
           success: false,
-          error: "Credential not found",
+          error: 'Credential not found',
         });
       }
 
@@ -551,26 +911,70 @@ router.delete(
 
       res.json({
         success: true,
-        message: "Credential deleted successfully",
+        message: 'Credential deleted successfully',
       });
     } catch (error) {
-      console.error("Error deleting credential:", error);
+      console.error('Error deleting credential:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to delete credential",
+        error: 'Failed to delete credential',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Supplier Sync Routes
 // ============================================
 
-// GET /api/suppliers/:id/sync-logs - Get supplier sync logs
+/**
+ * @swagger
+ * /api/suppliers/{id}/sync-logs:
+ *   get:
+ *     summary: Get supplier sync logs
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: dataType
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/:id/sync-logs",
-  requirePermission("suppliers:read"),
+  '/:id/sync-logs',
+  requirePermission('suppliers:read'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -578,7 +982,7 @@ router.get(
       const { page = 1, limit = 20, dataType, status } = req.query;
 
       const where: any = { supplierId: id };
-      if (dataType) where.metadata = { path: ["dataType"], equals: dataType };
+      if (dataType) where.metadata = { path: ['dataType'], equals: dataType };
       if (status) where.status = status;
 
       const [logs, total] = await Promise.all([
@@ -586,7 +990,7 @@ router.get(
           where,
           skip: (Number(page) - 1) * Number(limit),
           take: Number(limit),
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         }),
         prisma.supplierSyncLog.count({ where }),
       ]);
@@ -602,24 +1006,66 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching sync logs:", error);
+      console.error('Error fetching sync logs:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch sync logs",
+        error: 'Failed to fetch sync logs',
       });
     }
-  },
+  }
 );
 
-// POST /api/suppliers/:id/sync - Trigger supplier sync
+/**
+ * @swagger
+ * /api/suppliers/{id}/sync:
+ *   post:
+ *     summary: Trigger supplier sync
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               syncType:
+ *                 type: string
+ *                 default: incremental
+ *               dataType:
+ *                 type: string
+ *                 default: hotels
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Supplier is not active
+ *       404:
+ *         description: Supplier not found
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/:id/sync",
-  requirePermission("suppliers:update"),
+  '/:id/sync',
+  requirePermission('suppliers:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
-      const { syncType = "incremental", dataType = "hotels" } = req.body;
+      const { syncType = 'incremental', dataType = 'hotels' } = req.body;
 
       const supplier = await prisma.supplier.findUnique({
         where: { id },
@@ -628,53 +1074,89 @@ router.post(
       if (!supplier) {
         return res.status(404).json({
           success: false,
-          error: "Supplier not found",
+          error: 'Supplier not found',
         });
       }
 
-      if (supplier.status !== "active") {
+      if (supplier.status !== 'active') {
         return res.status(400).json({
           success: false,
-          error: "Supplier is not active",
+          error: 'Supplier is not active',
         });
       }
 
-      // Create sync log
       const syncLog = await prisma.supplierSyncLog.create({
         data: {
           supplierId: id,
           syncType,
-          status: "pending",
+          status: 'pending',
           metadata: { dataType },
         },
       });
 
-      // In a real implementation, this would trigger a background job
-      // For now, we just create the log and return
-
       res.json({
         success: true,
         data: syncLog,
-        message: "Sync initiated successfully",
+        message: 'Sync initiated successfully',
       });
     } catch (error) {
-      console.error("Error triggering sync:", error);
+      console.error('Error triggering sync:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to trigger sync",
+        error: 'Failed to trigger sync',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Supplier Hotel Mappings Routes
 // ============================================
 
-// GET /api/suppliers/:id/hotel-mappings - Get supplier hotel mappings
+/**
+ * @swagger
+ * /api/suppliers/{id}/hotel-mappings:
+ *   get:
+ *     summary: Get supplier hotel mappings
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/:id/hotel-mappings",
-  requirePermission("suppliers:read"),
+  '/:id/hotel-mappings',
+  requirePermission('suppliers:read'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -705,7 +1187,7 @@ router.get(
           where,
           skip: (Number(page) - 1) * Number(limit),
           take: Number(limit),
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         }),
         prisma.supplierHotelMapping.count({ where }),
       ]);
@@ -721,39 +1203,74 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching hotel mappings:", error);
+      console.error('Error fetching hotel mappings:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch hotel mappings",
+        error: 'Failed to fetch hotel mappings',
       });
     }
-  },
+  }
 );
 
-// POST /api/suppliers/:id/hotel-mappings - Create hotel mapping
+/**
+ * @swagger
+ * /api/suppliers/{id}/hotel-mappings:
+ *   post:
+ *     summary: Create hotel mapping
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [supplierHotelId]
+ *             properties:
+ *               canonicalHotelId: { type: string }
+ *               supplierHotelId: { type: string }
+ *               supplierHotelCode: { type: string }
+ *               matchType: { type: string }
+ *               matchConfidence: { type: number }
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/:id/hotel-mappings",
-  requirePermission("suppliers:update"),
+  '/:id/hotel-mappings',
+  requirePermission('suppliers:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
-      const {
-        canonicalHotelId,
-        supplierHotelId,
-        supplierHotelCode,
-        matchType,
-        matchConfidence,
-      } = req.body;
+      const { canonicalHotelId, supplierHotelId, supplierHotelCode, matchType, matchConfidence } =
+        req.body;
 
       if (!canonicalHotelId || !supplierHotelId) {
         return res.status(400).json({
           success: false,
-          error: "Canonical hotel ID and supplier hotel ID are required",
+          error: 'Canonical hotel ID and supplier hotel ID are required',
         });
       }
 
-      // Check if mapping already exists
       const existing = await prisma.supplierHotelMapping.findFirst({
         where: {
           supplierId: id,
@@ -764,7 +1281,7 @@ router.post(
       if (existing) {
         return res.status(400).json({
           success: false,
-          error: "Mapping already exists for this supplier hotel ID",
+          error: 'Mapping already exists for this supplier hotel ID',
         });
       }
 
@@ -780,22 +1297,55 @@ router.post(
       res.status(201).json({
         success: true,
         data: mapping,
-        message: "Hotel mapping created successfully",
+        message: 'Hotel mapping created successfully',
       });
     } catch (error) {
-      console.error("Error creating hotel mapping:", error);
+      console.error('Error creating hotel mapping:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to create hotel mapping",
+        error: 'Failed to create hotel mapping',
       });
     }
-  },
+  }
 );
 
-// DELETE /api/suppliers/:id/hotel-mappings/:mappingId - Delete hotel mapping
+/**
+ * @swagger
+ * /api/suppliers/{id}/hotel-mappings/{mappingId}:
+ *   delete:
+ *     summary: Delete hotel mapping
+ *     tags: [Suppliers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: mappingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Hotel mapping not found
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/:id/hotel-mappings/:mappingId",
-  requirePermission("suppliers:update"),
+  '/:id/hotel-mappings/:mappingId',
+  requirePermission('suppliers:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id, mappingId } = req.params;
@@ -807,7 +1357,7 @@ router.delete(
       if (!mapping) {
         return res.status(404).json({
           success: false,
-          error: "Hotel mapping not found",
+          error: 'Hotel mapping not found',
         });
       }
 
@@ -817,29 +1367,27 @@ router.delete(
 
       res.json({
         success: true,
-        message: "Hotel mapping deleted successfully",
+        message: 'Hotel mapping deleted successfully',
       });
     } catch (error) {
-      console.error("Error deleting hotel mapping:", error);
+      console.error('Error deleting hotel mapping:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to delete hotel mapping",
+        error: 'Failed to delete hotel mapping',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // SUPPLIER MANAGEMENT MODULE ROUTES
 // ============================================
-// Mount Phase 2 supplier management sub-routes
-router.use("/", supplierProductsRoutes);
-router.use("/", supplierMappingsRoutes);
-router.use("/", supplierFinancialRoutes);
-router.use("/", supplierWalletsRoutes);
-router.use("/", supplierPaymentsRoutes);
+router.use('/', supplierProductsRoutes);
+router.use('/', supplierMappingsRoutes);
+router.use('/', supplierFinancialRoutes);
+router.use('/', supplierWalletsRoutes);
+router.use('/', supplierPaymentsRoutes);
 
-// Mount Phase 3 payment gateway webhooks (outside auth - signature verified internally)
-router.use("/webhooks", webhookRoutes);
+router.use('/webhooks', webhookRoutes);
 
 export default router;

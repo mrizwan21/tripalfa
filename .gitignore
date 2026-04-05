@@ -15,6 +15,8 @@ build/
 # Logs
 *.log
 logs/
+.logs/
+**/.logs/
 *.log.*
 database/static-db/nohup.out
 
@@ -24,6 +26,8 @@ database/static-db/nohup.out
 # Runtime data
 pids
 *.pid
+.pids/
+**/.pids/
 *.seed
 *.pid.lock
 
@@ -70,6 +74,10 @@ jspm_packages/
 
 # Secrets folder - never commit
 secrets/
+*.key
+*.pem
+*.key
+*.pem
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -139,6 +147,8 @@ services/**/src/**/*.js.map
 .Trashes
 ehthumbs.db
 Thumbs.db
+.kilocode/
+.kilocode/
 
 # IDE files
 .vscode/
@@ -183,3 +193,11 @@ database/static-db/backups/
 
 # Large data files
 infrastructure/scripts/hotelbeds/
+
+# Legacy phase-specific env files
+.env.phase*.example
+.env.production.template
+
+# Legacy phase-specific env files
+.env.phase*.example
+.env.production.template

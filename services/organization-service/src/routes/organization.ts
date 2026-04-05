@@ -1,8 +1,8 @@
-import { OrganizationService } from "../services/organizationService.js";
-import { DatabaseConnection } from "../utils/database.js";
-import { SecurityMiddleware } from "../middleware/security.js";
-import { createLogger } from "@tripalfa/shared-utils";
-const logger = createLogger({ serviceName: "organization-service" });
+import { OrganizationService } from '../services/organizationService.js';
+import { DatabaseConnection } from '../utils/database.js';
+import { SecurityMiddleware } from '../middleware/security.js';
+import { createLogger } from '@tripalfa/shared-utils';
+const logger = createLogger({ serviceName: 'organization-service' });
 import {
   CreateDepartmentRequest,
   UpdateDepartmentRequest,
@@ -10,20 +10,65 @@ import {
   CreateCostCenterRequest,
   UpdateCostCenterRequest,
   OrganizationQueryParams,
-} from "../types/organization.js";
+} from '../types/organization.js';
 
-import { Router } from "express";
+import { Router } from 'express';
 const router: Router = Router();
 
 /**
  * Department Routes
  */
 
-// GET /api/departments - Get all departments with pagination and filtering
+/**
+ * @swagger
+ * /api/organization/departments:
+ *   get:
+ *     summary: List departments with pagination and filtering
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/departments",
+  '/departments',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN", "B2B"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN', 'B2B']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -39,25 +84,49 @@ router.get(
         offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
       };
 
-      const result = await service.getDepartments(
-        params,
-        req.user.id,
-        req.user.role,
-      );
+      const result = await service.getDepartments(params, req.user.id, req.user.role);
 
       res.json(result);
     } catch (error) {
-      logger.error(error as Error, "Error getting departments");
-      res.status(500).json({ error: "Internal server error" });
+      logger.error(error as Error, 'Error getting departments');
+      res.status(500).json({ error: 'Internal server error' });
     }
-  },
+  }
 );
 
-// GET /api/departments/:id - Get department by ID
+/**
+ * @swagger
+ * /api/organization/departments/{id}:
+ *   get:
+ *     summary: Get department by ID
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Department not found
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/departments/:id",
+  '/departments/:id',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN", "B2B"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN', 'B2B']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -66,26 +135,73 @@ router.get(
       const department = await service.getDepartmentById(
         req.params.id as string,
         req.user.id,
-        req.user.role,
+        req.user.role
       );
 
       res.json(department);
     } catch (error) {
-      logger.error(error as Error, "Error getting department");
-      if (error.message === "Department not found") {
+      logger.error(error as Error, 'Error getting department');
+      if (error.message === 'Department not found') {
         res.status(404).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
-// POST /api/departments - Create new department
+/**
+ * @swagger
+ * /api/organization/departments:
+ *   post:
+ *     summary: Create new department
+ *     tags: [Organizations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               headId:
+ *                 type: string
+ *               parentDepartmentId:
+ *                 type: string
+ *               level:
+ *                 type: integer
+ *               budget:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/departments",
+  '/departments',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -103,32 +219,81 @@ router.post(
         status: req.body.status,
       };
 
-      const department = await service.createDepartment(
-        departmentData,
-        req.user.id,
-        req.user.role,
-      );
+      const department = await service.createDepartment(departmentData, req.user.id, req.user.role);
 
       res.status(201).json(department);
     } catch (error) {
-      logger.error(error as Error, "Error creating department");
+      logger.error(error as Error, 'Error creating department');
       if (
-        error.message.includes("already exists") ||
-        error.message.includes("belongs to a different company")
+        error.message.includes('already exists') ||
+        error.message.includes('belongs to a different company')
       ) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
-// PUT /api/departments/:id - Update department
+/**
+ * @swagger
+ * /api/organization/departments/{id}:
+ *   put:
+ *     summary: Update department
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               headId:
+ *                 type: string
+ *               parentDepartmentId:
+ *                 type: string
+ *               level:
+ *                 type: integer
+ *               budget:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/departments/:id",
+  '/departments/:id',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -150,66 +315,133 @@ router.put(
         req.params.id as string,
         updateData,
         req.user.id,
-        req.user.role,
+        req.user.role
       );
 
       res.json(department);
     } catch (error) {
-      logger.error(error as Error, "Error updating department");
-      if (
-        error.message.includes("already exists") ||
-        error.message.includes("not found")
-      ) {
+      logger.error(error as Error, 'Error updating department');
+      if (error.message.includes('already exists') || error.message.includes('not found')) {
         res.status(404).json({ error: error.message });
-      } else if (error.message.includes("No fields to update")) {
+      } else if (error.message.includes('No fields to update')) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
-// DELETE /api/departments/:id - Soft delete department
+/**
+ * @swagger
+ * /api/organization/departments/{id}:
+ *   delete:
+ *     summary: Delete department
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/departments/:id",
+  '/departments/:id',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
       const service = new OrganizationService(db);
 
-      await service.deleteDepartment(
-        req.params.id as string,
-        req.user.id,
-        req.user.role,
-      );
+      await service.deleteDepartment(req.params.id as string, req.user.id, req.user.role);
 
-      res.json({ message: "Department deleted successfully" });
+      res.json({ message: 'Department deleted successfully' });
     } catch (error) {
-      logger.error(error as Error, "Error deleting department");
-      if (
-        error.message.includes("Cannot delete") ||
-        error.message.includes("not found")
-      ) {
+      logger.error(error as Error, 'Error deleting department');
+      if (error.message.includes('Cannot delete') || error.message.includes('not found')) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
 /**
  * Designation Routes
  */
 
-// GET /api/designations - Get all designations with pagination and filtering
+/**
+ * @swagger
+ * /api/organization/designations:
+ *   get:
+ *     summary: List designations with pagination and filtering
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: departmentId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/designations",
+  '/designations',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN", "B2B"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN', 'B2B']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -226,25 +458,72 @@ router.get(
         offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
       };
 
-      const result = await service.getDesignations(
-        params,
-        req.user.id,
-        req.user.role,
-      );
+      const result = await service.getDesignations(params, req.user.id, req.user.role);
 
       res.json(result);
     } catch (error) {
-      logger.error(error as Error, "Error getting designations");
-      res.status(500).json({ error: "Internal server error" });
+      logger.error(error as Error, 'Error getting designations');
+      res.status(500).json({ error: 'Internal server error' });
     }
-  },
+  }
 );
 
-// POST /api/designations - Create new designation
+/**
+ * @swagger
+ * /api/organization/designations:
+ *   post:
+ *     summary: Create new designation
+ *     tags: [Organizations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               level:
+ *                 type: integer
+ *               description:
+ *                 type: string
+ *               departmentId:
+ *                 type: string
+ *               responsibilities:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               requirements:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               salaryRange:
+ *                 type: object
+ *               status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/designations",
+  '/designations',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -265,30 +544,83 @@ router.post(
       const designation = await service.createDesignation(
         designationData,
         req.user.id,
-        req.user.role,
+        req.user.role
       );
 
       res.status(201).json(designation);
     } catch (error) {
-      logger.error(error as Error, "Error creating designation");
-      if (error.message.includes("already exists")) {
+      logger.error(error as Error, 'Error creating designation');
+      if (error.message.includes('already exists')) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
 /**
  * Cost Center Routes
  */
 
-// GET /api/cost-centers - Get all cost centers with pagination and filtering
+/**
+ * @swagger
+ * /api/organization/cost-centers:
+ *   get:
+ *     summary: List cost centers with pagination and filtering
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: departmentId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: branchId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/cost-centers",
+  '/cost-centers',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN", "B2B"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN', 'B2B']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -306,25 +638,70 @@ router.get(
         offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
       };
 
-      const result = await service.getCostCenters(
-        params,
-        req.user.id,
-        req.user.role,
-      );
+      const result = await service.getCostCenters(params, req.user.id, req.user.role);
 
       res.json(result);
     } catch (error) {
-      logger.error(error as Error, "Error getting cost centers");
-      res.status(500).json({ error: "Internal server error" });
+      logger.error(error as Error, 'Error getting cost centers');
+      res.status(500).json({ error: 'Internal server error' });
     }
-  },
+  }
 );
 
-// POST /api/cost-centers - Create new cost center
+/**
+ * @swagger
+ * /api/organization/cost-centers:
+ *   post:
+ *     summary: Create new cost center
+ *     tags: [Organizations]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               departmentId:
+ *                 type: string
+ *               branchId:
+ *                 type: string
+ *               budget:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               managerId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/cost-centers",
+  '/cost-centers',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -343,29 +720,78 @@ router.post(
         managerId: req.body.managerId,
       };
 
-      const costCenter = await service.createCostCenter(
-        costCenterData,
-        req.user.id,
-        req.user.role,
-      );
+      const costCenter = await service.createCostCenter(costCenterData, req.user.id, req.user.role);
 
       res.status(201).json(costCenter);
     } catch (error) {
-      logger.error(error as Error, "Error creating cost center");
-      if (error.message.includes("already exists")) {
+      logger.error(error as Error, 'Error creating cost center');
+      if (error.message.includes('already exists')) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
-// PUT /api/cost-centers/:id - Update cost center
+/**
+ * @swagger
+ * /api/organization/cost-centers/{id}:
+ *   put:
+ *     summary: Update cost center
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               departmentId:
+ *                 type: string
+ *               branchId:
+ *                 type: string
+ *               budget:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               managerId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/cost-centers/:id",
+  '/cost-centers/:id',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
@@ -388,50 +814,71 @@ router.put(
         req.params.id as string,
         updateData,
         req.user.id,
-        req.user.role,
+        req.user.role
       );
 
       res.json(costCenter);
     } catch (error) {
-      logger.error(error as Error, "Error updating cost center");
-      if (error.message.includes("not found")) {
+      logger.error(error as Error, 'Error updating cost center');
+      if (error.message.includes('not found')) {
         res.status(404).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
-// DELETE /api/cost-centers/:id - Soft delete cost center
+/**
+ * @swagger
+ * /api/organization/cost-centers/{id}:
+ *   delete:
+ *     summary: Delete cost center
+ *     tags: [Organizations]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/cost-centers/:id",
+  '/cost-centers/:id',
   SecurityMiddleware.authenticate,
-  SecurityMiddleware.authorize(["SUPER_ADMIN", "ADMIN"]),
+  SecurityMiddleware.authorize(['SUPER_ADMIN', 'ADMIN']),
   async (req, res) => {
     try {
       const db = await DatabaseConnection.getInstance().connect();
       const service = new OrganizationService(db);
 
-      await service.deleteCostCenter(
-        req.params.id as string,
-        req.user.id,
-        req.user.role,
-      );
+      await service.deleteCostCenter(req.params.id as string, req.user.id, req.user.role);
 
-      res.json({ message: "Cost center deleted successfully" });
+      res.json({ message: 'Cost center deleted successfully' });
     } catch (error) {
-      logger.error(error as Error, "Error deleting cost center");
-      if (
-        error.message.includes("Cannot delete") ||
-        error.message.includes("not found")
-      ) {
+      logger.error(error as Error, 'Error deleting cost center');
+      if (error.message.includes('Cannot delete') || error.message.includes('not found')) {
         res.status(400).json({ error: error.message });
       } else {
-        res.status(500).json({ error: "Internal server error" });
+        res.status(500).json({ error: 'Internal server error' });
       }
     }
-  },
+  }
 );
 
 export default router;

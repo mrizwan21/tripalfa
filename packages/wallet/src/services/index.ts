@@ -1,16 +1,13 @@
-import {
-  PrismaClient,
-  Wallet,
-  WalletTransaction,
-  WalletLedger,
-} from "@prisma/client";
-
 export interface WalletManagerConfig {
-  prisma: PrismaClient;
+  prisma: any;
 }
 
+type Wallet = any;
+type WalletTransaction = any;
+type WalletLedger = any;
+
 export class WalletManager {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor(config: WalletManagerConfig) {
     this.prisma = config.prisma;
@@ -243,6 +240,6 @@ export class WalletManager {
   }
 }
 
-export function initializeWallet(prisma: PrismaClient): WalletManager {
+export function initializeWallet(prisma: any): WalletManager {
   return new WalletManager({ prisma });
 }

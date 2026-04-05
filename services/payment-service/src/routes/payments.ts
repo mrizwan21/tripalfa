@@ -1,9 +1,6 @@
-import { Router, Request, Response } from "express";
-import type { Router as ExpressRouter } from "express";
-import {
-  authMiddleware,
-  getAuthenticatedUser,
-} from "../middleware/auth.js";
+import { Router, Request, Response } from 'express';
+import type { Router as ExpressRouter } from 'express';
+import { authMiddleware, getAuthenticatedUser } from '../middleware/auth.js';
 
 const router: ExpressRouter = Router();
 
@@ -51,7 +48,7 @@ export class InMemoryIdempotencyStore implements IdempotencyStore {
 
   set(key: string, value: any, ttlSeconds: number = 86400): void {
     this.store.set(key, value);
-    this.expiryTimes.set(key, Date.now() + (ttlSeconds * 1000));
+    this.expiryTimes.set(key, Date.now() + ttlSeconds * 1000);
   }
 
   private cleanup(): void {
@@ -86,7 +83,7 @@ export class RedisIdempotencyStore implements IdempotencyStore {
   async shutdown(): Promise<void> {
     // Stop the fallback store's cleanup interval
     this.fallbackStore.stopCleanup();
-    
+
     // Disconnect Redis if connected
     if (this.redis?.isReady) {
       await this.redis.disconnect();
@@ -99,12 +96,12 @@ export class RedisIdempotencyStore implements IdempotencyStore {
    */
   private async ensureInitialized(): Promise<void> {
     if (this.connected) return;
-    
+
     if (!this.initStarted) {
       this.initStarted = true;
       this.initPromise = this.initRedis();
     }
-    
+
     if (this.initPromise) {
       await this.initPromise;
     }
@@ -113,39 +110,39 @@ export class RedisIdempotencyStore implements IdempotencyStore {
   private async initRedis(): Promise<void> {
     try {
       // Dynamically import Redis to avoid dependency if not configured
-      const { createClient } = await import("redis");
+      const { createClient } = await import('redis');
       const redisUrl = process.env.REDIS_URL || process.env.REDIS_IDEMPOTENCY_URL;
 
       if (!redisUrl) {
-        console.warn("[Idempotency] REDIS_URL not configured, using in-memory fallback");
+        console.warn('[Idempotency] REDIS_URL not configured, using in-memory fallback');
         return;
       }
 
       this.redis = createClient({ url: redisUrl });
-      this.redis.on("error", (err: Error) => {
-        console.error("[Idempotency] Redis error:", err);
+      this.redis.on('error', (err: Error) => {
+        console.error('[Idempotency] Redis error:', err);
         this.connected = false;
       });
-      this.redis.on("connect", () => {
-        console.log("[Idempotency] Redis connected");
+      this.redis.on('connect', () => {
+        console.log('[Idempotency] Redis connected');
         this.connected = true;
       });
 
       await this.redis.connect();
     } catch (error) {
-      console.warn("[Idempotency] Failed to initialize Redis, using in-memory fallback:", error);
+      console.warn('[Idempotency] Failed to initialize Redis, using in-memory fallback:', error);
     }
   }
 
   async get(key: string): Promise<any> {
     await this.ensureInitialized();
-    
+
     if (this.connected && this.redis) {
       try {
         const value = await this.redis.get(`idempotency:${key}`);
         return value ? JSON.parse(value) : undefined;
       } catch (error) {
-        console.error("[Idempotency] Redis get failed, using fallback:", error);
+        console.error('[Idempotency] Redis get failed, using fallback:', error);
       }
     }
     return this.fallbackStore.get(key);
@@ -153,13 +150,13 @@ export class RedisIdempotencyStore implements IdempotencyStore {
 
   async set(key: string, value: any, ttlSeconds: number = 86400): Promise<void> {
     await this.ensureInitialized();
-    
+
     if (this.connected && this.redis) {
       try {
         await this.redis.setEx(`idempotency:${key}`, ttlSeconds, JSON.stringify(value));
         return;
       } catch (error) {
-        console.error("[Idempotency] Redis set failed, using fallback:", error);
+        console.error('[Idempotency] Redis set failed, using fallback:', error);
       }
     }
     this.fallbackStore.set(key, value, ttlSeconds);
@@ -167,9 +164,10 @@ export class RedisIdempotencyStore implements IdempotencyStore {
 }
 
 // Create store instance - uses Redis if configured, otherwise in-memory
-const idempotencyStore: IdempotencyStore = process.env.REDIS_URL || process.env.REDIS_IDEMPOTENCY_URL
-  ? new RedisIdempotencyStore()
-  : new InMemoryIdempotencyStore();
+const idempotencyStore: IdempotencyStore =
+  process.env.REDIS_URL || process.env.REDIS_IDEMPOTENCY_URL
+    ? new RedisIdempotencyStore()
+    : new InMemoryIdempotencyStore();
 
 /**
  * Gracefully shutdown the idempotency store.
@@ -197,7 +195,12 @@ async function getFromStore(store: IdempotencyStore, key: string): Promise<any> 
   return result instanceof Promise ? await result : result;
 }
 
-async function setInStore(store: IdempotencyStore, key: string, value: any, ttlSeconds?: number): Promise<void> {
+async function setInStore(
+  store: IdempotencyStore,
+  key: string,
+  value: any,
+  ttlSeconds?: number
+): Promise<void> {
   const result = store.set(key, value, ttlSeconds);
   if (result instanceof Promise) {
     await result;
@@ -207,16 +210,16 @@ async function setInStore(store: IdempotencyStore, key: string, value: any, ttlS
 // Mock payment gateway integrations
 const PAYMENT_GATEWAYS: Record<string, any> = {
   stripe: {
-    name: "Stripe",
-    supportedCurrencies: ["USD", "EUR", "GBP", "CAD", "AUD"],
-    supportedMethods: ["card", "apple_pay", "google_pay", "link"],
+    name: 'Stripe',
+    supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD', 'AUD'],
+    supportedMethods: ['card', 'apple_pay', 'google_pay', 'link'],
     processingFee: 0.029, // 2.9%
     fixedFee: 0.3,
   },
   paypal: {
-    name: "PayPal",
-    supportedCurrencies: ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"],
-    supportedMethods: ["paypal", "venmo", "pay_later"],
+    name: 'PayPal',
+    supportedCurrencies: ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'],
+    supportedMethods: ['paypal', 'venmo', 'pay_later'],
     processingFee: 0.034, // 3.4%
     fixedFee: 0.49,
   },
@@ -225,30 +228,68 @@ const PAYMENT_GATEWAYS: Record<string, any> = {
 // Mock transactions data
 const mockTransactions: any[] = [
   {
-    id: "txn_001",
-    bookingId: "BK-2026-001247",
+    id: 'txn_001',
+    bookingId: 'BK-2026-001247',
     amount: 1213.0,
-    currency: "USD",
-    status: "completed",
-    paymentMethod: "card",
-    gateway: "stripe",
-    customerId: "user123",
-    description: "Flight + Hotel Package",
-    createdAt: "2026-01-21T14:30:00Z",
-    completedAt: "2026-01-21T14:31:00Z",
+    currency: 'USD',
+    status: 'completed',
+    paymentMethod: 'card',
+    gateway: 'stripe',
+    customerId: 'user123',
+    description: 'Flight + Hotel Package',
+    createdAt: '2026-01-21T14:30:00Z',
+    completedAt: '2026-01-21T14:31:00Z',
   },
 ];
 
-// Payment processing routes with auth and idempotency
-router.post("/process", authMiddleware, async (req: Request, res: Response) => {
-  const { amount, currency, paymentMethod, bookingId, idempotencyKey } =
-    req.body;
+/**
+ * @swagger
+ * /api/payments/process:
+ *   post:
+ *     summary: Process a payment
+ *     tags: [Payments]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: string
+ *               bookingId:
+ *                 type: string
+ *               idempotencyKey:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/process', authMiddleware, async (req: Request, res: Response) => {
+  const { amount, currency, paymentMethod, bookingId, idempotencyKey } = req.body;
   const { userId: authenticatedCustomerId } = getAuthenticatedUser(req);
 
   if (!authenticatedCustomerId) {
     return res.status(401).json({
       success: false,
-      error: "Invalid token payload",
+      error: 'Invalid token payload',
     });
   }
 
@@ -256,16 +297,15 @@ router.post("/process", authMiddleware, async (req: Request, res: Response) => {
   if (!amount || !currency || !paymentMethod || !bookingId) {
     return res.status(400).json({
       success: false,
-      error:
-        "Missing required fields: amount, currency, paymentMethod, bookingId",
+      error: 'Missing required fields: amount, currency, paymentMethod, bookingId',
     });
   }
 
   // Validate amount is a positive number
-  if (typeof amount !== "number" || amount <= 0 || !Number.isFinite(amount)) {
+  if (typeof amount !== 'number' || amount <= 0 || !Number.isFinite(amount)) {
     return res.status(400).json({
       success: false,
-      error: "Amount must be a positive number",
+      error: 'Amount must be a positive number',
     });
   }
 
@@ -276,20 +316,20 @@ router.post("/process", authMiddleware, async (req: Request, res: Response) => {
       return res.json({
         success: true,
         transaction: existingTransaction,
-        message: "Payment already processed (idempotency)",
+        message: 'Payment already processed (idempotency)',
         idempotent: true,
       });
     }
   }
 
   const transaction = {
-    id: `txn_${String(mockTransactions.length + 1).padStart(3, "0")}`,
+    id: `txn_${String(mockTransactions.length + 1).padStart(3, '0')}`,
     bookingId,
     amount,
     currency,
-    status: "completed",
+    status: 'completed',
     paymentMethod,
-    gateway: "stripe",
+    gateway: 'stripe',
     customerId: authenticatedCustomerId,
     createdAt: new Date().toISOString(),
     completedAt: new Date().toISOString(),
@@ -305,44 +345,102 @@ router.post("/process", authMiddleware, async (req: Request, res: Response) => {
   res.json({
     success: true,
     transaction,
-    message: "Payment processed successfully",
+    message: 'Payment processed successfully',
   });
 });
 
-// Public endpoint - doesn't require auth
-router.get("/methods", (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/payments/methods:
+ *   get:
+ *     summary: Get available payment methods
+ *     tags: [Payments]
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
+router.get('/methods', (req: Request, res: Response) => {
   res.json({
-    country: "US",
-    currency: "USD",
+    country: 'US',
+    currency: 'USD',
     methods: [
-      { id: "card", name: "Credit/Debit Card", gateways: ["stripe"] },
-      { id: "paypal", name: "PayPal", gateways: ["paypal"] },
+      { id: 'card', name: 'Credit/Debit Card', gateways: ['stripe'] },
+      { id: 'paypal', name: 'PayPal', gateways: ['paypal'] },
     ],
   });
 });
 
-// GET /payments - List all payments (requires auth)
-router.get("/", authMiddleware, (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/payments:
+ *   get:
+ *     summary: List all payments
+ *     tags: [Payments]
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
+router.get('/', authMiddleware, (req: Request, res: Response) => {
   const { userId, isAdmin } = getAuthenticatedUser(req);
 
   if (isAdmin) {
     return res.json(mockTransactions);
   }
 
-  const visibleTransactions = mockTransactions.filter(
-    (t) => t.customerId === userId,
-  );
+  const visibleTransactions = mockTransactions.filter(t => t.customerId === userId);
   return res.json(visibleTransactions);
 });
 
- // Analytics requires admin auth
-router.get("/analytics", authMiddleware, (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/payments/analytics:
+ *   get:
+ *     summary: Get payment analytics
+ *     tags: [Payments]
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
+router.get('/analytics', authMiddleware, (req: Request, res: Response) => {
   const { isAdmin } = getAuthenticatedUser(req);
 
   if (!isAdmin) {
     return res.status(403).json({
       success: false,
-      message: "Access denied",
+      message: 'Access denied',
     });
   }
 
@@ -357,45 +455,100 @@ router.get("/analytics", authMiddleware, (req: Request, res: Response) => {
   });
 });
 
-// GET /payments/:id - Get payment by ID (requires auth)
-router.get("/:id", authMiddleware, (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/payments/{id}:
+ *   get:
+ *     summary: Get payment by ID
+ *     tags: [Payments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id', authMiddleware, (req: Request, res: Response) => {
   const { userId, isAdmin } = getAuthenticatedUser(req);
 
-  const payment = mockTransactions.find((t) => t.id === req.params.id);
-  if (!payment)
-    return res
-      .status(404)
-      .json({ success: false, message: "Payment not found" });
+  const payment = mockTransactions.find(t => t.id === req.params.id);
+  if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
   if (!isAdmin && payment.customerId !== userId) {
     return res.status(403).json({
       success: false,
-      message: "Access denied",
+      message: 'Access denied',
     });
   }
 
   res.json(payment);
 });
 
-// POST /payments/:id/refund - Refund a payment (requires auth)
-router.post("/:id/refund", authMiddleware, async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/payments/{id}/refund:
+ *   post:
+ *     summary: Refund a payment
+ *     tags: [Payments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               idempotencyKey:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
+router.post('/:id/refund', authMiddleware, async (req: Request, res: Response) => {
   const { idempotencyKey } = req.body;
   const { userId, isAdmin } = getAuthenticatedUser(req);
 
-  const payment = mockTransactions.find((t) => t.id === req.params.id);
-  if (!payment)
-    return res
-      .status(404)
-      .json({ success: false, message: "Payment not found" });
+  const payment = mockTransactions.find(t => t.id === req.params.id);
+  if (!payment) return res.status(404).json({ success: false, message: 'Payment not found' });
 
   if (!isAdmin && payment.customerId !== userId) {
     return res.status(403).json({
       success: false,
-      message: "Access denied",
+      message: 'Access denied',
     });
   }
-  if (payment.status === "refunded")
-    return res.status(400).json({ success: false, message: "Already refunded" });
+  if (payment.status === 'refunded')
+    return res.status(400).json({ success: false, message: 'Already refunded' });
 
   // Check idempotency for refunds
   if (idempotencyKey) {
@@ -404,13 +557,13 @@ router.post("/:id/refund", authMiddleware, async (req: Request, res: Response) =
       return res.json({
         success: true,
         payment: existingRefund,
-        message: "Refund already processed (idempotency)",
+        message: 'Refund already processed (idempotency)',
         idempotent: true,
       });
     }
   }
 
-  payment.status = "refunded";
+  payment.status = 'refunded';
   payment.refundedAt = new Date().toISOString();
 
   if (idempotencyKey) {

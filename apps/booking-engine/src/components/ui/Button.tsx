@@ -3,9 +3,10 @@ import { cn } from "@tripalfa/ui-components";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "destructive";
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
   isLoading?: boolean;
   children: React.ReactNode;
+  className?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -18,17 +19,20 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const variantClasses = {
-    primary: "btn-primary",
-    secondary: "btn-secondary",
+    primary: "btn-primary", // TripAlfa Coral (#f45d48) - Main buttons
+    secondary: "btn-secondary", // TripAlfa Navy (#10216b) - Alternative
     outline: "btn-outline",
     ghost: "btn-ghost",
     destructive: "btn-destructive",
   };
 
   const sizeClasses = {
+    xs: "btn-xs",
     sm: "btn-sm",
     md: "btn-md",
     lg: "btn-lg",
+    xl: "btn-xl",
+    "2xl": "btn-2xl",
   };
 
   return (

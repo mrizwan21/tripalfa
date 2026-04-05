@@ -136,7 +136,6 @@
     "lint:no-fallbacks": "eslint . --ext .ts,.tsx --no-eslintrc --parser @typescript-eslint/parser --plugin no-restricted-syntax --rule 'no-restricted-syntax: [error, {selector: BinaryExpression[operator=\"||\"][left.type=\"MemberExpression\"][left.object.name=\"process\"] > Literal, message: \"process.env fallback pattern detected\"}]'"
   },
   "dependencies": {
-    "@prisma/adapter-neon": "^7.4.0",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client-runtime-utils": "^7.4.2",
     "@tanstack/react-query": "^5.90.21",

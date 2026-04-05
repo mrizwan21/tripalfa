@@ -1,32 +1,31 @@
 /**
  * Real-time Hotel Booking API (LiteAPI Integration)
- * 
+ *
  * Implements the complete booking flow according to LiteAPI documentation:
  * https://docs.liteapi.travel/docs/booking-a-room
- * 
+ *
  * Flow:
  * 1. Search hotels by rates (POST /search/hotels)
  * 2. Create prebook session (POST /prebook) - Hold rate
  * 3. Complete booking (POST /book) - Confirm with payment
  * 4. Retrieve booking status (GET /bookings/:bookingId)
  * 5. Cancel booking (DELETE /bookings/:bookingId)
- * 
+ *
  * Database: NEON (PostgreSQL Cloud)
  * Cache: Redis for real-time sessions
  */
 
-import { Router, Request, Response, NextFunction } from "express";
-import { prisma } from "@tripalfa/shared-database";
-import { v4 as uuidv4 } from "uuid";
-import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
+import { Router, Request, Response, NextFunction } from 'express';
+import { prisma } from '@tripalfa/shared-database';
+import { v4 as uuidv4 } from 'uuid';
+import CacheService, { CacheKeys, CACHE_TTL } from '../cache/redis.js';
 
 const router: Router = Router();
 
 // Environment Configuration
 const LITEAPI_BOOK_BASE_URL =
-  process.env.LITEAPI_BOOK_BASE_URL || "https://book.liteapi.travel/v3.0";
-const LITEAPI_API_KEY =
-  process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
+  process.env.LITEAPI_BOOK_BASE_URL || 'https://book.liteapi.travel/v3.0';
+const LITEAPI_API_KEY = process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
 
 // ============================================================================
 // Types & Interfaces
@@ -53,7 +52,7 @@ interface RealTimeBookingRequest {
     email: string;
     phone?: string;
   };
-  paymentMethod: "WALLET" | "ACC_CREDIT_CARD" | "TRANSACTION";
+  paymentMethod: 'WALLET' | 'ACC_CREDIT_CARD' | 'TRANSACTION';
   userId: string;
   hotelName: string;
   roomType: string;
@@ -79,7 +78,7 @@ interface PrebookSessionData {
     occupancyNumber?: number;
   }>;
   userId: string;
-  status: "prebooked" | "confirmed" | "cancelled" | "expired";
+  status: 'prebooked' | 'confirmed' | 'cancelled' | 'expired';
   createdAt: Date;
   expiresAt: Date;
   validationWarnings?: string[];
@@ -102,7 +101,7 @@ interface BookingStateData {
     lastName: string;
     email: string;
   }>;
-  status: "pending" | "confirmed" | "cancelled" | "failed";
+  status: 'pending' | 'confirmed' | 'cancelled' | 'failed';
   price: {
     amount: number;
     currency: string;
@@ -121,18 +120,14 @@ interface BookingStateData {
 // Helper Functions
 // ============================================================================
 
-async function liteApiBookRequest<T>(
-  endpoint: string,
-  method: string,
-  body?: object,
-): Promise<T> {
+async function liteApiBookRequest<T>(endpoint: string, method: string, body?: object): Promise<T> {
   const url = `${LITEAPI_BOOK_BASE_URL}${endpoint}`;
 
   const response = await fetch(url, {
     method,
     headers: {
-      "Content-Type": "application/json",
-      "X-API-Key": LITEAPI_API_KEY || "",
+      'Content-Type': 'application/json',
+      'X-API-Key': LITEAPI_API_KEY || '',
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -149,7 +144,7 @@ function calculateNights(checkin: string, checkout: string): number {
   const checkInDate = new Date(checkin);
   const checkOutDate = new Date(checkout);
   const nights = Math.ceil(
-    (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24),
+    (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
   );
   return Math.max(1, nights);
 }
@@ -159,27 +154,97 @@ function calculateNights(checkin: string, checkout: string): number {
 // ============================================================================
 
 /**
- * POST /api/realtime-booking/prebook
- * Create a hold booking (Step 1 of E2E flow)
- * 
- * Request body:
- * {
- *   offerId: string,
- *   hotelId: string,
- *   roomTypeId: string,
- *   price: number,
- *   currency: string,
- *   checkInDate: string (YYYY-MM-DD),
- *   checkOutDate: string (YYYY-MM-DD),
- *   guests: array of guest objects,
- *   userId: string,
- *   hotelName: string,
- *   roomType: string,
- *   adults: number,
- *   children?: number[]
- * }
+ * @swagger
+ * /api/realtime-booking/prebook:
+ *   post:
+ *     summary: Create a prebook session to hold a hotel rate
+ *     tags: [Realtime Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - offerId
+ *               - price
+ *               - currency
+ *               - guests
+ *               - userId
+ *             properties:
+ *               offerId:
+ *                 type: string
+ *               hotelId:
+ *                 type: string
+ *               roomTypeId:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               checkInDate:
+ *                 type: string
+ *                 format: date
+ *               checkOutDate:
+ *                 type: string
+ *                 format: date
+ *               guests:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *                     occupancyNumber:
+ *                       type: integer
+ *               userId:
+ *                 type: string
+ *               hotelName:
+ *                 type: string
+ *               roomType:
+ *                 type: string
+ *               adults:
+ *                 type: integer
+ *               children:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *     responses:
+ *       201:
+ *         description: Prebook session created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     bookingId:
+ *                       type: string
+ *                     sessionId:
+ *                       type: string
+ *                     transactionId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     expiresAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Missing required fields or invalid data
+ *       500:
+ *         description: Failed to create prebook
  */
-router.post("/prebook", async (req: Request, res: Response) => {
+router.post('/prebook', async (req: Request, res: Response) => {
   try {
     const {
       offerId,
@@ -201,15 +266,14 @@ router.post("/prebook", async (req: Request, res: Response) => {
     if (!offerId || !price || !currency || !guests || !userId) {
       return res.status(400).json({
         success: false,
-        error:
-          "Missing required fields: offerId, price, currency, guests, userId",
+        error: 'Missing required fields: offerId, price, currency, guests, userId',
       });
     }
 
     if (!Array.isArray(guests) || guests.length === 0) {
       return res.status(400).json({
         success: false,
-        error: "At least one guest is required",
+        error: 'At least one guest is required',
       });
     }
 
@@ -219,7 +283,7 @@ router.post("/prebook", async (req: Request, res: Response) => {
     if (checkIn >= checkOut) {
       return res.status(400).json({
         success: false,
-        error: "Check-out date must be after check-in date",
+        error: 'Check-out date must be after check-in date',
       });
     }
 
@@ -233,7 +297,7 @@ router.post("/prebook", async (req: Request, res: Response) => {
         offerId,
         price: {
           amount: price,
-          currency: currency || "USD",
+          currency: currency || 'USD',
         },
         rooms: 1,
         guests: guests.map((guest, idx) => ({
@@ -245,16 +309,12 @@ router.post("/prebook", async (req: Request, res: Response) => {
         includeCreditBalance: true,
       };
 
-      const prebookResult = await liteApiBookRequest<any>(
-        "/rates/prebook",
-        "POST",
-        litePayload,
-      );
+      const prebookResult = await liteApiBookRequest<any>('/rates/prebook', 'POST', litePayload);
 
       if (!prebookResult.transactionId) {
         return res.status(400).json({
           success: false,
-          error: "Failed to create prebook session with LiteAPI",
+          error: 'Failed to create prebook session with LiteAPI',
           details: prebookResult,
         });
       }
@@ -264,8 +324,8 @@ router.post("/prebook", async (req: Request, res: Response) => {
         data: {
           id: bookingId,
           userId,
-          serviceType: "hotel",
-          status: "pending",
+          serviceType: 'hotel',
+          status: 'pending',
           bookingRef: prebookResult.transactionId,
           hotelId: hotelId,
           hotelName: hotelName,
@@ -274,7 +334,7 @@ router.post("/prebook", async (req: Request, res: Response) => {
           checkOutDate: new Date(checkOutDate),
           baseAmount: price,
           totalAmount: price,
-          currency: currency || "USD",
+          currency: currency || 'USD',
           customerEmail: guests[0]?.email,
           metadata: {
             sessionId,
@@ -302,12 +362,12 @@ router.post("/prebook", async (req: Request, res: Response) => {
         hotelId,
         roomTypeId,
         price,
-        currency: currency || "USD",
+        currency: currency || 'USD',
         checkInDate,
         checkOutDate,
         guests,
         userId,
-        status: "prebooked",
+        status: 'prebooked',
         createdAt: new Date(),
         expiresAt: new Date(prebookResult.expiresAt),
         validationWarnings: prebookResult.validationWarnings,
@@ -318,7 +378,7 @@ router.post("/prebook", async (req: Request, res: Response) => {
       await CacheService.set(
         CacheKeys.prebookSession(prebookResult.transactionId),
         sessionData,
-        CACHE_TTL.PREBOOK_SESSION,
+        CACHE_TTL.PREBOOK_SESSION
       );
 
       res.status(201).json({
@@ -327,27 +387,27 @@ router.post("/prebook", async (req: Request, res: Response) => {
           bookingId,
           sessionId,
           transactionId: prebookResult.transactionId,
-          status: "prebooked",
+          status: 'prebooked',
           expiresAt: prebookResult.expiresAt,
           hotel: { id: hotelId, name: hotelName, roomType },
           dates: { checkIn: checkInDate, checkOut: checkOutDate },
           nights: calculateNights(checkInDate, checkOutDate),
-          price: { amount: price, currency: currency || "USD" },
+          price: { amount: price, currency: currency || 'USD' },
           guests,
           validationWarnings: prebookResult.validationWarnings,
-          message: "Booking hold created successfully. Rate is now locked.",
+          message: 'Booking hold created successfully. Rate is now locked.',
         },
       });
     } catch (liteApiError: any) {
-      console.error("[RealtimeBooking] LiteAPI prebook error:", liteApiError.message);
+      console.error('[RealtimeBooking] LiteAPI prebook error:', liteApiError.message);
 
       // Fallback: create booking record without LiteAPI confirmation
       const booking = await prisma.booking.create({
         data: {
           id: bookingId,
           userId,
-          serviceType: "hotel",
-          status: "pending",
+          serviceType: 'hotel',
+          status: 'pending',
           bookingRef: sessionId,
           hotelId,
           hotelName,
@@ -356,7 +416,7 @@ router.post("/prebook", async (req: Request, res: Response) => {
           checkOutDate: new Date(checkOutDate),
           baseAmount: price,
           totalAmount: price,
-          currency: currency || "USD",
+          currency: currency || 'USD',
           customerEmail: guests[0]?.email,
           metadata: {
             sessionId,
@@ -375,56 +435,93 @@ router.post("/prebook", async (req: Request, res: Response) => {
         data: {
           bookingId,
           sessionId,
-          status: "pending",
+          status: 'pending',
           hotel: { id: hotelId, name: hotelName, roomType },
           dates: { checkIn: checkInDate, checkOut: checkOutDate },
           nights: calculateNights(checkInDate, checkOutDate),
-          price: { amount: price, currency: currency || "USD" },
+          price: { amount: price, currency: currency || 'USD' },
           guests,
-          message:
-            "Booking created locally. Please proceed to confirmation to finalize.",
+          message: 'Booking created locally. Please proceed to confirmation to finalize.',
         },
       });
     }
   } catch (error: any) {
-    console.error("[RealtimeBooking] /prebook error:", error.message);
+    console.error('[RealtimeBooking] /prebook error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to create prebook",
+      error: 'Failed to create prebook',
       details: error.message,
     });
   }
 });
 
 /**
- * POST /api/realtime-booking/book
- * Complete the booking with payment (Step 2 of E2E flow)
- * 
- * Request body:
- * {
- *   bookingId: string,
- *   transactionId: string (from prebook),
- *   guests: array of guest objects with occupancy numbers,
- *   holder: booking holder details,
- *   paymentMethod: "WALLET" | "ACC_CREDIT_CARD",
- *   paymentDetails?: object
- * }
+ * @swagger
+ * /api/realtime-booking/book:
+ *   post:
+ *     summary: Complete a booking with payment
+ *     tags: [Realtime Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bookingId
+ *               - transactionId
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               transactionId:
+ *                 type: string
+ *               guests:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               holder:
+ *                 type: object
+ *               paymentMethod:
+ *                 type: string
+ *                 enum: [WALLET, ACC_CREDIT_CARD, TRANSACTION]
+ *               paymentDetails:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Booking confirmed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Booking not found
+ *       409:
+ *         description: Booking already confirmed
+ *       500:
+ *         description: Failed to complete booking
  */
-router.post("/book", async (req: Request, res: Response) => {
+router.post('/book', async (req: Request, res: Response) => {
   try {
     const {
       bookingId,
       transactionId,
       guests,
       holder,
-      paymentMethod = "WALLET",
+      paymentMethod = 'WALLET',
       paymentDetails,
     } = req.body;
 
     if (!bookingId || !transactionId) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields: bookingId, transactionId",
+        error: 'Missing required fields: bookingId, transactionId',
       });
     }
 
@@ -436,14 +533,14 @@ router.post("/book", async (req: Request, res: Response) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        error: "Booking not found",
+        error: 'Booking not found',
       });
     }
 
-    if (booking.status === "confirmed") {
+    if (booking.status === 'confirmed') {
       return res.status(409).json({
         success: false,
-        error: "Booking is already confirmed",
+        error: 'Booking is already confirmed',
       });
     }
 
@@ -475,24 +572,20 @@ router.post("/book", async (req: Request, res: Response) => {
       }
 
       // Add payment information
-      if (paymentMethod === "WALLET") {
-        bookPayload.payment = { method: "WALLET" };
+      if (paymentMethod === 'WALLET') {
+        bookPayload.payment = { method: 'WALLET' };
       } else if (paymentDetails) {
         bookPayload.payment = paymentDetails;
       } else {
-        bookPayload.payment = { method: "ACC_CREDIT_CARD" };
+        bookPayload.payment = { method: 'ACC_CREDIT_CARD' };
       }
 
-      const bookResult = await liteApiBookRequest<any>(
-        "/rates/book",
-        "POST",
-        bookPayload,
-      );
+      const bookResult = await liteApiBookRequest<any>('/rates/book', 'POST', bookPayload);
 
       if (!bookResult.confirmationId) {
         return res.status(400).json({
           success: false,
-          error: "Failed to confirm booking with LiteAPI",
+          error: 'Failed to confirm booking with LiteAPI',
           details: bookResult,
         });
       }
@@ -501,7 +594,7 @@ router.post("/book", async (req: Request, res: Response) => {
       const updatedBooking = await prisma.booking.update({
         where: { id: bookingId },
         data: {
-          status: "confirmed",
+          status: 'confirmed',
           bookingRef: bookResult.confirmationId,
           metadata: {
             ...(booking.metadata as any),
@@ -522,17 +615,17 @@ router.post("/book", async (req: Request, res: Response) => {
         data: {
           bookingId,
           bookingRef: bookResult.confirmationId,
-          status: "confirmed",
+          status: 'confirmed',
           hotel: {
             name: booking.hotelName,
             roomType: booking.roomType,
           },
           dates: {
-            checkIn: booking.checkInDate.toISOString().split("T")[0],
-            checkOut: booking.checkOutDate.toISOString().split("T")[0],
+            checkIn: booking.checkInDate.toISOString().split('T')[0],
+            checkOut: booking.checkOutDate.toISOString().split('T')[0],
             nights: calculateNights(
               booking.checkInDate.toISOString(),
-              booking.checkOutDate.toISOString(),
+              booking.checkOutDate.toISOString()
             ),
           },
           price: {
@@ -540,17 +633,17 @@ router.post("/book", async (req: Request, res: Response) => {
             currency: booking.currency,
           },
           confirmation: bookResult,
-          message: "Booking confirmed successfully!",
+          message: 'Booking confirmed successfully!',
         },
       });
     } catch (liteApiError: any) {
-      console.error("[RealtimeBooking] LiteAPI book error:", liteApiError.message);
+      console.error('[RealtimeBooking] LiteAPI book error:', liteApiError.message);
 
       // Fallback: update booking as confirmed locally
       const updatedBooking = await prisma.booking.update({
         where: { id: bookingId },
         data: {
-          status: "confirmed",
+          status: 'confirmed',
           metadata: {
             ...(booking.metadata as any),
             holder,
@@ -568,32 +661,32 @@ router.post("/book", async (req: Request, res: Response) => {
         data: {
           bookingId,
           bookingRef: bookingId,
-          status: "confirmed",
+          status: 'confirmed',
           hotel: {
             name: booking.hotelName,
             roomType: booking.roomType,
           },
           dates: {
-            checkIn: booking.checkInDate.toISOString().split("T")[0],
-            checkOut: booking.checkOutDate.toISOString().split("T")[0],
+            checkIn: booking.checkInDate.toISOString().split('T')[0],
+            checkOut: booking.checkOutDate.toISOString().split('T')[0],
             nights: calculateNights(
               booking.checkInDate.toISOString(),
-              booking.checkOutDate.toISOString(),
+              booking.checkOutDate.toISOString()
             ),
           },
           price: {
             amount: booking.totalAmount,
             currency: booking.currency,
           },
-          message: "Booking confirmed locally. Synchronizing with supplier...",
+          message: 'Booking confirmed locally. Synchronizing with supplier...',
         },
       });
     }
   } catch (error: any) {
-    console.error("[RealtimeBooking] /book error:", error.message);
+    console.error('[RealtimeBooking] /book error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to complete booking",
+      error: 'Failed to complete booking',
       details: error.message,
     });
   }
@@ -603,7 +696,7 @@ router.post("/book", async (req: Request, res: Response) => {
  * GET /api/realtime-booking/bookings/:bookingId
  * Retrieve booking details and status
  */
-router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
+router.get('/bookings/:bookingId', async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
 
@@ -614,7 +707,7 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        error: "Booking not found",
+        error: 'Booking not found',
       });
     }
 
@@ -625,14 +718,11 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
 
     try {
       // Try to fetch from LiteAPI
-      if (booking.bookingRef && booking.status === "confirmed") {
-        liteApiStatus = await liteApiBookRequest<any>(
-          `/bookings/${booking.bookingRef}`,
-          "GET",
-        );
+      if (booking.bookingRef && booking.status === 'confirmed') {
+        liteApiStatus = await liteApiBookRequest<any>(`/bookings/${booking.bookingRef}`, 'GET');
       }
     } catch (error) {
-      console.log("[RealtimeBooking] Could not fetch LiteAPI status");
+      console.log('[RealtimeBooking] Could not fetch LiteAPI status');
     }
 
     res.json({
@@ -647,11 +737,11 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
           roomType: booking.roomType,
         },
         dates: {
-          checkIn: booking.checkInDate.toISOString().split("T")[0],
-          checkOut: booking.checkOutDate.toISOString().split("T")[0],
+          checkIn: booking.checkInDate.toISOString().split('T')[0],
+          checkOut: booking.checkOutDate.toISOString().split('T')[0],
           nights: calculateNights(
             booking.checkInDate.toISOString(),
-            booking.checkOutDate.toISOString(),
+            booking.checkOutDate.toISOString()
           ),
         },
         guest: {
@@ -672,10 +762,10 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[RealtimeBooking] GET /bookings/:id error:", error.message);
+    console.error('[RealtimeBooking] GET /bookings/:id error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch booking",
+      error: 'Failed to fetch booking',
       details: error.message,
     });
   }
@@ -685,10 +775,10 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
  * DELETE /api/realtime-booking/bookings/:bookingId
  * Cancel booking
  */
-router.delete("/bookings/:bookingId", async (req: Request, res: Response) => {
+router.delete('/bookings/:bookingId', async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
-    const { reason = "User requested cancellation" } = req.body;
+    const { reason = 'User requested cancellation' } = req.body;
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -697,14 +787,14 @@ router.delete("/bookings/:bookingId", async (req: Request, res: Response) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        error: "Booking not found",
+        error: 'Booking not found',
       });
     }
 
-    if (booking.status === "cancelled") {
+    if (booking.status === 'cancelled') {
       return res.status(409).json({
         success: false,
-        error: "Booking is already cancelled",
+        error: 'Booking is already cancelled',
       });
     }
 
@@ -712,25 +802,22 @@ router.delete("/bookings/:bookingId", async (req: Request, res: Response) => {
 
     try {
       // Cancel with LiteAPI if booking is confirmed
-      if (booking.bookingRef && booking.status === "confirmed") {
+      if (booking.bookingRef && booking.status === 'confirmed') {
         cancellationResult = await liteApiBookRequest<any>(
           `/bookings/${booking.bookingRef}`,
-          "DELETE",
-          { reason },
+          'DELETE',
+          { reason }
         );
       }
     } catch (liteApiError: any) {
-      console.error(
-        "[RealtimeBooking] LiteAPI cancellation error:",
-        liteApiError.message,
-      );
+      console.error('[RealtimeBooking] LiteAPI cancellation error:', liteApiError.message);
     }
 
     // Update booking status in NEON
     const cancelledBooking = await prisma.booking.update({
       where: { id: bookingId },
       data: {
-        status: "cancelled",
+        status: 'cancelled',
         metadata: {
           ...(booking.metadata as any),
           cancellationReason: reason,
@@ -745,17 +832,17 @@ router.delete("/bookings/:bookingId", async (req: Request, res: Response) => {
       data: {
         bookingId,
         bookingRef: booking.bookingRef,
-        status: "cancelled",
+        status: 'cancelled',
         cancellationReason: reason,
         cancellationResult,
-        message: "Booking cancelled successfully",
+        message: 'Booking cancelled successfully',
       },
     });
   } catch (error: any) {
-    console.error("[RealtimeBooking] DELETE /bookings/:id error:", error.message);
+    console.error('[RealtimeBooking] DELETE /bookings/:id error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to cancel booking",
+      error: 'Failed to cancel booking',
       details: error.message,
     });
   }
@@ -765,30 +852,23 @@ router.delete("/bookings/:bookingId", async (req: Request, res: Response) => {
  * GET /api/realtime-booking/bookings
  * List user's bookings with filtering
  */
-router.get("/bookings", async (req: Request, res: Response) => {
+router.get('/bookings', async (req: Request, res: Response) => {
   try {
-    const {
-      userId,
-      status,
-      limit = 20,
-      offset = 0,
-      fromDate,
-      toDate,
-    } = req.query;
+    const { userId, status, limit = 20, offset = 0, fromDate, toDate } = req.query;
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: "userId is required",
+        error: 'userId is required',
       });
     }
 
     const where: any = {
       userId: String(userId),
-      serviceType: "hotel",
+      serviceType: 'hotel',
     };
 
-    if (status && status !== "all") {
+    if (status && status !== 'all') {
       where.status = String(status);
     }
 
@@ -809,7 +889,7 @@ router.get("/bookings", async (req: Request, res: Response) => {
         where,
         take: Number(limit),
         skip: Number(offset),
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       }),
       prisma.booking.count({ where }),
     ]);
@@ -817,7 +897,7 @@ router.get("/bookings", async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: {
-        bookings: bookings.map((b) => ({
+        bookings: bookings.map(b => ({
           bookingId: b.id,
           bookingRef: b.bookingRef,
           status: b.status,
@@ -826,8 +906,8 @@ router.get("/bookings", async (req: Request, res: Response) => {
             roomType: b.roomType,
           },
           dates: {
-            checkIn: b.checkInDate.toISOString().split("T")[0],
-            checkOut: b.checkOutDate.toISOString().split("T")[0],
+            checkIn: b.checkInDate.toISOString().split('T')[0],
+            checkOut: b.checkOutDate.toISOString().split('T')[0],
           },
           price: {
             amount: b.totalAmount,
@@ -843,10 +923,10 @@ router.get("/bookings", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[RealtimeBooking] GET /bookings error:", error.message);
+    console.error('[RealtimeBooking] GET /bookings error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch bookings",
+      error: 'Failed to fetch bookings',
       details: error.message,
     });
   }
@@ -856,92 +936,83 @@ router.get("/bookings", async (req: Request, res: Response) => {
  * POST /api/realtime-booking/bookings/:bookingId/amend
  * Update guest information on existing booking
  */
-router.post(
-  "/bookings/:bookingId/amend",
-  async (req: Request, res: Response) => {
-    try {
-      const { bookingId } = req.params;
-      const { firstName, lastName, email, phone } = req.body;
+router.post('/bookings/:bookingId/amend', async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    const { firstName, lastName, email, phone } = req.body;
 
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
       });
+    }
 
-      if (!booking) {
-        return res.status(404).json({
-          success: false,
-          error: "Booking not found",
-        });
-      }
+    let amendmentResult = null;
 
-      let amendmentResult = null;
-
-      try {
-        // Amend with LiteAPI if confirmed
-        if (booking.bookingRef && booking.status === "confirmed") {
-          amendmentResult = await liteApiBookRequest<any>(
-            `/bookings/${booking.bookingRef}/amend`,
-            "PUT",
-            {
-              firstName,
-              lastName,
-              email,
-              phone,
-            },
-          );
-        }
-      } catch (liteApiError: any) {
-        console.error(
-          "[RealtimeBooking] LiteAPI amendment error:",
-          liteApiError.message,
+    try {
+      // Amend with LiteAPI if confirmed
+      if (booking.bookingRef && booking.status === 'confirmed') {
+        amendmentResult = await liteApiBookRequest<any>(
+          `/bookings/${booking.bookingRef}/amend`,
+          'PUT',
+          {
+            firstName,
+            lastName,
+            email,
+            phone,
+          }
         );
       }
+    } catch (liteApiError: any) {
+      console.error('[RealtimeBooking] LiteAPI amendment error:', liteApiError.message);
+    }
 
-      // Update booking locally
-      const updatedBooking = await prisma.booking.update({
-        where: { id: bookingId },
-        data: {
-          customerEmail: email || booking.customerEmail,
-          metadata: {
-            ...(booking.metadata as any),
-            amendments: {
-              firstName,
-              lastName,
-              email,
-              phone,
-            },
-            amendedAt: new Date().toISOString(),
-            amendmentResult,
-          },
-        },
-      });
-
-      res.json({
-        success: true,
-        data: {
-          bookingId,
+    // Update booking locally
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        customerEmail: email || booking.customerEmail,
+        metadata: {
+          ...(booking.metadata as any),
           amendments: {
             firstName,
             lastName,
             email,
             phone,
           },
-          supplierAmended: !!amendmentResult,
-          message: "Guest information updated successfully",
+          amendedAt: new Date().toISOString(),
+          amendmentResult,
         },
-      });
-    } catch (error: any) {
-      console.error(
-        "[RealtimeBooking] POST /bookings/:id/amend error:",
-        error.message,
-      );
-      res.status(500).json({
-        success: false,
-        error: "Failed to amend booking",
-        details: error.message,
-      });
-    }
-  },
-);
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        bookingId,
+        amendments: {
+          firstName,
+          lastName,
+          email,
+          phone,
+        },
+        supplierAmended: !!amendmentResult,
+        message: 'Guest information updated successfully',
+      },
+    });
+  } catch (error: any) {
+    console.error('[RealtimeBooking] POST /bookings/:id/amend error:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to amend booking',
+      details: error.message,
+    });
+  }
+});
 
 export default router;

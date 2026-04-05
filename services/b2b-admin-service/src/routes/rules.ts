@@ -1,17 +1,13 @@
-import { Router, Response } from "express";
-import { prisma } from "../database.js";
-import {
-  AuthRequest,
-  authMiddleware,
-  requirePermission,
-} from "../middleware/auth.js";
+import { Router, Response } from 'express';
+import { prisma } from '../database.js';
+import { AuthRequest, authMiddleware, requirePermission } from '../middleware/auth.js';
 import {
   validateZod,
   paginationSchema,
   createMarkupRuleSchema,
   idParamSchema,
-} from "../middleware/validate.js";
-import { Prisma } from "@prisma/client";
+} from '../middleware/validate.js';
+import { Prisma } from '@prisma/client';
 
 const router: Router = Router();
 
@@ -53,14 +49,18 @@ const validateFieldMigration = (data: any): { valid: boolean; error?: string } =
     conflicts.push("Cannot use both 'markupType' and 'ruleType'. Use 'ruleType' (new field name).");
   }
   if (data.applicableTo !== undefined && data.targetType !== undefined) {
-    conflicts.push("Cannot use both 'applicableTo' and 'targetType'. Use 'targetType' (new field name).");
+    conflicts.push(
+      "Cannot use both 'applicableTo' and 'targetType'. Use 'targetType' (new field name)."
+    );
   }
   if (data.serviceTypes !== undefined && data.serviceType !== undefined) {
-    conflicts.push("Cannot use both 'serviceTypes' and 'serviceType'. Use 'serviceType' (new field name).");
+    conflicts.push(
+      "Cannot use both 'serviceTypes' and 'serviceType'. Use 'serviceType' (new field name)."
+    );
   }
 
   if (conflicts.length > 0) {
-    return { valid: false, error: conflicts.join(" ") };
+    return { valid: false, error: conflicts.join(' ') };
   }
 
   return { valid: true };
@@ -69,18 +69,18 @@ const validateFieldMigration = (data: any): { valid: boolean; error?: string } =
 // Helper to log when deprecated fields are used (for migration tracking)
 const logDeprecatedFieldUsage = (data: any, context: string): void => {
   const deprecatedFields: string[] = [];
-  
+
   if (data.markupValue !== undefined) deprecatedFields.push("markupValue (use 'value')");
   if (data.minMarkup !== undefined) deprecatedFields.push("minMarkup (use 'minValue')");
   if (data.maxMarkup !== undefined) deprecatedFields.push("maxMarkup (use 'maxValue')");
   if (data.markupType !== undefined) deprecatedFields.push("markupType (use 'ruleType')");
   if (data.applicableTo !== undefined) deprecatedFields.push("applicableTo (use 'targetType')");
   if (data.serviceTypes !== undefined) deprecatedFields.push("serviceTypes (use 'serviceType')");
-  
+
   if (deprecatedFields.length > 0) {
     console.warn(
-      `[API Deprecation] ${context}: Using deprecated field(s): ${deprecatedFields.join(", ")}. ` +
-      "Please migrate to new field names."
+      `[API Deprecation] ${context}: Using deprecated field(s): ${deprecatedFields.join(', ')}. ` +
+        'Please migrate to new field names.'
     );
   }
 };
@@ -105,10 +105,67 @@ const serializeRule = (rule: any) => ({
 // Markup Rules Routes
 // ============================================
 
-// GET /api/rules/markup - List all markup rules
+/**
+ * @swagger
+ * /api/rules/markup:
+ *   get:
+ *     summary: List all markup rules
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *         description: Items per page
+ *       - in: query
+ *         name: isActive
+ *         schema: { type: string, enum: [true, false] }
+ *         description: Filter by active status
+ *       - in: query
+ *         name: companyId
+ *         schema: { type: string }
+ *         description: Filter by company ID
+ *       - in: query
+ *         name: serviceType
+ *         schema: { type: string }
+ *         description: Filter by service type
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Search by name or code
+ *     responses:
+ *       200:
+ *         description: List of markup rules
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page: { type: integer }
+ *                     limit: { type: integer }
+ *                     total: { type: integer }
+ *                     totalPages: { type: integer }
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 error: { type: string }
+ */
 router.get(
-  "/markup",
-  requirePermission("rules:read"),
+  '/markup',
+  requirePermission('rules:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -118,7 +175,7 @@ router.get(
       const where: any = {};
 
       if (isActive !== undefined) {
-        where.isActive = isActive === "true";
+        where.isActive = isActive === 'true';
       }
 
       if (companyId) {
@@ -141,7 +198,7 @@ router.get(
           where,
           skip: (page - 1) * limit,
           take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { priority: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { priority: 'desc' },
         }),
         prisma.markupRule.count({ where }),
       ]);
@@ -157,19 +214,47 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching markup rules:", error);
+      console.error('Error fetching markup rules:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch markup rules",
+        error: 'Failed to fetch markup rules',
       });
     }
-  },
+  }
 );
 
-// GET /api/rules/markup/:id - Get markup rule by ID
+/**
+ * @swagger
+ * /api/rules/markup/{id}:
+ *   get:
+ *     summary: Get markup rule by ID
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Markup rule not found
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/markup/:id",
-  requirePermission("rules:read"),
+  '/markup/:id',
+  requirePermission('rules:read'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -182,7 +267,7 @@ router.get(
       if (!rule) {
         return res.status(404).json({
           success: false,
-          error: "Markup rule not found",
+          error: 'Markup rule not found',
         });
       }
 
@@ -191,79 +276,85 @@ router.get(
         data: serializeRule(rule),
       });
     } catch (error) {
-      console.error("Error fetching markup rule:", error);
+      console.error('Error fetching markup rule:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch markup rule",
+        error: 'Failed to fetch markup rule',
       });
     }
-  },
+  }
 );
 
-// POST /api/rules/markup - Create markup rule
 /**
- * @api {post} /api/rules/markup Create Markup Rule
- * @apiName CreateMarkupRule
- * @apiGroup Rules
- * @apiPermission rules:create
- *
- * @apiBody {String} name Rule name
- * @apiBody {String} code Unique rule code
- * @apiBody {String} [companyId] Company ID (optional)
- * @apiBody {Number} [priority=0] Rule priority
- *
- * @apiBody (New Field Names) {String} ruleType Type of rule (percentage|fixed|tiered)
- * @apiBody (New Field Names) {String} targetType Target scope (global|company|branch|user)
- * @apiBody (New Field Names) {String} serviceType Service type (flight|hotel|car|transfer)
- * @apiBody (New Field Names) {Number} value Markup value
- * @apiBody (New Field Names) {Number} [minValue] Minimum markup value
- * @apiBody (New Field Names) {Number} [maxValue] Maximum markup value
- *
- * @apiBody (Deprecated Field Names) {String} [markupType] Use 'ruleType' instead
- * @apiBody (Deprecated Field Names) {String} [applicableTo] Use 'targetType' instead
- * @apiBody (Deprecated Field Names) {String[]} [serviceTypes] Use 'serviceType' instead
- * @apiBody (Deprecated Field Names) {Number} [markupValue] Use 'value' instead
- * @apiBody (Deprecated Field Names) {Number} [minMarkup] Use 'minValue' instead
- * @apiBody (Deprecated Field Names) {Number} [maxMarkup] Use 'maxValue' instead
- *
- * @apiDescription **Field Migration Notice:** This endpoint supports both old and new field names for backward compatibility.
- * If you provide both old and new field names in the same request, the validation will reject the request.
- * If you use only deprecated field names, they will be automatically mapped to the new field names.
- *
- * **Important:** When migrating, use EITHER all old fields OR all new fields. Do not mix them.
- *
- * **Field Precedence:** When both old and new fields are provided (though validation rejects this),
- * old field names take precedence. Example: if markupValue=10 and value=5, markupValue wins.
- *
- * **Migration Strategy:**
- * - Existing integrations: Continue using old field names (backward compatible)
- * - New integrations: Use new field names exclusively
- * - Migration: Replace all old fields with new ones in a single deployment
- * - Deprecation: Old fields will be removed in v3.0.0 (6 month migration period)
- *
- * @apiExample {json} Request-Example (New Fields):
- *     {
- *       "name": "Standard Flight Markup",
- *       "code": "FLIGHT_STD",
- *       "ruleType": "percentage",
- *       "targetType": "global",
- *       "serviceType": "flight",
- *       "value": 5.0
- *     }
- *
- * @apiExample {json} Request-Example (Deprecated Fields - Still Supported):
- *     {
- *       "name": "Standard Flight Markup",
- *       "code": "FLIGHT_STD",
- *       "markupType": "percentage",
- *       "applicableTo": "global",
- *       "serviceTypes": ["flight"],
- *       "markupValue": 5.0
- *     }
+ * @swagger
+ * /api/rules/markup:
+ *   post:
+ *     summary: Create markup rule
+ *     tags: [Rules]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - code
+ *               - value
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               companyId:
+ *                 type: string
+ *               priority:
+ *                 type: integer
+ *               ruleType:
+ *                 type: string
+ *                 enum: [percentage, fixed, tiered]
+ *               targetType:
+ *                 type: string
+ *                 enum: [global, company, branch, user]
+ *               serviceType:
+ *                 type: string
+ *                 enum: [flight, hotel, car, transfer]
+ *               value:
+ *                 type: number
+ *               minValue:
+ *                 type: number
+ *               maxValue:
+ *                 type: number
+ *               conditions:
+ *                 type: object
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
  */
 router.post(
-  "/markup",
-  requirePermission("rules:create"),
+  '/markup',
+  requirePermission('rules:create'),
   validateZod(createMarkupRuleSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -279,7 +370,7 @@ router.post(
       }
 
       // Log deprecated field usage for migration tracking
-      logDeprecatedFieldUsage(data, "POST /api/rules/markup");
+      logDeprecatedFieldUsage(data, 'POST /api/rules/markup');
 
       /**
        * Backward-compatible field aliases for API input
@@ -319,7 +410,7 @@ router.post(
       if (existingRule) {
         return res.status(400).json({
           success: false,
-          error: "Markup rule with this code already exists",
+          error: 'Markup rule with this code already exists',
         });
       }
 
@@ -329,11 +420,14 @@ router.post(
           name: inputData.name,
           code: inputData.code,
           priority: inputData.priority || 0,
-          targetType: inputData.applicableTo || "global",
-          serviceType: Array.isArray(inputData.serviceTypes) && inputData.serviceTypes.length > 0
-            ? inputData.serviceTypes[0]
-            : (typeof inputData.serviceTypes === "string" ? inputData.serviceTypes : null),
-          ruleType: inputData.markupType || "percentage",
+          targetType: inputData.applicableTo || 'global',
+          serviceType:
+            Array.isArray(inputData.serviceTypes) && inputData.serviceTypes.length > 0
+              ? inputData.serviceTypes[0]
+              : typeof inputData.serviceTypes === 'string'
+                ? inputData.serviceTypes
+                : null,
+          ruleType: inputData.markupType || 'percentage',
           value: new Prisma.Decimal(inputData.markupValue),
           minValue: inputData.minMarkup ? new Prisma.Decimal(inputData.minMarkup) : null,
           maxValue: inputData.maxMarkup ? new Prisma.Decimal(inputData.maxMarkup) : null,
@@ -353,76 +447,88 @@ router.post(
       res.status(201).json({
         success: true,
         data: serializeRule(rule),
-        message: "Markup rule created successfully",
+        message: 'Markup rule created successfully',
       });
     } catch (error) {
-      console.error("Error creating markup rule:", error);
+      console.error('Error creating markup rule:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to create markup rule",
+        error: 'Failed to create markup rule',
       });
     }
-  },
+  }
 );
 
-// PUT /api/rules/markup/:id - Update markup rule
 /**
- * @api {put} /api/rules/markup/:id Update Markup Rule
- * @apiName UpdateMarkupRule
- * @apiGroup Rules
- * @apiPermission rules:update
- *
- * @apiParam {String} id Rule ID
- *
- * @apiBody {String} [name] Rule name
- * @apiBody {Number} [priority] Rule priority
- *
- * @apiBody (New Field Names) {String} [ruleType] Type of rule (percentage|fixed|tiered)
- * @apiBody (New Field Names) {String} [targetType] Target scope (global|company|branch|user)
- * @apiBody (New Field Names) {String} [serviceType] Service type (flight|hotel|car|transfer)
- * @apiBody (New Field Names) {Number} [value] Markup value
- * @apiBody (New Field Names) {Number} [minValue] Minimum markup value
- * @apiBody (New Field Names) {Number} [maxValue] Maximum markup value
- *
- * @apiBody (Deprecated Field Names) {String} [markupType] Use 'ruleType' instead
- * @apiBody (Deprecated Field Names) {String} [applicableTo] Use 'targetType' instead
- * @apiBody (Deprecated Field Names) {String[]} [serviceTypes] Use 'serviceType' instead
- * @apiBody (Deprecated Field Names) {Number} [markupValue] Use 'value' instead
- * @apiBody (Deprecated Field Names) {Number} [minMarkup] Use 'minValue' instead
- * @apiBody (Deprecated Field Names) {Number} [maxMarkup] Use 'maxValue' instead
- *
- * @apiDescription **Field Migration Notice:** This endpoint supports both old and new field names for backward compatibility.
- * If you provide both old and new field names in the same request, the validation will reject the request.
- * If you use only deprecated field names, they will be automatically mapped to the new field names.
- *
- * **Important:** When migrating, use EITHER all old fields OR all new fields. Do not mix them.
- *
- * **Field Precedence:** When both old and new fields are provided (though validation rejects this),
- * old field names take precedence. Example: if markupValue=10 and value=5, markupValue wins.
- *
- * **Migration Strategy:**
- * - Existing integrations: Continue using old field names (backward compatible)
- * - New integrations: Use new field names exclusively
- * - Migration: Replace all old fields with new ones in a single deployment
- * - Deprecation: Old fields will be removed in v3.0.0 (6 month migration period)
- *
- * @apiExample {json} Request-Example (New Fields):
- *     {
- *       "name": "Updated Flight Markup",
- *       "ruleType": "percentage",
- *       "value": 7.5
- *     }
- *
- * @apiExample {json} Request-Example (Deprecated Fields - Still Supported):
- *     {
- *       "name": "Updated Flight Markup",
- *       "markupType": "percentage",
- *       "markupValue": 7.5
- *     }
+ * @swagger
+ * /api/rules/markup/{id}:
+ *   put:
+ *     summary: Update markup rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               priority:
+ *                 type: integer
+ *               ruleType:
+ *                 type: string
+ *                 enum: [percentage, fixed, tiered]
+ *               targetType:
+ *                 type: string
+ *                 enum: [global, company, branch, user]
+ *               serviceType:
+ *                 type: string
+ *                 enum: [flight, hotel, car, transfer]
+ *               value:
+ *                 type: number
+ *               minValue:
+ *                 type: number
+ *               maxValue:
+ *                 type: number
+ *               conditions:
+ *                 type: object
+ *               isActive:
+ *                 type: boolean
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Markup rule not found
+ *       500:
+ *         description: Server error
  */
 router.put(
-  "/markup/:id",
-  requirePermission("rules:update"),
+  '/markup/:id',
+  requirePermission('rules:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -478,7 +584,7 @@ router.put(
       if (!rule) {
         return res.status(404).json({
           success: false,
-          error: "Markup rule not found",
+          error: 'Markup rule not found',
         });
       }
 
@@ -488,22 +594,26 @@ router.put(
       if (inputData.priority !== undefined) updateData.priority = inputData.priority;
       if (inputData.applicableTo) updateData.targetType = inputData.applicableTo;
       if (inputData.serviceTypes) {
-        updateData.serviceType = Array.isArray(inputData.serviceTypes) && inputData.serviceTypes.length > 0
-          ? inputData.serviceTypes[0]
-          : (typeof inputData.serviceTypes === "string" ? inputData.serviceTypes : null);
+        updateData.serviceType =
+          Array.isArray(inputData.serviceTypes) && inputData.serviceTypes.length > 0
+            ? inputData.serviceTypes[0]
+            : typeof inputData.serviceTypes === 'string'
+              ? inputData.serviceTypes
+              : null;
       }
       if (inputData.markupType) updateData.ruleType = inputData.markupType;
       if (inputData.markupValue !== undefined)
         updateData.value = new Prisma.Decimal(inputData.markupValue);
       if (inputData.minMarkup !== undefined)
-        updateData.minValue = inputData.minMarkup
-          ? new Prisma.Decimal(inputData.minMarkup)
-          : null;
+        updateData.minValue = inputData.minMarkup ? new Prisma.Decimal(inputData.minMarkup) : null;
       if (inputData.maxMarkup !== undefined)
-        updateData.maxValue = inputData.maxMarkup
-          ? new Prisma.Decimal(inputData.maxMarkup)
-          : null;
-      if (inputData.conditions !== undefined || inputData.supplierIds !== undefined || inputData.branchIds !== undefined || inputData.userIds !== undefined) {
+        updateData.maxValue = inputData.maxMarkup ? new Prisma.Decimal(inputData.maxMarkup) : null;
+      if (
+        inputData.conditions !== undefined ||
+        inputData.supplierIds !== undefined ||
+        inputData.branchIds !== undefined ||
+        inputData.userIds !== undefined
+      ) {
         updateData.conditions = {
           ...inputData.conditions,
           supplierIds: inputData.supplierIds,
@@ -525,22 +635,50 @@ router.put(
       res.json({
         success: true,
         data: serializeRule(updatedRule),
-        message: "Markup rule updated successfully",
+        message: 'Markup rule updated successfully',
       });
     } catch (error) {
-      console.error("Error updating markup rule:", error);
+      console.error('Error updating markup rule:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update markup rule",
+        error: 'Failed to update markup rule',
       });
     }
-  },
+  }
 );
 
-// DELETE /api/rules/markup/:id - Delete markup rule
+/**
+ * @swagger
+ * /api/rules/markup/{id}:
+ *   delete:
+ *     summary: Delete markup rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Markup rule not found
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/markup/:id",
-  requirePermission("rules:delete"),
+  '/markup/:id',
+  requirePermission('rules:delete'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -553,7 +691,7 @@ router.delete(
       if (!rule) {
         return res.status(404).json({
           success: false,
-          error: "Markup rule not found",
+          error: 'Markup rule not found',
         });
       }
 
@@ -563,22 +701,50 @@ router.delete(
 
       res.json({
         success: true,
-        message: "Markup rule deleted successfully",
+        message: 'Markup rule deleted successfully',
       });
     } catch (error) {
-      console.error("Error deleting markup rule:", error);
+      console.error('Error deleting markup rule:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to delete markup rule",
+        error: 'Failed to delete markup rule',
       });
     }
-  },
+  }
 );
 
-// PUT /api/rules/markup/:id/toggle - Toggle markup rule active status
+/**
+ * @swagger
+ * /api/rules/markup/{id}/toggle:
+ *   put:
+ *     summary: Toggle markup rule active status
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Markup rule not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/markup/:id/toggle",
-  requirePermission("rules:update"),
+  '/markup/:id/toggle',
+  requirePermission('rules:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -591,7 +757,7 @@ router.put(
       if (!rule) {
         return res.status(404).json({
           success: false,
-          error: "Markup rule not found",
+          error: 'Markup rule not found',
         });
       }
 
@@ -603,22 +769,50 @@ router.put(
       res.json({
         success: true,
         data: serializeRule(updatedRule),
-        message: `Markup rule ${updatedRule.isActive ? "activated" : "deactivated"} successfully`,
+        message: `Markup rule ${updatedRule.isActive ? 'activated' : 'deactivated'} successfully`,
       });
     } catch (error) {
-      console.error("Error toggling markup rule:", error);
+      console.error('Error toggling markup rule:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to toggle markup rule",
+        error: 'Failed to toggle markup rule',
       });
     }
-  },
+  }
 );
 
-// POST /api/rules/markup/:id/duplicate - Duplicate markup rule
+/**
+ * @swagger
+ * /api/rules/markup/{id}/duplicate:
+ *   post:
+ *     summary: Duplicate markup rule
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Markup rule not found
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/markup/:id/duplicate",
-  requirePermission("rules:create"),
+  '/markup/:id/duplicate',
+  requirePermission('rules:create'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -631,7 +825,7 @@ router.post(
       if (!rule) {
         return res.status(404).json({
           success: false,
-          error: "Markup rule not found",
+          error: 'Markup rule not found',
         });
       }
 
@@ -644,7 +838,7 @@ router.post(
           name: `${rule.name} (Copy)`,
           code: newCode,
           priority: rule.priority,
-          targetType: rule.targetType || "global",
+          targetType: rule.targetType || 'global',
           serviceType: rule.serviceType,
           ruleType: rule.ruleType,
           value: rule.value,
@@ -661,26 +855,71 @@ router.post(
       res.status(201).json({
         success: true,
         data: serializeRule(newRule),
-        message: "Markup rule duplicated successfully",
+        message: 'Markup rule duplicated successfully',
       });
     } catch (error) {
-      console.error("Error duplicating markup rule:", error);
+      console.error('Error duplicating markup rule:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to duplicate markup rule",
+        error: 'Failed to duplicate markup rule',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Supplier Deals Routes
 // ============================================
 
-// GET /api/rules/deals - List all supplier deals
+/**
+ * @swagger
+ * /api/rules/deals:
+ *   get:
+ *     summary: List all supplier deals
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: productType
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/deals",
-  requirePermission("rules:read"),
+  '/deals',
+  requirePermission('rules:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -709,7 +948,7 @@ router.get(
           where,
           skip: (page - 1) * limit,
           take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { priority: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { priority: 'desc' },
           include: {
             dealMappingRules: {
               take: 5,
@@ -721,7 +960,7 @@ router.get(
 
       res.json({
         success: true,
-        data: deals.map((d) => ({
+        data: deals.map(d => ({
           ...d,
           discountValue: d.discountValue?.toNumber?.() ?? d.discountValue,
           maxDiscount: d.maxDiscount?.toNumber?.() ?? d.maxDiscount,
@@ -735,19 +974,47 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching supplier deals:", error);
+      console.error('Error fetching supplier deals:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch supplier deals",
+        error: 'Failed to fetch supplier deals',
       });
     }
-  },
+  }
 );
 
-// GET /api/rules/deals/:id - Get deal by ID
+/**
+ * @swagger
+ * /api/rules/deals/{id}:
+ *   get:
+ *     summary: Get deal by ID
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Deal not found
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/deals/:id",
-  requirePermission("rules:read"),
+  '/deals/:id',
+  requirePermission('rules:read'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -763,7 +1030,7 @@ router.get(
       if (!deal) {
         return res.status(404).json({
           success: false,
-          error: "Deal not found",
+          error: 'Deal not found',
         });
       }
 
@@ -773,24 +1040,96 @@ router.get(
           ...deal,
           discountValue: deal.discountValue?.toNumber?.() ?? deal.discountValue,
           maxDiscount: deal.maxDiscount?.toNumber?.() ?? deal.maxDiscount,
-          minOrderAmount:
-            deal.minOrderAmount?.toNumber?.() ?? deal.minOrderAmount,
+          minOrderAmount: deal.minOrderAmount?.toNumber?.() ?? deal.minOrderAmount,
         },
       });
     } catch (error) {
-      console.error("Error fetching deal:", error);
+      console.error('Error fetching deal:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch deal",
+        error: 'Failed to fetch deal',
       });
     }
-  },
+  }
 );
 
-// POST /api/rules/deals - Create supplier deal
+/**
+ * @swagger
+ * /api/rules/deals:
+ *   post:
+ *     summary: Create supplier deal
+ *     tags: [Rules]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - code
+ *               - productType
+ *               - dealType
+ *               - discountValue
+ *               - validFrom
+ *               - validTo
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               productType:
+ *                 type: string
+ *               dealType:
+ *                 type: string
+ *               supplierId:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               supplierCodes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               discountType:
+ *                 type: string
+ *               discountValue:
+ *                 type: number
+ *               maxDiscount:
+ *                 type: number
+ *               minOrderAmount:
+ *                 type: number
+ *               priority:
+ *                 type: integer
+ *               isCombinableWithCoupons:
+ *                 type: boolean
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/deals",
-  requirePermission("rules:create"),
+  '/deals',
+  requirePermission('rules:create'),
   async (req: AuthRequest, res: Response) => {
     try {
       const data = req.body;
@@ -798,7 +1137,7 @@ router.post(
       if (!data.name || !data.code || !data.productType || !data.dealType) {
         return res.status(400).json({
           success: false,
-          error: "Name, code, productType, and dealType are required",
+          error: 'Name, code, productType, and dealType are required',
         });
       }
 
@@ -810,7 +1149,7 @@ router.post(
       if (existingDeal) {
         return res.status(400).json({
           success: false,
-          error: "Deal with this code already exists",
+          error: 'Deal with this code already exists',
         });
       }
 
@@ -821,16 +1160,12 @@ router.post(
           code: data.code,
           productType: data.productType,
           dealType: data.dealType,
-          status: data.status || "active",
+          status: data.status || 'active',
           supplierCodes: data.supplierCodes || [],
           discountType: data.discountType,
           discountValue: new Prisma.Decimal(data.discountValue),
-          maxDiscount: data.maxDiscount
-            ? new Prisma.Decimal(data.maxDiscount)
-            : null,
-          minOrderAmount: data.minOrderAmount
-            ? new Prisma.Decimal(data.minOrderAmount)
-            : null,
+          maxDiscount: data.maxDiscount ? new Prisma.Decimal(data.maxDiscount) : null,
+          minOrderAmount: data.minOrderAmount ? new Prisma.Decimal(data.minOrderAmount) : null,
           priority: data.priority || 0,
           isCombinableWithCoupons: data.isCombinableWithCoupons || false,
           validFrom: new Date(data.validFrom),
@@ -845,25 +1180,87 @@ router.post(
           ...deal,
           discountValue: deal.discountValue?.toNumber?.() ?? deal.discountValue,
           maxDiscount: deal.maxDiscount?.toNumber?.() ?? deal.maxDiscount,
-          minOrderAmount:
-            deal.minOrderAmount?.toNumber?.() ?? deal.minOrderAmount,
+          minOrderAmount: deal.minOrderAmount?.toNumber?.() ?? deal.minOrderAmount,
         },
-        message: "Deal created successfully",
+        message: 'Deal created successfully',
       });
     } catch (error) {
-      console.error("Error creating deal:", error);
+      console.error('Error creating deal:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to create deal",
+        error: 'Failed to create deal',
       });
     }
-  },
+  }
 );
 
-// PUT /api/rules/deals/:id - Update deal
+/**
+ * @swagger
+ * /api/rules/deals/{id}:
+ *   put:
+ *     summary: Update deal
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               supplierCodes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               discountType:
+ *                 type: string
+ *               discountValue:
+ *                 type: number
+ *               maxDiscount:
+ *                 type: number
+ *               minOrderAmount:
+ *                 type: number
+ *               priority:
+ *                 type: integer
+ *               isCombinableWithCoupons:
+ *                 type: boolean
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Deal not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/deals/:id",
-  requirePermission("rules:update"),
+  '/deals/:id',
+  requirePermission('rules:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -877,7 +1274,7 @@ router.put(
       if (!deal) {
         return res.status(404).json({
           success: false,
-          error: "Deal not found",
+          error: 'Deal not found',
         });
       }
 
@@ -890,9 +1287,7 @@ router.put(
       if (data.discountValue !== undefined)
         updateData.discountValue = new Prisma.Decimal(data.discountValue);
       if (data.maxDiscount !== undefined)
-        updateData.maxDiscount = data.maxDiscount
-          ? new Prisma.Decimal(data.maxDiscount)
-          : null;
+        updateData.maxDiscount = data.maxDiscount ? new Prisma.Decimal(data.maxDiscount) : null;
       if (data.minOrderAmount !== undefined)
         updateData.minOrderAmount = data.minOrderAmount
           ? new Prisma.Decimal(data.minOrderAmount)
@@ -913,31 +1308,54 @@ router.put(
         success: true,
         data: {
           ...updatedDeal,
-          discountValue:
-            updatedDeal.discountValue?.toNumber?.() ??
-            updatedDeal.discountValue,
-          maxDiscount:
-            updatedDeal.maxDiscount?.toNumber?.() ?? updatedDeal.maxDiscount,
-          minOrderAmount:
-            updatedDeal.minOrderAmount?.toNumber?.() ??
-            updatedDeal.minOrderAmount,
+          discountValue: updatedDeal.discountValue?.toNumber?.() ?? updatedDeal.discountValue,
+          maxDiscount: updatedDeal.maxDiscount?.toNumber?.() ?? updatedDeal.maxDiscount,
+          minOrderAmount: updatedDeal.minOrderAmount?.toNumber?.() ?? updatedDeal.minOrderAmount,
         },
-        message: "Deal updated successfully",
+        message: 'Deal updated successfully',
       });
     } catch (error) {
-      console.error("Error updating deal:", error);
+      console.error('Error updating deal:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update deal",
+        error: 'Failed to update deal',
       });
     }
-  },
+  }
 );
 
-// DELETE /api/rules/deals/:id - Delete deal
+/**
+ * @swagger
+ * /api/rules/deals/{id}:
+ *   delete:
+ *     summary: Delete deal
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Deal not found
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/deals/:id",
-  requirePermission("rules:delete"),
+  '/deals/:id',
+  requirePermission('rules:delete'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -950,7 +1368,7 @@ router.delete(
       if (!deal) {
         return res.status(404).json({
           success: false,
-          error: "Deal not found",
+          error: 'Deal not found',
         });
       }
 
@@ -960,26 +1378,67 @@ router.delete(
 
       res.json({
         success: true,
-        message: "Deal deleted successfully",
+        message: 'Deal deleted successfully',
       });
     } catch (error) {
-      console.error("Error deleting deal:", error);
+      console.error('Error deleting deal:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to delete deal",
+        error: 'Failed to delete deal',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Commission Settlements Routes
 // ============================================
 
-// GET /api/rules/commissions - List commission settlements
+/**
+ * @swagger
+ * /api/rules/commissions:
+ *   get:
+ *     summary: List commission settlements
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: supplierId
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/commissions",
-  requirePermission("rules:read"),
+  '/commissions',
+  requirePermission('rules:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -1001,14 +1460,14 @@ router.get(
           where,
           skip: (page - 1) * limit,
           take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
         }),
         prisma.commissionSettlement.count({ where }),
       ]);
 
       res.json({
         success: true,
-        data: commissions.map((c) => ({
+        data: commissions.map(c => ({
           ...c,
           amount: c.amount?.toNumber?.() ?? c.amount,
         })),
@@ -1020,19 +1479,62 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching commissions:", error);
+      console.error('Error fetching commissions:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch commissions",
+        error: 'Failed to fetch commissions',
       });
     }
-  },
+  }
 );
 
-// PUT /api/rules/commissions/:id/settle - Settle commission
+/**
+ * @swagger
+ * /api/rules/commissions/{id}/settle:
+ *   put:
+ *     summary: Settle commission
+ *     tags: [Rules]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               settledAmount:
+ *                 type: number
+ *               settlementRef:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Commission settlement not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/commissions/:id/settle",
-  requirePermission("rules:update"),
+  '/commissions/:id/settle',
+  requirePermission('rules:update'),
   validateZod(idParamSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -1046,21 +1548,21 @@ router.put(
       if (!commission) {
         return res.status(404).json({
           success: false,
-          error: "Commission settlement not found",
+          error: 'Commission settlement not found',
         });
       }
 
-      if (commission.settlementStatus === "settled") {
+      if (commission.settlementStatus === 'settled') {
         return res.status(400).json({
           success: false,
-          error: "Commission already settled",
+          error: 'Commission already settled',
         });
       }
 
       const updatedCommission = await prisma.commissionSettlement.update({
         where: { id },
         data: {
-          settlementStatus: "settled",
+          settlementStatus: 'settled',
           settledAt: new Date(),
           metadata: {
             settlementRef: settlementRef || null,
@@ -1075,16 +1577,16 @@ router.put(
           ...updatedCommission,
           amount: updatedCommission.amount?.toNumber?.() ?? updatedCommission.amount,
         },
-        message: "Commission settled successfully",
+        message: 'Commission settled successfully',
       });
     } catch (error) {
-      console.error("Error settling commission:", error);
+      console.error('Error settling commission:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to settle commission",
+        error: 'Failed to settle commission',
       });
     }
-  },
+  }
 );
 
 export default router;

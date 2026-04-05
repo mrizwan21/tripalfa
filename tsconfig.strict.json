@@ -1,0 +1,32 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        // Enable all strict type-checking options
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictBindCallApply": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "useUnknownInCatchVariables": true,
+        "alwaysStrict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUncheckedIndexedAccess": true,
+        "noImplicitOverride": true,
+        "allowUnusedLabels": false,
+        "allowUnreachableCode": false,
+        // Additional quality checks
+        "forceConsistentCasingInFileNames": true,
+        "noPropertyAccessFromIndexSignature": true
+    },
+    "include": [],
+    "exclude": [
+        "node_modules",
+        "dist"
+    ]
+}

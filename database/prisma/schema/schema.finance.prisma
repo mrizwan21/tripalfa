@@ -1,0 +1,1261 @@
+// Prisma Schema: tripalfa_finance (Finance & Reporting database)
+// Database: PostgreSQL (tripalfa_finance)
+// Purpose: Invoices, commission, suppliers, marketing, loyalty, discounts
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../packages/shared-database/src/generated/finance"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============== INVOICING SYSTEM ==============
+
+model invoice {
+  id                String    @id @default(cuid())
+  invoiceNumber     String    @unique
+  bookingId         String?
+  userId            String
+  companyId         String?
+  invoiceType       String
+  status            String    @default("draft")
+  subtotal          Decimal   @db.Decimal(12, 2)
+  taxAmount         Decimal?  @db.Decimal(12, 2)
+  totalAmount       Decimal   @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  issueDate         DateTime  @db.Timestamptz(6)
+  dueDate           DateTime? @db.Timestamptz(6)
+  paidDate          DateTime? @db.Timestamptz(6)
+  paidAmount        Decimal?  @db.Decimal(12, 2)
+  notes             String?
+  termsConditions   String?
+  documentUrl       String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([status])
+  @@map("invoice")
+}
+
+model invoice_line_item {
+  id                String    @id @default(cuid())
+  invoiceId         String
+  description       String
+  quantity          Int       @default(1)
+  unitPrice         Decimal   @db.Decimal(12, 2)
+  amount            Decimal   @db.Decimal(12, 2)
+  taxRate           Decimal?  @db.Decimal(5, 2)
+  taxAmount         Decimal?  @db.Decimal(12, 2)
+  itemType          String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([invoiceId])
+  @@map("invoice_line_item")
+}
+
+model credit_note {
+  id                String    @id @default(cuid())
+  invoiceId         String
+  creditNoteNumber  String    @unique
+  reason            String?
+  amount            Decimal   @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  status            String    @default("draft")
+  appliedAt         DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([invoiceId])
+  @@map("credit_note")
+}
+
+model tax_document {
+  id                String    @id @default(cuid())
+  invoiceId         String
+  taxId             String
+  taxAuthority      String
+  filingStatus      String    @default("pending")
+  filedDate         DateTime? @db.Timestamptz(6)
+  documentUrl       String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([invoiceId])
+  @@map("tax_document")
+}
+
+// ============== COMMISSION & DEALS ==============
+
+model commission_rule {
+  id                String    @id @default(cuid())
+  supplierId        String?
+  name              String
+  code              String?   @unique
+  category          String?
+  itemType          String?
+  percentage        Decimal?  @db.Decimal(5, 2)
+  fixedAmount       Decimal?  @db.Decimal(12, 2)
+  minimumAmount     Decimal?  @db.Decimal(12, 2)
+  maximumAmount     Decimal?  @db.Decimal(12, 2)
+  value             Decimal?  @db.Decimal(12, 2)
+  commissionType    String?   @default("percentage")
+  priority          Int       @default(50)
+  rules             Json?
+  enabled           Boolean   @default(true)
+  isActive          Boolean   @default(true)
+  startDate         DateTime? @db.Timestamptz(6)
+  endDate           DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  // v2.0 relation
+  supplier          supplier? @relation(fields: [supplierId], references: [id])
+  settlements       commission_settlement[]
+
+  @@index([category])
+  @@index([enabled])
+  @@index([supplierId])
+  @@map("commission_rule")
+}
+
+model commission_settlement {
+  id                String    @id @default(cuid())
+  settlementNumber  String    @unique
+  ruleId            String?
+  partnerId         String?
+  supplierId        String?
+  bookingId         String?
+  periodStart       DateTime? @db.Timestamptz(6)
+  periodEnd         DateTime? @db.Timestamptz(6)
+  amount            Decimal   @db.Decimal(12, 2)
+  totalAmount       Decimal?  @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  status            String    @default("pending")
+  settlementStatus  String?
+  adjustments       Decimal?  @db.Decimal(12, 2)
+  notes             String?
+  settlementDate    DateTime? @db.Timestamptz(6)
+  paidAt            DateTime? @db.Timestamptz(6)
+  settledAt         DateTime? @db.Timestamptz(6)
+  paymentReference  String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  // v2.0 FK relations
+  rule              commission_rule? @relation(fields: [ruleId], references: [id])
+
+  @@index([supplierId])
+  @@index([partnerId])
+  @@index([status])
+  @@index([ruleId])
+  @@index([bookingId])
+  @@map("commission_settlement")
+}
+
+
+model supplier_payout {
+  id                String    @id @default(cuid())
+  supplierId        String
+  amount            Decimal   @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  status            String    @default("pending")
+  payoutDate        DateTime? @db.Timestamptz(6)
+  referenceNumber   String?   @unique
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@map("supplier_payout")
+}
+
+model deal_approval {
+  id                String    @id @default(cuid())
+  dealId            String?
+  title             String
+  description       String?
+  dealValue         Decimal?  @db.Decimal(12, 2)
+  approverIds       String[]
+  approvals         Json?
+  status            String    @default("pending")
+  createdBy         String?
+  submittedAt       DateTime? @db.Timestamptz(6)
+  approvedAt        DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([status])
+  @@map("deal_approval")
+}
+
+// ============== MARKUP & PRICING ==============
+
+model markup_rule {
+  id                String    @id @default(cuid())
+  companyId         String?
+  name              String
+  code              String?   @unique // Unique for lookup
+  priority          Int       @default(50)
+  targetType        String    @default("global") // global, company, branch, user
+  serviceType       String?   // flight, hotel, etc.
+  ruleType          String?   // percentage, fixed
+  value             Decimal?  @db.Decimal(12, 2) // Made optional to accommodate existing data
+  minValue          Decimal?  @db.Decimal(12, 2)
+  maxValue          Decimal?  @db.Decimal(12, 2)
+  conditions        Json?
+  isActive          Boolean   @default(true)
+  validFrom         DateTime  @default(now()) @db.Timestamptz(6)
+  validTo           DateTime? @db.Timestamptz(6)
+  category          String?   // Legacy field - kept for backward compatibility
+  enabled           Boolean?  // Legacy field - kept for backward compatibility  
+  itemType         String?   // Legacy field - kept for backward compatibility
+  percentage        Decimal?  @db.Decimal(5, 2) // Legacy field - kept for backward compatibility
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([companyId])
+  @@index([code])
+  @@index([isActive])
+  @@map("markup_rule")
+}
+
+model pricing_audit_log {
+  id                String    @id @default(cuid())
+  itemId            String
+  itemType          String
+  previousPrice     Decimal?  @db.Decimal(12, 2)
+  newPrice          Decimal?  @db.Decimal(12, 2)
+  changeReason      String?
+  changedBy         String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([itemId])
+  @@index([itemType])
+  @@map("pricing_audit_log")
+}
+
+model pricing_tier {
+  id                String    @id @default(cuid())
+  name              String
+  tier              String
+  minimumValue      Decimal?  @db.Decimal(12, 2)
+  maximumValue      Decimal?  @db.Decimal(12, 2)
+  discountPercentage Decimal? @db.Decimal(5, 2)
+  description       String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("pricing_tier")
+}
+
+// ============== SUPPLIER MANAGEMENT ==============
+
+model supplier {
+  id                String    @id @default(cuid())
+  name              String
+  code              String    @unique
+  vendorId          String?
+  category          String?
+  status            String    @default("active")
+  email             String?
+  phone             String?
+  website           String?
+  address           String?
+  legalName         String?
+  taxId             String?
+  bankDetails       Json?
+  contactPerson     String?
+  supplierType      String?   // flight, hotel, etc.
+  apiEndpoint       String?   // Added for suppliers.ts
+  supportedRoutes   String[]  // Added for suppliers.ts
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  credentials       supplier_credential[]
+  syncLogs          supplier_sync_log[]
+  hotelMappings     supplier_hotel_mapping[]
+  endpoints         supplier_endpoint[]
+  markets           supplier_market[]
+  channels          supplier_channel[]
+  rules             supplier_rule[]
+  metrics           supplier_api_metric[]
+  wallet            supplier_wallet?
+  walletApprovals   supplier_walletApprovalRequest[] // Added for count support in suppliers.ts
+  deals             supplier_deal[]
+  payments          supplier_payment[]
+  payouts           supplier_payout[]
+  commissions       commission_rule[]
+
+  @@index([code])
+  @@index([status])
+  @@map("supplier")
+}
+
+model supplier_credential {
+  id                String    @id @default(cuid())
+  supplierId        String
+  credentialType    String
+  apiKey            String?
+  apiSecret         String?
+  username          String?
+  password          String?
+  webhookUrl        String?
+  isEncrypted       Boolean   @default(true)
+  expiresAt         DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@map("supplier_credential")
+}
+
+model supplier_endpoint {
+  id                String    @id @default(cuid())
+  supplierId        String
+  environment       String    @default("production") // dev, sandbox, production
+  baseUrl           String
+  authType          String?   // apiKey, oauth2, basic
+  isActive          Boolean   @default(true)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@map("supplier_endpoint")
+}
+
+model supplier_market {
+  id                String    @id @default(cuid())
+  supplierId        String
+  marketType        String    @default("global") // global, regional, country
+  marketCodes       String[]  // ISO country codes, region codes
+  isActive          Boolean   @default(true)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@map("supplier_market")
+}
+
+model supplier_channel {
+  id                String    @id @default(cuid())
+  supplierId        String
+  channelName       String    // b2b, b2c, corporate, offline
+  isActive          Boolean   @default(true)
+  marginRules       Json?     // Channel-specific margin/markup overriding rules
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@map("supplier_channel")
+}
+
+model supplier_rule {
+  id                String    @id @default(cuid())
+  supplierId        String
+  ruleType          String    // flight_filter, hotel_sourcing, etc.
+  ruleData          Json      // e.g., { blockedAirlines: ["AA", "BA"], contentType: ["NDC", "GDS"] }
+  isActive          Boolean   @default(true)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@map("supplier_rule")
+}
+
+model supplier_api_metric {
+  id              String   @id @default(cuid())
+  supplierId      String
+  endpoint        String   // The API path called, e.g., /flights/search
+  method          String   @default("GET")
+  statusCode      Int      // HTTP status code returned
+  latencyMs       Int      // Response time in milliseconds
+  requestSize     Int?     // Request payload size in bytes
+  responseSize    Int?     // Response payload size in bytes
+  errorType       String?  // timeout, auth_error, upstream_error, etc.
+  environment     String   @default("production") // dev, sandbox, production
+  channel         String?  // b2b, b2c, corporate, offline
+  metadata        Json?    // Extra data: search params, booking reference, etc.
+  recordedAt      DateTime @default(now()) @db.Timestamptz(6)
+
+  supplier        supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@index([recordedAt])
+  @@index([statusCode])
+  @@index([endpoint])
+  @@map("supplier_api_metric")
+}
+
+model supplier_sync_log {
+  id                String    @id @default(cuid())
+  supplierId        String
+  syncType          String
+  status            String    @default("pending")
+  recordsProcessed  Int?      @default(0)
+  recordsSuccessful Int?      @default(0)
+  recordsFailed     Int?      @default(0)
+  errorMessage      String?
+  startedAt         DateTime  @default(now()) @db.Timestamptz(6)
+  completedAt       DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@index([status])
+  @@map("supplier_sync_log")
+}
+
+model supplier_hotel_mapping {
+  id                String    @id @default(cuid())
+  supplierId        String
+  supplierHotelId   String
+  internalHotelId   String?
+  localHotelId      String?
+  hotelName         String?
+  mappingStatus     String    @default("mapped")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([supplierId])
+  @@index([localHotelId])
+  @@map("supplier_hotel_mapping")
+}
+
+model supplier_deal {
+  id                String    @id @default(cuid())
+  supplierId        String
+  title             String
+  code              String?   @unique
+  description       String?
+  dealType          String
+  value             Decimal?  @db.Decimal(12, 2)
+  discountValue     Decimal?  @db.Decimal(12, 2)
+  maxDiscount       Decimal?  @db.Decimal(12, 2)
+  minOrderAmount    Decimal?  @db.Decimal(12, 2)
+  priority          Int       @default(0) // Added for sorting
+  startDate         DateTime? @db.Timestamptz(6)
+  endDate           DateTime? @db.Timestamptz(6)
+  status            String    @default("draft")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier? @relation(fields: [supplierId], references: [id])
+  dealMappingRules  deal_mapping_rule[]
+
+  @@index([supplierId])
+  @@map("supplier_deal")
+}
+
+model deal_mapping_rule {
+  id                String    @id @default(cuid())
+  dealId            String
+  sourceSystem      String
+  targetSystem      String
+  mappingLogic      Json?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  deal              supplier_deal @relation(fields: [dealId], references: [id])
+
+  @@index([dealId])
+  @@map("deal_mapping_rule")
+}
+
+model supplier_product {
+  id                String    @id @default(cuid())
+  supplierId        String
+  productId         String?
+  name              String    // Renamed from productName to match routes
+  productType       String?
+  description       String?   @db.Text
+  sku               String?
+  externalProductId String?   // Added for supplier-products.ts
+  category          String?   // Added for supplier-products.ts
+  subCategory       String?   // Added for supplier-products.ts
+  status            String    @default("active")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  mappings          supplier_product_mapping[]
+
+  @@index([supplierId])
+  @@map("supplier_product")
+}
+
+model supplier_product_mapping {
+  id                String    @id @default(cuid())
+  supplierId        String?   // Added for supplier-mappings.ts
+  supplierProductId String
+  productType       String?   // Added for supplier-mappings.ts
+  platformProductId String?   // Added for supplier-mappings.ts
+  mappingStatus     String    @default("mapped")
+  marketNames       String[]  // Added for supplier-mappings.ts
+  geographyZones    String[]  // Added for supplier-mappings.ts
+  seasonalApplicable String?  // Added for supplier-mappings.ts
+  businessRules     Json?     // Added for supplier-mappings.ts
+  matchConfidence   Int?      // Added for supplier-mappings.ts
+  approvedBy        String?   // Added for supplier-mappings.ts
+  approvedAt        DateTime? // Added for supplier-mappings.ts
+  status            String    @default("active") // Added for suppliers.ts
+  mappingData       Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplierProduct   supplier_product @relation(fields: [supplierProductId], references: [id])
+  parameters        product_mapping_parameter[]
+
+  @@index([supplierProductId])
+  @@map("supplier_product_mapping")
+}
+
+model product_mapping_parameter {
+  id                String    @id @default(cuid())
+  mappingId         String
+  parameterKey      String?   // Made optional for supplier-mappings.ts
+  parameterName     String?   // Added for supplier-mappings.ts
+  parameterType     String?   // Added for supplier-mappings.ts
+  parameterValue    String?
+  unit              String?   @default("percentage") // Added for supplier-mappings.ts
+  marketName        String?   // Added for supplier-mappings.ts
+  validFrom         DateTime? // Added for supplier-mappings.ts
+  validTo           DateTime? // Added for supplier-mappings.ts
+  dataType          String?
+  isRequired        Boolean   @default(false)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  mapping           supplier_product_mapping @relation(fields: [mappingId], references: [id])
+
+  @@index([mappingId])
+  @@map("product_mapping_parameter")
+}
+
+model supplier_financial {
+  id                String    @id @default(cuid())
+  supplierId        String    @unique // Added @unique for findUnique in supplier-financial.ts
+  year              Int       @default(2024) // Made optional with default
+  revenue           Decimal?  @db.Decimal(12, 2)
+  netIncome         Decimal?  @db.Decimal(12, 2)
+  minimumPayoutAmount Decimal? @db.Decimal(12, 2) // Added for supplier-financial.ts
+  paymentTerms      String?   // Added for supplier-financial.ts
+  settlementCycle   String?   // Added for supplier-financial.ts
+  commissionStructure Json?   // Added for supplier-financial.ts
+  currency          String    @default("USD")
+  notes             String?
+  // Bank details - added for supplier-financial.ts
+  bankAccountName   String?
+  bankAccountNumber String?
+  bankCode         String?
+  swiftCode        String?
+  accountHolderName String?
+  country          String?
+  taxId            String?
+  paymentHolds     Boolean   @default(false)
+  holdReason       String?
+  holdExpiresAt    DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([supplierId])
+  @@map("supplier_financial")
+}
+
+model supplier_payment_term {
+  id                String    @id @default(cuid())
+  supplierId        String
+  paymentMethod     String?   // Made optional for supplier-financial.ts
+  termType          String?   // Added for supplier-financial.ts
+  netDays           Int       @default(30)
+  daysFromBooking   Int?      @default(0)   // Added for supplier-financial.ts
+  percentageRequired Decimal? @db.Decimal(5, 2) // Added for supplier-financial.ts
+  discountPercentage Decimal? @db.Decimal(5, 2)
+  discountDays      Int?
+  minimumAmount     Decimal?  @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  description       String?   // Added for supplier-financial.ts
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([supplierId])
+  @@map("supplier_payment_term")
+}
+
+model supplier_wallet {
+  id                String    @id @default(cuid())
+  supplierId        String    @unique
+  balance           Decimal   @db.Decimal(12, 2) @default(0)
+  currency          String    @default("USD")
+  status            String    @default("active")
+  lastSettledAt     DateTime? @db.Timestamptz(6)
+  approvalStatus    String?   @default("pending") // Used in supplier-wallets.ts
+  deletedAt         DateTime? @db.Timestamptz(6)    // Used in supplier-wallets.ts
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier  @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@map("supplier_wallet")
+}
+
+model supplier_walletApprovalRequest {
+  id                String    @id @default(cuid())
+  walletId          String
+  supplierId        String?   // Used in lookup
+  amount            Decimal?  @db.Decimal(12, 2) // Made optional for supplier-wallets.ts
+  reason            String?
+  status            String    @default("pending")
+  approverIds       String[]
+  approvals         Json?
+  approvedAt        DateTime? @db.Timestamptz(6)
+  approvedBy        String?   // Used in update
+  approvalNotes     String?   // Used in supplier-wallets.ts
+  respondedAt       DateTime? @db.Timestamptz(6) // Used in update
+  requestType       String?   @default("update") // Added for supplier-wallets.ts
+  approverRole      String?   // Added for supplier-wallets.ts
+  requestData       Json?     // Added for supplier-wallets.ts
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier          supplier? @relation(fields: [supplierId], references: [id])
+
+  @@index([walletId])
+  @@index([supplierId])
+  @@index([status])
+  @@map("supplier_wallet_approval_request")
+}
+
+model supplier_payment {
+  id                    String    @id @default(cuid())
+  supplierId            String
+  walletId              String?   // Point to the supplier_wallet
+  amount                Decimal   @db.Decimal(12, 2)
+  currency              String    @default("USD")
+  paymentMethod         String?
+  paymentType           String?   // payout, refund, etc.
+  referenceId           String?   // External reference
+  transactionReference  String?   // Internal audit/transaction reference
+  scheduledFor          DateTime? @db.Timestamptz(6) // Added for supplier-payments.ts
+  status                String    @default("pending")
+  failureReason         String?   @db.Text
+  processedAt           DateTime? @db.Timestamptz(6)
+  metadata              Json?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(6)
+
+  supplier              supplier  @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@index([walletId])
+  @@index([status])
+  @@index([transactionReference])
+  @@map("supplier_payment")
+}
+
+model supplier_payment_log {
+  id                String    @id @default(cuid())
+  paymentId         String
+  supplierId        String?
+  walletId          String?
+  status            String    @default("pending") // Added default
+  action            String?   // processed, failed, etc.
+  actorType         String?   // system, admin, user
+  actorId           String?   // ID of the actor
+  message           String?
+  statusCode        String?
+  previousBalance   Decimal?  @db.Decimal(12, 2)
+  newBalance        Decimal?  @db.Decimal(12, 2)
+  amount            Decimal?  @db.Decimal(12, 2) // Added for supplier-payments-phase3.ts
+  notes             String?   // Added for webhooks.ts and retry.ts
+  timestamp         DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([paymentId])
+  @@index([supplierId])
+  @@map("supplier_payment_log")
+}
+
+model payment_reconciliation {
+  id                String    @id @default(cuid())
+  paymentId         String
+  reconciliationDate DateTime @db.Timestamptz(6)
+  status            String    @default("pending")
+  sourceAmount      Decimal?  @db.Decimal(12, 2)
+  targetAmount      Decimal?  @db.Decimal(12, 2)
+  variance          Decimal?  @db.Decimal(12, 2)
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([paymentId])
+  @@map("payment_reconciliation")
+}
+
+// ============== PAYMENT GATEWAY CONFIGURATION ==============
+
+model payment_gateway_config {
+  id                String    @id @default(cuid())
+  gateway           String    // "stripe", "duffel", "paypal", etc.
+  environment       String    @default("sandbox") // sandbox, production
+  apiKey            String?   @db.Text // encrypted
+  apiSecret         String?   @db.Text // encrypted
+  webhookSecret     String?   @db.Text
+  additionalConfig  Json?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([gateway, environment])
+  @@index([gateway])
+  @@index([environment])
+  @@index([isActive])
+  @@map("payment_gateway_config")
+}
+
+// ============== CORPORATE CONTRACTS ==============
+
+model corporate_contract {
+  id                String    @id @default(cuid())
+  supplierId        String
+  contractNumber    String    @unique
+  title             String
+  status            String    @default("draft")
+  startDate         DateTime  @db.Timestamptz(6)
+  endDate           DateTime? @db.Timestamptz(6)
+  value             Decimal?  @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  terms             String?
+  documentUrl       String?
+  signedBy          String?
+  signedDate        DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([supplierId])
+  @@map("corporate_contract")
+}
+
+// ============== LOYALTY & REWARDS ==============
+
+model loyalty_tier {
+  id                String    @id @default(cuid())
+  name              String
+  level             Int
+  minimumPoints     Int
+  benefits          Json?
+  description       String?
+  discountPercentage Decimal? @db.Decimal(5, 2)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([level])
+  @@map("loyalty_tier")
+}
+
+model customer_loyalty {
+  id                String    @id @default(cuid())
+  userId            String
+  tierId            String?
+  points            Int       @default(0)
+  totalPoints       Int       @default(0)
+  lastActivityAt    DateTime? @db.Timestamptz(6)
+  expiresAt         DateTime? @db.Timestamptz(6)
+  status            String    @default("active")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([tierId])
+  @@map("customer_loyalty")
+}
+
+model loyalty_transaction {
+  id                String    @id @default(cuid())
+  loyaltyId         String
+  transactionType   String
+  points            Int
+  description       String?
+  referenceId       String?
+  referenceType     String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([loyaltyId])
+  @@map("loyalty_transaction")
+}
+
+model loyalty_voucher {
+  id                String    @id @default(cuid())
+  loyaltyId         String
+  voucherCode       String    @unique
+  description       String?
+  value             Decimal?  @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  expiryDate        DateTime? @db.Timestamptz(6)
+  status            String    @default("active")
+  usedAt            DateTime? @db.Timestamptz(6)
+  redeemUrl         String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([loyaltyId])
+  @@index([voucherCode])
+  @@map("loyalty_voucher")
+}
+
+// ============== PLB (PERFORMANCE LINKED BONUS) ==============
+
+model airline_plb_program {
+  id                String    @id @default(cuid())
+  airlineId         Int
+  airlineCode       String
+  name              String
+  code              String?
+  plbType           String
+  status            String    @default("active")
+  basePercentage    Decimal?  @db.Decimal(5, 2)
+  validFrom         DateTime  @db.Timestamptz(6)
+  validTo           DateTime  @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  tiers             airline_plb_tier[]
+  snapshots         airline_plb_snapshot[]
+  bookings          airline_booking_analytics[]
+
+  @@index([airlineId])
+  @@index([airlineCode])
+  @@index([status])
+  @@map("airline_plb_program")
+}
+
+model airline_plb_tier {
+  id                String    @id @default(cuid())
+  plbProgramId      String
+  tierName          String
+  tierLevel         Int
+  minBookings       Int       @default(0)
+  minRevenue        Decimal?  @db.Decimal(12, 2)
+  minPassengers     Int       @default(0)
+  minGrowthPercentage Decimal? @db.Decimal(5, 2)
+  bonusPercentage   Decimal   @db.Decimal(5, 2)
+  maxBonusAmount    Decimal?  @db.Decimal(12, 2)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  program           airline_plb_program @relation(fields: [plbProgramId], references: [id])
+
+  @@index([plbProgramId])
+  @@map("airline_plb_tier")
+}
+
+model airline_booking_analytics {
+  id                String    @id @default(cuid())
+  bookingId         String
+  airlineId         Int
+  airlineCode       String
+  totalFare         Decimal   @db.Decimal(12, 2)
+  baseFare          Decimal   @db.Decimal(12, 2)
+  route             String
+  status            String    @default("booked")
+  plbProgramId      String?
+  plbEligible       Boolean   @default(false)
+  plbEligibleAmount Decimal   @db.Decimal(12, 2) @default(0)
+  bookedAt          DateTime  @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  program           airline_plb_program? @relation(fields: [plbProgramId], references: [id])
+
+  @@index([airlineId])
+  @@index([bookingId])
+  @@index([plbProgramId])
+  @@index([bookedAt])
+  @@map("airline_booking_analytics")
+}
+
+model airline_plb_snapshot {
+  id                    String    @id @default(cuid())
+  plbProgramId          String
+  airlineId             Int
+  airlineCode           String
+  periodType            String
+  periodStart           DateTime  @db.Timestamptz(6)
+  periodEnd             DateTime  @db.Timestamptz(6)
+  totalBookings         Int       @default(0)
+  totalRevenue          Decimal   @db.Decimal(12, 2) @default(0)
+  totalPassengers       Int       @default(0)
+  revenueGrowth         Decimal?  @db.Decimal(5, 2)
+  calculatedBonusAmount Decimal   @db.Decimal(12, 2) @default(0)
+  achievedTierName      String?
+  achievedTierLevel     Int?
+  calculationStatus     String    @default("pending")
+  approvedAt            DateTime? @db.Timestamptz(6)
+  paidAt                DateTime? @db.Timestamptz(6)
+  metadata              Json?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+
+  program               airline_plb_program @relation(fields: [plbProgramId], references: [id])
+
+  @@index([plbProgramId])
+  @@index([airlineId])
+  @@index([calculationStatus])
+  @@map("airline_plb_snapshot")
+}
+
+// ============== CAMPAIGNS & MARKETING ==============
+// v2.0: Merged campaign + marketing_campaign into single campaigns table with type column
+
+model campaigns {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?   @db.Text
+  status            String    @default("active")
+  type              String    @default("marketing")  // 'marketing' or 'internal'
+  
+  // Marketing-specific fields (optional, used when type = 'marketing')
+  channel           String?
+  budget            Decimal?  @db.Decimal(12, 2)
+  actualSpend       Decimal?  @db.Decimal(12, 2)
+  impressions       Int?
+  clicks            Int?
+  conversions       Int?
+  roi               Decimal?  @db.Decimal(5, 2)
+  
+  // Common fields
+  startDate         DateTime? @db.Timestamptz(6)
+  endDate           DateTime? @db.Timestamptz(6)
+  companyId         String?
+  targetAudience    Json?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  // v2.0 relations
+  discountCoupons   discount_coupon[]
+
+  @@index([status])
+  @@index([type])
+  @@index([channel])
+  @@map("campaigns")
+}
+
+model discount_coupon {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  campaignId        String?
+  discount          Decimal   @db.Decimal(12, 2)
+  discountType      String    @default("percentage")
+  minOrderValue     Decimal?  @db.Decimal(12, 2)
+  maxOrderValue     Decimal?  @db.Decimal(12, 2)
+  maxUses           Int?
+  usedCount         Int       @default(0)
+  status            String    @default("active")
+  startDate         DateTime? @db.Timestamptz(6)
+  expiryDate        DateTime? @db.Timestamptz(6)
+  applicableCategories String[]
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  // v2.0 FK relation
+  campaign          campaigns? @relation(fields: [campaignId], references: [id])
+  redemptions       coupon_redemption[]
+
+  @@index([code])
+  @@index([status])
+  @@index([campaignId])
+  @@map("discount_coupon")
+}
+
+model coupon_redemption {
+  id                String    @id @default(cuid())
+  couponId          String
+  userId            String?
+  bookingId         String?
+  redeemedAt        DateTime  @db.Timestamptz(6)
+  discountApplied   Decimal?  @db.Decimal(12, 2)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  // v2.0 relation
+  coupon            discount_coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  @@index([couponId])
+  @@index([userId])
+  @@map("coupon_redemption")
+}
+
+model promo_code {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  promoType         String
+  discount          Decimal   @db.Decimal(12, 2)
+  discountType      String    @default("percentage")
+  description       String?
+  status            String    @default("active")
+  startDate         DateTime? @db.Timestamptz(6)
+  expiryDate        DateTime? @db.Timestamptz(6)
+  maxUses           Int?
+  usedCount         Int       @default(0)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([code])
+  @@index([status])
+  @@map("promo_code")
+}
+
+// CRM Models for Marketing Service
+model crm_contact {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  firstName         String?
+  lastName          String?
+  phone             String?
+  company           String?
+  status            String    @default("lead") // lead, prospect, customer, inactive
+  source            String?
+  tier              String?   @default("bronze") // platinum, gold, silver, bronze
+  totalBookings     Int       @default(0)
+  totalSpent        Decimal?  @db.Decimal(12, 2) @default(0)
+  bookingsCount     Int       @default(0)
+  openTicketsCount  Int       @default(0)
+  location          String?
+  lastInteractionAt DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  activities        crm_activity[]
+  campaigns         crm_campaign_contact[]
+  leadScore         crm_lead_score?
+
+  @@index([email])
+  @@index([status])
+  @@index([source])
+  @@index([tier])
+  @@map("crm_contact")
+}
+
+model crm_activity {
+  id                String    @id @default(cuid())
+  contactId         String
+  activityType      String    // email, call, meeting, note, task
+  title             String
+  description       String?
+  dueDate           DateTime? @db.Timestamptz(6)
+  completedAt       DateTime? @db.Timestamptz(6)
+  status            String    @default("pending") // pending, completed, cancelled
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  contact           crm_contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId])
+  @@index([activityType])
+  @@index([status])
+  @@map("crm_activity")
+}
+
+model crm_campaign {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  status            String    @default("draft") // draft, scheduled, active, completed, paused
+  type              String    // email, sms, webinar, event, other
+  startDate         DateTime? @db.Timestamptz(6)
+  endDate           DateTime? @db.Timestamptz(6)
+  targetAudience    String?
+  budget            Decimal?  @db.Decimal(12, 2)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  contacts          crm_campaign_contact[]
+
+  @@index([status])
+  @@index([type])
+  @@map("crm_campaign")
+}
+
+model crm_campaign_contact {
+  id                String    @id @default(cuid())
+  campaignId        String
+  contactId         String
+  status            String    @default("pending") // pending, sent, opened, clicked, converted, failed
+  engagement        Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  campaign          crm_campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact           crm_contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+@@unique([campaignId, contactId])
+@@index([campaignId])
+@@index([contactId])
+@@index([status])
+@@map("crm_campaign_contact")
+}
+
+// Lead Scoring & Analytics
+model crm_lead_score {
+id                  String    @id @default(cuid())
+contactId           String    @unique
+email               String    @unique
+score               Int       @default(0) // 0-100
+grade               String    @default("D") // A, B, C, D
+emailsReceived      Int       @default(0)
+lastEngagementDate  DateTime? @db.Timestamptz(6)
+source              String?
+interests           String[]
+pageViews           Int       @default(0)
+searchQueries       Int       @default(0)
+conversionProbability Decimal? @db.Decimal(5, 2) // 0.00-1.00
+lastCalculatedAt    DateTime  @default(now()) @db.Timestamptz(6)
+metadata            Json?
+createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+contact             crm_contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+@@index([contactId])
+@@index([email])
+@@index([score])
+@@index([grade])
+@@index([lastEngagementDate])
+@@map("crm_lead_score")
+}
+
+// Visitor Analytics
+model crm_visitor_session {
+id                String    @id @default(cuid())
+sessionId         String    @unique
+visitorId         String?
+ipAddress         String?
+userAgent         String?
+deviceType        String?   // desktop, mobile, tablet
+browser           String?
+os                String?
+country           String?
+region            String?
+city              String?
+landingPage       String?
+referrer          String?
+utmSource         String?
+utmMedium         String?
+utmCampaign       String?
+utmTerm           String?
+utmContent        String?
+startTime         DateTime  @default(now()) @db.Timestamptz(6)
+endTime           DateTime? @db.Timestamptz(6)
+pageViews         Int       @default(0)
+durationSeconds   Int?      @default(0)
+converted         Boolean   @default(false)
+conversionType    String?   // signup, booking, download, etc.
+metadata          Json?
+createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+pageViewsRel      crm_visitor_page_view[]
+events            crm_visitor_event[]
+
+@@index([sessionId])
+@@index([visitorId])
+@@index([startTime])
+@@index([country])
+@@index([converted])
+@@map("crm_visitor_session")
+}
+
+model crm_visitor_page_view {
+id                String    @id @default(cuid())
+sessionId         String
+pageUrl           String
+pageTitle         String?
+pageCategory      String?
+timeOnPageSeconds Int?      @default(0)
+scrollDepth       Decimal?  @db.Decimal(5, 2) // 0.00-1.00
+timestamp         DateTime  @default(now()) @db.Timestamptz(6)
+metadata          Json?
+createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+session           crm_visitor_session @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+@@index([sessionId])
+@@index([timestamp])
+@@index([pageCategory])
+@@map("crm_visitor_page_view")
+}
+
+model crm_visitor_event {
+id                String    @id @default(cuid())
+sessionId         String
+eventType         String    // click, form_submit, download, video_play, etc.
+eventName         String
+elementId         String?
+elementClass      String?
+elementText       String?
+url               String?
+metadata          Json?
+timestamp         DateTime  @default(now()) @db.Timestamptz(6)
+createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+session           crm_visitor_session @relation(fields: [sessionId], references: [sessionId], onDelete: Cascade)
+
+@@index([sessionId])
+@@index([eventType])
+@@index([timestamp])
+@@map("crm_visitor_event")
+}
+

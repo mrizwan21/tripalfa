@@ -1,10 +1,6 @@
-import { Router, Response } from "express";
-import { prisma } from "../database.js";
-import {
-  AuthRequest,
-  authMiddleware,
-  requirePermission,
-} from "../middleware/auth.js";
+import { Router, Response } from 'express';
+import { prisma } from '../database.js';
+import { AuthRequest, authMiddleware, requirePermission } from '../middleware/auth.js';
 
 const router: Router = Router();
 
@@ -16,12 +12,56 @@ router.use(authMiddleware);
 // ============================================
 
 /**
- * GET /api/suppliers/:supplierId/wallets
- * Get supplier's wallet details
+ * @swagger
+ * /api/suppliers/{supplierId}/wallets:
+ *   get:
+ *     summary: Get supplier wallet details
+ *     tags: [Supplier Wallets]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Supplier ID
+ *     responses:
+ *       200:
+ *         description: Wallet details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Supplier or wallet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.get(
-  "/:supplierId/wallets",
-  requirePermission("suppliers:read"),
+  '/:supplierId/wallets',
+  requirePermission('suppliers:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { supplierId } = req.params;
@@ -31,7 +71,7 @@ router.get(
         where: { id: supplierId as string },
       });
       if (!supplier) {
-        res.status(404).json({ error: "Supplier not found" });
+        res.status(404).json({ error: 'Supplier not found' });
         return;
       }
 
@@ -43,25 +83,103 @@ router.get(
       });
 
       if (!wallet) {
-        res.status(404).json({ error: "Wallet not found. Request creation first." });
+        res.status(404).json({ error: 'Wallet not found. Request creation first.' });
         return;
       }
 
       res.json({ data: wallet });
     } catch (error) {
-      console.error("Error fetching wallet:", error);
-      res.status(500).json({ error: "Failed to fetch wallet" });
+      console.error('Error fetching wallet:', error);
+      res.status(500).json({ error: 'Failed to fetch wallet' });
     }
   }
 );
 
 /**
- * POST /api/suppliers/:supplierId/wallets/request
- * Request wallet creation (creates pending approval request)
+ * @swagger
+ * /api/suppliers/{supplierId}/wallets/request:
+ *   post:
+ *     summary: Request wallet creation
+ *     tags: [Supplier Wallets]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Supplier ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [currency]
+ *             properties:
+ *               currency:
+ *                 type: string
+ *               requestMessage:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Wallet request created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Supplier not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       409:
+ *         description: Wallet already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.post(
-  "/:supplierId/wallets/request",
-  requirePermission("suppliers:create"),
+  '/:supplierId/wallets/request',
+  requirePermission('suppliers:create'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { supplierId } = req.params;
@@ -69,7 +187,7 @@ router.post(
 
       // Validation
       if (!currency) {
-        res.status(400).json({ error: "currency is required" });
+        res.status(400).json({ error: 'currency is required' });
         return;
       }
 
@@ -78,7 +196,7 @@ router.post(
         where: { id: supplierId as string },
       });
       if (!supplier) {
-        res.status(404).json({ error: "Supplier not found" });
+        res.status(404).json({ error: 'Supplier not found' });
         return;
       }
 
@@ -90,7 +208,7 @@ router.post(
         },
       });
       if (existingWallet) {
-        res.status(409).json({ error: "Wallet already exists for this supplier" });
+        res.status(409).json({ error: 'Wallet already exists for this supplier' });
         return;
       }
 
@@ -100,8 +218,8 @@ router.post(
           supplierId: supplierId as string,
           currency,
           balance: 0,
-          status: "pending",
-          approvalStatus: "pending",
+          status: 'pending',
+          approvalStatus: 'pending',
         },
       });
 
@@ -110,163 +228,120 @@ router.post(
         data: {
           walletId: wallet.id,
           supplierId: supplierId as string,
-          requestType: "create",
+          requestType: 'create',
           requestData: {
             currency,
             requestMessage,
             requestedAt: new Date().toISOString(),
           },
-          approverRole: "finance",
-          status: "pending",
+          approverRole: 'finance',
+          status: 'pending',
         },
       });
 
       res.status(201).json({
-        message: "Wallet request created successfully",
+        message: 'Wallet request created successfully',
         data: {
           wallet,
           approvalRequest,
         },
       });
     } catch (error) {
-      console.error("Error requesting wallet:", error);
-      res.status(500).json({ error: "Failed to request wallet" });
+      console.error('Error requesting wallet:', error);
+      res.status(500).json({ error: 'Failed to request wallet' });
     }
   }
 );
 
 /**
- * GET /api/suppliers/:supplierId/wallet-approvals
- * List pending wallet approval requests
- */
-router.get(
-  "/:supplierId/wallet-approvals",
-  requirePermission("suppliers:read"),
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { supplierId } = req.params;
-      const { page = "1", limit = "10", status } = req.query;
-
-      const pageNum = Number(page) || 1;
-      const limitNum = Number(limit) || 10;
-      const skip = (pageNum - 1) * limitNum;
-
-      // Verify supplier exists
-      const supplier = await prisma.supplier.findUnique({
-        where: { id: supplierId as string },
-      });
-      if (!supplier) {
-        res.status(404).json({ error: "Supplier not found" });
-        return;
-      }
-
-      const whereClause: any = { supplierId: supplierId as string };
-      if (status) {
-        whereClause.status = status;
-      }
-
-      const [requests, total] = await Promise.all([
-        prisma.supplierWalletApprovalRequest.findMany({
-          where: whereClause,
-          skip,
-          take: limitNum,
-          orderBy: { createdAt: "desc" },
-        }),
-        prisma.supplierWalletApprovalRequest.count({ where: whereClause }),
-      ]);
-
-      res.json({
-        data: requests,
-        pagination: {
-          page: pageNum,
-          limit: limitNum,
-          total,
-          pages: Math.ceil(total / limitNum),
-        },
-      });
-    } catch (error) {
-      console.error("Error fetching approval requests:", error);
-      res.status(500).json({ error: "Failed to fetch approval requests" });
-    }
-  }
-);
-
-/**
- * POST /api/suppliers/:supplierId/wallet-approvals/:requestId/approve
- * Admin approve wallet creation
- */
-router.post(
-  "/:supplierId/wallet-approvals/:requestId/approve",
-  requirePermission("suppliers:approve"),
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { supplierId, requestId } = req.params;
-      const { approvalNotes } = req.body;
-
-      // Verify supplier exists
-      const supplier = await prisma.supplier.findUnique({
-        where: { id: supplierId as string },
-      });
-      if (!supplier) {
-        res.status(404).json({ error: "Supplier not found" });
-        return;
-      }
-
-      // Get approval request
-      const approvalRequest = await prisma.supplierWalletApprovalRequest.findFirst({
-        where: {
-          id: requestId as string,
-          supplierId: supplierId as string,
-        },
-      });
-      if (!approvalRequest) {
-        res.status(404).json({ error: "Approval request not found" });
-        return;
-      }
-
-      if (approvalRequest.status !== "pending") {
-        res.status(409).json({ error: "Request already processed" });
-        return;
-      }
-
-      // Update request status
-      const updated = await prisma.supplierWalletApprovalRequest.update({
-        where: { id: requestId as string },
-        data: {
-          status: "approved",
-          approvedBy: req.user?.id || "admin",
-          respondedAt: new Date(),
-          approvalNotes,
-        },
-      });
-
-      // Update wallet status
-      await prisma.supplierWallet.update({
-        where: { id: approvalRequest.walletId },
-        data: {
-          status: "active",
-          approvalStatus: "approved",
-        },
-      });
-
-      res.json({
-        message: "Wallet approved successfully",
-        data: updated,
-      });
-    } catch (error) {
-      console.error("Error approving wallet:", error);
-      res.status(500).json({ error: "Failed to approve wallet" });
-    }
-  }
-);
-
-/**
- * POST /api/suppliers/:supplierId/wallet-approvals/:requestId/reject
- * Admin reject wallet creation
+ * @swagger
+ * /api/suppliers/{supplierId}/wallet-approvals/{requestId}/reject:
+ *   post:
+ *     summary: Admin reject wallet creation
+ *     tags: [Supplier Wallets]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Supplier ID
+ *       - in: path
+ *         name: requestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Approval request ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [rejectionReason]
+ *             properties:
+ *               rejectionReason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Wallet rejected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Supplier or request not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       409:
+ *         description: Request already processed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.post(
-  "/:supplierId/wallet-approvals/:requestId/reject",
-  requirePermission("suppliers:approve"),
+  '/:supplierId/wallet-approvals/:requestId/reject',
+  requirePermission('suppliers:approve'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { supplierId, requestId } = req.params;
@@ -274,7 +349,7 @@ router.post(
 
       // Validation
       if (!rejectionReason) {
-        res.status(400).json({ error: "rejectionReason is required" });
+        res.status(400).json({ error: 'rejectionReason is required' });
         return;
       }
 
@@ -283,7 +358,7 @@ router.post(
         where: { id: supplierId as string },
       });
       if (!supplier) {
-        res.status(404).json({ error: "Supplier not found" });
+        res.status(404).json({ error: 'Supplier not found' });
         return;
       }
 
@@ -295,12 +370,12 @@ router.post(
         },
       });
       if (!approvalRequest) {
-        res.status(404).json({ error: "Approval request not found" });
+        res.status(404).json({ error: 'Approval request not found' });
         return;
       }
 
-      if (approvalRequest.status !== "pending") {
-        res.status(409).json({ error: "Request already processed" });
+      if (approvalRequest.status !== 'pending') {
+        res.status(409).json({ error: 'Request already processed' });
         return;
       }
 
@@ -308,8 +383,8 @@ router.post(
       const updated = await prisma.supplierWalletApprovalRequest.update({
         where: { id: requestId as string },
         data: {
-          status: "rejected",
-          approvedBy: req.user?.id || "admin",
+          status: 'rejected',
+          approvedBy: req.user?.id || 'admin',
           reason: rejectionReason,
           respondedAt: new Date(),
         },
@@ -319,29 +394,84 @@ router.post(
       await prisma.supplierWallet.update({
         where: { id: approvalRequest.walletId },
         data: {
-          approvalStatus: "rejected",
+          approvalStatus: 'rejected',
           deletedAt: new Date(),
         },
       });
 
       res.json({
-        message: "Wallet rejected successfully",
+        message: 'Wallet rejected successfully',
         data: updated,
       });
     } catch (error) {
-      console.error("Error rejecting wallet:", error);
-      res.status(500).json({ error: "Failed to reject wallet" });
+      console.error('Error rejecting wallet:', error);
+      res.status(500).json({ error: 'Failed to reject wallet' });
     }
   }
 );
 
 /**
- * GET /api/suppliers/:supplierId/wallets/balance
- * Get current wallet balance
+ * @swagger
+ * /api/suppliers/{supplierId}/wallets/balance:
+ *   get:
+ *     summary: Get current wallet balance
+ *     tags: [Supplier Wallets]
+ *     parameters:
+ *       - in: path
+ *         name: supplierId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Supplier ID
+ *     responses:
+ *       200:
+ *         description: Wallet balance retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     supplierId:
+ *                       type: string
+ *                     balance:
+ *                       type: number
+ *                     currency:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     approvalStatus:
+ *                       type: string
+ *       404:
+ *         description: Wallet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
 router.get(
-  "/:supplierId/wallets/balance",
-  requirePermission("suppliers:read"),
+  '/:supplierId/wallets/balance',
+  requirePermission('suppliers:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { supplierId } = req.params;
@@ -354,7 +484,7 @@ router.get(
       });
 
       if (!wallet) {
-        res.status(404).json({ error: "Wallet not found" });
+        res.status(404).json({ error: 'Wallet not found' });
         return;
       }
 
@@ -368,8 +498,8 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching balance:", error);
-      res.status(500).json({ error: "Failed to fetch balance" });
+      console.error('Error fetching balance:', error);
+      res.status(500).json({ error: 'Failed to fetch balance' });
     }
   }
 );

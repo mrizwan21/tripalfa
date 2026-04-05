@@ -1,9 +1,10 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import paymentsRoutes from "./routes/payments.js";
-import virtualCardsRoutes from "./routes/virtual-cards.js";
-import taxRoutes from "./routes/tax.js";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import paymentsRoutes from './routes/payments.js';
+import virtualCardsRoutes from './routes/virtual-cards.js';
+import taxRoutes from './routes/tax.js';
+import { setupPaymentSwagger } from './swagger.js';
 // import walletRoutes from './routes/wallet.js'
 // import { initializeWallet } from '@tripalfa/wallet'
 
@@ -27,40 +28,34 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get("/health", (req, res) => {
-  res.json({ status: "healthy", service: "payment-service" });
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', service: 'payment-service' });
 });
 
 // API Routes
-app.use("/api/payments", paymentsRoutes);
-app.use("/api/virtual-cards", virtualCardsRoutes);
-app.use("/api/tax", taxRoutes);
+app.use('/api/payments', paymentsRoutes);
+app.use('/api/virtual-cards', virtualCardsRoutes);
+app.use('/api/tax', taxRoutes);
 // app.use('/api/wallet', walletRoutes(// walletManager))
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
+  res.status(404).json({ error: 'Not Found' });
 });
 
 // Error Handler
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    console.error("[PaymentService] Error:", err);
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[PaymentService] Error:', err);
 
-    const isDevelopment = process.env.NODE_ENV !== "production";
-    res.status(500).json({
-      error: "Internal Server Error",
-      ...(isDevelopment ? { message: err?.message || "Unknown error" } : {}),
-    });
-  },
-);
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  res.status(500).json({
+    error: 'Internal Server Error',
+    ...(isDevelopment ? { message: err?.message || 'Unknown error' } : {}),
+  });
+});
 
 // Start server
+setupPaymentSwagger(app);
 app.listen(PORT, () => {
   console.log(`🚀 Payment Service running on port ${PORT}`);
 });

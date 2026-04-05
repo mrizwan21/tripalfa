@@ -1,5 +1,5 @@
-import express, { Request, Response, Router } from "express";
-import { prisma } from "@tripalfa/shared-database";
+import express, { Request, Response, Router } from 'express';
+import { prisma } from '@tripalfa/shared-database';
 
 const router: Router = express.Router();
 
@@ -62,7 +62,7 @@ interface DocumentPassenger {
   id: string;
   firstName: string;
   lastName: string;
-  type: "adult" | "child" | "infant";
+  type: 'adult' | 'child' | 'infant';
   nationality?: string;
   passportNumber?: string;
 }
@@ -123,31 +123,31 @@ interface PaymentBreakdown {
 }
 
 const DEFAULT_COMPANY_INFO: DocumentCompanyInfo = {
-  name: "TripAlfa",
-  logo: "https://tripalfa.com/logo.png",
-  address: "123 Travel Street, Dubai, UAE",
-  phone: "+971 4 123 4567",
-  email: "support@tripalfa.com",
-  website: "https://tripalfa.com",
-  taxId: "TAX123456789",
-  registrationNumber: "DUB2024001",
+  name: 'TripAlfa',
+  logo: 'https://tripalfa.com/logo.png',
+  address: '123 Travel Street, Dubai, UAE',
+  phone: '+971 4 123 4567',
+  email: 'support@tripalfa.com',
+  website: 'https://tripalfa.com',
+  taxId: 'TAX123456789',
+  registrationNumber: 'DUB2024001',
 };
 
 const DOCUMENT_THEME_COLORS = {
-  textPrimary: "rgb(21, 31, 102)", // Deep Navy from brand
-  textSecondary: "rgb(102, 112, 133)", // Muted Slate
-  brandPrimary: "rgb(21, 31, 102)", // Primary Navy
-  brandPrimaryDark: "rgb(15, 22, 73)", // Darker Navy
-  brandSecondary: "rgb(237, 107, 74)", // Coral
-  brandAccent: "rgb(40, 220, 203)", // Cyan
-  surfaceMuted: "rgb(242, 244, 247)",
-  surfaceInfo: "rgb(230, 242, 255)",
-  success: "rgb(18, 183, 106)",
-  successDark: "rgb(10, 132, 78)",
-  danger: "rgb(240, 68, 56)",
-  dangerDark: "rgb(180, 35, 24)",
-  warning: "rgb(247, 144, 9)",
-  warningDark: "rgb(181, 71, 8)",
+  textPrimary: 'rgb(21, 31, 102)', // Deep Navy from brand
+  textSecondary: 'rgb(102, 112, 133)', // Muted Slate
+  brandPrimary: 'rgb(21, 31, 102)', // Primary Navy
+  brandPrimaryDark: 'rgb(15, 22, 73)', // Darker Navy
+  brandSecondary: 'rgb(237, 107, 74)', // Coral
+  brandAccent: 'rgb(40, 220, 203)', // Cyan
+  surfaceMuted: 'rgb(242, 244, 247)',
+  surfaceInfo: 'rgb(230, 242, 255)',
+  success: 'rgb(18, 183, 106)',
+  successDark: 'rgb(10, 132, 78)',
+  danger: 'rgb(240, 68, 56)',
+  dangerDark: 'rgb(180, 35, 24)',
+  warning: 'rgb(247, 144, 9)',
+  warningDark: 'rgb(181, 71, 8)',
 } as const;
 
 // ============================================================================
@@ -156,19 +156,19 @@ const DOCUMENT_THEME_COLORS = {
 
 function generateFlightItineraryHtml(
   booking: FlightBooking,
-  customer: DocumentCustomerInfo,
+  customer: DocumentCustomerInfo
 ): string {
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   const formatTime = (time: string) =>
-    new Date(time).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+    new Date(time).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: true,
     });
 
@@ -182,11 +182,11 @@ function generateFlightItineraryHtml(
           <td style="padding: 10px;">
             <div style="font-size: 24px; font-weight: bold; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">${formatTime(segment.departureTime)}</div>
             <div style="font-weight: 600;">${segment.departureCity} (${segment.departureAirportCode})</div>
-            <div style="font-size: 12px; color: ${DOCUMENT_THEME_COLORS.textSecondary};">${formatDate(segment.departureDate)}${segment.departureTerminal ? ` - Terminal ${segment.departureTerminal}` : ""}</div>
+            <div style="font-size: 12px; color: ${DOCUMENT_THEME_COLORS.textSecondary};">${formatDate(segment.departureDate)}${segment.departureTerminal ? ` - Terminal ${segment.departureTerminal}` : ''}</div>
           </td>
           <td style="padding: 10px; text-align: center; color: ${DOCUMENT_THEME_COLORS.brandSecondary};">
              <div style="font-size: 20px;">✈</div>
-             <div style="font-size: 11px; font-weight: 600;">${segment.duration || ""}</div>
+             <div style="font-size: 11px; font-weight: 600;">${segment.duration || ''}</div>
           </td>
           <td style="padding: 10px; text-align: right;">
             <div style="font-size: 24px; font-weight: bold; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">${formatTime(segment.arrivalTime)}</div>
@@ -195,9 +195,9 @@ function generateFlightItineraryHtml(
         </tr>
       </table>
     </div>
-  `,
+  `
     )
-    .join("");
+    .join('');
 
   return `
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Flight Itinerary</title></head>
@@ -220,34 +220,28 @@ function generateFlightItineraryHtml(
   `;
 }
 
-function generateHotelItineraryHtml(
-  booking: HotelBooking,
-  customer: DocumentCustomerInfo,
-): string {
+function generateHotelItineraryHtml(booking: HotelBooking, customer: DocumentCustomerInfo): string {
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
-  const totalAmount = booking.rooms.reduce(
-    (sum, room) => sum + room.totalRate,
-    0,
-  );
+  const totalAmount = booking.rooms.reduce((sum, room) => sum + room.totalRate, 0);
 
   const roomsHtml = booking.rooms
     .map(
-      (room) => `
+      room => `
     <div style="padding: 15px; background: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid ${DOCUMENT_THEME_COLORS.brandSecondary};">
       <h4 style="margin: 0 0 10px 0; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">${room.roomName}</h4>
       <p style="margin: 5px 0;">${room.adults} Adults, ${room.children} Children | ${room.numberOfNights} Nights</p>
       <p style="margin: 5px 0; font-weight: bold; color: ${DOCUMENT_THEME_COLORS.brandPrimary};">Total: $${room.totalRate.toFixed(2)}</p>
-      ${room.inclusions?.length ? `<p style="margin: 5px 0; font-size: 12px; color: ${DOCUMENT_THEME_COLORS.brandAccent}; font-weight: 600;">✨ Inclusions: ${room.inclusions.join(", ")}</p>` : ""}
+      ${room.inclusions?.length ? `<p style="margin: 5px 0; font-size: 12px; color: ${DOCUMENT_THEME_COLORS.brandAccent}; font-weight: 600;">✨ Inclusions: ${room.inclusions.join(', ')}</p>` : ''}
     </div>
-  `,
+  `
     )
-    .join("");
+    .join('');
 
   return `
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hotel Itinerary</title></head>
@@ -273,10 +267,7 @@ function generateHotelItineraryHtml(
   `;
 }
 
-function generateFlightETicketHtml(
-  booking: FlightBooking,
-  customer: DocumentCustomerInfo,
-): string {
+function generateFlightETicketHtml(booking: FlightBooking, customer: DocumentCustomerInfo): string {
   return `
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>E-Ticket</title></head>
 <body style="font-family: Arial; padding: 20px;">
@@ -284,44 +275,38 @@ function generateFlightETicketHtml(
     <div style="background: linear-gradient(135deg, ${DOCUMENT_THEME_COLORS.brandPrimary}, ${DOCUMENT_THEME_COLORS.brandPrimaryDark}); padding: 30px; color: white; text-align: center;">
       <h1 style="margin: 0;">🎫 E-TICKET</h1>
       <p>Booking: <strong>${booking.bookingReference}</strong></p>
-      <p>Ticket: <strong>${booking.ticketNumber || "N/A"}</strong></p>
+      <p>Ticket: <strong>${booking.ticketNumber || 'N/A'}</strong></p>
     </div>
     <div style="padding: 30px;">
       <h3>Passenger: ${customer.name}</h3>
       <p>Email: ${customer.email}</p>
       ${booking.segments
-      .map(
-        (s, i) => `
+        .map(
+          (s, i) => `
         <div style="padding: 15px; background: ${DOCUMENT_THEME_COLORS.surfaceMuted}; border-radius: 8px; margin: 10px 0;">
           <strong>Flight ${i + 1}:</strong> ${s.airline} ${s.flightNumber}<br>
           <strong>From:</strong> ${s.departureCity} (${s.departureAirportCode}) at ${s.departureTime}<br>
           <strong>To:</strong> ${s.arrivalCity} (${s.arrivalAirportCode}) at ${s.arrivalTime}<br>
           <strong>Class:</strong> ${s.cabinClass}
         </div>
-      `,
-      )
-      .join("")}
+      `
+        )
+        .join('')}
     </div>
   </div>
 </body></html>
   `;
 }
 
-function generateHotelVoucherHtml(
-  booking: HotelBooking,
-  customer: DocumentCustomerInfo,
-): string {
+function generateHotelVoucherHtml(booking: HotelBooking, customer: DocumentCustomerInfo): string {
   const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
-  const totalAmount = booking.rooms.reduce(
-    (sum, room) => sum + room.totalRate,
-    0,
-  );
+  const totalAmount = booking.rooms.reduce((sum, room) => sum + room.totalRate, 0);
 
   return `
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Hotel Voucher</title></head>
@@ -334,7 +319,7 @@ function generateHotelVoucherHtml(
     <div style="padding: 30px;">
       <h3>${booking.hotelName}</h3>
       <p>${booking.hotelAddress}, ${booking.hotelCity}, ${booking.hotelCountry}</p>
-      ${booking.hotelPhone ? `<p>Phone: ${booking.hotelPhone}</p>` : ""}
+      ${booking.hotelPhone ? `<p>Phone: ${booking.hotelPhone}</p>` : ''}
       <hr>
       <p><strong>Guest:</strong> ${booking.guestName}</p>
       <p><strong>Check-in:</strong> ${formatDate(booking.checkInDate)} (from 14:00)</p>
@@ -352,7 +337,7 @@ function generateHotelVoucherHtml(
 function generateFlightInvoiceHtml(
   booking: FlightBooking,
   customer: DocumentCustomerInfo,
-  payment: PaymentBreakdown,
+  payment: PaymentBreakdown
 ): string {
   const invoiceNumber = `INV-FL-${booking.bookingReference}-${Date.now()}`;
 
@@ -387,13 +372,10 @@ function generateFlightInvoiceHtml(
 function generateHotelInvoiceHtml(
   booking: HotelBooking,
   customer: DocumentCustomerInfo,
-  payment: PaymentBreakdown,
+  payment: PaymentBreakdown
 ): string {
   const invoiceNumber = `INV-HT-${booking.confirmationNumber}-${Date.now()}`;
-  const roomsTotal = booking.rooms.reduce(
-    (sum, room) => sum + room.totalRate,
-    0,
-  );
+  const roomsTotal = booking.rooms.reduce((sum, room) => sum + room.totalRate, 0);
 
   return `
 <!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice</title></head>
@@ -426,7 +408,7 @@ function generateHotelInvoiceHtml(
 function generateFlightReceiptHtml(
   booking: FlightBooking,
   customer: DocumentCustomerInfo,
-  payment: PaymentBreakdown,
+  payment: PaymentBreakdown
 ): string {
   const receiptNumber = `RCT-FL-${booking.bookingReference}-${Date.now()}`;
 
@@ -455,7 +437,7 @@ function generateFlightReceiptHtml(
 function generateHotelReceiptHtml(
   booking: HotelBooking,
   customer: DocumentCustomerInfo,
-  payment: PaymentBreakdown,
+  payment: PaymentBreakdown
 ): string {
   const receiptNumber = `RCT-HT-${booking.confirmationNumber}-${Date.now()}`;
 
@@ -485,7 +467,7 @@ function generateRefundNoteHtml(
   refundAmount: number,
   currency: string,
   bookingRef: string,
-  customer: DocumentCustomerInfo,
+  customer: DocumentCustomerInfo
 ): string {
   const refundNumber = `RFN-${bookingRef}-${Date.now()}`;
 
@@ -516,7 +498,7 @@ function generateDebitNoteHtml(
   amount: number,
   currency: string,
   bookingRef: string,
-  customer: DocumentCustomerInfo,
+  customer: DocumentCustomerInfo
 ): string {
   const debitNoteNumber = `DBT-${bookingRef}-${Date.now()}`;
 
@@ -567,35 +549,45 @@ async function getBookingData(bookingId: string) {
   const metadata = (booking.metadata as any) || {};
   const customer: DocumentCustomerInfo = {
     id: booking.userId,
-    name: metadata.customerName || booking.customerEmail || "Guest",
-    email: booking.customerEmail || "guest@example.com",
-    phone: booking.customerPhone || "N/A",
+    name: metadata.customerName || booking.customerEmail || 'Guest',
+    email: booking.customerEmail || 'guest@example.com',
+    phone: booking.customerPhone || 'N/A',
   };
 
   // Map to Document types
-  const isHotel = booking.serviceType.toLowerCase() === "hotel";
+  const isHotel = booking.serviceType.toLowerCase() === 'hotel';
 
   if (isHotel) {
     const hotelSegment = booking.bookingSegments[0]; // Assume first segment for simple voucher
     const hotelBooking: HotelBooking = {
       id: booking.id,
-      hotelName: hotelSegment?.hotelName || "Hotel",
-      hotelAddress: metadata.hotelAddress || "Address",
-      hotelCity: metadata.hotelCity || "City",
-      hotelCountry: metadata.hotelCountry || "Country",
-      checkInDate: hotelSegment?.checkInDate?.toISOString() || "",
-      checkOutDate: hotelSegment?.checkOutDate?.toISOString() || "",
-      numberOfNights: hotelSegment ? Math.ceil((hotelSegment.checkOutDate!.getTime() - hotelSegment.checkInDate!.getTime()) / (1000 * 3600 * 24)) : 0,
+      hotelName: hotelSegment?.hotelName || 'Hotel',
+      hotelAddress: metadata.hotelAddress || 'Address',
+      hotelCity: metadata.hotelCity || 'City',
+      hotelCountry: metadata.hotelCountry || 'Country',
+      checkInDate: hotelSegment?.checkInDate?.toISOString() || '',
+      checkOutDate: hotelSegment?.checkOutDate?.toISOString() || '',
+      numberOfNights: hotelSegment
+        ? Math.ceil(
+            (hotelSegment.checkOutDate!.getTime() - hotelSegment.checkInDate!.getTime()) /
+              (1000 * 3600 * 24)
+          )
+        : 0,
       rooms: [
         {
-          id: hotelSegment?.id || "room-1",
-          roomType: hotelSegment?.roomType || "Standard",
-          roomName: hotelSegment?.roomType || "Standard Room",
+          id: hotelSegment?.id || 'room-1',
+          roomType: hotelSegment?.roomType || 'Standard',
+          roomName: hotelSegment?.roomType || 'Standard Room',
           adults: metadata.adults || 1,
           children: metadata.children || 0,
-          checkIn: hotelSegment?.checkInDate?.toISOString() || "",
-          checkOut: hotelSegment?.checkOutDate?.toISOString() || "",
-          numberOfNights: hotelSegment ? Math.ceil((hotelSegment.checkOutDate!.getTime() - hotelSegment.checkInDate!.getTime()) / (1000 * 3600 * 24)) : 0,
+          checkIn: hotelSegment?.checkInDate?.toISOString() || '',
+          checkOut: hotelSegment?.checkOutDate?.toISOString() || '',
+          numberOfNights: hotelSegment
+            ? Math.ceil(
+                (hotelSegment.checkOutDate!.getTime() - hotelSegment.checkInDate!.getTime()) /
+                  (1000 * 3600 * 24)
+              )
+            : 0,
           ratePerNight: Number(booking.baseAmount) / (metadata.nights || 1),
           totalRate: Number(booking.baseAmount),
         },
@@ -615,7 +607,7 @@ async function getBookingData(bookingId: string) {
       fees: Number(booking.markupAmount),
       total: Number(booking.totalAmount),
       currency: booking.currency,
-      paymentMethod: latestPayment?.paymentMethod || metadata.paymentMethod || "Credit Card",
+      paymentMethod: latestPayment?.paymentMethod || metadata.paymentMethod || 'Credit Card',
       paidAmount: latestPayment ? Number(latestPayment.amount) : Number(booking.totalAmount),
     };
 
@@ -627,28 +619,28 @@ async function getBookingData(bookingId: string) {
       bookingReference: booking.bookingRef,
       pnr: metadata.pnr || booking.bookingRef,
       ticketNumber: metadata.ticketNumber,
-      passengers: booking.bookingPassengers.map((p) => ({
+      passengers: booking.bookingPassengers.map(p => ({
         id: p.id,
-        firstName: p.firstName || "",
-        lastName: p.lastName || "",
-        type: (p.passengerType as any) || "adult",
+        firstName: p.firstName || '',
+        lastName: p.lastName || '',
+        type: (p.passengerType as any) || 'adult',
       })),
-      segments: booking.bookingSegments.map((s) => ({
+      segments: booking.bookingSegments.map(s => ({
         id: s.id,
-        flightNumber: s.flightNumber || "",
-        airline: s.airline || "",
-        airlineIata: metadata.airlineCode || "",
-        departureAirport: s.departureAirport || "",
-        departureAirportCode: metadata.departureCode || s.departureAirport || "",
-        departureCity: metadata.departureCity || "",
-        departureTime: s.departureTime?.toISOString() || "",
-        departureDate: s.departureTime?.toISOString().split("T")[0] || "",
-        arrivalAirport: s.arrivalAirport || "",
-        arrivalAirportCode: metadata.arrivalCode || s.arrivalAirport || "",
-        arrivalCity: metadata.arrivalCity || "",
-        arrivalTime: s.arrivalTime?.toISOString() || "",
+        flightNumber: s.flightNumber || '',
+        airline: s.airline || '',
+        airlineIata: metadata.airlineCode || '',
+        departureAirport: s.departureAirport || '',
+        departureAirportCode: metadata.departureCode || s.departureAirport || '',
+        departureCity: metadata.departureCity || '',
+        departureTime: s.departureTime?.toISOString() || '',
+        departureDate: s.departureTime?.toISOString().split('T')[0] || '',
+        arrivalAirport: s.arrivalAirport || '',
+        arrivalAirportCode: metadata.arrivalCode || s.arrivalAirport || '',
+        arrivalCity: metadata.arrivalCity || '',
+        arrivalTime: s.arrivalTime?.toISOString() || '',
         duration: metadata.duration,
-        cabinClass: metadata.cabinClass || "Economy",
+        cabinClass: metadata.cabinClass || 'Economy',
       })),
       totalAmount: Number(booking.totalAmount),
       baseFare: Number(booking.baseAmount),
@@ -665,7 +657,7 @@ async function getBookingData(bookingId: string) {
       fees: Number(booking.markupAmount),
       total: Number(booking.totalAmount),
       currency: booking.currency,
-      paymentMethod: latestPayment?.paymentMethod || metadata.paymentMethod || "Credit Card",
+      paymentMethod: latestPayment?.paymentMethod || metadata.paymentMethod || 'Credit Card',
       paidAmount: latestPayment ? Number(latestPayment.amount) : Number(booking.totalAmount),
     };
 
@@ -678,261 +670,430 @@ async function getBookingData(bookingId: string) {
 // ============================================================================
 
 /**
- * GET /api/documents/:bookingId
- * Get list of available documents for a booking
+ * @swagger
+ * /api/documents/{bookingId}:
+ *   get:
+ *     summary: Get list of available documents for a booking
+ *     tags: [Documents]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *       - in: query
+ *         name: bookingType
+ *         schema:
+ *           type: string
+ *         description: Type of booking (e.g., hotel)
+ *     responses:
+ *       200:
+ *         description: List of available documents
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     documents:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
-router.get("/:bookingId", async (req: Request, res: Response) => {
+router.get('/:bookingId', async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const { bookingType } = req.query;
-    const isHotel = bookingType === "hotel";
+    const isHotel = bookingType === 'hotel';
 
     // In production, fetch from database based on booking status
     const documents = isHotel
       ? [
-        {
-          id: `doc-itin-${bookingId}`,
-          type: "itinerary",
-          name: "Hotel Itinerary",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/itinerary?bookingType=hotel`,
-          available: true,
-        },
-        {
-          id: `doc-inv-${bookingId}`,
-          type: "invoice",
-          name: "Hotel Invoice",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/invoice?bookingType=hotel`,
-          available: true,
-        },
-        {
-          id: `doc-vch-${bookingId}`,
-          type: "voucher",
-          name: "Hotel Voucher",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/voucher?bookingType=hotel`,
-          available: true,
-        },
-        {
-          id: `doc-rct-${bookingId}`,
-          type: "receipt",
-          name: "Payment Receipt",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/receipt?bookingType=hotel`,
-          available: true,
-        },
-        {
-          id: `doc-ref-${bookingId}`,
-          type: "refund",
-          name: "Refund Note",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/refund?bookingType=hotel`,
-          available: true,
-        },
-        {
-          id: `doc-dbt-${bookingId}`,
-          type: "debit",
-          name: "Debit Note",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/debit?bookingType=hotel`,
-          available: true,
-        },
-      ]
+          {
+            id: `doc-itin-${bookingId}`,
+            type: 'itinerary',
+            name: 'Hotel Itinerary',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/itinerary?bookingType=hotel`,
+            available: true,
+          },
+          {
+            id: `doc-inv-${bookingId}`,
+            type: 'invoice',
+            name: 'Hotel Invoice',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/invoice?bookingType=hotel`,
+            available: true,
+          },
+          {
+            id: `doc-vch-${bookingId}`,
+            type: 'voucher',
+            name: 'Hotel Voucher',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/voucher?bookingType=hotel`,
+            available: true,
+          },
+          {
+            id: `doc-rct-${bookingId}`,
+            type: 'receipt',
+            name: 'Payment Receipt',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/receipt?bookingType=hotel`,
+            available: true,
+          },
+          {
+            id: `doc-ref-${bookingId}`,
+            type: 'refund',
+            name: 'Refund Note',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/refund?bookingType=hotel`,
+            available: true,
+          },
+          {
+            id: `doc-dbt-${bookingId}`,
+            type: 'debit',
+            name: 'Debit Note',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/debit?bookingType=hotel`,
+            available: true,
+          },
+        ]
       : [
-        {
-          id: `doc-itin-${bookingId}`,
-          type: "itinerary",
-          name: "Flight Itinerary",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/itinerary`,
-          available: true,
-        },
-        {
-          id: `doc-inv-${bookingId}`,
-          type: "invoice",
-          name: "Commercial Invoice",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/invoice`,
-          available: true,
-        },
-        {
-          id: `doc-tkt-${bookingId}`,
-          type: "ticket",
-          name: "E-Ticket",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/ticket`,
-          available: false,
-        },
-        {
-          id: `doc-rct-${bookingId}`,
-          type: "receipt",
-          name: "Payment Receipt",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/receipt`,
-          available: false,
-        },
-        {
-          id: `doc-ref-${bookingId}`,
-          type: "refund",
-          name: "Refund Note",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/refund`,
-          available: false,
-        },
-        {
-          id: `doc-dbt-${bookingId}`,
-          type: "debit",
-          name: "Debit Note",
-          format: "PDF",
-          url: `/api/documents/${bookingId}/download/debit`,
-          available: false,
-        },
-      ];
+          {
+            id: `doc-itin-${bookingId}`,
+            type: 'itinerary',
+            name: 'Flight Itinerary',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/itinerary`,
+            available: true,
+          },
+          {
+            id: `doc-inv-${bookingId}`,
+            type: 'invoice',
+            name: 'Commercial Invoice',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/invoice`,
+            available: true,
+          },
+          {
+            id: `doc-tkt-${bookingId}`,
+            type: 'ticket',
+            name: 'E-Ticket',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/ticket`,
+            available: false,
+          },
+          {
+            id: `doc-rct-${bookingId}`,
+            type: 'receipt',
+            name: 'Payment Receipt',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/receipt`,
+            available: false,
+          },
+          {
+            id: `doc-ref-${bookingId}`,
+            type: 'refund',
+            name: 'Refund Note',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/refund`,
+            available: false,
+          },
+          {
+            id: `doc-dbt-${bookingId}`,
+            type: 'debit',
+            name: 'Debit Note',
+            format: 'PDF',
+            url: `/api/documents/${bookingId}/download/debit`,
+            available: false,
+          },
+        ];
 
     res.json({ success: true, data: { documents } });
   } catch (error: any) {
-    console.error("[Documents] Error:", error.message);
+    console.error('[Documents] Error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 /**
- * GET /api/documents/:bookingId/download/:documentType
- * Download/generate a specific document
+ * @swagger
+ * /api/documents/{bookingId}/download/{documentType}:
+ *   get:
+ *     summary: Download/generate a specific document
+ *     tags: [Documents]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *       - in: path
+ *         name: documentType
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [itinerary, invoice, ticket, voucher, receipt, refund, debit]
+ *         description: The type of document to download
+ *       - in: query
+ *         name: bookingType
+ *         schema:
+ *           type: string
+ *         description: Type of booking (e.g., hotel)
+ *     responses:
+ *       200:
+ *         description: Generated document content
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     bookingId:
+ *                       type: string
+ *                     documentType:
+ *                       type: string
+ *                     documentName:
+ *                       type: string
+ *                     content:
+ *                       type: string
+ *                     generatedAt:
+ *                       type: string
+ *                       format: date-time
+ *                 error:
+ *                   type: string
+ *       400:
+ *         description: Invalid document type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       404:
+ *         description: Booking not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
-router.get(
-  "/:bookingId/download/:documentType",
-  async (req: Request, res: Response) => {
-    try {
-      const { bookingId, documentType } = req.params as {
-        bookingId: string;
-        documentType: string;
-      };
-      const { bookingType } = req.query;
-      const isHotel = bookingType === "hotel";
+router.get('/:bookingId/download/:documentType', async (req: Request, res: Response) => {
+  try {
+    const { bookingId, documentType } = req.params as {
+      bookingId: string;
+      documentType: string;
+    };
+    const { bookingType } = req.query;
+    const isHotel = bookingType === 'hotel';
 
-      console.log(
-        `[Documents] Generating ${documentType} for booking ${bookingId}, isHotel: ${isHotel}`,
-      );
+    console.log(
+      `[Documents] Generating ${documentType} for booking ${bookingId}, isHotel: ${isHotel}`
+    );
 
-      // Get real data from database
-      const result = await getBookingData(bookingId);
-      if (!result) {
-        return res.status(404).json({
-          success: false,
-          error: "Booking not found",
-        });
-      }
-
-      const { booking, customer, payment } = result;
-
-      let htmlContent = "";
-      let documentName = "";
-
-      switch (documentType) {
-        case "itinerary":
-          documentName = isHotel ? "Hotel_Itinerary" : "Flight_Itinerary";
-          htmlContent = isHotel
-            ? generateHotelItineraryHtml(booking as HotelBooking, customer)
-            : generateFlightItineraryHtml(booking as FlightBooking, customer);
-          break;
-        case "invoice":
-          documentName = isHotel ? "Hotel_Invoice" : "Flight_Invoice";
-          htmlContent = isHotel
-            ? generateHotelInvoiceHtml(
-              booking as HotelBooking,
-              customer,
-              payment,
-            )
-            : generateFlightInvoiceHtml(
-              booking as FlightBooking,
-              customer,
-              payment,
-            );
-          break;
-        case "ticket":
-          documentName = "E-Ticket";
-          htmlContent = generateFlightETicketHtml(
-            booking as FlightBooking,
-            customer,
-          );
-          break;
-        case "voucher":
-          documentName = "Hotel_Voucher";
-          htmlContent = generateHotelVoucherHtml(
-            booking as HotelBooking,
-            customer,
-          );
-          break;
-        case "receipt":
-          documentName = "Payment_Receipt";
-          htmlContent = isHotel
-            ? generateHotelReceiptHtml(
-              booking as HotelBooking,
-              customer,
-              payment,
-            )
-            : generateFlightReceiptHtml(
-              booking as FlightBooking,
-              customer,
-              payment,
-            );
-          break;
-        case "refund":
-          documentName = "Refund_Note";
-          htmlContent = generateRefundNoteHtml(
-            payment.paidAmount,
-            payment.currency,
-            bookingId,
-            customer,
-          );
-          break;
-        case "debit":
-          documentName = "Debit_Note";
-          htmlContent = generateDebitNoteHtml(
-            150.0,
-            payment.currency,
-            bookingId,
-            customer,
-          );
-          break;
-        default:
-          return res.status(400).json({
-            success: false,
-            error: `Invalid document type: ${documentType}`,
-          });
-      }
-
-      // Return HTML content
-      res.setHeader("Content-Type", "text/html");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${documentName}_${bookingId}.html"`,
-      );
-
-      res.json({
-        success: true,
-        data: {
-          bookingId,
-          documentType,
-          documentName,
-          content: htmlContent,
-          generatedAt: new Date().toISOString(),
-        },
+    // Get real data from database
+    const result = await getBookingData(bookingId);
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
       });
-    } catch (error: any) {
-      console.error("[Documents] Download error:", error.message);
-      res.status(500).json({ success: false, error: error.message });
     }
-  },
-);
+
+    const { booking, customer, payment } = result;
+
+    let htmlContent = '';
+    let documentName = '';
+
+    switch (documentType) {
+      case 'itinerary':
+        documentName = isHotel ? 'Hotel_Itinerary' : 'Flight_Itinerary';
+        htmlContent = isHotel
+          ? generateHotelItineraryHtml(booking as HotelBooking, customer)
+          : generateFlightItineraryHtml(booking as FlightBooking, customer);
+        break;
+      case 'invoice':
+        documentName = isHotel ? 'Hotel_Invoice' : 'Flight_Invoice';
+        htmlContent = isHotel
+          ? generateHotelInvoiceHtml(booking as HotelBooking, customer, payment)
+          : generateFlightInvoiceHtml(booking as FlightBooking, customer, payment);
+        break;
+      case 'ticket':
+        documentName = 'E-Ticket';
+        htmlContent = generateFlightETicketHtml(booking as FlightBooking, customer);
+        break;
+      case 'voucher':
+        documentName = 'Hotel_Voucher';
+        htmlContent = generateHotelVoucherHtml(booking as HotelBooking, customer);
+        break;
+      case 'receipt':
+        documentName = 'Payment_Receipt';
+        htmlContent = isHotel
+          ? generateHotelReceiptHtml(booking as HotelBooking, customer, payment)
+          : generateFlightReceiptHtml(booking as FlightBooking, customer, payment);
+        break;
+      case 'refund':
+        documentName = 'Refund_Note';
+        htmlContent = generateRefundNoteHtml(
+          payment.paidAmount,
+          payment.currency,
+          bookingId,
+          customer
+        );
+        break;
+      case 'debit':
+        documentName = 'Debit_Note';
+        htmlContent = generateDebitNoteHtml(150.0, payment.currency, bookingId, customer);
+        break;
+      default:
+        return res.status(400).json({
+          success: false,
+          error: `Invalid document type: ${documentType}`,
+        });
+    }
+
+    // Return HTML content
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${documentName}_${bookingId}.html"`
+    );
+
+    res.json({
+      success: true,
+      data: {
+        bookingId,
+        documentType,
+        documentName,
+        content: htmlContent,
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error: any) {
+    console.error('[Documents] Download error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 /**
- * POST /api/documents/:bookingId/email
- * Email a document to a recipient
+ * @swagger
+ * /api/documents/{bookingId}/email:
+ *   post:
+ *     summary: Email a document to a recipient
+ *     tags: [Documents]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - documentType
+ *               - recipientEmail
+ *             properties:
+ *               documentType:
+ *                 type: string
+ *                 description: The type of document to email
+ *               recipientEmail:
+ *                 type: string
+ *                 format: email
+ *                 description: The recipient email address
+ *     responses:
+ *       200:
+ *         description: Document email queued successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     bookingId:
+ *                       type: string
+ *                     documentType:
+ *                       type: string
+ *                     recipientEmail:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     sentAt:
+ *                       type: string
+ *                       format: date-time
+ *                 error:
+ *                   type: string
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
  */
-router.post("/:bookingId/email", async (req: Request, res: Response) => {
+router.post('/:bookingId/email', async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const { documentType, recipientEmail } = req.body;
@@ -940,13 +1101,13 @@ router.post("/:bookingId/email", async (req: Request, res: Response) => {
     if (!documentType || !recipientEmail) {
       return res.status(400).json({
         success: false,
-        error: "documentType and recipientEmail are required",
+        error: 'documentType and recipientEmail are required',
       });
     }
 
     // In production: queue email with generated PDF attachment
     console.log(
-      `[Documents] Emailing ${documentType} for booking ${bookingId} to ${recipientEmail}`,
+      `[Documents] Emailing ${documentType} for booking ${bookingId} to ${recipientEmail}`
     );
 
     res.json({
@@ -955,12 +1116,12 @@ router.post("/:bookingId/email", async (req: Request, res: Response) => {
         bookingId,
         documentType,
         recipientEmail,
-        status: "queued",
+        status: 'queued',
         sentAt: new Date().toISOString(),
       },
     });
   } catch (error: any) {
-    console.error("[Documents] Email error:", error.message);
+    console.error('[Documents] Email error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });

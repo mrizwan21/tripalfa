@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^7.4.0",
     "@tripalfa/shared-database": "workspace:*",
+    "@tripalfa/shared-openapi": "workspace:*",
     "@tripalfa/shared-types": "workspace:*",
     "@types/multer": "^2.0.0",
     "axios": "^1.7.9",
@@ -25,12 +26,16 @@
     "multer": "2.1.0",
     "pg": "^8.11.0",
     "redis": "^4.7.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^25.2.1",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.6",
     "@types/uuid": "^10.0.0",
     "prisma": "^7.4.0",
     "tsx": "^4.7.0",

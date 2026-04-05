@@ -1,0 +1,49 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "CCAVENUE",
+    "cuid",
+    "Timestamptz",
+    "webgl",
+    "Geolocation",
+    "openexchangerates",
+    "upsert",
+    "upserting",
+    "itin",
+    "CFAR",
+    "cfar",
+    "mktemp",
+    "PIPESTATUS",
+    "failfast",
+    "FAILFAST",
+    "vitest",
+    "Vitest",
+    "mapbox",
+    "zadd",
+    "zrange",
+    "oneworld",
+    "fkey",
+    "plpgsql",
+    "blocklist",
+    "Blocklist"
+  ],
+  "ignoreWords": [],
+  "import": [],
+  "dictionaries": [],
+  "ignorePaths": [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "coverage",
+    ".cspellrc.json",
+    ".cspell.json"
+  ],
+  "overrides": [
+    {
+      "filename": "**/*.prisma",
+      "words": ["cuid", "Timestamptz"]
+    }
+  ]
+}

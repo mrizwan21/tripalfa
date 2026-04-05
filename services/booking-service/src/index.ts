@@ -1,84 +1,79 @@
-import dotenv from "dotenv";
-import fs from "fs";
-import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
+import dotenv from 'dotenv';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
 // Load environment variables from root .env file BEFORE any other imports
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const rootDir = resolve(__dirname, "../../..");
-dotenv.config({ path: resolve(rootDir, ".env") });
+const rootDir = resolve(__dirname, '../../..');
+dotenv.config({ path: resolve(rootDir, '.env') });
 
 // Now import other modules that depend on environment variables
-import express, { Express, Request, Response } from "express";
-import cors from "cors";
-import bookingsRoutes from "./routes/bookings.js";
-import documentsRoutes from "./routes/documents.js";
-import orderManagementRoutes from "./routes/order-management.js";
-import inventoryRoutes from "./routes/inventory.js";
-import auditRoutes from "./routes/audit.js";
-import adminBookingCardRoutes from "./routes/adminBookingCard.js";
-import liteApiRoutes from "./routes/liteapi.js";
-import airlineCreditsRoutes from "./routes/airlineCredits.js";
-import webhookRoutes from "./routes/webhooks.js";
-import duffelRoutes from "./routes/duffel.js";
-import duffelEnhancedRoutes from "./routes/duffel-enhanced.js";
-import flightBookingRoutes from "./routes/flight-booking.js";
-import hotelBookingRoutes from "./routes/hotel-booking.js";
-import realtimeBookingRoutes from "./routes/realtime-booking.js";
-import hotelRoutes from "./routes/hotels.js";
-import locationRoutes from "./routes/location.js";
-import staticRoutes from "./routes/static.routes.js";
-import contentRoutes from "./routes/content.routes.js";
-import hotelStaticRoutes from "./routes/hotels.static.routes.js";
-import { randomUUID } from "crypto";
-import { CacheService } from "./cache/redis.js";
+import express, { Express, Request, Response } from 'express';
+import cors from 'cors';
+import bookingsRoutes from './routes/bookings.js';
+import documentsRoutes from './routes/documents.js';
+import orderManagementRoutes from './routes/order-management.js';
+import inventoryRoutes from './routes/inventory.js';
+import auditRoutes from './routes/audit.js';
+import adminBookingCardRoutes from './routes/adminBookingCard.js';
+import liteApiRoutes from './routes/liteapi.js';
+import airlineCreditsRoutes from './routes/airlineCredits.js';
+import webhookRoutes from './routes/webhooks.js';
+import duffelRoutes from './routes/duffel.js';
+import duffelEnhancedRoutes from './routes/duffel-enhanced.js';
+import flightBookingRoutes from './routes/flight-booking.js';
+import hotelBookingRoutes from './routes/hotel-booking.js';
+import realtimeBookingRoutes from './routes/realtime-booking.js';
+import hotelRoutes from './routes/hotels.js';
+import locationRoutes from './routes/location.js';
+import staticRoutes from './routes/static.routes.js';
+import contentRoutes from './routes/content.routes.js';
+import hotelStaticRoutes from './routes/hotels.static.routes.js';
+import { randomUUID } from 'crypto';
+import { CacheService } from './cache/redis.js';
+import { setupBookingSwagger } from './swagger.js';
 
 // Duffel API configuration
-const DUFFEL_API_URL = process.env.DUFFEL_API_URL || "https://api.duffel.com";
+const DUFFEL_API_URL = process.env.DUFFEL_API_URL || 'https://api.duffel.com';
 
 function resolveDuffelApiKey() {
   const normalizeToken = (value?: string) => {
-    if (!value) return "";
-    const trimmed = value.trim().replace(/^['\"]|['\"]$/g, "");
-    const withoutBearer = trimmed.replace(/^Bearer\s+/i, "").trim();
-    return withoutBearer.startsWith("duffel_") ? withoutBearer : "";
+    if (!value) return '';
+    const trimmed = value.trim().replace(/^['\"]|['\"]$/g, '');
+    const withoutBearer = trimmed.replace(/^Bearer\s+/i, '').trim();
+    return withoutBearer.startsWith('duffel_') ? withoutBearer : '';
   };
 
-  const envKey = normalizeToken(
-    process.env.DUFFEL_API_KEY || process.env.DUFFEL_TEST_TOKEN,
-  );
+  const envKey = normalizeToken(process.env.DUFFEL_API_KEY || process.env.DUFFEL_TEST_TOKEN);
   if (envKey) {
     return envKey;
   }
 
-  const keyPath = resolve(rootDir, "secrets", "duffel_api_key.txt");
+  const keyPath = resolve(rootDir, 'secrets', 'duffel_api_key.txt');
   if (fs.existsSync(keyPath)) {
-    const fileKey = normalizeToken(fs.readFileSync(keyPath, "utf8"));
+    const fileKey = normalizeToken(fs.readFileSync(keyPath, 'utf8'));
     if (fileKey) {
       return fileKey;
     }
   }
 
-  return "";
+  return '';
 }
 
 const DUFFEL_API_KEY = resolveDuffelApiKey();
-const DUFFEL_VERSION = "v2";
+const DUFFEL_VERSION = 'v2';
 
 // Helper to make authenticated Duffel API requests
-async function duffelApi<T>(
-  endpoint: string,
-  method: string = "GET",
-  body?: object,
-): Promise<T> {
+async function duffelApi<T>(endpoint: string, method: string = 'GET', body?: object): Promise<T> {
   const url = `${DUFFEL_API_URL}${endpoint}`;
   const response = await fetch(url, {
     method,
     headers: {
       Authorization: `Bearer ${DUFFEL_API_KEY}`,
-      "Duffel-Version": DUFFEL_VERSION,
-      "Content-Type": "application/json",
+      'Duffel-Version': DUFFEL_VERSION,
+      'Content-Type': 'application/json',
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -104,8 +99,8 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get("/health", (req, res) => {
-  res.json({ status: "healthy", service: "booking-service" });
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', service: 'booking-service' });
 });
 
 // ============================================================================
@@ -113,27 +108,22 @@ app.get("/health", (req, res) => {
 // Frontend calls POST /route with { provider: 'duffel', env, data: {...} }
 // ============================================================================
 
-app.post("/route", async (req: Request, res: Response) => {
+app.post('/route', async (req: Request, res: Response) => {
   try {
     const { provider, env, data } = req.body;
 
-    if (provider !== "duffel") {
-      return res
-        .status(400)
-        .json({ error: "Only duffel provider is supported" });
+    if (provider !== 'duffel') {
+      return res.status(400).json({ error: 'Only duffel provider is supported' });
     }
 
-    console.log(
-      `[Route] Duffel request - env: ${env}, data keys:`,
-      Object.keys(data || {}),
-    );
+    console.log(`[Route] Duffel request - env: ${env}, data keys:`, Object.keys(data || {}));
 
     // Forward to Duffel API - create offer request
-    const duffelResponse = await duffelApi<any>("/air/offer_requests", "POST", {
+    const duffelResponse = await duffelApi<any>('/air/offer_requests', 'POST', {
       data: {
         slices: data?.slices,
         passengers: data?.passengers,
-        cabin_class: data?.cabin_class || "economy",
+        cabin_class: data?.cabin_class || 'economy',
         return_available_services: data?.return_available_services ?? true,
       },
     });
@@ -145,7 +135,7 @@ app.post("/route", async (req: Request, res: Response) => {
       expires_at: duffelResponse.data?.expires_at,
     });
   } catch (error: any) {
-    console.error("[Route] Error:", error.message);
+    console.error('[Route] Error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -155,8 +145,8 @@ app.post("/route", async (req: Request, res: Response) => {
 // ============================================================================
 
 function normalizePassenger(p: any) {
-  const rawGender = String(p.gender || "M").toLowerCase();
-  const gender = rawGender === "m" || rawGender === "male" ? "m" : "f";
+  const rawGender = String(p.gender || 'M').toLowerCase();
+  const gender = rawGender === 'm' || rawGender === 'male' ? 'm' : 'f';
   const bornOn = p.born_on || p.born_at || p.dob;
 
   return {
@@ -166,15 +156,15 @@ function normalizePassenger(p: any) {
     email: p.email,
     phone_number: p.phone_number,
     born_on: bornOn,
-    title: (p.title || (gender === "m" ? "mr" : "ms")).toLowerCase(),
+    title: (p.title || (gender === 'm' ? 'mr' : 'ms')).toLowerCase(),
     gender,
-    type: p.type || "adult",
+    type: p.type || 'adult',
   };
 }
 
 function normalizePaymentAmount(rawAmount: any) {
   const amountNumber = Number(rawAmount);
-  if (!Number.isFinite(amountNumber)) return "0.00";
+  if (!Number.isFinite(amountNumber)) return '0.00';
 
   if (Number.isInteger(amountNumber) && amountNumber >= 1000) {
     return (amountNumber / 100).toFixed(2);
@@ -183,32 +173,30 @@ function normalizePaymentAmount(rawAmount: any) {
   return amountNumber.toFixed(2);
 }
 
-app.post("/bookings/flight/order", async (req: Request, res: Response) => {
+app.post('/bookings/flight/order', async (req: Request, res: Response) => {
   try {
     const { selectedOffers, passengers, orderType, paymentMethod } = req.body;
 
-    console.log("[Bookings] Creating flight order:", {
+    console.log('[Bookings] Creating flight order:', {
       selectedOffers,
       passengerCount: passengers?.length,
       orderType,
     });
 
     const mappedPassengers = passengers?.map((p: any) => normalizePassenger(p));
-    const requestedOrderType = String(orderType || "hold").toLowerCase();
-    const createUnpaidHold = requestedOrderType === "hold";
+    const requestedOrderType = String(orderType || 'hold').toLowerCase();
+    const createUnpaidHold = requestedOrderType === 'hold';
 
     if (createUnpaidHold) {
       const firstOfferId = selectedOffers?.[0];
       if (!firstOfferId) {
-        return res
-          .status(400)
-          .json({ error: "selectedOffers is required for hold orders" });
+        return res.status(400).json({ error: 'selectedOffers is required for hold orders' });
       }
 
       // Validate offer ID format to prevent path injection/SSRF
       const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (typeof firstOfferId !== 'string' || !UUID_REGEX.test(firstOfferId)) {
-        return res.status(400).json({ error: "Invalid offer ID format. Must be a valid UUID." });
+        return res.status(400).json({ error: 'Invalid offer ID format. Must be a valid UUID.' });
       }
 
       const offerResponse = await duffelApi<any>(`/air/offers/${firstOfferId}`);
@@ -218,37 +206,32 @@ app.post("/bookings/flight/order", async (req: Request, res: Response) => {
       if (requiresInstantPayment !== false) {
         return res.status(400).json({
           error:
-            "Selected offer does not allow holds. Choose an offer with payment_requirements.requires_instant_payment = false",
+            'Selected offer does not allow holds. Choose an offer with payment_requirements.requires_instant_payment = false',
           payment_requirements: offerResponse?.data?.payment_requirements,
         });
       }
     }
 
     // Create order in Duffel
-    const duffelResponse = await duffelApi<any>("/air/orders", "POST", {
+    const duffelResponse = await duffelApi<any>('/air/orders', 'POST', {
       data: {
-        ...(createUnpaidHold ? { type: "hold" } : {}),
+        ...(createUnpaidHold ? { type: 'hold' } : {}),
         selected_offers: selectedOffers,
         passengers: mappedPassengers,
         ...(!createUnpaidHold
           ? {
-            payments: [
-              {
-                type:
-                  paymentMethod?.type === "balance"
-                    ? "balance"
-                    : "arc_bsp_cash",
-                amount: normalizePaymentAmount(
-                  paymentMethod?.amount?.amount || paymentMethod?.amount,
-                ),
-                currency: String(
-                  paymentMethod?.amount?.currency ||
-                  paymentMethod?.currency ||
-                  "USD",
-                ).toUpperCase(),
-              },
-            ],
-          }
+              payments: [
+                {
+                  type: paymentMethod?.type === 'balance' ? 'balance' : 'arc_bsp_cash',
+                  amount: normalizePaymentAmount(
+                    paymentMethod?.amount?.amount || paymentMethod?.amount
+                  ),
+                  currency: String(
+                    paymentMethod?.amount?.currency || paymentMethod?.currency || 'USD'
+                  ).toUpperCase(),
+                },
+              ],
+            }
           : {}),
       },
     });
@@ -262,144 +245,127 @@ app.post("/bookings/flight/order", async (req: Request, res: Response) => {
       data: duffelResponse.data,
     });
   } catch (error: any) {
-    console.error("[Bookings] Create order error:", error.message);
+    console.error('[Bookings] Create order error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get(
-  "/bookings/flight/order/:orderId",
-  async (req: Request, res: Response) => {
-    try {
-      const { orderId } = req.params;
+app.get('/bookings/flight/order/:orderId', async (req: Request, res: Response) => {
+  try {
+    const { orderId } = req.params;
 
-      // Validate order ID format to prevent path injection/SSRF
-      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!orderId || typeof orderId !== 'string' || !UUID_REGEX.test(orderId)) {
-        return res.status(400).json({ error: "Invalid order ID format. Must be a valid UUID." });
-      }
-
-      const duffelResponse = await duffelApi<any>(`/air/orders/${orderId}`);
-
-      res.json({
-        success: true,
-        id: duffelResponse.data?.id,
-        order: duffelResponse.data,
-        data: duffelResponse.data,
-      });
-    } catch (error: any) {
-      console.error("[Bookings] Get order error:", error.message);
-      res.status(500).json({ error: error.message });
+    // Validate order ID format to prevent path injection/SSRF
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!orderId || typeof orderId !== 'string' || !UUID_REGEX.test(orderId)) {
+      return res.status(400).json({ error: 'Invalid order ID format. Must be a valid UUID.' });
     }
-  },
-);
 
-app.post(
-  "/bookings/flight/payment-intent",
-  async (req: Request, res: Response) => {
+    const duffelResponse = await duffelApi<any>(`/air/orders/${orderId}`);
+
+    res.json({
+      success: true,
+      id: duffelResponse.data?.id,
+      order: duffelResponse.data,
+      data: duffelResponse.data,
+    });
+  } catch (error: any) {
+    console.error('[Bookings] Get order error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/bookings/flight/payment-intent', async (req: Request, res: Response) => {
+  try {
+    const { order_id, amount } = req.body;
+
+    if (!order_id) {
+      return res.status(400).json({ error: 'order_id is required' });
+    }
+
+    const paymentAmount = normalizePaymentAmount(amount?.amount ?? amount);
+    const paymentCurrency = String(amount?.currency || 'USD').toUpperCase();
+
+    let duffelResponse: any;
     try {
-      const { order_id, amount } = req.body;
-
-      if (!order_id) {
-        return res.status(400).json({ error: "order_id is required" });
-      }
-
-      const paymentAmount = normalizePaymentAmount(amount?.amount ?? amount);
-      const paymentCurrency = String(amount?.currency || "USD").toUpperCase();
-
-      let duffelResponse: any;
-      try {
-        duffelResponse = await duffelApi<any>("/air/payments", "POST", {
-          data: {
-            order_id,
-            payment: {
-              type: "balance",
+      duffelResponse = await duffelApi<any>('/air/payments', 'POST', {
+        data: {
+          order_id,
+          payment: {
+            type: 'balance',
+            amount: paymentAmount,
+            currency: paymentCurrency,
+          },
+        },
+      });
+    } catch (primaryError) {
+      duffelResponse = await duffelApi<any>('/air/payments', 'POST', {
+        data: {
+          order_id,
+          payments: [
+            {
+              type: 'balance',
               amount: paymentAmount,
               currency: paymentCurrency,
             },
-          },
-        });
-      } catch (primaryError) {
-        duffelResponse = await duffelApi<any>("/air/payments", "POST", {
-          data: {
-            order_id,
-            payments: [
-              {
-                type: "balance",
-                amount: paymentAmount,
-                currency: paymentCurrency,
-              },
-            ],
-          },
-        });
-      }
-
-      res.json({
-        success: true,
-        id: duffelResponse.data?.id,
-        paymentId: duffelResponse.data?.id,
-        data: duffelResponse.data,
+          ],
+        },
       });
-    } catch (error: any) {
-      console.error("[Bookings] Payment intent error:", error.message);
-      res.status(500).json({ error: error.message });
     }
-  },
-);
 
-app.post(
-  "/bookings/flight/order/:orderId/confirm",
-  async (req: Request, res: Response) => {
-    try {
-      const { orderId } = req.params;
+    res.json({
+      success: true,
+      id: duffelResponse.data?.id,
+      paymentId: duffelResponse.data?.id,
+      data: duffelResponse.data,
+    });
+  } catch (error: any) {
+    console.error('[Bookings] Payment intent error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-      // Validate order ID format to prevent path injection/SSRF
-      const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      if (!orderId || typeof orderId !== 'string' || !UUID_REGEX.test(orderId)) {
-        return res.status(400).json({ error: "Invalid order ID format. Must be a valid UUID." });
-      }
-
-      let confirmResponse: any = null;
-      try {
-        confirmResponse = await duffelApi<any>(
-          `/air/orders/${orderId}/confirm_payment`,
-          "POST",
-          {
-            data: {},
-          },
-        );
-      } catch {
-        confirmResponse = await duffelApi<any>(`/air/orders/${orderId}`);
-      }
-
-      res.json({
-        success: true,
-        id: confirmResponse.data?.id,
-        data: confirmResponse.data,
-        order: confirmResponse.data,
-      });
-    } catch (error: any) {
-      console.error("[Bookings] Confirm order error:", error.message);
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-app.post("/api/flights/search", async (req: Request, res: Response) => {
+app.post('/bookings/flight/order/:orderId/confirm', async (req: Request, res: Response) => {
   try {
-    const {
-      slices,
-      passengers,
-      cabin_class,
-    } = req.body;
+    const { orderId } = req.params;
 
-    console.log("[Search] Flight search init:", { slices, passengers, cabin_class });
+    // Validate order ID format to prevent path injection/SSRF
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!orderId || typeof orderId !== 'string' || !UUID_REGEX.test(orderId)) {
+      return res.status(400).json({ error: 'Invalid order ID format. Must be a valid UUID.' });
+    }
 
-    const duffelResponse = await duffelApi<any>("/air/offer_requests", "POST", {
+    let confirmResponse: any = null;
+    try {
+      confirmResponse = await duffelApi<any>(`/air/orders/${orderId}/confirm_payment`, 'POST', {
+        data: {},
+      });
+    } catch {
+      confirmResponse = await duffelApi<any>(`/air/orders/${orderId}`);
+    }
+
+    res.json({
+      success: true,
+      id: confirmResponse.data?.id,
+      data: confirmResponse.data,
+      order: confirmResponse.data,
+    });
+  } catch (error: any) {
+    console.error('[Bookings] Confirm order error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/flights/search', async (req: Request, res: Response) => {
+  try {
+    const { slices, passengers, cabin_class } = req.body;
+
+    console.log('[Search] Flight search init:', { slices, passengers, cabin_class });
+
+    const duffelResponse = await duffelApi<any>('/air/offer_requests', 'POST', {
       data: {
         slices,
         passengers,
-        cabin_class: cabin_class || "economy",
+        cabin_class: cabin_class || 'economy',
         return_available_services: true,
       },
     });
@@ -417,9 +383,9 @@ app.post("/api/flights/search", async (req: Request, res: Response) => {
       const identity = slice.segments
         .map(
           (s: any) =>
-            `${s.marketing_carrier?.iata_code || "UNKNOWN"}${s.marketing_carrier_flight_number || ""}-${s.departing_at}`
+            `${s.marketing_carrier?.iata_code || 'UNKNOWN'}${s.marketing_carrier_flight_number || ''}-${s.departing_at}`
         )
-        .join("|");
+        .join('|');
 
       if (!groups[identity]) groups[identity] = [];
 
@@ -427,19 +393,19 @@ app.post("/api/flights/search", async (req: Request, res: Response) => {
       const mapped = {
         id: offer.id,
         offerId: offer.id,
-        airline: offer.owner?.name || "Unknown",
-        airlineCode: offer.owner?.iata_code || "",
-        flightNumber: slice.segments[0]?.marketing_carrier_flight_number || "",
-        carrierCode: offer.owner?.iata_code || "",
-        departureTime: slice.segments[0]?.departing_at || "",
-        arrivalTime: slice.segments[slice.segments.length - 1]?.arriving_at || "",
-        origin: slice.segments[0]?.origin?.iata_code || "",
-        destination: slice.segments[slice.segments.length - 1]?.destination?.iata_code || "",
-        duration: slice.duration || "",
+        airline: offer.owner?.name || 'Unknown',
+        airlineCode: offer.owner?.iata_code || '',
+        flightNumber: slice.segments[0]?.marketing_carrier_flight_number || '',
+        carrierCode: offer.owner?.iata_code || '',
+        departureTime: slice.segments[0]?.departing_at || '',
+        arrivalTime: slice.segments[slice.segments.length - 1]?.arriving_at || '',
+        origin: slice.segments[0]?.origin?.iata_code || '',
+        destination: slice.segments[slice.segments.length - 1]?.destination?.iata_code || '',
+        duration: slice.duration || '',
         stops: slice.segments.length - 1,
         amount: parseFloat(offer.total_amount) || 0,
-        currency: offer.total_currency || "USD",
-        cabin: slice.segments[0]?.passengers?.[0]?.cabin_class || cabin_class || "economy",
+        currency: offer.total_currency || 'USD',
+        cabin: slice.segments[0]?.passengers?.[0]?.cabin_class || cabin_class || 'economy',
         refundable: offer.conditions?.refund_before_departure?.allowed || false,
         changeable: offer.conditions?.change_before_departure?.allowed || false,
         segments: slice.segments.map((seg: any) => ({
@@ -453,17 +419,18 @@ app.post("/api/flights/search", async (req: Request, res: Response) => {
           duration: seg.duration,
           aircraft: seg.aircraft?.name,
           originCity: seg.origin?.city_name || seg.origin?.name || seg.origin?.iata_code,
-          destinationCity: seg.destination?.city_name || seg.destination?.name || seg.destination?.iata_code,
+          destinationCity:
+            seg.destination?.city_name || seg.destination?.name || seg.destination?.iata_code,
         })),
         ancillaries: (offer.available_services || []).map((s: any) => ({
           id: s.id,
           name: s.metadata?.name || s.type,
-          price: parseFloat(s.total_amount || "0"),
+          price: parseFloat(s.total_amount || '0'),
           currency: s.total_currency,
-          type: s.type === "baggage" ? "baggage" : s.type === "seat" ? "seat" : "other",
-          raw: s
+          type: s.type === 'baggage' ? 'baggage' : s.type === 'seat' ? 'seat' : 'other',
+          raw: s,
         })),
-        rawOffer: offer
+        rawOffer: offer,
       };
 
       groups[identity].push(mapped);
@@ -483,11 +450,15 @@ app.post("/api/flights/search", async (req: Request, res: Response) => {
     const cacheKey = `flight_search:${searchId}`;
 
     // Store in Redis (1800s = 30 mins)
-    await CacheService.set(cacheKey, {
-      offers: transformedOffers,
-      offer_request_id: duffelResponse.data?.id,
-      expires_at: duffelResponse.data?.expires_at
-    }, 1800);
+    await CacheService.set(
+      cacheKey,
+      {
+        offers: transformedOffers,
+        offer_request_id: duffelResponse.data?.id,
+        expires_at: duffelResponse.data?.expires_at,
+      },
+      1800
+    );
 
     res.json({
       searchId,
@@ -496,12 +467,12 @@ app.post("/api/flights/search", async (req: Request, res: Response) => {
       expires_at: duffelResponse.data?.expires_at,
     });
   } catch (error: any) {
-    console.error("[Search] Flight search error:", error.message);
+    console.error('[Search] Flight search error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.post("/api/flights/search/results/:searchId", async (req: Request, res: Response) => {
+app.post('/api/flights/search/results/:searchId', async (req: Request, res: Response) => {
   try {
     const { searchId } = req.params;
     const {
@@ -519,61 +490,59 @@ app.post("/api/flights/search/results/:searchId", async (req: Request, res: Resp
     const cachedData = await CacheService.get<any>(cacheKey);
 
     if (!cachedData) {
-      return res.status(404).json({ error: "Search session expired or not found. Please search again." });
+      return res
+        .status(404)
+        .json({ error: 'Search session expired or not found. Please search again.' });
     }
 
     let transformedOffers = [...cachedData.offers];
 
     // Apply filters
     if (maxPrice !== undefined) {
-      transformedOffers = transformedOffers.filter(
-        (o: any) => o.amount <= Number(maxPrice),
-      );
+      transformedOffers = transformedOffers.filter((o: any) => o.amount <= Number(maxPrice));
     }
     if (stops !== undefined) {
       const stopFilter = Number(stops);
-      transformedOffers = transformedOffers.filter(
-        (o: any) => o.stops === stopFilter,
-      );
+      transformedOffers = transformedOffers.filter((o: any) => o.stops === stopFilter);
     }
     if (airlines && Array.isArray(airlines) && airlines.length > 0) {
       transformedOffers = transformedOffers.filter((o: any) =>
         airlines.some(
           (a: string) =>
             o.airlineCode?.toLowerCase() === a.toLowerCase() ||
-            o.airline?.toLowerCase().includes(a.toLowerCase()),
-        ),
+            o.airline?.toLowerCase().includes(a.toLowerCase())
+        )
       );
     }
 
     // Apply sorting
     if (sortBy) {
-      const isAsc = sortOrder !== "desc";
+      const isAsc = sortOrder !== 'desc';
 
       transformedOffers.sort((a: any, b: any) => {
         let aVal: any, bVal: any;
 
         switch (sortBy.toLowerCase()) {
-          case "price":
+          case 'price':
             aVal = a.amount;
             bVal = b.amount;
             break;
-          case "duration":
+          case 'duration':
             aVal = parseDuration(a.duration);
             bVal = parseDuration(b.duration);
             break;
-          case "departure":
+          case 'departure':
             aVal = new Date(a.departureTime).getTime();
             bVal = new Date(b.departureTime).getTime();
             break;
-          case "airline":
-            aVal = a.airline || "";
-            bVal = b.airline || "";
+          case 'airline':
+            aVal = a.airline || '';
+            bVal = b.airline || '';
             return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-          case "best value":
+          case 'best value':
             // Heuristic: Price + (Duration in mins * some factor)
-            aVal = a.amount + (parseDuration(a.duration) * 0.5);
-            bVal = b.amount + (parseDuration(b.duration) * 0.5);
+            aVal = a.amount + parseDuration(a.duration) * 0.5;
+            bVal = b.amount + parseDuration(b.duration) * 0.5;
             break;
           default:
             return 0;
@@ -587,10 +556,7 @@ app.post("/api/flights/search/results/:searchId", async (req: Request, res: Resp
 
     // Apply pagination
     if (offset !== undefined && limit !== undefined) {
-      transformedOffers = transformedOffers.slice(
-        Number(offset),
-        Number(offset) + Number(limit),
-      );
+      transformedOffers = transformedOffers.slice(Number(offset), Number(offset) + Number(limit));
     }
 
     res.json({
@@ -600,7 +566,7 @@ app.post("/api/flights/search/results/:searchId", async (req: Request, res: Resp
       expires_at: cachedData.expires_at,
     });
   } catch (error: any) {
-    console.error("[Search] Flight results error:", error.message);
+    console.error('[Search] Flight results error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -610,88 +576,82 @@ function parseDuration(duration: string): number {
   if (!duration) return 0;
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
   if (!match) return 0;
-  const hours = parseInt(match[1] || "0", 10);
-  const minutes = parseInt(match[2] || "0", 10);
+  const hours = parseInt(match[1] || '0', 10);
+  const minutes = parseInt(match[2] || '0', 10);
   return hours * 60 + minutes;
 }
 
 // API Routes
-app.use("/api/bookings", bookingsRoutes);
+app.use('/api/bookings', bookingsRoutes);
 
 // Document Routes - for generating all document types
-app.use("/api/documents", documentsRoutes);
+app.use('/api/documents', documentsRoutes);
 
 // V2 Booking Routes (with workflow state machine)
 // app.use('/api/v2/admin/bookings', bookingsV2Routes)
 
 // Legacy admin routes
-app.use("/api/order-management", orderManagementRoutes);
-app.use("/api/inventory", inventoryRoutes);
-app.use("/api/audit", auditRoutes);
-app.use("/api/admin-bookings", adminBookingCardRoutes);
+app.use('/api/order-management', orderManagementRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/audit', auditRoutes);
+app.use('/api/admin-bookings', adminBookingCardRoutes);
 
 // LITEAPI Routes (Hotels & Loyalty)
-app.use("/api", liteApiRoutes);
+app.use('/api', liteApiRoutes);
 
 // Airline Credits Routes (Duffel Frequent Flyer)
-app.use("/api/airline-credits", airlineCreditsRoutes);
+app.use('/api/airline-credits', airlineCreditsRoutes);
 
 // Webhook Routes (Duffel & LITEAPI)
-app.use("/api/webhooks", webhookRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 // Duffel Flight API Routes (Offers, Orders, Cancellations, Changes)
-app.use("/api/duffel", duffelRoutes);
+app.use('/api/duffel', duffelRoutes);
 
 // Enhanced Duffel Flight API Routes (Partial Offers, Batch Requests, Order Changes, Airline Credits, Services, Payments)
 // Mounted on /api/flights for cleaner REST API design
-app.use("/api/flights", duffelEnhancedRoutes);
+app.use('/api/flights', duffelEnhancedRoutes);
 
 // Flight Booking Orchestrator Routes (E2E booking flow)
-app.use("/api/flight-booking", flightBookingRoutes);
+app.use('/api/flight-booking', flightBookingRoutes);
 
 // Hotel Booking Orchestrator Routes (E2E hotel booking flow)
-app.use("/api/hotel-booking", hotelBookingRoutes);
+app.use('/api/hotel-booking', hotelBookingRoutes);
 
 // Real-Time Hotel Booking Routes (LiteAPI direct integration with NEON DB)
-app.use("/api/realtime-booking", realtimeBookingRoutes);
+app.use('/api/realtime-booking', realtimeBookingRoutes);
 
 // Hotel Routes (Hybrid: Static DB + Live Rates from LiteAPI)
-app.use("/api/hotels", hotelRoutes);
+app.use('/api/hotels', hotelRoutes);
 
 // Location Routes (IP Geolocation & Timezone)
-app.use("/api/location", locationRoutes);
+app.use('/api/location', locationRoutes);
 
 // Static Data Routes (Airports, Airlines, Countries, Currencies, etc.)
-app.use("/api/static", staticRoutes);
+app.use('/api/static', staticRoutes);
 
 // Content Routes (Popular Destinations, Promotions, Legal, Insurance)
-app.use("/api/content", contentRoutes);
+app.use('/api/content', contentRoutes);
 
 // Hotel Static Routes (Destination search, Static hotel details, Reviews)
-app.use("/api", hotelStaticRoutes);
+app.use('/api', hotelStaticRoutes);
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Not Found" });
+  res.status(404).json({ error: 'Not Found' });
 });
 
 // Error Handler
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction,
-  ) => {
-    console.error("[BookingService] Error:", err);
-    res.status(500).json({
-      error: "Internal Server Error",
-      message: err.message || "Unknown error",
-    });
-  },
-);
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[BookingService] Error:', err);
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: err.message || 'Unknown error',
+  });
+});
 
 // Start server
+setupBookingSwagger(app);
 app.listen(PORT, () => {
   console.log(`🚀 Booking Service running on port ${PORT}`);
 });

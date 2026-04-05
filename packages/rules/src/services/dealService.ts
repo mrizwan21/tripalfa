@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import {
   SupplierDeal,
   SupplierDealCreate,
@@ -18,10 +17,18 @@ import {
  * Handles creation, updates, validation, and lifecycle management of deals.
  */
 export class DealService {
-  private prisma: PrismaClient;
+  private prisma: any;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    // Prisma client is typed as `any` - initialize via setPrisma()
+    this.prisma = null;
+  }
+
+  /**
+   * Set Prisma client (inject dependency)
+   */
+  setPrisma(prisma: any): void {
+    this.prisma = prisma;
   }
 
   /**

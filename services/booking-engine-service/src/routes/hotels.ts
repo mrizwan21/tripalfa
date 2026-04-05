@@ -1,35 +1,77 @@
-import { Router, Response } from "express";
-import { randomUUID } from "node:crypto";
-import prisma, { Decimal } from "../database.js";
-import { staticDbPool } from "../static-db.js";
-import { validateLiteApiId } from "../utils/validation.js";
+import { Router, Response } from 'express';
+import { randomUUID } from 'node:crypto';
+import prisma, { Decimal } from '../database.js';
+import { staticDbPool } from '../static-db.js';
+import { validateLiteApiId } from '../utils/validation.js';
 import {
   liteapiDataClient,
   liteapiBookClient,
   liteapiProdDataClient,
-} from "../utils/liteapiClient.js";
+} from '../utils/liteapiClient.js';
 
 const router: Router = Router();
 
 // Helper for LITEAPI requests using centralized clients
-async function liteApiRequest<T>(
-  endpoint: string,
-  params: Record<string, any> = {},
-): Promise<T> {
+async function liteApiRequest<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
   const response = await liteapiDataClient.get(endpoint, { params });
   return response.data as T;
 }
 
-async function liteApiPost<T>(
-  endpoint: string,
-  data: Record<string, any>,
-): Promise<T> {
+async function liteApiPost<T>(endpoint: string, data: Record<string, any>): Promise<T> {
   const response = await liteapiBookClient.post(endpoint, data);
   return response.data as T;
 }
 
-// POST /api/hotels/search - Search for hotels
-router.post("/search", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/search:
+ *   post:
+ *     summary: Search for hotels
+ *     tags: [Hotels]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [destination, checkIn, checkOut]
+ *             properties:
+ *               destination:
+ *                 type: string
+ *               checkIn:
+ *                 type: string
+ *                 format: date
+ *               checkOut:
+ *                 type: string
+ *                 format: date
+ *               guests:
+ *                 type: array
+ *               rooms:
+ *                 type: integer
+ *                 default: 1
+ *               nationality:
+ *                 type: string
+ *               currency:
+ *                 type: string
+ *                 default: USD
+ *     responses:
+ *       200:
+ *         description: Hotel search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/search', async (req, res: Response) => {
   try {
     const {
       destination,
@@ -38,17 +80,17 @@ router.post("/search", async (req, res: Response) => {
       guests,
       rooms = 1,
       nationality,
-      currency = "USD",
+      currency = 'USD',
     } = req.body;
 
     if (!destination || !checkIn || !checkOut) {
       return res.status(400).json({
         success: false,
-        error: "Destination, check-in, and check-out dates are required",
+        error: 'Destination, check-in, and check-out dates are required',
       });
     }
 
-    console.log("[Hotels] Searching hotels:", {
+    console.log('[Hotels] Searching hotels:', {
       destination,
       checkIn,
       checkOut,
@@ -57,13 +99,13 @@ router.post("/search", async (req, res: Response) => {
     });
 
     // Search hotels via LITEAPI
-    const searchResponse = await liteApiPost<any>("/v3.0/hotels/search", {
+    const searchResponse = await liteApiPost<any>('/v3.0/hotels/search', {
       destination,
       checkIn,
       checkOut,
       guests: guests || [{ adults: 2, children: [] }],
       rooms,
-      nationality: nationality || "US",
+      nationality: nationality || 'US',
       currency,
     });
 
@@ -83,11 +125,11 @@ router.post("/search", async (req, res: Response) => {
           // Use the mapping data directly since there's no separate hotel model
           const canonicalHotel = {
             id: mapping.localHotelId,
-            name: mapping.hotelName || "",
+            name: mapping.hotelName || '',
             starRating: 0,
-            address: "",
-            city: "",
-            countryCode: "",
+            address: '',
+            city: '',
+            countryCode: '',
             images: [],
             amenities: [],
           };
@@ -107,7 +149,7 @@ router.post("/search", async (req, res: Response) => {
         }
 
         return hotel;
-      }),
+      })
     );
 
     res.json({
@@ -119,18 +161,69 @@ router.post("/search", async (req, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[Hotels] Search error:", error.message);
+    console.error('[Hotels] Search error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to search hotels",
+      error: 'Failed to search hotels',
       message: error.message,
     });
   }
 });
 
-
-// POST /api/hotels/book - Create hotel booking
-router.post("/book", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/book:
+ *   post:
+ *     summary: Create a hotel booking
+ *     tags: [Hotels]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [hotelId, offerId, checkIn, checkOut]
+ *             properties:
+ *               hotelId:
+ *                 type: string
+ *               offerId:
+ *                 type: string
+ *               checkIn:
+ *                 type: string
+ *                 format: date
+ *               checkOut:
+ *                 type: string
+ *                 format: date
+ *               rooms:
+ *                 type: array
+ *               guests:
+ *                 type: array
+ *               guestInfo:
+ *                 type: object
+ *               specialRequests:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: object
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/book', async (req, res: Response) => {
   try {
     const {
       hotelId,
@@ -148,11 +241,11 @@ router.post("/book", async (req, res: Response) => {
     if (!hotelId || !offerId || !checkIn || !checkOut) {
       return res.status(400).json({
         success: false,
-        error: "Hotel ID, offer ID, check-in, and check-out dates are required",
+        error: 'Hotel ID, offer ID, check-in, and check-out dates are required',
       });
     }
 
-    console.log("[Hotels] Creating booking:", {
+    console.log('[Hotels] Creating booking:', {
       hotelId,
       offerId,
       checkIn,
@@ -160,7 +253,7 @@ router.post("/book", async (req, res: Response) => {
     });
 
     // Create prebook session
-    const prebookResponse = await liteApiPost<any>("/rates/prebook", {
+    const prebookResponse = await liteApiPost<any>('/rates/prebook', {
       offerId,
       guestInfo: {
         email: guestInfo?.email,
@@ -173,7 +266,7 @@ router.post("/book", async (req, res: Response) => {
     if (!prebookResponse.data || !prebookResponse.data.prebookId) {
       return res.status(400).json({
         success: false,
-        error: prebookResponse.message || "Failed to prebook hotel",
+        error: prebookResponse.message || 'Failed to prebook hotel',
       });
     }
 
@@ -181,16 +274,16 @@ router.post("/book", async (req, res: Response) => {
     const prebookId = prebookData.prebookId;
 
     // NOW: Complete the booking with LITEAPI
-    const bookResponse = await liteApiPost<any>("/rates/book", {
+    const bookResponse = await liteApiPost<any>('/rates/book', {
       prebookId,
     });
 
     if (!bookResponse.data || !bookResponse.data.bookingId) {
       // If booking fails, we still have the prebook session, but the booking is failed
-      console.error("[Hotels] LITEAPI Book failed:", bookResponse.message);
+      console.error('[Hotels] LITEAPI Book failed:', bookResponse.message);
       return res.status(400).json({
         success: false,
-        error: bookResponse.message || "Failed to complete LITEAPI booking",
+        error: bookResponse.message || 'Failed to complete LITEAPI booking',
       });
     }
 
@@ -201,8 +294,8 @@ router.post("/book", async (req, res: Response) => {
     const baseAmount = Number(bookData.totalPrice || prebookData.price || 0);
     const taxAmount = Number(bookData.taxAmount || prebookData.taxAmount || 0);
     const totalAmount = Number(bookData.totalPrice || prebookData.price || 0);
-    const currency = String(bookData.currency || prebookData.currency || "USD");
-    const hotelName = String(bookData.hotelName || prebookData.hotelName || "");
+    const currency = String(bookData.currency || prebookData.currency || 'USD');
+    const hotelName = String(bookData.hotelName || prebookData.hotelName || '');
 
     // Create local booking record
     const bookingRef = `HTL-${Date.now().toString(36).toUpperCase()}`;
@@ -210,11 +303,11 @@ router.post("/book", async (req, res: Response) => {
     const booking = await prisma.booking.create({
       data: {
         bookingRef,
-        userId: guestInfo?.id || "guest",
-        serviceType: "hotel",
-        status: "confirmed",
-        workflowState: "confirmed",
-        paymentStatus: "pending",
+        userId: guestInfo?.id || 'guest',
+        serviceType: 'hotel',
+        status: 'confirmed',
+        workflowState: 'confirmed',
+        paymentStatus: 'pending',
         customerEmail: guestInfo?.email,
         customerPhone: guestInfo?.phone,
         baseAmount: new Decimal(baseAmount),
@@ -242,7 +335,7 @@ router.post("/book", async (req, res: Response) => {
         bookingId: liteapiBookingId,
         prebookId,
         localBookingId: booking.id,
-        status: "confirmed",
+        status: 'confirmed',
         hotelId,
         hotelName,
         checkIn: new Date(checkIn),
@@ -251,9 +344,9 @@ router.post("/book", async (req, res: Response) => {
         currency,
         metadata: {
           bookData,
-          prebookData
-        }
-      }
+          prebookData,
+        },
+      },
     });
 
     // Create booking segment...
@@ -262,12 +355,12 @@ router.post("/book", async (req, res: Response) => {
     await prisma.bookingSegment.create({
       data: {
         bookingId: booking.id,
-        segmentType: "hotel_checkin",
+        segmentType: 'hotel_checkin',
         sequenceNumber: 0,
         hotelName: hotelName || metadata?.hotelName,
         checkInDate: new Date(checkIn),
         checkOutDate: new Date(checkOut),
-        roomType: rooms?.[0]?.roomType || "Standard",
+        roomType: rooms?.[0]?.roomType || 'Standard',
         supplierHotelId: hotelId,
       },
     });
@@ -278,7 +371,7 @@ router.post("/book", async (req, res: Response) => {
         await prisma.bookingPassenger.create({
           data: {
             bookingId: booking.id,
-            passengerType: "adult",
+            passengerType: 'adult',
             firstName: guest.firstName || guestInfo?.firstName,
             lastName: guest.lastName || guestInfo?.lastName,
           },
@@ -295,11 +388,9 @@ router.post("/book", async (req, res: Response) => {
         price: new Decimal(totalAmount),
         currency: currency,
         guestEmail: guestInfo?.email,
-        guestName: guestInfo
-          ? `${guestInfo.firstName} ${guestInfo.lastName}`
-          : null,
+        guestName: guestInfo ? `${guestInfo.firstName} ${guestInfo.lastName}` : null,
         expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-        status: "pending",
+        status: 'pending',
         bookingId: booking.id,
       },
     });
@@ -313,17 +404,46 @@ router.post("/book", async (req, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[Hotels] Booking error:", error.message);
+    console.error('[Hotels] Booking error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to create hotel booking",
+      error: 'Failed to create hotel booking',
       message: error.message,
     });
   }
 });
 
-// GET /api/hotels/booking/:bookingRef - Get hotel booking
-router.get("/booking/:bookingRef", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/booking/{bookingRef}:
+ *   get:
+ *     summary: Get hotel booking details
+ *     tags: [Hotels]
+ *     parameters:
+ *       - in: path
+ *         name: bookingRef
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking reference
+ *     responses:
+ *       200:
+ *         description: Booking details retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/booking/:bookingRef', async (req, res: Response) => {
   try {
     const { bookingRef } = req.params;
 
@@ -338,7 +458,7 @@ router.get("/booking/:bookingRef", async (req, res: Response) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        error: "Booking not found",
+        error: 'Booking not found',
       });
     }
 
@@ -355,16 +475,55 @@ router.get("/booking/:bookingRef", async (req, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[Hotels] Get booking error:", error.message);
+    console.error('[Hotels] Get booking error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get booking details",
+      error: 'Failed to get booking details',
     });
   }
 });
 
-// POST /api/hotels/booking/:bookingRef/cancel - Cancel hotel booking
-router.post("/booking/:bookingRef/cancel", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/booking/{bookingRef}/cancel:
+ *   post:
+ *     summary: Cancel a hotel booking
+ *     tags: [Hotels]
+ *     parameters:
+ *       - in: path
+ *         name: bookingRef
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking reference
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/booking/:bookingRef/cancel', async (req, res: Response) => {
   try {
     const { bookingRef } = req.params;
     const { reason } = req.body;
@@ -376,14 +535,14 @@ router.post("/booking/:bookingRef/cancel", async (req, res: Response) => {
     if (!booking) {
       return res.status(404).json({
         success: false,
-        error: "Booking not found",
+        error: 'Booking not found',
       });
     }
 
-    if (booking.status === "cancelled") {
+    if (booking.status === 'cancelled') {
       return res.status(400).json({
         success: false,
-        error: "Booking is already cancelled",
+        error: 'Booking is already cancelled',
       });
     }
 
@@ -391,11 +550,11 @@ router.post("/booking/:bookingRef/cancel", async (req, res: Response) => {
     const hotelMetadata = booking.metadata as { prebookId?: string } | null;
     if (hotelMetadata?.prebookId) {
       try {
-        await liteApiPost<any>("/v3.0/hotels/cancel", {
+        await liteApiPost<any>('/v3.0/hotels/cancel', {
           prebookId: hotelMetadata.prebookId,
         });
       } catch (e: any) {
-        console.warn("[Hotels] Could not cancel with supplier:", e.message);
+        console.warn('[Hotels] Could not cancel with supplier:', e.message);
       }
     }
 
@@ -403,8 +562,8 @@ router.post("/booking/:bookingRef/cancel", async (req, res: Response) => {
     const updatedBooking = await prisma.booking.update({
       where: { bookingRef },
       data: {
-        status: "cancelled",
-        workflowState: "cancelled",
+        status: 'cancelled',
+        workflowState: 'cancelled',
       },
     });
 
@@ -412,30 +571,56 @@ router.post("/booking/:bookingRef/cancel", async (req, res: Response) => {
     await prisma.bookingModification.create({
       data: {
         bookingId: booking.id,
-        modificationType: "cancellation",
-        status: "completed",
+        modificationType: 'cancellation',
+        status: 'completed',
         requestNote: reason,
         oldValue: { status: booking.status },
-        newValue: { status: "cancelled" },
+        newValue: { status: 'cancelled' },
       },
     });
 
     res.json({
       success: true,
       data: updatedBooking,
-      message: "Hotel booking cancelled successfully",
+      message: 'Hotel booking cancelled successfully',
     });
   } catch (error: any) {
-    console.error("[Hotels] Cancel booking error:", error.message);
+    console.error('[Hotels] Cancel booking error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to cancel hotel booking",
+      error: 'Failed to cancel hotel booking',
     });
   }
 });
 
-// GET /api/hotels/destinations - Search destinations
-router.get("/destinations/search", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/destinations/search:
+ *   get:
+ *     summary: Search hotel destinations
+ *     tags: [Hotels]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search term for city or country
+ *     responses:
+ *       200:
+ *         description: Destination search results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
+router.get('/destinations/search', async (req, res: Response) => {
   try {
     const { search } = req.query;
 
@@ -469,18 +654,39 @@ router.get("/destinations/search", async (req, res: Response) => {
       data: result.rows,
     });
   } catch (error: any) {
-    console.error("[Hotels] Destination search error:", error.message);
+    console.error('[Hotels] Destination search error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to search destinations",
+      error: 'Failed to search destinations',
     });
   }
 });
 
-// GET /api/hotels/amenities - Get hotel amenities
-router.get("/amenities", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/amenities:
+ *   get:
+ *     summary: Get hotel amenities
+ *     tags: [Hotels]
+ *     responses:
+ *       200:
+ *         description: Amenities list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
+router.get('/amenities', async (req, res: Response) => {
   try {
-    const query = 'SELECT id, name, category, true as "isActive" FROM hotel.facilities ORDER BY category ASC, name ASC';
+    const query =
+      'SELECT id, name, category, true as "isActive" FROM hotel.facilities ORDER BY category ASC, name ASC';
     const result = await staticDbPool.query(query);
 
     res.json({
@@ -488,20 +694,40 @@ router.get("/amenities", async (req, res: Response) => {
       data: result.rows,
     });
   } catch (error: any) {
-    console.error("[Hotels] Get amenities error:", error.message);
+    console.error('[Hotels] Get amenities error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get amenities",
+      error: 'Failed to get amenities',
     });
   }
 });
 
-// GET /api/hotels/board-types - Get board types
-router.get("/board-types", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/board-types:
+ *   get:
+ *     summary: Get board types
+ *     tags: [Hotels]
+ *     responses:
+ *       200:
+ *         description: Board types list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
+router.get('/board-types', async (req, res: Response) => {
   try {
     const boardTypes = await prisma.boardType.findMany({
       where: { isActive: true },
-      orderBy: { code: "asc" },
+      orderBy: { code: 'asc' },
     });
 
     res.json({
@@ -509,16 +735,43 @@ router.get("/board-types", async (req, res: Response) => {
       data: boardTypes,
     });
   } catch (error: any) {
-    console.error("[Hotels] Get board types error:", error.message);
+    console.error('[Hotels] Get board types error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get board types",
+      error: 'Failed to get board types',
     });
   }
 });
 
-// GET /api/hotels/:hotelId - Get hotel details
-router.get("/:hotelId", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/{hotelId}:
+ *   get:
+ *     summary: Get hotel details
+ *     tags: [Hotels]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The hotel ID
+ *     responses:
+ *       200:
+ *         description: Hotel details retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
+router.get('/:hotelId', async (req, res: Response) => {
   try {
     const { hotelId } = req.params;
 
@@ -533,13 +786,13 @@ router.get("/:hotelId", async (req, res: Response) => {
       // Use the mapping data directly since there's no separate hotel model
       const canonicalHotel = {
         id: mapping.localHotelId,
-        name: mapping.hotelName || "",
-        description: "",
+        name: mapping.hotelName || '',
+        description: '',
         starRating: 0,
-        address: "",
-        city: "",
-        country: "",
-        countryCode: "",
+        address: '',
+        city: '',
+        country: '',
+        countryCode: '',
         latitude: null,
         longitude: null,
         images: [],
@@ -556,8 +809,8 @@ router.get("/:hotelId", async (req, res: Response) => {
         data: {
           hotel: {
             id: canonicalHotel.id,
-            name: canonicalHotel.name || "",
-            description: canonicalHotel.description || "",
+            name: canonicalHotel.name || '',
+            description: canonicalHotel.description || '',
             starRating: canonicalHotel.starRating || 0,
             address: canonicalHotel.address,
             city: canonicalHotel.city,
@@ -580,65 +833,106 @@ router.get("/:hotelId", async (req, res: Response) => {
 
     // Fallback to LITEAPI
     const safeHotelId = validateLiteApiId(hotelId);
-    const hotelDetails = await liteApiRequest<any>(
-      `/v3.0/hotels/${safeHotelId}`,
-    );
+    const hotelDetails = await liteApiRequest<any>(`/v3.0/hotels/${safeHotelId}`);
 
     res.json({
       success: true,
       data: hotelDetails.data || hotelDetails,
     });
   } catch (error: any) {
-    console.error("[Hotels] Get hotel error:", error.message);
+    console.error('[Hotels] Get hotel error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get hotel details",
+      error: 'Failed to get hotel details',
     });
   }
 });
 
-// POST /api/hotels/:hotelId/rates - Get hotel rates
-router.post("/:hotelId/rates", async (req, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/{hotelId}/rates:
+ *   post:
+ *     summary: Get hotel rates
+ *     tags: [Hotels]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The hotel ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [checkIn, checkOut]
+ *             properties:
+ *               checkIn:
+ *                 type: string
+ *                 format: date
+ *               checkOut:
+ *                 type: string
+ *                 format: date
+ *               guests:
+ *                 type: array
+ *               rooms:
+ *                 type: integer
+ *                 default: 1
+ *               nationality:
+ *                 type: string
+ *               currency:
+ *                 type: string
+ *                 default: USD
+ *     responses:
+ *       200:
+ *         description: Hotel rates retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/:hotelId/rates', async (req, res: Response) => {
   try {
     const { hotelId } = req.params;
-    const {
-      checkIn,
-      checkOut,
-      guests,
-      rooms = 1,
-      nationality,
-      currency = "USD",
-    } = req.body;
+    const { checkIn, checkOut, guests, rooms = 1, nationality, currency = 'USD' } = req.body;
 
     if (!checkIn || !checkOut) {
       return res.status(400).json({
         success: false,
-        error: "Check-in and check-out dates are required",
+        error: 'Check-in and check-out dates are required',
       });
     }
 
     const safeHotelId = validateLiteApiId(hotelId);
-    const ratesResponse = await liteApiPost<any>(
-      `/v3.0/hotels/${safeHotelId}/rates`,
-      {
-        checkIn,
-        checkOut,
-        guests: guests || [{ adults: 2, children: [] }],
-        rooms,
-        nationality: nationality || "US",
-        currency,
-      },
-    );
+    const ratesResponse = await liteApiPost<any>(`/v3.0/hotels/${safeHotelId}/rates`, {
+      checkIn,
+      checkOut,
+      guests: guests || [{ adults: 2, children: [] }],
+      rooms,
+      nationality: nationality || 'US',
+      currency,
+    });
 
     res.json({
       success: true,
       data: ratesResponse.data || ratesResponse,
     });
   } catch (error: any) {
-    console.error("[Hotels] Get rates error:", error.message);
+    console.error('[Hotels] Get rates error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to get hotel rates",
+      error: 'Failed to get hotel rates',
     });
   }
 });

@@ -1,0 +1,113 @@
+/* Optics-to-TripAlfa Bridge
+ * Maps Optics design tokens to TripAlfa semantic names.
+ * Import this when replacing Optics CSS with Tailwind-only setup.
+ * Place AFTER Triplfa design-tokens.css, BEFORE component styles.
+ */
+
+:root {
+  /* ============================================
+     COLOR MAPPING: Optics → TripAlfa Semantic
+     ============================================ */
+  --brand-primary: var(--op-color-primary-h) var(--op-color-primary-s) var(--op-color-primary-l);
+  --brand-primary-foreground: var(--op-color-primary-on-base);
+  --brand-secondary: var(--op-color-neutral-h) 4% 96%;
+  --brand-secondary-foreground: var(--op-color-neutral-on-minus-two);
+  --brand-accent: var(--op-color-alerts-info-h) var(--op-color-alerts-info-s) var(--op-color-alerts-info-l);
+  --brand-accent-foreground: var(--op-color-alerts-info-on-base);
+
+  /* Destructive → Danger mapping */
+  --destructive: var(--op-color-alerts-danger-h) var(--op-color-alerts-danger-s) var(--op-color-alerts-danger-l);
+  --destructive-foreground: var(--op-color-alerts-danger-on-base);
+
+  /* Success mapping */
+  --success: var(--op-color-alerts-notice-h) var(--op-color-alerts-notice-s) var(--op-color-alerts-notice-l);
+  --success-foreground: var(--op-color-alerts-notice-on-base);
+
+  /* Warning mapping */
+  --warning: var(--op-color-alerts-warning-h) var(--op-color-alerts-warning-s) var(--op-color-alerts-warning-l);
+  --warning-foreground: var(--op-color-alerts-warning-on-base);
+
+  /* Info mapping */
+  --info: var(--op-color-alerts-info-h) var(--op-color-alerts-info-s) var(--op-color-alerts-info-l);
+  --info-foreground: var(--op-color-alerts-info-on-base);
+
+  /* Neutral → Muted/Background/Foreground */
+  --muted: var(--op-color-neutral-h) 40% 96%;
+  --muted-foreground: var(--op-color-neutral-h) 16% 47%;
+  --card: 0 0% 100%;
+  --card-foreground: var(--op-color-neutral-base);
+  --popover: 0 0% 100%;
+  --popover-foreground: var(--op-color-neutral-base);
+  --background: 0 0% 100%;
+  --foreground: var(--op-color-neutral-base);
+  --border: var(--op-color-neutral-h) 32% 91%;
+  --input: var(--op-color-neutral-h) 32% 91%;
+  --ring: var(--op-color-primary-h) var(--op-color-primary-s) var(--op-color-primary-l);
+
+  /* ============================================
+     RADIUS MAPPING
+     ============================================ */
+  --radius-xs: var(--op-radius-small);
+  --radius-sm: var(--op-radius-small);
+  --radius: var(--op-radius-medium);
+  --radius-md: var(--op-radius-large);
+  --radius-lg: var(--op-radius-x-large);
+  --radius-xl: var(--op-radius-2x-large);
+  --radius-2xl: var(--op-radius-circle);
+  --radius-full: 9999px;
+
+  /* ============================================
+     SPACING MAPPING
+     ============================================ */
+  --space-1: var(--op-space-2x-small);
+  --space-2: var(--op-space-x-small);
+  --space-3: var(--op-space-small);
+  --space-4: var(--op-space-medium);
+  --space-5: var(--op-space-large);
+  --space-6: var(--op-space-x-large);
+  --space-8: var(--op-space-2x-large);
+  --space-10: var(--op-space-3x-large);
+  --space-12: var(--op-space-4x-large);
+
+  /* ============================================
+     SHADOW MAPPING
+     ============================================ */
+  --shadow-sm: var(--op-shadow-x-small);
+  --shadow-md: var(--op-shadow-small);
+  --shadow-lg: var(--op-shadow-medium);
+  --shadow-xl: var(--op-shadow-large);
+
+  /* ============================================
+     Z-INDEX MAPPING
+     ============================================ */
+  --z-base: 1;
+  --z-dropdown: var(--op-z-index-header);
+  --z-sticky: var(--op-z-index-sidebar);
+  --z-overlay: var(--op-z-index-dialog-backdrop);
+  --z-modal: var(--op-z-index-dialog-content);
+  --z-popover: var(--op-z-index-dropdown);
+  --z-tooltip: var(--op-z-index-tooltip);
+  --z-toast: var(--op-z-index-tooltip);
+}
+
+/* ============================================
+   DARK MODE BRIDGE
+   ============================================ */
+.dark {
+  --brand-primary: var(--op-color-primary-h) var(--op-color-primary-s) var(--op-color-primary-l);
+  --brand-primary-foreground: var(--op-color-primary-on-base);
+  --brand-secondary: var(--op-color-neutral-h) 4% 16%;
+  --background: var(--op-color-neutral-plus-eight);
+  --foreground: var(--op-color-neutral-on-plus-eight);
+  --card: var(--op-color-neutral-plus-seven);
+  --card-foreground: var(--op-color-neutral-on-plus-seven-alt);
+  --popover: var(--op-color-neutral-plus-seven);
+  --popover-foreground: var(--op-color-neutral-on-plus-seven-alt);
+  --muted: var(--op-color-neutral-plus-six);
+  --muted-foreground: var(--op-color-neutral-on-plus-six-alt);
+  --border: var(--op-color-neutral-plus-five);
+  --input: var(--op-color-neutral-plus-five);
+  --ring: var(--op-color-primary-h) var(--op-color-primary-s) var(--op-color-primary-l);
+  --destructive: var(--op-color-alerts-danger-h) var(--op-color-alerts-danger-s) calc(var(--op-color-alerts-danger-l) * 0.7);
+  --destructive-foreground: var(--op-color-alerts-danger-on-minus-two);
+}

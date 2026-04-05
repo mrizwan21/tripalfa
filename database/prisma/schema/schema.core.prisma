@@ -1,0 +1,3232 @@
+// Prisma Schema: tripalfa_core (Core operational database)
+// Database: PostgreSQL (tripalfa_core)
+// Purpose: Users, companies, bookings, wallet, KYC, inventory, admin UI state
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../packages/shared-database/src/generated/core"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============== USER & AUTHENTICATION ==============
+
+enum UserType {
+  B2C
+  B2B_ADMIN
+  B2B_EMPLOYEE
+  SUPER_ADMIN
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+  FACEBOOK
+  SAML
+  OIDC
+}
+
+enum PaymentMethod {
+  CARD
+  WALLET
+  HYBRID
+  BALANCE
+  BANK_TRANSFER
+  CASH
+  UNKNOWN
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  REQUIRES_ACTION
+  REQUIRES_CONFIRMATION
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum RefundStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  FAILED
+  REJECTED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  STRIPE
+  DUFFEL
+  PAYPAL
+  RAZORPAY
+  CCAVENUE
+  MANUAL
+  WALLET
+}
+
+enum OrderChangeRequestStatus {
+  pending
+  confirmed
+  failed
+  expired
+}
+
+enum OrderChangeStatus {
+  pending
+  confirmed
+  failed
+  expired
+}
+
+enum OrderCancellationStatus {
+  pending
+  confirmed
+  failed
+  expired
+}
+
+enum RefundTo {
+  original_form_of_payment
+  airline_credits
+  voucher
+}
+
+enum AirlineCreditStatus {
+  active
+  used
+  expired
+}
+
+enum BatchOfferRequestStatus {
+  pending
+  processing
+  completed
+  expired
+}
+
+model user {
+  id              String    @id @default(cuid())
+  externalId      String?   // OAuth provider user ID
+  email           String    @unique
+  phoneNumber     String?
+  firstName       String?
+  lastName        String?
+  avatarUrl       String?
+  companyId       String?
+
+  // Authentication fields
+  passwordHash    String?
+  userType        UserType  @default(B2C)
+  authProvider    AuthProvider @default(EMAIL)
+  isEmailVerified Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime? @db.Timestamptz(6)
+  failedLoginAttempts Int   @default(0)
+  lockedUntil     DateTime? @db.Timestamptz(6)
+
+  // MFA
+  mfaEnabled      Boolean   @default(false)
+  mfaSecret       String?
+  backupCodes     String[]  // Hashed backup codes
+
+  // SSO fields
+  samlIdpId       String?   // SAML Identity Provider ID
+  oidcSubject     String?   // OIDC subject claim
+  idpTenantId     String?   // For B2B multi-tenant SSO
+
+  // Timestamps
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  role            role?     @relation(fields: [roleId], references: [id])
+  roleId          String?
+  sessions        session_state[]
+  oauthAccounts   oauth_account[]
+  company         company?  @relation("CompanyUsers", fields: [companyId], references: [id])
+  userRoles       userRole[]
+  preferences     admin_ui_preference[]
+  emailVerificationTokens emailVerificationToken[]
+  supportTickets  support_ticket[]
+
+  @@index([email])
+  @@index([companyId])
+  @@index([userType])
+  @@index([authProvider])
+  @@map("user")
+}
+
+model userPreference {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  language        String    @default("en")
+  currency        String    @default("USD")
+  notifications   Boolean   @default(true)
+  theme           String?   @default("light")
+  timezone        String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  // Relations - link to user (note: not using FK relation as user-service expects this)
+  @@map("user_preferences")
+}
+
+model emailVerificationToken {
+  id                String            @id @default(cuid())
+  userId            String
+  user              user              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email             String            @db.VarChar(255)
+  token             String            @unique @db.VarChar(255)
+  expiresAt         DateTime
+  verifiedAt        DateTime?
+  attemptCount      Int               @default(0)
+  maxAttempts       Int               @default(3)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("email_verification_token")
+}
+
+model oauth_account {
+  id            String    @id @default(cuid())
+  userId        String
+  provider      String
+  providerId    String
+  accessToken   String?
+  refreshToken  String?
+  expiresAt     DateTime? @db.Timestamptz(6)
+  scope         String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+
+  user          user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@index([userId])
+  @@map("oauth_account")
+}
+
+model identity_provider {
+  id                  String    @id @default(cuid())
+  name                String
+  type                String
+  tenantId            String?
+
+  samlEntryPoint      String?
+  samlIssuer          String?
+  samlCertificate     String?
+
+  oidcIssuer          String?   // Authorization endpoint
+  oidcClientId        String?
+  oidcClientSecret    String?   // Encrypted
+  oidcScopes          String?   // Space-separated scopes
+
+  isActive            Boolean   @default(true)
+  isDefault           Boolean   @default(false)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+  company             company?   @relation("CompanyIdP", fields: [tenantId], references: [id])
+
+  @@unique([type, tenantId])
+  @@map("identity_provider")
+}
+
+// ============== SERVICE ACCESS CONTROL ==============
+
+model service {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  displayName   String
+  description   String?
+  baseUrl       String
+  isInternal    Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  priority      Int       @default(0)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+
+  permissions   service_permission[]
+  roleAccess    role_service_access[]
+
+  @@map("service")
+}
+
+model service_permission {
+  id            String    @id @default(cuid())
+  serviceId     String
+  name          String
+  description   String?
+  endpoint      String?
+  method        String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+
+  service       service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  roles         role_service_access[]
+
+  @@unique([serviceId, name])
+  @@index([serviceId])
+  @@map("service_permission")
+}
+
+model role_service_access {
+  id              String    @id @default(cuid())
+  roleId          String
+  serviceId       String
+  permissionId    String?
+  accessLevel     String    @default("read") // read, write, admin
+  rateLimit       Int?      // Requests per minute
+  quota           Int?      // Daily quota
+  quotaUsed       Int       @default(0)
+  quotaResetAt    DateTime? @db.Timestamptz(6)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  role            role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  service         service            @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  permission      service_permission? @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, serviceId])
+  @@index([roleId])
+  @@index([serviceId])
+  @@map("role_service_access")
+}
+
+// ============== IP MANAGEMENT ==============
+
+model ip_whitelist {
+  id            String    @id @default(cuid())
+  ipAddress     String
+  ipRange       String?   // CIDR notation for ranges
+  description   String?
+  isActive      Boolean   @default(true)
+  isBlacklist   Boolean   @default(false) // If true, this is a blacklist entry
+  countryCode   String?   // Country code for geo-blocking
+  region        String?
+  city          String?
+  provider      String?   // ISP name
+  userId        String?   // User-specific IP (for 2FA trusted devices)
+  companyId     String?   // Company-specific IP
+  expiresAt     DateTime? @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  createdBy     String?
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([ipAddress, userId])
+  @@index([ipAddress])
+  @@index([companyId])
+  @@index([userId])
+  @@map("ip_whitelist")
+}
+
+model ip_audit_log {
+  id            String    @id @default(cuid())
+  ipAddress     String
+  userId        String?
+  action        String    // login_success, login_failed, access_denied, suspicious
+  serviceId     String?
+  endpoint      String?
+  userAgent     String?
+  countryCode   String?
+  countryName   String?
+  city          String?
+  isVpn         Boolean   @default(false)
+  isProxy       Boolean   @default(false)
+  isTor         Boolean   @default(false)
+  isp           String?
+  latitude      Decimal?  @db.Decimal(10, 6)
+  longitude     Decimal?  @db.Decimal(10, 6)
+  requestId     String?   // Trace ID
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([ipAddress])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("ip_audit_log")
+}
+
+// ============== DEVICE & STATE MANAGEMENT ==============
+
+model device {
+  id              String    @id @default(cuid())
+  userId          String
+  deviceId        String    @unique // Fingerprint ID
+  deviceType      String    // mobile, desktop, tablet
+  browser         String?
+  os              String?
+  engine          String?
+  cpu             String?
+  deviceBrand    String?
+  deviceModel     String?
+  isMobile        Boolean   @default(false)
+  isTablet        Boolean   @default(false)
+  isDesktop       Boolean   @default(true)
+  isBot           Boolean   @default(false)
+  screenWidth     Int?
+  screenHeight    Int?
+  languages       String[]  // Accept-Language header
+  colorDepth      Int?
+  platform        String?
+  vendor          String?
+  canvasFingerprint String?
+  webglFingerprint String?
+  
+  // Trust & State
+  isTrusted       Boolean   @default(false)
+  isVerified      Boolean   @default(false) // Verified via 2FA
+  lastVerifiedAt  DateTime? @db.Timestamptz(6)
+  firstSeenAt     DateTime  @default(now()) @db.Timestamptz(6)
+  lastSeenAt      DateTime  @default(now()) @db.Timestamptz(6)
+  lastIpAddress   String?
+  isActive        Boolean   @default(true)
+  isCompromised   Boolean   @default(false)
+  
+  // Geolocation
+  countryCode     String?
+  region          String?
+  city            String?
+  
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([deviceId])
+  @@index([isTrusted])
+  @@map("device")
+}
+
+// ============== LOGIN & AUDIT TRAIL ==============
+
+model login_audit {
+  id              String    @id @default(cuid())
+  userId          String?
+  email           String?
+  ipAddress       String
+  ipCountryCode   String?
+  ipCity          String?
+  userAgent       String?
+  deviceId        String?
+  deviceFingerprint String?
+  browser         String?
+  os              String?
+  
+  // Login details
+  action          String    // login_success, login_failed, logout, password_changed, mfa_enabled, etc.
+  status          String    // success, failed, blocked
+  failureReason   String?
+  
+  // Security checks
+  isVpn           Boolean   @default(false)
+  isProxy         Boolean   @default(false)
+  isTor           Boolean   @default(false)
+  isNewDevice     Boolean   @default(false)
+  isNewLocation   Boolean   @default(false)
+  isNewIp         Boolean   @default(false)
+  
+  // Session info
+  sessionId       String?
+  tokenId         String?   // JTI of the token
+  
+  // Metadata
+  requestId       String?   // For tracing
+  metadata        Json?
+  
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([ipAddress])
+  @@index([action])
+  @@index([status])
+  @@index([createdAt])
+  @@map("login_audit")
+}
+
+model session_state {
+  id              String    @id @default(cuid())
+  userId          String
+  sessionToken    String    @unique
+  refreshToken    String?   @unique
+  
+  // State
+  isValid         Boolean   @default(true)
+  isBlocked       Boolean   @default(false)
+  blockReason     String?   // manual, suspicious_activity, policy_violation
+  blockedAt       DateTime? @db.Timestamptz(6)
+  blockedBy       String?
+  
+  // Device info
+  deviceId        String?
+  deviceFingerprint String?
+  ipAddress       String?
+  ipCountryCode   String?
+  userAgent       String?
+  
+  // Timestamps
+  issuedAt        DateTime  @db.Timestamptz(6)
+  expiresAt       DateTime  @db.Timestamptz(6)
+  lastActivityAt  DateTime  @default(now()) @db.Timestamptz(6)
+  previousActivityAt DateTime? @db.Timestamptz(6)
+  
+  // Security state
+  isMfaVerified   Boolean   @default(false)
+  riskScore       Int       @default(0) // 0-100 risk score
+  riskLevel        String    @default("low") // low, medium, high, critical
+  
+  // Location tracking
+  currentCity     String?
+  currentCountry  String?
+  isNewLocation   Boolean   @default(false)
+  
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([sessionToken])
+
+  user            user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([expiresAt])
+  @@index([isValid])
+  @@map("session_state")
+}
+
+// ============== RATE LIMITING ==============
+
+model rate_limit {
+  id              String    @id @default(cuid())
+  identifier      String    // IP address, user ID, or API key
+  identifierType  String    // ip, user, api_key
+  endpoint        String?
+  method          String?
+  windowSeconds   Int       @default(60)
+  maxRequests     Int       @default(100)
+  currentCount    Int       @default(0)
+  resetAt         DateTime  @db.Timestamptz(6)
+  isPermanent     Boolean   @default(false)
+  isWhitelisted   Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([identifier, endpoint, windowSeconds])
+  @@index([identifier])
+  @@index([resetAt])
+  @@map("rate_limit")
+}
+
+// ============== SECURITY POLICIES ==============
+
+model security_policy {
+  id                    String    @id @default(cuid())
+  name                  String    @unique
+  description           String?
+  
+  // Password policy
+  minPasswordLength     Int       @default(8)
+  requireUppercase      Boolean   @default(true)
+  requireLowercase      Boolean   @default(true)
+  requireNumbers        Boolean   @default(true)
+  requireSpecialChar    Boolean   @default(true)
+  passwordExpiryDays    Int?      // 0 = never
+  passwordHistoryCount  Int       @default(5)
+  
+  // Session policy
+  sessionTimeoutMinutes Int       @default(30)
+  maxConcurrentSessions Int       @default(3)
+  allowMultipleDevices  Boolean   @default(true)
+  requireMfaForRole     String[]  // Roles that require MFA
+  
+  // IP policy
+  enableIpWhitelist     Boolean   @default(false)
+  enableGeoBlocking     Boolean   @default(false)
+  blockedCountries      String[]
+  allowVpn              Boolean   @default(true)
+  allowTor              Boolean   @default(false)
+  allowProxy            Boolean   @default(false)
+  
+  // Access policy
+  enableRateLimiting    Boolean   @default(true)
+  defaultRateLimit      Int       @default(100)
+  enableBruteForce      Boolean   @default(true)
+  maxLoginAttempts      Int       @default(5)
+  lockoutDurationMinutes Int      @default(15)
+  
+  // Trust policy
+  deviceTrustDays       Int       @default(30)
+  ipTrustDays          Int       @default(7)
+  requireDeviceVerification Boolean @default(false)
+  
+  // Company-specific
+  companyId             String?
+  company              company?  @relation(fields: [companyId], references: [id])
+  
+  isActive              Boolean   @default(true)
+  isDefault             Boolean   @default(false)
+  priority              Int       @default(0)
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([companyId, isDefault])
+  @@map("security_policy")
+}
+
+model role {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String?
+  userType      UserType  @default(B2C)
+  isSystem      Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  priority      Int       @default(0)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+
+  permissions       role_permission[]
+  users             user[]
+  roleServiceAccess role_service_access[]
+  userRoles         userRole[]
+
+  @@map("role")
+}
+
+model userRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_role")
+}
+
+model permission {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  description   String?
+  category      String
+  resource      String
+  action        String
+  conditions    Json?
+
+  roles         role_permission[]
+
+  @@unique([resource, action])
+  @@index([category])
+  @@index([resource])
+  @@map("permission")
+}
+
+// Role-Permission junction table (explicit many-to-many)
+model role_permission {
+  roleId       String
+  permissionId String
+  grantedAt    DateTime  @default(now()) @db.Timestamptz(6)
+
+  role         role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permission")
+}
+
+// ============== COMPANY STRUCTURE ==============
+
+model company {
+  id              String    @id @default(cuid())
+  name            String    @unique
+  code            String    @unique // Added for companies.ts
+  type            String    @default("standard")
+  registrationNo  String?
+  taxId           String?
+  businessLicense String?
+  address         String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  phone           String?
+  email           String?
+  website         String?
+  logoUrl         String?
+  isActive        Boolean   @default(true)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  users              user[]               @relation("CompanyUsers")
+  identityProviders  identity_provider[]  @relation("CompanyIdP")
+  securityPolicies   security_policy[]
+  branches          branch[]
+  departments       department[]
+  designations      designation[]
+  costCenters       cost_center[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("company")
+}
+
+model branch {
+  id          String    @id @default(cuid())
+  companyId   String
+  company     company   @relation(fields: [companyId], references: [id])
+  name        String
+  branchCode  String    @unique
+  address     String?
+  city        String?
+  state       String?
+  phone       String?
+  email       String?
+  managerName String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  // Reverse relations
+  departments   department[]
+  designations  designation[]
+  costCenters   cost_center[]
+
+  @@index([companyId])
+  @@index([branchCode])
+  @@map("branch")
+}
+
+model department {
+  id          String    @id @default(cuid())
+  companyId   String
+  branchId    String?
+  branch      branch?   @relation(fields: [branchId], references: [id])
+  company     company   @relation(fields: [companyId], references: [id])
+  name        String
+  code        String    @unique // Renamed from deptCode to match routes
+  headName    String?
+  headId      String?   // Added for companies.ts
+  description String?   // Added for companies.ts
+  budget      Decimal?  @db.Decimal(12, 2)
+  isActive    Boolean   @default(true)
+  designations designation[]
+  costCenters  cost_center[]
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([companyId])
+  @@index([branchId])
+  @@index([code])
+  @@map("department")
+}
+
+model designation {
+  id          String    @id @default(cuid())
+  companyId   String
+  branchId    String?
+  departmentId String?
+  department   department? @relation(fields: [departmentId], references: [id])
+  branch      branch?    @relation(fields: [branchId], references: [id])
+  company     company    @relation(fields: [companyId], references: [id])
+  title       String    @unique
+  level       String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([companyId])
+  @@index([branchId])
+  @@index([departmentId])
+  @@map("designation")
+}
+
+model cost_center {
+  id          String    @id @default(cuid())
+  companyId   String
+  branchId    String?
+  departmentId String?   // Added for department relation
+  department  department? @relation(fields: [departmentId], references: [id])
+  branch      branch?   @relation(fields: [branchId], references: [id])
+  company     company   @relation(fields: [companyId], references: [id])
+  code        String    @unique
+  name        String
+  manager     String?
+  budget      Decimal?  @db.Decimal(12, 2)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([companyId])
+  @@index([branchId])
+  @@index([code])
+  @@map("cost_center")
+}
+
+// ============== KYC & VERIFICATION ==============
+
+model kyc_verification {
+  id                String    @id @default(cuid())
+  userId            String
+  status            String    @default("pending")
+  verificationType  String
+  documentType      String?
+  documentNumber    String?
+  documentFront     String?
+  documentBack      String?
+  selfie            String?
+  firstName         String?
+  lastName          String?
+  dateOfBirth       DateTime? @db.Timestamptz(6)
+  nationality       String?
+  address           Json?
+  addressStreet     String?
+  addressCity       String?
+  addressState      String?
+  addressPostalCode String?
+  addressCountry    String?
+  submittedAt       DateTime? @db.Timestamptz(6)
+  reviewedAt        DateTime? @db.Timestamptz(6)
+  reviewedBy        String?
+  issuingCountry    String?
+  expiryDate        DateTime? @db.Timestamptz(6)
+  verifiedAt        DateTime? @db.Timestamptz(6)
+  verifiedBy        String?
+  rejectionReason   String?
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  kyc_document_submissions kyc_document_submission[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("kyc_verification")
+}
+
+model kyc_document_submission {
+  id              String    @id @default(cuid())
+  kycVerificationId String
+  documentType    String
+  documentUrl     String
+  fileName        String
+  fileSize        Int
+  mimeType        String
+  uploadedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  verificationStatus String @default("pending")
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  kyc_verification kyc_verification @relation(fields: [kycVerificationId], references: [id])
+
+  @@index([kycVerificationId])
+  @@index([documentType])
+  @@map("kyc_document_submission")
+}
+
+model kyc_verification_history {
+  id              String    @id @default(cuid())
+  kycVerificationId String
+  status          String
+  changeReason    String?
+  changedBy       String
+  changedAt       DateTime  @default(now()) @db.Timestamptz(6)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([kycVerificationId])
+  @@map("kyc_verification_history")
+}
+
+model kyc_id_verification {
+  id              String    @id @default(cuid())
+  kycVerificationId String
+  idType          String
+  idNumber        String
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime? @db.Timestamptz(6)
+  issueDate       DateTime? @db.Timestamptz(6)
+  expiryDate      DateTime? @db.Timestamptz(6)
+  verificationResult String?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([kycVerificationId])
+  @@index([idNumber])
+  @@map("kyc_id_verification")
+}
+
+// ============== CORE BOOKING TABLES ==============
+
+model booking {
+  id             String    @id
+  bookingRef     String?   @unique // Made unique for findUnique
+  userId         String
+  serviceType    String
+  status         String    @default("pending")
+  workflowState  String    @default("pending")
+  paymentStatus  String    @default("pending")
+  customerEmail  String?
+  customerPhone  String?
+  baseAmount     Decimal   @db.Decimal(12, 2)
+  taxAmount      Decimal   @db.Decimal(12, 2) @default(0)
+  markupAmount   Decimal   @db.Decimal(12, 2) @default(0)
+  totalAmount    Decimal   @db.Decimal(12, 2)
+  currency       String    @default("USD")
+  travelDate     DateTime? @db.Timestamptz(6)
+  returnDate     DateTime? @db.Timestamptz(6)
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([status])
+  @@map("booking")
+
+  // Relations
+  bookingSegments   booking_segment[]
+  bookingPassengers booking_passenger[]
+  modifications     booking_modification[]
+  workQueueItems    booking_work_queue[]
+  approvals         booking_approval[]
+  escalations       booking_escalation[]
+  reissues          ticket_reissue[]
+  refundRequests    refund_request[]
+  paymentIntents    payment_intent[]
+  supportTickets    support_ticket[]
+}
+
+model booking_segment {
+  id          String   @id @default(cuid())
+  bookingId   String
+  type        String
+  sequenceNumber Int       @default(0) // Added for sorting in bookings.ts
+  flightNumber String?   // Added for bookings.ts
+  hotelName    String?   // Added for bookings.ts
+  supplierId  String?
+  supplierRef String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@map("booking_segment")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+model booking_passenger {
+  id           String   @id @default(cuid())
+  bookingId    String
+  firstName    String?
+  lastName     String?
+  email        String?
+  phone        String?
+  dateOfBirth  DateTime?
+  passportNo   String?
+  createdAt    DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@map("booking_passenger")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+// ============== BOOKING OPERATIONS ==============
+
+model booking_work_queue {
+  id              String    @id @default(cuid())
+  bookingId       String
+  itemType        String
+  priority        String    @default("normal")
+  status          String    @default("pending")
+  assignedTo      String?
+  dueDate         DateTime? @db.Timestamptz(6)
+  completedAt     DateTime? @db.Timestamptz(6)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([assignedTo])
+  @@map("booking_work_queue")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+model booking_approval {
+  id              String    @id @default(cuid())
+  bookingId       String
+  approvalType    String
+  status          String    @default("pending")
+  approverGroups  String[]
+  approvals       Json?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("booking_approval")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+model booking_escalation {
+  id              String    @id @default(cuid())
+  bookingId       String
+  escalationType  String
+  reason          String?
+  escalatedTo     String?
+  status          String    @default("open")
+  resolvedAt      DateTime? @db.Timestamptz(6)
+  resolvedBy      String?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("booking_escalation")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+model booking_modification {
+  id                String    @id @default(cuid())
+  bookingId         String
+  modificationType  String
+  status            String    @default("pending")
+  modificationFee   Decimal?  @db.Decimal(12, 2) // Added for serializeBooking
+  penaltyFee       Decimal?  @db.Decimal(12, 2) // Added for serializeBooking
+  oldValue          Json?
+  newValue          Json?
+  reason            String?
+  requestNote       String?   // Added for queue action
+  internalNote      String?   // Added for queue action
+  modifiedBy        String?
+  appliedAt         DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([modificationType])
+  @@index([status])
+  @@map("booking_modification")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+model ticket_reissue {
+  id              String    @id @default(cuid())
+  bookingId       String
+  segmentId       String?
+  reason          String
+  status          String    @default("pending")
+  requesterName   String?
+  requesterEmail  String?
+  newDocumentRef  String?
+  issuedAt        DateTime? @db.Timestamptz(6)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("ticket_reissue")
+
+  booking booking @relation(fields: [bookingId], references: [id])
+}
+
+model refund_request {
+  id              String        @id @default(cuid())
+  bookingId       String
+  userId          String
+  paymentId       String?       // Reference to duffelPayment or other payment record
+  amount          Decimal       @db.Decimal(12, 2)
+  currency        String        @default("USD")
+  reason          String
+  status          RefundStatus  @default(PENDING)
+  approvedBy      String?
+  approvedAt      DateTime?     @db.Timestamptz(6)
+  processedAt     DateTime?     @db.Timestamptz(6)
+  refundMethod    PaymentMethod? // How the refund will be processed
+  transactionId   String?       // External refund transaction ID
+  notes           String?
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  booking         booking           @relation(fields: [bookingId], references: [id])
+  payment         duffelPayment?    @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  refunds         refund[]
+
+  @@index([bookingId])
+  @@index([userId])
+  @@index([status])
+  @@index([paymentId])
+  @@map("refund_request")
+}
+
+// ============== REFUND TRANSACTIONS ==============
+
+model refund {
+  id              String        @id @default(cuid())
+  refundRequestId String?       // Link to refund_request if applicable
+  paymentId       String        // Reference to original payment
+  amount          Decimal       @db.Decimal(12, 2)
+  currency        String        @default("USD")
+  status          RefundStatus  @default(PENDING)
+  refundMethod    PaymentMethod // How the refund was processed
+  transactionId   String?       // External refund transaction ID
+  processedAt     DateTime?     @db.Timestamptz(6)
+  completedAt     DateTime?     @db.Timestamptz(6)
+  failureReason   String?
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  refundRequest   refund_request? @relation(fields: [refundRequestId], references: [id], onDelete: SetNull)
+  payment         duffelPayment   @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([refundRequestId])
+  @@index([paymentId])
+  @@index([status])
+  @@index([transactionId])
+  @@map("refund")
+}
+
+// ============== OFFLINE BOOKING ==============
+
+model offline_booking_form {
+  id              String    @id @default(cuid())
+  formCode        String    @unique
+  userId          String?
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  tripDetails     String
+  serviceType     String
+  budget          Decimal?  @db.Decimal(12, 2)
+  currency        String    @default("USD")
+  status          String    @default("submitted")
+  submittedAt     DateTime  @default(now()) @db.Timestamptz(6)
+  processedAt     DateTime? @db.Timestamptz(6)
+  processedBy     String?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([status])
+  @@map("offline_booking_form")
+}
+
+model offline_change_request {
+  id                    String    @id @default(cuid())
+  offlineBookingFormId  String
+  changeType            String
+  details               String
+  status                String    @default("pending")
+  requestedAt           DateTime  @default(now()) @db.Timestamptz(6)
+  approvedAt            DateTime? @db.Timestamptz(6)
+  approvedBy            String?
+  metadata              Json?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([offlineBookingFormId])
+  @@index([status])
+  @@map("offline_change_request")
+}
+
+// ============== INVENTORY MANAGEMENT ==============
+
+model inventory_item {
+  id              String    @id @default(cuid())
+  itemCode        String    @unique
+  itemType        String
+  itemName        String
+  description     String?
+  quantity        Int       @default(0)
+  reorderLevel    Int       @default(10)
+  unitPrice       Decimal?  @db.Decimal(12, 2)
+  currency        String    @default("USD")
+  location        String?
+  status          String    @default("active")
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([itemCode])
+  @@index([status])
+  @@map("inventory_item")
+}
+
+model inventory_hold {
+  id              String    @id @default(cuid())
+  inventoryItemId String
+  holdType        String
+  holdReason      String
+  quantity        Int
+  heldBy          String
+  heldUntil       DateTime? @db.Timestamptz(6)
+  status          String    @default("active")
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([inventoryItemId])
+  @@index([status])
+  @@map("inventory_hold")
+}
+
+model inventory_allocation_rule {
+  id              String    @id @default(cuid())
+  itemType        String
+  allocationLogic String
+  priority        Int       @default(50)
+  isActive        Boolean   @default(true)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([itemType])
+  @@map("inventory_allocation_rule")
+}
+
+// ============== WALLET & FINANCIAL ==============
+
+model wallet {
+  id              String    @id
+  userId          String
+  balance         Decimal   @db.Decimal(12, 2) @default(0)
+  reservedBalance Decimal   @db.Decimal(12, 2) @default(0)
+  currency        String    @default("USD")
+  status          String    @default("active")
+  dailyLimit      Decimal?  @db.Decimal(12, 2)
+  monthlyLimit    Decimal?  @db.Decimal(12, 2)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  // v2.0 relation
+  ledgerEntries   wallet_ledger[]
+
+  @@index([userId])
+  @@unique([userId, currency])
+  @@map("wallet")
+}
+
+model wallet_transaction {
+  id              String    @id
+  walletId        String
+  payerId         String?
+  payeeId         String?
+  referenceId     String?
+  idempotencyKey  String?
+  type            String
+  flow            String?
+  amount          Decimal   @db.Decimal(12, 2)
+  balance         Decimal   @db.Decimal(12, 2)
+  currency        String    @default("USD")
+  credit          Decimal?  @db.Decimal(12, 2)
+  debit           Decimal?  @db.Decimal(12, 2)
+  description     String?
+  bookingId       String?
+  paymentId       String?
+  serviceType     String?
+  supplierId      String?
+  supplierName    String?
+  bookingRef      String?
+  travelDate      DateTime? @db.Timestamptz(6)
+  returnDate      DateTime? @db.Timestamptz(6)
+  route           String?
+  hotelAddress    String?
+  guestName       String?
+  roomType        String?
+  metadata        Json?
+  status          String    @default("completed")
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  // v2.0 relation
+  ledgerEntries   wallet_ledger[]
+
+  @@index([walletId])
+  @@index([bookingId])
+  @@index([payerId])
+  @@index([payeeId])
+  @@map("wallet_transaction")
+}
+
+model wallet_ledger {
+  id            String   @id
+  walletId      String
+  transactionId String
+  entryType     String
+  amount        Decimal  @db.Decimal(12, 2)
+  balance       Decimal  @db.Decimal(12, 2)
+  currency      String   @default("USD")
+  credit        Decimal? @db.Decimal(12, 2)
+  debit         Decimal? @db.Decimal(12, 2)
+  accountType   String
+  account       String?
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+
+  // v2.0 FK relations - enables explicit tracing
+  wallet        wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  transaction   wallet_transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([transactionId])
+  @@index([createdAt])
+  // Note: Consider partitioning by createdAt (monthly) for high-volume systems
+  // Example: PARTITION BY RANGE (createdAt)
+  @@map("wallet_ledger")
+}
+
+model wallet_approval_request {
+  id          String    @id @default(cuid())
+  walletId    String
+  amount      Decimal   @db.Decimal(12, 2)
+  reason      String?
+  status      String    @default("pending")
+  approverIds String[]
+  approvals   Json?
+  approvedAt  DateTime? @db.Timestamptz(6)
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([walletId])
+  @@index([status])
+  @@map("wallet_approval_request")
+}
+
+// ============== DUFFEL FLIGHT DATA ==============
+
+model duffelFlight {
+  id             String    @id
+  departureTime  DateTime  @db.Timestamptz(6)
+  arrivalTime    DateTime  @db.Timestamptz(6)
+  originAirportId String
+  destinationAirportId String
+  airlineId      String
+  aircraftId     String?
+  operatingAirlineId String?
+  flightNumber   String
+  scheduledDepartureTime DateTime? @db.Timestamptz(6)
+  scheduledArrivalTime DateTime? @db.Timestamptz(6)
+  durationMinutes Int?
+  segments       Json?
+  metadata       Json?
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([originAirportId])
+  @@index([destinationAirportId])
+  @@map("duffel_flight")
+}
+
+model duffelAirline {
+  id         String    @id
+  iataCode   String?   @unique
+  icaoCode   String?
+  name       String
+  logoUrl    String?
+  metadata   Json?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("duffel_airline")
+}
+
+model duffelAircraft {
+  id         String    @id
+  iataCode   String?   @unique
+  name       String
+  metadata   Json?
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("duffel_aircraft")
+}
+
+model duffelAirport {
+  id           String    @id
+  iataCode     String?   @unique
+  icaoCode     String?
+  name         String
+  city         String?
+  country      String?
+  countryCode  String?
+  latitude     Decimal?  @db.Decimal(10, 6)
+  longitude    Decimal?  @db.Decimal(10, 6)
+  timezone     String?
+  metadata     Json?
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("duffel_airport")
+}
+
+model duffelAircraftEquipment {
+  id             String    @id
+  aircraftId     String
+  equipmentType  String
+  status         String    @default("operational")
+  createdAt      DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("duffel_aircraft_equipment")
+}
+
+model duffelSeatDetails {
+  id              String    @id
+  flightId        String
+  seatNumber      String
+  seatClass       String
+  availabilityStatus String @default("available")
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([flightId])
+  @@map("duffel_seat_details")
+}
+
+model duffelGateDetails {
+  id              String    @id
+  flightId        String
+  gateNumber      String?
+  terminal        String?
+  departureTime   DateTime? @db.Timestamptz(6)
+  arrivalTime     DateTime? @db.Timestamptz(6)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([flightId])
+  @@map("duffel_gate_details")
+}
+
+model duffelAircraftConfiguration {
+  id              String    @id
+  aircraftId      String
+  cabinLayout     Json
+  seatMap         Json?
+  totalSeats      Int
+  businessSeats   Int       @default(0)
+  economySeats    Int       @default(0)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("duffel_aircraft_configuration")
+}
+
+model duffelFlightFeatures {
+  id              String    @id
+  flightId        String
+  featureName     String
+  featureValue    String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([flightId])
+  @@map("duffel_flight_features")
+}
+
+model duffelFlownAircraft {
+  id              String    @id
+  flightId        String
+  aircraftId      String
+  registrationNo  String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([flightId])
+  @@map("duffel_flown_aircraft")
+}
+
+model duffelOperatingAircraft {
+  id              String    @id
+  flightId        String
+  operatingAirlineId String
+  aircraftId      String
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([flightId])
+  @@map("duffel_operating_aircraft")
+}
+
+// ============== AIRCRAFT SEAT MAP SYSTEM ==============
+
+enum CabinClass {
+  first
+  business
+  premium_economy
+  economy
+}
+
+enum ElementType {
+  seat
+  empty
+  bassinet
+  exit_row
+  lavatory
+  galley
+  closet
+  stairs
+  restricted_seat_general
+}
+
+enum AvailabilityStatus {
+  available
+  booked
+  blocked
+  reserved
+}
+
+
+model cabin_configuration {
+  id                  String    @id
+  aircraftId          String
+  configurationName   String?
+  totalSeats          Int
+  businessSeats       Int       @default(0)
+  premiumEconomySeats Int       @default(0)
+  economySeats        Int       @default(0)
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+  cabins              cabin[]
+  seatMaps            seat_map[]
+
+  @@index([aircraftId])
+  @@map("cabin_configuration")
+}
+
+model cabin {
+  id                      String    @id
+  cabinConfigurationId    String
+  cabinClass              CabinClass
+  deck                    Int       @default(0)
+  aisles                  Int       @default(1)
+  wingPositionFirstRowIndex Int?
+  wingPositionLastRowIndex  Int?
+  createdAt               DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime  @updatedAt @db.Timestamptz(6)
+
+  cabinConfiguration      cabin_configuration @relation(fields: [cabinConfigurationId], references: [id], onDelete: Cascade)
+  seatRows                seat_row[]
+
+  @@index([cabinConfigurationId])
+  @@map("cabin")
+}
+
+model seat_row {
+  id              String    @id
+  cabinId         String
+  rowNumber       Int
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  cabin           cabin    @relation(fields: [cabinId], references: [id], onDelete: Cascade)
+  seatSections    seat_section[]
+
+  @@unique([cabinId, rowNumber])
+  @@map("seat_row")
+}
+
+model seat_section {
+  id              String    @id
+  seatRowId       String
+  sectionIndex    Int
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  seatRow         seat_row  @relation(fields: [seatRowId], references: [id], onDelete: Cascade)
+  seatElements    seat_element[]
+
+  @@unique([seatRowId, sectionIndex])
+  @@map("seat_section")
+}
+
+model seat_element {
+  id              String        @id
+  seatSectionId   String
+  elementType     ElementType
+  designator      String?
+  name            String?
+  disclosures     String[]
+  coordinatesX    Int?
+  coordinatesY    Int?
+  amenities       Json?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(6)
+
+  seatSection     seat_section  @relation(fields: [seatSectionId], references: [id], onDelete: Cascade)
+  seatAvailabilities seat_availability[]
+
+  @@index([seatSectionId])
+  @@map("seat_element")
+}
+
+model seat_map {
+  id                    String    @id
+  segmentId             String
+  sliceId               String
+  cabinConfigurationId  String?
+  rawData               Json?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(6)
+
+  cabinConfiguration    cabin_configuration? @relation(fields: [cabinConfigurationId], references: [id], onDelete: SetNull)
+
+  @@index([segmentId])
+  @@map("seat_map")
+}
+
+model seat_availability {
+  id                  String              @id
+  seatElementId       String
+  segmentId           String
+  availabilityStatus  AvailabilityStatus  @default(available)
+  passengerId         String?
+  bookingId           String?
+  priceAmount         Decimal?            @db.Decimal(12, 2)
+  priceCurrency       String?
+  serviceId           String?
+  validUntil          DateTime?           @db.Timestamptz(6)
+  createdAt           DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime            @updatedAt @db.Timestamptz(6)
+
+  seatElement         seat_element        @relation(fields: [seatElementId], references: [id], onDelete: Cascade)
+  seatServices        seat_service[]
+
+  @@unique([seatElementId, segmentId])
+  @@index([segmentId])
+  @@index([seatElementId])
+  @@map("seat_availability")
+}
+
+model seat_service {
+  id                  String    @id
+  seatAvailabilityId  String
+  passengerId         String
+  totalAmount         Decimal   @db.Decimal(12, 2)
+  totalCurrency       String
+  status              String    @default("confirmed")
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+  seatAvailability    seat_availability @relation(fields: [seatAvailabilityId], references: [id], onDelete: Cascade)
+
+  @@index([seatAvailabilityId])
+  @@map("seat_service")
+}
+
+model duffelOfferRequest {
+  id                   String   @id
+  externalId           String?
+  slices               Json?
+  passengers           Json?
+  cabinClass           String?
+  offersCount          Int      @default(0)
+  expiresAt            DateTime? @db.Timestamptz(6)
+  status               String   @default("pending")
+  batchOfferRequestId  String?
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+
+  offers               duffelOffer[]
+  batchOfferRequest    duffelBatchOfferRequest? @relation(fields: [batchOfferRequestId], references: [id], onDelete: Cascade)
+
+  @@index([batchOfferRequestId])
+  @@map("duffel_offer_requests")
+}
+
+model duffelBatchOfferRequest {
+  id          String                     @id @default(cuid())
+  externalId  String                     @unique
+  requests    Json?                      // array of request objects (slices, passengers, cabin_class)
+  status      BatchOfferRequestStatus    @default(pending)
+  processedAt DateTime?                  @db.Timestamptz(6)
+  completedAt DateTime?                  @db.Timestamptz(6)
+  expiresAt   DateTime?                  @db.Timestamptz(6)
+  results     Json?                      // results from Duffel API
+  createdAt   DateTime                   @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime                   @updatedAt @db.Timestamptz(6)
+
+  offerRequests duffelOfferRequest[]
+
+  @@index([externalId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("duffel_batch_offer_requests")
+}
+
+model duffelPartialOfferRequest {
+  id                      String    @id @default(cuid())
+  externalId              String    @unique
+  slices                  Json?
+  passengers              Json?
+  cabinClass              String?
+  returnAvailableServices Boolean   @default(false)
+  expiresAt               DateTime? @db.Timestamptz(6)
+  status                  String    @default("pending")
+  createdAt               DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime  @updatedAt @db.Timestamptz(6)
+
+  partialOfferFares       duffelPartialOfferFare[]
+
+  @@index([externalId])
+  @@index([status])
+  @@map("duffel_partial_offer_requests")
+}
+
+model duffelPartialOfferFare {
+  id                  String    @id @default(cuid())
+  partialRequestId    String
+  fareId              String
+  amount              Decimal   @db.Decimal(12, 2)
+  currency            String    @default("USD")
+  conditions          Json?
+  createdAt           DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @db.Timestamptz(6)
+
+  partialRequest      duffelPartialOfferRequest @relation(fields: [partialRequestId], references: [externalId], onDelete: Cascade)
+
+  @@unique([partialRequestId, fareId])
+  @@index([partialRequestId])
+  @@index([fareId])
+  @@map("duffel_partial_offer_fares")
+}
+
+model duffelOffer {
+  id              String   @id
+  externalId      String?
+  offerRequestId  String?
+  slices          Json?
+  passengers      Json?
+  conditions      Json?
+  totalAmount     Decimal  @db.Decimal(12, 2) @default(0)
+  totalCurrency   String   @default("USD")
+  baseAmount      Decimal  @db.Decimal(12, 2) @default(0)
+  taxAmount       Decimal  @db.Decimal(12, 2) @default(0)
+  expiresAt       DateTime? @db.Timestamptz(6)
+  status          String   @default("available")
+  cabinClass      String?
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+
+  offerRequest    duffelOfferRequest? @relation(fields: [offerRequestId], references: [id])
+
+  @@index([offerRequestId])
+  @@map("duffel_offers")
+}
+
+// ============== DUFFEL ORDERS & PAYMENTS ==============
+
+model duffelOrder {
+  id              String      @id @default(cuid())
+  externalId      String?     @unique
+  userId          String?     // Added for internal tracking
+  customerEmail   String?
+  customerPhone   String?
+  status          String      @default("pending")
+  type            String?     // "hold", "instant"
+  slices          Json?
+  passengers      Json?
+  baseAmount      Decimal     @db.Decimal(12, 2) @default(0)
+  taxAmount       Decimal     @db.Decimal(12, 2) @default(0)
+  totalAmount     Decimal     @db.Decimal(12, 2) @default(0)
+  currency        String      @default("USD")
+  confirmedAt     DateTime?   @db.Timestamptz(6)
+  cancelledAt     DateTime?   @db.Timestamptz(6)
+  bookingReference String?    // Added for code compatibility
+  metadata        Json?
+  createdAt       DateTime    @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime    @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  payments        duffelPayment[]
+  paymentIntents  payment_intent[]
+  changeRequests  duffelOrderChangeRequest[]
+  changes         duffelOrderChange[]
+  cancellations   duffelOrderCancellation[]
+  airlineCredits  duffelAirlineCredit[]
+  airlineInitiatedChanges duffelAirlineInitiatedChange[]
+  services        duffelService[]
+
+  @@index([externalId])
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("duffel_order")
+}
+
+model duffelPayment {
+  id              String        @id @default(cuid())
+  externalId      String?       @unique
+  orderId         String
+  paymentIntentId String?       // Reference to payment_intent if created via intent flow
+  amount          Decimal       @db.Decimal(12, 2)
+  currency        String        @default("USD")
+  paymentMethod   String        @default("unknown")  // Changed from PaymentMethod enum to String for Duffel compatibility
+  status          String        @default("pending")  // Changed from PaymentStatus enum to String for Duffel compatibility
+  gateway         String?       // Changed from PaymentProvider enum to String for Duffel compatibility
+  transactionId   String?
+  metadata        Json?
+  createdAt       DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime      @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  order           duffelOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentIntent   payment_intent? @relation(fields: [paymentIntentId], references: [id], onDelete: SetNull)
+  refunds         refund[]
+  refundRequests  refund_request[]
+
+  @@index([externalId])
+  @@index([orderId])
+  @@index([status])
+  @@index([paymentIntentId])
+  @@map("duffel_payment")
+}
+
+model duffelService {
+  id            String   @id @default(cuid())
+  externalId    String   @unique
+  orderId       String
+  type          String?
+  name          String?
+  description   String?
+  amount        Decimal  @db.Decimal(12, 2)
+  currency      String   @default("USD")
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  order         duffelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("duffel_services")
+}
+
+// ============== DUFFEL CACHE TABLES ==============
+
+model duffelOfferRequestCache {
+  id          String   @id @default(cuid())
+  requestId   String   @unique
+  requestData Json
+  expiresAt   DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("duffel_offer_request_cache")
+}
+
+model duffelOfferCache {
+  id          String   @id @default(cuid())
+  offerId     String   @unique
+  offerData   Json
+  expiresAt   DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("duffel_offer_cache")
+}
+
+model duffelOrderCache {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  orderData   Json
+  expiresAt   DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("duffel_order_cache")
+}
+
+model duffelSeatMapCache {
+  id          String   @id @default(cuid())
+  segmentId   String   @unique
+  seatMapData Json
+  expiresAt   DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("duffel_seat_map_cache")
+}
+
+model duffelServicesCache {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  servicesData Json
+  expiresAt   DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("duffel_services_cache")
+}
+
+model duffelCancellationCache {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  cancellationData Json
+  expiresAt   DateTime? @db.Timestamptz(6)
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("duffel_cancellation_cache")
+}
+
+// ============== ORDER CHANGE REQUESTS ==============
+
+model duffelOrderChangeRequest {
+  id              String    @id @default(cuid())
+  externalId      String?   @unique
+  orderId         String
+  order           duffelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Request details
+  requestedChanges Json?    // The slices that were requested to be changed
+  changeOffers     Json?    // The order_change_offers returned by Duffel
+  
+  // Status tracking
+  status          OrderChangeRequestStatus    @default(pending)
+  errorMessage    String?
+  
+  // Timestamps
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  expiresAt       DateTime? @db.Timestamptz(6)
+  
+  // Metadata
+  metadata        Json?
+  
+  // Relations
+  changes         duffelOrderChange[]
+  
+  // Indexes
+  @@index([externalId])
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("duffel_order_change_request")
+}
+
+model duffelOrderChange {
+  id                      String    @id @default(cuid())
+  externalId              String?   @unique
+  orderId                 String
+  orderChangeRequestId    String?
+  
+  // Relations
+  order                   duffelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderChangeRequest      duffelOrderChangeRequest? @relation(fields: [orderChangeRequestId], references: [id], onDelete: SetNull)
+  
+  // Change details
+  requestedChanges       Json?        // Added for code compatibility
+  selectedOrderChangeOfferId String?  // The selected offer ID
+  changeDetails          Json?        // The full change details from Duffel
+  paymentRequired        Boolean     @default(false)
+  paymentAmount          Decimal?    @db.Decimal(12, 2)
+  paymentCurrency        String      @default("USD")
+  refundAmount           Decimal?    @db.Decimal(12, 2)
+  refundCurrency         String      @default("USD")
+  // Additional financial details from Duffel API
+  changeTotalAmount      Decimal?    @db.Decimal(12, 2)  // Net change amount (positive = pay, negative = refund)
+  changeTotalCurrency    String      @default("USD")
+  penaltyAmount          Decimal?    @db.Decimal(12, 2)  // Penalty charges
+  penaltyCurrency        String      @default("USD")
+  
+  // Status tracking
+  status                  OrderChangeStatus    @default(pending) // pending, confirmed, failed, expired
+  confirmedAt             DateTime? @db.Timestamptz(6)
+  failedAt                DateTime? @db.Timestamptz(6)
+  failureReason           String?
+  
+  // Timestamps
+  createdAt               DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt               DateTime  @updatedAt @db.Timestamptz(6)
+  expiresAt               DateTime? @db.Timestamptz(6)
+  
+  // Metadata
+  metadata                Json?
+  
+  // Indexes
+  @@index([externalId])
+  @@index([orderId])
+  @@index([status])
+  @@index([orderChangeRequestId])
+  @@map("duffel_order_change")
+}
+
+model duffelOrderCancellation {
+  id              String    @id @default(cuid())
+  externalId      String?   @unique
+  orderId         String
+  order           duffelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Cancellation details
+  refundAmount    Decimal?  @db.Decimal(12, 2)
+  refundCurrency  String    @default("USD")
+  refundTo        RefundTo?   // original_form_of_payment, airline_credits, voucher
+  airlineCredits  Json?     // Airline credits details if applicable
+  voucher         Json?     // Voucher details if applicable
+  
+  // Status tracking
+  status          OrderCancellationStatus    @default(pending) // pending, confirmed, failed, expired
+  confirmedAt     DateTime? @db.Timestamptz(6)
+  failedAt        DateTime? @db.Timestamptz(6)
+  failureReason   String?
+  expiresAt       DateTime? @db.Timestamptz(6)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  
+  // Metadata
+  metadata        Json?
+  
+  // Relations
+  airlineCreditsList duffelAirlineCredit[]
+  
+  // Indexes
+  @@index([externalId])
+  @@index([orderId])
+  @@index([status])
+  @@map("duffel_order_cancellation")
+}
+
+model duffelAirlineCredit {
+  id              String    @id @default(cuid())
+  externalId      String?   @unique
+  orderId         String
+  orderCancellationId String?
+  
+  // Relations
+  order           duffelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderCancellation duffelOrderCancellation? @relation(fields: [orderCancellationId], references: [id], onDelete: SetNull)
+  
+  // Credit details
+  airlineIataCode String?
+  airlineName     String?
+  amount          Decimal   @db.Decimal(12, 2)
+  currency        String    @default("USD")
+  reason          String?
+  passengerId     String?
+  ticketNumber    String?
+  
+  // Status
+  status          AirlineCreditStatus    @default(active) // active, used, expired
+  usedAt          DateTime? @db.Timestamptz(6)
+  expiresAt       DateTime? @db.Timestamptz(6)
+  
+  // Timestamps
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  
+  // Metadata
+  metadata        Json?
+  
+  // Indexes
+  @@index([externalId])
+  @@index([orderId])
+  @@index([airlineIataCode])
+  @@index([status])
+  @@map("duffel_airline_credit")
+}
+
+// ============== AIRLINE-INITIATED CHANGES ==============
+
+enum AirlineInitiatedChangeStatus {
+  pending
+  accepted
+  declined
+  expired
+  cancelled
+}
+
+enum AirlineInitiatedChangeType {
+  schedule_change
+  aircraft_change
+  cabin_change
+  route_change
+  cancellation
+  other
+}
+
+enum AirlineInitiatedActionTaken {
+  accept
+  decline
+  request_refund
+  request_alternative
+  no_action
+}
+
+model duffelAirlineInitiatedChange {
+  id              String    @id @default(cuid())
+  externalId      String?   @unique
+  orderId         String
+  
+  // Relations
+  order           duffelOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  // Core change information
+  changeType      AirlineInitiatedChangeType
+  status          AirlineInitiatedChangeStatus @default(pending)
+  actionTaken     AirlineInitiatedActionTaken? @default(no_action)
+  
+  // Change details
+  title           String?
+  description     String?
+  details         Json?     // Detailed change information (flight numbers, times, etc.)
+  options         Json?     // Available options for the passenger (accept, refund, etc.)
+  
+  // Financial implications
+  refundAmount    Decimal?  @db.Decimal(12, 2)
+  refundCurrency  String    @default("USD")
+  penaltyAmount   Decimal?  @db.Decimal(12, 2)
+  penaltyCurrency String    @default("USD")
+  
+  // Timestamps
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  expiresAt       DateTime? @db.Timestamptz(6)
+  notifiedAt      DateTime? @db.Timestamptz(6)
+  respondedAt     DateTime? @db.Timestamptz(6)
+  
+  // Metadata
+  metadata        Json?
+  
+  // Relations to other tables
+  changeOptions   duffelAirlineChangeOption[]
+  changeActions   duffelAirlineChangeAction[]
+  changeDetails   duffelAirlineChangeDetail[]
+  
+  // Indexes
+  @@index([externalId])
+  @@index([orderId])
+  @@index([status])
+  @@index([changeType])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("duffel_airline_initiated_change")
+}
+
+model duffelAirlineChangeOption {
+  id              String    @id @default(cuid())
+  changeId        String
+  optionType      String    // "accept", "refund", "alternative", "decline"
+  optionValue     String?   // Specific option value
+  description     String?
+  isRecommended   Boolean   @default(false)
+  financialImpact Decimal?  @db.Decimal(12, 2)
+  currency        String    @default("USD")
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  
+  // Relations
+  change          duffelAirlineInitiatedChange @relation(fields: [changeId], references: [id], onDelete: Cascade)
+  
+  @@index([changeId])
+  @@index([optionType])
+  @@map("duffel_airline_change_option")
+}
+
+model duffelAirlineChangeAction {
+  id              String    @id @default(cuid())
+  changeId        String
+  actionType      String    // "notified", "viewed", "responded", "accepted", "declined"
+  actionBy        String?   // User ID or system
+  actionDetails   Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  
+  // Relations
+  change          duffelAirlineInitiatedChange @relation(fields: [changeId], references: [id], onDelete: Cascade)
+  
+  @@index([changeId])
+  @@index([actionType])
+  @@index([createdAt])
+  @@map("duffel_airline_change_action")
+}
+
+model duffelAirlineChangeDetail {
+  id              String    @id @default(cuid())
+  changeId        String
+  detailType      String    // "flight_change", "schedule_change", "aircraft_change", "cabin_change"
+  fieldName       String    // "departure_time", "arrival_time", "flight_number", "aircraft_type"
+  oldValue        String?
+  newValue        String?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  
+  // Relations
+  change          duffelAirlineInitiatedChange @relation(fields: [changeId], references: [id], onDelete: Cascade)
+  
+  @@index([changeId])
+  @@index([detailType])
+  @@index([fieldName])
+  @@map("duffel_airline_change_detail")
+}
+
+// ============== PAYMENT INTENTS ==============
+
+model payment_intent {
+  id              String          @id @default(cuid())
+  externalId      String?         @unique
+  provider        String          @default("unknown")  // Changed from PaymentProvider enum to String for Duffel compatibility
+  orderId         String?         // reference to duffelOrder
+  bookingId       String?         // reference to booking
+  amount          Decimal         @db.Decimal(12, 2)
+  currency        String          @default("USD")
+  status          String          @default("pending")  // Changed from PaymentStatus enum to String for Duffel compatibility
+  clientSecret    String?
+  metadata        Json?
+  createdAt       DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @db.Timestamptz(6)
+
+  // Relations
+  order           duffelOrder?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  booking         booking?        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  payments        duffelPayment[]
+
+  @@index([externalId])
+  @@index([provider])
+  @@index([status])
+  @@index([createdAt])
+  @@index([bookingId])
+  @@map("payment_intent")
+}
+
+// ============== KIWI FLIGHT DATA ==============
+
+model kiwi_booking_hold {
+  id            String    @id
+  bookingId     String?
+  kiwiBookingId String?
+  amount        Decimal   @db.Decimal(12, 2)
+  currency      String    @default("USD")
+  status        String    @default("pending")
+  walletId      String?
+  heldAt        DateTime? @db.Timestamptz(6)
+  expiresAt     DateTime? @db.Timestamptz(6)
+  confirmedAt   DateTime? @db.Timestamptz(6)
+  releasedAt    DateTime? @db.Timestamptz(6)
+  metadata      Json?
+
+  @@index([bookingId])
+  @@index([kiwiBookingId])
+  @@index([walletId])
+  @@map("kiwi_booking_hold")
+}
+
+model kiwi_search {
+  id        String    @id
+  query     Json
+  metadata  Json?
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("kiwi_search")
+}
+
+model kiwi_itinerary {
+  id        String    @id
+  searchId  String
+  data      Json
+  metadata  Json?
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([searchId])
+  @@map("kiwi_itinerary")
+}
+
+model kiwi_booking {
+  id        String    @id
+  itineraryId String
+  status    String    @default("pending")
+  data      Json
+  metadata  Json?
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([itineraryId])
+  @@map("kiwi_booking")
+}
+
+// ============== REFERENCE DATA ==============
+
+model exchange_rate {
+  id              String    @id @default(cuid())
+  fromCurrency    String
+  toCurrency      String
+  rate            Decimal   @db.Decimal(18, 8)
+  source          String?   // Source of the rate (e.g., fixer, openexchangerates)
+  provider        String?
+  effectiveDate   DateTime  @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([fromCurrency, toCurrency, effectiveDate])
+  @@map("exchange_rate")
+}
+
+model airport {
+  id          String    @id @default(cuid())
+  iataCode    String    @unique
+  icaoCode    String?
+  name        String
+  city        String?
+  country     String?
+  timezone    String?
+  latitude    Decimal?  @db.Decimal(10, 6)
+  longitude   Decimal?  @db.Decimal(10, 6)
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([iataCode])
+  @@map("airport")
+}
+
+model airline {
+  id        String    @id @default(cuid())
+  iataCode  String    @unique
+  icaoCode  String?
+  name      String
+  logoUrl   String?
+  metadata  Json?
+  createdAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("airline")
+}
+
+model destination {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  name        String
+  description String?
+  country     String
+  region      String?
+  highlights  String[]
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("destination")
+}
+
+// ============== AUDIT & INFRASTRUCTURE ==============
+
+model audit_log {
+  id            String    @id @default(cuid())
+  entityType    String
+  entityId      String
+  action        String
+  userId        String?
+  oldValues     Json?
+  newValues     Json?
+  changeReason  String?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([entityType])
+  @@index([entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_log")
+}
+
+model circuit_breaker {
+  id              String    @id @default(cuid())
+  serviceName     String
+  status          String    @default("closed")
+  failureCount    Int       @default(0)
+  successCount    Int       @default(0)
+  lastFailureTime DateTime? @db.Timestamptz(6)
+  lastSuccessTime DateTime? @db.Timestamptz(6)
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([serviceName])
+  @@map("circuit_breaker")
+}
+
+// ============== COMPANY SETTINGS ==============
+
+model company_setting {
+  id              String    @id @default(cuid())
+  companyId       String?
+  settingKey      String
+  settingValue    String
+  dataType        String    @default("string")
+  description     String?
+  isSecure        Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@unique([companyId, settingKey])
+  @@map("company_setting")
+}
+
+model system_configuration {
+  id              String    @id @default(cuid())
+  configKey       String    @unique
+  configValue     String
+  dataType        String    @default("string")
+  description     String?
+  version         Int       @default(1)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("system_configuration")
+}
+
+// ============== ADMIN UI STATE ==============
+
+model admin_ui_preference {
+  id              String    @id @default(cuid())
+  userId          String
+  preferenceKey   String
+  preferenceValue Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  user            user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, preferenceKey])
+  @@index([userId])
+  @@map("admin_ui_preference")
+}
+
+model saved_search {
+  id              String    @id @default(cuid())
+  userId          String
+  searchName      String
+  searchQuery     Json
+  filters         Json?
+  isPublic        Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("saved_search")
+}
+
+model admin_dashboard_widget {
+  id              String    @id @default(cuid())
+  userId          String
+  widgetType      String
+  widgetConfig    Json
+  position        Int
+  isVisible       Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@map("admin_dashboard_widget")
+}
+
+
+model admin_activity_log {
+  id              String    @id @default(cuid())
+  adminId         String
+  action          String
+  resourceType    String?
+  resourceId      String?
+  details         String?
+  ipAddress       String?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([adminId])
+  @@index([createdAt])
+  @@map("admin_activity_log")
+}
+
+model document {
+  id              String    @id @default(cuid())
+  entityType      String    // booking, user, company
+  entityId        String
+  bookingId       String?   // Added for bookings.ts
+  documentType    String    // receipt, ticket, invoice, id_proof
+  name            String
+  fileUrl         String
+  fileSize        Int?
+  mimeType        String?
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([entityType, entityId])
+  @@map("document")
+
+  template        document_template? @relation(fields: [templateId], references: [id])
+  access          document_access[]
+  templateId      String?
+}
+
+model document_template {
+  id              String    @id @default(cuid())
+  name            String
+  type            String
+  content         String?   @db.Text
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  documents       document[]
+  @@map("document_template")
+}
+
+model document_access {
+  id              String    @id @default(cuid())
+  documentId      String
+  userId          String
+  action          String    // read, download, print
+  timestamp       DateTime  @default(now()) @db.Timestamptz(6)
+  ipAddress       String?
+  metadata        Json?
+
+  document        document  @relation(fields: [documentId], references: [id])
+  @@index([documentId])
+  @@index([userId])
+  @@map("document_access")
+}
+model currency {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  name            String
+  symbol          String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([code])
+  @@map("currency")
+}
+
+// ============== CRM SUPPORT TABLES ==============
+
+model support_ticket {
+  id              String    @id @default(cuid())
+  ticketNumber    String    @unique
+  userId          String?
+  bookingId       String?
+  companyId       String?
+  
+  // Ticket details
+  subject         String
+  description     String
+  category        String    // billing, technical, booking, refund, other
+  priority        String    // low, medium, high, critical
+  status          String    // open, in_progress, resolved, closed
+  source          String    // web, email, phone, chat, api
+  
+  // Assignment & tracking
+  assignedTo      String?   // agent/user ID
+  assignedAt      DateTime?
+  dueDate         DateTime?
+  slaBreachAt     DateTime?
+  
+  // Resolution
+  resolution      String?
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  
+  // Metadata
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+  
+  // Relations
+  user            user?     @relation(fields: [userId], references: [id])
+  booking         booking?  @relation(fields: [bookingId], references: [id])
+  interactions    support_interaction[]
+  attachments     support_attachment[]
+  
+  @@index([userId])
+  @@index([bookingId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("support_ticket")
+}
+
+model support_interaction {
+  id              String    @id @default(cuid())
+  ticketId        String
+  type            String    // internal_note, customer_reply, system_event
+  content         String
+  createdBy       String?   // user ID or system
+  isInternal      Boolean   @default(false)
+  
+  metadata        Json?
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  
+  ticket          support_ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  attachments     support_attachment[]
+  
+  @@index([ticketId])
+  @@index([createdAt])
+  @@map("support_interaction")
+}
+
+model support_attachment {
+  id              String    @id @default(cuid())
+  ticketId        String
+  interactionId   String?
+  fileName        String
+  fileType        String
+  fileSize        Int
+  storagePath     String
+  uploadedBy      String?
+  
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  
+  ticket          support_ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  interaction     support_interaction? @relation(fields: [interactionId], references: [id])
+  
+  @@index([ticketId])
+  @@map("support_attachment")
+}
+
+// ============== CRM MODULE: Contact & Activity ==============
+
+enum ContactTier {
+  PLATINUM
+  GOLD
+  SILVER
+  STANDARD
+}
+
+enum ActivityType {
+  BOOKING_CREATED
+  BOOKING_MODIFIED
+  AMENDMENT_REQUESTED
+  TICKET_CREATED
+  TICKET_RESOLVED
+  EMAIL_SENT
+  EMAIL_OPENED
+  EMAIL_CLICKED
+  PAYMENT_RECEIVED
+  REFUND_ISSUED
+  VISITOR_CONVERTED
+  OTHER
+}
+
+enum CommunicationPreference {
+  EMAIL
+  SMS
+  BOTH
+  NONE
+}
+
+enum EmailFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  NEVER
+}
+
+model contact {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  email             String    @db.VarChar(255)
+  firstName         String?
+  lastName          String?
+  phoneNumber       String?   @db.VarChar(20)
+  avatarUrl         String?
+  
+  tier              ContactTier @default(STANDARD)
+  totalBookings     Int       @default(0)
+  totalSpent        Float     @default(0)
+  bookingsCount     Int       @default(0)
+  openTicketsCount  Int       @default(0)
+  
+  communicationPref CommunicationPreference @default(EMAIL)
+  languagePreference String?   @default("en")
+  marketingConsent  Boolean   @default(true)
+  
+  metadata          Json?
+  notes             String?
+  
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  lastInteractionAt DateTime? @db.Timestamptz(6)
+  
+  activities        activity[]
+  preferences       contact_preference?
+  comments          contact_comment[]
+  
+  @@index([userId])
+  @@index([email])
+  @@index([tier])
+  @@map("contact")
+}
+
+model activity {
+  id                String    @id @default(cuid())
+  contactId         String
+  type              ActivityType
+  title             String
+  
+  bookingId         String?
+  ticketId          String?
+  amendmentId       String?
+  emailCampaignId   String?
+  
+  description       String?
+  metadata          Json?
+  
+  createdBy         String?
+  isInternal        Boolean   @default(false)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  
+  contact           contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt(sort: Desc)])
+  @@map("activity")
+}
+
+model contact_preference {
+  id                String    @id @default(cuid())
+  contactId         String    @unique
+  
+  marketingEmail    Boolean   @default(true)
+  marketingSms      Boolean   @default(false)
+  marketingPush     Boolean   @default(false)
+  promotionalOffers Boolean   @default(true)
+  newsletter        Boolean   @default(true)
+  
+  emailFrequency    EmailFrequency @default(WEEKLY)
+  smsFrequency      EmailFrequency @default(NEVER)
+  
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  updatedBy         String?
+  
+  contact           contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@map("contact_preference")
+}
+
+model contact_comment {
+  id                String    @id @default(cuid())
+  contactId         String
+  content           String
+  isInternal        Boolean   @default(true)
+  
+  createdBy         String
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime? @db.Timestamptz(6)
+  
+  contact           contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  @@index([contactId])
+  @@index([createdAt(sort: Desc)])
+  @@map("contact_comment")
+}
+
+// ============== MARKETING MODULE: Campaigns & Assets ==============
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  COMPLETED
+  PAUSED
+}
+
+enum RecipientStatus {
+  PENDING
+  SENT
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  CONVERTED
+}
+
+model email_suppression_list {
+  id                String    @id @default(cuid())
+  email             String    @unique @db.VarChar(255)
+  reason            String?   @db.VarChar(100)
+  
+  bounceType        String?   @db.VarChar(50)
+  bounceSubtype     String?   @db.VarChar(50)
+  
+  metadata          Json?
+  addedAt           DateTime  @default(now()) @db.Timestamptz(6)
+  
+  @@index([email])
+  @@index([addedAt(sort: Desc)])
+  @@map("email_suppression_list")
+}
+
+model email_campaign {
+  id                String    @id @default(cuid())
+  campaignId        String    @unique
+  
+  name              String
+  subject           String
+  description       String?
+  
+  segmentationRules Json     // e.g., {tier: ['GOLD', 'PLATINUM']}
+  estimatedRecipients Int
+  
+  templateId        String?
+  htmlContent       String?
+  textContent       String?
+  previewText       String?
+  
+  status            CampaignStatus @default(DRAFT)
+  scheduledFor      DateTime? @db.Timestamptz(6)
+  startedAt         DateTime? @db.Timestamptz(6)
+  completedAt       DateTime? @db.Timestamptz(6)
+  
+  totalSent         Int       @default(0)
+  totalOpened       Int       @default(0)
+  totalClicked      Int       @default(0)
+  totalConverted    Int       @default(0)
+  totalBounced      Int       @default(0)
+  totalComplained   Int       @default(0)
+  
+  conversionEvent   String?
+  
+  createdBy         String
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  
+  recipients        campaign_recipient[]
+  
+  @@index([campaignId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("email_campaign")
+}
+
+model campaign_recipient {
+  id                String    @id @default(cuid())
+  campaignId        String
+  userId            String
+  email             String    @db.VarChar(255)
+  
+  resendMessageId   String?
+  
+  status            RecipientStatus @default(PENDING)
+  
+  sentAt            DateTime? @db.Timestamptz(6)
+  openedAt          DateTime? @db.Timestamptz(6)
+  openedCount       Int       @default(0)
+  
+  clickedAt         DateTime? @db.Timestamptz(6)
+  clickedCount      Int       @default(0)
+  
+  bouncedAt         DateTime? @db.Timestamptz(6)
+  bounceType        String?
+  bounceReason      String?
+  
+  complainedAt      DateTime? @db.Timestamptz(6)
+  convertedAt       DateTime? @db.Timestamptz(6)
+  conversionValue   Float?
+  
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  
+  campaign          email_campaign @relation(fields: [campaignId], references: [campaignId], onDelete: Cascade)
+  
+  @@index([campaignId])
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("campaign_recipient")
+}
+
+model marketing_flyer {
+  id                String    @id @default(cuid())
+  flyerId           String    @unique
+  
+  title             String
+  description       String?
+  
+  designJson        Json     // Flyer builder JSON
+  thumbnailUrl      String?
+  previewUrl        String?
+  
+  shareableLink     String?   @unique
+  shareViews        Int       @default(0)
+  shareClicks       Int       @default(0)
+  
+  facebookShares    Int       @default(0)
+  whatsappShares    Int       @default(0)
+  twitterShares     Int       @default(0)
+  linkedinShares    Int       @default(0)
+  instagramShares   Int       @default(0)
+  telegramShares    Int       @default(0)
+  totalShares       Int       @default(0)
+  
+  qrCodeText        String?
+  qrCodeImageUrl    String?
+  
+  isPublished       Boolean   @default(false)
+  featured          Boolean   @default(false)
+  
+  createdBy         String
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  
+  shareLinks        flyer_share_link[]
+  
+  @@index([flyerId])
+  @@index([createdAt(sort: Desc)])
+  @@index([isPublished])
+  @@map("marketing_flyer")
+}
+
+model asset_file {
+  id                String    @id @default(cuid())
+  
+  fileName          String
+  originalFileName  String
+  fileType          String?
+  fileSize          Int
+  mimeType          String?
+  
+  storagePath       String
+  thumbnailPath     String?
+  altText           String?
+  
+  width             Int?
+  height            Int?
+  
+  uploadedBy        String
+  uploadedAt        DateTime  @default(now()) @db.Timestamptz(6)
+  lastAccessedAt    DateTime? @db.Timestamptz(6)
+  cleanupAt         DateTime? @db.Timestamptz(6)
+  
+  isBackup          Boolean   @default(false)
+  metadata          Json?
+  
+  @@index([uploadedAt(sort: Desc)])
+  @@index([cleanupAt])
+  @@map("asset_file")
+}
+
+model flyer_share_link {
+  id                String    @id @default(cuid())
+  flyerId           String
+  shareKey          String    @unique
+  
+  views             Int       @default(0)
+  clicks            Int       @default(0)
+  
+  platform          String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  
+  flyer             marketing_flyer @relation(fields: [flyerId], references: [flyerId], onDelete: Cascade)
+  
+  @@index([shareKey])
+  @@index([flyerId])
+  @@map("flyer_share_link")
+}
+
+// ============== VISITOR TRACKING ==============
+
+enum DeviceType {
+  MOBILE
+  DESKTOP
+  TABLET
+}
+
+enum VisitorStatus {
+  ACTIVE
+  CONVERTED
+  INACTIVE
+}
+
+model online_visitor {
+  id                String    @id @default(cuid())
+  sessionId         String    @unique
+  
+  userId            String?
+  email             String?   @db.VarChar(255)
+  
+  pageViews         Int       @default(1)
+  searchQueries     Int       @default(0)
+  
+  source            String?
+  campaign          String?
+  referrer          String?
+  
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmContent        String?
+  utmTerm           String?
+  
+  deviceType        DeviceType @default(DESKTOP)
+  deviceOs          String?
+  browserName       String?
+  browserVersion    String?
+  
+  country           String?
+  countryCode       String?   @db.Char(2)
+  region            String?
+  city              String?
+  latitude          Float?
+  longitude         Float?
+  
+  lastPageUrl       String?
+  lastSearchQuery   String?
+  
+  convertedAt       DateTime? @db.Timestamptz(6)
+  convertedToBooking Boolean  @default(false)
+  bookingId         String?
+  
+  leadScore         Int       @default(0)
+  
+  firstSeenAt       DateTime  @default(now()) @db.Timestamptz(6)
+  lastSeenAt        DateTime  @updatedAt @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  
+  pageViews_rel     visitor_page_view[]
+  searches          visitor_search[]
+  
+  @@index([sessionId])
+  @@index([email])
+  @@index([userId])
+  @@index([source])
+  @@index([lastSeenAt(sort: Desc)])
+  @@index([convertedAt])
+  @@map("online_visitor")
+}
+
+model visitor_page_view {
+  id                String    @id @default(cuid())
+  visitorId         String
+  
+  pageUrl           String
+  pageTitle         String?
+  pageType          String?
+  
+  searchParams      Json?
+  viewDurationSecs  Int?
+  
+  referrer          String?
+  metadata          Json?
+  
+  viewedAt          DateTime  @default(now()) @db.Timestamptz(6)
+  
+  visitor           online_visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  
+  @@index([visitorId])
+  @@index([viewedAt(sort: Desc)])
+  @@map("visitor_page_view")
+}
+
+model visitor_search {
+  id                String    @id @default(cuid())
+  visitorId         String
+  
+  searchType        String
+  origin            String?
+  destination       String?
+  departureDate     DateTime? @db.Date
+  returnDate        DateTime? @db.Date
+  passengers        Int?
+  
+  filters           Json?
+  resultsCount      Int?
+  selectedResultId  String?
+  
+  metadata          Json?
+  searchedAt        DateTime  @default(now()) @db.Timestamptz(6)
+  
+  visitor           online_visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  
+  @@index([visitorId])
+  @@index([searchedAt(sort: Desc)])
+  @@map("visitor_search")
+}
+
+// ============== LEAD MANAGEMENT ==============
+
+enum LeadGrade {
+  A
+  B
+  C
+  D
+}
+
+enum SubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  COMPLAINED
+  INACTIVE
+}
+
+model email_subscriber {
+  id                String    @id @default(cuid())
+  email             String    @unique @db.VarChar(255)
+  
+  firstName         String?
+  lastName          String?
+  phoneNumber       String?   @db.VarChar(20)
+  
+  leadScore         Int       @default(0)
+  leadGrade         LeadGrade @default(C)
+  
+  status            SubscriberStatus @default(ACTIVE)
+  
+  interests         String[]
+  preferredLanguage String?   @default("en")
+  preferredCurrency String?   @db.Char(3)
+  
+  emailsReceived    Int       @default(0)
+  emailsOpened      Int       @default(0)
+  emailsClicked     Int       @default(0)
+  lastEmailOpenedAt DateTime? @db.Timestamptz(6)
+  
+  convertedToContact Boolean @default(false)
+  contactId         String?
+  convertedAt       DateTime? @db.Timestamptz(6)
+  
+  metadata          Json?
+  
+  subscribedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  unsubscribedAt    DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  
+  activities        lead_activity[]
+  sources           lead_source[]
+  segments          segment_member[]
+  
+  @@index([email])
+  @@index([status])
+  @@index([leadGrade])
+  @@index([leadScore(sort: Desc)])
+  @@index([subscribedAt(sort: Desc)])
+  @@map("email_subscriber")
+}
+
+model lead_activity {
+  id                String    @id @default(cuid())
+  subscriberId      String
+  
+  activityType      String
+  description       String?
+  activityData      Json?
+  
+  scoreDelta        Int       @default(0)
+  
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  
+  subscriber        email_subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  
+  @@index([subscriberId])
+  @@index([activityType])
+  @@index([createdAt(sort: Desc)])
+  @@map("lead_activity")
+}
+
+model lead_source {
+  id                String    @id @default(cuid())
+  subscriberId      String
+  
+  source            String
+  campaign          String?
+  
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmContent        String?
+  utmTerm           String?
+  
+  referrerUrl       String?
+  referrerDomain    String?   @db.VarChar(255)
+  
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  
+  subscriber        email_subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  
+  @@index([subscriberId])
+  @@index([source])
+  @@map("lead_source")
+}
+
+model subscriber_segment {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  
+  segmentRules      Json     // Segmentation criteria
+  memberCount       Int       @default(0)
+  
+  isActive          Boolean   @default(true)
+  
+  createdBy         String?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+  
+  members           segment_member[]
+  
+  @@index([name])
+  @@index([isActive])
+  @@map("subscriber_segment")
+}
+
+model segment_member {
+  id                String    @id @default(cuid())
+  segmentId         String
+  subscriberId      String
+  
+  addedAt           DateTime  @default(now()) @db.Timestamptz(6)
+  removedAt         DateTime? @db.Timestamptz(6)
+  
+  segment           subscriber_segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  subscriber        email_subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  
+  @@unique([segmentId, subscriberId])
+  @@index([segmentId])
+  @@index([subscriberId])
+  @@map("segment_member")
+}
+
+

@@ -15,6 +15,7 @@
   "dependencies": {
     "@prisma/client": "^7.4.0",
     "@tripalfa/shared-database": "workspace:*",
+    "@tripalfa/shared-openapi": "workspace:*",
     "@tripalfa/shared-types": "workspace:*",
     "@tripalfa/wallet": "workspace:*",
     "cors": "^2.8.5",
@@ -22,11 +23,15 @@
     "express": "^5.0.6",
     "jsonwebtoken": "^9.0.3",
     "redis": "^5.11.0",
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.2.1",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.6",
     "prisma": "^7.4.0",
     "tsx": "^4.7.0",
     "typescript": "^5.9.3"

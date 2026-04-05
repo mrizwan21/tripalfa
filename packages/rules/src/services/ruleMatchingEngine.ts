@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { MarkupRule, CommissionRule, RuleMatchContext } from "../types";
 import {
   ruleMatchesConditions,
@@ -21,8 +20,15 @@ export class RuleMatchingEngine {
   private cacheTTL: number = 300000; // 5 minutes
 
   constructor(cacheEnabled: boolean = false) {
-    this.prisma = new PrismaClient();
+    this.prisma = null;
     this.cacheEnabled = cacheEnabled;
+  }
+
+  /**
+   * Set Prisma client (inject dependency)
+   */
+  setPrisma(prisma: any): void {
+    this.prisma = prisma;
   }
 
   /**

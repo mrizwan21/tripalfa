@@ -1,0 +1,811 @@
+// Prisma Schema: tripalfa_ops (Operational database)
+// Database: PostgreSQL (tripalfa_ops)
+// Purpose: Notifications, rules engine, documents, disputes management
+//
+// KNOWN DUPLICATES: The following models also exist in schema.core.prisma:
+// - activity (core has canonical version)
+// - contact (core has canonical version)
+// - document (core has canonical version)
+// - document_access (core has canonical version)
+// - document_template (core has canonical version)
+// - email_suppression_list (core uses snake_case naming)
+// - email_campaign (core uses snake_case naming)
+// - campaign_recipient (core uses snake_case naming)
+// - online_visitor (core uses snake_case naming)
+// - visitor_page_view (core uses snake_case naming)
+// - visitor_search (core uses snake_case naming)
+// - email_subscriber (core uses snake_case naming)
+// - asset_file (core uses snake_case naming)
+// - marketing_flyer (core uses snake_case naming)
+//
+// TODO: Consolidate these models to use the core schema as single source of truth.
+// Migration plan: Remove ops duplicates and update services to use core schema.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../packages/shared-database/src/generated/ops"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============== NOTIFICATIONS SYSTEM ==============
+
+model notification {
+  id                String    @id @default(cuid())
+  userId            String
+  orderId           String?
+  bookingId         String?
+  notificationType  String
+  priority          String    @default("medium")
+  status            String    @default("pending")
+  channels          String[]
+  content           Json
+  contentHash       String?
+  metadata          Json?
+  tags              String[]  @default([])
+  sentAt            DateTime? @db.Timestamptz(6)
+  deliveredAt       DateTime? @db.Timestamptz(6)
+  openedAt          DateTime? @db.Timestamptz(6)
+  failureReason     String?
+  isDLQ             Boolean   @default(false)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([status])
+  @@index([bookingId])
+  @@map("notification")
+}
+
+model channel_status {
+  id                String    @id @default(cuid())
+  notificationId    String
+  channel           String
+  sentAt            DateTime? @db.Timestamptz(6)
+  deliveredAt       DateTime? @db.Timestamptz(6)
+  openedAt          DateTime? @db.Timestamptz(6)
+  clickedAt         DateTime? @db.Timestamptz(6)
+  failedAt          DateTime? @db.Timestamptz(6)
+  messageId         String?
+  error             String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([notificationId, channel])
+  @@index([notificationId])
+  @@map("channel_status")
+}
+
+model notification_template {
+  id                String    @id @default(cuid())
+  name              String
+  type              String
+  subtype           String?
+  version           String    @default("1.0")
+  content           Json?
+  htmlTemplate      String?
+  variables         String[]  @default([])
+  isActive          Boolean   @default(true)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([type])
+  @@map("notification_template")
+}
+
+model notification_retry {
+  id                String    @id @default(cuid())
+  notificationId    String
+  channel           String?
+  attemptNumber     Int       @default(1)
+  maxRetries        Int       @default(3)
+  nextRetryAt       DateTime? @db.Timestamptz(6)
+  lastError         String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([notificationId])
+  @@map("notification_retry")
+}
+
+model notification_analytic {
+  id                String    @id @default(cuid())
+  notificationId    String
+  eventType         String?
+  eventData         Json?
+  timestamp         DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([notificationId])
+  @@map("notification_analytic")
+}
+
+model notification_metric {
+  id                String    @id @default(cuid())
+  notificationType  String
+  channel           String?
+  period            String?
+  sentCount         Int       @default(0)
+  deliveredCount    Int       @default(0)
+  openedCount       Int       @default(0)
+  failedCount       Int       @default(0)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([notificationType])
+  @@map("notification_metric")
+}
+
+model scheduled_notification {
+  id                String    @id @default(cuid())
+  userId            String
+  templateId        String?
+  notificationType  String?
+  channels          String[]
+  variables         Json?
+  scheduledFor      DateTime  @db.Timestamptz(6)
+  jobQueueId        String?
+  status            String    @default("scheduled")
+  sentAt            DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([scheduledFor])
+  @@map("scheduled_notification")
+}
+
+model notification_target {
+  id                String    @id @default(cuid())
+  userId            String
+  contactType       String
+  contactValue      String
+  isVerified        Boolean   @default(false)
+  isPreferred       Boolean   @default(false)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([contactType])
+  @@map("notification_target")
+}
+
+model dead_letter_queue {
+  id                String    @id @default(cuid())
+  originalNotificationId String?
+  reason            String?
+  failureCount      Int       @default(0)
+  lastError         String?
+  payload           Json?
+  status            String    @default("dead_letter")
+  replayedAt        DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([status])
+  @@map("dead_letter_queue")
+}
+
+model webhook_event {
+  id                String    @id @default(cuid())
+  provider          String
+  eventType         String
+  payload           Json?
+  status            String    @default("received")
+  processedAt       DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([provider])
+  @@index([eventType])
+  @@map("webhook_event")
+}
+
+// ============== WEBHOOK DELIVERY SYSTEM ==============
+
+enum WebhookDeliveryStatus {
+  PENDING
+  DELIVERING
+  DELIVERED
+  FAILED
+  RETRYING
+  DEAD_LETTER
+}
+
+model webhook_delivery {
+  id                    String                  @id @default(cuid())
+  // Source information
+  provider              String                  // e.g., "duffel", "liteapi", "internal"
+  eventType             String                  // e.g., "order.created"
+  webhookId             String?                 // ID from source system
+  payload               Json?                   // Original payload
+  signature             String?                 // HMAC signature for verification
+  verificationStatus    String?                 // "verified", "invalid", "skipped"
+  
+  // Target information
+  endpointUrl           String                  // Customer endpoint URL
+  customerId            String?                 // Associated customer/tenant
+  subscriptionId        String?                 // Webhook subscription ID
+  
+  // Delivery status
+  status                WebhookDeliveryStatus   @default(PENDING)
+  attemptCount          Int                     @default(0)
+  maxRetries            Int                     @default(3)
+  nextRetryAt           DateTime?               @db.Timestamptz(6)
+  
+  // Response details
+  responseStatusCode    Int?
+  responseBody          String?                 @db.Text
+  responseHeaders       Json?
+  deliveredAt           DateTime?               @db.Timestamptz(6)
+  
+  // Error information
+  lastError             String?                 @db.Text
+  errorCode             String?
+  
+  // Timestamps
+  createdAt             DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime                @updatedAt @db.Timestamptz(6)
+  
+  // Indexes
+  @@index([provider])
+  @@index([eventType])
+  @@index([status])
+  @@index([customerId])
+  @@index([createdAt])
+  @@index([nextRetryAt])
+  @@map("webhook_delivery")
+}
+
+// ============== RULE ENGINE ==============
+
+model rule {
+  id                String    @id @default(cuid())
+  name              String
+  description       String?
+  category          String?
+  trigger           Json?
+  triggerEvent      String?
+  condition         Json?
+  actions           Json?
+  priority          Int       @default(50)
+  status            String    @default("draft")
+  enabled           Boolean   @default(false)
+  version           Int       @default(1)
+  timeout           Int?
+  maxRetries        Int?
+  asyncExecution    Boolean   @default(false)
+  tags              String[]  @default([])
+  totalExecutions   Int       @default(0)
+  successCount      Int       @default(0)
+  failureCount      Int       @default(0)
+  lastExecutedAt    DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([category])
+  @@index([enabled])
+  @@map("rule")
+}
+
+model rule_execution {
+  id                String    @id @default(cuid())
+  ruleId            String
+  userId            String?
+  status            String    @default("pending")
+  startedAt         DateTime? @db.Timestamptz(6)
+  completedAt       DateTime? @db.Timestamptz(6)
+  inputData         Json?
+  outputData        Json?
+  conditionMet      Boolean?
+  conditionEval     Json?
+  actionsExecuted   String[]
+  executionTime     Int?
+  error             String?
+  errorType         String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([ruleId])
+  @@index([status])
+  @@map("rule_execution")
+}
+
+model rule_analysis {
+  id                String    @id @default(cuid())
+  ruleId            String
+  riskLevel         String?
+  conflictCount     Int       @default(0)
+  conflicts         Json?
+  performance       Json?
+  recommendations   String[]
+  analysisData      Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([ruleId])
+  @@map("rule_analysis")
+}
+
+// ============== DOCUMENTS & DOCUMENT MANAGEMENT ==============
+
+model document {
+  id                String    @id @default(cuid())
+  userId            String?
+  bookingId         String?
+  invoiceId         String?
+  templateId        String?
+  type              String
+  status            String    @default("draft")
+  url               String?
+  storageKey        String?
+  storageProvider   String?
+  mimeType          String?
+  fileSize          Int?
+  expiresAt         DateTime? @db.Timestamptz(6)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([type])
+  @@map("document")
+}
+
+model document_access {
+  id                String    @id @default(cuid())
+  documentId        String
+  userId            String
+  action            String
+  accessedAt        DateTime  @default(now()) @db.Timestamptz(6)
+  ipAddress         String?
+  metadata          Json?
+
+  @@index([documentId])
+  @@index([userId])
+  @@map("document_access")
+}
+
+model document_retention {
+  id                String    @id @default(cuid())
+  documentId        String
+  retentionDays     Int?
+  expiresAt         DateTime? @db.Timestamptz(6)
+  isArchived        Boolean   @default(false)
+  archivedAt        DateTime? @db.Timestamptz(6)
+  deletedAt         DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([documentId])
+  @@map("document_retention")
+}
+
+model document_template {
+  id                String    @id @default(cuid())
+  name              String
+  type              String
+  version           String    @default("1.0")
+  content           Json?
+  htmlTemplate      String?
+  variables         String[]  @default([])
+  isActive          Boolean   @default(true)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([type])
+  @@map("document_template")
+}
+
+// ============== TRAVEL DOCUMENT SYSTEM ==============
+
+model document_template_type {
+  id                String    @id @default(cuid())
+  code              String    @unique
+  name              String
+  description       String?
+  variableSchema    Json?
+  previewUrl        String?
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@map("document_template_type")
+}
+
+model generated_travel_document {
+  id                String    @id @default(cuid())
+  bookingId         String?
+  passengerId       String?
+  templateId        String?
+  templateTypeCode  String
+  documentRef       String    @unique
+  renderData        Json?
+  pdfUrl            String?
+  storageKey        String?
+  issuedAt          DateTime  @default(now()) @db.Timestamptz(6)
+  expiresAt         DateTime? @db.Timestamptz(6)
+  status            String    @default("draft")
+  issuedBy          String?
+  deliveryStatus    String    @default("pending")
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([documentRef])
+  @@map("generated_travel_document")
+}
+
+model document_generation_job {
+  id                String    @id @default(cuid())
+  documentType      String
+  status            String    @default("queued")
+  triggeredBy       String?
+  bookingId         String?
+  outputUrl         String?
+  errorMessage      String?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([bookingId])
+  @@map("document_generation_job")
+}
+
+model document_signature {
+  id                String    @id @default(cuid())
+  documentId        String
+  signerId          String
+  signedAt          DateTime? @db.Timestamptz(6)
+  signatureProvider String?
+  status            String    @default("pending")
+  signatureData     Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([documentId])
+  @@index([signerId])
+  @@map("document_signature")
+}
+
+model document_delivery_log {
+  id                String    @id @default(cuid())
+  documentId        String
+  channel           String
+  recipient         String?
+  deliveredAt       DateTime? @db.Timestamptz(6)
+  status            String    @default("pending")
+  errorMessage      String?
+  attempts          Int       @default(0)
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([documentId])
+  @@index([channel])
+  @@map("document_delivery_log")
+}
+
+// ============== OFFLINE REQUEST QUEUE ==============
+
+model offline_request_audit_log {
+  id                String    @id @default(cuid())
+  offlineRequestId  String
+  action            String
+  actorId           String?
+  actorType         String?
+  previousStatus    String?
+  newStatus         String?
+  notes             String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([offlineRequestId])
+  @@map("offline_request_audit_log")
+}
+
+model offline_request_notification_queue {
+  id                String    @id @default(cuid())
+  offlineRequestId  String
+  notificationType  String
+  recipientId       String?
+  recipientEmail    String?
+  payload           Json?
+  status            String    @default("pending")
+  sentAt            DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([offlineRequestId])
+  @@index([status])
+  @@map("offline_request_notification_queue")
+}
+
+// ============== DISPUTES & COMPLAINTS ==============
+
+model dispute {
+  id                String    @id @default(cuid())
+  bookingId         String?
+  userId            String?
+  type              String
+  amount            Decimal?  @db.Decimal(12, 2)
+  currency          String    @default("USD")
+  reason            String?
+  status            String    @default("pending")
+  resolution        String?
+  resolvedAt        DateTime? @db.Timestamptz(6)
+  resolvedBy        String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([userId])
+  @@index([status])
+  @@map("dispute")
+}
+
+model settlement {
+  id                String    @id @default(cuid())
+  bookingId         String?
+  walletId          String?
+  amount            Decimal?  @db.Decimal(12, 2)
+  settlementDate    DateTime? @db.Timestamptz(6)
+  referenceId       String?
+  status            String    @default("pending")
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("settlement")
+}
+
+// ============== CRM SYSTEM ==============
+
+model contact {
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  email             String    @unique
+  firstName         String
+  lastName          String
+  tier              String    @default("bronze") // bronze, silver, gold, platinum
+  totalBookings     Int       @default(0)
+  totalSpent        Decimal   @default(0) @db.Decimal(12, 2)
+  bookingsCount     Int       @default(0)
+  openTicketsCount  Int       @default(0)
+  source            String?   @default("direct")
+  phone             String?
+  location          String?
+  metadata          Json?
+  lastActivity      DateTime  @updatedAt @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([email])
+  @@index([userId])
+  @@index([tier])
+  @@index([createdAt])
+  @@map("contact")
+}
+
+model activity {
+  id                String    @id @default(cuid())
+  contactId         String
+  type              String    // BOOKING_CREATED, TICKET_CREATED, EMAIL_SENT, etc.
+  title             String
+  description       String?
+  bookingId         String?
+  ticketId          String?
+  metadata          Json?
+  createdBy         String?
+  isInternal        Boolean   @default(false)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([contactId, createdAt])
+  @@map("activity")
+}
+
+model emailCampaign {
+  id                String    @id @default(cuid())
+  name              String
+  subject           String
+  html              String?
+  previewText       String?
+  recipientCount    Int       @default(0)
+  sentCount         Int       @default(0)
+  openedCount       Int       @default(0)
+  clickedCount      Int       @default(0)
+  convertedCount    Int       @default(0)
+  segmentationRules Json?
+  status            String    @default("draft") // draft, scheduled, running, completed
+  scheduledFor      DateTime? @db.Timestamptz(6)
+  completedAt       DateTime? @db.Timestamptz(6)
+  templateId        String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_campaign")
+}
+
+model campaignRecipient {
+  id                String    @id @default(cuid())
+  campaignId        String
+  userId            String?
+  email             String
+  status            String    @default("pending") // pending, sent, opened, clicked, bounced, failed
+  sentAt            DateTime? @db.Timestamptz(6)
+  openedAt          DateTime? @db.Timestamptz(6)
+  clickedAt         DateTime? @db.Timestamptz(6)
+  resendMessageId   String?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([campaignId])
+  @@index([email])
+  @@index([status])
+  @@map("campaign_recipient")
+}
+
+model emailSuppressionList {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  reason            String    // bounce, complaint, unsubscribe, manual
+  bounceType        String?   // hard, soft
+  complaintType     String?   // abuse, auth_failure, fraud, not_spam, other, virus
+  metadata          Json?
+  addedAt           DateTime  @default(now()) @db.Timestamptz(6)
+  removedAt         DateTime? @db.Timestamptz(6)
+
+  @@index([email])
+  @@index([reason])
+  @@map("email_suppression_list")
+}
+
+model onlineVisitor {
+  id                String    @id @default(cuid())
+  sessionId         String    @unique
+  email             String?
+  userId            String?
+  pageViews         Int       @default(1)
+  searchQueries     Int       @default(0)
+  source            String?   @default("direct") // organic, referral, direct, utm_source
+  campaign          String?
+  deviceType        String?   // mobile, desktop, tablet
+  deviceOs          String?   // iOS, Android, Windows, Mac, Linux
+  browserName       String?   // Chrome, Firefox, Safari, Edge
+  country           String?
+  city              String?
+  latitude          Float?
+  longitude         Float?
+  referrer          String?
+  score             Int       @default(0)
+  leadGrade         String    @default("D") // A, B, C, D
+  metadata          Json?
+  convertedAt       DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([sessionId])
+  @@index([email])
+  @@index([userId])
+  @@index([score])
+  @@index([createdAt])
+  @@map("online_visitor")
+}
+
+model visitorPageView {
+  id                String    @id @default(cuid())
+  sessionId         String
+  pageUrl           String
+  referrer          String?
+  timeOnPage        Int?      // seconds
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([sessionId])
+  @@index([pageUrl])
+  @@map("visitor_page_view")
+}
+
+model visitorSearch {
+  id                String    @id @default(cuid())
+  sessionId         String
+  query             String
+  filters           Json?
+  resultsCount      Int?
+  metadata          Json?
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([sessionId])
+  @@map("visitor_search")
+}
+
+model emailSubscriber {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  firstName         String?
+  lastName          String?
+  score             Int       @default(0)
+  leadGrade         String    @default("D") // A, B, C, D
+  status            String    @default("active") // active, unsubscribed, bounced
+  interests         String[]  @default([])
+  emailsReceived    Int       @default(0)
+  lastEmailAt       DateTime? @db.Timestamptz(6)
+  source            String?   @default("direct")
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  metadata          Json?
+  convertedAt       DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([email])
+  @@index([score])
+  @@index([leadGrade])
+  @@index([status])
+  @@index([createdAt])
+  @@map("email_subscriber")
+}
+
+model assetFile {
+  id                String    @id @default(cuid())
+  name              String
+  originalFilename  String
+  mimeType          String
+  size              Int
+  fileType          String    @default("image") // image, document, video
+  purpose           String    @default("flyer") // flyer, banner, thumbnail
+  storageUrl        String    @unique
+  thumbnailUrl      String?
+  uploadedBy        String
+  metadata          Json?
+  expiresAt         DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([uploadedBy])
+  @@index([expiresAt])
+  @@map("asset_file")
+}
+
+model marketingFlyer {
+  id                String    @id @default(cuid())
+  title             String
+  description       String?
+  designJson        Json
+  previewImageUrl   String?
+  shareableLink     String    @unique @default(cuid())
+  shareableCode     String    @unique @default(cuid())
+  uploadedBy        String
+  status            String    @default("draft") // draft, published, archived
+  viewCount         Int       @default(0)
+  downloadCount     Int       @default(0)
+  shareCount        Int       @default(0)
+  metadata          Json?
+  publishedAt       DateTime? @db.Timestamptz(6)
+  archivedAt        DateTime? @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @db.Timestamptz(6)
+
+  @@index([uploadedBy])
+  @@index([status])
+  @@index([shareableLink])
+  @@index([createdAt])
+  @@map("marketing_flyer")
+}

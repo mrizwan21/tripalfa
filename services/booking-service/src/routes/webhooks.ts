@@ -12,21 +12,20 @@
  * - POST /api/webhooks/test - Test webhook endpoint
  */
 
-import { Router, Request, Response } from "express";
-import type { Router as ExpressRouter } from "express";
-import { prisma } from "@tripalfa/shared-database";
-import crypto from "crypto";
+import { Router, Request, Response } from 'express';
+import type { Router as ExpressRouter } from 'express';
+import { prisma } from '@tripalfa/shared-database';
+import crypto from 'crypto';
 
 const router: ExpressRouter = Router();
 
 // Environment Configuration
-const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "development_secret";
+const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'development_secret';
 const NOTIFICATION_SERVICE_URL =
-  process.env.NOTIFICATION_SERVICE_URL || "http://notification-service:3009";
-const NODE_ENV = process.env.NODE_ENV || "development";
+  process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3009';
+const NODE_ENV = process.env.NODE_ENV || 'development';
 const ENABLE_WEBHOOK_SIGNATURE_VERIFICATION =
-  process.env.ENABLE_WEBHOOK_SIGNATURE_VERIFICATION === "true" ||
-  NODE_ENV === "production";
+  process.env.ENABLE_WEBHOOK_SIGNATURE_VERIFICATION === 'true' || NODE_ENV === 'production';
 
 // ============================================
 // Webhook Event Types
@@ -34,25 +33,25 @@ const ENABLE_WEBHOOK_SIGNATURE_VERIFICATION =
 
 // Duffel Event Types
 type DuffelEventType =
-  | "order.created"
-  | "order.updated"
-  | "order.cancelled"
-  | "flight_schedule_changed"
-  | "airline_initiated_change"
-  | "seat_map_updated"
-  | "order_change_completed";
+  | 'order.created'
+  | 'order.updated'
+  | 'order.cancelled'
+  | 'flight_schedule_changed'
+  | 'airline_initiated_change'
+  | 'seat_map_updated'
+  | 'order_change_completed';
 
 // LITEAPI Event Types
 type LiteApiEventType =
-  | "booking.confirmed"
-  | "booking.cancelled"
-  | "booking.modified"
-  | "booking.pending";
+  | 'booking.confirmed'
+  | 'booking.cancelled'
+  | 'booking.modified'
+  | 'booking.pending';
 
 // Webhook Log Interface
 interface WebhookLog {
   id: string;
-  source: "duffel" | "liteapi";
+  source: 'duffel' | 'liteapi';
   eventType: string;
   payload: any;
   processed: boolean;
@@ -73,31 +72,28 @@ function verifySignature(payload: string, signature: string): boolean {
   if (!signature) return false;
 
   const expectedSignature = crypto
-    .createHmac("sha256", WEBHOOK_SECRET)
+    .createHmac('sha256', WEBHOOK_SECRET)
     .update(payload)
-    .digest("hex");
+    .digest('hex');
 
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature),
-  );
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 }
 
 /**
  * Log webhook event to database using Prisma
  */
 async function logWebhook(
-  source: "duffel" | "liteapi",
+  source: 'duffel' | 'liteapi',
   eventType: string,
   payload: any,
   processed: boolean = false,
-  error?: string,
+  error?: string
 ): Promise<WebhookLog> {
   try {
     // Map source to supplier string
     const supplierMap: Record<string, string> = {
-      duffel: "duffel",
-      liteapi: "innstant",
+      duffel: 'duffel',
+      liteapi: 'innstant',
     };
 
     const logEntry = await prisma.webhookEvent.create({
@@ -158,8 +154,8 @@ async function sendNotification(type: string, data: any): Promise<void> {
   try {
     // Use global fetch
     await fetch(`${NOTIFICATION_SERVICE_URL}/notifications/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         type,
         data,
@@ -167,7 +163,7 @@ async function sendNotification(type: string, data: any): Promise<void> {
       }),
     }).catch(() => {});
   } catch (error) {
-    console.log("[Webhook] Notification service unavailable");
+    console.log('[Webhook] Notification service unavailable');
   }
 }
 
@@ -195,40 +191,40 @@ async function sendFlightConfirmation(data: any): Promise<void> {
     const confirmationPayload = {
       orderId: order_id,
       bookingReference: order_id,
-      customerEmail: customer_email || data.email || "customer@example.com",
-      customerName: customer_name || passenger_name || "Valued Customer",
+      customerEmail: customer_email || data.email || 'customer@example.com',
+      customerName: customer_name || passenger_name || 'Valued Customer',
       flights: flights || [
         {
           departure: {
-            airportCode: origin?.code || origin || "DEP",
-            city: origin?.city || origin || "Departure City",
-            airport: origin?.airport || origin || "Departure Airport",
+            airportCode: origin?.code || origin || 'DEP',
+            city: origin?.city || origin || 'Departure City',
+            airport: origin?.airport || origin || 'Departure Airport',
             time: data.departure_time || new Date().toISOString(),
             terminal: origin?.terminal,
           },
           arrival: {
-            airportCode: destination?.code || destination || "ARR",
-            city: destination?.city || destination || "Arrival City",
-            airport: destination?.airport || destination || "Arrival Airport",
+            airportCode: destination?.code || destination || 'ARR',
+            city: destination?.city || destination || 'Arrival City',
+            airport: destination?.airport || destination || 'Arrival Airport',
             time: data.arrival_time || new Date().toISOString(),
             terminal: destination?.terminal,
           },
-          airline: data.airline || "Airline",
-          flightNumber: data.flight_number || "",
-          cabinClass: data.cabin_class || "Economy",
-          duration: data.duration || "",
-          flightId: data.flight_id || "",
+          airline: data.airline || 'Airline',
+          flightNumber: data.flight_number || '',
+          cabinClass: data.cabin_class || 'Economy',
+          duration: data.duration || '',
+          flightId: data.flight_id || '',
         },
       ],
       passengers: passengers || [
         {
-          firstName: passenger_name?.first || passenger_name || "Passenger",
-          lastName: passenger_name?.last || "",
-          passengerType: "adult",
+          firstName: passenger_name?.first || passenger_name || 'Passenger',
+          lastName: passenger_name?.last || '',
+          passengerType: 'adult',
         },
       ],
-      totalAmount: total_amount || "0",
-      currency: currency || "USD",
+      totalAmount: total_amount || '0',
+      currency: currency || 'USD',
       userId: data.userId,
     };
 
@@ -238,17 +234,15 @@ async function sendFlightConfirmation(data: any): Promise<void> {
     const response = await fetch(
       `${NOTIFICATION_SERVICE_URL}/notifications/flight/confirmation/webhook`,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(confirmationPayload),
-      },
+      }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(
-        `[Webhook] Flight confirmation failed: ${response.status} - ${errorText}`,
-      );
+      console.error(`[Webhook] Flight confirmation failed: ${response.status} - ${errorText}`);
       return;
     }
 
@@ -256,8 +250,8 @@ async function sendFlightConfirmation(data: any): Promise<void> {
     console.log(`[Webhook] Flight confirmation sent: ${result.notificationId}`);
   } catch (error) {
     console.error(
-      "[Webhook] Flight confirmation error:",
-      error instanceof Error ? error.message : "Unknown error",
+      '[Webhook] Flight confirmation error:',
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }
@@ -272,15 +266,7 @@ async function sendFlightConfirmation(data: any): Promise<void> {
  * Reference: https://duffel.com/docs/guides/handling-flight-booking-confirmation-emails
  */
 async function handleOrderCreated(data: any): Promise<void> {
-  const {
-    order_id,
-    status,
-    passenger_name,
-    origin,
-    destination,
-    total_amount,
-    currency,
-  } = data;
+  const { order_id, status, passenger_name, origin, destination, total_amount, currency } = data;
 
   console.log(`[Webhook] New order created: ${order_id}`);
 
@@ -294,17 +280,17 @@ async function handleOrderCreated(data: any): Promise<void> {
     await prisma.booking.create({
       data: {
         bookingRef: order_id,
-        userId: "webhook-user",
+        userId: 'webhook-user',
         baseAmount: parseFloat(total_amount) || 0,
         taxAmount: 0,
         markupAmount: 0,
-        serviceType: "flight",
-        status: "confirmed",
+        serviceType: 'flight',
+        status: 'confirmed',
         totalAmount: parseFloat(total_amount) || 0,
-        currency: currency || "USD",
+        currency: currency || 'USD',
         metadata: {
-          source: "duffel_webhook",
-          event_type: "order.created",
+          source: 'duffel_webhook',
+          event_type: 'order.created',
           passenger_name,
           origin,
           destination,
@@ -315,7 +301,7 @@ async function handleOrderCreated(data: any): Promise<void> {
   }
 
   // Send notification
-  await sendNotification("duffel_order_created", { order_id, status });
+  await sendNotification('duffel_order_created', { order_id, status });
 
   // Send flight booking confirmation email (Duffel best practice)
   // This is triggered on order creation to send confirmation to customer
@@ -338,7 +324,7 @@ async function handleOrderUpdated(data: any): Promise<void> {
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
-        status: status === "confirmed" ? "confirmed" : booking.status,
+        status: status === 'confirmed' ? 'confirmed' : booking.status,
         metadata: {
           ...((booking.metadata as object) || {}),
           lastUpdated: new Date().toISOString(),
@@ -348,7 +334,7 @@ async function handleOrderUpdated(data: any): Promise<void> {
     });
   }
 
-  await sendNotification("duffel_order_updated", { order_id, status, changes });
+  await sendNotification('duffel_order_updated', { order_id, status, changes });
 }
 
 /**
@@ -367,19 +353,19 @@ async function handleOrderCancelled(data: any): Promise<void> {
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
-        status: "cancelled",
+        status: 'cancelled',
         metadata: {
           ...((booking.metadata as object) || {}),
           cancelledAt: new Date().toISOString(),
           refund_amount,
           refund_currency,
-          cancellation_source: "duffel_webhook",
+          cancellation_source: 'duffel_webhook',
         },
       },
     });
   }
 
-  await sendNotification("duffel_order_cancelled", {
+  await sendNotification('duffel_order_cancelled', {
     order_id,
     refund_amount,
     refund_currency,
@@ -390,8 +376,7 @@ async function handleOrderCancelled(data: any): Promise<void> {
  * Handle flight_schedule_changed event
  */
 async function handleFlightScheduleChanged(data: any): Promise<void> {
-  const { order_id, flight_id, new_departure_time, new_arrival_time, reason } =
-    data;
+  const { order_id, flight_id, new_departure_time, new_arrival_time, reason } = data;
 
   console.log(`[Webhook] Flight schedule changed: ${order_id}`);
 
@@ -404,9 +389,9 @@ async function handleFlightScheduleChanged(data: any): Promise<void> {
     await prisma.bookingModification.create({
       data: {
         bookingId: booking.id,
-        modificationType: "schedule_change",
-        oldValue: { description: "Schedule changed by airline" },
-        status: "pending",
+        modificationType: 'schedule_change',
+        oldValue: { description: 'Schedule changed by airline' },
+        status: 'pending',
       },
     });
 
@@ -428,7 +413,7 @@ async function handleFlightScheduleChanged(data: any): Promise<void> {
     });
   }
 
-  await sendNotification("duffel_schedule_changed", {
+  await sendNotification('duffel_schedule_changed', {
     order_id,
     flight_id,
     new_departure_time,
@@ -451,14 +436,14 @@ async function handleAirlineInitiatedChange(data: any): Promise<void> {
     await prisma.bookingModification.create({
       data: {
         bookingId: booking.id,
-        modificationType: "airline_initiated",
-        oldValue: { description: description || "Airline initiated change" },
-        status: "pending",
+        modificationType: 'airline_initiated',
+        oldValue: { description: description || 'Airline initiated change' },
+        status: 'pending',
       },
     });
   }
 
-  await sendNotification("duffel_airline_change", {
+  await sendNotification('duffel_airline_change', {
     change_id,
     order_id,
     change_type,
@@ -474,7 +459,7 @@ async function handleSeatMapUpdated(data: any): Promise<void> {
   console.log(`[Webhook] Seat map updated: ${offer_id || order_id}`);
 
   // Could invalidate cached seat maps
-  await sendNotification("duffel_seat_map_updated", { offer_id, order_id });
+  await sendNotification('duffel_seat_map_updated', { offer_id, order_id });
 }
 
 /**
@@ -507,7 +492,7 @@ async function handleOrderChangeCompleted(data: any): Promise<void> {
     });
   }
 
-  await sendNotification("duffel_change_completed", {
+  await sendNotification('duffel_change_completed', {
     order_id,
     change_id,
     new_order_id,
@@ -522,14 +507,7 @@ async function handleOrderChangeCompleted(data: any): Promise<void> {
  * Handle booking.confirmed event
  */
 async function handleBookingConfirmed(data: any): Promise<void> {
-  const {
-    booking_id,
-    confirmation_number,
-    guest_name,
-    hotel_name,
-    checkin,
-    checkout,
-  } = data;
+  const { booking_id, confirmation_number, guest_name, hotel_name, checkin, checkout } = data;
 
   console.log(`[Webhook] Booking confirmed: ${booking_id}`);
 
@@ -545,16 +523,16 @@ async function handleBookingConfirmed(data: any): Promise<void> {
     await prisma.booking.create({
       data: {
         bookingRef: booking_id,
-        userId: "webhook-user",
+        userId: 'webhook-user',
         baseAmount: 0,
         taxAmount: 0,
         markupAmount: 0,
-        serviceType: "hotel",
-        status: "confirmed",
+        serviceType: 'hotel',
+        status: 'confirmed',
         totalAmount: 0,
         metadata: {
-          source: "liteapi_webhook",
-          event_type: "booking.confirmed",
+          source: 'liteapi_webhook',
+          event_type: 'booking.confirmed',
           guest_name,
           hotel_name,
           checkin,
@@ -568,7 +546,7 @@ async function handleBookingConfirmed(data: any): Promise<void> {
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
-        status: "confirmed",
+        status: 'confirmed',
         metadata: {
           ...((booking.metadata as object) || {}),
           confirmedAt: new Date().toISOString(),
@@ -579,7 +557,7 @@ async function handleBookingConfirmed(data: any): Promise<void> {
     });
   }
 
-  await sendNotification("liteapi_booking_confirmed", {
+  await sendNotification('liteapi_booking_confirmed', {
     booking_id,
     confirmation_number,
   });
@@ -601,20 +579,20 @@ async function handleBookingCancelled(data: any): Promise<void> {
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
-        status: "cancelled",
+        status: 'cancelled',
         metadata: {
           ...((booking.metadata as object) || {}),
           cancelledAt: new Date().toISOString(),
           cancellation_id,
           refund_amount,
           currency,
-          cancellation_source: "liteapi_webhook",
+          cancellation_source: 'liteapi_webhook',
         },
       },
     });
   }
 
-  await sendNotification("liteapi_booking_cancelled", {
+  await sendNotification('liteapi_booking_cancelled', {
     booking_id,
     cancellation_id,
     refund_amount,
@@ -638,9 +616,9 @@ async function handleBookingModified(data: any): Promise<void> {
     await prisma.bookingModification.create({
       data: {
         bookingId: booking.id,
-        modificationType: "hotel_modification",
-        oldValue: { description: "Hotel booking modified" },
-        status: "completed",
+        modificationType: 'hotel_modification',
+        oldValue: { description: 'Hotel booking modified' },
+        status: 'completed',
         newValue: { requestedChanges: changes },
         processedAt: new Date(),
       },
@@ -660,7 +638,7 @@ async function handleBookingModified(data: any): Promise<void> {
     });
   }
 
-  await sendNotification("liteapi_booking_modified", {
+  await sendNotification('liteapi_booking_modified', {
     booking_id,
     modification_id,
   });
@@ -682,7 +660,7 @@ async function handleBookingPending(data: any): Promise<void> {
     await prisma.booking.update({
       where: { id: booking.id },
       data: {
-        status: "pending",
+        status: 'pending',
         metadata: {
           ...((booking.metadata as object) || {}),
           pendingAt: new Date().toISOString(),
@@ -697,63 +675,99 @@ async function handleBookingPending(data: any): Promise<void> {
 // API Routes
 // ============================================
 
-// POST /api/webhooks/duffel - Duffel webhook receiver
-router.post("/duffel", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/webhooks/duffel:
+ *   post:
+ *     summary: Handle Duffel webhook events
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [order.created, order.updated, order.cancelled, flight_schedule_changed, airline_initiated_change, seat_map_updated, order_change_completed]
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Webhook processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 received:
+ *                   type: boolean
+ *       400:
+ *         description: Missing event type
+ *       401:
+ *         description: Invalid signature
+ *       500:
+ *         description: Webhook processing failed
+ */
+router.post('/duffel', async (req: Request, res: Response) => {
   try {
-    const signature = req.headers["x-duffel-signature"] as string;
+    const signature = req.headers['x-duffel-signature'] as string;
     const payload = JSON.stringify(req.body);
 
     // Verify signature in production or when explicitly enabled
     if (ENABLE_WEBHOOK_SIGNATURE_VERIFICATION) {
       if (!signature) {
-        console.warn("[Webhook] Missing Duffel signature header");
-        return res.status(401).json({ error: "Missing signature header" });
+        console.warn('[Webhook] Missing Duffel signature header');
+        return res.status(401).json({ error: 'Missing signature header' });
       }
 
       if (!verifySignature(payload, signature)) {
-        console.warn("[Webhook] Invalid Duffel signature");
-        return res.status(401).json({ error: "Invalid signature" });
+        console.warn('[Webhook] Invalid Duffel signature');
+        return res.status(401).json({ error: 'Invalid signature' });
       }
 
-      console.log("[Webhook] Duffel signature verified successfully");
+      console.log('[Webhook] Duffel signature verified successfully');
     } else {
-      console.log(
-        "[Webhook] Duffel signature verification disabled (development mode)",
-      );
+      console.log('[Webhook] Duffel signature verification disabled (development mode)');
     }
 
     const { type, data } = req.body;
 
     if (!type) {
-      return res.status(400).json({ error: "Missing event type" });
+      return res.status(400).json({ error: 'Missing event type' });
     }
 
     console.log(`[Webhook] Received Duffel event: ${type}`);
 
     // Log the webhook
-    await logWebhook("duffel", type, data, false);
+    await logWebhook('duffel', type, data, false);
 
     // Process based on event type
     switch (type) {
-      case "order.created":
+      case 'order.created':
         await handleOrderCreated(data);
         break;
-      case "order.updated":
+      case 'order.updated':
         await handleOrderUpdated(data);
         break;
-      case "order.cancelled":
+      case 'order.cancelled':
         await handleOrderCancelled(data);
         break;
-      case "flight_schedule_changed":
+      case 'flight_schedule_changed':
         await handleFlightScheduleChanged(data);
         break;
-      case "airline_initiated_change":
+      case 'airline_initiated_change':
         await handleAirlineInitiatedChange(data);
         break;
-      case "seat_map_updated":
+      case 'seat_map_updated':
         await handleSeatMapUpdated(data);
         break;
-      case "order_change_completed":
+      case 'order_change_completed':
         await handleOrderChangeCompleted(data);
         break;
       default:
@@ -761,63 +775,99 @@ router.post("/duffel", async (req: Request, res: Response) => {
     }
 
     // Update log as processed
-    await logWebhook("duffel", type, data, true);
+    await logWebhook('duffel', type, data, true);
 
     res.json({ success: true, received: true });
   } catch (error: any) {
-    console.error("[Webhook] Duffel webhook error:", error.message);
-    res.status(500).json({ error: "Webhook processing failed" });
+    console.error('[Webhook] Duffel webhook error:', error.message);
+    res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 
-// POST /api/webhooks/liteapi - LITEAPI webhook receiver
-router.post("/liteapi", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/webhooks/liteapi:
+ *   post:
+ *     summary: Handle LITEAPI webhook events
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - event_type
+ *             properties:
+ *               event_type:
+ *                 type: string
+ *                 enum: [booking.confirmed, booking.cancelled, booking.modified, booking.pending]
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Webhook processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 received:
+ *                   type: boolean
+ *       400:
+ *         description: Missing event_type
+ *       401:
+ *         description: Invalid signature
+ *       500:
+ *         description: Webhook processing failed
+ */
+router.post('/liteapi', async (req: Request, res: Response) => {
   try {
-    const signature = req.headers["x-liteapi-signature"] as string;
+    const signature = req.headers['x-liteapi-signature'] as string;
     const payload = JSON.stringify(req.body);
 
     // Verify signature in production or when explicitly enabled
     if (ENABLE_WEBHOOK_SIGNATURE_VERIFICATION) {
       if (!signature) {
-        console.warn("[Webhook] Missing LITEAPI signature header");
-        return res.status(401).json({ error: "Missing signature header" });
+        console.warn('[Webhook] Missing LITEAPI signature header');
+        return res.status(401).json({ error: 'Missing signature header' });
       }
 
       if (!verifySignature(payload, signature)) {
-        console.warn("[Webhook] Invalid LITEAPI signature");
-        return res.status(401).json({ error: "Invalid signature" });
+        console.warn('[Webhook] Invalid LITEAPI signature');
+        return res.status(401).json({ error: 'Invalid signature' });
       }
 
-      console.log("[Webhook] LITEAPI signature verified successfully");
+      console.log('[Webhook] LITEAPI signature verified successfully');
     } else {
-      console.log(
-        "[Webhook] LITEAPI signature verification disabled (development mode)",
-      );
+      console.log('[Webhook] LITEAPI signature verification disabled (development mode)');
     }
 
     const { event_type, data } = req.body;
 
     if (!event_type) {
-      return res.status(400).json({ error: "Missing event_type" });
+      return res.status(400).json({ error: 'Missing event_type' });
     }
 
     console.log(`[Webhook] Received LITEAPI event: ${event_type}`);
 
     // Log the webhook
-    await logWebhook("liteapi", event_type, data, false);
+    await logWebhook('liteapi', event_type, data, false);
 
     // Process based on event type
     switch (event_type) {
-      case "booking.confirmed":
+      case 'booking.confirmed':
         await handleBookingConfirmed(data);
         break;
-      case "booking.cancelled":
+      case 'booking.cancelled':
         await handleBookingCancelled(data);
         break;
-      case "booking.modified":
+      case 'booking.modified':
         await handleBookingModified(data);
         break;
-      case "booking.pending":
+      case 'booking.pending':
         await handleBookingPending(data);
         break;
       default:
@@ -825,17 +875,67 @@ router.post("/liteapi", async (req: Request, res: Response) => {
     }
 
     // Update log as processed
-    await logWebhook("liteapi", event_type, data, true);
+    await logWebhook('liteapi', event_type, data, true);
 
     res.json({ success: true, received: true });
   } catch (error: any) {
-    console.error("[Webhook] LITEAPI webhook error:", error.message);
-    res.status(500).json({ error: "Webhook processing failed" });
+    console.error('[Webhook] LITEAPI webhook error:', error.message);
+    res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 
-// GET /api/webhooks/logs - Get webhook delivery logs
-router.get("/logs", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/webhooks/logs:
+ *   get:
+ *     summary: Get webhook delivery history logs
+ *     tags: [Webhooks]
+ *     parameters:
+ *       - in: query
+ *         name: source
+ *         schema:
+ *           type: string
+ *           enum: [duffel, liteapi]
+ *         description: Filter by webhook source
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of log entries
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Pagination offset
+ *     responses:
+ *       200:
+ *         description: Webhook logs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     limit:
+ *                       type: integer
+ *                     offset:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *       500:
+ *         description: Failed to retrieve logs
+ */
+router.get('/logs', async (req: Request, res: Response) => {
   try {
     const { source, limit = 50, offset = 0 } = req.query;
 
@@ -845,8 +945,8 @@ router.get("/logs", async (req: Request, res: Response) => {
     if (source) {
       // Map source to supplier
       const supplierMap: Record<string, string> = {
-        duffel: "duffel",
-        liteapi: "innstant",
+        duffel: 'duffel',
+        liteapi: 'innstant',
       };
       where.supplier = supplierMap[source as string] || source;
     }
@@ -854,7 +954,7 @@ router.get("/logs", async (req: Request, res: Response) => {
     const [logs, total] = await Promise.all([
       prisma.webhookEvent.findMany({
         where,
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         skip: Number(offset),
         take: Number(limit),
       }),
@@ -862,9 +962,9 @@ router.get("/logs", async (req: Request, res: Response) => {
     ]);
 
     // Transform logs to match our interface
-    const transformedLogs = logs.map((log) => ({
+    const transformedLogs = logs.map(log => ({
       id: log.id,
-      source: log.supplier === "duffel" ? "duffel" : "liteapi",
+      source: log.supplier === 'duffel' ? 'duffel' : 'liteapi',
       eventType: log.eventType,
       payload: log.raw_payload,
       processed: log.processed,
@@ -883,46 +983,76 @@ router.get("/logs", async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error("[Webhook] Logs error:", error.message);
+    console.error('[Webhook] Logs error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/webhooks/test - Test webhook endpoint
-router.post("/test", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/webhooks/test:
+ *   post:
+ *     summary: Test webhook endpoint
+ *     tags: [Webhooks]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               source:
+ *                 type: string
+ *                 enum: [duffel, liteapi]
+ *                 default: duffel
+ *               event_type:
+ *                 type: string
+ *               data:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Test webhook processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *       500:
+ *         description: Test processing failed
+ */
+router.post('/test', async (req: Request, res: Response) => {
   try {
-    const { source = "duffel", event_type, data } = req.body;
+    const { source = 'duffel', event_type, data } = req.body;
 
     console.log(`[Webhook] Test webhook received: ${source} - ${event_type}`);
 
     // Process test webhook
-    if (source === "duffel") {
+    if (source === 'duffel') {
       switch (event_type) {
-        case "order.created":
-          await handleOrderCreated(
-            data || { order_id: "test_order_123", status: "confirmed" },
-          );
+        case 'order.created':
+          await handleOrderCreated(data || { order_id: 'test_order_123', status: 'confirmed' });
           break;
-        case "order.cancelled":
-          await handleOrderCancelled(data || { order_id: "test_order_123" });
+        case 'order.cancelled':
+          await handleOrderCancelled(data || { order_id: 'test_order_123' });
           break;
-        case "flight_schedule_changed":
-          await handleFlightScheduleChanged(
-            data || { order_id: "test_order_123" },
-          );
+        case 'flight_schedule_changed':
+          await handleFlightScheduleChanged(data || { order_id: 'test_order_123' });
           break;
       }
-    } else if (source === "liteapi") {
+    } else if (source === 'liteapi') {
       switch (event_type) {
-        case "booking.confirmed":
-          await handleBookingConfirmed(
-            data || { booking_id: "test_booking_123" },
-          );
+        case 'booking.confirmed':
+          await handleBookingConfirmed(data || { booking_id: 'test_booking_123' });
           break;
-        case "booking.cancelled":
-          await handleBookingCancelled(
-            data || { booking_id: "test_booking_123" },
-          );
+        case 'booking.cancelled':
+          await handleBookingCancelled(data || { booking_id: 'test_booking_123' });
           break;
       }
     }
@@ -933,53 +1063,102 @@ router.post("/test", async (req: Request, res: Response) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {
-    console.error("[Webhook] Test error:", error.message);
+    console.error('[Webhook] Test error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// GET /api/webhooks/status - Get webhook configuration status
-router.get("/status", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/webhooks/status:
+ *   get:
+ *     summary: Get webhook configuration status
+ *     tags: [Webhooks]
+ *     responses:
+ *       200:
+ *         description: Webhook configuration retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     duffel:
+ *                       type: object
+ *                     liteapi:
+ *                       type: object
+ *                     webhookSecret:
+ *                       type: string
+ *       500:
+ *         description: Failed to retrieve status
+ */
+router.get('/status', async (req: Request, res: Response) => {
   try {
     res.json({
       success: true,
       data: {
         duffel: {
           enabled: true,
-          endpoint: "/api/webhooks/duffel",
+          endpoint: '/api/webhooks/duffel',
           events: [
-            "order.created",
-            "order.updated",
-            "order.cancelled",
-            "flight_schedule_changed",
-            "airline_initiated_change",
-            "seat_map_updated",
-            "order_change_completed",
+            'order.created',
+            'order.updated',
+            'order.cancelled',
+            'flight_schedule_changed',
+            'airline_initiated_change',
+            'seat_map_updated',
+            'order_change_completed',
           ],
         },
         liteapi: {
           enabled: true,
-          endpoint: "/api/webhooks/liteapi",
-          events: [
-            "booking.confirmed",
-            "booking.cancelled",
-            "booking.modified",
-            "booking.pending",
-          ],
+          endpoint: '/api/webhooks/liteapi',
+          events: ['booking.confirmed', 'booking.cancelled', 'booking.modified', 'booking.pending'],
         },
-        webhookSecret: WEBHOOK_SECRET
-          ? "***configured***"
-          : "***not configured***",
+        webhookSecret: WEBHOOK_SECRET ? '***configured***' : '***not configured***',
       },
     });
   } catch (error: any) {
-    console.error("[Webhook] Status error:", error.message);
+    console.error('[Webhook] Status error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/webhooks/retry/:logId - Retry a failed webhook
-router.post("/retry/:logId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/webhooks/retry/{logId}:
+ *   post:
+ *     summary: Retry a failed webhook delivery
+ *     tags: [Webhooks]
+ *     parameters:
+ *       - in: path
+ *         name: logId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Webhook log ID to retry
+ *     responses:
+ *       200:
+ *         description: Retry initiated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 note:
+ *                   type: string
+ *       500:
+ *         description: Retry failed
+ */
+router.post('/retry/:logId', async (req: Request, res: Response) => {
   try {
     const { logId } = req.params;
 
@@ -989,10 +1168,10 @@ router.post("/retry/:logId", async (req: Request, res: Response) => {
     res.json({
       success: true,
       message: `Retry initiated for webhook ${logId}`,
-      note: "Requires webhook_events table implementation",
+      note: 'Requires webhook_events table implementation',
     });
   } catch (error: any) {
-    console.error("[Webhook] Retry error:", error.message);
+    console.error('[Webhook] Retry error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -1,16 +1,8 @@
-import { Router, Response } from "express";
-import { prisma } from "../database.js";
-import {
-  AuthRequest,
-  authMiddleware,
-  requirePermission,
-} from "../middleware/auth.js";
-import {
-  validateZod,
-  paginationSchema,
-  walletTransactionSchema,
-} from "../middleware/validate.js";
-import { Prisma } from "@prisma/client";
+import { Router, Response } from 'express';
+import { prisma } from '../database.js';
+import { AuthRequest, authMiddleware, requirePermission } from '../middleware/auth.js';
+import { validateZod, paginationSchema, walletTransactionSchema } from '../middleware/validate.js';
+import { Prisma } from '@prisma/client';
 
 const router: Router = Router();
 
@@ -21,8 +13,7 @@ router.use(authMiddleware);
 const serializeWallet = (wallet: any) => ({
   ...wallet,
   balance: wallet.balance?.toNumber?.() ?? wallet.balance,
-  reservedBalance:
-    wallet.reservedBalance?.toNumber?.() ?? wallet.reservedBalance,
+  reservedBalance: wallet.reservedBalance?.toNumber?.() ?? wallet.reservedBalance,
 });
 
 const serializeTransaction = (tx: any) => ({
@@ -34,10 +25,52 @@ const serializeTransaction = (tx: any) => ({
 // Wallet Routes
 // ============================================
 
-// GET /api/finance/wallets - List all wallets
+/**
+ * @swagger
+ * /api/finance/wallets:
+ *   get:
+ *     summary: List all wallets
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 20 }
+ *       - in: query
+ *         name: sortBy
+ *         schema: { type: string }
+ *       - in: query
+ *         name: sortOrder
+ *         schema: { type: string, enum: [asc, desc] }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: List of wallets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
+ *                 pagination: { type: object }
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 error: { type: string }
+ */
 router.get(
-  "/wallets",
-  requirePermission("finance:read"),
+  '/wallets',
+  requirePermission('finance:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -61,7 +94,7 @@ router.get(
           where,
           skip: (page - 1) * limit,
           take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
         }),
         prisma.wallet.count({ where }),
       ]);
@@ -77,23 +110,56 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching wallets:", error);
+      console.error('Error fetching wallets:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch wallets",
+        error: 'Failed to fetch wallets',
       });
     }
-  },
+  }
 );
 
-// GET /api/finance/wallets/:userId - Get wallet by user ID
+/**
+ * @swagger
+ * /api/finance/wallets/{userId}:
+ *   get:
+ *     summary: Get wallet by user ID
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: currency
+ *         schema:
+ *           type: string
+ *           default: USD
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Wallet not found
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/wallets/:userId",
-  requirePermission("finance:read"),
+  '/wallets/:userId',
+  requirePermission('finance:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { userId } = req.params;
-      const { currency = "USD" } = req.query;
+      const { currency = 'USD' } = req.query;
 
       const wallet = await prisma.wallet.findUnique({
         where: {
@@ -107,7 +173,7 @@ router.get(
       if (!wallet) {
         return res.status(404).json({
           success: false,
-          error: "Wallet not found",
+          error: 'Wallet not found',
         });
       }
 
@@ -116,23 +182,61 @@ router.get(
         data: serializeWallet(wallet),
       });
     } catch (error) {
-      console.error("Error fetching wallet:", error);
+      console.error('Error fetching wallet:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch wallet",
+        error: 'Failed to fetch wallet',
       });
     }
-  },
+  }
 );
 
-// GET /api/finance/wallets/:userId/transactions - Get wallet transactions
+/**
+ * @swagger
+ * /api/finance/wallets/{userId}/transactions:
+ *   get:
+ *     summary: Get wallet transactions
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 20 }
+ *       - in: query
+ *         name: type
+ *         schema: { type: string }
+ *       - in: query
+ *         name: currency
+ *         schema: { type: string, default: USD }
+ *     responses:
+ *       200:
+ *         description: Wallet transactions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: array, items: { type: object } }
+ *                 pagination: { type: object }
+ *       404:
+ *         description: Wallet not found
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/wallets/:userId/transactions",
-  requirePermission("finance:read"),
+  '/wallets/:userId/transactions',
+  requirePermission('finance:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { userId } = req.params;
-      const { page = 1, limit = 20, type, currency = "USD" } = req.query;
+      const { page = 1, limit = 20, type, currency = 'USD' } = req.query;
 
       // First get the wallet
       const wallet = await prisma.wallet.findUnique({
@@ -147,7 +251,7 @@ router.get(
       if (!wallet) {
         return res.status(404).json({
           success: false,
-          error: "Wallet not found",
+          error: 'Wallet not found',
         });
       }
 
@@ -161,7 +265,7 @@ router.get(
           where,
           skip: (Number(page) - 1) * Number(limit),
           take: Number(limit),
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         }),
         prisma.walletTransaction.count({ where }),
       ]);
@@ -177,28 +281,66 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      console.error('Error fetching transactions:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch transactions",
+        error: 'Failed to fetch transactions',
       });
     }
-  },
+  }
 );
 
-// POST /api/finance/wallets/:userId/credit - Credit wallet
+/**
+ * @swagger
+ * /api/finance/wallets/{userId}/credit:
+ *   post:
+ *     summary: Credit wallet
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount]
+ *             properties:
+ *               amount: { type: number }
+ *               currency: { type: string, default: USD }
+ *               description: { type: string }
+ *               referenceId: { type: string }
+ *     responses:
+ *       200:
+ *         description: Wallet credited successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success: { type: boolean }
+ *                 data: { type: object }
+ *                 message: { type: string }
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/wallets/:userId/credit",
-  requirePermission("finance:update"),
+  '/wallets/:userId/credit',
+  requirePermission('finance:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { userId } = req.params;
-      const { amount, currency = "USD", description, referenceId } = req.body;
+      const { amount, currency = 'USD', description, referenceId } = req.body;
 
       if (!amount || amount <= 0) {
         return res.status(400).json({
           success: false,
-          error: "Valid amount is required",
+          error: 'Valid amount is required',
         });
       }
 
@@ -224,7 +366,7 @@ router.post(
       }
 
       // Create transaction and update balance
-      const transaction = await prisma.$transaction(async (tx) => {
+      const transaction = await prisma.$transaction(async tx => {
         // Get current wallet balance
         const currentWallet = await tx.wallet.findUnique({
           where: { id: wallet!.id },
@@ -239,12 +381,12 @@ router.post(
         const newTx = await tx.walletTransaction.create({
           data: {
             walletId: wallet!.id,
-            type: "deposit",
-            flow: "credit",
+            type: 'deposit',
+            flow: 'credit',
             amount: new Prisma.Decimal(amount),
             balance: newBalance,
             currency,
-            description: description || "Admin credit",
+            description: description || 'Admin credit',
             metadata: { referenceId, processedBy: req.user?.id },
           },
         });
@@ -263,31 +405,78 @@ router.post(
       res.json({
         success: true,
         data: serializeTransaction(transaction),
-        message: "Wallet credited successfully",
+        message: 'Wallet credited successfully',
       });
     } catch (error) {
-      console.error("Error crediting wallet:", error);
+      console.error('Error crediting wallet:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to credit wallet",
+        error: 'Failed to credit wallet',
       });
     }
-  },
+  }
 );
 
-// POST /api/finance/wallets/:userId/debit - Debit wallet
+/**
+ * @swagger
+ * /api/finance/wallets/{userId}/debit:
+ *   post:
+ *     summary: Debit wallet
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount]
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *                 default: USD
+ *               description:
+ *                 type: string
+ *               referenceId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Wallet not found
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/wallets/:userId/debit",
-  requirePermission("finance:update"),
+  '/wallets/:userId/debit',
+  requirePermission('finance:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { userId } = req.params;
-      const { amount, currency = "USD", description, referenceId } = req.body;
+      const { amount, currency = 'USD', description, referenceId } = req.body;
 
       if (!amount || amount <= 0) {
         return res.status(400).json({
           success: false,
-          error: "Valid amount is required",
+          error: 'Valid amount is required',
         });
       }
 
@@ -303,7 +492,7 @@ router.post(
       if (!wallet) {
         return res.status(404).json({
           success: false,
-          error: "Wallet not found",
+          error: 'Wallet not found',
         });
       }
 
@@ -311,12 +500,12 @@ router.post(
       if (wallet.balance.toNumber() < amount) {
         return res.status(400).json({
           success: false,
-          error: "Insufficient balance",
+          error: 'Insufficient balance',
         });
       }
 
       // Create transaction and update balance
-      const transaction = await prisma.$transaction(async (tx) => {
+      const transaction = await prisma.$transaction(async tx => {
         // Get current wallet balance
         const currentWallet = await tx.wallet.findUnique({
           where: { id: wallet.id },
@@ -331,12 +520,12 @@ router.post(
         const newTx = await tx.walletTransaction.create({
           data: {
             walletId: wallet.id,
-            type: "withdrawal",
-            flow: "debit",
+            type: 'withdrawal',
+            flow: 'debit',
             amount: new Prisma.Decimal(amount),
             balance: newBalance,
             currency,
-            description: description || "Admin debit",
+            description: description || 'Admin debit',
             metadata: { referenceId, processedBy: req.user?.id },
           },
         });
@@ -355,26 +544,63 @@ router.post(
       res.json({
         success: true,
         data: serializeTransaction(transaction),
-        message: "Wallet debited successfully",
+        message: 'Wallet debited successfully',
       });
     } catch (error) {
-      console.error("Error debiting wallet:", error);
+      console.error('Error debiting wallet:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to debit wallet",
+        error: 'Failed to debit wallet',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Settlement Routes
 // ============================================
 
-// GET /api/finance/settlements - List settlements
+/**
+ * @swagger
+ * /api/finance/settlements:
+ *   get:
+ *     summary: List settlements
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/settlements",
-  requirePermission("finance:read"),
+  '/settlements',
+  requirePermission('finance:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -391,14 +617,14 @@ router.get(
           where,
           skip: (page - 1) * limit,
           take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
         }),
         prisma.settlement.count({ where }),
       ]);
 
       res.json({
         success: true,
-        data: settlements.map((s) => ({
+        data: settlements.map(s => ({
           ...s,
           amount: s.amount?.toNumber?.() ?? s.amount,
         })),
@@ -410,19 +636,61 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching settlements:", error);
+      console.error('Error fetching settlements:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch settlements",
+        error: 'Failed to fetch settlements',
       });
     }
-  },
+  }
 );
 
-// PUT /api/finance/settlements/:id - Update settlement
+/**
+ * @swagger
+ * /api/finance/settlements/{id}:
+ *   put:
+ *     summary: Update settlement
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *               referenceNumber:
+ *                 type: string
+ *               bankReference:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Settlement not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/settlements/:id",
-  requirePermission("finance:update"),
+  '/settlements/:id',
+  requirePermission('finance:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
@@ -435,7 +703,7 @@ router.put(
       if (!settlement) {
         return res.status(404).json({
           success: false,
-          error: "Settlement not found",
+          error: 'Settlement not found',
         });
       }
 
@@ -443,7 +711,7 @@ router.put(
       if (status) updateData.status = status;
       if (referenceNumber) updateData.referenceNumber = referenceNumber;
       if (bankReference) updateData.bankReference = bankReference;
-      if (status === "completed") updateData.processedAt = new Date();
+      if (status === 'completed') updateData.processedAt = new Date();
 
       const updatedSettlement = await prisma.settlement.update({
         where: { id },
@@ -454,29 +722,65 @@ router.put(
         success: true,
         data: {
           ...updatedSettlement,
-          amount:
-            updatedSettlement.amount?.toNumber?.() ?? updatedSettlement.amount,
+          amount: updatedSettlement.amount?.toNumber?.() ?? updatedSettlement.amount,
         },
-        message: "Settlement updated successfully",
+        message: 'Settlement updated successfully',
       });
     } catch (error) {
-      console.error("Error updating settlement:", error);
+      console.error('Error updating settlement:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update settlement",
+        error: 'Failed to update settlement',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Dispute Routes
 // ============================================
 
-// GET /api/finance/disputes - List disputes
+/**
+ * @swagger
+ * /api/finance/disputes:
+ *   get:
+ *     summary: List disputes
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/disputes",
-  requirePermission("finance:read"),
+  '/disputes',
+  requirePermission('finance:read'),
   validateZod(paginationSchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -493,14 +797,14 @@ router.get(
           where,
           skip: (page - 1) * limit,
           take: limit,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
         }),
         prisma.dispute.count({ where }),
       ]);
 
       res.json({
         success: true,
-        data: disputes.map((d) => ({
+        data: disputes.map(d => ({
           ...d,
           amount: d.amount?.toNumber?.() ?? d.amount,
         })),
@@ -512,19 +816,60 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching disputes:", error);
+      console.error('Error fetching disputes:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch disputes",
+        error: 'Failed to fetch disputes',
       });
     }
-  },
+  }
 );
 
-// PUT /api/finance/disputes/:id - Update dispute
+/**
+ * @swagger
+ * /api/finance/disputes/{id}:
+ *   put:
+ *     summary: Update dispute
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *               staffNote:
+ *                 type: string
+ *               customerNote:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Dispute not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/disputes/:id",
-  requirePermission("finance:update"),
+  '/disputes/:id',
+  requirePermission('finance:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
@@ -537,7 +882,7 @@ router.put(
       if (!dispute) {
         return res.status(404).json({
           success: false,
-          error: "Dispute not found",
+          error: 'Dispute not found',
         });
       }
 
@@ -545,7 +890,7 @@ router.put(
       if (status) updateData.status = status;
       if (staffNote) updateData.staffNote = staffNote;
       if (customerNote) updateData.customerNote = customerNote;
-      if (["won", "lost", "resolved"].includes(status)) {
+      if (['won', 'lost', 'resolved'].includes(status)) {
         updateData.resolvedAt = new Date();
         updateData.processedAt = new Date();
       }
@@ -561,56 +906,124 @@ router.put(
           ...updatedDispute,
           amount: updatedDispute.amount?.toNumber?.() ?? updatedDispute.amount,
         },
-        message: "Dispute updated successfully",
+        message: 'Dispute updated successfully',
       });
     } catch (error) {
-      console.error("Error updating dispute:", error);
+      console.error('Error updating dispute:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update dispute",
+        error: 'Failed to update dispute',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Exchange Rate Routes
 // ============================================
 
-// GET /api/finance/exchange-rates - List exchange rates
+/**
+ * @swagger
+ * /api/finance/exchange-rates:
+ *   get:
+ *     summary: List exchange rates
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: query
+ *         name: baseCurrency
+ *         schema:
+ *           type: string
+ *           default: USD
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/exchange-rates",
-  requirePermission("finance:read"),
+  '/exchange-rates',
+  requirePermission('finance:read'),
   async (req: AuthRequest, res: Response) => {
     try {
-      const { baseCurrency = "USD" } = req.query;
+      const { baseCurrency = 'USD' } = req.query;
 
       const rates = await prisma.exchangeRate.findMany({
         where: { baseCurrency: baseCurrency as string },
-        orderBy: { targetCurrency: "asc" },
+        orderBy: { targetCurrency: 'asc' },
       });
 
       res.json({
         success: true,
-        data: rates.map((r) => ({
+        data: rates.map(r => ({
           ...r,
           rate: r.rate?.toNumber?.() ?? r.rate,
         })),
       });
     } catch (error) {
-      console.error("Error fetching exchange rates:", error);
+      console.error('Error fetching exchange rates:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch exchange rates",
+        error: 'Failed to fetch exchange rates',
       });
     }
-  },
+  }
 );
 
-// POST /api/finance/exchange-rates - Update exchange rate
+/**
+ * @swagger
+ * /api/finance/exchange-rates:
+ *   post:
+ *     summary: Update exchange rate
+ *     tags: [Finance]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - source
+ *               - baseCurrency
+ *               - targetCurrency
+ *               - rate
+ *             properties:
+ *               source:
+ *                 type: string
+ *               baseCurrency:
+ *                 type: string
+ *               targetCurrency:
+ *                 type: string
+ *               rate:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/exchange-rates",
-  requirePermission("finance:update"),
+  '/exchange-rates',
+  requirePermission('finance:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { source, baseCurrency, targetCurrency, rate } = req.body;
@@ -618,8 +1031,7 @@ router.post(
       if (!source || !baseCurrency || !targetCurrency || !rate) {
         return res.status(400).json({
           success: false,
-          error:
-            "All fields are required: source, baseCurrency, targetCurrency, rate",
+          error: 'All fields are required: source, baseCurrency, targetCurrency, rate',
         });
       }
 
@@ -649,31 +1061,51 @@ router.post(
           ...exchangeRate,
           rate: exchangeRate.rate?.toNumber?.() ?? exchangeRate.rate,
         },
-        message: "Exchange rate updated successfully",
+        message: 'Exchange rate updated successfully',
       });
     } catch (error) {
-      console.error("Error updating exchange rate:", error);
+      console.error('Error updating exchange rate:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update exchange rate",
+        error: 'Failed to update exchange rate',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Currency Routes
 // ============================================
 
-// GET /api/finance/currencies - List currencies
+/**
+ * @swagger
+ * /api/finance/currencies:
+ *   get:
+ *     summary: List currencies
+ *     tags: [Finance]
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/currencies",
-  requirePermission("finance:read"),
+  '/currencies',
+  requirePermission('finance:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const currencies = await prisma.currency.findMany({
         where: { isActive: true },
-        orderBy: { code: "asc" },
+        orderBy: { code: 'asc' },
       });
 
       res.json({
@@ -681,19 +1113,62 @@ router.get(
         data: currencies,
       });
     } catch (error) {
-      console.error("Error fetching currencies:", error);
+      console.error('Error fetching currencies:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch currencies",
+        error: 'Failed to fetch currencies',
       });
     }
-  },
+  }
 );
 
-// PUT /api/finance/currencies/:code - Update currency
+/**
+ * @swagger
+ * /api/finance/currencies/{code}:
+ *   put:
+ *     summary: Update currency
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: path
+ *         name: code
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               symbol:
+ *                 type: string
+ *               decimals:
+ *                 type: integer
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Currency not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/currencies/:code",
-  requirePermission("finance:update"),
+  '/currencies/:code',
+  requirePermission('finance:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { code } = req.params;
@@ -706,7 +1181,7 @@ router.put(
       if (!currency) {
         return res.status(404).json({
           success: false,
-          error: "Currency not found",
+          error: 'Currency not found',
         });
       }
 
@@ -724,44 +1199,70 @@ router.put(
       res.json({
         success: true,
         data: updatedCurrency,
-        message: "Currency updated successfully",
+        message: 'Currency updated successfully',
       });
     } catch (error) {
-      console.error("Error updating currency:", error);
+      console.error('Error updating currency:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update currency",
+        error: 'Failed to update currency',
       });
     }
-  },
+  }
 );
 
 // ============================================
 // Reports Routes
 // ============================================
 
-// GET /api/finance/reports/summary - Financial summary
+/**
+ * @swagger
+ * /api/finance/reports/summary:
+ *   get:
+ *     summary: Get financial summary
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           default: 30d
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/reports/summary",
-  requirePermission("finance:read"),
+  '/reports/summary',
+  requirePermission('finance:read'),
   async (req: AuthRequest, res: Response) => {
     try {
-      const { period = "30d" } = req.query;
+      const { period = '30d' } = req.query;
 
       // Calculate date range
       const now = new Date();
       const startDate = new Date();
       switch (period) {
-        case "7d":
+        case '7d':
           startDate.setDate(now.getDate() - 7);
           break;
-        case "30d":
+        case '30d':
           startDate.setDate(now.getDate() - 30);
           break;
-        case "90d":
+        case '90d':
           startDate.setDate(now.getDate() - 90);
           break;
-        case "1y":
+        case '1y':
           startDate.setFullYear(now.getFullYear() - 1);
           break;
       }
@@ -783,25 +1284,25 @@ router.get(
         transactionCount: transactions.length,
       };
 
-      transactions.forEach((tx) => {
+      transactions.forEach(tx => {
         const amount = tx.amount.toNumber();
         switch (tx.type) {
-          case "deposit":
+          case 'deposit':
             summary.totalDeposits += amount;
             break;
-          case "withdrawal":
+          case 'withdrawal':
             summary.totalWithdrawals += amount;
             break;
-          case "purchase":
+          case 'purchase':
             summary.totalPurchases += amount;
             break;
-          case "refund":
+          case 'refund':
             summary.totalRefunds += amount;
             break;
-          case "commission":
+          case 'commission':
             summary.totalCommissions += amount;
             break;
-          case "settlement":
+          case 'settlement':
             summary.totalSettlements += amount;
             break;
         }
@@ -817,14 +1318,14 @@ router.get(
 
       // Get pending settlements
       const pendingSettlements = await prisma.settlement.aggregate({
-        where: { status: "pending" },
+        where: { status: 'pending' },
         _sum: { amount: true },
         _count: true,
       });
 
       // Get open disputes
       const openDisputes = await prisma.dispute.aggregate({
-        where: { status: "open" },
+        where: { status: 'open' },
         _sum: { amount: true },
         _count: true,
       });
@@ -849,37 +1350,68 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching financial summary:", error);
+      console.error('Error fetching financial summary:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch financial summary",
+        error: 'Failed to fetch financial summary',
       });
     }
-  },
+  }
 );
 
-// GET /api/finance/reports/revenue - Revenue report
+/**
+ * @swagger
+ * /api/finance/reports/revenue:
+ *   get:
+ *     summary: Get revenue report
+ *     tags: [Finance]
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           default: 30d
+ *       - in: query
+ *         name: groupBy
+ *         schema:
+ *           type: string
+ *           default: day
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/reports/revenue",
-  requirePermission("finance:read"),
+  '/reports/revenue',
+  requirePermission('finance:read'),
   async (req: AuthRequest, res: Response) => {
     try {
-      const { period = "30d", groupBy = "day" } = req.query;
+      const { period = '30d', groupBy = 'day' } = req.query;
 
       // Calculate date range
       const now = new Date();
       const startDate = new Date();
       switch (period) {
-        case "7d":
+        case '7d':
           startDate.setDate(now.getDate() - 7);
           break;
-        case "30d":
+        case '30d':
           startDate.setDate(now.getDate() - 30);
           break;
-        case "90d":
+        case '90d':
           startDate.setDate(now.getDate() - 90);
           break;
-        case "1y":
+        case '1y':
           startDate.setFullYear(now.getFullYear() - 1);
           break;
       }
@@ -888,7 +1420,7 @@ router.get(
       const bookings = await prisma.booking.findMany({
         where: {
           createdAt: { gte: startDate },
-          status: { notIn: ["cancelled", "draft"] },
+          status: { notIn: ['cancelled', 'draft'] },
         },
         select: {
           createdAt: true,
@@ -900,32 +1432,29 @@ router.get(
       });
 
       // Group by date
-      const groupedData: Record<
-        string,
-        { total: number; markup: number; count: number }
-      > = {};
+      const groupedData: Record<string, { total: number; markup: number; count: number }> = {};
 
-      bookings.forEach((booking) => {
+      bookings.forEach(booking => {
         let key: string;
         const date = new Date(booking.createdAt);
 
         switch (groupBy) {
-          case "hour":
-            key = `${date.toISOString().split("T")[0]}T${date.getHours().toString().padStart(2, "0")}:00`;
+          case 'hour':
+            key = `${date.toISOString().split('T')[0]}T${date.getHours().toString().padStart(2, '0')}:00`;
             break;
-          case "day":
-            key = date.toISOString().split("T")[0];
+          case 'day':
+            key = date.toISOString().split('T')[0];
             break;
-          case "week":
+          case 'week':
             const weekStart = new Date(date);
             weekStart.setDate(date.getDate() - date.getDay());
-            key = weekStart.toISOString().split("T")[0];
+            key = weekStart.toISOString().split('T')[0];
             break;
-          case "month":
-            key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
+          case 'month':
+            key = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
             break;
           default:
-            key = date.toISOString().split("T")[0];
+            key = date.toISOString().split('T')[0];
         }
 
         if (!groupedData[key]) {
@@ -953,13 +1482,13 @@ router.get(
         groupBy,
       });
     } catch (error) {
-      console.error("Error fetching revenue report:", error);
+      console.error('Error fetching revenue report:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch revenue report",
+        error: 'Failed to fetch revenue report',
       });
     }
-  },
+  }
 );
 
 export default router;

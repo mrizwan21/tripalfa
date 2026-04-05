@@ -2,16 +2,16 @@
 // POST /api/wallet/settlement
 // Supplier settlement flow: Agency settles with Supplier after customer purchase
 
-import { Router, Request, Response, NextFunction } from "express";
-import type { Router as ExpressRouter } from "express";
-import Joi from "joi";
-import walletService from "../services/walletService.js";
-import * as fxService from "../services/fxService.js";
-import { authMiddleware } from "../middlewares/auth.js";
-import { logger } from "../utils/logger.js";
+import { Router, Request, Response, NextFunction } from 'express';
+import type { Router as ExpressRouter } from 'express';
+import Joi from 'joi';
+import walletService from '../services/walletService.js';
+import * as fxService from '../services/fxService.js';
+import { authMiddleware } from '../middlewares/auth.js';
+import { logger } from '../utils/logger.js';
 
 const router: ExpressRouter = Router();
-const SERVICE_NAME = "settlementRoute";
+const SERVICE_NAME = 'settlementRoute';
 
 // Validation schema
 const settlementSchema = Joi.object({
@@ -24,45 +24,60 @@ const settlementSchema = Joi.object({
 });
 
 /**
- * POST /api/wallet/settlement
- * Agency settles payment with Supplier
- *
- * Prerequisites:
- * - Customer purchase transaction must exist
- * - Agency holds the full customer payment in wallet
- * - Commission is deducted from agency balance
- * - Supplier receives: settledAmount = fullCustomerPayment - commission
- *
- * Flow:
- * 1. Verify agency has sufficient balance (settledAmount + commission)
- * 2. Debit agency: settlementAmount + commissionDeducted
- * 3. Credit supplier: settlementAmount
- * 4. Create settlement transaction with invoice reference
- * 5. Create ledger entries for both debit and commission deduction
- *
- * Response:
- * {
- *   success: true,
- *   transaction: {
- *     id: uuid,
- *     type: 'supplier_settlement',
- *     flow: 'agency_to_supplier',
- *     amount: settlementAmount,
- *     currency: currency,
- *     status: 'completed',
- *     invoiceId: invoiceId,
- *     createdAt: timestamp
- *   },
- *   summary: {
- *     agencyDebited: settlementAmount + deductedCommission,
- *     supplierCredited: settlementAmount,
- *     commissionDeducted: deductedCommission,
- *     net: settlementAmount
- *   }
- * }
+ * @swagger
+ * /api/wallet/settlement:
+ *   post:
+ *     summary: Process supplier settlement
+ *     tags: [Settlements]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [supplierId, settlementAmount, deductedCommission, currency, invoiceId, idempotencyKey]
+ *             properties:
+ *               supplierId:
+ *                 type: string
+ *                 format: uuid
+ *               settlementAmount:
+ *                 type: number
+ *               deductedCommission:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               invoiceId:
+ *                 type: string
+ *               idempotencyKey:
+ *                 type: string
+ *                 format: uuid
+ *     responses:
+ *       200:
+ *         description: Settlement successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 transaction:
+ *                   type: object
+ *                 summary:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *       402:
+ *         description: Insufficient funds
+ *       404:
+ *         description: Resource not found
+ *       409:
+ *         description: Duplicate settlement
+ *       500:
+ *         description: Server error
  */
 router.post(
-  "/api/wallet/settlement",
+  '/api/wallet/settlement',
   authMiddleware,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -84,11 +99,11 @@ router.post(
 
       // Validate agencyId
       if (!agencyId) {
-        return res.status(401).json({ success: false, error: "Unauthorized" });
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
 
       logger.info(
-        `${SERVICE_NAME}: Settlement request - agency: ${agencyId}, supplier: ${supplierId}, amount: ${settlementAmount} ${currency}`,
+        `${SERVICE_NAME}: Settlement request - agency: ${agencyId}, supplier: ${supplierId}, amount: ${settlementAmount} ${currency}`
       );
 
       // 2. Verify FX snapshot available
@@ -98,7 +113,7 @@ router.post(
         logger.warn(`${SERVICE_NAME}: FX snapshot unavailable`);
         return res.status(503).json({
           success: false,
-          error: "FX rates unavailable. Please try again.",
+          error: 'FX rates unavailable. Please try again.',
         });
       }
 
@@ -118,9 +133,7 @@ router.post(
 
       const totalDebited = settlementAmount + deductedCommission;
 
-      logger.info(
-        `${SERVICE_NAME}: Settlement completed - transaction: ${transaction.id}`,
-      );
+      logger.info(`${SERVICE_NAME}: Settlement completed - transaction: ${transaction.id}`);
 
       return res.status(200).json({
         success: true,
@@ -145,7 +158,7 @@ router.post(
     } catch (err) {
       const error = err as Error;
 
-      if (error.message.includes("Insufficient")) {
+      if (error.message.includes('Insufficient')) {
         logger.warn(`${SERVICE_NAME}: Insufficient funds - ${error.message}`);
         return res.status(402).json({
           success: false,
@@ -153,7 +166,7 @@ router.post(
         });
       }
 
-      if (error.message.includes("not found")) {
+      if (error.message.includes('not found')) {
         logger.warn(`${SERVICE_NAME}: Resource not found - ${error.message}`);
         return res.status(404).json({
           success: false,
@@ -161,23 +174,21 @@ router.post(
         });
       }
 
-      if (error.message.includes("Duplicate")) {
-        logger.warn(
-          `${SERVICE_NAME}: Duplicate transaction - ${error.message}`,
-        );
+      if (error.message.includes('Duplicate')) {
+        logger.warn(`${SERVICE_NAME}: Duplicate transaction - ${error.message}`);
         return res.status(409).json({
           success: false,
-          error: "Duplicate settlement detected",
+          error: 'Duplicate settlement detected',
         });
       }
 
       logger.error(`${SERVICE_NAME}: Settlement failed`, error);
       return res.status(500).json({
         success: false,
-        error: "Failed to process settlement",
+        error: 'Failed to process settlement',
       });
     }
-  },
+  }
 );
 
 export default router;

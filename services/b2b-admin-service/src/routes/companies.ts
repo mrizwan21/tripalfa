@@ -1,41 +1,86 @@
-import { Router, Response } from "express";
-import { z } from "zod";
-import { prisma } from "../database.js";
-import {
-  AuthRequest,
-  authMiddleware,
-  requirePermission,
-} from "../middleware/auth.js";
+import { Router, Response } from 'express';
+import { z } from 'zod';
+import { prisma } from '../database.js';
+import { AuthRequest, authMiddleware, requirePermission } from '../middleware/auth.js';
 import {
   validateZod,
   createCompanySchema,
   updateCompanySchema,
   paginationSchema,
-} from "../middleware/validate.js";
-import { Prisma } from "@prisma/client";
+} from '../middleware/validate.js';
+import { Prisma } from '@prisma/client';
 
 const router: Router = Router();
 
 // All company routes require authentication
 router.use(authMiddleware);
 
-// GET /api/companies - List all companies with pagination
+/**
+ * @swagger
+ * /api/companies:
+ *   get:
+ *     summary: List all companies with pagination
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                 pagination:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/",
-  requirePermission("companies:read"),
-  validateZod(z.object({
-    query: z.object({
-      page: z.coerce.number().min(1).default(1),
-      limit: z.coerce.number().min(1).max(100).default(10),
-      sortBy: z.string().optional(),
-      sortOrder: z.enum(["asc", "desc"]).default("desc"),
-      search: z.string().optional(),
-    }),
-  })),
+  '/',
+  requirePermission('companies:read'),
+  validateZod(
+    z.object({
+      query: z.object({
+        page: z.coerce.number().min(1).default(1),
+        limit: z.coerce.number().min(1).max(100).default(10),
+        sortBy: z.string().optional(),
+        sortOrder: z.enum(['asc', 'desc']).default('desc'),
+        search: z.string().optional(),
+      }),
+    })
+  ),
   async (req: AuthRequest, res: Response) => {
     try {
       const { page, limit, sortBy, sortOrder, search } = req.query as any;
-      
+
       // Ensure proper type conversion
       const pageNum = Number(page) || 1;
       const limitNum = Number(limit) || 10;
@@ -58,7 +103,7 @@ router.get(
           where,
           skip: (pageNum - 1) * limitNum,
           take: limitNum,
-          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: "desc" },
+          orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
           include: {
             _count: {
               select: { departments: true, designations: true },
@@ -79,71 +124,142 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching companies:", error);
+      console.error('Error fetching companies:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch companies",
+        error: 'Failed to fetch companies',
       });
     }
-  },
+  }
 );
 
-// GET /api/companies/:id - Get company by ID
-router.get(
-  "/:id",
-  requirePermission("companies:read"),
-  async (req: AuthRequest, res: Response) => {
-    try {
-      const { id } = req.params;
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   get:
+ *     summary: Get company by ID
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id', requirePermission('companies:read'), async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
 
-      const company = await prisma.company.findUnique({
-        where: { id },
-        include: {
-          departments: {
-            where: { isActive: true },
-            orderBy: { name: "asc" },
-          },
-          designations: {
-            where: { isActive: true },
-            orderBy: { name: "asc" },
-          },
-          costCenters: {
-            where: { isActive: true },
-            orderBy: { name: "asc" },
-          },
-          campaigns: {
-            where: { status: "active" },
-            orderBy: { createdAt: "desc" },
-            take: 5,
-          },
+    const company = await prisma.company.findUnique({
+      where: { id },
+      include: {
+        departments: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
         },
-      });
+        designations: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
+        },
+        costCenters: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' },
+        },
+        campaigns: {
+          where: { status: 'active' },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        },
+      },
+    });
 
-      if (!company) {
-        return res.status(404).json({
-          success: false,
-          error: "Company not found",
-        });
-      }
-
-      res.json({
-        success: true,
-        data: company,
-      });
-    } catch (error) {
-      console.error("Error fetching company:", error);
-      res.status(500).json({
+    if (!company) {
+      return res.status(404).json({
         success: false,
-        error: "Failed to fetch company",
+        error: 'Company not found',
       });
     }
-  },
-);
 
-// POST /api/companies - Create new company
+    res.json({
+      success: true,
+      data: company,
+    });
+  } catch (error) {
+    console.error('Error fetching company:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch company',
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/companies:
+ *   post:
+ *     summary: Create a new company
+ *     tags: [Companies]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               taxId:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Company created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Validation error or duplicate company
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/",
-  requirePermission("companies:create"),
+  '/',
+  requirePermission('companies:create'),
   validateZod(createCompanySchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -153,8 +269,8 @@ router.post(
       if (!data.code) {
         data.code = data.name
           .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
       }
 
       // Check if code already exists
@@ -165,7 +281,7 @@ router.post(
       if (existingCompany) {
         return res.status(400).json({
           success: false,
-          error: "Company with this code already exists",
+          error: 'Company with this code already exists',
         });
       }
 
@@ -184,22 +300,71 @@ router.post(
       res.status(201).json({
         success: true,
         data: company,
-        message: "Company created successfully",
+        message: 'Company created successfully',
       });
     } catch (error) {
-      console.error("Error creating company:", error);
+      console.error('Error creating company:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to create company",
+        error: 'Failed to create company',
       });
     }
-  },
+  }
 );
 
-// PUT /api/companies/:id - Update company
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   put:
+ *     summary: Update an existing company
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               address:
+ *                 type: string
+ *               taxId:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Company updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Server error
+ */
 router.put(
-  "/:id",
-  requirePermission("companies:update"),
+  '/:id',
+  requirePermission('companies:update'),
   validateZod(updateCompanySchema),
   async (req: AuthRequest, res: Response) => {
     try {
@@ -214,7 +379,7 @@ router.put(
       if (!existingCompany) {
         return res.status(404).json({
           success: false,
-          error: "Company not found",
+          error: 'Company not found',
         });
       }
 
@@ -227,7 +392,7 @@ router.put(
         if (codeExists) {
           return res.status(400).json({
             success: false,
-            error: "Company with this code already exists",
+            error: 'Company with this code already exists',
           });
         }
       }
@@ -248,22 +413,50 @@ router.put(
       res.json({
         success: true,
         data: company,
-        message: "Company updated successfully",
+        message: 'Company updated successfully',
       });
     } catch (error) {
-      console.error("Error updating company:", error);
+      console.error('Error updating company:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to update company",
+        error: 'Failed to update company',
       });
     }
-  },
+  }
 );
 
-// DELETE /api/companies/:id - Soft delete company (set status to inactive)
+/**
+ * @swagger
+ * /api/companies/{id}:
+ *   delete:
+ *     summary: Soft delete a company
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Company deactivated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Company not found
+ *       500:
+ *         description: Server error
+ */
 router.delete(
-  "/:id",
-  requirePermission("companies:delete"),
+  '/:id',
+  requirePermission('companies:delete'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
@@ -275,7 +468,7 @@ router.delete(
       if (!company) {
         return res.status(404).json({
           success: false,
-          error: "Company not found",
+          error: 'Company not found',
         });
       }
 
@@ -287,29 +480,55 @@ router.delete(
 
       res.json({
         success: true,
-        message: "Company deactivated successfully",
+        message: 'Company deactivated successfully',
       });
     } catch (error) {
-      console.error("Error deleting company:", error);
+      console.error('Error deleting company:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to delete company",
+        error: 'Failed to delete company',
       });
     }
-  },
+  }
 );
 
-// GET /api/companies/:id/departments - Get company departments
+/**
+ * @swagger
+ * /api/companies/{id}/departments:
+ *   get:
+ *     summary: Get company departments
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/:id/departments",
-  requirePermission("companies:read"),
+  '/:id/departments',
+  requirePermission('companies:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
 
       const departments = await prisma.department.findMany({
         where: { companyId: id, isActive: true },
-        orderBy: { name: "asc" },
+        orderBy: { name: 'asc' },
         include: {
           _count: {
             select: { designations: true, costCenters: true },
@@ -322,19 +541,66 @@ router.get(
         data: departments,
       });
     } catch (error) {
-      console.error("Error fetching departments:", error);
+      console.error('Error fetching departments:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch departments",
+        error: 'Failed to fetch departments',
       });
     }
-  },
+  }
 );
 
-// POST /api/companies/:id/departments - Create department
+/**
+ * @swagger
+ * /api/companies/{id}/departments:
+ *   post:
+ *     summary: Create a new department for a company
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               code:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               headId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Department created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Validation error
+ *       500:
+ *         description: Server error
+ */
 router.post(
-  "/:id/departments",
-  requirePermission("companies:update"),
+  '/:id/departments',
+  requirePermission('companies:update'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
@@ -343,7 +609,7 @@ router.post(
       if (!name) {
         return res.status(400).json({
           success: false,
-          error: "Department name is required",
+          error: 'Department name is required',
         });
       }
 
@@ -360,41 +626,84 @@ router.post(
       res.status(201).json({
         success: true,
         data: department,
-        message: "Department created successfully",
+        message: 'Department created successfully',
       });
     } catch (error) {
-      console.error("Error creating department:", error);
+      console.error('Error creating department:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to create department",
+        error: 'Failed to create department',
       });
     }
-  },
+  }
 );
 
-// GET /api/companies/:id/stats - Get company statistics
+/**
+ * @swagger
+ * /api/companies/{id}/stats:
+ *   get:
+ *     summary: Get company statistics
+ *     tags: [Companies]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [7d, 30d, 90d, 1y]
+ *           default: 30d
+ *     responses:
+ *       200:
+ *         description: Success
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     totalBookings:
+ *                       type: integer
+ *                     totalRevenue:
+ *                       type: number
+ *                     totalUsers:
+ *                       type: integer
+ *                     totalDepartments:
+ *                       type: integer
+ *                     period:
+ *                       type: string
+ *       500:
+ *         description: Server error
+ */
 router.get(
-  "/:id/stats",
-  requirePermission("companies:read"),
+  '/:id/stats',
+  requirePermission('companies:read'),
   async (req: AuthRequest, res: Response) => {
     try {
       const { id } = req.params;
-      const { period = "30d" } = req.query;
+      const { period = '30d' } = req.query;
 
       // Calculate date range
       const now = new Date();
       const startDate = new Date();
       switch (period) {
-        case "7d":
+        case '7d':
           startDate.setDate(now.getDate() - 7);
           break;
-        case "30d":
+        case '30d':
           startDate.setDate(now.getDate() - 30);
           break;
-        case "90d":
+        case '90d':
           startDate.setDate(now.getDate() - 90);
           break;
-        case "1y":
+        case '1y':
           startDate.setFullYear(now.getFullYear() - 1);
           break;
       }
@@ -430,13 +739,13 @@ router.get(
         },
       });
     } catch (error) {
-      console.error("Error fetching company stats:", error);
+      console.error('Error fetching company stats:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch company statistics",
+        error: 'Failed to fetch company statistics',
       });
     }
-  },
+  }
 );
 
 export default router;

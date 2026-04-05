@@ -1,14 +1,45 @@
-import { Router, Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import { Router, Request, Response, NextFunction } from 'express';
+import { PrismaClient } from '@prisma/client';
 
 const router = Router();
 const prisma = new PrismaClient();
 
-// ── City / hotel destination search ────────────────────────────
-// @static-lookup: Public system-wide data, no tenant isolation needed
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/hotels/destinations", async (req: Request, res: Response) => {
-  const q = String(req.query.q ?? "").trim();
+/**
+ * @swagger
+ * /api/hotels/destinations:
+ *   get:
+ *     summary: Search hotel destinations/cities
+ *     tags: [Hotel Static Data]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query
+ *     responses:
+ *       200:
+ *         description: Destinations retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   city:
+ *                     type: string
+ *                   country:
+ *                     type: string
+ *                   type:
+ *                     type: string
+ */
+router.get('/hotels/destinations', async (req: Request, res: Response) => {
+  const q = String(req.query.q ?? '').trim();
   if (q.length < 2) return res.json([]);
 
   const pattern = `%${q}%`;
@@ -25,10 +56,73 @@ router.get("/hotels/destinations", async (req: Request, res: Response) => {
   return res.json(rows);
 });
 
-// ── Hotel static detail ─────────────────────────────────────────
-// @static-lookup: Public system-wide data, no tenant isolation needed
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/hotels/:hotelId/static", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/{hotelId}/static:
+ *   get:
+ *     summary: Get hotel static details including images, amenities, policies, room types
+ *     tags: [Hotel Static Data]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Hotel details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 starRating:
+ *                   type: number
+ *                 latitude:
+ *                   type: number
+ *                 longitude:
+ *                   type: number
+ *                 address:
+ *                   type: string
+ *                 city:
+ *                   type: string
+ *                 country:
+ *                   type: string
+ *                 images:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 amenities:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 policies:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 nearbyPlaces:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 roomTypes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       404:
+ *         description: Hotel not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+router.get('/hotels/:hotelId/static', async (req: Request, res: Response) => {
   const hotel = await prisma.$queryRaw<
     {
       id: string;
@@ -57,19 +151,13 @@ router.get("/hotels/:hotelId/static", async (req: Request, res: Response) => {
   `;
 
   if (!hotel || hotel.length === 0) {
-    return res.status(404).json({ error: "Hotel not found" });
+    return res.status(404).json({ error: 'Hotel not found' });
   }
 
   const [hotelData] = hotel;
 
   // Fetch related data in parallel
-  const [
-    images,
-    amenities,
-    policies,
-    nearbyPlaces,
-    roomTypes,
-  ] = await Promise.all([
+  const [images, amenities, policies, nearbyPlaces, roomTypes] = await Promise.all([
     prisma.$queryRaw<
       {
         id: number;
@@ -155,10 +243,50 @@ router.get("/hotels/:hotelId/static", async (req: Request, res: Response) => {
   });
 });
 
-// ── Hotel reviews (paginated) ──────────────────────────────────
-// @static-lookup: Public system-wide data, no tenant isolation needed
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get("/hotels/:hotelId/reviews", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/{hotelId}/reviews:
+ *   get:
+ *     summary: Get paginated hotel reviews
+ *     tags: [Hotel Static Data]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Items per page
+ *     responses:
+ *       200:
+ *         description: Reviews retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reviews:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 pages:
+ *                   type: integer
+ *                 averageRating:
+ *                   type: number
+ */
+router.get('/hotels/:hotelId/reviews', async (req: Request, res: Response) => {
   const page = Math.max(1, Number(req.query.page ?? 1));
   const limit = Math.min(50, Math.max(1, Number(req.query.limit ?? 10)));
   const skip = (page - 1) * limit;
@@ -201,30 +329,61 @@ router.get("/hotels/:hotelId/reviews", async (req: Request, res: Response) => {
   });
 });
 
-// ── Hotel extra services ───────────────────────────────────────
-// @static-lookup: Public system-wide data, no tenant isolation needed
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-router.get(
-  "/hotels/:hotelId/extras",
-  async (req: Request, res: Response) => {
-    const data = await prisma.$queryRaw<
-      {
-        id: number;
-        hotelId: string;
-        name: string;
-        description: string | null;
-        price: number;
-        currency: string;
-        isActive: boolean;
-      }[]
-    >`
+/**
+ * @swagger
+ * /api/hotels/{hotelId}/extras:
+ *   get:
+ *     summary: Get hotel extra services
+ *     tags: [Hotel Static Data]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Extra services retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   hotelId:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *                   price:
+ *                     type: number
+ *                   currency:
+ *                     type: string
+ *                   isActive:
+ *                     type: boolean
+ */
+router.get('/hotels/:hotelId/extras', async (req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<
+    {
+      id: number;
+      hotelId: string;
+      name: string;
+      description: string | null;
+      price: number;
+      currency: string;
+      isActive: boolean;
+    }[]
+  >`
       SELECT id, hotel_id as "hotelId", name, description, price, currency, is_active as "isActive"
       FROM hotel_extra_services
       WHERE hotel_id = ${req.params.hotelId}
         AND is_active = true
     `;
-    return res.json(data);
-  }
-);
+  return res.json(data);
+});
 
 export default router;

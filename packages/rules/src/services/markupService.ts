@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import {
   MarkupRule,
   MarkupRuleCreate,
@@ -18,7 +17,14 @@ export class MarkupService {
   private prisma: any;
 
   constructor() {
-    this.prisma = new PrismaClient();
+    this.prisma = null;
+  }
+
+  /**
+   * Set Prisma client (inject dependency)
+   */
+  setPrisma(prisma: any): void {
+    this.prisma = prisma;
   }
 
   /**
