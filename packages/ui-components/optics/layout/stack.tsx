@@ -1,22 +1,5 @@
-import * as React from 'react';
+import { createLayoutComponent, type LayoutProps } from './create-layout-component';
 
-export interface StackProps extends React.HTMLAttributes<HTMLDivElement> {
-  gap?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  as?: React.ElementType;
-}
+export type StackProps = LayoutProps;
 
-export const Stack = React.forwardRef<HTMLDivElement, StackProps>(
-  ({ gap = 'md', as: Comp = 'div', className = '', children, ...props }, ref) => {
-    const gapClass = gap !== 'md' ? ` gap-${gap}` : '';
-    return (
-      <Comp
-        ref={ref}
-        className={`op-stack${gapClass}${className ? ` ${className}` : ''}`}
-        {...props}
-      >
-        {children}
-      </Comp>
-    );
-  }
-);
-Stack.displayName = 'Stack';
+export const Stack = createLayoutComponent('Stack', 'op-stack');

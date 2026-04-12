@@ -7,7 +7,7 @@ import type { MenuItem, FilterOption } from "./types";
 // Navigation Menu
 // ============================================================================
 
-export const MAIN_MENU: MenuItem[] = [
+const MAIN_MENU: MenuItem[] = [
   {
     id: "dashboard",
     label: "Dashboard",
@@ -132,21 +132,21 @@ export const MAIN_MENU: MenuItem[] = [
 // Status Options
 // ============================================================================
 
-export const COMPANY_STATUS_OPTIONS: FilterOption[] = [
+const COMPANY_STATUS_OPTIONS: FilterOption[] = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
   { label: "Suspended", value: "SUSPENDED" },
   { label: "Pending", value: "PENDING" },
 ];
 
-export const USER_STATUS_OPTIONS: FilterOption[] = [
+const USER_STATUS_OPTIONS: FilterOption[] = [
   { label: "Active", value: "ACTIVE" },
   { label: "Inactive", value: "INACTIVE" },
   { label: "Suspended", value: "SUSPENDED" },
   { label: "Pending Verification", value: "PENDING_VERIFICATION" },
 ];
 
-export const BOOKING_STATUS_OPTIONS: FilterOption[] = [
+const BOOKING_STATUS_OPTIONS: FilterOption[] = [
   { label: "Pending", value: "PENDING" },
   { label: "Processing", value: "PROCESSING" },
   { label: "Confirmed", value: "CONFIRMED" },
@@ -157,7 +157,7 @@ export const BOOKING_STATUS_OPTIONS: FilterOption[] = [
   { label: "Failed", value: "FAILED" },
 ];
 
-export const PAYMENT_STATUS_OPTIONS: FilterOption[] = [
+const PAYMENT_STATUS_OPTIONS: FilterOption[] = [
   { label: "Pending", value: "PENDING" },
   { label: "Processing", value: "PROCESSING" },
   { label: "Completed", value: "COMPLETED" },
@@ -170,7 +170,7 @@ export const PAYMENT_STATUS_OPTIONS: FilterOption[] = [
 // Booking Segment Types
 // ============================================================================
 
-export const BOOKING_SEGMENT_TYPES: FilterOption[] = [
+const BOOKING_SEGMENT_TYPES: FilterOption[] = [
   { label: "Flight", value: "FLIGHT" },
   { label: "Hotel", value: "HOTEL" },
   { label: "Car", value: "CAR" },
@@ -186,7 +186,7 @@ export const BOOKING_SEGMENT_TYPES: FilterOption[] = [
 // Company Types
 // ============================================================================
 
-export const COMPANY_TYPE_OPTIONS: FilterOption[] = [
+const COMPANY_TYPE_OPTIONS: FilterOption[] = [
   { label: "Travel Agency", value: "TRAVEL_AGENCY" },
   { label: "Tour Operator", value: "TOUR_OPERATOR" },
   { label: "OTA", value: "OTA" },
@@ -292,8 +292,8 @@ export const API_ENDPOINTS = {
 // Pagination Defaults
 // ============================================================================
 
-export const DEFAULT_PAGE_SIZE = 20;
-export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const DEFAULT_PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 // ============================================================================
 // Date Formats
@@ -301,15 +301,15 @@ export const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
 
 export const DATE_FORMAT = "MMM dd, yyyy";
 export const DATE_TIME_FORMAT = "MMM dd, yyyy HH:mm";
-export const TIME_FORMAT = "HH:mm";
-export const API_DATE_FORMAT = "yyyy-MM-dd";
+const TIME_FORMAT = "HH:mm";
+const API_DATE_FORMAT = "yyyy-MM-dd";
 
 // ============================================================================
 // Currency Defaults
 // ============================================================================
 
 export const DEFAULT_CURRENCY = "USD";
-export const SUPPORTED_CURRENCIES = [
+const SUPPORTED_CURRENCIES = [
   "USD",
   "EUR",
   "GBP",

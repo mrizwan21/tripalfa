@@ -14,7 +14,7 @@ interface IdempotencyStore {
 }
 
 // In-memory implementation for development
-export class InMemoryIdempotencyStore implements IdempotencyStore {
+class InMemoryIdempotencyStore implements IdempotencyStore {
   private store = new Map<string, any>();
   private expiryTimes = new Map<string, number>();
   private cleanupInterval: NodeJS.Timeout | null = null;
@@ -63,7 +63,7 @@ export class InMemoryIdempotencyStore implements IdempotencyStore {
 }
 
 // Redis implementation for production (lazy-loaded with initialization tracking)
-export class RedisIdempotencyStore implements IdempotencyStore {
+class RedisIdempotencyStore implements IdempotencyStore {
   private redis: any = null;
   private connected = false;
   private fallbackStore: InMemoryIdempotencyStore;
@@ -181,7 +181,7 @@ const idempotencyStore: IdempotencyStore =
  *   process.exit(0);
  * });
  */
-export async function shutdownIdempotencyStore(): Promise<void> {
+async function shutdownIdempotencyStore(): Promise<void> {
   if (idempotencyStore instanceof InMemoryIdempotencyStore) {
     idempotencyStore.stopCleanup();
   } else if (idempotencyStore instanceof RedisIdempotencyStore) {

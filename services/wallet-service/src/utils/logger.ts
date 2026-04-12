@@ -15,7 +15,7 @@ const LOG_LEVELS: Record<string, LogLevel> = {
   debug: LogLevel.Debug,
 };
 
-const currentLevel = LOG_LEVELS[process.env.LOG_LEVEL || "info"];
+const currentLevel = LOG_LEVELS[process.env.LOG_LEVEL || 'info'];
 
 interface LogEntry {
   level: string;
@@ -30,7 +30,7 @@ export const logger = {
   error: (message: string, error?: Error): void => {
     if (currentLevel >= LogLevel.Error) {
       const entry: LogEntry = {
-        level: "error",
+        level: 'error',
         timestamp: new Date().toISOString(),
         message,
         error: error?.message || String(error),
@@ -43,7 +43,7 @@ export const logger = {
   warn: (message: string, data?: unknown): void => {
     if (currentLevel >= LogLevel.Warn) {
       const entry: LogEntry = {
-        level: "warn",
+        level: 'warn',
         timestamp: new Date().toISOString(),
         message,
         data,
@@ -55,7 +55,7 @@ export const logger = {
   info: (message: string, data?: unknown): void => {
     if (currentLevel >= LogLevel.Info) {
       const entry: LogEntry = {
-        level: "info",
+        level: 'info',
         timestamp: new Date().toISOString(),
         message,
         data,
@@ -67,7 +67,7 @@ export const logger = {
   debug: (message: string, data?: unknown): void => {
     if (currentLevel >= LogLevel.Debug) {
       const entry: LogEntry = {
-        level: "debug",
+        level: 'debug',
         timestamp: new Date().toISOString(),
         message,
         data,
@@ -76,5 +76,3 @@ export const logger = {
     }
   },
 };
-
-export default logger;

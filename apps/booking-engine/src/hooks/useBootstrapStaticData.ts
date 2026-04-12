@@ -110,7 +110,7 @@ export function useBootstrapStaticData(): void {
  * }, [searchType]);
  * ```
  */
-export function usePrefetchStaticData() {
+function usePrefetchStaticData() {
   const queryClient = useQueryClient();
 
   return {

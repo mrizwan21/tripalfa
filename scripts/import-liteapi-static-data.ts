@@ -23,6 +23,7 @@ const pool = new pg.Pool({
 const adapter = new PrismaPg(pool);
 
 // Initialize Prisma Client with adapter (required for Prisma 7.x)
+// @ts-ignore - Prisma 7.x adapter compatibility
 const prisma = new PrismaClient({
     adapter,
     log: ['error', 'warn'],

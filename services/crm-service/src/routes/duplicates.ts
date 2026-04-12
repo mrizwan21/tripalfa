@@ -168,7 +168,7 @@ router.post('/detect', (req: Request, res: Response) => {
  */
 router.post('/:id/reject', (req: Request, res: Response) => {
   try {
-    const match = matches.get(req.params.id);
+    const match = matches.get(req.params.id as string);
     if (!match) return res.status(404).json({ success: false, error: 'Match not found' });
 
     match.status = 'REJECTED';

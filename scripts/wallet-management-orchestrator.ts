@@ -86,6 +86,8 @@ interface WalletTransaction {
   metadata?: Record<string, any>;
   createdAt: string;
   completedAt?: string;
+  success?: boolean;
+  reason?: string;
 }
 
 interface TransactionBatch {
@@ -868,7 +870,16 @@ class WalletManagementTestSuite {
 
     if (!wallet) {
       await this.client.createWallet(customer1, "USD");
-      wallet = wallets.get(walletKey) || { id: "default" };
+      wallet = wallets.get(walletKey) || {
+        id: "default",
+        userId: customer1,
+        currency: "USD",
+        balance: 0,
+        reservedBalance: 0,
+        status: "active" as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
     }
 
     await this.test("Process booking cancellation refund", async () => {

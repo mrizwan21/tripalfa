@@ -10,7 +10,7 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint src --ext .ts",
+    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
     "format": "prettier --write src/**/*.ts"
   },
   "dependencies": {
@@ -21,8 +21,6 @@
     "express": "^5.0.0",
     "helmet": "^7.0.0",
     "morgan": "^1.10.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

@@ -23,7 +23,7 @@ const TRANSLATION_API_CONFIG = {
 };
 
 // Supported languages mapping
-export const SUPPORTED_LANGUAGES = {
+const SUPPORTED_LANGUAGES = {
   en: "English",
   ar: "Arabic",
   fr: "French",
@@ -43,10 +43,10 @@ export const SUPPORTED_LANGUAGES = {
 };
 
 // RTL languages
-export const RTL_LANGUAGES = ["ar", "he", "fa", "ur"];
+const RTL_LANGUAGES = ["ar", "he", "fa", "ur"];
 
 // Common UI text keys that need translation
-export const TRANSLATION_KEYS = [
+const TRANSLATION_KEYS = [
   "header.sign_in",
   "header.register",
   "header.notifications",
@@ -73,7 +73,7 @@ export const TRANSLATION_KEYS = [
 ];
 
 // Default English translations
-export const DEFAULT_TRANSLATIONS: Record<string, string> = {
+const DEFAULT_TRANSLATIONS: Record<string, string> = {
   "header.sign_in": "Sign In",
   "header.register": "Register",
   "header.notifications": "Notifications",
@@ -105,7 +105,7 @@ const translationCache = new Map<string, Record<string, string>>();
 /**
  * Get translation for a specific key
  */
-export function t(
+function t(
   key: string,
   translations: Record<string, string> = {},
 ): string {
@@ -183,7 +183,7 @@ function updateRTLStyles(isRTL: boolean): void {
 /**
  * Fetch translations from API
  */
-export async function fetchTranslations(
+async function fetchTranslations(
   lang: string,
 ): Promise<Record<string, string>> {
   try {

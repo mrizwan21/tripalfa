@@ -252,7 +252,7 @@ router.post('/', (req: Request, res: Response) => {
 router.patch('/:id/stage', (req: Request, res: Response) => {
   try {
     const { stage } = req.body;
-    const opp = opportunities.get(req.params.id);
+    const opp = opportunities.get(req.params.id as string);
     if (!opp) return res.status(404).json({ success: false, error: 'Opportunity not found' });
 
     opp.stage = stage;

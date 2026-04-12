@@ -459,4 +459,4 @@ const styles = `
 }
 `;
 
-export { styles };
+{ styles }

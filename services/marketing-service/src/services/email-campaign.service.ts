@@ -5,7 +5,7 @@ import type { CreateEmailCampaign } from '../types/index.js';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_API_URL = 'https://api.resend.com';
 
-export class EmailCampaignService {
+class EmailCampaignService {
   /**
    * Create email campaign
    */
@@ -360,4 +360,4 @@ export class EmailCampaignService {
   }
 }
 
-export const emailCampaignService = new EmailCampaignService();
+const emailCampaignService = new EmailCampaignService();

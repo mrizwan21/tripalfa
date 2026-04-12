@@ -23,7 +23,7 @@ const swaggerSpec = createSwaggerSpec({
   ],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupWalletSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

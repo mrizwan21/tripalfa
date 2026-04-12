@@ -3,7 +3,7 @@ import type { CreateContact, UpdateContact, CreateActivity, UpdatePreference } f
 
 const prisma = getPrismaClient();
 
-export class ContactService {
+class ContactService {
   /**
    * Sync or create contact from user
    */

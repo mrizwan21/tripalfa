@@ -249,7 +249,7 @@ export function useBundledStaticData() {
 // These are thin wrappers around the React Query versions.
 // =====================================================================
 
-export function useStaticAirports() {
+function useStaticAirports() {
   const query = useAirports();
   return useMemo(() => {
     const data = (query.data || []) as AirportItem[];
@@ -272,7 +272,7 @@ export function useStaticAirports() {
   }, [query.data, query.isLoading, query.error]);
 }
 
-export function useStaticAirlines() {
+function useStaticAirlines() {
   const query = useAirlines();
   return useMemo(() => {
     const data = (query.data || []) as AirlineItem[];
@@ -295,7 +295,7 @@ export function useStaticAirlines() {
   }, [query.data, query.isLoading, query.error]);
 }
 
-export function useStaticCities() {
+function useStaticCities() {
   const query = useCities();
   return useMemo(() => {
     const data = query.data || [];
@@ -318,7 +318,7 @@ export function useStaticCities() {
   }, [query.data, query.isLoading, query.error]);
 }
 
-export function useStaticCountries() {
+function useStaticCountries() {
   const query = useCountries();
   return useMemo(() => {
     const data = query.data || [];
@@ -340,7 +340,7 @@ export function useStaticCountries() {
   }, [query.data, query.isLoading, query.error]);
 }
 
-export function useStaticCurrencies() {
+function useStaticCurrencies() {
   const query = useCurrencies();
   return useMemo(() => {
     const data = query.data || [];
@@ -362,7 +362,7 @@ export function useStaticCurrencies() {
   }, [query.data, query.isLoading, query.error]);
 }
 
-export function useStaticNationalities() {
+function useStaticNationalities() {
   const query = useCountries(); // Nationalities are embedded in countries
   return useMemo(() => {
     const data = query.data || [];
@@ -384,7 +384,7 @@ export function useStaticNationalities() {
   }, [query.data, query.isLoading, query.error]);
 }
 
-export function useStaticHotelAmenities() {
+function useStaticHotelAmenities() {
   const query = useHotelAmenities();
   return useMemo(
     () => ({
@@ -396,7 +396,7 @@ export function useStaticHotelAmenities() {
   );
 }
 
-export function useStaticBoardTypes() {
+function useStaticBoardTypes() {
   const query = useBoardTypes();
   return useMemo(
     () => ({
@@ -408,7 +408,7 @@ export function useStaticBoardTypes() {
   );
 }
 
-export function useStaticDestinations() {
+function useStaticDestinations() {
   const query = usePopularDestinations();
   return useMemo(
     () => ({
@@ -420,7 +420,7 @@ export function useStaticDestinations() {
   );
 }
 
-export function useStaticLoyaltyPrograms() {
+function useStaticLoyaltyPrograms() {
   const query = useLoyaltyPrograms();
   return useMemo(
     () => ({
@@ -433,7 +433,7 @@ export function useStaticLoyaltyPrograms() {
 }
 
 // Placeholder stubs for hooks not yet mapped (can be left empty or removed)
-export function useStaticHotels() {
+function useStaticHotels() {
   return useMemo(
     () => ({
       hotels: [],
@@ -444,7 +444,7 @@ export function useStaticHotels() {
   );
 }
 
-export function useStaticHotelChains() {
+function useStaticHotelChains() {
   return useMemo(
     () => ({
       chains: [],
@@ -455,7 +455,7 @@ export function useStaticHotelChains() {
   );
 }
 
-export function useStaticHotelTypes() {
+function useStaticHotelTypes() {
   return useMemo(
     () => ({
       types: [],

@@ -15,7 +15,7 @@ const swaggerSpec = createSwaggerSpec({
   tags: [{ name: 'KYC', description: 'KYC verification and management endpoints' }],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupKYCSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

@@ -1,9 +1,0 @@
-{
-  "api": {
-    "upstream_url": "http://host.docker.internal:3000",
-    "request_path": "/",
-    "strip_uri": false,
-    "preserve_host": false
-  },
-  "plugins": []
-}

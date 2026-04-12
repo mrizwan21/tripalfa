@@ -1,4 +1,3 @@
-// Layout Primitives
 export { Stack } from './layout/stack';
 export type { StackProps } from './layout/stack';
 export { Cluster } from './layout/cluster';

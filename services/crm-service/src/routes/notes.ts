@@ -239,7 +239,7 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.post('/:id/comments', (req: Request, res: Response) => {
   try {
-    const note = notes.get(req.params.id);
+    const note = notes.get(req.params.id as string);
     if (!note) return res.status(404).json({ success: false, error: 'Note not found' });
 
     const { author, text } = req.body;
@@ -303,7 +303,7 @@ router.post('/:id/comments', (req: Request, res: Response) => {
  */
 router.patch('/:id/pin', (req: Request, res: Response) => {
   try {
-    const note = notes.get(req.params.id);
+    const note = notes.get(req.params.id as string);
     if (!note) return res.status(404).json({ success: false, error: 'Note not found' });
 
     note.pinnedForTeam = !note.pinnedForTeam;
@@ -364,10 +364,10 @@ router.patch('/:id/pin', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!notes.has(req.params.id)) {
+    if (!notes.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Note not found' });
     }
-    notes.delete(req.params.id);
+    notes.delete(req.params.id as string);
     res.status(200).json({ success: true, message: 'Note deleted' });
   } catch (error: unknown) {
     res.status(500).json({ success: false, error: 'Failed to delete note' });

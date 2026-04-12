@@ -44,7 +44,7 @@ class UnifiedImporter {
                 }
 
                 const json = await response.json();
-                return json.data || json;
+                return (json as Record<string, any>).data || json;
             } catch (error) {
                 console.error(`  ⚠️ Attempt ${i + 1} failed: ${(error as Error).message}`);
                 if (i === retries - 1) throw error;

@@ -20,7 +20,7 @@ type ErrorCodeType = (typeof ErrorCode)[keyof typeof ErrorCode];
 /**
  * Logger for errors with context
  */
-export function logError(context: string, error: unknown, additionalContext?: Record<string, any>) {
+function logError(context: string, error: unknown, additionalContext?: Record<string, any>) {
   const errorObj = error instanceof Error ? error : new Error(String(error));
   const logEntry = {
     level: 'error',
@@ -37,7 +37,7 @@ export function logError(context: string, error: unknown, additionalContext?: Re
 /**
  * Logger for informational messages
  */
-export function logInfo(context: string, details?: Record<string, any>) {
+function logInfo(context: string, details?: Record<string, any>) {
   const logEntry = {
     level: 'info',
     timestamp: new Date().toISOString(),
@@ -51,7 +51,7 @@ export function logInfo(context: string, details?: Record<string, any>) {
 /**
  * Logger for warning messages
  */
-export function logWarn(context: string, details?: Record<string, any>) {
+function logWarn(context: string, details?: Record<string, any>) {
   const logEntry = {
     level: 'warn',
     timestamp: new Date().toISOString(),
@@ -65,7 +65,7 @@ export function logWarn(context: string, details?: Record<string, any>) {
 /**
  * Create a structured error object
  */
-export function createError(
+function createError(
   code: string,
   message: string,
   statusCode: number = 500,
@@ -86,7 +86,7 @@ export function createError(
 /**
  * Format error response for API
  */
-export function formatErrorResponse(error: any) {
+function formatErrorResponse(error: any) {
   return {
     success: false,
     error: error.message || 'Internal Server Error',

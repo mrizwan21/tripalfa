@@ -33,7 +33,7 @@ export interface Role {
 /**
  * Comprehensive Role Management Service for FusionAuth
  */
-export class FusionAuthRoleService {
+class FusionAuthRoleService {
   private static instance: FusionAuthRoleService;
   private client: AxiosInstance;
 

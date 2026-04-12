@@ -1,37 +1,37 @@
-import { useState, useMemo } from "react";
-import { Search, Filter, Trash2, Eye, Settings, Loader2 } from "lucide-react";
-import { Button } from "@tripalfa/ui-components/ui/button";
-import { Input } from "@tripalfa/ui-components/ui/input";
+import { useState, useMemo } from 'react';
+import { Search, Filter, Trash2, Eye, Settings, Loader2 } from 'lucide-react';
+import { Button } from '@tripalfa/ui-components/ui/button';
+import { Input } from '@tripalfa/ui-components/ui/input';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@tripalfa/ui-components/ui/card";
+} from '@tripalfa/ui-components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@tripalfa/ui-components/ui/select";
-import { useNotifications } from "@/hooks/useNotifications";
+} from '@tripalfa/ui-components/ui/select';
+import { useNotifications } from '@/hooks/useNotifications';
 
 // Simple Badge component inline
 const Badge = ({
   children,
-  className = "",
-  variant = "default",
+  className = '',
+  variant = 'default',
 }: {
   children: React.ReactNode;
   className?: string;
   variant?: string;
 }) => {
   const variantClasses: Record<string, string> = {
-    default: "bg-muted text-foreground",
-    outline: "border border-border bg-transparent text-muted-foreground",
-    secondary: "bg-muted text-foreground",
+    default: 'bg-muted text-foreground',
+    outline: 'border border-border bg-transparent text-muted-foreground',
+    secondary: 'bg-muted text-foreground',
   };
   return (
     <span
@@ -43,23 +43,15 @@ const Badge = ({
 };
 
 export const NotificationCenter = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<string | "all">("all");
-  const [filterStatus, setFilterStatus] = useState<"all" | "read" | "unread">(
-    "all",
-  );
-  const [filterPriority, setFilterPriority] = useState<string | "all">("all");
-  const {
-    notifications,
-    isLoading,
-    error,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-  } = useNotifications(50);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string | 'all'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'read' | 'unread'>('all');
+  const [filterPriority, setFilterPriority] = useState<string | 'all'>('all');
+  const { notifications, isLoading, error, markAsRead, markAllAsRead, deleteNotification } =
+    useNotifications(50);
 
   const filteredNotifications = useMemo(() => {
-    return notifications.filter((notification) => {
+    return notifications.filter(notification => {
       // Search filter
       if (
         searchQuery &&
@@ -70,23 +62,20 @@ export const NotificationCenter = () => {
       }
 
       // Type filter
-      if (filterType !== "all" && notification.type !== filterType) {
+      if (filterType !== 'all' && notification.type !== filterType) {
         return false;
       }
 
       // Status filter
-      if (filterStatus === "read" && !notification.readAt) {
+      if (filterStatus === 'read' && !notification.readAt) {
         return false;
       }
-      if (filterStatus === "unread" && notification.readAt) {
+      if (filterStatus === 'unread' && notification.readAt) {
         return false;
       }
 
       // Priority filter
-      if (
-        filterPriority !== "all" &&
-        notification.priority !== filterPriority
-      ) {
+      if (filterPriority !== 'all' && notification.priority !== filterPriority) {
         return false;
       }
 
@@ -95,46 +84,46 @@ export const NotificationCenter = () => {
   }, [notifications, searchQuery, filterType, filterStatus, filterPriority]);
 
   const notificationTypes = [
-    { value: "offline_request_update", label: "Offline Request Updates" },
-    { value: "price_alert", label: "Price Alerts" },
-    { value: "booking_reminder", label: "Booking Reminders" },
-    { value: "approval_pending", label: "Approvals Pending" },
+    { value: 'offline_request_update', label: 'Offline Request Updates' },
+    { value: 'price_alert', label: 'Price Alerts' },
+    { value: 'booking_reminder', label: 'Booking Reminders' },
+    { value: 'approval_pending', label: 'Approvals Pending' },
   ];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-300";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
-      case "low":
-        return "bg-blue-100 text-blue-800 border-blue-300";
+      case 'high':
+        return 'bg-blue-100 text-blue-800 border-blue-300';
+      case 'medium':
+        return 'bg-neutral-100 text-neutral-800 border-neutral-300';
+      case 'low':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
       default:
-        return "bg-muted text-foreground border-border";
+        return 'bg-muted text-foreground border-border';
     }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "offline_request_update":
-        return "📝";
-      case "price_alert":
-        return "💰";
-      case "booking_reminder":
-        return "🛫";
-      case "approval_pending":
-        return "⏳";
+      case 'offline_request_update':
+        return '📝';
+      case 'price_alert':
+        return '💰';
+      case 'booking_reminder':
+        return '🛫';
+      case 'approval_pending':
+        return '⏳';
       default:
-        return "📬";
+        return '📬';
     }
   };
 
   const getTypeBadge = (type: string) => {
-    const typeData = notificationTypes.find((t) => t.value === type);
+    const typeData = notificationTypes.find(t => t.value === type);
     return typeData?.label || type;
   };
 
-  const unreadCount = notifications.filter((n) => !n.readAt).length;
+  const unreadCount = notifications.filter(n => !n.readAt).length;
 
   return (
     <div className="space-y-6 p-6">
@@ -143,7 +132,7 @@ export const NotificationCenter = () => {
         <div>
           <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
           <p className="text-muted-foreground mt-1">
-            {unreadCount > 0 ? `${unreadCount} unread` : "All caught up"}
+            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
           </p>
         </div>
 
@@ -160,9 +149,9 @@ export const NotificationCenter = () => {
 
       {/* Error State */}
       {error && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-neutral-200 bg-neutral-50">
           <CardContent className="pt-6">
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-sm text-neutral-700">{error}</p>
           </CardContent>
         </Card>
       )}
@@ -176,15 +165,13 @@ export const NotificationCenter = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                Search
-              </label>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   placeholder="Search notifications..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -192,16 +179,14 @@ export const NotificationCenter = () => {
 
             {/* Type Filter */}
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                Type
-              </label>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Type</label>
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {notificationTypes.map((type) => (
+                  {notificationTypes.map(type => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
                     </SelectItem>
@@ -212,14 +197,10 @@ export const NotificationCenter = () => {
 
             {/* Status Filter */}
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                Status
-              </label>
+              <label className="text-sm font-medium text-muted-foreground mb-2 block">Status</label>
               <Select
                 value={filterStatus}
-                onValueChange={(value) =>
-                  setFilterStatus(value as "all" | "read" | "unread")
-                }
+                onValueChange={value => setFilterStatus(value as 'all' | 'read' | 'unread')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
@@ -283,13 +264,13 @@ export const NotificationCenter = () => {
         </Card>
       ) : (
         <div className="space-y-3">
-          {filteredNotifications.map((notification) => (
+          {filteredNotifications.map(notification => (
             <Card
               key={notification.id}
               className={`border-l-4 transition-all ${
                 !notification.readAt
-                  ? "border-l-blue-500 bg-blue-50 shadow-sm"
-                  : "border-l-border bg-background"
+                  ? 'border-l-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-l-border bg-background'
               }`}
             >
               <CardContent className="p-4">
@@ -297,9 +278,7 @@ export const NotificationCenter = () => {
                   {/* Notification Content */}
                   <div className="flex-1 min-w-0 gap-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-2xl">
-                        {getNotificationIcon(notification.type)}
-                      </span>
+                      <span className="text-2xl">{getNotificationIcon(notification.type)}</span>
 
                       <div className="flex-1 min-w-0 gap-4">
                         <h3 className="font-semibold text-foreground line-clamp-1 text-xl font-semibold tracking-tight">
@@ -311,17 +290,13 @@ export const NotificationCenter = () => {
                             {getTypeBadge(notification.type)}
                           </Badge>
 
-                          <Badge
-                            className={`text-xs ${getPriorityColor(notification.priority)}`}
-                          >
+                          <Badge className={`text-xs ${getPriorityColor(notification.priority)}`}>
                             {notification.priority?.charAt(0).toUpperCase() +
-                              notification.priority?.slice(1) || "Normal"}
+                              notification.priority?.slice(1) || 'Normal'}
                           </Badge>
 
                           {!notification.readAt && (
-                            <Badge className="text-xs bg-blue-600 text-white">
-                              Unread
-                            </Badge>
+                            <Badge className="text-xs bg-blue-600 text-white">Unread</Badge>
                           )}
                         </div>
                       </div>
@@ -333,14 +308,14 @@ export const NotificationCenter = () => {
 
                     {notification.data?.bookingId && (
                       <p className="text-xs text-muted-foreground mb-2">
-                        <span className="font-medium">Booking ID:</span>{" "}
+                        <span className="font-medium">Booking ID:</span>{' '}
                         {notification.data.bookingId}
                       </p>
                     )}
 
                     {notification.data?.requestId && (
                       <p className="text-xs text-muted-foreground mb-2">
-                        <span className="font-medium">Request ID:</span>{" "}
+                        <span className="font-medium">Request ID:</span>{' '}
                         {notification.data.requestId}
                       </p>
                     )}
@@ -382,7 +357,7 @@ export const NotificationCenter = () => {
                       size="sm"
                       onClick={() => deleteNotification(notification.id)}
                       title="Delete"
-                      className="w-full text-red-600 border-red-300 hover:bg-red-50"
+                      className="w-full text-neutral-500 border-neutral-300 hover:bg-neutral-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -397,8 +372,7 @@ export const NotificationCenter = () => {
       {/* Results Summary */}
       {filteredNotifications.length > 0 && (
         <p className="text-sm text-muted-foreground text-center">
-          Showing {filteredNotifications.length} of {notifications.length}{" "}
-          notifications
+          Showing {filteredNotifications.length} of {notifications.length} notifications
         </p>
       )}
     </div>

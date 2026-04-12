@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 /**
  * Search Tabs - Premium International OTA Design
- * 
+ *
  * Upgraded with:
  * - Phosphor animated icons (duotone with active state)
  * - Smooth sliding indicator animation
@@ -11,12 +11,7 @@
 
 import React from 'react';
 import { cn } from '@tripalfa/shared-utils/utils';
-import {
-  AirplaneTilt,
-  Bed,
-  Car,
-  SuitcaseSimple,
-} from '@phosphor-icons/react';
+import { AirplaneTilt, Bed, Car, SuitcaseSimple } from '@phosphor-icons/react';
 
 export type SearchTab = 'flights' | 'hotels' | 'packages' | 'cars';
 
@@ -34,12 +29,7 @@ interface SearchTabsProps {
   className?: string;
 }
 
-export function SearchTabs({
-  activeTab,
-  onTabChange,
-  tabs,
-  className,
-}: SearchTabsProps) {
+export function SearchTabs({ activeTab, onTabChange, tabs, className }: SearchTabsProps) {
   const defaultTabs: SearchTabItem[] = [
     { id: 'flights', label: 'Flights', icon: AirplaneTilt },
     { id: 'hotels', label: 'Hotels', icon: Bed },
@@ -48,12 +38,12 @@ export function SearchTabs({
   ];
 
   const tabItems = tabs || defaultTabs;
-  const activeIndex = tabItems.findIndex((t) => t.id === activeTab);
+  const activeIndex = tabItems.findIndex(t => t.id === activeTab);
 
   return (
     <div className={cn('relative', className)}>
       <div
-        className="relative inline-flex items-center bg-gray-100/60 backdrop-blur-md rounded-2xl p-1.5 shadow-inner shadow-gray-200/50"
+        className="relative inline-flex items-center bg-gray-100/60 backdrop-blur-md rounded-xl p-1.5 shadow-inner shadow-gray-200/50"
         role="tablist"
         aria-orientation="horizontal"
       >
@@ -80,16 +70,14 @@ export function SearchTabs({
               className={cn(
                 'relative z-10 flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-300 outline-none group/tab',
                 'disabled:opacity-40 disabled:cursor-not-allowed',
-                isActive
-                  ? 'text-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
+                isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
               )}
             >
               <Icon
                 className={cn(
                   'h-5 w-5 transition-all duration-300',
                   isActive
-                    ? 'text-[#F45D48] scale-110'
+                    ? 'text-[hsl(var(--primary))] scale-110'
                     : 'group-hover/tab:scale-110 group-hover/tab:text-gray-700'
                 )}
                 size={20}

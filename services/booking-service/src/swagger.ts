@@ -36,7 +36,7 @@ const swaggerSpec = createSwaggerSpec({
   ],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupBookingSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

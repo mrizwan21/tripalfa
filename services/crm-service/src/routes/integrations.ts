@@ -229,7 +229,7 @@ router.post('/authorize', (req: Request, res: Response) => {
  */
 router.post('/:id/sync', (req: Request, res: Response) => {
   try {
-    const account = accounts.get(req.params.id);
+    const account = accounts.get(req.params.id as string);
     if (!account) return res.status(404).json({ success: false, error: 'Account not found' });
 
     account.syncStatus = 'SYNCING';
@@ -291,10 +291,10 @@ router.post('/:id/sync', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!accounts.has(req.params.id)) {
+    if (!accounts.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Account not found' });
     }
-    accounts.delete(req.params.id);
+    accounts.delete(req.params.id as string);
     res.status(200).json({ success: true, message: 'Account disconnected' });
   } catch (error: unknown) {
     res.status(500).json({ success: false, error: 'Failed to disconnect' });

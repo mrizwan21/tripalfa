@@ -13,7 +13,7 @@ export const staticDbPool = new Pool({
 /**
  * Execute a query against the static database
  */
-export async function queryStatic(text: string, params?: any[]) {
+async function queryStatic(text: string, params?: any[]) {
     const start = Date.now();
     try {
         const res = await staticDbPool.query(text, params);

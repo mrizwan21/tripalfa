@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
+import { log } from "@tripalfa/shared-utils/logging";
 
 // Load environment variables from root .env file BEFORE initializing Prisma
 const moduleFilename = fileURLToPath(import.meta.url);
@@ -77,16 +78,16 @@ function initPrisma(): PrismaClient {
     );
   }
 
-  console.log("Connecting to database:", databaseUrl.substring(0, 30) + "...");
+  log.database.connect(databaseUrl);
 
   // For Neon - use standard pg adapter for transaction support
   // Note: NeonPool/PrismaNeon has issues with interactive transactions
   if (databaseUrl.includes("neon.tech") || databaseUrl.includes("neondb")) {
     try {
-      console.log("Using PrismaPg adapter for Neon (transaction support)");
+      log.info("Using PrismaPg adapter for Neon (transaction support)");
       return createPrismaClient(databaseUrl, true);
     } catch (e) {
-      console.error("Failed to create Neon client:", e);
+      log.database.error("Neon client creation", e as Error);
       throw e;
     }
   }
@@ -95,7 +96,7 @@ function initPrisma(): PrismaClient {
   try {
     return createPrismaClient(databaseUrl, false);
   } catch (e) {
-    console.error("Failed to create PostgreSQL client:", e);
+    log.database.error("PostgreSQL client creation", e as Error);
     throw e;
   }
 }
@@ -109,12 +110,12 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 // ============================================
 
 async function gracefulShutdown(signal: string) {
-  console.log(`\n[shared-database] Received ${signal}, disconnecting Prisma...`);
+  log.info(`Received ${signal}, disconnecting Prisma...`);
   try {
     await prisma.$disconnect();
-    console.log("[shared-database] Prisma disconnected cleanly.");
+    log.info("Prisma disconnected cleanly.");
   } catch (e) {
-    console.error("[shared-database] Error during disconnect:", e);
+    log.error("Error during disconnect", e as Error);
   }
   process.exit(0);
 }
@@ -145,6 +146,10 @@ export async function withRetry<T>(
   retries = 3,
   delayMs = 500,
 ): Promise<T> {
+  if (retries < 1) {
+    return fn();
+  }
+  
   const RETRYABLE_CODES = new Set(["XX000", "57P01", "08006", "ECONNRESET"]);
 
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -152,26 +157,28 @@ export async function withRetry<T>(
       return await fn();
     } catch (error: unknown) {
       const errCode =
-        (error as { code?: string })?.code ??
-        (error as { message?: string })?.message ?? "";
+        typeof error === 'object' && error !== null
+          ? (error as { code?: string }).code ??
+            (error as { message?: string }).message
+          : String(error);
 
       const isRetryable =
         RETRYABLE_CODES.has(errCode) ||
         (typeof errCode === "string" && errCode.includes("ECONNRESET"));
 
-      if (attempt === retries || !isRetryable) {
+      if (!isRetryable || attempt === retries) {
         throw error;
       }
 
       const waitMs = delayMs * attempt;
-      console.warn(
-        `[shared-database] Transient error (${errCode}), retrying in ${waitMs}ms (attempt ${attempt}/${retries})...`,
+      log.warn(
+        `Transient error (${errCode}), retrying in ${waitMs}ms (attempt ${attempt}/${retries})...`,
       );
       await new Promise((r) => setTimeout(r, waitMs));
     }
   }
-
-  throw new Error("withRetry: unreachable");
+  
+  throw new Error("Retry logic failed unexpectedly");
 }
 
 export * from "./generated/index.js";

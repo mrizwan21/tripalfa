@@ -16,7 +16,7 @@ let pool: Pool | null = null;
 /**
  * Initialize database connection pool
  */
-export function initializeFxDatabase(): Pool {
+function initializeFxDatabase(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: STATIC_DB_URL,
@@ -35,7 +35,7 @@ export function initializeFxDatabase(): Pool {
 /**
  * Get database connection
  */
-export function getFxDatabase(): Pool {
+function getFxDatabase(): Pool {
   if (!pool) {
     return initializeFxDatabase();
   }
@@ -45,7 +45,7 @@ export function getFxDatabase(): Pool {
 /**
  * Get a single client from pool
  */
-export async function getFxDatabaseClient(): Promise<PoolClient> {
+async function getFxDatabaseClient(): Promise<PoolClient> {
   const db = getFxDatabase();
   return db.connect();
 }
@@ -53,7 +53,7 @@ export async function getFxDatabaseClient(): Promise<PoolClient> {
 /**
  * Close database connection
  */
-export async function closeFxDatabase(): Promise<void> {
+async function closeFxDatabase(): Promise<void> {
   if (pool) {
     await pool.end();
     pool = null;
@@ -64,7 +64,7 @@ export async function closeFxDatabase(): Promise<void> {
 // FX RATES OPERATIONS
 // ============================================================
 
-export async function getFxRate(from: string, to: string): Promise<any> {
+async function getFxRate(from: string, to: string): Promise<any> {
   const db = getFxDatabase();
   const result = await db.query(
     `
@@ -83,7 +83,7 @@ export async function getFxRate(from: string, to: string): Promise<any> {
   return row || null;
 }
 
-export async function saveFxRate(
+async function saveFxRate(
   from: string,
   to: string,
   rate: number,
@@ -109,7 +109,7 @@ export async function saveFxRate(
 // FX CONVERSIONS LOGGING
 // ============================================================
 
-export async function logFxConversion(conversion: {
+async function logFxConversion(conversion: {
   from_currency: string;
   to_currency: string;
   from_amount: number;
@@ -155,7 +155,7 @@ export async function logFxConversion(conversion: {
 // FX ANALYTICS OPERATIONS
 // ============================================================
 
-export async function updateFxAnalytics(
+async function updateFxAnalytics(
   from: string,
   to: string,
   feeAmount: number,
@@ -196,7 +196,7 @@ export async function updateFxAnalytics(
   );
 }
 
-export async function getFxAnalytics(
+async function getFxAnalytics(
   from?: string,
   to?: string,
 ): Promise<any[]> {
@@ -219,7 +219,7 @@ export async function getFxAnalytics(
   return result.rows;
 }
 
-export async function getTopFxPairs(limit: number = 10): Promise<any[]> {
+async function getTopFxPairs(limit: number = 10): Promise<any[]> {
   const db = getFxDatabase();
   const result = await db.query(
     `
@@ -231,7 +231,7 @@ export async function getTopFxPairs(limit: number = 10): Promise<any[]> {
   return result.rows;
 }
 
-export async function getFxAnalyticsSummary(): Promise<any> {
+async function getFxAnalyticsSummary(): Promise<any> {
   const db = getFxDatabase();
   const result = await db.query(`
     SELECT 
@@ -249,7 +249,7 @@ export async function getFxAnalyticsSummary(): Promise<any> {
 // FX CACHE METADATA OPERATIONS
 // ============================================================
 
-export async function saveFxCacheMetadata(
+async function saveFxCacheMetadata(
   from: string,
   to: string,
   rate: number,
@@ -281,7 +281,7 @@ export async function saveFxCacheMetadata(
   );
 }
 
-export async function getFxCacheStats(): Promise<any> {
+async function getFxCacheStats(): Promise<any> {
   const db = getFxDatabase();
   const result = await db.query(`
     SELECT 
@@ -296,7 +296,7 @@ export async function getFxCacheStats(): Promise<any> {
   return result.rows[0];
 }
 
-export async function queryFxCacheMetadata(from?: string, to?: string): Promise<any[]> {
+async function queryFxCacheMetadata(from?: string, to?: string): Promise<any[]> {
   const db = getFxDatabase();
 
   let query = `
@@ -335,7 +335,7 @@ export async function queryFxCacheMetadata(from?: string, to?: string): Promise<
 // DAILY ANALYTICS OPERATIONS
 // ============================================================
 
-export async function getDailyFxAnalytics(
+async function getDailyFxAnalytics(
   fromDate?: Date,
   toDate?: Date,
 ): Promise<any[]> {
@@ -358,7 +358,7 @@ export async function getDailyFxAnalytics(
   return result.rows;
 }
 
-export async function archiveDailyAnalytics(
+async function archiveDailyAnalytics(
   dateToArchive: Date,
 ): Promise<void> {
   const db = getFxDatabase();
@@ -402,7 +402,7 @@ export async function archiveDailyAnalytics(
 // HEALTH CHECK
 // ============================================================
 
-export async function checkFxDatabaseHealth(): Promise<{
+async function checkFxDatabaseHealth(): Promise<{
   status: string;
   connected: boolean;
   tables: string[];
@@ -432,3 +432,22 @@ export async function checkFxDatabaseHealth(): Promise<{
     };
   }
 }
+export {
+  initializeFxDatabase,
+  getFxDatabase,
+  getFxDatabaseClient,
+  closeFxDatabase,
+  getFxRate,
+  saveFxRate,
+  logFxConversion,
+  updateFxAnalytics,
+  getFxAnalytics,
+  getTopFxPairs,
+  getFxAnalyticsSummary,
+  saveFxCacheMetadata,
+  getFxCacheStats,
+  queryFxCacheMetadata,
+  getDailyFxAnalytics,
+  archiveDailyAnalytics,
+  checkFxDatabaseHealth,
+};

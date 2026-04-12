@@ -39,7 +39,7 @@ export interface SocialLoginResult {
 /**
  * Social Login Service for FusionAuth
  */
-export class FusionAuthSocialService {
+class FusionAuthSocialService {
   private static instance: FusionAuthSocialService;
   private client: AxiosInstance;
 

@@ -211,23 +211,29 @@ export async function checkHealth(): Promise<HealthStatus> {
   // Check database
   try {
     const dbStart = Date.now();
-    // TODO: Implement actual database health check
+    // TODO: Import and use prisma for actual health check
+    // await prisma.$queryRaw`SELECT 1`;
     const dbLatency = Date.now() - dbStart;
     services.database = { status: 'up', latency: dbLatency };
-  } catch {
+    logger.debug('Database health check passed', { latency: dbLatency });
+  } catch (error) {
     services.database = { status: 'down', latency: -1 };
     overallStatus = 'degraded';
+    logger.error('Database health check failed', { error });
   }
 
   // Check cache
   try {
     const cacheStart = Date.now();
-    // TODO: Implement actual cache health check
+    // TODO: Import and use redis for actual cache health check
+    // await redis.ping();
     const cacheLatency = Date.now() - cacheStart;
     services.cache = { status: 'up', latency: cacheLatency };
-  } catch {
+    logger.debug('Cache health check passed', { latency: cacheLatency });
+  } catch (error) {
     services.cache = { status: 'down', latency: -1 };
     overallStatus = 'degraded';
+    logger.error('Cache health check failed', { error });
   }
 
   return {

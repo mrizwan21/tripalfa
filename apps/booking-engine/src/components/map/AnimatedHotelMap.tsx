@@ -114,7 +114,7 @@ function generateRandomHotels(
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
-export function AnimatedHotelMap({
+function AnimatedHotelMap({
   destination,
   hotels: propHotels,
   animationDuration = 3000,

@@ -7,7 +7,7 @@
  * @see https://duffel.com/docs/api/v2/seat-maps/get-seat-maps
  */
 
-import type { api as ApiClientInstance } from "../lib/api";
+import type { api as ApiClientInstance } from "../lib/apiClient";
 
 // Lazy import to avoid circular dependency
 type ApiClient = typeof ApiClientInstance;
@@ -68,7 +68,7 @@ export interface SeatSelectionResponse {
 /**
  * Service for fetching and processing Duffel seat maps
  */
-export class DuffelSeatMapsService {
+class DuffelSeatMapsService {
   /**
    * Get seat maps for an offer (booking flow)
    *
@@ -450,7 +450,7 @@ export function getAvailableSeats(seatMap: ProcessedSeatMap): FlattenedSeat[] {
 /**
  * Get seats by row number
  */
-export function getSeatsByRow(
+function getSeatsByRow(
   seatMap: ProcessedSeatMap,
   rowNumber: number,
 ): FlattenedSeat[] {
@@ -460,7 +460,7 @@ export function getSeatsByRow(
 /**
  * Get seats by section index
  */
-export function getSeatsBySection(
+function getSeatsBySection(
   seatMap: ProcessedSeatMap,
   sectionIndex: number,
 ): FlattenedSeat[] {

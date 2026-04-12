@@ -21,7 +21,7 @@ export interface PaymentRequest {
   paymentMethod: string;
 }
 
-export class PaymentService {
+class PaymentService {
   /**
    * Get base URL for payment service - uses lazy evaluation to support runtime config changes
    */

@@ -5,7 +5,7 @@
  * Updated to use navy as primary and red as accent.
  */
 
-export const COLORS = {
+const COLORS = {
   // Primary colors
   primary: 'rgb(21 36 103)', // Navy - main brand color
   primaryHover: 'rgb(10 28 80)', // Darker navy for hover states
@@ -42,8 +42,62 @@ export const COLORS = {
   },
 } as const;
 
+const SPACING = {
+  baseUnit: 8,
+  scale: {
+    0: '0px',
+    0.5: '2px',
+    1: '4px',
+    1.5: '6px',
+    2: '8px',
+    2.5: '10px',
+    3: '12px',
+    3.5: '14px',
+    4: '16px',
+    5: '20px',
+    6: '24px',
+    7: '28px',
+    8: '32px',
+    9: '36px',
+    10: '40px',
+    11: '44px',
+    12: '48px',
+    14: '56px',
+    16: '64px',
+    20: '80px',
+    24: '96px',
+  },
+  page: {
+    paddingX: 'p-page-x',
+    paddingXLarge: 'p-page-x-lg',
+    paddingY: 'p-page-y',
+    paddingYLarge: 'p-page-y-lg',
+  },
+  section: {
+    gap: 'gap-section',
+    gapLarge: 'gap-section-lg',
+    marginBottom: 'mb-section',
+    marginBottomLarge: 'mb-section-lg',
+  },
+  card: {
+    padding: 'p-card',
+    paddingLarge: 'p-card-lg',
+    headerPadding: 'p-6',
+    contentPadding: 'p-card-lg pt-0',
+    footerPadding: 'p-card-lg pt-0',
+  },
+  list: {
+    gap: 'gap-list',
+    gapLarge: 'gap-list-lg',
+  },
+  input: {
+    paddingX: 'px-input-x',
+    paddingY: 'py-input-y',
+  },
+} as const;
+
 // CSS class mappings for Tailwind
-export const THEME_CLASSES = {
+const THEME_CLASSES = {
   primary: 'bg-primary',
   primaryHover: 'hover:bg-primary/90',
   accent: 'bg-accent',
@@ -66,7 +120,7 @@ export const DEMO_CONFIG = {
 
 export type ColorKey = keyof typeof COLORS;
 
-export const TYPOGRAPHY = {
+const TYPOGRAPHY = {
   headings: {
     h72: 'text-[72px] leading-[1.1] tracking-[-0.03em] font-bold',
     h64: 'text-[64px] leading-[1.1] tracking-[-0.03em] font-bold',
@@ -87,7 +141,7 @@ export const TYPOGRAPHY = {
   },
 } as const;
 
-export const SURFACES = {
+const SURFACES = {
   base: 'border bg-background rounded-md',
   raised: 'border bg-background rounded-md shadow-xs',
   elevated: 'border bg-background rounded-lg shadow-md',
@@ -95,7 +149,7 @@ export const SURFACES = {
 } as const;
 
 // Semantic color usage per WIG guidelines
-export const SEMANTIC_COLORS = {
+const SEMANTIC_COLORS = {
   // Neutrals for backgrounds and text
   text: {
     primary: 'text-foreground',
@@ -133,7 +187,7 @@ export const SEMANTIC_COLORS = {
 } as const;
 
 // Focus states per WIG - clear, visible focus rings
-export const FOCUS_STYLES = {
+const FOCUS_STYLES = {
   default:
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
   within:
@@ -141,20 +195,20 @@ export const FOCUS_STYLES = {
 } as const;
 
 // Interaction states
-export const INTERACTION_STATES = {
+const INTERACTION_STATES = {
   hover: 'hover:opacity-90 transition-opacity duration-150',
   active: 'active:scale-[0.98] transition-transform duration-150',
   disabled: 'disabled:opacity-50 disabled:pointer-events-none',
 } as const;
 
 // Loading states per WIG - minimum duration to avoid flicker
-export const LOADING_STATES = {
+const LOADING_STATES = {
   button: 'opacity-80 cursor-wait',
   skeleton: 'animate-pulse bg-neutral-200',
 } as const;
 
 // Hit target minimums per WIG
-export const HIT_TARGETS = {
+const HIT_TARGETS = {
   minimum: 'min-h-[24px] min-w-[24px]',
   mobile: 'min-h-[44px] min-w-[44px]',
 } as const;

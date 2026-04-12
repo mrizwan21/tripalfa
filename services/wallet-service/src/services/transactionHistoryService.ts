@@ -2,12 +2,12 @@
 // Transaction history service with filtering and Excel export
 // Supports flights, hotels, and all wallet transactions
 
-import { prisma } from "@tripalfa/shared-database";
-import { logger } from "../utils/logger.js";
+import { prisma } from '@tripalfa/shared-database';
+import { logger } from '../utils/logger.js';
 
-const SERVICE_NAME = "transactionHistoryService";
-const EXCEL_HEADER_BACKGROUND = `${"#"}667EEA`;
-const EXCEL_HEADER_TEXT = `${"#"}FFFFFF`;
+const SERVICE_NAME = 'transactionHistoryService';
+const EXCEL_HEADER_BACKGROUND = `${'#'}667EEA`;
+const EXCEL_HEADER_TEXT = `${'#'}FFFFFF`;
 
 export interface TransactionFilters {
   userId?: string;
@@ -28,8 +28,8 @@ export interface TransactionFilters {
 export interface TransactionHistoryOptions {
   limit?: number;
   offset?: number;
-  sortBy?: "createdAt" | "amount" | "balance";
-  sortOrder?: "asc" | "desc";
+  sortBy?: 'createdAt' | 'amount' | 'balance';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface TransactionWithDetails {
@@ -68,14 +68,9 @@ export interface TransactionWithDetails {
  */
 export async function getTransactionHistory(
   filters: TransactionFilters,
-  options: TransactionHistoryOptions = {},
+  options: TransactionHistoryOptions = {}
 ): Promise<{ transactions: TransactionWithDetails[]; total: number }> {
-  const {
-    limit = 50,
-    offset = 0,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-  } = options;
+  const { limit = 50, offset = 0, sortBy = 'createdAt', sortOrder = 'desc' } = options;
 
   // Build where clause
   const where: any = {};
@@ -85,7 +80,7 @@ export async function getTransactionHistory(
       where: { userId: filters.userId },
       select: { id: true },
     });
-    where.walletId = { in: wallets.map((w) => w.id) };
+    where.walletId = { in: wallets.map(w => w.id) };
   }
 
   if (filters.walletId) {
@@ -133,7 +128,7 @@ export async function getTransactionHistory(
   }
 
   if (filters.bookingRef) {
-    where.bookingRef = { contains: filters.bookingRef, mode: "insensitive" };
+    where.bookingRef = { contains: filters.bookingRef, mode: 'insensitive' };
   }
 
   if (filters.status) {
@@ -161,38 +156,36 @@ export async function getTransactionHistory(
   });
 
   // Map to response format
-  const mappedTransactions: TransactionWithDetails[] = transactions.map(
-    (tx) => ({
-      id: tx.id,
-      type: tx.type,
-      flow: tx.flow || "",
-      amount: Number(tx.amount),
-      currency: tx.currency,
-      balance: Number(tx.balance),
-      description: tx.description,
-      status: tx.status,
-      createdAt: tx.createdAt,
+  const mappedTransactions: TransactionWithDetails[] = transactions.map(tx => ({
+    id: tx.id,
+    type: tx.type,
+    flow: tx.flow || '',
+    amount: Number(tx.amount),
+    currency: tx.currency,
+    balance: Number(tx.balance),
+    description: tx.description,
+    status: tx.status,
+    createdAt: tx.createdAt,
 
-      // Service details
-      serviceType: tx.serviceType,
-      supplierId: tx.supplierId,
-      supplierName: tx.supplierName,
-      bookingRef: tx.bookingRef,
-      travelDate: tx.travelDate,
-      returnDate: tx.returnDate,
-      route: tx.route,
-      hotelAddress: tx.hotelAddress,
-      guestName: tx.guestName,
-      roomType: tx.roomType,
+    // Service details
+    serviceType: tx.serviceType,
+    supplierId: tx.supplierId,
+    supplierName: tx.supplierName,
+    bookingRef: tx.bookingRef,
+    travelDate: tx.travelDate,
+    returnDate: tx.returnDate,
+    route: tx.route,
+    hotelAddress: tx.hotelAddress,
+    guestName: tx.guestName,
+    roomType: tx.roomType,
 
-      // Related IDs
-      walletId: tx.walletId,
-      payerId: tx.payerId,
-      payeeId: tx.payeeId,
-      bookingId: tx.bookingId,
-      paymentId: tx.paymentId,
-    }),
-  );
+    // Related IDs
+    walletId: tx.walletId,
+    payerId: tx.payerId,
+    payeeId: tx.payeeId,
+    bookingId: tx.bookingId,
+    paymentId: tx.paymentId,
+  }));
 
   return { transactions: mappedTransactions, total };
 }
@@ -202,7 +195,7 @@ export async function getTransactionHistory(
  */
 export async function getTransactionSummary(
   userId: string,
-  filters: TransactionFilters = {},
+  filters: TransactionFilters = {}
 ): Promise<{
   totalCredits: number;
   totalDebits: number;
@@ -216,7 +209,7 @@ export async function getTransactionSummary(
   });
 
   const where: any = {
-    walletId: { in: wallets.map((w) => w.id) },
+    walletId: { in: wallets.map(w => w.id) },
   };
 
   if (filters.serviceType) {
@@ -237,18 +230,14 @@ export async function getTransactionSummary(
   for (const tx of transactions) {
     const amount = Number(tx.amount);
 
-    if (
-      tx.flow === "inbound" ||
-      tx.type === "deposit" ||
-      tx.type === "credit"
-    ) {
+    if (tx.flow === 'inbound' || tx.type === 'deposit' || tx.type === 'credit') {
       totalCredits += amount;
     } else {
       totalDebits += amount;
     }
 
     // Group by service type
-    const serviceType = tx.serviceType || "other";
+    const serviceType = tx.serviceType || 'other';
     if (!byServiceType[serviceType]) {
       byServiceType[serviceType] = { count: 0, total: 0 };
     }
@@ -270,7 +259,7 @@ export async function getTransactionSummary(
  */
 export async function exportTransactionsToCSV(
   filters: TransactionFilters,
-  options: TransactionHistoryOptions = {},
+  options: TransactionHistoryOptions = {}
 ): Promise<string> {
   // Fetch all matching transactions (no limit for export)
   const { transactions } = await getTransactionHistory(filters, {
@@ -281,29 +270,29 @@ export async function exportTransactionsToCSV(
 
   // CSV Headers
   const headers = [
-    "Date",
-    "Transaction ID",
-    "Type",
-    "Service Type",
-    "Description",
-    "Amount",
-    "Currency",
-    "Balance After",
-    "Status",
-    "Booking Reference",
-    "Supplier Name",
-    "Route",
-    "Travel Date",
-    "Return Date",
-    "Hotel Address",
-    "Guest Name",
-    "Room Type",
-    "Created At",
+    'Date',
+    'Transaction ID',
+    'Type',
+    'Service Type',
+    'Description',
+    'Amount',
+    'Currency',
+    'Balance After',
+    'Status',
+    'Booking Reference',
+    'Supplier Name',
+    'Route',
+    'Travel Date',
+    'Return Date',
+    'Hotel Address',
+    'Guest Name',
+    'Room Type',
+    'Created At',
   ];
 
   // Format date for CSV
   const formatDate = (date: Date | null) => {
-    if (!date) return "";
+    if (!date) return '';
     return date.toISOString();
   };
 
@@ -313,34 +302,32 @@ export async function exportTransactionsToCSV(
   };
 
   // Build CSV rows
-  const rows = transactions.map((tx) => [
+  const rows = transactions.map(tx => [
     formatDate(tx.createdAt),
     tx.id,
     tx.type,
-    tx.serviceType || "N/A",
-    tx.description || "",
+    tx.serviceType || 'N/A',
+    tx.description || '',
     formatAmount(tx.amount, tx.currency),
     tx.currency,
     formatAmount(tx.balance, tx.currency),
     tx.status,
-    tx.bookingRef || "",
-    tx.supplierName || "",
-    tx.route || "",
+    tx.bookingRef || '',
+    tx.supplierName || '',
+    tx.route || '',
     formatDate(tx.travelDate),
     formatDate(tx.returnDate),
-    tx.hotelAddress || "",
-    tx.guestName || "",
-    tx.roomType || "",
+    tx.hotelAddress || '',
+    tx.guestName || '',
+    tx.roomType || '',
     formatDate(tx.createdAt),
   ]);
 
   // Combine headers and rows
   const csvContent = [
-    headers.join(","),
-    ...rows.map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-    ),
-  ].join("\n");
+    headers.join(','),
+    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
+  ].join('\n');
 
   return csvContent;
 }
@@ -350,7 +337,7 @@ export async function exportTransactionsToCSV(
  */
 export async function exportTransactionsToExcel(
   filters: TransactionFilters,
-  options: TransactionHistoryOptions = {},
+  options: TransactionHistoryOptions = {}
 ): Promise<Buffer> {
   const { transactions } = await getTransactionHistory(filters, {
     ...options,
@@ -361,7 +348,7 @@ export async function exportTransactionsToExcel(
   // Generate Excel XML (SpreadsheetML format - compatible with Excel)
   const xml = generateExcelXML(transactions);
 
-  return Buffer.from(xml, "utf-8");
+  return Buffer.from(xml, 'utf-8');
 }
 
 /**
@@ -370,16 +357,16 @@ export async function exportTransactionsToExcel(
 function generateExcelXML(transactions: TransactionWithDetails[]): string {
   const escapeXml = (str: string) => {
     return String(str)
-      .replace(/&/g, "&")
-      .replace(/</g, "<")
-      .replace(/>/g, ">")
+      .replace(/&/g, '&')
+      .replace(/</g, '<')
+      .replace(/>/g, '>')
       .replace(/"/g, '"')
       .replace(/'/g, String.fromCharCode(39));
   };
 
   const formatDate = (date: Date | null) => {
-    if (!date) return "";
-    return date.toISOString().split("T")[0];
+    if (!date) return '';
+    return date.toISOString().split('T')[0];
   };
 
   const formatAmount = (amount: number) => amount.toFixed(2);
@@ -387,29 +374,29 @@ function generateExcelXML(transactions: TransactionWithDetails[]): string {
   // Build rows
   const rows = transactions
     .map(
-      (tx) => `
+      tx => `
     <Row>
       <Cell><Data ss:Type="String">${escapeXml(formatDate(tx.createdAt))}</Data></Cell>
       <Cell><Data ss:Type="String">${escapeXml(tx.id)}</Data></Cell>
       <Cell><Data ss:Type="String">${escapeXml(tx.type)}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.serviceType || "N/A")}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.description || "")}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.serviceType || 'N/A')}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.description || '')}</Data></Cell>
       <Cell><Data ss:Type="Number">${escapeXml(formatAmount(tx.amount))}</Data></Cell>
       <Cell><Data ss:Type="String">${escapeXml(tx.currency)}</Data></Cell>
       <Cell><Data ss:Type="Number">${escapeXml(formatAmount(tx.balance))}</Data></Cell>
       <Cell><Data ss:Type="String">${escapeXml(tx.status)}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.bookingRef || "")}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.supplierName || "")}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.route || "")}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.bookingRef || '')}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.supplierName || '')}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.route || '')}</Data></Cell>
       <Cell><Data ss:Type="String">${escapeXml(formatDate(tx.travelDate))}</Data></Cell>
       <Cell><Data ss:Type="String">${escapeXml(formatDate(tx.returnDate))}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.hotelAddress || "")}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.guestName || "")}</Data></Cell>
-      <Cell><Data ss:Type="String">${escapeXml(tx.roomType || "")}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.hotelAddress || '')}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.guestName || '')}</Data></Cell>
+      <Cell><Data ss:Type="String">${escapeXml(tx.roomType || '')}</Data></Cell>
     </Row>
-  `,
+  `
     )
-    .join("");
+    .join('');
 
   return `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
@@ -469,7 +456,7 @@ function generateExcelXML(transactions: TransactionWithDetails[]): string {
 /**
  * Record a transaction with full booking details (for flights/hotels)
  */
-export async function recordTransactionWithDetails(
+async function recordTransactionWithDetails(
   walletId: string,
   data: {
     type: string;
@@ -497,7 +484,7 @@ export async function recordTransactionWithDetails(
     payeeId?: string;
     bookingId?: string;
     paymentId?: string;
-  },
+  }
 ): Promise<{ id: string; createdAt: Date }> {
   const transaction = await prisma.walletTransaction.create({
     data: {
@@ -528,7 +515,7 @@ export async function recordTransactionWithDetails(
       bookingId: data.bookingId,
       paymentId: data.paymentId,
 
-      status: "completed",
+      status: 'completed',
     },
   });
 
@@ -537,25 +524,17 @@ export async function recordTransactionWithDetails(
     data: {
       walletId,
       transactionId: transaction.id,
-      entryType: data.flow === "inbound" ? "credit" : "debit",
+      entryType: data.flow === 'inbound' ? 'credit' : 'debit',
       amount: data.amount,
       balance: data.balance,
       currency: data.currency,
-      accountType: "main",
+      accountType: 'main',
     },
   });
 
   logger.info(
-    `[${SERVICE_NAME}] Transaction recorded: ${transaction.id}, serviceType: ${data.serviceType}`,
+    `[${SERVICE_NAME}] Transaction recorded: ${transaction.id}, serviceType: ${data.serviceType}`
   );
 
   return { id: transaction.id, createdAt: transaction.createdAt };
 }
-
-export default {
-  getTransactionHistory,
-  getTransactionSummary,
-  exportTransactionsToCSV,
-  exportTransactionsToExcel,
-  recordTransactionWithDetails,
-};

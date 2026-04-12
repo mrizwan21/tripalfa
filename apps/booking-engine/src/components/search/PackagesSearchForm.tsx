@@ -26,7 +26,11 @@ export interface PackagesSearchData {
   rooms: number;
 }
 
-export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSearch }: PackagesSearchFormProps) {
+export function PackagesSearchForm({
+  searchLabels,
+  isSearchEnabled = true,
+  onSearch,
+}: PackagesSearchFormProps) {
   const [origin, setOrigin] = React.useState('');
   const [destination, setDestination] = React.useState('');
   const [checkIn, setCheckIn] = React.useState('');
@@ -61,7 +65,10 @@ export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSea
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none">
-              <Plane className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors" strokeWidth={1.75} />
+              <Plane
+                className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors"
+                strokeWidth={1.75}
+              />
             </div>
             <Input
               type="text"
@@ -89,7 +96,10 @@ export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSea
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none">
-              <MapPin className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors" strokeWidth={1.75} />
+              <MapPin
+                className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors"
+                strokeWidth={1.75}
+              />
             </div>
             <Input
               type="text"
@@ -117,7 +127,10 @@ export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSea
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none">
-              <CalendarDays className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors" strokeWidth={1.75} />
+              <CalendarDays
+                className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors"
+                strokeWidth={1.75}
+              />
             </div>
             <Input
               type="date"
@@ -135,7 +148,10 @@ export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSea
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none">
-              <CalendarDays className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors" strokeWidth={1.75} />
+              <CalendarDays
+                className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors"
+                strokeWidth={1.75}
+              />
             </div>
             <Input
               type="date"
@@ -153,7 +169,10 @@ export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSea
           </Label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none">
-              <Users className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors" strokeWidth={1.75} />
+              <Users
+                className="h-4.5 w-4.5 text-[hsl(var(--muted-foreground))] group-focus-within:text-[#F45D48] transition-colors"
+                strokeWidth={1.75}
+              />
             </div>
             <Input
               type="text"
@@ -172,8 +191,8 @@ export function PackagesSearchForm({ searchLabels, isSearchEnabled = true, onSea
             onClick={handleSearch}
             className={cn(
               'w-full h-14 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 outline-none',
-              'bg-gradient-to-r from-[#F45D48] to-[#E8453A] text-white',
-              'hover:from-[#E8453A] hover:to-[#D63A2F] shadow-lg shadow-[#F45D48]/25 hover:shadow-xl hover:shadow-[#F45D48]/30 hover:-translate-y-0.5',
+              'bg-[hsl(var(--primary))] text-white',
+              'hover:bg-[hsl(var(--primary))]/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5',
               'active:translate-y-0 active:shadow-md',
               'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:translate-y-0'
             )}

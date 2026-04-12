@@ -21,7 +21,7 @@ const swaggerSpec = createSwaggerSpec({
   ],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupOrganizationSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

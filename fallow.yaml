@@ -1,0 +1,33 @@
+# fallow configuration for TripAlfa monorepo
+# https://docs.fallow.tools
+
+entry:
+  - 'apps/Admin/index.html'
+  - 'apps/Admin/src/app/main.tsx'
+  - 'apps/booking-engine/index.html'
+  - 'apps/booking-engine/src/main.tsx'
+  - 'packages/static-data/src/index.ts'
+  - 'packages/static-data/src/frontend-index.ts'
+  - 'packages/static-data/src/scheduler.ts'
+  - 'packages/shared-utils/index.ts'
+  - 'packages/shared-utils/tracing.ts'
+  - 'packages/shared-utils/src/monitoring.ts'
+  - 'packages/ui-components/index.ts'
+
+ignoreRules:
+  - 'unlisted-dependency'
+  - 'unused-dependency'
+
+ignore:
+  # Unlisted dependencies that are inherited from root workspace
+  # or not actually used but detected as used
+  - '@modelcontextprotocol/sdk'
+  - 'pg'
+  - 'uuid'
+  - 'express'
+  - '@prisma/client-runtime-utils'
+  - 'redis'
+  # These workspace packages are used but not detected correctly
+  - '@tripalfa/api-clients'
+  - '@tripalfa/shared-utils'
+  - '@tripalfa/ui-components'

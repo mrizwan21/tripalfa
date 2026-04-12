@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 /**
  * Hotel Search Form - Premium International OTA Design
- * 
+ *
  * Upgraded with:
  * - Strict height tokens for perfect alignment
  * - Premium glassmorphism design
@@ -60,7 +60,10 @@ function AnimatedIcon({
 }) {
   return (
     <Icon
-      className={cn('transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-[#F45D48]', className)}
+      className={cn(
+        'transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-[hsl(var(--primary))]',
+        className
+      )}
       size={size}
       weight={weight}
     />
@@ -122,7 +125,7 @@ function GuestSelector({
             'w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-200',
             value <= min
               ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-[#F45D48]/30 hover:text-[#F45D48] hover:bg-[#F45D48]/5'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-[hsl(var(--primary))]/30 hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5'
           )}
         >
           <Minus size={14} weight="bold" />
@@ -136,7 +139,7 @@ function GuestSelector({
             'w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-200',
             value >= max
               ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-[#F45D48]/30 hover:text-[#F45D48] hover:bg-[#F45D48]/5'
+              : 'border-gray-200 bg-white text-gray-600 hover:border-[hsl(var(--primary))]/30 hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5'
           )}
         >
           <Plus size={14} weight="bold" />
@@ -148,10 +151,12 @@ function GuestSelector({
   return (
     <div
       ref={popoverRef}
-      className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl shadow-black/10 ring-1 ring-gray-200/50 z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
+      className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-2xl shadow-black/10 ring-1 ring-gray-200/50 z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
     >
-      <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-transparent">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Guests & Rooms</p>
+      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          Guests & Rooms
+        </p>
       </div>
       <CounterRow
         label="Adults"
@@ -171,7 +176,8 @@ function GuestSelector({
         max={6}
       />
       <div className="border-t border-gray-100" />
-      <CounterRow        label="Rooms"
+      <CounterRow
+        label="Rooms"
         sublabel="Number of rooms"
         value={rooms}
         onChange={onRoomsChange}
@@ -182,7 +188,7 @@ function GuestSelector({
         <button
           type="button"
           onClick={onClose}
-          className="w-full py-2.5 rounded-xl bg-[#F45D48] text-white text-sm font-semibold hover:bg-[#E8453A] transition-colors duration-200"
+          className="w-full py-2.5 rounded-xl bg-[hsl(var(--primary))] text-white text-sm font-semibold hover:bg-[hsl(var(--primary))]/90 transition-colors duration-200"
         >
           Done
         </button>
@@ -191,7 +197,11 @@ function GuestSelector({
   );
 }
 
-export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch }: HotelSearchFormProps) {
+export function HotelSearchForm({
+  searchLabels,
+  isSearchEnabled = true,
+  onSearch,
+}: HotelSearchFormProps) {
   const [destination, setDestination] = useState('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
@@ -211,7 +221,7 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
         {/* Destination Input */}
         <div className="lg:col-span-4 relative group">
           <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <MapPin size={12} weight="fill" className="text-[#F45D48]" />
+            <MapPin size={12} weight="fill" className="text-[hsl(var(--primary))]" />
             {searchLabels.destination}
           </Label>
           <div className="relative">
@@ -221,7 +231,7 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
             <Input
               type="text"
               placeholder={searchLabels.destinationPlaceholder}
-              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[#F45D48]/50 focus:ring-4 focus:ring-[#F45D48]/10 focus:bg-white focus:shadow-lg focus:shadow-[#F45D48]/5 hover:border-gray-300"
+              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg hover:border-gray-300"
               value={destination}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setDestination(e.target.value)}
               onFocus={() => {}}
@@ -244,7 +254,7 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
         {/* Check-in Date */}
         <div className="lg:col-span-2 group">
           <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <CalendarBlank size={12} weight="fill" className="text-[#F45D48]" />
+            <CalendarBlank size={12} weight="fill" className="text-[hsl(var(--primary))]" />
             {searchLabels.checkIn}
           </Label>
           <div className="relative">
@@ -253,7 +263,7 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
             </div>
             <Input
               type="date"
-              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[#F45D48]/50 focus:ring-4 focus:ring-[#F45D48]/10 focus:bg-white focus:shadow-lg focus:shadow-[#F45D48]/5 hover:border-gray-300"
+              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg hover:border-gray-300"
               value={checkIn}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setCheckIn(e.target.value)}
             />
@@ -263,7 +273,7 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
         {/* Check-out Date */}
         <div className="lg:col-span-2 group">
           <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <CalendarBlank size={12} weight="fill" className="text-[#F45D48]" />
+            <CalendarBlank size={12} weight="fill" className="text-[hsl(var(--primary))]" />
             {searchLabels.checkOut}
           </Label>
           <div className="relative">
@@ -272,7 +282,7 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
             </div>
             <Input
               type="date"
-              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[#F45D48]/50 focus:ring-4 focus:ring-[#F45D48]/10 focus:bg-white focus:shadow-lg focus:shadow-[#F45D48]/5 hover:border-gray-300"
+              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg hover:border-gray-300"
               value={checkOut}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setCheckOut(e.target.value)}
             />
@@ -282,13 +292,13 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
         {/* Guests & Rooms */}
         <div className="lg:col-span-2 group relative">
           <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Bed size={12} weight="fill" className="text-[#F45D48]" />
+            <Bed size={12} weight="fill" className="text-[hsl(var(--primary))]" />
             Guests & Rooms
           </Label>
           <button
             type="button"
             onClick={() => setShowGuestSelector(!showGuestSelector)}
-            className="w-full flex items-center h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 hover:border-gray-300 hover:bg-white focus:border-[#F45D48]/50 focus:ring-4 focus:ring-[#F45D48]/10 focus:bg-white focus:shadow-lg focus:shadow-[#F45D48]/5 px-3"
+            className="w-full flex items-center h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 hover:border-gray-300 hover:bg-white focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg px-3"
           >
             <Users size={20} weight="duotone" className="text-gray-400 mr-3 shrink-0" />
             <span className="text-gray-700 truncate">
@@ -314,8 +324,8 @@ export function HotelSearchForm({ searchLabels, isSearchEnabled = true, onSearch
             onClick={handleSearch}
             className={cn(
               'w-full h-14 rounded-xl font-semibold text-sm flex items-center justify-center gap-2.5 transition-all duration-300 outline-none',
-              'bg-gradient-to-r from-[#F45D48] via-[#F45D48] to-[#E8453A] text-white',
-              'hover:from-[#E8453A] hover:to-[#D63A2F] shadow-lg shadow-[#F45D48]/30 hover:shadow-xl hover:shadow-[#F45D48]/40 hover:-translate-y-0.5',
+              'bg-[hsl(var(--primary))] text-white',
+              'hover:bg-[hsl(var(--primary))]/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5',
               'active:translate-y-0 active:shadow-md',
               'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:translate-y-0'
             )}

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   TrendingUp,
   Star as Trophy,
@@ -14,23 +14,20 @@ import {
   History,
   CreditCard,
   Tag,
-} from "lucide-react";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import { useNavigate } from "react-router-dom";
+} from 'lucide-react';
+import { clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import { useNavigate } from 'react-router-dom';
 
-import PageHeader from "../components/layout/PageHeader";
-import { useLoyaltyBalance } from "../hooks/useLoyaltyBalance";
-import { loyaltyApi } from "../api/loyaltyApi";
-import { LoyaltyTierBadge } from "../components/loyalty/LoyaltyTierBadge";
-import { PointsDisplay } from "../components/loyalty/PointsDisplay";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import {
-  DEFAULT_CONTENT_CONFIG,
-  loadTenantContentConfig,
-} from "../lib/tenantContentConfig";
-import { Label } from "@/components/ui/label";
+import PageHeader from '../components/layout/PageHeader';
+import { useLoyaltyBalance } from '../hooks/useLoyaltyBalance';
+import { loyaltyApi } from '../api/loyaltyApi';
+import { LoyaltyTierBadge } from '../components/loyalty/LoyaltyTierBadge';
+import { PointsDisplay } from '../components/loyalty/PointsDisplay';
+import { Card } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
+import { Label } from '@/components/ui/label';
 
 type TierBenefits = Record<string, any>;
 
@@ -39,7 +36,7 @@ function cn(...inputs: (string | undefined | null | false)[]) {
   return twMerge(clsx(inputs));
 }
 
-export default function LoyaltyPage() {
+function LoyaltyPage() {
   const navigate = useNavigate();
   const { balance, isLoading } = useLoyaltyBalance();
   const [tiers, setTiers] = React.useState<TierBenefits[]>([]);
@@ -49,11 +46,9 @@ export default function LoyaltyPage() {
   } | null>(null);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [coupons, setCoupons] = useState(
-    DEFAULT_CONTENT_CONFIG.loyalty.coupons,
-  );
+  const [coupons, setCoupons] = useState(DEFAULT_CONTENT_CONFIG.loyalty.coupons);
   const [transactionHistory, setTransactionHistory] = useState(
-    DEFAULT_CONTENT_CONFIG.loyalty.transactionHistory,
+    DEFAULT_CONTENT_CONFIG.loyalty.transactionHistory
   );
 
   const handleRedeem = () => {
@@ -71,7 +66,7 @@ export default function LoyaltyPage() {
         const [loadedTiers, expiringData, contentConfig] = await Promise.all([
           loyaltyApi.getTierBenefits(),
           // Assume user ID is handled internally by API instance or token
-          loyaltyApi.getExpiringPoints("current"),
+          loyaltyApi.getExpiringPoints('current'),
           loadTenantContentConfig(),
         ]);
         setTiers(loadedTiers);
@@ -83,7 +78,7 @@ export default function LoyaltyPage() {
         setTransactionHistory(contentConfig.loyalty.transactionHistory);
       } catch (e) {
         // Fallback for demo if API unreachable
-        console.warn("Using fallback loyalty logic", e);
+        console.warn('Using fallback loyalty logic', e);
       }
     };
     loadDynamicRules();
@@ -91,14 +86,12 @@ export default function LoyaltyPage() {
 
   // Safe defaults if API data is loading/missing
   const currentPoints = balance?.currentPoints ?? 12500;
-  const currentTierName = balance?.tier ?? "Silver";
+  const currentTierName = balance?.tier ?? 'Silver';
 
   // Find the next tier above the current one
-  const currentTierObj = tiers.find((t) => t.name === currentTierName);
+  const currentTierObj = tiers.find(t => t.name === currentTierName);
   const nextTierObj = tiers
-    .filter((t) =>
-      currentTierObj ? t.level > currentTierObj.level : t.level > 2,
-    )
+    .filter(t => (currentTierObj ? t.level > currentTierObj.level : t.level > 2))
     .sort((a, b) => a.level - b.level)[0];
 
   // Fallback: if no API data, assume next tier at 25000 points
@@ -107,43 +100,39 @@ export default function LoyaltyPage() {
   const tierProgress = (currentPoints / nextTierPoints) * 100;
 
   // Logic: Calculate benefits dynamically based on tier level
-  const currentTierLevel =
-    tiers.find((t) => t.name === currentTierName)?.level || 2;
+  const currentTierLevel = tiers.find(t => t.name === currentTierName)?.level || 2;
   const processedBenefits = useMemo(() => {
     // If no API data, use mocks
     if (tiers.length === 0)
       return [
-        { id: 1, name: "Priority Boarding", icon: Zap, unlocked: true },
-        { id: 2, name: "Lounge Access", icon: Trophy, unlocked: true },
-        { id: 3, name: "Free Cancellation", icon: Shield, unlocked: false },
+        { id: 1, name: 'Priority Boarding', icon: Zap, unlocked: true },
+        { id: 2, name: 'Lounge Access', icon: Trophy, unlocked: true },
+        { id: 3, name: 'Free Cancellation', icon: Shield, unlocked: false },
         {
           id: 4,
-          name: "2x Points Multiplier",
+          name: '2x Points Multiplier',
           icon: TrendingUp,
           unlocked: false,
         },
       ];
 
     return tiers
-      .flatMap((t) =>
-        t.benefits.map((b) => ({
+      .flatMap(t =>
+        t.benefits.map(b => ({
           id: t.id + b,
           name: b,
           icon: Star, // Generic icon for dynamic benefits
           unlocked: t.level <= currentTierLevel,
           tierName: t.name,
-        })),
+        }))
       )
-      .filter((v, i, a) => a.findIndex((t) => t.name === v.name) === i) // Unique benefits
+      .filter((v, i, a) => a.findIndex(t => t.name === v.name) === i) // Unique benefits
       .sort((a, b) => (a.unlocked === b.unlocked ? 0 : a.unlocked ? -1 : 1)); // Active first
   }, [tiers, currentTierLevel]);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <PageHeader
-        title="Loyalty Hub"
-        subtitle="Manage your elite status and rewards."
-      />
+      <PageHeader title="Loyalty Hub" subtitle="Manage your elite status and rewards." />
 
       {/* Main Tier Card */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
@@ -152,23 +141,22 @@ export default function LoyaltyPage() {
             <LoyaltyTierBadge
               tier={{
                 name:
-                  typeof currentTierName === "string"
+                  typeof currentTierName === 'string'
                     ? currentTierName
-                    : (currentTierName?.name ?? "Silver"),
+                    : (currentTierName?.name ?? 'Silver'),
                 level: 2,
-                id: "silver",
+                id: 'silver',
                 minPoints: 0,
                 maxPoints: 0,
                 discountPercentage: 10,
                 pointsMultiplier: 1.5,
                 benefits: [],
               }}
-              config={{ size: "lg", showTierName: false }}
+              config={{ size: 'lg', showTierName: false }}
             />
             <div>
               <h2 className="text-2xl font-semibold text-foreground">
-                {typeof currentTierName === "string" ? currentTierName : ""}{" "}
-                Elite
+                {typeof currentTierName === 'string' ? currentTierName : ''} Elite
               </h2>
               <p className="text-sm text-muted-foreground">Member since 2024</p>
             </div>
@@ -181,27 +169,25 @@ export default function LoyaltyPage() {
             </div>
             <div className="h-3 w-full bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                className="h-full bg-[hsl(var(--primary))]"
                 style={{ width: `${tierProgress}%` }}
               />
             </div>
             <p className="text-sm text-muted-foreground">
               <span className="font-medium text-foreground">
                 {nextTierPoints - currentPoints} points
-              </span>{" "}
+              </span>{' '}
               needed to reach Gold.
             </p>
           </div>
         </div>
 
         <div className="bg-background p-6 rounded-xl border border-border shadow-sm">
-          <p className="text-sm font-medium text-muted-foreground mb-2">
-            Available Balance
-          </p>
+          <p className="text-sm font-medium text-muted-foreground mb-2">Available Balance</p>
           <PointsDisplay
             currentPoints={currentPoints}
             pointsToEarn={250}
-            config={{ size: "lg", format: "simple", showAnimation: true }}
+            config={{ size: 'lg', format: 'simple', showAnimation: true }}
           />
           <div className="flex gap-3 mt-4">
             <Button
@@ -260,14 +246,9 @@ export default function LoyaltyPage() {
                 />
               </div>
               <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  100 points = $1 USD credit
-                </p>
+                <p className="text-sm text-muted-foreground">100 points = $1 USD credit</p>
               </div>
-              <Button
-                className="w-full"
-                onClick={() => setShowRedeemModal(false)}
-              >
+              <Button className="w-full" onClick={() => setShowRedeemModal(false)}>
                 Redeem Points
               </Button>
             </div>
@@ -291,27 +272,23 @@ export default function LoyaltyPage() {
               </Button>
             </div>
             <div className="space-y-3">
-              {transactionHistory.map((txn) => (
+              {transactionHistory.map(txn => (
                 <div
                   key={txn.id}
                   className="flex items-center justify-between p-3 border rounded-lg gap-2"
                 >
                   <div>
-                    <p className="font-medium text-foreground">
-                      {txn.description}
-                    </p>
+                    <p className="font-medium text-foreground">{txn.description}</p>
                     <p className="text-xs text-muted-foreground">{txn.date}</p>
                   </div>
                   <div className="text-right">
                     <p
-                      className={`font-semibold ${txn.points > 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`font-semibold ${txn.points > 0 ? 'text-blue-600' : 'text-neutral-500'}`}
                     >
-                      {txn.points > 0 ? "+" : ""}
+                      {txn.points > 0 ? '+' : ''}
                       {txn.points}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {txn.status}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{txn.status}</p>
                   </div>
                 </div>
               ))}
@@ -339,30 +316,26 @@ export default function LoyaltyPage() {
                 <div
                   key={benefit.id}
                   className={cn(
-                    "p-4 rounded-lg border flex items-center gap-3 transition-all",
+                    'p-4 rounded-lg border flex items-center gap-3 transition-all',
                     benefit.unlocked
-                      ? "bg-muted border-border"
-                      : "bg-muted border-border opacity-50",
+                      ? 'bg-muted border-border'
+                      : 'bg-muted border-border opacity-50'
                   )}
                 >
                   <div
                     className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center",
+                      'w-10 h-10 rounded-lg flex items-center justify-center',
                       benefit.unlocked
-                        ? "bg-purple-100 text-purple-600"
-                        : "bg-muted text-muted-foreground",
+                        ? 'bg-purple-100 text-purple-600'
+                        : 'bg-muted text-muted-foreground'
                     )}
                   >
                     <benefit.icon size={20} />
                   </div>
                   <div className="flex-1 gap-4">
-                    <p className="font-medium text-foreground">
-                      {benefit.name}
-                    </p>
+                    <p className="font-medium text-foreground">{benefit.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {benefit.unlocked
-                        ? "Active"
-                        : `Unlocks at ${benefit.tierName}`}
+                      {benefit.unlocked ? 'Active' : `Unlocks at ${benefit.tierName}`}
                     </p>
                   </div>
                 </div>
@@ -372,22 +345,21 @@ export default function LoyaltyPage() {
 
           {/* Expiring Points Warning */}
           {expiring && expiring.points > 0 && (
-            <div className="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
-              <div className="p-2 bg-amber-100 rounded-full text-amber-600">
+            <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-xl flex items-start gap-3">
+              <div className="p-2 bg-neutral-100 rounded-full text-neutral-600">
                 <Clock size={18} />
               </div>
               <div className="flex-1 gap-4">
-                <h4 className="font-medium text-amber-900">Expiring Points</h4>
-                <p className="text-sm text-amber-700">
-                  You have{" "}
-                  <span className="font-bold">{expiring.points} points</span>{" "}
-                  expiring on {expiring.date}.
+                <h4 className="font-medium text-neutral-900">Expiring Points</h4>
+                <p className="text-sm text-neutral-700">
+                  You have <span className="font-bold">{expiring.points} points</span> expiring on{' '}
+                  {expiring.date}.
                 </p>
               </div>
               <Button
                 variant="ghost"
                 size="md"
-                className="text-sm font-medium text-amber-700 hover:text-amber-900 px-4 py-2 text-sm font-medium rounded-md transition-colors hover:bg-muted"
+                className="text-sm font-medium text-neutral-700 hover:text-neutral-900 px-4 py-2 text-sm font-medium rounded-md transition-colors hover:bg-muted"
               >
                 Redeem Now
               </Button>
@@ -412,20 +384,15 @@ export default function LoyaltyPage() {
             </div>
 
             <div className="space-y-3">
-              {coupons.map((coupon) => (
-                <div
-                  key={coupon.id}
-                  className="bg-muted p-4 rounded-lg border border-border"
-                >
+              {coupons.map(coupon => (
+                <div key={coupon.id} className="bg-muted p-4 rounded-lg border border-border">
                   <div className="flex justify-between items-start mb-2 gap-4">
                     <div>
                       <span className="text-xs font-medium text-muted-foreground">
                         {coupon.type} Discount
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-xl font-bold text-foreground">
-                          {coupon.discount}
-                        </span>
+                        <span className="text-xl font-bold text-foreground">{coupon.discount}</span>
                         <Gift size={16} className="text-purple-600" />
                       </div>
                     </div>
@@ -433,12 +400,8 @@ export default function LoyaltyPage() {
                       {coupon.id}
                     </code>
                   </div>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    {coupon.desc}
-                  </p>
-                  <span className="text-xs text-red-500">
-                    Exp: {coupon.valid}
-                  </span>
+                  <p className="text-xs text-muted-foreground mb-2">{coupon.desc}</p>
+                  <span className="text-xs text-red-500">Exp: {coupon.valid}</span>
                 </div>
               ))}
 
@@ -456,3 +419,5 @@ export default function LoyaltyPage() {
     </div>
   );
 }
+
+export default LoyaltyPage;

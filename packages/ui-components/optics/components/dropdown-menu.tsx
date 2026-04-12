@@ -1,56 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React from 'react';
+import {
+  useClickOutside,
+  ALIGN_CLASSES,
+  type FloatingContextValue,
+  createFloatingRoot,
+  createFloatingTrigger,
+} from './use-click-outside';
 
-interface DropdownMenuContextValue {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  triggerRef: React.RefObject<HTMLDivElement | null>;
-}
-
-const DropdownMenuContext = React.createContext<DropdownMenuContextValue>({
+const DropdownMenuContext = React.createContext<FloatingContextValue>({
   open: false,
   setOpen: () => {},
   triggerRef: { current: null },
 });
 
+// Shared Root and Trigger from factory — eliminates duplication with Popover
+const DropdownMenuRoot = createFloatingRoot(DropdownMenuContext);
+const DropdownMenuTrigger = createFloatingTrigger(DropdownMenuContext);
+
 export interface DropdownMenuProps {
   children: React.ReactNode;
 }
 
-export function DropdownMenu({ children }: DropdownMenuProps) {
-  const [open, setOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <DropdownMenuContext.Provider value={{ open, setOpen, triggerRef }}>
-      <div className="relative">{children}</div>
-    </DropdownMenuContext.Provider>
-  );
-}
-
-export interface DropdownMenuTriggerProps {
-  asChild?: boolean;
-  children: React.ReactNode;
-}
-
-export function DropdownMenuTrigger({ asChild, children }: DropdownMenuTriggerProps) {
-  const { open, setOpen, triggerRef } = React.useContext(DropdownMenuContext);
-
-  const handleClick = () => setOpen(!open);
-
-  if (asChild && React.isValidElement(children)) {
-    return (
-      <div ref={triggerRef} onClick={handleClick}>
-        {children}
-      </div>
-    );
-  }
-
-  return (
-    <div ref={triggerRef} onClick={handleClick} className="cursor-pointer">
-      {children}
-    </div>
-  );
-}
+/**
+ * DropdownMenu is an alias for the Root component (compound component pattern)
+ */
+export const DropdownMenu = DropdownMenuRoot as typeof DropdownMenuRoot & {
+  Root: typeof DropdownMenuRoot;
+  Trigger: typeof DropdownMenuTrigger;
+  Content: typeof DropdownMenuContent;
+  Item: typeof DropdownMenuItem;
+  Separator: typeof DropdownMenuSeparator;
+  Label: typeof DropdownMenuLabel;
+};
 
 export interface DropdownMenuContentProps {
   className?: string;
@@ -68,49 +49,14 @@ export function DropdownMenuContent({
   children,
 }: DropdownMenuContentProps) {
   const { open, setOpen, triggerRef } = React.useContext(DropdownMenuContext);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        contentRef.current &&
-        !contentRef.current.contains(event.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [open, setOpen, triggerRef]);
+  const contentRef = useClickOutside(open, setOpen, triggerRef);
 
   if (!open) return null;
-
-  const alignClasses = {
-    start: 'left-0',
-    center: 'left-1/2 -translate-x-1/2',
-    end: 'right-0',
-  };
 
   return (
     <div
       ref={contentRef}
-      className={`absolute z-50 mt-1 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md ${alignClasses[align]} ${className}`}
+      className={`absolute z-50 mt-1 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md ${ALIGN_CLASSES[align]} ${className}`}
     >
       {children}
     </div>
@@ -166,7 +112,7 @@ export function DropdownMenuLabel({ className = '', children }: DropdownMenuLabe
 }
 
 // Compound component pattern - attach subcomponents to main component
-DropdownMenu.Root = DropdownMenu;
+DropdownMenu.Root = DropdownMenuRoot;
 DropdownMenu.Trigger = DropdownMenuTrigger;
 DropdownMenu.Content = DropdownMenuContent;
 DropdownMenu.Item = DropdownMenuItem;

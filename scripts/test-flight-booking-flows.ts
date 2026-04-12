@@ -14,7 +14,7 @@
 import {
   DuffelFlightIntegrationTests,
   type TestConfig,
-} from "../apps/booking-engine/tests/api-integration/duffel-flight-integration.test";
+} from "../apps/booking-engine/tests/api-integration/duffel-flight-integration.test.js";
 
 // ============================================================================
 // CONFIGURATION

@@ -36,7 +36,7 @@ export interface NotificationTemplate {
   channel: 'email' | 'in_app' | 'sms' | 'all';
 }
 
-export class TierNotificationService {
+class TierNotificationService {
   private readonly notificationTemplates: NotificationTemplate[] = [
     {
       id: 'tier_upgrade',

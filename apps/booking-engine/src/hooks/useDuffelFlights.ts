@@ -10,7 +10,7 @@ import duffelFlightService, {
   SearchFlightsParams,
   SearchFlightsResult,
 } from "../services/duffelFlightService";
-import type { FlightSearchResult, CabinClass } from "../types/duffel";
+import type { FlightSearchResult } from "../types/duffel";
 
 // ============================================================================
 // TYPES
@@ -243,89 +243,3 @@ export function useDuffelFlights(
     refetch,
   };
 }
-
-// ============================================================================
-// SPECIALIZED HOOKS
-// ============================================================================
-
-/**
- * Hook for one-way flight search
- */
-export function useOneWayFlightSearch() {
-  return useDuffelFlights();
-}
-
-/**
- * Hook for round-trip flight search
- */
-export function useRoundTripFlightSearch() {
-  return useDuffelFlights();
-}
-
-/**
- * Hook for multi-city flight search
- */
-export function useMultiCityFlightSearch() {
-  return useDuffelFlights();
-}
-
-/**
- * Hook for flight price tracking
- * Returns the lowest price for a route
- */
-export function useFlightPriceTracker(
-  origin: string,
-  destination: string,
-  departureDate: string,
-  cabinClass: CabinClass = "economy",
-) {
-  const [lowestPrice, setLowestPrice] = useState<number | null>(null);
-  const [priceHistory, setPriceHistory] = useState<
-    Array<{ price: number; date: string }>
-  >([]);
-
-  const { search, loading, flights } = useDuffelFlights({
-    onSuccess: (results) => {
-      if (results.length > 0) {
-        const prices = results.map((f) => f.amount);
-        const minPrice = Math.min(...prices);
-        setLowestPrice(minPrice);
-        setPriceHistory((prev) => [
-          ...prev,
-          { price: minPrice, date: new Date().toISOString() },
-        ]);
-      }
-    },
-  });
-
-  useEffect(() => {
-    if (origin && destination && departureDate) {
-      search({
-        origin,
-        destination,
-        departureDate,
-        cabinClass,
-        adults: 1,
-        tripType: "oneWay",
-      });
-    }
-  }, [origin, destination, departureDate, cabinClass, search]);
-
-  return {
-    lowestPrice,
-    priceHistory,
-    loading,
-    flights,
-    refresh: () =>
-      search({
-        origin,
-        destination,
-        departureDate,
-        cabinClass,
-        adults: 1,
-        tripType: "oneWay",
-      }),
-  };
-}
-
-export default useDuffelFlights;

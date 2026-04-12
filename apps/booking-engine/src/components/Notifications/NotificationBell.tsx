@@ -1,19 +1,10 @@
-import { useState, useRef, useEffect } from "react";
-import { Bell, Loader2, Trash2, Eye } from "lucide-react";
-import { Button } from "../ui/button";
-import {
-  useNotifications,
-  useUnreadNotificationCount,
-} from "@/hooks/useNotifications";
+import { useState, useRef, useEffect } from 'react';
+import { Bell, Loader2, Trash2, Eye } from 'lucide-react';
+import { Button } from '../ui/button';
+import { useNotifications, useUnreadNotificationCount } from '@/hooks/useNotifications';
 
 // Simple Badge component inline
-const Badge = ({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) => (
+const Badge = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => (
   <span
     className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${className}`}
   >
@@ -22,7 +13,7 @@ const Badge = ({
 );
 
 interface NotificationBellProps {
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   showBadge?: boolean;
 }
 
@@ -31,90 +22,72 @@ function getRelativeTime(date: Date): string {
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 60) return 'Just now';
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800)
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
   return date.toLocaleDateString();
 }
 
-export const NotificationBell = ({
-  size = "md",
-  showBadge = true,
-}: NotificationBellProps) => {
+export const NotificationBell = ({ size = 'md', showBadge = true }: NotificationBellProps) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { unreadCount } = useUnreadNotificationCount();
-  const {
-    notifications,
-    isLoading,
-    error,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-  } = useNotifications(10);
+  const { notifications, isLoading, error, markAsRead, markAllAsRead, deleteNotification } =
+    useNotifications(10);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const sizeClasses = {
-    sm: "w-5 h-5",
-    md: "w-6 h-6",
-    lg: "w-8 h-8",
+    sm: 'w-5 h-5',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8',
   };
 
   const getNotificationColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "border-red-300 bg-red-50";
-      case "medium":
-        return "border-yellow-300 bg-yellow-50";
-      case "low":
-        return "border-blue-300 bg-blue-50";
+      case 'high':
+        return 'border-blue-300 bg-blue-50';
+      case 'medium':
+        return 'border-neutral-300 bg-neutral-50';
+      case 'low':
+        return 'border-blue-200 bg-blue-50';
       default:
-        return "border-border bg-muted";
+        return 'border-border bg-muted';
     }
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "offline_request_update":
-        return "memo";
-      case "price_alert":
-        return "money";
-      case "booking_reminder":
-        return "airplane";
-      case "approval_pending":
-        return "hourglass";
+      case 'offline_request_update':
+        return 'memo';
+      case 'price_alert':
+        return 'money';
+      case 'booking_reminder':
+        return 'airplane';
+      case 'approval_pending':
+        return 'hourglass';
       default:
-        return "envelope";
+        return 'envelope';
     }
   };
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="relative"
-        onClick={() => setOpen(!open)}
-      >
+      <Button variant="ghost" size="sm" className="relative" onClick={() => setOpen(!open)}>
         <Bell className={sizeClasses[size]} />
         {showBadge && unreadCount > 0 && (
-          <Badge className="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center p-0 text-xs gap-2">
-            {unreadCount > 99 ? "99+" : unreadCount}
+          <Badge className="absolute top-0 right-0 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center p-0 text-xs gap-2">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </Badge>
         )}
       </Button>
@@ -140,8 +113,8 @@ export const NotificationBell = ({
 
           {/* Error */}
           {error && (
-            <div className="p-4 bg-red-50 border-b border-red-200">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="p-4 bg-neutral-50 border-b border-neutral-200">
+              <p className="text-sm text-neutral-700">{error}</p>
             </div>
           )}
 
@@ -158,19 +131,17 @@ export const NotificationBell = ({
           ) : (
             <div className="max-h-96 overflow-y-auto">
               <div className="space-y-0 divide-y">
-                {notifications.map((notification) => (
+                {notifications.map(notification => (
                   <div
                     key={notification.id}
                     className={`p-4 hover:bg-muted cursor-pointer transition-colors border-l-4 ${getNotificationColor(
-                      notification.priority,
+                      notification.priority
                     )}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0 gap-4">
                         <div className="flex items-center gap-2">
-                          <span className="text-xl">
-                            {getNotificationIcon(notification.type)}
-                          </span>
+                          <span className="text-xl">{getNotificationIcon(notification.type)}</span>
                           <div className="flex-1 gap-4">
                             <p className="font-medium text-sm text-foreground line-clamp-1">
                               {notification.title}
@@ -186,9 +157,7 @@ export const NotificationBell = ({
                             )}
 
                             <p className="text-xs text-muted-foreground mt-1">
-                              {getRelativeTime(
-                                new Date(notification.createdAt),
-                              )}
+                              {getRelativeTime(new Date(notification.createdAt))}
                             </p>
                           </div>
                         </div>
@@ -199,7 +168,7 @@ export const NotificationBell = ({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={(e) => {
+                            onClick={e => {
                               e.stopPropagation();
                               markAsRead(notification.id);
                             }}
@@ -213,14 +182,14 @@ export const NotificationBell = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             deleteNotification(notification.id);
                           }}
                           className="p-1 h-auto"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4 text-red-600" />
+                          <Trash2 className="w-4 h-4 text-neutral-500" />
                         </Button>
                       </div>
                     </div>

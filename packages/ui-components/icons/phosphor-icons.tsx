@@ -14,7 +14,7 @@
  *   import { Check, X, Home, Plane, Hotel } from '@tripalfa/ui-components/icons/phosphor-icons';
  */
 
-import * as React from "react";
+import * as React from 'react';
 import {
   Check,
   CheckCircle,
@@ -22,22 +22,18 @@ import {
   XCircle,
   Plus,
   Minus,
-  Home,
   House,
   User,
   Users,
-  Settings,
   Gear,
   Bell,
-  Mail,
   Envelope,
   Phone,
   MapPin,
   Calendar,
   Clock,
-  Search,
   MagnifyingGlass,
-  Filter,
+  Funnel,
   SlidersHorizontal,
   Download,
   Upload,
@@ -47,8 +43,8 @@ import {
   LockKey,
   Key,
   ShieldCheck,
-  AlertCircle,
-  AlertTriangle,
+  WarningCircle,
+  Warning,
   Info,
   Question,
   Star,
@@ -64,11 +60,10 @@ import {
   CaretUp,
   CaretLeft,
   CaretRight,
-  ChevronsDownUp,
-  ChevronsUpDown,
+  ArrowsDownUp,
+  CaretUpDown,
   ArrowClockwise,
   ArrowCounterClockwise,
-  Refresh,
   Play,
   Pause,
   Stop,
@@ -121,7 +116,7 @@ import {
   Wind,
   Drop,
   Waves,
-  Mountain,
+  Mountains,
   FlowerTulip,
   Tree,
   Leaf,
@@ -130,14 +125,13 @@ import {
   PawPrint,
   Dna,
   Brain,
-  HeartPulse,
-  Activity,
+  Heartbeat,
   Pulse,
   FirstAid,
   Stethoscope,
   Pill,
   Building,
-  buildingOffice,
+  BuildingOffice,
   Storefront,
   Factory,
   Warehouse,
@@ -149,8 +143,7 @@ import {
   Bathtub,
   Shower,
   Toilet,
-  Sink,
-  Refrigerator,
+  CookingPot,
   Oven,
   Coffee,
   Wine,
@@ -160,12 +153,12 @@ import {
   Pizza,
   Hamburger,
   ForkKnife,
-} from "@phosphor-icons/react";
+} from '@phosphor-icons/react';
 
 // ============================================================================
 // Icon Weight Types
 // ============================================================================
-export type IconWeight = "thin" | "light" | "regular" | "fill" | "duotone";
+export type IconWeight = 'thin' | 'light' | 'regular' | 'fill' | 'duotone';
 
 // ============================================================================
 // Phosphor Icon Component Props
@@ -184,14 +177,16 @@ export interface PhosphorIconProps extends React.HTMLAttributes<HTMLElement> {
 // ============================================================================
 function createAnimatedPhosphorIcon(BaseIcon: React.ComponentType<any>) {
   const AnimatedIcon = React.forwardRef<HTMLElement, PhosphorIconProps>(
-    ({ className, weight = "regular", size = 24, color, ...props }, ref) => {
-      const hasAnimation = weight === "duotone" || weight === "fill";
-      const animationClasses = hasAnimation ? "transition-transform duration-300 hover:scale-110" : "";
+    ({ className, weight = 'regular', size = 24, color, ...props }, ref) => {
+      const hasAnimation = weight === 'duotone' || weight === 'fill';
+      const animationClasses = hasAnimation
+        ? 'transition-transform duration-300 hover:scale-110'
+        : '';
 
       return (
         <BaseIcon
           ref={ref}
-          className={`${className || ""} ${animationClasses}`.trim()}
+          className={`${className || ''} ${animationClasses}`.trim()}
           size={size}
           weight={weight}
           color={color}
@@ -201,7 +196,7 @@ function createAnimatedPhosphorIcon(BaseIcon: React.ComponentType<any>) {
     }
   );
 
-  AnimatedIcon.displayName = "PhosphorIcon";
+  AnimatedIcon.displayName = 'PhosphorIcon';
   return AnimatedIcon;
 }
 
@@ -216,18 +211,18 @@ export const XIcon = createAnimatedPhosphorIcon(X);
 export const XCircleIcon = createAnimatedPhosphorIcon(XCircle);
 export const PlusIcon = createAnimatedPhosphorIcon(Plus);
 export const MinusIcon = createAnimatedPhosphorIcon(Minus);
-export const HomeIcon = createAnimatedPhosphorIcon(Home);
+export const HomeIcon = createAnimatedPhosphorIcon(House);
 export const UserIcon = createAnimatedPhosphorIcon(User);
 export const UsersIcon = createAnimatedPhosphorIcon(Users);
-export const SettingsIcon = createAnimatedPhosphorIcon(Settings);
+export const SettingsIcon = createAnimatedPhosphorIcon(Gear);
 export const BellIcon = createAnimatedPhosphorIcon(Bell);
-export const MailIcon = createAnimatedPhosphorIcon(Mail);
+export const MailIcon = createAnimatedPhosphorIcon(Envelope);
 export const PhoneIcon = createAnimatedPhosphorIcon(Phone);
 export const MapPinIcon = createAnimatedPhosphorIcon(MapPin);
 export const CalendarIcon = createAnimatedPhosphorIcon(Calendar);
 export const ClockIcon = createAnimatedPhosphorIcon(Clock);
-export const SearchIcon = createAnimatedPhosphorIcon(Search);
-export const FilterIcon = createAnimatedPhosphorIcon(Filter);
+export const SearchIcon = createAnimatedPhosphorIcon(MagnifyingGlass);
+export const FilterIcon = createAnimatedPhosphorIcon(Funnel);
 export const DownloadIcon = createAnimatedPhosphorIcon(Download);
 export const UploadIcon = createAnimatedPhosphorIcon(Upload);
 export const EyeIcon = createAnimatedPhosphorIcon(Eye);
@@ -235,8 +230,8 @@ export const EyeOffIcon = createAnimatedPhosphorIcon(EyeSlash);
 export const LockIcon = createAnimatedPhosphorIcon(Lock);
 export const KeyIcon = createAnimatedPhosphorIcon(Key);
 export const ShieldCheckIcon = createAnimatedPhosphorIcon(ShieldCheck);
-export const AlertCircleIcon = createAnimatedPhosphorIcon(AlertCircle);
-export const AlertTriangleIcon = createAnimatedPhosphorIcon(AlertTriangle);
+export const AlertCircleIcon = createAnimatedPhosphorIcon(WarningCircle);
+export const AlertTriangleIcon = createAnimatedPhosphorIcon(Warning);
 export const InfoIcon = createAnimatedPhosphorIcon(Info);
 export const QuestionIcon = createAnimatedPhosphorIcon(Question);
 export const StarIcon = createAnimatedPhosphorIcon(Star);
@@ -253,7 +248,7 @@ export const CaretDownIcon = createAnimatedPhosphorIcon(CaretDown);
 export const CaretUpIcon = createAnimatedPhosphorIcon(CaretUp);
 export const CaretLeftIcon = createAnimatedPhosphorIcon(CaretLeft);
 export const CaretRightIcon = createAnimatedPhosphorIcon(CaretRight);
-export const RefreshIcon = createAnimatedPhosphorIcon(Refresh);
+export const RefreshIcon = createAnimatedPhosphorIcon(ArrowClockwise);
 
 // Travel & Transportation Icons
 export const PlaneIcon = createAnimatedPhosphorIcon(AirplaneTakeoff);
@@ -327,15 +322,15 @@ export const BurgerIcon = createAnimatedPhosphorIcon(Hamburger);
 export const UtensilsIcon = createAnimatedPhosphorIcon(ForkKnife);
 
 // Nature & Activity Icons
-export const MountainIcon = createAnimatedPhosphorIcon(Mountain);
+export const MountainIcon = createAnimatedPhosphorIcon(Mountains);
 export const LeafIcon = createAnimatedPhosphorIcon(Leaf);
 export const FlowerIcon = createAnimatedPhosphorIcon(Flower);
 export const TreeIcon = createAnimatedPhosphorIcon(Tree);
 
 // Health & Accessibility Icons
-export const ActivityIcon = createAnimatedPhosphorIcon(Activity);
+export const ActivityIcon = createAnimatedPhosphorIcon(Pulse);
 export const BrainIcon = createAnimatedPhosphorIcon(Brain);
-export const HeartPulseIcon = createAnimatedPhosphorIcon(HeartPulse);
+export const HeartPulseIcon = createAnimatedPhosphorIcon(Heartbeat);
 export const PillIcon = createAnimatedPhosphorIcon(Pill);
 
 // Status & Action Icons
@@ -350,22 +345,18 @@ export {
   XCircle,
   Plus,
   Minus,
-  Home,
   House,
   User,
   Users,
-  Settings,
   Gear,
   Bell,
-  Mail,
   Envelope,
   Phone,
   MapPin,
   Calendar,
   Clock,
-  Search,
   MagnifyingGlass,
-  Filter,
+  Funnel,
   SlidersHorizontal,
   Download,
   Upload,
@@ -375,8 +366,8 @@ export {
   LockKey,
   Key,
   ShieldCheck,
-  AlertCircle,
-  AlertTriangle,
+  WarningCircle,
+  Warning,
   Info,
   Question,
   Star,
@@ -392,11 +383,10 @@ export {
   CaretUp,
   CaretLeft,
   CaretRight,
-  ChevronsDownUp,
-  ChevronsUpDown,
+  ArrowsDownUp,
+  CaretUpDown,
   ArrowClockwise,
   ArrowCounterClockwise,
-  Refresh,
   Play,
   Pause,
   Stop,
@@ -449,7 +439,7 @@ export {
   Wind,
   Drop,
   Waves,
-  Mountain,
+  Mountains,
   FlowerTulip,
   Tree,
   Leaf,
@@ -458,13 +448,13 @@ export {
   PawPrint,
   Dna,
   Brain,
-  HeartPulse,
-  Activity,
+  Heartbeat,
   Pulse,
   FirstAid,
   Stethoscope,
   Pill,
   Building,
+  BuildingOffice,
   Storefront,
   Factory,
   Warehouse,
@@ -476,8 +466,7 @@ export {
   Bathtub,
   Shower,
   Toilet,
-  Sink,
-  Refrigerator,
+  CookingPot,
   Oven,
   Coffee,
   Wine,
@@ -487,4 +476,4 @@ export {
   Pizza,
   Hamburger,
   ForkKnife,
-} from "@phosphor-icons/react";
+} from '@phosphor-icons/react';

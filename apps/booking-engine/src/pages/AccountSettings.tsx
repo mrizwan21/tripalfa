@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  Key,
-  CreditCard,
-  ShieldCheck,
-  Bell,
-  User,
-  Download,
-} from "lucide-react";
-import { Button } from "../components/ui/button";
-import PageHeader from "../components/layout/PageHeader";
-import { Card } from "../components/ui/card";
-import { formatCurrency } from "@tripalfa/ui-components";
-import { Label } from "@/components/ui/label";
-import {
-  DEFAULT_CONTENT_CONFIG,
-  loadTenantContentConfig,
-} from "../lib/tenantContentConfig";
+import React, { useState, useEffect } from 'react';
+import { Key, CreditCard, ShieldCheck, Bell, User, Download } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import PageHeader from '../components/layout/PageHeader';
+import { Card } from '../components/ui/card';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { Label } from '@/components/ui/label';
+import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
 
 type CardItem = {
   id: string;
@@ -26,37 +16,29 @@ type CardItem = {
   balance?: number;
 };
 
-export default function AccountSettings(): React.JSX.Element {
+function AccountSettings(): React.JSX.Element {
   const [tab, setTab] = useState<
-    "profile" | "security" | "payments" | "notifications" | "documents" | "api"
-  >("profile");
+    'profile' | 'security' | 'payments' | 'notifications' | 'documents' | 'api'
+  >('profile');
 
-  const [accountContent, setAccountContent] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings,
-  );
+  const [accountContent, setAccountContent] = useState(DEFAULT_CONTENT_CONFIG.accountSettings);
 
   // Mocked state (replace with hooks/api integration)
   const [firstName, setFirstName] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.firstName,
+    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.firstName
   );
   const [lastName, setLastName] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.lastName,
+    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.lastName
   );
-  const [email, setEmail] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.email,
-  );
-  const [phone, setPhone] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.phone,
-  );
+  const [email, setEmail] = useState(DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.email);
+  const [phone, setPhone] = useState(DEFAULT_CONTENT_CONFIG.accountSettings.profileDefaults.phone);
   const [cards, setCards] = useState<CardItem[]>(
-    DEFAULT_CONTENT_CONFIG.accountSettings.paymentsDefaults.savedCards,
+    DEFAULT_CONTENT_CONFIG.accountSettings.paymentsDefaults.savedCards
   );
   const [notifications, setNotifications] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings.notificationsDefaults,
+    DEFAULT_CONTENT_CONFIG.accountSettings.notificationsDefaults
   );
-  const [apiKeys, setApiKeys] = useState(
-    DEFAULT_CONTENT_CONFIG.accountSettings.apiDefaults,
-  );
+  const [apiKeys, setApiKeys] = useState(DEFAULT_CONTENT_CONFIG.accountSettings.apiDefaults);
 
   // respect hash navigation (e.g. /account-settings#security)
   useEffect(() => {
@@ -78,17 +60,10 @@ export default function AccountSettings(): React.JSX.Element {
     };
 
     try {
-      const h = (window.location.hash || "").replace("#", "");
+      const h = (window.location.hash || '').replace('#', '');
       if (
         h &&
-        [
-          "profile",
-          "security",
-          "payments",
-          "notifications",
-          "documents",
-          "api",
-        ].includes(h)
+        ['profile', 'security', 'payments', 'notifications', 'documents', 'api'].includes(h)
       ) {
         setTab(h as any);
       }
@@ -101,10 +76,7 @@ export default function AccountSettings(): React.JSX.Element {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <PageHeader
-        title={accountContent.title}
-        subtitle={accountContent.subtitle}
-      />
+      <PageHeader title={accountContent.title} subtitle={accountContent.subtitle} />
 
       <div className="flex gap-6">
         {/* Local page sidebar */}
@@ -114,56 +86,55 @@ export default function AccountSettings(): React.JSX.Element {
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => setTab("profile")}
-                className={`w-full text-left px-3 py-2 rounded-md ${tab === "profile" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+                onClick={() => setTab('profile')}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === 'profile' ? 'bg-background/80 ring-1 ring-indigo-200' : 'hover:bg-background/30'}`}
               >
-                <User className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                <User className="inline-block mr-2 h-4 w-4 align-middle" />{' '}
                 {accountContent.tabs.profile}
               </Button>
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => setTab("security")}
-                className={`w-full text-left px-3 py-2 rounded-md ${tab === "security" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+                onClick={() => setTab('security')}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === 'security' ? 'bg-background/80 ring-1 ring-indigo-200' : 'hover:bg-background/30'}`}
               >
-                <ShieldCheck className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                <ShieldCheck className="inline-block mr-2 h-4 w-4 align-middle" />{' '}
                 {accountContent.tabs.security}
               </Button>
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => setTab("payments")}
-                className={`w-full text-left px-3 py-2 rounded-md ${tab === "payments" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+                onClick={() => setTab('payments')}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === 'payments' ? 'bg-background/80 ring-1 ring-indigo-200' : 'hover:bg-background/30'}`}
               >
-                <CreditCard className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                <CreditCard className="inline-block mr-2 h-4 w-4 align-middle" />{' '}
                 {accountContent.tabs.payments}
               </Button>
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => setTab("notifications")}
-                className={`w-full text-left px-3 py-2 rounded-md ${tab === "notifications" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+                onClick={() => setTab('notifications')}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === 'notifications' ? 'bg-background/80 ring-1 ring-indigo-200' : 'hover:bg-background/30'}`}
               >
-                <Bell className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                <Bell className="inline-block mr-2 h-4 w-4 align-middle" />{' '}
                 {accountContent.tabs.notifications}
               </Button>
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => setTab("documents")}
-                className={`w-full text-left px-3 py-2 rounded-md ${tab === "documents" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+                onClick={() => setTab('documents')}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === 'documents' ? 'bg-background/80 ring-1 ring-indigo-200' : 'hover:bg-background/30'}`}
               >
-                <Download className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
+                <Download className="inline-block mr-2 h-4 w-4 align-middle" />{' '}
                 {accountContent.tabs.documents}
               </Button>
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => setTab("api")}
-                className={`w-full text-left px-3 py-2 rounded-md ${tab === "api" ? "bg-background/80 ring-1 ring-indigo-200" : "hover:bg-background/30"}`}
+                onClick={() => setTab('api')}
+                className={`w-full text-left px-3 py-2 rounded-md ${tab === 'api' ? 'bg-background/80 ring-1 ring-indigo-200' : 'hover:bg-background/30'}`}
               >
-                <Key className="inline-block mr-2 h-4 w-4 align-middle" />{" "}
-                {accountContent.tabs.api}
+                <Key className="inline-block mr-2 h-4 w-4 align-middle" /> {accountContent.tabs.api}
               </Button>
             </nav>
           </div>
@@ -172,22 +143,20 @@ export default function AccountSettings(): React.JSX.Element {
         {/* Content */}
         <div className="flex-1 space-y-6">
           {/* Profile */}
-          {tab === "profile" && (
+          {tab === 'profile' && (
             <Card className="p-6">
               <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
                 Profile
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  <div className="text-xs text-muted-foreground">
-                    First name
-                  </div>
+                  <div className="text-xs text-muted-foreground">First name</div>
                   <input
                     id="account-first-name"
                     name="account-first-name"
                     className="mt-1 w-full p-3 border rounded-lg bg-background/70"
                     value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+                    onChange={e => setFirstName(e.target.value)}
                   />
                 </Label>
                 <Label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -197,7 +166,7 @@ export default function AccountSettings(): React.JSX.Element {
                     name="account-last-name"
                     className="mt-1 w-full p-3 border rounded-lg bg-background/70"
                     value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
+                    onChange={e => setLastName(e.target.value)}
                   />
                 </Label>
                 <Label className="block sm:col-span-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -207,7 +176,7 @@ export default function AccountSettings(): React.JSX.Element {
                     name="account-email"
                     className="mt-1 w-full p-3 border rounded-lg bg-background/70"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={e => setEmail(e.target.value)}
                   />
                 </Label>
                 <Label className="block sm:col-span-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -217,7 +186,7 @@ export default function AccountSettings(): React.JSX.Element {
                     name="account-phone"
                     className="mt-1 w-full p-3 border rounded-lg bg-background/70"
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={e => setPhone(e.target.value)}
                   />
                 </Label>
               </div>
@@ -232,7 +201,7 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Security */}
-          {tab === "security" && (
+          {tab === 'security' && (
             <Card className="p-6">
               <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
                 Security
@@ -274,8 +243,7 @@ export default function AccountSettings(): React.JSX.Element {
                   </Label>
                   <div className="mt-2 bg-background/70 p-3 rounded-lg border">
                     <p className="text-sm text-foreground mb-2">
-                      Protect your account with 2FA via SMS or authenticator
-                      app.
+                      Protect your account with 2FA via SMS or authenticator app.
                     </p>
                     <div className="flex gap-2">
                       <Button variant="outline">Enable SMS 2FA</Button>
@@ -288,7 +256,7 @@ export default function AccountSettings(): React.JSX.Element {
                       Active sessions
                     </Label>
                     <div className="mt-2 text-sm text-muted-foreground">
-                      You are signed in on 2 devices.{" "}
+                      You are signed in on 2 devices.{' '}
                       <Button
                         variant="ghost"
                         size="md"
@@ -304,7 +272,7 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Payments */}
-          {tab === "payments" && (
+          {tab === 'payments' && (
             <Card className="p-6">
               <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
                 Payment Methods & Billing
@@ -316,7 +284,7 @@ export default function AccountSettings(): React.JSX.Element {
                     Saved cards
                   </h3>
                   <div className="space-y-3">
-                    {cards.map((c) => (
+                    {cards.map(c => (
                       <div
                         key={c.id}
                         className="flex items-center justify-between p-3 border rounded-lg bg-background/70 gap-2"
@@ -325,10 +293,8 @@ export default function AccountSettings(): React.JSX.Element {
                           <div className="text-sm font-medium">
                             {c.brand} •••• {c.last4}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Expires {c.exp}
-                          </div>
-                          {typeof c.balance === "number" && (
+                          <div className="text-xs text-muted-foreground">Expires {c.exp}</div>
+                          {typeof c.balance === 'number' && (
                             <div className="text-xs text-muted-foreground mt-1">
                               Available: {formatCurrency(c.balance)}
                             </div>
@@ -418,7 +384,7 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Notifications */}
-          {tab === "notifications" && (
+          {tab === 'notifications' && (
             <Card className="p-6">
               <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
                 Notifications
@@ -435,7 +401,7 @@ export default function AccountSettings(): React.JSX.Element {
                     type="checkbox"
                     checked={notifications.marketing}
                     onChange={() =>
-                      setNotifications((s) => ({
+                      setNotifications(s => ({
                         ...s,
                         marketing: !s.marketing,
                       }))
@@ -454,7 +420,7 @@ export default function AccountSettings(): React.JSX.Element {
                     type="checkbox"
                     checked={notifications.bookingUpdates}
                     onChange={() =>
-                      setNotifications((s) => ({
+                      setNotifications(s => ({
                         ...s,
                         bookingUpdates: !s.bookingUpdates,
                       }))
@@ -472,9 +438,7 @@ export default function AccountSettings(): React.JSX.Element {
                   <input
                     type="checkbox"
                     checked={notifications.promoSms}
-                    onChange={() =>
-                      setNotifications((s) => ({ ...s, promoSms: !s.promoSms }))
-                    }
+                    onChange={() => setNotifications(s => ({ ...s, promoSms: !s.promoSms }))}
                   />
                 </Label>
 
@@ -486,7 +450,7 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* Documents */}
-          {tab === "documents" && (
+          {tab === 'documents' && (
             <Card className="p-6">
               <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
                 Documents
@@ -494,12 +458,8 @@ export default function AccountSettings(): React.JSX.Element {
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 border rounded-lg bg-background/70 gap-2">
                   <div>
-                    <div className="text-sm font-medium">
-                      Invoice - March 2025
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      PDF • 120KB
-                    </div>
+                    <div className="text-sm font-medium">Invoice - March 2025</div>
+                    <div className="text-xs text-muted-foreground">PDF • 120KB</div>
                   </div>
                   <div>
                     <Button variant="ghost">Download</Button>
@@ -517,22 +477,20 @@ export default function AccountSettings(): React.JSX.Element {
           )}
 
           {/* API Keys */}
-          {tab === "api" && (
+          {tab === 'api' && (
             <Card className="p-6">
               <h2 className="text-lg font-medium mb-4 text-2xl font-semibold tracking-tight">
                 API Keys
               </h2>
               <div className="space-y-3">
-                {apiKeys.map((k) => (
+                {apiKeys.map(k => (
                   <div
                     key={k.id}
                     className="flex items-center justify-between p-3 border rounded-lg bg-background/70 gap-2"
                   >
                     <div>
                       <div className="text-sm font-medium">{k.label}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {k.created}
-                      </div>
+                      <div className="text-xs text-muted-foreground">{k.created}</div>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-xs text-foreground font-mono px-3 py-1 bg-muted rounded">
@@ -559,23 +517,23 @@ export default function AccountSettings(): React.JSX.Element {
           <Button
             variant="outline"
             size="md"
-            onClick={() => setTab("profile")}
-            className={`flex-1 text-center py-2 ${tab === "profile" ? "text-indigo-700" : "text-muted-foreground"}`}
+            onClick={() => setTab('profile')}
+            className={`flex-1 text-center py-2 ${tab === 'profile' ? 'text-indigo-700' : 'text-muted-foreground'}`}
           >
             <User className="mx-auto" />
           </Button>
           <Button
             variant="outline"
             size="md"
-            onClick={() => setTab("payments")}
-            className={`flex-1 text-center py-2 ${tab === "payments" ? "text-indigo-700" : "text-muted-foreground"}`}
+            onClick={() => setTab('payments')}
+            className={`flex-1 text-center py-2 ${tab === 'payments' ? 'text-indigo-700' : 'text-muted-foreground'}`}
           >
             <CreditCard className="mx-auto" />
           </Button>
           <Button
             variant="outline"
             size="md"
-            onClick={() => setTab("bookings" as any)}
+            onClick={() => setTab('bookings' as any)}
             className={`flex-1 text-center py-2 text-muted-foreground`}
           >
             <ShieldCheck className="mx-auto" />
@@ -583,16 +541,16 @@ export default function AccountSettings(): React.JSX.Element {
           <Button
             variant="outline"
             size="md"
-            onClick={() => setTab("notifications")}
-            className={`flex-1 text-center py-2 ${tab === "notifications" ? "text-indigo-700" : "text-muted-foreground"}`}
+            onClick={() => setTab('notifications')}
+            className={`flex-1 text-center py-2 ${tab === 'notifications' ? 'text-indigo-700' : 'text-muted-foreground'}`}
           >
             <Bell className="mx-auto" />
           </Button>
           <Button
             variant="outline"
             size="md"
-            onClick={() => setTab("api")}
-            className={`flex-1 text-center py-2 ${tab === "api" ? "text-indigo-700" : "text-muted-foreground"}`}
+            onClick={() => setTab('api')}
+            className={`flex-1 text-center py-2 ${tab === 'api' ? 'text-indigo-700' : 'text-muted-foreground'}`}
           >
             <Key className="mx-auto" />
           </Button>
@@ -601,3 +559,5 @@ export default function AccountSettings(): React.JSX.Element {
     </div>
   );
 }
+
+export default AccountSettings;

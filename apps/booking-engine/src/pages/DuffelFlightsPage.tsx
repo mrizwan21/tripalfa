@@ -5,66 +5,57 @@
  * Combines search form, results display, and detail view in one page.
  */
 
-import React, { useState, useCallback, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
-import { ArrowLeft, Plane, Server, Zap } from "lucide-react";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { DuffelFlightSearch } from "../components/flight/DuffelFlightSearch";
-import { DuffelFlightResults } from "../components/flight/DuffelFlightResults";
-import { DuffelFlightDetail } from "../components/flight/DuffelFlightDetail";
-import { Button } from "../components/ui/button";
-import { useDuffelFlights } from "../hooks/useDuffelFlights";
-import type { FlightSearchResult, CabinClass } from "../types/duffel";
+import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { format } from 'date-fns';
+import { ArrowLeft, Plane, Server, Zap } from 'lucide-react';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { DuffelFlightSearch } from '../components/flight/DuffelFlightSearch';
+import { DuffelFlightResults } from '../components/flight/DuffelFlightResults';
+import { DuffelFlightDetail } from '../components/flight/DuffelFlightDetail';
+import { Button } from '../components/ui/button';
+import { useDuffelFlights } from '../hooks/useDuffelFlights';
+import type { FlightSearchResult, CabinClass } from '../types/duffel';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type ViewMode = "search" | "results" | "detail";
+type ViewMode = 'search' | 'results' | 'detail';
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
-export function DuffelFlightsPage() {
+function DuffelFlightsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   // View state
-  const [viewMode, setViewMode] = useState<ViewMode>("search");
-  const [selectedFlight, setSelectedFlight] =
-    useState<FlightSearchResult | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('search');
+  const [selectedFlight, setSelectedFlight] = useState<FlightSearchResult | null>(null);
 
   // Get initial params from URL
   const initialParams = {
-    origin: searchParams.get("origin") || "",
-    destination: searchParams.get("destination") || "",
-    departureDate: searchParams.get("departureDate") || "",
-    returnDate: searchParams.get("returnDate") || "",
-    adults: parseInt(searchParams.get("adults") || "1"),
-    children: parseInt(searchParams.get("children") || "0"),
-    infants: parseInt(searchParams.get("infants") || "0"),
-    cabinClass: (searchParams.get("cabinClass") || "economy") as CabinClass,
-    tripType: (searchParams.get("tripType") || "roundTrip") as
-      | "roundTrip"
-      | "oneWay"
-      | "multiCity",
+    origin: searchParams.get('origin') || '',
+    destination: searchParams.get('destination') || '',
+    departureDate: searchParams.get('departureDate') || '',
+    returnDate: searchParams.get('returnDate') || '',
+    adults: parseInt(searchParams.get('adults') || '1'),
+    children: parseInt(searchParams.get('children') || '0'),
+    infants: parseInt(searchParams.get('infants') || '0'),
+    cabinClass: (searchParams.get('cabinClass') || 'economy') as CabinClass,
+    tripType: (searchParams.get('tripType') || 'roundTrip') as 'roundTrip' | 'oneWay' | 'multiCity',
   };
 
   // Search hook
-  const { flights, loading, error, search, isCached, total, refetch } =
-    useDuffelFlights();
+  const { flights, loading, error, search, isCached, total, refetch } = useDuffelFlights();
 
   // Auto-search if URL params are present
   useEffect(() => {
-    if (
-      initialParams.origin &&
-      initialParams.destination &&
-      initialParams.departureDate
-    ) {
+    if (initialParams.origin && initialParams.destination && initialParams.departureDate) {
       search(initialParams);
-      setViewMode("results");
+      setViewMode('results');
     }
   }, []);
 
@@ -76,39 +67,36 @@ export function DuffelFlightsPage() {
 
       // Parse params and search
       const searchParamsObj = {
-        origin: params.get("origin") || "",
-        destination: params.get("destination") || "",
-        departureDate: params.get("departureDate") || "",
-        returnDate: params.get("returnDate") || undefined,
-        adults: parseInt(params.get("adults") || "1"),
-        children: parseInt(params.get("children") || "0"),
-        infants: parseInt(params.get("infants") || "0"),
-        cabinClass: (params.get("cabinClass") || "economy") as CabinClass,
-        tripType: (params.get("tripType") || "roundTrip") as
-          | "roundTrip"
-          | "oneWay"
-          | "multiCity",
+        origin: params.get('origin') || '',
+        destination: params.get('destination') || '',
+        departureDate: params.get('departureDate') || '',
+        returnDate: params.get('returnDate') || undefined,
+        adults: parseInt(params.get('adults') || '1'),
+        children: parseInt(params.get('children') || '0'),
+        infants: parseInt(params.get('infants') || '0'),
+        cabinClass: (params.get('cabinClass') || 'economy') as CabinClass,
+        tripType: (params.get('tripType') || 'roundTrip') as 'roundTrip' | 'oneWay' | 'multiCity',
       };
 
       search(searchParamsObj);
-      setViewMode("results");
+      setViewMode('results');
     },
-    [navigate, search],
+    [navigate, search]
   );
 
   // Handle flight selection
   const handleSelectFlight = useCallback((flight: FlightSearchResult) => {
     setSelectedFlight(flight);
-    setViewMode("detail");
+    setViewMode('detail');
   }, []);
 
   // Handle back navigation
   const handleBack = useCallback(() => {
-    if (viewMode === "detail") {
-      setViewMode("results");
+    if (viewMode === 'detail') {
+      setViewMode('results');
       setSelectedFlight(null);
-    } else if (viewMode === "results") {
-      setViewMode("search");
+    } else if (viewMode === 'results') {
+      setViewMode('search');
     }
   }, [viewMode]);
 
@@ -120,14 +108,14 @@ export function DuffelFlightsPage() {
         state: { flight },
       });
     },
-    [navigate],
+    [navigate]
   );
 
   return (
     <TripLogerLayout>
       <div className="min-h-screen bg-[hsl(var(--background))]">
         {/* Search View */}
-        {viewMode === "search" && (
+        {viewMode === 'search' && (
           <div className="relative">
             {/* Hero Background */}
             <div
@@ -137,8 +125,8 @@ export function DuffelFlightsPage() {
                   "url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2074&auto=format&fit=crop')",
               }}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--secondary)/0.8)] via-[hsl(var(--primary)/0.6)] to-[hsl(var(--accent)/0.4)]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--foreground)/0.4)] via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-[hsl(var(--primary))]" />
+              <div className="absolute inset-0 bg-[hsl(var(--foreground)/0.4)]" />
             </div>
 
             {/* Content */}
@@ -148,13 +136,13 @@ export function DuffelFlightsPage() {
                   Search Flights with Duffel
                 </h1>
                 <p className="text-white/90 max-w-2xl mx-auto drop-shadow-md">
-                  Real-time flight search powered by Duffel API. Find the best
-                  deals from hundreds of airlines worldwide.
+                  Real-time flight search powered by Duffel API. Find the best deals from hundreds
+                  of airlines worldwide.
                 </p>
               </div>
 
               {/* Search Card */}
-              <div className="max-w-5xl mx-auto bg-card/10 backdrop-blur-md border border-border rounded-3xl p-6 shadow-2xl">
+              <div className="max-w-5xl mx-auto bg-card/10 backdrop-blur-md border border-border rounded-xl p-6 shadow-2xl">
                 <DuffelFlightSearch
                   onNavigate={handleSearchNavigate}
                   initialTripType={initialParams.tripType}
@@ -164,38 +152,32 @@ export function DuffelFlightsPage() {
 
               {/* Features */}
               <div className="max-w-4xl mx-auto mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-muted/10 backdrop-blur-sm rounded-2xl p-6 text-center">
+                <div className="bg-muted/10 backdrop-blur-sm rounded-xl p-6 text-center">
                   <div className="w-12 h-12 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4 gap-2">
                     <Zap className="text-yellow-400" size={24} />
                   </div>
                   <h3 className="text-white font-bold mb-2 text-xl font-semibold tracking-tight">
                     Real-time Results
                   </h3>
-                  <p className="text-white/70 text-sm">
-                    Live pricing from 300+ airlines
-                  </p>
+                  <p className="text-white/70 text-sm">Live pricing from 300+ airlines</p>
                 </div>
-                <div className="bg-muted/10 backdrop-blur-sm rounded-2xl p-6 text-center">
+                <div className="bg-muted/10 backdrop-blur-sm rounded-xl p-6 text-center">
                   <div className="w-12 h-12 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4 gap-2">
                     <Server className="text-blue-400" size={24} />
                   </div>
                   <h3 className="text-white font-bold mb-2 text-xl font-semibold tracking-tight">
                     Direct API
                   </h3>
-                  <p className="text-white/70 text-sm">
-                    No middleman, direct airline content
-                  </p>
+                  <p className="text-white/70 text-sm">No middleman, direct airline content</p>
                 </div>
-                <div className="bg-muted/10 backdrop-blur-sm rounded-2xl p-6 text-center">
+                <div className="bg-muted/10 backdrop-blur-sm rounded-xl p-6 text-center">
                   <div className="w-12 h-12 bg-muted/20 rounded-full flex items-center justify-center mx-auto mb-4 gap-2">
                     <Plane className="text-purple-400" size={24} />
                   </div>
                   <h3 className="text-white font-bold mb-2 text-xl font-semibold tracking-tight">
                     Instant Booking
                   </h3>
-                  <p className="text-white/70 text-sm">
-                    Book directly with instant confirmation
-                  </p>
+                  <p className="text-white/70 text-sm">Book directly with instant confirmation</p>
                 </div>
               </div>
             </div>
@@ -203,7 +185,7 @@ export function DuffelFlightsPage() {
         )}
 
         {/* Results View */}
-        {viewMode === "results" && (
+        {viewMode === 'results' && (
           <div className="container mx-auto px-4 py-8">
             {/* Header */}
             <div className="bg-card border-b border-border sticky top-16 z-40 -mx-4 px-4 py-4 mb-8">
@@ -223,12 +205,9 @@ export function DuffelFlightsPage() {
                     </h1>
                     <p className="text-xs text-muted-foreground">
                       {initialParams.departureDate}
-                      {initialParams.returnDate &&
-                        ` - ${initialParams.returnDate}`}
-                      {" • "}
-                      {initialParams.adults +
-                        initialParams.children +
-                        initialParams.infants}{" "}
+                      {initialParams.returnDate && ` - ${initialParams.returnDate}`}
+                      {' • '}
+                      {initialParams.adults + initialParams.children + initialParams.infants}{' '}
                       traveler(s)
                     </p>
                   </div>
@@ -236,7 +215,7 @@ export function DuffelFlightsPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setViewMode("search")}
+                  onClick={() => setViewMode('search')}
                   className="text-xs font-bold text-[hsl(var(--primary))] uppercase tracking-widest hover:underline"
                 >
                   Modify Search
@@ -260,12 +239,8 @@ export function DuffelFlightsPage() {
         )}
 
         {/* Detail View */}
-        {viewMode === "detail" && selectedFlight && (
-          <DuffelFlightDetail
-            flight={selectedFlight}
-            onBook={handleBook}
-            onBack={handleBack}
-          />
+        {viewMode === 'detail' && selectedFlight && (
+          <DuffelFlightDetail flight={selectedFlight} onBook={handleBook} onBack={handleBack} />
         )}
       </div>
     </TripLogerLayout>

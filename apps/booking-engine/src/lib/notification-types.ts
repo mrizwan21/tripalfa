@@ -95,7 +95,7 @@ function mapApiStatusToUIStatus(apiStatus: string): NotificationStatus {
   return statusMap[apiStatus] || "INFO";
 }
 
-export const MOCK_NOTIFICATIONS: NotificationItem[] = [
+const MOCK_NOTIFICATIONS: NotificationItem[] = [
   {
     id: "1",
     type: "SUCCESS",

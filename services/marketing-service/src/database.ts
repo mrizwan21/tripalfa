@@ -1,10 +1,10 @@
 import { getCoreDb, getLocalDb, getFinanceDb } from '@tripalfa/shared-database';
 
-export const coreDb = getCoreDb();
-export const localDb = getLocalDb();
-export const financeDb = getFinanceDb();
+const coreDb = getCoreDb();
+const localDb = getLocalDb();
+const financeDb = getFinanceDb();
 // Aliases for backward compatibility
-export const prisma = coreDb;
-export { getFinanceDb };
+const prisma = coreDb;
+{ getFinanceDb }
 
 export default { coreDb, localDb, financeDb, prisma, getFinanceDb };

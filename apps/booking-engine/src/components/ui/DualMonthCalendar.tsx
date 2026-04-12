@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import * as Popover from "@radix-ui/react-popover";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import {
   format,
   addMonths,
@@ -15,7 +15,7 @@ import {
   isAfter,
   isBefore,
   isToday,
-} from "date-fns";
+} from 'date-fns';
 
 interface DualMonthCalendarProps {
   departureDate?: Date | null;
@@ -23,13 +23,13 @@ interface DualMonthCalendarProps {
   onDepartureDateChange?: (date: Date) => void;
   onReturnDateChange?: (date: Date) => void;
   onClose?: () => void;
-  mode?: "flight" | "hotel";
+  mode?: 'flight' | 'hotel';
   departureLabel?: string;
   returnLabel?: string;
   minDate?: Date;
 }
 
-type SelectionMode = "departure" | "return";
+type SelectionMode = 'departure' | 'return';
 
 export function DualMonthCalendar({
   departureDate,
@@ -37,21 +37,16 @@ export function DualMonthCalendar({
   onDepartureDateChange,
   onReturnDateChange,
   onClose,
-  mode = "flight",
-  departureLabel = "Departure",
-  returnLabel = "Return",
+  mode = 'flight',
+  departureLabel = 'Departure',
+  returnLabel = 'Return',
   minDate = new Date(),
 }: DualMonthCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectionMode, setSelectionMode] =
-    useState<SelectionMode>("departure");
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>('departure');
   const [isOpen, setIsOpen] = useState(false);
-  const [internalDeparture, setInternalDeparture] = useState<Date | null>(
-    departureDate || null,
-  );
-  const [internalReturn, setInternalReturn] = useState<Date | null>(
-    returnDate || null,
-  );
+  const [internalDeparture, setInternalDeparture] = useState<Date | null>(departureDate || null);
+  const [internalReturn, setInternalReturn] = useState<Date | null>(returnDate || null);
 
   useEffect(() => {
     setInternalDeparture(departureDate || null);
@@ -74,11 +69,11 @@ export function DualMonthCalendar({
   const handleDateClick = (date: Date) => {
     if (isBefore(date, startOfDay(minDate))) return;
 
-    if (selectionMode === "departure") {
+    if (selectionMode === 'departure') {
       setInternalDeparture(date);
       onDepartureDateChange?.(date);
       // Auto-advance to return selection
-      setSelectionMode("return");
+      setSelectionMode('return');
       // If return date is before new departure, clear it
       if (internalReturn && isBefore(internalReturn, date)) {
         setInternalReturn(null);
@@ -135,16 +130,13 @@ export function DualMonthCalendar({
       <div className="flex-1 gap-4">
         {/* Month Header */}
         <div className="text-center font-bold text-gray-900 text-lg mb-4">
-          {format(monthDate, "MMMM yyyy")}
+          {format(monthDate, 'MMMM yyyy')}
         </div>
 
         {/* Day Headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {["S", "M", "T", "W", "T", "F", "S"].map((day, i) => (
-            <div
-              key={i}
-              className="text-center text-xs font-bold text-gray-400 py-2"
-            >
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+            <div key={i} className="text-center text-xs font-bold text-gray-400 py-2">
               {day}
             </div>
           ))}
@@ -157,50 +149,46 @@ export function DualMonthCalendar({
               {week.map((date, dayIndex) => {
                 const isCurrentMonth = isSameMonth(date, monthDate);
                 const isPast = isBefore(date, startOfDay(minDate));
-                const isDeparture =
-                  internalDeparture && isSameDay(date, internalDeparture);
-                const isReturn =
-                  internalReturn && isSameDay(date, internalReturn);
+                const isDeparture = internalDeparture && isSameDay(date, internalDeparture);
+                const isReturn = internalReturn && isSameDay(date, internalReturn);
                 const inRange = isInRange(date);
                 const isTodayDate = isToday(date);
 
-                let bgClass = "bg-transparent hover:bg-gray-100";
-                let textClass = "text-gray-900";
-                let borderClass = "";
+                let bgClass = 'bg-transparent hover:bg-gray-100';
+                let textClass = 'text-gray-900';
+                let borderClass = '';
 
                 if (!isCurrentMonth) {
-                  textClass = "text-gray-300";
-                  bgClass = "bg-transparent";
+                  textClass = 'text-gray-300';
+                  bgClass = 'bg-transparent';
                 } else if (isPast) {
-                  textClass = "text-gray-300";
-                  bgClass = "bg-transparent cursor-not-allowed";
+                  textClass = 'text-gray-300';
+                  bgClass = 'bg-transparent cursor-not-allowed';
                 } else if (isDeparture) {
-                  bgClass = "bg-pink-400";
-                  textClass = "text-white font-bold";
+                  bgClass = 'bg-pink-400';
+                  textClass = 'text-white font-bold';
                 } else if (isReturn) {
-                  bgClass = "bg-green-500";
-                  textClass = "text-white font-bold";
+                  bgClass = 'bg-green-500';
+                  textClass = 'text-white font-bold';
                 } else if (inRange) {
-                  bgClass = "bg-yellow-400/80";
-                  textClass = "text-gray-900";
+                  bgClass = 'bg-yellow-400/80';
+                  textClass = 'text-gray-900';
                 } else if (isTodayDate) {
-                  borderClass = "ring-2 ring-purple-500";
+                  borderClass = 'ring-2 ring-purple-500';
                 }
 
                 return (
                   <button
                     key={dayIndex}
-                    onClick={() =>
-                      isCurrentMonth && !isPast && handleDateClick(date)
-                    }
+                    onClick={() => isCurrentMonth && !isPast && handleDateClick(date)}
                     disabled={!isCurrentMonth || isPast}
                     className={`
                       w-10 h-10 flex items-center justify-center rounded-lg text-sm transition-all
                       ${bgClass} ${textClass} ${borderClass}
-                      ${isCurrentMonth && !isPast ? "cursor-pointer" : "cursor-default"}
+                      ${isCurrentMonth && !isPast ? 'cursor-pointer' : 'cursor-default'}
                     `}
                   >
-                    {format(date, "d")}
+                    {format(date, 'd')}
                   </button>
                 );
               })}
@@ -212,21 +200,19 @@ export function DualMonthCalendar({
   };
 
   const formatDisplayDate = (date: Date | null) => {
-    if (!date) return "";
-    return format(date, "EEE, d MMM");
+    if (!date) return '';
+    return format(date, 'EEE, d MMM');
   };
 
   return (
-    <div>
+    <div className="overflow-visible [&_*]:overflow-visible">
       {/* Hidden inputs for E2E testing */}
       <input
         type="text"
-        data-testid={
-          mode === "flight" ? "flight-departure-date" : "hotel-checkin-date"
-        }
+        data-testid={mode === 'flight' ? 'flight-departure-date' : 'hotel-checkin-date'}
         className="hidden"
-        value={internalDeparture ? format(internalDeparture, "yyyy-MM-dd") : ""}
-        onChange={(e) => {
+        value={internalDeparture ? format(internalDeparture, 'yyyy-MM-dd') : ''}
+        onChange={e => {
           const date = new Date(e.target.value);
           if (!isNaN(date.getTime())) {
             setInternalDeparture(date);
@@ -236,12 +222,10 @@ export function DualMonthCalendar({
       />
       <input
         type="text"
-        data-testid={
-          mode === "flight" ? "flight-return-date" : "hotel-checkout-date"
-        }
+        data-testid={mode === 'flight' ? 'flight-return-date' : 'hotel-checkout-date'}
         className="hidden"
-        value={internalReturn ? format(internalReturn, "yyyy-MM-dd") : ""}
-        onChange={(e) => {
+        value={internalReturn ? format(internalReturn, 'yyyy-MM-dd') : ''}
+        onChange={e => {
           const date = new Date(e.target.value);
           if (!isNaN(date.getTime())) {
             setInternalReturn(date);
@@ -254,37 +238,38 @@ export function DualMonthCalendar({
           <div className="flex gap-4 cursor-pointer h-full min-h-[48px] w-full">
             {/* Departure/Check-in Input */}
             <div
-              className={`flex-1 flex items-center gap-2 bg-card px-4 h-full rounded-xl border-2 transition-all ${selectionMode === "departure" && isOpen
-                ? "border-[hsl(var(--primary))] ring-2 ring-[hsl(var(--primary)/0.1)]"
-                : "border-border hover:border-border/80"
-                }`}
+              className={`flex-1 flex items-center gap-2 bg-card px-4 h-full rounded-xl border-2 transition-all ${
+                selectionMode === 'departure' && isOpen
+                  ? 'border-[hsl(var(--primary))] ring-2 ring-[hsl(var(--primary)/0.1)]'
+                  : 'border-border hover:border-border/80'
+              }`}
               onClick={() => {
-                setSelectionMode("departure");
+                setSelectionMode('departure');
                 setIsOpen(true);
               }}
             >
               <Calendar size={18} className="text-[hsl(var(--primary))]" />
               <span className="text-sm font-bold text-gray-900">
                 {formatDisplayDate(internalDeparture) ||
-                  (mode === "hotel" ? "Check-in" : "Departure")}
+                  (mode === 'hotel' ? 'Check-in' : 'Departure')}
               </span>
             </div>
 
             {/* Return/Check-out Input */}
             <div
-              className={`flex-1 flex items-center gap-2 bg-card px-4 h-full rounded-xl border-2 transition-all ${selectionMode === "return" && isOpen
-                ? "border-[hsl(var(--secondary))] ring-2 ring-[hsl(var(--secondary)/0.1)]"
-                : "border-border hover:border-border/80"
-                }`}
+              className={`flex-1 flex items-center gap-2 bg-card px-4 h-full rounded-xl border-2 transition-all ${
+                selectionMode === 'return' && isOpen
+                  ? 'border-[hsl(var(--secondary))] ring-2 ring-[hsl(var(--secondary)/0.1)]'
+                  : 'border-border hover:border-border/80'
+              }`}
               onClick={() => {
-                setSelectionMode("return");
+                setSelectionMode('return');
                 setIsOpen(true);
               }}
             >
               <Calendar size={18} className="text-green-500" />
               <span className="text-sm font-bold text-gray-900">
-                {formatDisplayDate(internalReturn) ||
-                  (mode === "hotel" ? "Check-out" : "Return")}
+                {formatDisplayDate(internalReturn) || (mode === 'hotel' ? 'Check-out' : 'Return')}
               </span>
             </div>
           </div>
@@ -300,30 +285,32 @@ export function DualMonthCalendar({
             <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100 gap-2">
               <div className="flex gap-4">
                 <button
-                  onClick={() => setSelectionMode("departure")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${selectionMode === "departure"
-                    ? "bg-purple-100 text-purple-700"
-                    : "text-gray-500 hover:bg-gray-100"
-                    }`}
+                  onClick={() => setSelectionMode('departure')}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    selectionMode === 'departure'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
                 >
-                  {mode === "hotel" ? "Check-in" : departureLabel}
+                  {mode === 'hotel' ? 'Check-in' : departureLabel}
                   {internalDeparture && (
                     <span className="ml-2 text-xs font-normal">
-                      {format(internalDeparture, "MMM d")}
+                      {format(internalDeparture, 'MMM d')}
                     </span>
                   )}
                 </button>
                 <button
-                  onClick={() => setSelectionMode("return")}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${selectionMode === "return"
-                    ? "bg-green-100 text-green-700"
-                    : "text-gray-500 hover:bg-gray-100"
-                    }`}
+                  onClick={() => setSelectionMode('return')}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    selectionMode === 'return'
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
                 >
-                  {mode === "hotel" ? "Check-out" : returnLabel}
+                  {mode === 'hotel' ? 'Check-out' : returnLabel}
                   {internalReturn && (
                     <span className="ml-2 text-xs font-normal">
-                      {format(internalReturn, "MMM d")}
+                      {format(internalReturn, 'MMM d')}
                     </span>
                   )}
                 </button>
@@ -357,13 +344,13 @@ export function DualMonthCalendar({
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded bg-pink-400" />
                 <span className="text-xs text-gray-500">
-                  {mode === "hotel" ? "Check-in" : "Departure"}
+                  {mode === 'hotel' ? 'Check-in' : 'Departure'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 rounded bg-green-500" />
                 <span className="text-xs text-gray-500">
-                  {mode === "hotel" ? "Check-out" : "Return"}
+                  {mode === 'hotel' ? 'Check-out' : 'Return'}
                 </span>
               </div>
               <div className="flex items-center gap-2">

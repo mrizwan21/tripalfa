@@ -58,7 +58,7 @@ export interface SSOLoginResult {
 /**
  * Single Sign-On Service for FusionAuth
  */
-export class FusionAuthSSOService {
+class FusionAuthSSOService {
   private static instance: FusionAuthSSOService;
   private client: AxiosInstance;
 

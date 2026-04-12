@@ -394,7 +394,7 @@ export interface RuleDebugSession {
 
 // Note: RuleStats is already exported above, RuleExecutionHistory is separate interface
 
-export class RuleEngineService {
+class RuleEngineService {
   /**
    * Get base URL for rule engine service - uses lazy evaluation to support runtime config changes
    */

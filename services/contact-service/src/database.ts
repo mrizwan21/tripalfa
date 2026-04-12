@@ -1,19 +1,11 @@
-import { PrismaClient } from '@tripalfa/shared-database';
+import { prisma } from '@tripalfa/shared-database';
 
-let prisma: PrismaClient | null = null;
-
-export function getPrismaClient(): PrismaClient {
-  if (!prisma) {
-    prisma = new PrismaClient();
-  }
+export function getPrismaClient() {
   return prisma;
 }
 
 async function disconnectPrisma(): Promise<void> {
-  if (prisma) {
-    await prisma.$disconnect();
-    prisma = null;
-  }
+  await prisma.$disconnect();
 }
 
 export async function healthCheck(): Promise<boolean> {

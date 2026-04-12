@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { api as ApiClientInstance } from "../lib/api";
+import { useCallback, useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { api as ApiClientInstance } from '../lib/api';
 // Lazy import to avoid circular dependency
 type ApiClient = typeof ApiClientInstance;
 let api: ApiClient | undefined;
 function getApi() {
-  if (!api) api = require("../lib/api").api as ApiClient;
+  if (!api) api = require('../lib/api').api as ApiClient;
   return api;
 }
 
@@ -17,8 +17,8 @@ interface Notification {
   message: string;
   data?: Record<string, any>;
   channels: string[];
-  priority: "low" | "medium" | "high";
-  status: "sent" | "read" | "archived";
+  priority: 'low' | 'medium' | 'high';
+  status: 'sent' | 'read' | 'archived';
   actionUrl?: string;
   readAt?: string;
   createdAt: string;
@@ -61,11 +61,9 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
   const [offset, setOffset] = useState(0);
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["notifications", offset],
+    queryKey: ['notifications', offset],
     queryFn: async () => {
-      const response = await getApi().get(
-        `/notifications?limit=${limit}&offset=${offset}`,
-      );
+      const response = await getApi().get(`/notifications?limit=${limit}&offset=${offset}`);
       return response;
     },
     staleTime: 30000, // 30 seconds
@@ -76,18 +74,18 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
       await getApi().patch(`/notifications/${notificationId}/read`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
     },
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await getApi().patch("/notifications/read-all", {});
+      await getApi().patch('/notifications/read-all', {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
     },
   });
 
@@ -96,12 +94,12 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
       await getApi().delete(`/notifications/${notificationId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 
   const loadMore = useCallback(() => {
-    setOffset((prev) => prev + limit);
+    setOffset(prev => prev + limit);
   }, [limit]);
 
   return {
@@ -125,10 +123,10 @@ export const useNotificationPreferences = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["notificationPreferences"],
+    queryKey: ['notificationPreferences'],
     queryFn: async () => {
       const response = await api.get<{ data: NotificationPreferences }>(
-        "/notifications/preferences",
+        '/notifications/preferences'
       );
       return response.data as NotificationPreferences;
     },
@@ -138,13 +136,13 @@ export const useNotificationPreferences = () => {
   const updateMutation = useMutation({
     mutationFn: async (preferences: Partial<NotificationPreferences>) => {
       const response = await api.patch<{ data: NotificationPreferences }>(
-        "/notifications/preferences",
-        preferences,
+        '/notifications/preferences',
+        preferences
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notificationPreferences"] });
+      queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
     },
   });
 
@@ -165,10 +163,10 @@ export const useUnreadNotificationCount = () => {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["unreadCount"],
+    queryKey: ['unreadCount'],
     queryFn: async () => {
       const response = await api.get<{ data: { unreadCount: number } }>(
-        "/notifications/count/unread",
+        '/notifications/count/unread'
       );
       return response.data.unreadCount;
     },
@@ -187,34 +185,32 @@ export const useUnreadNotificationCount = () => {
 /**
  * Hook for push notification subscription
  */
-export const usePushNotifications = () => {
+const usePushNotifications = () => {
   const queryClient = useQueryClient();
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
     // Check if browser supports service workers and push notifications
     const supported =
-      "serviceWorker" in navigator &&
-      "PushManager" in window &&
-      "Notification" in window;
+      'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     setIsSupported(supported);
   }, []);
 
   const subscribeMutation = useMutation({
     mutationFn: async () => {
       if (!isSupported) {
-        throw new Error("Push notifications not supported in this browser");
+        throw new Error('Push notifications not supported in this browser');
       }
 
-      if (Notification.permission !== "granted") {
+      if (Notification.permission !== 'granted') {
         const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          throw new Error("Notification permission denied");
+        if (permission !== 'granted') {
+          throw new Error('Notification permission denied');
         }
       }
 
       // Register service worker
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      const registration = await navigator.serviceWorker.register('/sw.js');
 
       // Subscribe to push
       const subscription = await registration.pushManager.subscribe({
@@ -223,15 +219,14 @@ export const usePushNotifications = () => {
       });
 
       // Send subscription to server
-      const response = await api.post<{ data: any }>(
-        "/notifications/subscribe",
-        { subscription: subscription.toJSON() },
-      );
+      const response = await api.post<{ data: any }>('/notifications/subscribe', {
+        subscription: subscription.toJSON(),
+      });
 
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notificationPreferences"] });
+      queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
     },
   });
 
@@ -240,7 +235,7 @@ export const usePushNotifications = () => {
       await getApi().delete(`/notifications/subscribe/${subscriptionId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notificationPreferences"] });
+      queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
     },
   });
 
@@ -257,35 +252,33 @@ export const usePushNotifications = () => {
  * Real-time notification listener using WebSocket
  * (Optional - for real-time updates)
  */
-export const useRealtimeNotifications = () => {
+const useRealtimeNotifications = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const [lastNotification, setLastNotification] = useState<Notification | null>(
-    null,
-  );
+  const [lastNotification, setLastNotification] = useState<Notification | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
     // Initialize WebSocket connection for real-time notifications
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (!token) return;
 
     const ws = new WebSocket(
-      `${import.meta.env.VITE_WS_URL || "ws://localhost:3001"}/notifications?token=${token}`,
+      `${import.meta.env.VITE_WS_URL || 'ws://localhost:3001'}/notifications?token=${token}`
     );
 
     ws.onopen = () => setIsConnected(true);
     ws.onclose = () => setIsConnected(false);
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       try {
         const notification = JSON.parse(event.data);
         setLastNotification(notification);
 
         // Invalidate queries to trigger refetch
-        queryClient.invalidateQueries({ queryKey: ["notifications"] });
-        queryClient.invalidateQueries({ queryKey: ["unreadCount"] });
+        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        queryClient.invalidateQueries({ queryKey: ['unreadCount'] });
       } catch (error) {
-        console.error("Error parsing notification:", error);
+        console.error('Error parsing notification:', error);
       }
     };
 

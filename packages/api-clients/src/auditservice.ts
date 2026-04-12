@@ -20,7 +20,7 @@ export interface ComplianceReport {
   lastAudit: string;
 }
 
-export class AuditService {
+class AuditService {
   /**
    * Get base URL for audit service - uses lazy evaluation to support runtime config changes
    */

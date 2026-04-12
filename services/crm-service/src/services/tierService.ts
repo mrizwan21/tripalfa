@@ -35,7 +35,7 @@ export interface CustomerTierScore {
   downgradeRisk: boolean;
 }
 
-export class TierService {
+class TierService {
   // Tier definitions - can be configured via database or environment variables
   private static readonly TIER_DEFINITIONS: TierDefinition[] = [
     {
@@ -330,7 +330,7 @@ export class TierService {
       for (let i = 0; i < contacts.length; i += batchSize) {
         const batch = contacts.slice(i, i + batchSize);
 
-        const batchPromises = batch.map(async contact => {
+        const batchPromises = batch.map(async (contact: { id: string }) => {
           try {
             const tierScore = await this.calculateTierForCustomer(contact.id);
             await this.updateCustomerTier(contact.id, tierScore.calculatedTier);
@@ -377,9 +377,9 @@ export class TierService {
         },
       });
 
-      const totalCustomers = tierDistribution.reduce((sum, item) => sum + item._count.id, 0);
+      const totalCustomers = tierDistribution.reduce((sum: number, item: any) => sum + item._count.id, 0);
 
-      const distribution = tierDistribution.map(item => ({
+      const distribution = tierDistribution.map((item: any) => ({
         tier: item.tier || 'unknown',
         count: item._count.id,
         percentage: totalCustomers > 0 ? Math.round((item._count.id / totalCustomers) * 100) : 0,

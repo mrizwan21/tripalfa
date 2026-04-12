@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import * as Popover from "@radix-ui/react-popover";
-import { Minus, Plus, ChevronDown } from "lucide-react";
-import { Label } from "./label";
-import { Button } from "./button";
+import React, { useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { Minus, Plus, ChevronDown } from 'lucide-react';
+import { Label } from './label';
+import { Button } from './button';
 
 export function GuestSelector() {
   const [adults, setAdults] = useState(2);
@@ -15,9 +15,9 @@ export function GuestSelector() {
     const newCount = Math.max(0, children + delta);
     setChildren(newCount);
     if (delta > 0) {
-      setChildAges((prev) => [...prev, 0]); // Default age 0
+      setChildAges(prev => [...prev, 0]); // Default age 0
     } else {
-      setChildAges((prev) => prev.slice(0, -1));
+      setChildAges(prev => prev.slice(0, -1));
     }
   };
 
@@ -30,15 +30,15 @@ export function GuestSelector() {
   const displayText = `${adults} Adults · ${children} Children · ${rooms} Room`;
 
   return (
-    <div>
+    <div className="overflow-visible [&_*]:overflow-visible">
       {/* Hidden selects for E2E testing */}
       <select
         data-testid="hotel-adults"
         className="hidden"
         value={adults}
-        onChange={(e) => setAdults(parseInt(e.target.value))}
+        onChange={e => setAdults(parseInt(e.target.value))}
       >
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+        {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
           <option key={num} value={num}>
             {num}
           </option>
@@ -48,9 +48,9 @@ export function GuestSelector() {
         data-testid="hotel-rooms"
         className="hidden"
         value={rooms}
-        onChange={(e) => setRooms(parseInt(e.target.value))}
+        onChange={e => setRooms(parseInt(e.target.value))}
       >
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+        {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
           <option key={num} value={num}>
             {num}
           </option>
@@ -138,18 +138,11 @@ export function GuestSelector() {
                 <div key={i} className="animate-in slide-in-from-top-2">
                   <Label className="block text-xs font-bold text-gray-700 mb-1">
                     {i + 1}
-                    {i === 0
-                      ? "st"
-                      : i === 1
-                        ? "nd"
-                        : i === 2
-                          ? "rd"
-                          : "th"}{" "}
-                    child's age
+                    {i === 0 ? 'st' : i === 1 ? 'nd' : i === 2 ? 'rd' : 'th'} child's age
                   </Label>
                   <select
                     value={age}
-                    onChange={(e) => updateAge(i, parseInt(e.target.value))}
+                    onChange={e => updateAge(i, parseInt(e.target.value))}
                     className="w-full p-2 border border-gray-300 rounded text-sm bg-white outline-none focus:border-blue-500"
                   >
                     <option value="" disabled>

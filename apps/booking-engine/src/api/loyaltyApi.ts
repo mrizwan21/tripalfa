@@ -227,4 +227,4 @@ class LoyaltyApi {
 }
 
 export const loyaltyApi = LoyaltyApi.getInstance();
-export { LoyaltyApiError };
+{ LoyaltyApiError }

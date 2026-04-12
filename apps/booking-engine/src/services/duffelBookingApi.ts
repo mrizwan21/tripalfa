@@ -5,7 +5,7 @@
  * All requests go through the centralized API layer
  */
 
-import type { api as ApiClientInstance } from "../lib/api";
+import type { api as ApiClientInstance } from "../lib/apiClient";
 
 // Lazy import to avoid circular dependency
 type ApiClient = typeof ApiClientInstance;
@@ -119,7 +119,7 @@ export interface SelectedSeat {
 /**
  * Create an offer request (search for flights)
  */
-export async function createOfferRequest(
+async function createOfferRequest(
   params: OfferRequestParams,
 ): Promise<any> {
   try {
@@ -143,7 +143,7 @@ export async function createOfferRequest(
 /**
  * Get offer details by ID
  */
-export async function getOfferDetails(offerId: string): Promise<any> {
+async function getOfferDetails(offerId: string): Promise<any> {
   try {
     const result = await api.get<any>(`/offers/${offerId}`);
     return result;
@@ -181,7 +181,7 @@ export interface CreateOrderParams {
 /**
  * Create a flight order from selected offers
  */
-export async function createFlightOrder(
+async function createFlightOrder(
   params: CreateOrderParams,
 ): Promise<any> {
   try {
@@ -206,7 +206,7 @@ export async function createFlightOrder(
 /**
  * Get order details
  */
-export async function getFlightOrder(orderId: string): Promise<any> {
+async function getFlightOrder(orderId: string): Promise<any> {
   try {
     console.log("[Duffel] Fetching order:", orderId);
 
@@ -225,7 +225,7 @@ export async function getFlightOrder(orderId: string): Promise<any> {
 /**
  * Update order (add services, etc.)
  */
-export async function updateFlightOrder(
+async function updateFlightOrder(
   orderId: string,
   updateData: any,
 ): Promise<any> {

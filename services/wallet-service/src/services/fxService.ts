@@ -50,7 +50,7 @@ async function getAllRates(): Promise<Record<string, number>> {
 /**
  * Check if snapshot is stale (older than 3 hours)
  */
-export function isSnapshotStale(fetchedAt: Date): boolean {
+function isSnapshotStale(fetchedAt: Date): boolean {
   const thresholdMs = 3 * 60 * 60 * 1000; // 3 hours
   return Date.now() - new Date(fetchedAt).getTime() > thresholdMs;
 }
@@ -115,7 +115,7 @@ export async function convertAmount(
 /**
  * Save FX rate to database (called by fxFetcher job)
  */
-export async function saveSnapshot(
+async function saveSnapshot(
   source: string,
   baseCurrency: string,
   rates: Record<string, number>,
@@ -161,7 +161,7 @@ export async function saveSnapshot(
 /**
  * Get historical snapshots for a date range
  */
-export async function getSnapshotHistory(
+async function getSnapshotHistory(
   startDate: Date,
   endDate: Date,
   _currency?: string,
@@ -187,7 +187,7 @@ export async function getSnapshotHistory(
 /**
  * Mark old snapshots as stale
  */
-export async function markSnapshotStale(_snapshotId: string): Promise<void> {
+async function markSnapshotStale(_snapshotId: string): Promise<void> {
   try {
     // Mark all rates older than 3 hours as stale by deleting them
     const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
@@ -233,7 +233,7 @@ export async function getRate(
 }
 
 // Keep initializeFxService for backward compatibility
-export function initializeFxService(_pgPool: any): void {
+function initializeFxService(_pgPool: any): void {
   // No longer needed - using Prisma directly
   logger.info(`${SERVICE_NAME}: FX service initialized with Prisma`);
 }

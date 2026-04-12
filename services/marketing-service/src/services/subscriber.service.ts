@@ -4,7 +4,7 @@ import axios from 'axios';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_API_URL = 'https://api.resend.com';
 
-export class SubscriberService {
+class SubscriberService {
   /**
    * Subscribe email
    */
@@ -316,4 +316,4 @@ export class SubscriberService {
   }
 }
 
-export const subscriberService = new SubscriberService();
+const subscriberService = new SubscriberService();

@@ -17,14 +17,6 @@
       "auth": "key-auth"
     },
     {
-      "name": "Inventory Service",
-      "id": "inventory-service",
-      "plans": ["unlimited"],
-      "desc": "Travel Kingdom inventory management API for hotels, flights, and availability",
-      "tags": ["internal", "inventory"],
-      "auth": "key-auth"
-    },
-    {
       "name": "User Service",
       "id": "user-service",
       "plans": ["unlimited"],
@@ -41,35 +33,11 @@
       "auth": "key-auth"
     },
     {
-      "name": "Analytics Service",
-      "id": "analytics-service",
-      "plans": ["unlimited"],
-      "desc": "Travel Kingdom analytics and reporting API for business intelligence",
-      "tags": ["internal", "analytics"],
-      "auth": "key-auth"
-    },
-    {
-      "name": "Metrics Service",
-      "id": "metrics-service",
-      "plans": ["unlimited"],
-      "desc": "Travel Kingdom metrics and monitoring API for system observability",
-      "tags": ["internal", "metrics", "monitoring"],
-      "auth": "key-auth"
-    },
-    {
-      "name": "B2B Admin Server",
-      "id": "b2b-admin-server",
-      "plans": ["unlimited"],
-      "desc": "Internal server for B2B Admin portal handling staff onboarding and specific admin functions",
-      "tags": ["internal", "admin", "b2b"],
-      "auth": "key-auth"
-    },
-    {
       "name": "Admin Service",
       "id": "admin-service",
       "plans": ["unlimited"],
-      "desc": "Admin API service to expose /admin/* routes through the API gateway (Kong)",
-      "tags": ["internal", "admin"],
+      "desc": "Admin API service for B2B Admin portal - handles staff onboarding, admin functions, and /admin/* routes through the API gateway",
+      "tags": ["internal", "admin", "b2b"],
       "auth": "key-auth"
     }
   ],

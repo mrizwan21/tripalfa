@@ -6,7 +6,7 @@
  * Routes through centralized API Manager for consistency
  */
 
-import { api } from "../lib/api";
+import { api } from "../lib/apiClient";
 
 /**
  * Process payment through the supplier/booking system

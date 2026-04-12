@@ -667,7 +667,7 @@ router.get('/stats/tiers', async (req: Request, res: Response) => {
     });
 
     // Format the response
-    const formattedStats = tierStats.map(stat => ({
+    const formattedStats = tierStats.map((stat: any) => ({
       tier: stat.tier || 'unknown',
       customerCount: stat._count.id,
       totalSpent: stat._sum.totalSpent || 0,
@@ -719,7 +719,7 @@ router.get('/stats/tiers', async (req: Request, res: Response) => {
  */
 router.get('/:id/tier-analysis', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const tierScore = await tierService.calculateTierForCustomer(id);
 
@@ -792,7 +792,7 @@ router.get('/:id/tier-analysis', async (req: Request, res: Response) => {
  */
 router.post('/:id/update-tier', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { tier, sendNotification = false, reason } = req.body;
 
     // Validate tier if provided

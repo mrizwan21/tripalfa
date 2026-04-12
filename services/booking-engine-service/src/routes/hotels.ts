@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import { randomUUID } from 'node:crypto';
-import prisma, { Decimal } from '../database.js';
+import prisma from '../database.js';
 import { staticDbPool } from '../static-db.js';
 import { validateLiteApiId } from '../utils/validation.js';
 import {
@@ -299,6 +299,9 @@ router.post('/book', async (req, res: Response) => {
 
     // Create local booking record
     const bookingRef = `HTL-${Date.now().toString(36).toUpperCase()}`;
+    const baseAmountValue = String(baseAmount);
+    const taxAmountValue = String(taxAmount);
+    const totalAmountValue = String(totalAmount);
 
     const booking = await prisma.booking.create({
       data: {
@@ -310,10 +313,10 @@ router.post('/book', async (req, res: Response) => {
         paymentStatus: 'pending',
         customerEmail: guestInfo?.email,
         customerPhone: guestInfo?.phone,
-        baseAmount: new Decimal(baseAmount),
-        taxAmount: new Decimal(taxAmount),
-        markupAmount: new Decimal(0),
-        totalAmount: new Decimal(totalAmount),
+        baseAmount: baseAmountValue,
+        taxAmount: taxAmountValue,
+        markupAmount: '0',
+        totalAmount: totalAmountValue,
         currency: currency,
         travelDate: new Date(checkIn),
         returnDate: new Date(checkOut),
@@ -340,7 +343,7 @@ router.post('/book', async (req, res: Response) => {
         hotelName,
         checkIn: new Date(checkIn),
         checkOut: new Date(checkOut),
-        totalAmount: new Decimal(totalAmount),
+        totalAmount: totalAmountValue,
         currency,
         metadata: {
           bookData,
@@ -385,7 +388,7 @@ router.post('/book', async (req, res: Response) => {
         transactionId: prebookId,
         offerId,
         hotelId,
-        price: new Decimal(totalAmount),
+        price: totalAmountValue,
         currency: currency,
         guestEmail: guestInfo?.email,
         guestName: guestInfo ? `${guestInfo.firstName} ${guestInfo.lastName}` : null,

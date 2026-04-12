@@ -22,8 +22,8 @@ const swaggerSpec = createSwaggerSpec({
   ],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupBookingEngineSwagger(app: Application): void {
-  setupSwagger(app, swaggerSpec, '/api-docs');
+  setupSwagger(app as unknown as Parameters<typeof setupSwagger>[0], swaggerSpec, '/api-docs');
 }

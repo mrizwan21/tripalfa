@@ -308,7 +308,7 @@ function generateRequestId(): string {
 /**
  * Composite middleware applying all gateway policies
  */
-export const gatewayMiddleware = [resolveEndpoint, checkAuth, rateLimit];
+const gatewayMiddleware = [resolveEndpoint, checkAuth, rateLimit];
 
 /**
  * Export forwarding middleware separately for final route handler

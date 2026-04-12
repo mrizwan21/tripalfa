@@ -693,8 +693,34 @@ router.post('/book', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/realtime-booking/bookings/:bookingId
- * Retrieve booking details and status
+ * @swagger
+ * /api/realtime-booking/bookings/{bookingId}:
+ *   get:
+ *     summary: Retrieve booking details and status
+ *     tags: [Realtime Booking]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Booking ID
+ *     responses:
+ *       200:
+ *         description: Booking retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Failed to fetch booking
  */
 router.get('/bookings/:bookingId', async (req: Request, res: Response) => {
   try {
@@ -772,8 +798,45 @@ router.get('/bookings/:bookingId', async (req: Request, res: Response) => {
 });
 
 /**
- * DELETE /api/realtime-booking/bookings/:bookingId
- * Cancel booking
+ * @swagger
+ * /api/realtime-booking/bookings/{bookingId}:
+ *   delete:
+ *     summary: Cancel a booking
+ *     tags: [Realtime Booking]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Booking ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 default: User requested cancellation
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Booking not found
+ *       409:
+ *         description: Booking already cancelled
+ *       500:
+ *         description: Failed to cancel booking
  */
 router.delete('/bookings/:bookingId', async (req: Request, res: Response) => {
   try {
@@ -849,8 +912,63 @@ router.delete('/bookings/:bookingId', async (req: Request, res: Response) => {
 });
 
 /**
- * GET /api/realtime-booking/bookings
- * List user's bookings with filtering
+ * @swagger
+ * /api/realtime-booking/bookings:
+ *   get:
+ *     summary: List user's bookings with filtering
+ *     tags: [Realtime Booking]
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by booking status
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Pagination offset
+ *       - in: query
+ *         name: fromDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter from date
+ *       - in: query
+ *         name: toDate
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Filter to date
+ *     responses:
+ *       200:
+ *         description: Bookings retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: userId is required
+ *       500:
+ *         description: Failed to fetch bookings
  */
 router.get('/bookings', async (req: Request, res: Response) => {
   try {
@@ -933,8 +1051,49 @@ router.get('/bookings', async (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/realtime-booking/bookings/:bookingId/amend
- * Update guest information on existing booking
+ * @swagger
+ * /api/realtime-booking/bookings/{bookingId}/amend:
+ *   post:
+ *     summary: Update guest information on existing booking
+ *     tags: [Realtime Booking]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Booking ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Guest information updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Failed to amend booking
  */
 router.post('/bookings/:bookingId/amend', async (req: Request, res: Response) => {
   try {

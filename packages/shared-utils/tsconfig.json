@@ -30,7 +30,8 @@
     "utils.ts",
     "logger.ts",
     "api.ts",
-    "hooks.ts"
+    "hooks.ts",
+    "date-utils.ts"
   ],
   "references": [{ "path": "../shared-types" }]
 }

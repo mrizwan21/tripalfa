@@ -9,10 +9,11 @@
  * - Usage history
  */
 
-import React, { useState, useEffect } from "react";
-import type { FC } from "react";
-import { getStoredAuthToken } from "../lib/authToken";
-import { Button } from "@tripalfa/ui-components";
+import React, { useState, useEffect } from 'react';
+import type { FC } from 'react';
+import { getStoredAuthToken } from '../lib/authToken';
+import { Button } from '@tripalfa/ui-components';
+import { formatDate } from '@tripalfa/shared-utils/date-utils';
 
 interface AirlineCredit {
   id: string;
@@ -24,7 +25,7 @@ interface AirlineCredit {
   currency: string;
   expiresAt: string;
   issuedAt: string;
-  status: "active" | "expired" | "used";
+  status: 'active' | 'expired' | 'used';
   reason?: string;
 }
 
@@ -48,13 +49,13 @@ interface AirlineCreditsPanelProps {
   customerId: string;
 }
 
-type FilterStatus = "all" | "active" | "expired" | "used";
+type FilterStatus = 'all' | 'active' | 'expired' | 'used';
 
 const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
   const [data, setData] = useState<AirlineCreditsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [expandedCredit, setExpandedCredit] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,59 +67,48 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/customers/${customerId}/airline-credits`,
-        {
-          headers: {
-            Authorization: `Bearer ${getStoredAuthToken()}`,
-          },
+      const response = await fetch(`/api/customers/${customerId}/airline-credits`, {
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
         },
-      );
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch airline credits");
+        throw new Error('Failed to fetch airline credits');
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status: AirlineCredit["status"]) => {
+  const getStatusBadge = (status: AirlineCredit['status']) => {
     const config = {
       active: {
-        label: "Active",
-        color: "hsl(var(--secondary))",
-        bgColor: "hsl(var(--secondary) / 0.14)",
-        icon: "✓",
+        label: 'Active',
+        color: 'hsl(var(--secondary))',
+        bgColor: 'hsl(var(--secondary) / 0.14)',
+        icon: '✓',
       },
       expired: {
-        label: "Expired",
-        color: "hsl(var(--destructive))",
-        bgColor: "hsl(var(--destructive) / 0.14)",
-        icon: "✕",
+        label: 'Expired',
+        color: 'hsl(var(--destructive))',
+        bgColor: 'hsl(var(--destructive) / 0.14)',
+        icon: '✕',
       },
       used: {
-        label: "Used",
-        color: "hsl(var(--primary))",
-        bgColor: "hsl(var(--primary) / 0.14)",
-        icon: "✓",
+        label: 'Used',
+        color: 'hsl(var(--primary))',
+        bgColor: 'hsl(var(--primary) / 0.14)',
+        icon: '✓',
       },
     };
     return config[status];
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const isExpired = (expiresAt: string) => {
@@ -133,8 +123,8 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
   };
 
   const filteredCredits =
-    data?.credits.filter((credit) => {
-      if (filterStatus === "all") return true;
+    data?.credits.filter(credit => {
+      if (filterStatus === 'all') return true;
       return credit.status === filterStatus;
     }) || [];
 
@@ -146,7 +136,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
       acc[credit.airlineCode].push(credit);
       return acc;
     },
-    {} as Record<string, AirlineCredit[]>,
+    {} as Record<string, AirlineCredit[]>
   );
 
   return (
@@ -155,11 +145,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <Button
-            variant="outline"
-            size="default"
-            onClick={fetchAirlineCredits}
-          >
+          <Button variant="outline" size="default" onClick={fetchAirlineCredits}>
             Retry
           </Button>
         </div>
@@ -188,36 +174,34 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "all" ? "active" : ""}`}
-              onClick={() => setFilterStatus("all")}
+              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('all')}
             >
               All ({data.credits.length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "active" ? "active" : ""}`}
-              onClick={() => setFilterStatus("active")}
+              className={`filter-btn ${filterStatus === 'active' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('active')}
             >
-              Active ({data.credits.filter((c) => c.status === "active").length}
-              )
+              Active ({data.credits.filter(c => c.status === 'active').length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "expired" ? "active" : ""}`}
-              onClick={() => setFilterStatus("expired")}
+              className={`filter-btn ${filterStatus === 'expired' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('expired')}
             >
-              Expired (
-              {data.credits.filter((c) => c.status === "expired").length})
+              Expired ({data.credits.filter(c => c.status === 'expired').length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "used" ? "active" : ""}`}
-              onClick={() => setFilterStatus("used")}
+              className={`filter-btn ${filterStatus === 'used' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('used')}
             >
-              Used ({data.credits.filter((c) => c.status === "used").length})
+              Used ({data.credits.filter(c => c.status === 'used').length})
             </Button>
           </div>
 
@@ -229,142 +213,110 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             </div>
           ) : (
             <div className="credits-list">
-              {Object.entries(groupedByAirline).map(
-                ([airlineCode, credits]) => (
-                  <div key={airlineCode} className="airline-group">
-                    <div className="airline-header">
-                      <span className="airline-name">
-                        {credits[0].airlineName} ({airlineCode})
-                      </span>
-                      <span className="airline-total">
-                        {data.currency}{" "}
-                        {credits
-                          .reduce(
-                            (sum, c) => sum + (c.amount - c.usedAmount),
-                            0,
-                          )
-                          .toFixed(2)}
-                      </span>
-                    </div>
+              {Object.entries(groupedByAirline).map(([airlineCode, credits]) => (
+                <div key={airlineCode} className="airline-group">
+                  <div className="airline-header">
+                    <span className="airline-name">
+                      {credits[0].airlineName} ({airlineCode})
+                    </span>
+                    <span className="airline-total">
+                      {data.currency}{' '}
+                      {credits.reduce((sum, c) => sum + (c.amount - c.usedAmount), 0).toFixed(2)}
+                    </span>
+                  </div>
 
-                    <div className="credits-items">
-                      {credits.map((credit) => {
-                        const statusConfig = getStatusBadge(credit.status);
-                        const daysLeft = getDaysUntilExpiration(
-                          credit.expiresAt,
-                        );
-                        const balance = credit.amount - credit.usedAmount;
+                  <div className="credits-items">
+                    {credits.map(credit => {
+                      const statusConfig = getStatusBadge(credit.status);
+                      const daysLeft = getDaysUntilExpiration(credit.expiresAt);
+                      const balance = credit.amount - credit.usedAmount;
 
-                        return (
+                      return (
+                        <div key={credit.id} className={`credit-item ${credit.status}`}>
                           <div
-                            key={credit.id}
-                            className={`credit-item ${credit.status}`}
+                            className="credit-header-row"
+                            onClick={() =>
+                              setExpandedCredit(expandedCredit === credit.id ? null : credit.id)
+                            }
                           >
-                            <div
-                              className="credit-header-row"
-                              onClick={() =>
-                                setExpandedCredit(
-                                  expandedCredit === credit.id
-                                    ? null
-                                    : credit.id,
-                                )
-                              }
-                            >
-                              <div className="credit-left">
-                                <p className="credit-code">{credit.code}</p>
-                                <p className="credit-issued">
-                                  Issued: {formatDate(credit.issuedAt)}
-                                </p>
-                              </div>
-
-                              <div className="credit-middle">
-                                <span
-                                  className="status-badge"
-                                  style={{
-                                    backgroundColor: statusConfig.bgColor,
-                                    color: statusConfig.color,
-                                  }}
-                                >
-                                  {statusConfig.label}
-                                </span>
-                              </div>
-
-                              <div className="credit-right">
-                                <p className="credit-balance">
-                                  {data.currency} {balance.toFixed(2)}
-                                </p>
-                                {credit.status === "active" &&
-                                  daysLeft <= 30 && (
-                                    <p className="expiry-warning">
-                                      Expires in {daysLeft} day
-                                      {daysLeft !== 1 ? "s" : ""}
-                                    </p>
-                                  )}
-                                {credit.status === "expired" && (
-                                  <p className="expired-date">
-                                    Expired: {formatDate(credit.expiresAt)}
-                                  </p>
-                                )}
-                              </div>
-
-                              <div className="expand-icon">
-                                {expandedCredit === credit.id ? "▼" : "▶"}
-                              </div>
+                            <div className="credit-left">
+                              <p className="credit-code">{credit.code}</p>
+                              <p className="credit-issued">Issued: {formatDate(credit.issuedAt)}</p>
                             </div>
 
-                            {/* Expanded Details */}
-                            {expandedCredit === credit.id && (
-                              <div className="credit-details">
-                                <div className="detail-row">
-                                  <span className="detail-label">
-                                    Original Amount:
-                                  </span>
-                                  <span className="detail-value">
-                                    {data.currency} {credit.amount.toFixed(2)}
-                                  </span>
-                                </div>
-                                <div className="detail-row">
-                                  <span className="detail-label">
-                                    Used Amount:
-                                  </span>
-                                  <span className="detail-value">
-                                    {data.currency}{" "}
-                                    {credit.usedAmount.toFixed(2)}
-                                  </span>
-                                </div>
-                                <div className="detail-row">
-                                  <span className="detail-label">
-                                    Remaining:
-                                  </span>
-                                  <span className="detail-value">
-                                    {data.currency} {balance.toFixed(2)}
-                                  </span>
-                                </div>
-                                <div className="detail-row">
-                                  <span className="detail-label">Expires:</span>
-                                  <span className="detail-value">
-                                    {formatDate(credit.expiresAt)}
-                                  </span>
-                                </div>
-                                {credit.reason && (
-                                  <div className="detail-row">
-                                    <span className="detail-label">
-                                      Reason:
-                                    </span>
-                                    <span className="detail-value">
-                                      {credit.reason}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+                            <div className="credit-middle">
+                              <span
+                                className="status-badge"
+                                style={{
+                                  backgroundColor: statusConfig.bgColor,
+                                  color: statusConfig.color,
+                                }}
+                              >
+                                {statusConfig.label}
+                              </span>
+                            </div>
+
+                            <div className="credit-right">
+                              <p className="credit-balance">
+                                {data.currency} {balance.toFixed(2)}
+                              </p>
+                              {credit.status === 'active' && daysLeft <= 30 && (
+                                <p className="expiry-warning">
+                                  Expires in {daysLeft} day
+                                  {daysLeft !== 1 ? 's' : ''}
+                                </p>
+                              )}
+                              {credit.status === 'expired' && (
+                                <p className="expired-date">
+                                  Expired: {formatDate(credit.expiresAt)}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="expand-icon">
+                              {expandedCredit === credit.id ? '▼' : '▶'}
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {/* Expanded Details */}
+                          {expandedCredit === credit.id && (
+                            <div className="credit-details">
+                              <div className="detail-row">
+                                <span className="detail-label">Original Amount:</span>
+                                <span className="detail-value">
+                                  {data.currency} {credit.amount.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Used Amount:</span>
+                                <span className="detail-value">
+                                  {data.currency} {credit.usedAmount.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Remaining:</span>
+                                <span className="detail-value">
+                                  {data.currency} {balance.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Expires:</span>
+                                <span className="detail-value">{formatDate(credit.expiresAt)}</span>
+                              </div>
+                              {credit.reason && (
+                                <div className="detail-row">
+                                  <span className="detail-label">Reason:</span>
+                                  <span className="detail-value">{credit.reason}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                ),
-              )}
+                </div>
+              ))}
             </div>
           )}
 
@@ -373,13 +325,11 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             <div className="usage-history">
               <h3>Recent Usage</h3>
               <div className="history-items">
-                {data.usageHistory.slice(0, 5).map((record) => (
+                {data.usageHistory.slice(0, 5).map(record => (
                   <div key={record.id} className="history-item">
                     <div className="history-icon">🎫</div>
                     <div className="history-details">
-                      <p className="history-description">
-                        {record.description}
-                      </p>
+                      <p className="history-description">{record.description}</p>
                       <p className="history-date">{formatDate(record.date)}</p>
                     </div>
                     <div className="history-amount">
@@ -398,9 +348,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
               <li>Credits are automatically applied to your next booking</li>
               <li>Credits are prioritized by expiration date</li>
               <li>Unused credits will expire on the date shown</li>
-              <li>
-                Combine credits with wallet and card for flexible payments
-              </li>
+              <li>Combine credits with wallet and card for flexible payments</li>
               <li>Check back regularly for new credits from your bookings</li>
             </ul>
           </div>
@@ -811,4 +759,6 @@ const styles = `
 }
 `;
 
-export { styles };
+{
+  styles;
+}

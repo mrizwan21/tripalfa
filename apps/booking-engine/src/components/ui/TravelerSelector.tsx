@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import * as Popover from "@radix-ui/react-popover";
-import { Users, Minus, Plus, ChevronDown } from "lucide-react";
-import { Button } from "./button";
+import React, { useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import { Users, Minus, Plus, ChevronDown } from 'lucide-react';
+import { Button } from './button';
 
 interface PassengerCounts {
   adults: number;
@@ -26,10 +26,10 @@ export function TravelerSelector() {
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   const updateCount = (key: keyof PassengerCounts, delta: number) => {
-    setCounts((prev) => {
+    setCounts(prev => {
       const newVal = Math.max(0, prev[key] + delta);
       // Must have at least 1 adult if no other adult types (simplification)
-      if (key === "adults" && newVal === 0 && prev.adults === 1) return prev;
+      if (key === 'adults' && newVal === 0 && prev.adults === 1) return prev;
       return { ...prev, [key]: newVal };
     });
   };
@@ -39,26 +39,24 @@ export function TravelerSelector() {
     label: string;
     sub: string;
   }[] = [
-    { key: "adults", label: "Adults", sub: "18+" },
-    { key: "students", label: "Students", sub: "over 18" },
-    { key: "youths", label: "Youths", sub: "12-17" },
-    { key: "children", label: "Children", sub: "2-11" },
-    { key: "toddlers", label: "Toddlers in own seat", sub: "under 2" },
-    { key: "infants", label: "Infants on lap", sub: "under 2" },
+    { key: 'adults', label: 'Adults', sub: '18+' },
+    { key: 'students', label: 'Students', sub: 'over 18' },
+    { key: 'youths', label: 'Youths', sub: '12-17' },
+    { key: 'children', label: 'Children', sub: '2-11' },
+    { key: 'toddlers', label: 'Toddlers in own seat', sub: 'under 2' },
+    { key: 'infants', label: 'Infants on lap', sub: 'under 2' },
   ];
 
   return (
-    <div>
+    <div className="overflow-visible [&_*]:overflow-visible">
       {/* Hidden select for E2E testing */}
       <select
         data-testid="flight-adults"
         className="hidden"
         value={counts.adults}
-        onChange={(e) =>
-          updateCount("adults", parseInt(e.target.value) - counts.adults)
-        }
+        onChange={e => updateCount('adults', parseInt(e.target.value) - counts.adults)}
       >
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+        {Array.from({ length: 10 }, (_, i) => i + 1).map(num => (
           <option key={num} value={num}>
             {num}
           </option>
@@ -72,11 +70,11 @@ export function TravelerSelector() {
             className="flex items-center gap-2 bg-transparent text-white font-medium hover:bg-white/10 px-3 py-1.5 rounded transition-colors group"
           >
             <span>
-              {total} Traveler{total !== 1 ? "s" : ""}
+              {total} Traveler{total !== 1 ? 's' : ''}
             </span>
             <ChevronDown
               size={14}
-              className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+              className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             />
           </Button>
         </Popover.Trigger>
@@ -85,21 +83,14 @@ export function TravelerSelector() {
             className="w-80 bg-white rounded-xl shadow-xl border border-gray-100 p-4 z-[100] animate-in fade-in-0 zoom-in-95"
             sideOffset={8}
             align="start"
-            onOpenAutoFocus={(e) => e.preventDefault()}
+            onOpenAutoFocus={e => e.preventDefault()}
           >
-            <h3 className="font-bold text-lg mb-4 text-gray-900 border-b pb-2">
-              Travellers
-            </h3>
+            <h3 className="font-bold text-lg mb-4 text-gray-900 border-b pb-2">Travellers</h3>
             <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-              {categories.map((cat) => (
-                <div
-                  key={cat.key}
-                  className="flex justify-between items-center bg-white gap-4"
-                >
+              {categories.map(cat => (
+                <div key={cat.key} className="flex justify-between items-center bg-white gap-4">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {cat.label}
-                    </div>
+                    <div className="text-sm font-medium text-gray-900">{cat.label}</div>
                     <div className="text-xs text-gray-500">{cat.sub}</div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -107,10 +98,7 @@ export function TravelerSelector() {
                       variant="outline"
                       size="sm"
                       onClick={() => updateCount(cat.key, -1)}
-                      disabled={
-                        counts[cat.key] === 0 ||
-                        (cat.key === "adults" && total === 1)
-                      }
+                      disabled={counts[cat.key] === 0 || (cat.key === 'adults' && total === 1)}
                       className="w-8 h-8 flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:border-blue-600 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors gap-2"
                     >
                       <Minus size={14} />

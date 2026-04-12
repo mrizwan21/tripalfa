@@ -12,31 +12,28 @@
  * @route /seat-selection?mode=post-booking (Post-booking management)
  */
 
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { ChevronLeft, AlertCircle, Check, Luggage, Plane } from "lucide-react";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { formatCurrency } from "@tripalfa/ui-components";
-import { Button } from "../components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { ChevronLeft, AlertCircle, Check, Luggage, Plane } from 'lucide-react';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { Button } from '../components/ui/button';
 import {
   getSeatMaps,
   getSeatMapsForBooking,
   parseSeatPattern,
   getAircraftLayout,
-} from "../lib/api";
-import type {
-  AircraftConfig,
-  SeatMapWithAircraft,
-} from "../services/seatMapsApi";
-import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
+} from '../lib/api';
+import type { AircraftConfig, SeatMapWithAircraft } from '../services/seatMapsApi';
+import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 
 type SelectedSeat = Record<string, any>;
 
-type SeatSelectionMode = "booking" | "post-booking";
+type SeatSelectionMode = 'booking' | 'post-booking';
 
 interface SeatElement {
   designator: string;
-  type: "seat" | "empty" | "lavatory" | "galley" | "bassinet" | "closet";
+  type: 'seat' | 'empty' | 'lavatory' | 'galley' | 'bassinet' | 'closet';
   available_services?: Array<{
     id: string;
     total_amount: string;
@@ -44,7 +41,7 @@ interface SeatElement {
   }>;
 }
 
-export default function SeatSelection() {
+function SeatSelection() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -57,7 +54,7 @@ export default function SeatSelection() {
   const [error, setError] = useState<string | null>(null);
   const [activeSegment, setActiveSegment] = useState(0);
   const [totalSeatCost, setTotalSeatCost] = useState(0);
-  const [mode, setMode] = useState<SeatSelectionMode>("booking");
+  const [mode, setMode] = useState<SeatSelectionMode>('booking');
   const [activePassengerIndex, setActivePassengerIndex] = useState(0);
 
   // Navigation state
@@ -68,8 +65,8 @@ export default function SeatSelection() {
 
   // Get passenger count from various sources
   const statePassengers = state.passengers || [];
-  const urlAdults = parseInt(searchParams.get("adults") || "1", 10);
-  const urlChildren = parseInt(searchParams.get("children") || "0", 10);
+  const urlAdults = parseInt(searchParams.get('adults') || '1', 10);
+  const urlChildren = parseInt(searchParams.get('children') || '0', 10);
 
   // Generate passengers list - use state passengers if available, otherwise generate from URL params
   const passengers =
@@ -78,20 +75,20 @@ export default function SeatSelection() {
       : Array.from({ length: urlAdults + urlChildren }, (_, i) => ({
           id: `passenger_${i + 1}`,
           label: `Passenger ${i + 1}`,
-          type: i < urlAdults ? "adult" : "child",
+          type: i < urlAdults ? 'adult' : 'child',
         }));
 
   // Get currently active passenger
   const activePassenger = passengers[activePassengerIndex] ||
-    passengers[0] || { id: "passenger_1", label: "Passenger 1" };
+    passengers[0] || { id: 'passenger_1', label: 'Passenger 1' };
 
   // Determine mode based on URL params and state
   useEffect(() => {
-    const urlMode = searchParams.get("mode") as SeatSelectionMode;
-    if (urlMode === "post-booking" || (orderId && booking)) {
-      setMode("post-booking");
+    const urlMode = searchParams.get('mode') as SeatSelectionMode;
+    if (urlMode === 'post-booking' || (orderId && booking)) {
+      setMode('post-booking');
     } else {
-      setMode("booking");
+      setMode('booking');
     }
   }, [searchParams, orderId, booking]);
 
@@ -100,9 +97,7 @@ export default function SeatSelection() {
       <TripLogerLayout>
         <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--background))] px-4 gap-2">
           <div className="bg-card rounded-[2rem] border border-border shadow-sm p-8 text-center max-w-xl w-full">
-            <h1 className="text-2xl font-black text-foreground mb-2">
-              Seat Selection Disabled
-            </h1>
+            <h1 className="text-2xl font-black text-foreground mb-2">Seat Selection Disabled</h1>
             <p className="text-sm font-bold text-muted-foreground mb-6">
               Seat selection is currently disabled by your admin settings.
             </p>
@@ -126,30 +121,20 @@ export default function SeatSelection() {
       try {
         let maps: SeatMapWithAircraft[] = [];
 
-        if (mode === "post-booking" && orderId) {
-          console.log(
-            "[SeatSelection] POST-BOOKING MODE: Fetching maps for order:",
-            orderId,
-          );
-          maps = await getSeatMapsForBooking(orderId, "duffel", "test");
-        } else if (mode === "booking" && offer?.id) {
-          console.log(
-            "[SeatSelection] BOOKING MODE: Fetching maps for offer:",
-            offer.id,
-          );
-          maps = await getSeatMaps(offer.id, "duffel", "test");
+        if (mode === 'post-booking' && orderId) {
+          console.log('[SeatSelection] POST-BOOKING MODE: Fetching maps for order:', orderId);
+          maps = await getSeatMapsForBooking(orderId, 'duffel', 'test');
+        } else if (mode === 'booking' && offer?.id) {
+          console.log('[SeatSelection] BOOKING MODE: Fetching maps for offer:', offer.id);
+          maps = await getSeatMaps(offer.id, 'duffel', 'test');
         } else {
-          setError(
-            mode === "post-booking"
-              ? "No booking ID provided"
-              : "No offer selected",
-          );
+          setError(mode === 'post-booking' ? 'No booking ID provided' : 'No offer selected');
           setLoading(false);
           return;
         }
 
         if (!maps || maps.length === 0) {
-          setError("Seat selection is not available for this flight");
+          setError('Seat selection is not available for this flight');
           setSeatMaps([]);
         } else {
           setSeatMaps(maps);
@@ -157,8 +142,8 @@ export default function SeatSelection() {
         }
         setLoading(false);
       } catch (err) {
-        console.error("[SeatSelection] Error fetching seat maps:", err);
-        setError("Failed to load seat maps. Please try again.");
+        console.error('[SeatSelection] Error fetching seat maps:', err);
+        setError('Failed to load seat maps. Please try again.');
         setLoading(false);
       }
     };
@@ -173,20 +158,16 @@ export default function SeatSelection() {
   // - Flexible width for other facilities (they fill/shrink)
   // - Full designator shown on each seat (e.g., "1A", "2B")
   // - Middle-aligned if elements don't fill section
-  const renderSeatButton = (
-    element: SeatElement,
-    segmentId: string,
-    passengerId: string,
-  ) => {
+  const renderSeatButton = (element: SeatElement, segmentId: string, passengerId: string) => {
     const isSelected = selectedSeats.some(
-      (s) => s.designator === element.designator && s.segmentId === segmentId,
+      s => s.designator === element.designator && s.segmentId === segmentId
     );
     const isAvailable =
-      element.type === "seat" &&
+      element.type === 'seat' &&
       element.available_services &&
       element.available_services.length > 0;
 
-    if (element.type === "seat") {
+    if (element.type === 'seat') {
       return (
         <Button
           variant="ghost"
@@ -196,34 +177,29 @@ export default function SeatSelection() {
             isAvailable &&
             handleSeatClick(
               element.designator,
-              String(passengerId || "passenger_1"),
-              String(segmentId || ""),
+              String(passengerId || 'passenger_1'),
+              String(segmentId || ''),
               element.available_services?.[0]?.id,
-              parseFloat(element.available_services?.[0]?.total_amount || "0"),
+              parseFloat(element.available_services?.[0]?.total_amount || '0')
             )
           }
           disabled={!isAvailable}
           className={`w-10 h-10 flex items-center justify-center rounded font-bold text-xs transition-all duration-200 shrink-0 ${
             isSelected
-              ? "bg-blue-600 text-background border-2 border-blue-700 shadow-md"
+              ? 'bg-blue-600 text-background border-2 border-blue-700 shadow-md'
               : isAvailable
-                ? "bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer"
-                : "bg-muted text-muted-foreground cursor-not-allowed"
+                ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                : 'bg-muted text-muted-foreground cursor-not-allowed'
           }`}
-          title={`Seat ${element.designator} - ${isAvailable ? "Available" : "Unavailable"}`}
+          title={`Seat ${element.designator} - ${isAvailable ? 'Available' : 'Unavailable'}`}
         >
           {element.designator}
         </Button>
       );
-    } else if (element.type === "empty") {
+    } else if (element.type === 'empty') {
       // Static width empty space
-      return (
-        <div
-          key={`empty-${element.designator}`}
-          className="w-10 h-10 shrink-0"
-        />
-      );
-    } else if (element.type === "bassinet") {
+      return <div key={`empty-${element.designator}`} className="w-10 h-10 shrink-0" />;
+    } else if (element.type === 'bassinet') {
       // Bassinet with static width (same as seats)
       return (
         <div
@@ -237,9 +213,9 @@ export default function SeatSelection() {
     } else {
       // Facilities (lavatory, galley, closet) - flexible width, fill available space
       const facilityEmoji: Record<string, string> = {
-        lavatory: "🚽",
-        galley: "🍽️",
-        closet: "🚪",
+        lavatory: '🚽',
+        galley: '🍽️',
+        closet: '🚪',
       };
       return (
         <div
@@ -247,21 +223,17 @@ export default function SeatSelection() {
           className="px-2 h-10 flex items-center justify-center text-sm opacity-60 bg-muted border border-border rounded flex-1 min-w-0 gap-2"
           title={element.type.charAt(0).toUpperCase() + element.type.slice(1)}
         >
-          {facilityEmoji[element.type] || "?"}
+          {facilityEmoji[element.type] || '?'}
         </div>
       );
     }
   };
 
   // Render cabin with dynamic layout based on aircraft
-  const renderCabin = (
-    cabin: any,
-    segmentId: string,
-    aircraft?: AircraftConfig,
-  ) => {
+  const renderCabin = (cabin: any, segmentId: string, aircraft?: AircraftConfig) => {
     const layout = aircraft ? getAircraftLayout(aircraft) : null;
     const pattern = layout ? parseSeatPattern(layout.rowPattern) : null;
-    const passengerId = activePassenger?.id || "passenger_1";
+    const passengerId = activePassenger?.id || 'passenger_1';
 
     return (
       <div key={`cabin-${cabin.cabin_class}`} className="mb-12">
@@ -274,8 +246,7 @@ export default function SeatSelection() {
             {aircraft && (
               <p className="text-sm text-muted-foreground mt-2">
                 <Plane className="w-4 h-4 inline mr-1" />
-                {aircraft.aircraftType} • {aircraft.bodyType}-body • Pattern:{" "}
-                {layout?.rowPattern}
+                {aircraft.aircraftType} • {aircraft.bodyType}-body • Pattern: {layout?.rowPattern}
               </p>
             )}
           </div>
@@ -290,10 +261,7 @@ export default function SeatSelection() {
         {/* Seat Grid Container - Dynamic Layout based on Aircraft Configuration */}
         <div className="inline-block border border-border rounded-lg p-4 bg-muted overflow-x-auto">
           {cabin.rows.map((row: any, rowIndex: number) => (
-            <div
-              key={`row-${rowIndex}`}
-              className="flex gap-3 mb-3 items-stretch"
-            >
+            <div key={`row-${rowIndex}`} className="flex gap-3 mb-3 items-stretch">
               {/* Row Number Label - Left aligned */}
               <span className="w-8 text-center text-xs font-bold text-muted-foreground shrink-0 flex items-center justify-center bg-muted rounded h-10 gap-2">
                 {layout?.firstRow ? rowIndex + layout.firstRow : rowIndex + 1}
@@ -307,7 +275,7 @@ export default function SeatSelection() {
                     className="flex gap-1 items-center justify-center"
                   >
                     {section.elements.map((element: SeatElement) =>
-                      renderSeatButton(element, segmentId, passengerId),
+                      renderSeatButton(element, segmentId, passengerId)
                     )}
                   </div>
                 ))}
@@ -355,7 +323,7 @@ export default function SeatSelection() {
 
   // Navigate to next step
   const handleContinue = () => {
-    if (mode === "post-booking") {
+    if (mode === 'post-booking') {
       // Post-booking: Update seats and return to booking
       navigate(`/bookings/${orderId}`, {
         state: {
@@ -368,7 +336,7 @@ export default function SeatSelection() {
       });
     } else {
       // Booking flow: Continue to passenger details
-      navigate("/passenger-details", {
+      navigate('/passenger-details', {
         state: {
           offer,
           flight: state.flight,
@@ -381,7 +349,7 @@ export default function SeatSelection() {
 
   // Navigate back
   const handleBack = () => {
-    if (mode === "post-booking") {
+    if (mode === 'post-booking') {
       navigate(`/bookings/${orderId}`);
     } else {
       navigate(-1);
@@ -394,21 +362,21 @@ export default function SeatSelection() {
     passengerId: string,
     segmentId: string,
     serviceId?: string,
-    seatPrice?: number,
+    seatPrice?: number
   ) => {
     // Prevent double-booking
     const existingBooking = selectedSeats.find(
-      (s) => s.designator === seatDesignator && s.passengerId !== passengerId,
+      s => s.designator === seatDesignator && s.passengerId !== passengerId
     );
     if (existingBooking) {
-      setError("This seat is already selected by another passenger");
+      setError('This seat is already selected by another passenger');
       return;
     }
 
     // Toggle seat selection
     const newSelectedSeats = [...selectedSeats];
     const index = newSelectedSeats.findIndex(
-      (s) => s.passengerId === passengerId && s.segmentId === segmentId,
+      s => s.passengerId === passengerId && s.segmentId === segmentId
     );
 
     if (index >= 0) {
@@ -417,7 +385,7 @@ export default function SeatSelection() {
         // Deselect
         const price = (existingSeat as any).seatPrice || 0;
         newSelectedSeats.splice(index, 1);
-        setTotalSeatCost((prev) => prev - price);
+        setTotalSeatCost(prev => prev - price);
       } else {
         // Replace with new seat
         const oldPrice = (existingSeat as any).seatPrice || 0;
@@ -428,7 +396,7 @@ export default function SeatSelection() {
           serviceId,
           seatPrice,
         } as any;
-        setTotalSeatCost((prev) => prev - oldPrice + (seatPrice || 0));
+        setTotalSeatCost(prev => prev - oldPrice + (seatPrice || 0));
       }
     } else {
       // New selection
@@ -439,7 +407,7 @@ export default function SeatSelection() {
         serviceId,
         seatPrice,
       } as any);
-      setTotalSeatCost((prev) => prev + (seatPrice || 0));
+      setTotalSeatCost(prev => prev + (seatPrice || 0));
     }
 
     setSelectedSeats(newSelectedSeats);
@@ -450,10 +418,7 @@ export default function SeatSelection() {
    * Render seat grid dynamically based on aircraft configuration
    * Handles different layouts: narrow-body (3-3), wide-body (3-4-3), etc.
    */
-  const renderDynamicSeatGrid = (
-    cabinElement: any,
-    aircraft?: AircraftConfig,
-  ): React.ReactNode => {
+  const renderDynamicSeatGrid = (cabinElement: any, aircraft?: AircraftConfig): React.ReactNode => {
     if (!aircraft) {
       // Fallback to static rendering if no aircraft config
       return renderStaticSeatGrid(cabinElement);
@@ -480,67 +445,59 @@ export default function SeatSelection() {
             <div className="flex gap-2">
               {seatPattern.map((seatsInSection: number, sectionIdx: number) => (
                 <div key={`section-${sectionIdx}`} className="flex gap-1">
-                  {row.sections[sectionIdx]?.elements.map(
-                    (element: any, elementIndex: number) => {
-                      const isSelected = selectedSeats.some(
-                        (s) =>
-                          s.designator === element.designator &&
-                          s.segmentId === currentSeatMap.segment_id,
-                      );
-                      const isAvailable =
-                        element.type === "seat" &&
-                        element.available_services &&
-                        element.available_services.length > 0;
+                  {row.sections[sectionIdx]?.elements.map((element: any, elementIndex: number) => {
+                    const isSelected = selectedSeats.some(
+                      s =>
+                        s.designator === element.designator &&
+                        s.segmentId === currentSeatMap.segment_id
+                    );
+                    const isAvailable =
+                      element.type === 'seat' &&
+                      element.available_services &&
+                      element.available_services.length > 0;
 
-                      return element.type === "seat" ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          key={`seat-${elementIndex}`}
-                          onClick={() =>
-                            isAvailable &&
-                            handleSeatClick(
-                              element.designator,
-                              activePassenger?.id || "passenger_1",
-                              currentSeatMap.segment_id,
-                              element.available_services?.[0]?.id,
-                              parseFloat(
-                                element.available_services?.[0]?.total_amount ||
-                                  0,
-                              ),
-                            )
-                          }
-                          disabled={!isAvailable}
-                          className={`w-10 h-10 flex items-center justify-center rounded font-semibold text-xs transition-all ${
-                            isSelected
-                              ? "bg-blue-600 text-background border-2 border-blue-700"
-                              : isAvailable
-                                ? "bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer"
-                                : "bg-muted text-muted-foreground cursor-not-allowed"
-                          }`}
-                          title={`Seat ${element.designator}`}
-                        >
-                          {element.designator.slice(-1)}
-                        </Button>
-                      ) : element.type === "empty" ? (
-                        <div
-                          key={`empty-${elementIndex}`}
-                          className="w-10 h-10"
-                        />
-                      ) : (
-                        <div
-                          key={`special-${elementIndex}`}
-                          className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
-                          title={element.type}
-                        >
-                          {element.type === "lavatory" && "🚽"}
-                          {element.type === "galley" && "🍽️"}
-                          {element.type === "bassinet" && "👶"}
-                          {element.type === "closet" && "🚪"}
-                        </div>
-                      );
-                    },
-                  )}
+                    return element.type === 'seat' ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        key={`seat-${elementIndex}`}
+                        onClick={() =>
+                          isAvailable &&
+                          handleSeatClick(
+                            element.designator,
+                            activePassenger?.id || 'passenger_1',
+                            currentSeatMap.segment_id,
+                            element.available_services?.[0]?.id,
+                            parseFloat(element.available_services?.[0]?.total_amount || 0)
+                          )
+                        }
+                        disabled={!isAvailable}
+                        className={`w-10 h-10 flex items-center justify-center rounded font-semibold text-xs transition-all ${
+                          isSelected
+                            ? 'bg-blue-600 text-background border-2 border-blue-700'
+                            : isAvailable
+                              ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                              : 'bg-muted text-muted-foreground cursor-not-allowed'
+                        }`}
+                        title={`Seat ${element.designator}`}
+                      >
+                        {element.designator.slice(-1)}
+                      </Button>
+                    ) : element.type === 'empty' ? (
+                      <div key={`empty-${elementIndex}`} className="w-10 h-10" />
+                    ) : (
+                      <div
+                        key={`special-${elementIndex}`}
+                        className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
+                        title={element.type}
+                      >
+                        {element.type === 'lavatory' && '🚽'}
+                        {element.type === 'galley' && '🍽️'}
+                        {element.type === 'bassinet' && '👶'}
+                        {element.type === 'closet' && '🚪'}
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
@@ -562,43 +519,41 @@ export default function SeatSelection() {
               <div key={`section-${sectionIndex}`} className="flex gap-2">
                 {section.elements.map((element: any, elementIndex: number) => {
                   const isSelected = selectedSeats.some(
-                    (s) =>
+                    s =>
                       s.designator === element.designator &&
-                      s.segmentId === currentSeatMap.segment_id,
+                      s.segmentId === currentSeatMap.segment_id
                   );
                   const isAvailable =
-                    element.type === "seat" &&
+                    element.type === 'seat' &&
                     element.available_services &&
                     element.available_services.length > 0;
 
-                  return element.type === "seat" ? (
+                  return element.type === 'seat' ? (
                     <button
                       key={`seat-${elementIndex}`}
                       onClick={() =>
                         isAvailable &&
                         handleSeatClick(
                           element.designator,
-                          activePassenger?.id || "passenger_1",
+                          activePassenger?.id || 'passenger_1',
                           currentSeatMap.segment_id,
                           element.available_services?.[0]?.id,
-                          parseFloat(
-                            element.available_services?.[0]?.total_amount || 0,
-                          ),
+                          parseFloat(element.available_services?.[0]?.total_amount || 0)
                         )
                       }
                       disabled={!isAvailable}
                       className={`w-10 h-10 flex items-center justify-center rounded font-semibold text-xs transition-all ${
                         isSelected
-                          ? "bg-blue-600 text-background border-2 border-blue-700"
+                          ? 'bg-blue-600 text-background border-2 border-blue-700'
                           : isAvailable
-                            ? "bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer"
-                            : "bg-muted text-muted-foreground cursor-not-allowed"
+                            ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                            : 'bg-muted text-muted-foreground cursor-not-allowed'
                       }`}
                       title={`Seat ${element.designator}`}
                     >
                       {element.designator}
                     </button>
-                  ) : element.type === "empty" ? (
+                  ) : element.type === 'empty' ? (
                     <div key={`empty-${elementIndex}`} className="w-10 h-10" />
                   ) : (
                     <div
@@ -606,10 +561,10 @@ export default function SeatSelection() {
                       className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
                       title={element.type}
                     >
-                      {element.type === "lavatory" && "🚽"}
-                      {element.type === "galley" && "🍽️"}
-                      {element.type === "bassinet" && "👶"}
-                      {element.type === "closet" && "🚪"}
+                      {element.type === 'lavatory' && '🚽'}
+                      {element.type === 'galley' && '🍽️'}
+                      {element.type === 'bassinet' && '👶'}
+                      {element.type === 'closet' && '🚪'}
                     </div>
                   );
                 })}
@@ -641,9 +596,7 @@ export default function SeatSelection() {
         <div className="flex items-center justify-center min-h-screen gap-2">
           <div className="text-center">
             <Luggage className="w-12 h-12 mx-auto mb-4 animate-bounce text-blue-600" />
-            <p className="text-lg text-muted-foreground">
-              Loading seat maps...
-            </p>
+            <p className="text-lg text-muted-foreground">Loading seat maps...</p>
           </div>
         </div>
       </TripLogerLayout>
@@ -654,9 +607,9 @@ export default function SeatSelection() {
     return (
       <TripLogerLayout>
         <div className="max-w-4xl mx-auto p-6 mt-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <AlertCircle className="w-6 h-6 text-red-600 inline mr-2" />
-            <span className="text-red-800">
+          <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+            <AlertCircle className="w-6 h-6 text-neutral-500 inline mr-2" />
+            <span className="text-neutral-800">
               No flight offer found. Please select a flight first.
             </span>
           </div>
@@ -665,7 +618,7 @@ export default function SeatSelection() {
     );
   }
 
-  if (error === "Seat selection is not available for this flight") {
+  if (error === 'Seat selection is not available for this flight') {
     return (
       <TripLogerLayout>
         <div className="max-w-4xl mx-auto p-6 mt-8">
@@ -684,8 +637,8 @@ export default function SeatSelection() {
               Seat Selection Not Available
             </h3>
             <p className="text-blue-700 mb-4">
-              This flight doesn't support seat selection. You can proceed with
-              your booking without selecting specific seats.
+              This flight doesn't support seat selection. You can proceed with your booking without
+              selecting specific seats.
             </p>
             <Button
               variant="primary"
@@ -716,18 +669,14 @@ export default function SeatSelection() {
               <ChevronLeft className="w-5 h-5" />
               Back
             </Button>
-            <h1 className="text-3xl font-bold text-foreground">
-              Select Your Seats
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Choose preferred seats for each segment
-            </p>
+            <h1 className="text-3xl font-bold text-foreground">Select Your Seats</h1>
+            <p className="text-muted-foreground mt-2">Choose preferred seats for each segment</p>
           </div>
           {totalSeatCost > 0 && (
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Seat charges</p>
               <p className="text-3xl font-bold text-blue-600">
-                {formatCurrency(totalSeatCost, "USD")}
+                {formatCurrency(totalSeatCost, 'USD')}
               </p>
             </div>
           )}
@@ -736,15 +685,11 @@ export default function SeatSelection() {
         {/* Passenger Selector */}
         {passengers.length > 0 && (
           <div className="bg-card rounded-lg border p-6 mb-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">
-              Select Passenger
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Select Passenger</h3>
             <div className="flex flex-wrap gap-3">
               {passengers.map((passenger: any, index: number) => {
                 const passengerSeat = selectedSeats.find(
-                  (s) =>
-                    s.passengerId === passenger.id &&
-                    s.segmentId === currentSeatMap?.segment_id,
+                  s => s.passengerId === passenger.id && s.segmentId === currentSeatMap?.segment_id
                 );
                 return (
                   <Button
@@ -754,52 +699,45 @@ export default function SeatSelection() {
                     onClick={() => setActivePassengerIndex(index)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
                       activePassengerIndex === index
-                        ? "border-blue-500 bg-blue-50 text-blue-700"
-                        : "border-border hover:border-border text-foreground"
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-border hover:border-border text-foreground'
                     }`}
                   >
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                         activePassengerIndex === index
-                          ? "bg-blue-500 text-background"
-                          : "bg-muted text-muted-foreground"
+                          ? 'bg-blue-500 text-background'
+                          : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       {index + 1}
                     </div>
                     <div className="text-left">
                       <p className="font-medium">
-                        {passenger.label ||
-                          passenger.name ||
-                          `Passenger ${index + 1}`}
+                        {passenger.label || passenger.name || `Passenger ${index + 1}`}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {passengerSeat
-                          ? `Seat ${passengerSeat.designator}`
-                          : "No seat selected"}
+                        {passengerSeat ? `Seat ${passengerSeat.designator}` : 'No seat selected'}
                       </p>
                     </div>
-                    {passengerSeat && (
-                      <Check className="w-5 h-5 text-green-500 ml-2" />
-                    )}
+                    {passengerSeat && <Check className="w-5 h-5 text-blue-500 ml-2" />}
                   </Button>
                 );
               })}
             </div>
             <p className="mt-4 text-sm text-muted-foreground">
-              Selecting seats for:{" "}
+              Selecting seats for:{' '}
               <span className="font-semibold text-foreground">
-                {activePassenger?.label ||
-                  `Passenger ${activePassengerIndex + 1}`}
+                {activePassenger?.label || `Passenger ${activePassengerIndex + 1}`}
               </span>
             </p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-start gap-4">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0 gap-4" />
-            <p className="text-red-800">{error}</p>
+          <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-4 mb-6 flex items-start gap-4">
+            <AlertCircle className="w-5 h-5 text-neutral-500 mr-3 mt-0.5 flex-shrink-0 gap-4" />
+            <p className="text-neutral-800">{error}</p>
           </div>
         )}
 
@@ -814,8 +752,8 @@ export default function SeatSelection() {
                 onClick={() => setActiveSegment(index)}
                 className={`px-4 py-3 font-medium transition-colors ${
                   activeSegment === index
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 Segment {index + 1}
@@ -839,22 +777,19 @@ export default function SeatSelection() {
                   {cabin.rows.map((row, rowIndex) => (
                     <div key={`row-${rowIndex}`} className="flex gap-1 mb-2">
                       {row.sections.map((section, sectionIndex) => (
-                        <div
-                          key={`section-${sectionIndex}`}
-                          className="flex gap-2"
-                        >
+                        <div key={`section-${sectionIndex}`} className="flex gap-2">
                           {section.elements.map((element, elementIndex) => {
                             const isSelected = selectedSeats.some(
-                              (s) =>
+                              s =>
                                 s.designator === element.designator &&
-                                s.segmentId === currentSeatMap.segment_id,
+                                s.segmentId === currentSeatMap.segment_id
                             );
                             const isAvailable =
-                              element.type === "seat" &&
+                              element.type === 'seat' &&
                               element.available_services &&
                               element.available_services.length > 0;
 
-                            return element.type === "seat" ? (
+                            return element.type === 'seat' ? (
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -863,43 +798,35 @@ export default function SeatSelection() {
                                   isAvailable &&
                                   handleSeatClick(
                                     element.designator,
-                                    String(
-                                      activePassenger?.id || "passenger_1",
-                                    ),
-                                    String(currentSeatMap.segment_id || ""),
+                                    String(activePassenger?.id || 'passenger_1'),
+                                    String(currentSeatMap.segment_id || ''),
                                     element.available_services?.[0]?.id,
-                                    parseFloat(
-                                      element.available_services?.[0]
-                                        ?.total_amount || "0",
-                                    ),
+                                    parseFloat(element.available_services?.[0]?.total_amount || '0')
                                   )
                                 }
                                 disabled={!isAvailable}
                                 className={`w-10 h-10 flex items-center justify-center rounded font-semibold text-sm transition-all ${
                                   isSelected
-                                    ? "bg-blue-600 text-background border-2 border-blue-700"
+                                    ? 'bg-blue-600 text-background border-2 border-blue-700'
                                     : isAvailable
-                                      ? "bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer"
-                                      : "bg-muted text-muted-foreground cursor-not-allowed"
+                                      ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                                      : 'bg-muted text-muted-foreground cursor-not-allowed'
                                 }`}
                                 title={`Seat ${element.designator}`}
                               >
                                 {element.designator}
                               </Button>
-                            ) : element.type === "empty" ? (
-                              <div
-                                key={`empty-${elementIndex}`}
-                                className="w-10 h-10"
-                              />
+                            ) : element.type === 'empty' ? (
+                              <div key={`empty-${elementIndex}`} className="w-10 h-10" />
                             ) : (
                               <div
                                 key={`special-${elementIndex}`}
                                 className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
                               >
-                                {element.type === "lavatory" && "🚽"}
-                                {element.type === "galley" && "🍽️"}
-                                {element.type === "bassinet" && "👶"}
-                                {element.type === "closet" && "🚪"}
+                                {element.type === 'lavatory' && '🚽'}
+                                {element.type === 'galley' && '🍽️'}
+                                {element.type === 'bassinet' && '👶'}
+                                {element.type === 'closet' && '🚪'}
                               </div>
                             );
                           })}
@@ -913,27 +840,19 @@ export default function SeatSelection() {
                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-card border-2 border-border rounded" />
-                    <span className="text-sm text-muted-foreground">
-                      Available
-                    </span>
+                    <span className="text-sm text-muted-foreground">Available</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-blue-600 border-2 border-blue-700 rounded" />
-                    <span className="text-sm text-muted-foreground">
-                      Selected
-                    </span>
+                    <span className="text-sm text-muted-foreground">Selected</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-muted rounded" />
-                    <span className="text-sm text-muted-foreground">
-                      Unavailable
-                    </span>
+                    <span className="text-sm text-muted-foreground">Unavailable</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm">🚽</span>
-                    <span className="text-sm text-muted-foreground">
-                      Facilities
-                    </span>
+                    <span className="text-sm text-muted-foreground">Facilities</span>
                   </div>
                 </div>
               </div>
@@ -963,12 +882,12 @@ export default function SeatSelection() {
         ) : (
           <div className="bg-muted rounded-lg p-8 text-center">
             <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              No seat maps available for this segment
-            </p>
+            <p className="text-muted-foreground">No seat maps available for this segment</p>
           </div>
         )}
       </div>
     </TripLogerLayout>
   );
 }
+
+export default SeatSelection;

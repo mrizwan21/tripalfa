@@ -1,0 +1,37 @@
+{
+  "version": "1.0.0",
+  "description": "TripAlfa - AI Travel Assistant Platform",
+  "agents": {
+    "default": {
+      "description": "Default agent for TripAlfa development",
+      "instructions": [
+        "Before building any frontend UI, reference the DESIGN.md files in /design-standards/ as the visual source of truth",
+        "Use the design standards to ensure UI consistency with modern design patterns",
+        "Review existing design tokens and component styles in the design-standards directory before creating new components"
+      ]
+    },
+    "frontend": {
+      "description": "Frontend UI development agent",
+      "instructions": [
+        "ALWAYS reference /design-standards/ directory for visual design patterns before implementing UI",
+        "Use the DESIGN.md files as the single source of truth for visual styling",
+        "Match colors, typography, spacing, and component patterns from design standards",
+        "Before creating any new component, check design-standards for similar patterns"
+      ]
+    },
+    "ui-designer": {
+      "description": "UI design and styling agent",
+      "instructions": [
+        "Reference DESIGN.md files in /design-standards/ as visual source of truth",
+        "Follow design tokens and patterns from established design systems",
+        "Ensure all UI components match the design standards before implementation"
+      ]
+    }
+  },
+  "commands": {},
+  "designStandards": {
+    "path": "design-standards",
+    "description": "Design system references from VoltAgent/awesome-design-md",
+    "mandatory": true
+  }
+}

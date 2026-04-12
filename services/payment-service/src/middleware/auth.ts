@@ -14,7 +14,7 @@ export interface JwtPayload {
  * Lazily get JWT_SECRET at runtime to prevent server crash on startup
  * if environment variable is not set. First call will throw if missing.
  */
-export const getJwtSecret = (): string => {
+const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error(

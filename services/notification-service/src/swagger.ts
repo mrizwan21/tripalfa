@@ -17,7 +17,7 @@ const swaggerSpec = createSwaggerSpec({
   tags: [{ name: 'Notifications', description: 'Notification management and delivery endpoints' }],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupNotificationSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

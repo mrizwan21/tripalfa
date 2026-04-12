@@ -1,15 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { BookingFilters } from "../components/booking/BookingFilters";
-import { BookingTable } from "../components/booking/BookingTable";
-import { listBookings } from "../lib/api";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { useUserProfile } from "../lib/hooks";
-import { ListFilter, Search, Plus } from "lucide-react";
-import { Button } from "../components/ui/button";
-import type { Booking } from "../lib/srs-types";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { BookingFilters } from '../components/booking/BookingFilters';
+import { BookingTable } from '../components/booking/BookingTable';
+import { listBookings } from '../lib/api';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { useUserProfile } from '../lib/hooks';
+import { ListFilter, Search, Plus } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import type { Booking } from '../lib/srs-types';
 
-export default function BookingManagement() {
+function BookingManagement() {
   const [items, setItems] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(false);
   const { data: user } = useUserProfile();
@@ -17,7 +17,7 @@ export default function BookingManagement() {
   async function load() {
     setLoading(true);
     try {
-      const res = await listBookings("all");
+      const res = await listBookings('all');
       setItems(Array.isArray(res) ? (res as Booking[]) : []);
     } catch (e) {
       console.error(e);
@@ -39,7 +39,7 @@ export default function BookingManagement() {
       >
         {/* Elite Header */}
         <div className="bg-card border-b border-border shadow-sm overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-purple-50/50 to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 w-[40%] h-full bg-purple-50/50 pointer-events-none" />
           <div className="container mx-auto px-4 max-w-7xl pt-12 pb-10 relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
@@ -55,8 +55,8 @@ export default function BookingManagement() {
                   My Bookings
                 </h2>
                 <p className="text-[11px] font-bold text-muted-foreground max-w-md">
-                  Manage your luxury travel itinerary, track status updates, and
-                  execute post-booking operations.
+                  Manage your luxury travel itinerary, track status updates, and execute
+                  post-booking operations.
                 </p>
               </div>
 
@@ -86,7 +86,7 @@ export default function BookingManagement() {
             <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-20 group-hover:opacity-100 transition-opacity" />
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground gap-2">
+                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground gap-2">
                   <Search size={18} />
                 </div>
                 <div>
@@ -120,3 +120,5 @@ export default function BookingManagement() {
     </TripLogerLayout>
   );
 }
+
+export default BookingManagement;

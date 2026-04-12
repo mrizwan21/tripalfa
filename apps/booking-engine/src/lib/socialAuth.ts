@@ -29,7 +29,7 @@ function getRedirectUrl(provider: SocialProvider): string {
 }
 
 // Initialize OAuth flow - redirects to the backend OAuth endpoint
-export function initiateOAuth(provider: SocialProvider): void {
+function initiateOAuth(provider: SocialProvider): void {
   const redirectUrl = getRedirectUrl(provider);
   const authUrl = `${API_ENDPOINTS.AUTH_OAUTH}/${provider}?redirect_url=${encodeURIComponent(redirectUrl)}`;
 
@@ -38,7 +38,7 @@ export function initiateOAuth(provider: SocialProvider): void {
 }
 
 // Handle OAuth callback - exchange authorization code for tokens
-export async function handleOAuthCallback(
+async function handleOAuthCallback(
   provider: SocialProvider,
   authorizationCode: string,
 ): Promise<AuthResponse> {
@@ -58,7 +58,7 @@ export async function handleOAuthCallback(
 }
 
 // Check if user is authenticated via social login
-export async function getSocialUser(): Promise<SocialUser | null> {
+async function getSocialUser(): Promise<SocialUser | null> {
   try {
     const response = await api.get<SocialUser>(API_ENDPOINTS.AUTH_PROFILE);
     return response;
@@ -68,7 +68,7 @@ export async function getSocialUser(): Promise<SocialUser | null> {
 }
 
 // Link existing account with social provider
-export async function linkSocialAccount(
+async function linkSocialAccount(
   provider: SocialProvider,
 ): Promise<void> {
   const redirectUrl = getRedirectUrl(provider);
@@ -76,14 +76,14 @@ export async function linkSocialAccount(
 }
 
 // Unlink social account from existing account
-export async function unlinkSocialAccount(
+async function unlinkSocialAccount(
   provider: SocialProvider,
 ): Promise<void> {
   await api.delete(`${API_ENDPOINTS.AUTH_OAUTH_UNLINK}/${provider}`);
 }
 
 // Get current linked social accounts
-export async function getLinkedAccounts(): Promise<SocialProvider[]> {
+async function getLinkedAccounts(): Promise<SocialProvider[]> {
   const response = await api.get<{ providers: SocialProvider[] }>(
     API_ENDPOINTS.AUTH_LINKED_ACCOUNTS,
   );

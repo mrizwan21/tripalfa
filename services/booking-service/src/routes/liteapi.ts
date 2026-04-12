@@ -1,79 +1,59 @@
 /**
  * LITEAPI Routes
  * Handles all LITEAPI hotel and loyalty endpoints
- *
- * Base URLs:
- * - API: https://api.liteapi.travel/v3.0 (data endpoints)
- * - BOOK: https://book.liteapi.travel/v3.0 (booking endpoints)
- * - DA: https://da.liteapi.travel/v1 (voucher endpoints)
- *
- * Caching Strategy:
- * - Hotel search results: 15 min TTL
- * - Room rates: 30 min TTL
- * - Prebook sessions: 60 min TTL
  */
 
-import { Router, Request, Response, NextFunction } from "express";
-import { prisma } from "@tripalfa/shared-database";
-import { Pool } from "pg";
-import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
-import { randomUUID } from "crypto";
+import { Router, Request, Response, NextFunction } from 'express';
+import { prisma } from '@tripalfa/shared-database';
+import { Pool } from 'pg';
+import CacheService, { CacheKeys, CACHE_TTL } from '../cache/redis.js';
+import { randomUUID } from 'crypto';
 
 const router: Router = Router();
 
-// ============================================================================
 // Environment Configuration
-// ============================================================================
 
-const LITEAPI_API_BASE_URL =
-  process.env.LITEAPI_API_BASE_URL || "https://api.liteapi.travel/v3.0";
+const LITEAPI_API_BASE_URL = process.env.LITEAPI_API_BASE_URL || 'https://api.liteapi.travel/v3.0';
 const LITEAPI_BOOK_BASE_URL =
-  process.env.LITEAPI_BOOK_BASE_URL || "https://book.liteapi.travel/v3.0";
-const LITEAPI_DA_BASE_URL =
-  process.env.LITEAPI_DA_BASE_URL || "https://da.liteapi.travel/v1";
+  process.env.LITEAPI_BOOK_BASE_URL || 'https://book.liteapi.travel/v3.0';
+const LITEAPI_DA_BASE_URL = process.env.LITEAPI_DA_BASE_URL || 'https://da.liteapi.travel/v1';
 // Use production key for coordinates/destinations, sandbox for other endpoints
 const LITEAPI_PROD_API_KEY = process.env.LITEAPI_PROD_API_KEY;
-const LITEAPI_API_KEY =
-  process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
+const LITEAPI_API_KEY = process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
 const STATIC_DATABASE_URL = process.env.STATIC_DATABASE_URL;
 const staticDbPool = STATIC_DATABASE_URL
   ? new Pool({
-    connectionString: STATIC_DATABASE_URL,
-    max: 5,
-    connectionTimeoutMillis: 5000,
-    idleTimeoutMillis: 30000,
-  })
+      connectionString: STATIC_DATABASE_URL,
+      max: 5,
+      connectionTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+    })
   : null;
 
 // Graceful shutdown: close static DB pool on application termination
 if (staticDbPool) {
   const closePool = async () => {
-    console.log("[LITEAPI] Closing static database pool...");
+    console.log('[LITEAPI] Closing static database pool...');
     try {
       await staticDbPool.end();
-      console.log("[LITEAPI] Static database pool closed");
+      console.log('[LITEAPI] Static database pool closed');
     } catch (error: any) {
-      console.error(
-        "[LITEAPI] Error closing static database pool:",
-        error.message,
-      );
+      console.error('[LITEAPI] Error closing static database pool:', error.message);
     }
   };
 
-  process.on("SIGTERM", closePool);
-  process.on("SIGINT", closePool);
+  process.on('SIGTERM', closePool);
+  process.on('SIGINT', closePool);
 }
 
-// ============================================================================
 // Helper Functions (Compatibility Wrappers)
-// ============================================================================
 
 const liteApiRequest = async <T>(
   endpoint: string,
   method: string,
   body?: object,
   baseUrl?: string,
-  useProdKey: boolean = false,
+  useProdKey: boolean = false
 ): Promise<T> => {
   const client = useProdKey ? liteapiProdDataClient : liteapiDataClient;
   const response = await client.request({
@@ -87,7 +67,7 @@ const liteApiRequest = async <T>(
 const liteApiBookRequest = async <T>(
   endpoint: string,
   method: string,
-  body?: object,
+  body?: object
 ): Promise<T> => {
   const response = await liteapiBookClient.request({
     url: endpoint,
@@ -97,11 +77,7 @@ const liteApiBookRequest = async <T>(
   return response.data as T;
 };
 
-const liteApiDaRequest = async <T>(
-  endpoint: string,
-  method: string,
-  body?: object,
-): Promise<T> => {
+const liteApiDaRequest = async <T>(endpoint: string, method: string, body?: object): Promise<T> => {
   const response = await liteapiDaClient.request({
     url: endpoint,
     method,
@@ -113,7 +89,7 @@ const liteApiDaRequest = async <T>(
 const liteApiCoordsRequest = async <T>(
   endpoint: string,
   method: string,
-  body?: object,
+  body?: object
 ): Promise<T> => {
   return liteApiRequest<T>(endpoint, method, body, undefined, true);
 };
@@ -125,7 +101,7 @@ const liteApiCoordsRequest = async <T>(
 // Geocode an address to coordinates using Nominatim
 async function geocodeAddress(
   address: string,
-  city: string,
+  city: string
 ): Promise<{ latitude: number; longitude: number } | null> {
   try {
     // Build search query
@@ -134,13 +110,13 @@ async function geocodeAddress(
 
     const response = await fetch(url, {
       headers: {
-        "User-Agent": "TripAlfa/1.0",
-        "Accept-Language": "en",
+        'User-Agent': 'TripAlfa/1.0',
+        'Accept-Language': 'en',
       },
     });
 
     if (!response.ok) {
-      console.error("[Geocoding] Nominatim request failed:", response.status);
+      console.error('[Geocoding] Nominatim request failed:', response.status);
       return null;
     }
 
@@ -155,19 +131,16 @@ async function geocodeAddress(
 
     return null;
   } catch (error) {
-    console.error("[Geocoding] Error:", error);
+    console.error('[Geocoding] Error:', error);
     return null;
   }
 }
 
 // Batch geocode multiple addresses with caching
 async function geocodeAddresses(
-  addresses: Array<{ address: string; city: string }>,
+  addresses: Array<{ address: string; city: string }>
 ): Promise<Map<string, { latitude: number; longitude: number } | null>> {
-  const results = new Map<
-    string,
-    { latitude: number; longitude: number } | null
-  >();
+  const results = new Map<string, { latitude: number; longitude: number } | null>();
 
   // Process in batches to avoid rate limiting (1 request per second for Nominatim)
   for (const item of addresses) {
@@ -190,38 +163,74 @@ async function geocodeAddresses(
     }
 
     // Rate limit: wait 1 second between requests
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    await new Promise(resolve => setTimeout(resolve, 1100));
   }
 
   return results;
 }
 
-
 // ============================================================================
 // Data Endpoints (API Base URL)
 // ============================================================================
 
-// GET /exchange-rates/latest - Latest FX rates from static DB (hourly OXR sync)
-router.get("/exchange-rates/latest", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /exchange-rates/latest:
+ *   get:
+ *     summary: Get latest FX rates
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: base
+ *         schema:
+ *           type: string
+ *         description: Base currency code (default: USD)
+ *     responses:
+ *       200:
+ *         description: Latest exchange rates
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 base:
+ *                   type: string
+ *                 rates:
+ *                   type: object
+ *                 precisions:
+ *                   type: object
+ *                 source:
+ *                   type: string
+ *                 updatedAt:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Unsupported base currency
+ *       500:
+ *         description: Failed to fetch exchange rates
+ */
+router.get('/exchange-rates/latest', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
       return res.status(503).json({
         success: false,
-        error: "Static DB not configured",
+        error: 'Static DB not configured',
       });
     }
 
-    const requestedBase = String(req.query.base || "USD").toUpperCase();
+    const requestedBase = String(req.query.base || 'USD').toUpperCase();
     const result = await staticDbPool.query(
       `SELECT code, rate_vs_usd, precision, updated_at as rate_updated_at
        FROM liteapi_currencies
-       WHERE rate_vs_usd IS NOT NULL`,
+       WHERE rate_vs_usd IS NOT NULL`
     );
 
     if (!result.rows.length) {
       return res.status(503).json({
         success: false,
-        error: "No exchange rates available in static DB",
+        error: 'No exchange rates available in static DB',
       });
     }
 
@@ -245,7 +254,7 @@ router.get("/exchange-rates/latest", async (req: Request, res: Response) => {
       }
     }
 
-    const baseRate = requestedBase === "USD" ? 1 : usdRates[requestedBase];
+    const baseRate = requestedBase === 'USD' ? 1 : usdRates[requestedBase];
     if (!baseRate || !Number.isFinite(baseRate) || baseRate <= 0) {
       return res.status(400).json({
         success: false,
@@ -271,23 +280,34 @@ router.get("/exchange-rates/latest", async (req: Request, res: Response) => {
       base: requestedBase,
       rates,
       precisions,
-      source: "static-db",
+      source: 'static-db',
       updatedAt: latestUpdatedAt,
     });
   } catch (error: any) {
-    console.error("[LITEAPI] /exchange-rates/latest error:", error.message);
+    console.error('[LITEAPI] /exchange-rates/latest error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch exchange rates from static DB",
+      error: 'Failed to fetch exchange rates from static DB',
     });
   }
 });
 
-// GET /liteapi/currencies - Currencies with rates and precision
-router.get("/liteapi/currencies", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/currencies:
+ *   get:
+ *     summary: Get currencies with rates and precision
+ *     tags: [LiteAPI]
+ *     responses:
+ *       200:
+ *         description: List of currencies retrieved successfully
+ *       500:
+ *         description: Failed to fetch currencies
+ */
+router.get('/liteapi/currencies', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const result = await staticDbPool.query(`
@@ -303,20 +323,31 @@ router.get("/liteapi/currencies", async (req: Request, res: Response) => {
         name: row.name,
         rateVsUsd: row.rate_vs_usd,
         precision: row.precision,
-        updatedAt: row.updated_at
-      }))
+        updatedAt: row.updated_at,
+      })),
     });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/currencies error:", error.message);
+    console.error('[LITEAPI] /liteapi/currencies error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// GET /liteapi/countries - Countries with dialing codes
-router.get("/liteapi/countries", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/countries:
+ *   get:
+ *     summary: Get countries with dialing codes
+ *     tags: [LiteAPI]
+ *     responses:
+ *       200:
+ *         description: List of countries retrieved successfully
+ *       500:
+ *         description: Failed to fetch countries
+ */
+router.get('/liteapi/countries', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const result = await staticDbPool.query(`
@@ -330,37 +361,74 @@ router.get("/liteapi/countries", async (req: Request, res: Response) => {
       data: result.rows.map(row => ({
         code: row.code,
         name: row.name,
-        dialingCode: row.dialing_code
-      }))
+        dialingCode: row.dialing_code,
+      })),
     });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/countries error:", error.message);
+    console.error('[LITEAPI] /liteapi/countries error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-
-// GET /liteapi/places - Search hotel destinations (cities) from static DB
-router.get("/liteapi/places", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/liteapi/places:
+ *   get:
+ *     summary: Search hotel destinations/cities
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Destinations retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/liteapi/places', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { q, search, limit = 10 } = req.query;
-    const query = (q || search || "") as string;
+    const query = (q || search || '') as string;
 
-    const result = await staticDbPool.query(`
+    const result = await staticDbPool.query(
+      `
       SELECT id, name, country_code, latitude, longitude, timezone
       FROM liteapi_cities
       WHERE name ILIKE $1
       ORDER BY name ASC
       LIMIT $2
-    `, [`%${query}%`, Number(limit)]);
+    `,
+      [`%${query}%`, Number(limit)]
+    );
 
     const cities = result.rows.map(city => ({
-      type: "CITY",
-      icon: "map-pin",
+      type: 'CITY',
+      icon: 'map-pin',
       title: city.name,
       subtitle: city.country_code,
       code: city.id,
@@ -368,47 +436,67 @@ router.get("/liteapi/places", async (req: Request, res: Response) => {
       countryCode: city.country_code,
       latitude: Number(city.latitude),
       longitude: Number(city.longitude),
-      timezone: city.timezone
+      timezone: city.timezone,
     }));
 
     res.json({ success: true, data: cities });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/places error:", error.message);
+    console.error('[LITEAPI] /liteapi/places error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Legacy alias for /hotels/destinations
-router.get("/hotels/destinations", async (req: Request, res: Response) => {
-  res.redirect(301, "/api/liteapi/places");
+/**
+ * @swagger
+ * /hotels/destinations:
+ *   get:
+ *     summary: Redirect to places (legacy alias)
+ *     tags: [LiteAPI]
+ *     responses:
+ *       301:
+ *         description: Redirects to /api/liteapi/places
+ */
+router.get('/hotels/destinations', async (req: Request, res: Response) => {
+  res.redirect(301, '/api/liteapi/places');
 });
 
-// GET /liteapi/languages - List of supported languages from static DB
-router.get("/liteapi/languages", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/languages:
+ *   get:
+ *     summary: Get supported languages
+ *     tags: [LiteAPI]
+ *     responses:
+ *       200:
+ *         description: List of languages retrieved successfully
+ *       500:
+ *         description: Failed to fetch languages
+ */
+router.get('/liteapi/languages', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
       return res.status(503).json({
         success: false,
-        error: "Static DB not configured",
+        error: 'Static DB not configured',
       });
     }
 
     const LANGUAGE_FLAG_MAP: Record<string, string> = {
-      en: "🇺🇸",
-      ar: "🇸🇦",
-      fr: "🇫🇷",
-      es: "🇪🇸",
-      de: "🇩🇪",
-      it: "🇮🇹",
-      pt: "🇵🇹",
-      ru: "🇷🇺",
-      zh: "🇨🇳",
-      ja: "🇯🇵",
-      ko: "🇰🇷",
-      hi: "🇮🇳",
-      tr: "🇹🇷",
+      en: '🇺🇸',
+      ar: '🇸🇦',
+      fr: '🇫🇷',
+      es: '🇪🇸',
+      de: '🇩🇪',
+      it: '🇮🇹',
+      pt: '🇵🇹',
+      ru: '🇷🇺',
+      zh: '🇨🇳',
+      ja: '🇯🇵',
+      ko: '🇰🇷',
+      hi: '🇮🇳',
+      tr: '🇹🇷',
     };
-    const RTL_LANGUAGE_CODES = new Set(["ar", "he", "fa", "ur"]);
+    const RTL_LANGUAGE_CODES = new Set(['ar', 'he', 'fa', 'ur']);
 
     const result = await staticDbPool.query(`
       SELECT code, name
@@ -419,101 +507,237 @@ router.get("/liteapi/languages", async (req: Request, res: Response) => {
     const languages = result.rows.map((row: any) => ({
       code: String(row.code).toLowerCase(),
       name: row.name,
-      flag: LANGUAGE_FLAG_MAP[String(row.code).toLowerCase()] || "🌐",
+      flag: LANGUAGE_FLAG_MAP[String(row.code).toLowerCase()] || '🌐',
       isRtl: RTL_LANGUAGE_CODES.has(String(row.code).toLowerCase()),
     }));
 
     res.json({ success: true, data: languages });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/languages error:", error.message);
+    console.error('[LITEAPI] /liteapi/languages error:', error.message);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch languages from static DB",
+      error: 'Failed to fetch languages from static DB',
     });
   }
 });
 
-// Legacy alias for /data/languages
-router.get("/data/languages", async (req: Request, res: Response) => {
-  res.redirect(301, "/api/liteapi/languages");
+/**
+ * @swagger
+ * /data/languages:
+ *   get:
+ *     summary: Get supported languages (legacy alias)
+ *     description: Redirects to /liteapi/languages
+ *     tags: [LiteAPI]
+ *     responses:
+ *       301:
+ *         description: Redirect to /liteapi/languages
+ */
+router.get('/data/languages', async (req: Request, res: Response) => {
+  res.redirect(301, '/api/liteapi/languages');
 });
 
-// GET /liteapi/hotel/:hotelId - Get hotel details from static DB
-router.get("/liteapi/hotel/:hotelId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/hotel/{hotelId}:
+ *   get:
+ *     summary: Get hotel details
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Hotel ID
+ *     responses:
+ *       200:
+ *         description: Hotel details retrieved successfully
+ *       404:
+ *         description: Hotel not found
+ *       500:
+ *         description: Failed to fetch hotel details
+ */
+router.get('/liteapi/hotel/:hotelId', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { hotelId } = req.params;
 
-    const result = await staticDbPool.query(`
+    const result = await staticDbPool.query(
+      `
       SELECT * FROM liteapi_hotels
       WHERE id = $1
-    `, [hotelId]);
+    `,
+      [hotelId]
+    );
 
     if (result.rows.length === 0) {
       // Fallback to LiteAPI if not in static DB (or return 404)
       try {
-        const liteHotel = await liteApiRequest<any>(`/data/hotel/${encodeURIComponent(hotelId)}`, "GET");
+        const liteHotel = await liteApiRequest<any>(
+          `/data/hotel/${encodeURIComponent(hotelId)}`,
+          'GET'
+        );
         return res.json(liteHotel);
       } catch (e) {
-        return res.status(404).json({ success: false, error: "Hotel not found" });
+        return res.status(404).json({ success: false, error: 'Hotel not found' });
       }
     }
 
     res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/hotel/:id error:", error.message);
+    console.error('[LITEAPI] /liteapi/hotel/:id error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Legacy alias for /data/hotel/:id
-router.get("/data/hotel/:hotelId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /data/hotel/{hotelId}:
+ *   get:
+ *     summary: Get hotel details (legacy alias)
+ *     description: Redirects to /api/liteapi/hotel/{hotelId}
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Hotel ID
+ *       - in: query
+ *         name: redirect
+ *         schema:
+ *           type: boolean
+ *         description: Whether to redirect
+ *     responses:
+ *       301:
+ *         description: Redirect to /api/liteapi/hotel/{hotelId}
+ *       500:
+ *         description: Server error
+ */
+router.get('/data/hotel/:hotelId', async (req: Request, res: Response) => {
   res.redirect(301, `/api/liteapi/hotel/${req.params.hotelId}`);
 });
 
-// POST /liteapi/hotel - Get hotel details by ID (POST)
-router.post("/liteapi/hotel", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/hotel:
+ *   post:
+ *     summary: Get hotel details by ID
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - hotelId
+ *             properties:
+ *               hotelId:
+ *                 type: string
+ *                 description: Hotel ID
+ *     responses:
+ *       200:
+ *         description: Hotel details retrieved successfully
+ *       400:
+ *         description: hotelId is required
+ *       404:
+ *         description: Hotel not found
+ *       500:
+ *         description: Failed to fetch hotel details
+ */
+router.post('/liteapi/hotel', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { hotelId } = req.body;
-    if (!hotelId) return res.status(400).json({ success: false, error: "hotelId is required in body" });
+    if (!hotelId)
+      return res.status(400).json({ success: false, error: 'hotelId is required in body' });
 
-    const result = await staticDbPool.query(`SELECT * FROM liteapi_hotels WHERE id = $1`, [hotelId]);
+    const result = await staticDbPool.query(`SELECT * FROM liteapi_hotels WHERE id = $1`, [
+      hotelId,
+    ]);
 
     if (result.rows.length === 0) {
       try {
-        const liteHotel = await liteApiRequest<any>(`/data/hotel/${encodeURIComponent(hotelId)}`, "GET");
+        const liteHotel = await liteApiRequest<any>(
+          `/data/hotel/${encodeURIComponent(hotelId)}`,
+          'GET'
+        );
         return res.json(liteHotel);
       } catch (e) {
-        return res.status(404).json({ success: false, error: "Hotel not found" });
+        return res.status(404).json({ success: false, error: 'Hotel not found' });
       }
     }
 
     res.json({ success: true, data: result.rows[0] });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/hotel POST error:", error.message);
+    console.error('[LITEAPI] /liteapi/hotel POST error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-
-// GET /liteapi/hotels - Search hotels from static DB
-router.get("/liteapi/hotels", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/hotels:
+ *   get:
+ *     summary: Search hotels
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Search query
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search query (alternative to q)
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: Filter by city
+ *       - in: query
+ *         name: countryCode
+ *         schema:
+ *           type: string
+ *         description: Filter by country code
+ *       - in: query
+ *         name: starRating
+ *         schema:
+ *           type: integer
+ *         description: Minimum star rating
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Maximum number of results
+ *     responses:
+ *       200:
+ *         description: Hotels retrieved successfully
+ *       500:
+ *         description: Failed to search hotels
+ */
+router.get('/liteapi/hotels', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { q, search, city, countryCode, starRating, limit = 20 } = req.query;
-    const query = (q || search || "") as string;
+    const query = (q || search || '') as string;
 
-    let sql = "SELECT id, name, star_rating, address, city, country_code, latitude, longitude, timezone FROM liteapi_hotels WHERE 1=1";
+    let sql =
+      'SELECT id, name, star_rating, address, city, country_code, latitude, longitude, timezone FROM liteapi_hotels WHERE 1=1';
     const params: any[] = [];
 
     if (query) {
@@ -539,46 +763,131 @@ router.get("/liteapi/hotels", async (req: Request, res: Response) => {
     const result = await staticDbPool.query(sql, params);
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/hotels error:", error.message);
+    console.error('[LITEAPI] /liteapi/hotels error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-
-// GET /liteapi/reviews - Get hotel reviews from static DB
-router.get("/liteapi/reviews", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/reviews:
+ *   get:
+ *     summary: Get hotel reviews
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: hotelId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Hotel ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: Reviews retrieved successfully
+ *       400:
+ *         description: hotelId is required
+ *       500:
+ *         description: Failed to fetch reviews
+ */
+router.get('/liteapi/reviews', async (req: Request, res: Response) => {
   try {
     if (!staticDbPool) {
-      return res.status(503).json({ success: false, error: "Static DB not configured" });
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { hotelId, limit = 10, offset = 0 } = req.query;
 
     if (!hotelId) {
-      return res.status(400).json({ error: "hotelId is required" });
+      return res.status(400).json({ error: 'hotelId is required' });
     }
 
-    const result = await staticDbPool.query(`
+    const result = await staticDbPool.query(
+      `
       SELECT * FROM liteapi_reviews
       WHERE hotel_id = $1
       ORDER BY date DESC
       LIMIT $2 OFFSET $3
-    `, [hotelId, Number(limit), Number(offset)]);
+    `,
+      [hotelId, Number(limit), Number(offset)]
+    );
 
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/reviews error:", error.message);
+    console.error('[LITEAPI] /liteapi/reviews error:', error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Legacy alias for /data/reviews
-router.get("/data/reviews", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /data/reviews:
+ *   get:
+ *     summary: Redirect to reviews endpoint (legacy alias)
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: hotelId
+ *         schema:
+ *           type: string
+ *         description: Hotel ID
+ *       - in: query
+ *         name: redirect
+ *         schema:
+ *           type: boolean
+ *         description: Whether to redirect
+ *     responses:
+ *       301:
+ *         description: Redirects to /api/liteapi/reviews
+ *       500:
+ *         description: Server error
+ */
+router.get('/data/reviews', async (req: Request, res: Response) => {
   res.redirect(301, `/api/liteapi/reviews?hotelId=${req.query.hotelId}`);
 });
 
-// POST /liteapi/hotels/room-search - Search hotel rooms by image and text
-router.post("/liteapi/hotels/room-search", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /liteapi/hotels/room-search:
+ *   post:
+ *     summary: Search hotel rooms by image and text
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 description: Image URL or base64
+ *               text:
+ *                 type: string
+ *                 description: Text description of room preferences
+ *               hotelId:
+ *                 type: string
+ *                 description: Hotel ID to search within
+ *     responses:
+ *       200:
+ *         description: Room search results retrieved successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/liteapi/hotels/room-search', async (req: Request, res: Response) => {
   try {
     // This remains a real-time call as it involves AI/Vision logic usually on LiteAPI side
     const { image, text, hotelId } = req.body;
@@ -588,32 +897,127 @@ router.post("/liteapi/hotels/room-search", async (req: Request, res: Response) =
     if (text) payload.text = text;
     if (hotelId) payload.hotelId = hotelId;
 
-    const result = await liteApiRequest<any>(
-      "/data/hotels/room-search",
-      "POST",
-      payload,
-    );
+    const result = await liteApiRequest<any>('/data/hotels/room-search', 'POST', payload);
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /liteapi/hotels/room-search error:", error.message);
+    console.error('[LITEAPI] /liteapi/hotels/room-search error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Legacy alias for /data/hotels/room-search
-router.post("/data/hotels/room-search", async (req: Request, res: Response) => {
-  // We can't use redirect for POST easily, but we can just call the new handler or leave it
-  // Since it was already POST /data/hotels/room-search, and the new one is /liteapi/hotels/room-search
-  // I'll just keep the original as a proxy for now if needed, but the Gateway is updated.
-  res.redirect(307, "/api/liteapi/hotels/room-search");
+/**
+ * @swagger
+ * /data/hotels/room-search:
+ *   post:
+ *     summary: Redirect to room search endpoint (legacy alias)
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *               text:
+ *                 type: string
+ *               hotelId:
+ *                 type: string
+ *     responses:
+ *       307:
+ *         description: Redirects to /api/liteapi/hotels/room-search
+ *       500:
+ *         description: Server error
+ */
+router.post('/data/hotels/room-search', async (req: Request, res: Response) => {
+  res.redirect(307, '/api/liteapi/hotels/room-search');
 });
 
-// ============================================================================
-// Search Hotels - Room Rates
-// POST /hotels/rates (API Base URL)
-// ============================================================================
-
-router.post("/search/hotels", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /search/hotels:
+ *   post:
+ *     summary: Search hotels by location and dates
+ *     description: Search for hotels with various filters and return a searchId for pagination
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [location, checkin, checkout]
+ *             properties:
+ *               location:
+ *                 type: string
+ *               checkin:
+ *                 type: string
+ *                 format: date
+ *               checkout:
+ *                 type: string
+ *                 format: date
+ *               adults:
+ *                 type: integer
+ *                 default: 2
+ *               children:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               rooms:
+ *                 type: integer
+ *                 default: 1
+ *               countryCode:
+ *                 type: string
+ *               limit:
+ *                 type: integer
+ *                 default: 20
+ *               offset:
+ *                 type: integer
+ *                 default: 0
+ *               minPrice:
+ *                 type: number
+ *               maxPrice:
+ *                 type: number
+ *               minRating:
+ *                 type: number
+ *               amenities:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               sortBy:
+ *                 type: string
+ *               sortOrder:
+ *                 type: string
+ *               currency:
+ *                 type: string
+ *                 default: USD
+ *               guestNationality:
+ *                 type: string
+ *                 default: US
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               radius:
+ *                 type: number
+ *               placeId:
+ *                 type: string
+ *               iataCode:
+ *                 type: string
+ *               hotelIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Search results with searchId
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/search/hotels', async (req: Request, res: Response) => {
   try {
     const {
       location,
@@ -634,8 +1038,8 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
       sortBy,
       sortOrder,
       // New LiteAPI rate request parameters
-      currency = "USD",
-      guestNationality = "US",
+      currency = 'USD',
+      guestNationality = 'US',
       timeout,
       roomMapping,
       hotelName,
@@ -679,11 +1083,7 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
           occupancies: [
             {
               adults: Number(adults),
-              children: children
-                ? Array.isArray(children)
-                  ? children
-                  : [children]
-                : [],
+              children: children ? (Array.isArray(children) ? children : [children]) : [],
             },
           ],
           limit: 100, // Fetch more results for client-side filtering
@@ -702,7 +1102,7 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
           payload.iataCode = iataCode;
         } else if (location) {
           payload.cityName = location;
-          payload.countryCode = countryCode || "US";
+          payload.countryCode = countryCode || 'US';
         }
 
         // Optional filters
@@ -711,28 +1111,25 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
         if (hotelName) payload.hotelName = hotelName;
         if (minReviewsCount) payload.minReviewsCount = minReviewsCount;
         if (minRating) payload.minRating = minRating;
-        if (starRating && starRating.length > 0)
-          payload.starRating = starRating;
+        if (starRating && starRating.length > 0) payload.starRating = starRating;
         if (facilities && facilities.length > 0) {
           payload.facilities = facilities;
-          if (strictFacilityFiltering)
-            payload.strictFacilityFiltering = strictFacilityFiltering;
+          if (strictFacilityFiltering) payload.strictFacilityFiltering = strictFacilityFiltering;
         }
         if (maxRatesPerHotel) payload.maxRatesPerHotel = maxRatesPerHotel;
         if (includeHotelData) payload.includeHotelData = includeHotelData;
         if (aiSearch) payload.aiSearch = aiSearch;
         if (offset) payload.offset = offset;
 
-        return await liteApiRequest<any>("/hotels/rates", "POST", payload);
+        return await liteApiRequest<any>('/hotels/rates', 'POST', payload);
       },
-      CACHE_TTL.HOTEL_SEARCH,
+      CACHE_TTL.HOTEL_SEARCH
     );
 
     // Transform hotels and add coordinates using geocoding
     // LITEAPI returns both root-level hotels (basic info) AND data[].hotels (detailed with room types)
     const hotelsFromRoot = result.hotels || [];
-    const hotelsFromData =
-      result.data?.map((d: any) => d.hotels?.[0])?.filter(Boolean) || [];
+    const hotelsFromData = result.data?.map((d: any) => d.hotels?.[0])?.filter(Boolean) || [];
 
     // Merge: use root hotels for basic info, data for room types
     const hotelsRaw = hotelsFromRoot.map((hotel: any, index: number) => {
@@ -747,11 +1144,8 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
     // Get unique addresses for geocoding
     const uniqueAddresses = Array.from(
       new Map(
-        hotelsRaw.map((h: any) => [
-          h.address,
-          { address: h.address, city: location },
-        ]),
-      ).values(),
+        hotelsRaw.map((h: any) => [h.address, { address: h.address, city: location }])
+      ).values()
     );
 
     // Geocode unique addresses
@@ -775,21 +1169,18 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
         name: hotel.name,
         image:
           hotel.main_photo ||
-          "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80",
+          'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80',
         location: hotel.address,
         rating: hotel.rating || 0,
         reviews: 0,
         latitude: coords?.latitude || null,
         longitude: coords?.longitude || null,
         price: {
-          amount:
-            firstRate?.retailRate?.total?.[0]?.amount ||
-            firstRate?.offerRetailRate ||
-            0,
-          currency: "USD",
+          amount: firstRate?.retailRate?.total?.[0]?.amount || firstRate?.offerRetailRate || 0,
+          currency: 'USD',
         },
         amenities: [...new Set(roomAmenities)], // Unique amenities
-        provider: "LiteAPI",
+        provider: 'LiteAPI',
         // Include room types for room selection page
         roomTypes:
           hotel.roomTypes?.map((rt: any) => ({
@@ -805,18 +1196,16 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
               rt.rates?.map((r: any) => ({
                 offerId: r.offerId,
                 price: {
-                  amount:
-                    r.retailRate?.total?.[0]?.amount || r.offerRetailRate || 0,
-                  currency: r.retailRate?.total?.[0]?.currency || "USD",
+                  amount: r.retailRate?.total?.[0]?.amount || r.offerRetailRate || 0,
+                  currency: r.retailRate?.total?.[0]?.currency || 'USD',
                 },
-                isRefundable: r.refundableTag === "RFN",
+                isRefundable: r.refundableTag === 'RFN',
                 cancellationPolicy: r.cancellationPolicies?.cancelPolicyInfos,
-                suggestedSellingPrice:
-                  r.retailRate?.suggestedSellingPrice?.[0]?.amount,
+                suggestedSellingPrice: r.retailRate?.suggestedSellingPrice?.[0]?.amount,
               })) || [],
           })) || [],
         offers: hotel.roomTypes || [], // For backward compatibility
-        refundable: firstRate?.refundableTag === "RFN",
+        refundable: firstRate?.refundableTag === 'RFN',
       };
     });
 
@@ -827,13 +1216,82 @@ router.post("/search/hotels", async (req: Request, res: Response) => {
 
     res.json({ searchId, total: hotels.length, cached: true });
   } catch (error: any) {
-    console.error("[LITEAPI] /search/hotels error:", error.message);
+    console.error('[LITEAPI] /search/hotels error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// POST /search/hotels/results/:searchId - Get and refine results
-router.post("/search/hotels/results/:searchId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /search/hotels/results/{searchId}:
+ *   post:
+ *     summary: Get and refine hotel search results
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: searchId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The search session ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               limit:
+ *                 type: integer
+ *                 default: 20
+ *                 description: Max results per page
+ *               offset:
+ *                 type: integer
+ *                 default: 0
+ *                 description: Results offset
+ *               minPrice:
+ *                 type: number
+ *                 description: Minimum price filter
+ *               maxPrice:
+ *                 type: number
+ *                 description: Maximum price filter
+ *               minRating:
+ *                 type: number
+ *                 description: Minimum rating filter
+ *               amenities:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Amenity filters
+ *               sortBy:
+ *                 type: string
+ *                 description: Sort field
+ *               sortOrder:
+ *                 type: string
+ *                 enum: [asc, desc]
+ *                 description: Sort order
+ *     responses:
+ *       200:
+ *         description: Filtered and sorted hotel results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 total:
+ *                   type: integer
+ *                 cached:
+ *                   type: boolean
+ *       404:
+ *         description: Search session expired or not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/search/hotels/results/:searchId', async (req: Request, res: Response) => {
   try {
     const { searchId } = req.params;
     const {
@@ -851,50 +1309,53 @@ router.post("/search/hotels/results/:searchId", async (req: Request, res: Respon
     const cachedData = await CacheService.get<any>(sessionKey);
 
     if (!cachedData || !cachedData.hotels) {
-      return res.status(404).json({ error: "Search session expired or not found. Please search again." });
+      return res
+        .status(404)
+        .json({ error: 'Search session expired or not found. Please search again.' });
     }
 
     let hotels = [...cachedData.hotels];
 
     // Apply filters
-    if (minPrice !== undefined) hotels = hotels.filter((h: any) => (h.price?.amount || 0) >= Number(minPrice));
-    if (maxPrice !== undefined) hotels = hotels.filter((h: any) => (h.price?.amount || 0) <= Number(maxPrice));
-    if (minRating !== undefined) hotels = hotels.filter((h: any) => (h.rating || 0) >= Number(minRating));
+    if (minPrice !== undefined)
+      hotels = hotels.filter((h: any) => (h.price?.amount || 0) >= Number(minPrice));
+    if (maxPrice !== undefined)
+      hotels = hotels.filter((h: any) => (h.price?.amount || 0) <= Number(maxPrice));
+    if (minRating !== undefined)
+      hotels = hotels.filter((h: any) => (h.rating || 0) >= Number(minRating));
 
     // Exact match for amenities (all must be present)
     if (amenities && Array.isArray(amenities) && amenities.length > 0) {
       hotels = hotels.filter((h: any) =>
         amenities.every((a: string) =>
-          h.amenities?.some((ha: string) =>
-            ha.toLowerCase().includes(a.toLowerCase()),
-          ),
-        ),
+          h.amenities?.some((ha: string) => ha.toLowerCase().includes(a.toLowerCase()))
+        )
       );
     }
 
     // Apply sorting
     if (sortBy) {
-      const isAsc = sortOrder !== "desc";
+      const isAsc = sortOrder !== 'desc';
 
       hotels.sort((a: any, b: any) => {
         let aVal: any, bVal: any;
 
         switch (sortBy.toLowerCase()) {
-          case "price":
-          case "price: low to high":
-          case "price: high to low":
+          case 'price':
+          case 'price: low to high':
+          case 'price: high to low':
             aVal = a.price?.amount || 0;
             bVal = b.price?.amount || 0;
             break;
-          case "rating":
-          case "rating: high to low":
+          case 'rating':
+          case 'rating: high to low':
             aVal = a.rating || 0;
             bVal = b.rating || 0;
             // high to low is actually descending, so if isAsc is true but user picked rating: high to low we have to flip
             break;
-          case "name":
-            aVal = a.name || "";
-            bVal = b.name || "";
+          case 'name':
+            aVal = a.name || '';
+            bVal = b.name || '';
             return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
           default:
             return 0; // Recommended
@@ -913,20 +1374,95 @@ router.post("/search/hotels/results/:searchId", async (req: Request, res: Respon
 
     res.json({ results: hotels, total, cached: true });
   } catch (error: any) {
-    console.error("[LITEAPI] /search/hotels/results error:", error.message);
+    console.error('[LITEAPI] /search/hotels/results error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// POST /hotels/rates - Get room rates for specific hotels
-router.post("/hotels/rates", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/rates:
+ *   post:
+ *     summary: Get room rates for specific hotels
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [checkin, checkout]
+ *             properties:
+ *               hotelIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               checkin:
+ *                 type: string
+ *                 format: date
+ *               checkout:
+ *                 type: string
+ *                 format: date
+ *               currency:
+ *                 type: string
+ *               guestNationality:
+ *                 type: string
+ *               occupancies:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               cityName:
+ *                 type: string
+ *               countryCode:
+ *                 type: string
+ *               limit:
+ *                 type: integer
+ *               offset:
+ *                 type: integer
+ *               latitude:
+ *                 type: number
+ *               longitude:
+ *                 type: number
+ *               radius:
+ *                 type: number
+ *               placeId:
+ *                 type: string
+ *               iataCode:
+ *                 type: string
+ *               timeout:
+ *                 type: integer
+ *               starRating:
+ *                 type: array
+ *                 items:
+ *                   type: integer
+ *               facilities:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               maxRatesPerHotel:
+ *                 type: integer
+ *               includeHotelData:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Room rates retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Location is required
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/hotels/rates', async (req: Request, res: Response) => {
   try {
     const {
       hotelIds,
       checkin,
       checkout,
-      currency = "USD",
-      guestNationality = "US",
+      currency = 'USD',
+      guestNationality = 'US',
       occupancies,
       cityName,
       countryCode,
@@ -978,7 +1514,7 @@ router.post("/hotels/rates", async (req: Request, res: Response) => {
     } else {
       return res.status(400).json({
         error:
-          "Location is required: provide hotelIds, latitude+longitude, placeId, iataCode, or cityName+countryCode",
+          'Location is required: provide hotelIds, latitude+longitude, placeId, iataCode, or cityName+countryCode',
       });
     }
 
@@ -991,8 +1527,7 @@ router.post("/hotels/rates", async (req: Request, res: Response) => {
     if (starRating && starRating.length > 0) payload.starRating = starRating;
     if (facilities && facilities.length > 0) {
       payload.facilities = facilities;
-      if (strictFacilityFiltering)
-        payload.strictFacilityFiltering = strictFacilityFiltering;
+      if (strictFacilityFiltering) payload.strictFacilityFiltering = strictFacilityFiltering;
     }
     if (maxRatesPerHotel) payload.maxRatesPerHotel = maxRatesPerHotel;
     if (includeHotelData) payload.includeHotelData = includeHotelData;
@@ -1003,43 +1538,80 @@ router.post("/hotels/rates", async (req: Request, res: Response) => {
 
     const result = await CacheService.getOrSet(
       cacheKey,
-      async () => liteApiRequest<any>("/hotels/rates", "POST", payload),
-      CACHE_TTL.HOTEL_RATES,
+      async () => liteApiRequest<any>('/hotels/rates', 'POST', payload),
+      CACHE_TTL.HOTEL_RATES
     );
 
     res.json({ ...result, cached: true });
   } catch (error: any) {
-    console.error("[LITEAPI] /hotels/rates error:", error.message);
+    console.error('[LITEAPI] /hotels/rates error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /hotels/min-rates - Retrieve minimum rate for hotels
-router.get("/hotels/min-rates", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/hotels/min-rates:
+ *   get:
+ *     summary: Retrieve minimum rates for hotels
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: hotelIds
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: checkin
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: checkout
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - in: query
+ *         name: currency
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Minimum rates retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: hotelIds are required
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/hotels/min-rates', async (req: Request, res: Response) => {
   try {
-    const { hotelIds, checkin, checkout, currency = "USD" } = req.query;
+    const { hotelIds, checkin, checkout, currency = 'USD' } = req.query;
 
     if (!hotelIds) {
-      return res.status(400).json({ error: "hotelIds are required" });
+      return res.status(400).json({ error: 'hotelIds are required' });
     }
 
-    const ids = Array.isArray(hotelIds) ? hotelIds : hotelIds.split(",");
+    const ids = Array.isArray(hotelIds) ? hotelIds : hotelIds.split(',');
     const params = new URLSearchParams();
-    params.append("hotelIds", ids.join(","));
-    if (checkin) params.append("checkin", String(checkin));
-    if (checkout) params.append("checkout", String(checkout));
-    if (currency) params.append("currency", String(currency));
+    params.append('hotelIds', ids.join(','));
+    if (checkin) params.append('checkin', String(checkin));
+    if (checkout) params.append('checkout', String(checkout));
+    if (currency) params.append('currency', String(currency));
 
-    const cacheKey = `liteapi:minrates:${ids.join(",")}:${checkin}:${checkout}`;
+    const cacheKey = `liteapi:minrates:${ids.join(',')}:${checkin}:${checkout}`;
     const result = await CacheService.getOrSet(
       cacheKey,
-      async () => liteApiRequest<any>(`/hotels/min-rates?${params}`, "GET"),
-      CACHE_TTL.HOTEL_RATES,
+      async () => liteApiRequest<any>(`/hotels/min-rates?${params}`, 'GET'),
+      CACHE_TTL.HOTEL_RATES
     );
 
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /hotels/min-rates error:", error.message);
+    console.error('[LITEAPI] /hotels/min-rates error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1048,8 +1620,66 @@ router.get("/hotels/min-rates", async (req: Request, res: Response) => {
 // Booking Endpoints (BOOK Base URL)
 // ============================================================================
 
-// POST /rates/prebook - Create checkout session
-router.post("/rates/prebook", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /api/rates/prebook:
+ *   post:
+ *     summary: Create checkout session (prebook)
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [offerId, price]
+ *             properties:
+ *               offerId:
+ *                 type: string
+ *               price:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               guestDetails:
+ *                 type: object
+ *               rooms:
+ *                 type: integer
+ *               userId:
+ *                 type: string
+ *               includeCreditBalance:
+ *                 type: boolean
+ *               voucherCode:
+ *                 type: string
+ *               addons:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               bedTypeIds:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               bookingId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Prebook created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 transactionId:
+ *                   type: string
+ *                 validationWarnings:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: offerId and price are required
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/rates/prebook', async (req: Request, res: Response) => {
   try {
     const {
       offerId,
@@ -1067,14 +1697,14 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
     } = req.body;
 
     if (!offerId || !price) {
-      return res.status(400).json({ error: "offerId and price are required" });
+      return res.status(400).json({ error: 'offerId and price are required' });
     }
 
     const payload: any = {
       offerId,
       price: {
         amount: price,
-        currency: currency || "USD",
+        currency: currency || 'USD',
       },
       rooms: rooms || 1,
       // Enable WALLET payment support - get credit balance for wallet payments
@@ -1083,9 +1713,7 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
 
     // Add guest details if provided
     if (guestDetails) {
-      payload.guests = Array.isArray(guestDetails)
-        ? guestDetails
-        : [guestDetails];
+      payload.guests = Array.isArray(guestDetails) ? guestDetails : [guestDetails];
     }
 
     // Add optional fields
@@ -1093,11 +1721,7 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
     if (addons && addons.length > 0) payload.addons = addons;
     if (bedTypeIds && bedTypeIds.length > 0) payload.bedTypeIds = bedTypeIds;
 
-    const result = await liteApiBookRequest<any>(
-      "/rates/prebook",
-      "POST",
-      payload,
-    );
+    const result = await liteApiBookRequest<any>('/rates/prebook', 'POST', payload);
 
     // Validate prebook response for price/cancellation changes
     const validationWarnings: string[] = [];
@@ -1118,16 +1742,16 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
 
       // Check for cancellation policy changes
       if (cancellationChanged) {
-        validationWarnings.push("Cancellation policy has changed");
+        validationWarnings.push('Cancellation policy has changed');
       }
 
       // Check for board type changes
       if (boardChanged) {
-        validationWarnings.push("Board type has changed");
+        validationWarnings.push('Board type has changed');
       }
 
       // Check if WALLET payment is supported
-      const walletSupported = paymentTypes?.includes("WALLET") || false;
+      const walletSupported = paymentTypes?.includes('WALLET') || false;
 
       // Check wallet balance if WALLET payment
       if (walletSupported && creditLine) {
@@ -1136,7 +1760,7 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
 
         if (remainingCredit < bookingPrice) {
           validationWarnings.push(
-            `Insufficient wallet balance. Available: ${remainingCredit} ${currency || "USD"}, Required: ${bookingPrice}`,
+            `Insufficient wallet balance. Available: ${remainingCredit} ${currency || 'USD'}, Required: ${bookingPrice}`
           );
         }
       }
@@ -1147,13 +1771,13 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
         transactionId: result.transactionId,
         offerId,
         price,
-        currency: currency || "USD",
+        currency: currency || 'USD',
         guestDetails,
         rooms,
         userId,
         expiresAt: result.expiresAt,
         createdAt: new Date().toISOString(),
-        status: "prebooked",
+        status: 'prebooked',
         validationWarnings,
         creditLine: result.data?.creditLine,
         paymentTypes: result.data?.paymentTypes,
@@ -1162,7 +1786,7 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
       await CacheService.set(
         CacheKeys.prebookSession(result.transactionId),
         sessionData,
-        CACHE_TTL.PREBOOK_SESSION,
+        CACHE_TTL.PREBOOK_SESSION
       );
 
       if (bookingId) {
@@ -1178,7 +1802,7 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
               },
             },
           })
-          .catch(() => { });
+          .catch(() => {});
       }
     }
 
@@ -1189,13 +1813,37 @@ router.post("/rates/prebook", async (req: Request, res: Response) => {
       cached: true,
     });
   } catch (error: any) {
-    console.error("[LITEAPI] /rates/prebook error:", error.message);
+    console.error('[LITEAPI] /rates/prebook error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /prebooks/:prebookId - Retrieve a prebook by ID
-router.get("/prebooks/:prebookId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /prebooks/{prebookId}:
+ *   get:
+ *     summary: Retrieve a prebook by ID
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: prebookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The prebook ID
+ *     responses:
+ *       200:
+ *         description: Prebook retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       404:
+ *         description: Prebook not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/prebooks/:prebookId', async (req: Request, res: Response) => {
   try {
     const { prebookId } = req.params;
 
@@ -1206,19 +1854,16 @@ router.get("/prebooks/:prebookId", async (req: Request, res: Response) => {
       return res.json({ ...cached, cached: true });
     }
 
-    const result = await liteApiBookRequest<any>(
-      `/prebooks/${prebookId}`,
-      "GET",
-    );
+    const result = await liteApiBookRequest<any>(`/prebooks/${prebookId}`, 'GET');
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /prebooks/:id error:", error.message);
+    console.error('[LITEAPI] /prebooks/:id error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 // POST /rates/book - Complete a booking
-router.post("/rates/book", async (req: Request, res: Response) => {
+router.post('/rates/book', async (req: Request, res: Response) => {
   try {
     const {
       prebookId,
@@ -1234,9 +1879,7 @@ router.post("/rates/book", async (req: Request, res: Response) => {
     } = req.body;
 
     if (!prebookId) {
-      return res
-        .status(400)
-        .json({ error: "prebookId (transactionId) is required" });
+      return res.status(400).json({ error: 'prebookId (transactionId) is required' });
     }
 
     // Build payload according to LiteAPI specification
@@ -1271,9 +1914,7 @@ router.post("/rates/book", async (req: Request, res: Response) => {
       }));
     } else if (guestDetails) {
       // Legacy format: single guest object
-      payload.guests = Array.isArray(guestDetails)
-        ? guestDetails
-        : [guestDetails];
+      payload.guests = Array.isArray(guestDetails) ? guestDetails : [guestDetails];
     }
 
     // Add metadata (optional)
@@ -1290,10 +1931,10 @@ router.post("/rates/book", async (req: Request, res: Response) => {
     // Add payment information
     // For WALLET payment: payment.method = "WALLET"
     if (paymentDetails) {
-      if (paymentDetails.method === "WALLET") {
+      if (paymentDetails.method === 'WALLET') {
         // WALLET payment method
         payload.payment = {
-          method: "WALLET",
+          method: 'WALLET',
         };
       } else {
         // Other payment methods (legacy format)
@@ -1302,7 +1943,7 @@ router.post("/rates/book", async (req: Request, res: Response) => {
     } else {
       // Default to WALLET payment
       payload.payment = {
-        method: "WALLET",
+        method: 'WALLET',
       };
     }
 
@@ -1317,77 +1958,68 @@ router.post("/rates/book", async (req: Request, res: Response) => {
       };
     }
 
-    const result = await liteApiBookRequest<any>(
-      "/rates/book",
-      "POST",
-      payload,
-    );
+    const result = await liteApiBookRequest<any>('/rates/book', 'POST', payload);
 
     if (bookingId && result.confirmationId) {
       await prisma.booking
         .update({
           where: { id: bookingId },
           data: {
-            status: "confirmed",
+            status: 'confirmed',
             bookingRef: result.confirmationId,
             metadata: {
               liteApiConfirmationId: result.confirmationId,
               rawBookingData: result,
-              paymentMethod: payload.payment?.method || "WALLET",
+              paymentMethod: payload.payment?.method || 'WALLET',
             },
           },
         })
-        .catch(() => { });
+        .catch(() => {});
     }
 
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /rates/book error:", error.message);
+    console.error('[LITEAPI] /rates/book error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 // GET /bookings - List all bookings
-router.get("/bookings", async (req: Request, res: Response) => {
+router.get('/bookings', async (req: Request, res: Response) => {
   try {
     const { status, limit = 50, offset = 0 } = req.query;
 
     try {
       const params = new URLSearchParams();
-      if (status) params.append("status", status as string);
-      params.append("limit", String(limit));
-      params.append("offset", String(offset));
+      if (status) params.append('status', status as string);
+      params.append('limit', String(limit));
+      params.append('offset', String(offset));
 
-      const result = await liteApiBookRequest<any>(
-        `/bookings?${params}`,
-        "GET",
-      );
+      const result = await liteApiBookRequest<any>(`/bookings?${params}`, 'GET');
       return res.json(result);
     } catch (liteError) {
-      console.log("[LITEAPI] Direct bookings failed, falling back to database");
+      console.log('[LITEAPI] Direct bookings failed, falling back to database');
     }
 
     const dbBookings = await prisma.booking.findMany({
       where: {
-        serviceType: "hotel",
-        ...(status && status !== "all"
-          ? { status: String(status) as string }
-          : {}),
+        serviceType: 'hotel',
+        ...(status && status !== 'all' ? { status: String(status) as string } : {}),
       },
       take: Number(limit),
       skip: Number(offset),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
 
     res.json({ bookings: dbBookings, total: dbBookings.length });
   } catch (error: any) {
-    console.error("[LITEAPI] /bookings error:", error.message);
+    console.error('[LITEAPI] /bookings error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 // GET /bookings/:bookingId - Retrieve a booking
-router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
+router.get('/bookings/:bookingId', async (req: Request, res: Response) => {
   try {
     const bookingId = String(req.params.bookingId);
 
@@ -1401,10 +2033,7 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
     const targetBookingId = liteapiBooking?.bookingId || bookingId;
 
     try {
-      const result = await liteApiBookRequest<any>(
-        `/bookings/${targetBookingId}`,
-        "GET",
-      );
+      const result = await liteApiBookRequest<any>(`/bookings/${targetBookingId}`, 'GET');
       return res.json(result);
     } catch (liteError) {
       console.log(`[LITEAPI] Direct fetch for ${targetBookingId} failed, falling back`);
@@ -1424,123 +2053,184 @@ router.get("/bookings/:bookingId", async (req: Request, res: Response) => {
       return res.json(booking);
     }
 
-    res.status(404).json({ error: "Booking not found" });
+    res.status(404).json({ error: 'Booking not found' });
   } catch (error: any) {
-    console.error("[LITEAPI] /bookings/:id error:", error.message);
+    console.error('[LITEAPI] /bookings/:id error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
 // POST /bookings/:bookingId/alternative-prebooks - Hard Amendment
-router.post(
-  "/bookings/:bookingId/alternative-prebooks",
-  async (req: Request, res: Response) => {
-    try {
-      const { bookingId } = req.params;
-      const result = await liteApiBookRequest<any>(
-        `/bookings/${bookingId}/alternative-prebooks`,
-        "POST",
-        req.body,
-      );
-      res.json(result);
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /bookings/:id/alternative-prebooks error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-// PUT /bookings/:bookingId/amend - Soft Amendment
-router.put("/bookings/:bookingId/amend", async (req: Request, res: Response) => {
+router.post('/bookings/:bookingId/alternative-prebooks', async (req: Request, res: Response) => {
   try {
     const { bookingId } = req.params;
     const result = await liteApiBookRequest<any>(
-      `/bookings/${bookingId}/amend`,
-      "PUT",
-      req.body,
+      `/bookings/${bookingId}/alternative-prebooks`,
+      'POST',
+      req.body
     );
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /bookings/:id/amend error:", error.message);
+    console.error('[LITEAPI] /bookings/:id/alternative-prebooks error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /bookings/:bookingId/voucher - Retrieve booking voucher
-router.get(
-  "/bookings/:bookingId/voucher",
-  async (req: Request, res: Response) => {
-    try {
-      const { bookingId } = req.params;
+/**
+ * @swagger
+ * /bookings/{bookingId}/amend:
+ *   put:
+ *     summary: Soft amendment for a booking
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Amendment successful
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/bookings/:bookingId/amend', async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
+    const result = await liteApiBookRequest<any>(`/bookings/${bookingId}/amend`, 'PUT', req.body);
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /bookings/:id/amend error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-      const liteapiBooking = await prisma.liteApiBooking.findFirst({
-        where: {
-          OR: [{ localBookingId: bookingId }, { bookingId: bookingId }],
-        },
-      });
+/**
+ * @swagger
+ * /bookings/{bookingId}/voucher:
+ *   get:
+ *     summary: Retrieve booking voucher
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *     responses:
+ *       200:
+ *         description: Voucher retrieved successfully
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/bookings/:bookingId/voucher', async (req: Request, res: Response) => {
+  try {
+    const { bookingId } = req.params;
 
-      const targetBookingId = liteapiBooking?.bookingId || bookingId;
+    const liteapiBooking = await prisma.liteApiBooking.findFirst({
+      where: {
+        OR: [{ localBookingId: bookingId }, { bookingId: bookingId }],
+      },
+    });
 
-      const result = await liteApiBookRequest<any>(
-        `/bookings/${targetBookingId}/voucher`,
-        "GET",
-      );
-      res.json(result);
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /bookings/:id/voucher error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+    const targetBookingId = liteapiBooking?.bookingId || bookingId;
 
-// PUT /bookings/:bookingId - Cancel a booking (with refund flow)
-router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
+    const result = await liteApiBookRequest<any>(`/bookings/${targetBookingId}/voucher`, 'GET');
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /bookings/:id/voucher error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /bookings/{bookingId}:
+ *   put:
+ *     summary: Cancel a booking with refund flow
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 description: New booking status (e.g., cancelled)
+ *               cancellationReason:
+ *                 type: string
+ *                 description: Reason for cancellation
+ *               initiateRefund:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Whether to initiate refund
+ *               refundToWallet:
+ *                 type: boolean
+ *                 default: true
+ *                 description: Whether to refund to wallet
+ *     responses:
+ *       200:
+ *         description: Booking cancelled with refund details
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/bookings/:bookingId', async (req: Request, res: Response) => {
   try {
     const bookingId = String(req.params.bookingId);
-    const {
-      status,
-      cancellationReason,
-      initiateRefund = true,
-      refundToWallet = true,
-    } = req.body;
+    const { status, cancellationReason, initiateRefund = true, refundToWallet = true } = req.body;
 
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
     });
 
     if (!booking) {
-      return res.status(404).json({ error: "Booking not found" });
+      return res.status(404).json({ error: 'Booking not found' });
     }
 
     // Full cancellation flow with refund calculation
-    if (status === "cancelled" && booking.bookingRef) {
+    if (status === 'cancelled' && booking.bookingRef) {
       // Step 1: Fetch booking details from LiteAPI to get cancellation policy and payment info
       let bookingDetails: any = null;
       let refundableAmount = 0;
       let isRefundable = true;
       let cancellationFee = 0;
-      let refundType: "full" | "partial" | "none" = "full";
+      let refundType: 'full' | 'partial' | 'none' = 'full';
 
       try {
-        bookingDetails = await liteApiBookRequest<any>(
-          `/bookings/${booking.bookingRef}`,
-          "GET",
-        );
+        bookingDetails = await liteApiBookRequest<any>(`/bookings/${booking.bookingRef}`, 'GET');
 
         // Extract cancellation policy info
-        const cancelPolicy =
-          bookingDetails.cancellationPolicies?.cancelPolicyInfos?.[0];
+        const cancelPolicy = bookingDetails.cancellationPolicies?.cancelPolicyInfos?.[0];
         const refundableTag =
-          bookingDetails.refundableTag ||
-          bookingDetails.cancelPolicies?.refundableTag;
+          bookingDetails.refundableTag || bookingDetails.cancelPolicies?.refundableTag;
 
-        isRefundable = refundableTag === "RFN";
+        isRefundable = refundableTag === 'RFN';
 
         // Calculate refund based on policy
         if (isRefundable && cancelPolicy) {
@@ -1549,29 +2239,24 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
 
           if (now < cancelTime) {
             // Before free cancellation deadline - full refund
-            refundableAmount = Number(
-              bookingDetails.retailRate || booking.totalAmount || 0,
-            );
-            refundType = "full";
+            refundableAmount = Number(bookingDetails.retailRate || booking.totalAmount || 0);
+            refundType = 'full';
           } else {
             // After free cancellation deadline - apply cancellation fee
             cancellationFee = Number(cancelPolicy.amount || 0);
             refundableAmount = Math.max(
               0,
-              Number(bookingDetails.retailRate || booking.totalAmount || 0) -
-              cancellationFee,
+              Number(bookingDetails.retailRate || booking.totalAmount || 0) - cancellationFee
             );
-            refundType = refundableAmount > 0 ? "partial" : "none";
+            refundType = refundableAmount > 0 ? 'partial' : 'none';
           }
         } else if (!isRefundable) {
           // Non-refundable booking
           refundableAmount = 0;
-          refundType = "none";
+          refundType = 'none';
         }
       } catch (detailsError) {
-        console.log(
-          "[LITEAPI] Could not fetch booking details, using booking amount",
-        );
+        console.log('[LITEAPI] Could not fetch booking details, using booking amount');
         refundableAmount = Number(booking.totalAmount || 0);
       }
 
@@ -1580,16 +2265,16 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
       try {
         const cancelPayload = {
           bookingId: booking.bookingRef,
-          reason: cancellationReason || "User requested cancellation",
+          reason: cancellationReason || 'User requested cancellation',
         };
 
         cancelResult = await liteApiBookRequest<any>(
           `/bookings/${booking.bookingRef}`,
-          "PUT",
-          cancelPayload,
+          'PUT',
+          cancelPayload
         );
       } catch (liteError: any) {
-        console.error("[LITEAPI] Cancellation failed:", liteError.message);
+        console.error('[LITEAPI] Cancellation failed:', liteError.message);
         // Continue with local cancellation even if LiteAPI fails
       }
 
@@ -1597,77 +2282,68 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
       let refundResult: any = null;
 
       const metadata = (booking.metadata as any) || {};
-      const paymentMethod = metadata.paymentMethod || "WALLET";
+      const paymentMethod = metadata.paymentMethod || 'WALLET';
       const walletTransactionId = metadata.walletTransactionId;
       const paymentTransactionId =
         metadata.paymentTransactionId || bookingDetails?.payment_transaction_id;
       const voucherId = metadata.voucherId || bookingDetails?.voucher_id;
-      const voucherAmount =
-        metadata.voucherAmount || bookingDetails?.voucher_total_amount;
+      const voucherAmount = metadata.voucherAmount || bookingDetails?.voucher_total_amount;
 
       if (initiateRefund && refundableAmount > 0) {
         // Handle wallet refund
-        if (
-          refundToWallet &&
-          walletTransactionId &&
-          paymentMethod === "WALLET"
-        ) {
+        if (refundToWallet && walletTransactionId && paymentMethod === 'WALLET') {
           try {
             // Credit the wallet using wallet service
-            const walletServiceUrl =
-              process.env.WALLET_SERVICE_URL || "http://wallet-service:3006";
-            const refundResponse = await fetch(
-              `${walletServiceUrl}/wallet/refund`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  userId: booking.userId,
-                  amount: refundableAmount,
-                  currency: booking.currency || "USD",
-                  bookingId: bookingId,
-                  originalTransactionId: walletTransactionId,
-                  reason: cancellationReason || "Booking cancellation refund",
-                  idempotencyKey: `refund_${bookingId}_${Date.now()}`,
-                }),
-              },
-            ).catch(() => null);
+            const walletServiceUrl = process.env.WALLET_SERVICE_URL || 'http://wallet-service:3006';
+            const refundResponse = await fetch(`${walletServiceUrl}/wallet/refund`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: booking.userId,
+                amount: refundableAmount,
+                currency: booking.currency || 'USD',
+                bookingId: bookingId,
+                originalTransactionId: walletTransactionId,
+                reason: cancellationReason || 'Booking cancellation refund',
+                idempotencyKey: `refund_${bookingId}_${Date.now()}`,
+              }),
+            }).catch(() => null);
 
             if (walletServiceUrl) {
               refundResult = {
-                type: "wallet_refund",
+                type: 'wallet_refund',
                 amount: refundableAmount,
-                currency: booking.currency || "USD",
-                status: walletServiceUrl ? "completed" : "pending",
+                currency: booking.currency || 'USD',
+                status: walletServiceUrl ? 'completed' : 'pending',
                 transactionId: walletTransactionId,
               };
             }
           } catch (walletError: any) {
-            console.error("[Wallet] Refund failed:", walletError.message);
+            console.error('[Wallet] Refund failed:', walletError.message);
             refundResult = {
-              type: "wallet_refund",
+              type: 'wallet_refund',
               amount: refundableAmount,
-              currency: booking.currency || "USD",
-              status: "failed",
+              currency: booking.currency || 'USD',
+              status: 'failed',
               error: walletError.message,
             };
           }
         }
 
         // Handle card/payment gateway refund (if not wallet or if split payment)
-        if (paymentTransactionId && paymentMethod !== "WALLET") {
+        if (paymentTransactionId && paymentMethod !== 'WALLET') {
           try {
             // Call payment gateway to initiate refund
             const paymentServiceUrl =
-              process.env.PAYMENT_SERVICE_URL || "http://payment-service:3007";
+              process.env.PAYMENT_SERVICE_URL || 'http://payment-service:3007';
             const gatewayRefund = await fetch(`${paymentServiceUrl}/refund`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 transactionId: paymentTransactionId,
                 amount: refundableAmount,
-                currency: booking.currency || "USD",
-                reason: "Booking cancellation",
+                currency: booking.currency || 'USD',
+                reason: 'Booking cancellation',
               }),
             }).catch(() => null);
 
@@ -1675,27 +2351,22 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
               ...refundResult,
               gatewayRefund: gatewayRefund
                 ? {
-                  transactionId: paymentTransactionId,
-                  amount: refundableAmount,
-                  currency: booking.currency || "USD",
-                  status: "initiated",
-                }
+                    transactionId: paymentTransactionId,
+                    amount: refundableAmount,
+                    currency: booking.currency || 'USD',
+                    status: 'initiated',
+                  }
                 : null,
             };
           } catch (paymentError: any) {
-            console.error(
-              "[Payment] Gateway refund failed:",
-              paymentError.message,
-            );
+            console.error('[Payment] Gateway refund failed:', paymentError.message);
           }
         }
 
         // Handle voucher reversal if voucher was used
         if (voucherId && voucherAmount) {
           // Reverse voucher usage in local records
-          console.log(
-            `[Cancellation] Voucher ${voucherId} reversal: ${voucherAmount}`,
-          );
+          console.log(`[Cancellation] Voucher ${voucherId} reversal: ${voucherAmount}`);
           // Voucher reversal would be handled by voucher service
         }
       }
@@ -1704,7 +2375,7 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
       await prisma.booking.update({
         where: { id: bookingId },
         data: {
-          status: "cancelled",
+          status: 'cancelled',
           metadata: {
             ...metadata,
             cancellationResult: cancelResult,
@@ -1715,7 +2386,7 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
               refundType,
               refundableAmount,
               cancellationFee,
-              currency: booking.currency || "USD",
+              currency: booking.currency || 'USD',
               refundProcessed: !!refundResult,
               refundResult,
               paymentMethod,
@@ -1731,13 +2402,12 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
       // Step 5: Send notification (fire and forget)
       try {
         const notificationServiceUrl =
-          process.env.NOTIFICATION_SERVICE_URL ||
-          "http://notification-service:3009";
+          process.env.NOTIFICATION_SERVICE_URL || 'http://notification-service:3009';
         await fetch(`${notificationServiceUrl}/notifications/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            type: "booking_cancelled",
+            type: 'booking_cancelled',
             data: {
               bookingId,
               bookingRef: booking.bookingRef,
@@ -1747,22 +2417,22 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
               currency: booking.currency,
             },
           }),
-        }).catch(() => { });
+        }).catch(() => {});
       } catch (notifyError) {
-        console.log("[Notification] Could not send cancellation notification");
+        console.log('[Notification] Could not send cancellation notification');
       }
 
       return res.json({
         success: true,
         bookingId,
         bookingRef: booking.bookingRef,
-        status: "cancelled",
+        status: 'cancelled',
         refund: {
           type: refundType,
           refundable: isRefundable,
           amount: refundableAmount,
           cancellationFee,
-          currency: booking.currency || "USD",
+          currency: booking.currency || 'USD',
           processed: !!refundResult,
           details: refundResult,
         },
@@ -1784,217 +2454,343 @@ router.put("/bookings/:bookingId", async (req: Request, res: Response) => {
 
     res.json(updatedBooking);
   } catch (error: any) {
-    console.error("[LITEAPI] /bookings/:id PUT error:", error.message);
+    console.error('[LITEAPI] /bookings/:id PUT error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// PUT /bookings/:bookingId/amend - Update guest information for an existing booking
-// Updates the booking holder (payer) details: firstName, lastName, email, remarks
-router.put(
-  "/bookings/:bookingId/amend",
-  async (req: Request, res: Response) => {
-    try {
-      const bookingId = String(req.params.bookingId);
-      const { firstName, lastName, email, remarks } = req.body;
+/**
+ * @swagger
+ * /bookings/{bookingId}/amend:
+ *   put:
+ *     summary: Update booking holder details
+ *     description: Updates the booking holder (payer) details: firstName, lastName, email, remarks
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               remarks:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking holder updated successfully
+ *       400:
+ *         description: Bad request - at least one field required
+ *       404:
+ *         description: Booking not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/bookings/:bookingId/amend', async (req: Request, res: Response) => {
+  try {
+    const bookingId = String(req.params.bookingId);
+    const { firstName, lastName, email, remarks } = req.body;
 
-      // Validate that at least one field is provided
-      if (!firstName && !lastName && !email && !remarks) {
-        return res.status(400).json({
-          error:
-            "At least one of firstName, lastName, email, or remarks is required",
-        });
-      }
-
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
+    // Validate that at least one field is provided
+    if (!firstName && !lastName && !email && !remarks) {
+      return res.status(400).json({
+        error: 'At least one of firstName, lastName, email, or remarks is required',
       });
+    }
 
-      if (!booking) {
-        return res.status(404).json({ error: "Booking not found" });
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Build the payload for LiteAPI according to the specification
+    const payload: any = {};
+
+    if (firstName) payload.firstName = firstName;
+    if (lastName) payload.lastName = lastName;
+    if (email) payload.email = email;
+    if (remarks) payload.remarks = remarks;
+
+    let result: any = null;
+    let amendmentResult: any = { success: false };
+
+    // If booking has a supplier reference, call LiteAPI to amend
+    if (booking.bookingRef) {
+      try {
+        result = await liteApiBookRequest<any>(
+          `/bookings/${booking.bookingRef}/amend`,
+          'PUT',
+          payload
+        );
+        amendmentResult = {
+          success: true,
+          supplierAmended: true,
+          supplierResponse: result,
+        };
+      } catch (liteError: any) {
+        console.error('[LITEAPI] Amendment call failed, updating local only:', liteError.message);
+        amendmentResult = {
+          success: true,
+          supplierAmended: false,
+          error: liteError.message,
+        };
       }
+    }
 
-      // Build the payload for LiteAPI according to the specification
-      const payload: any = {};
+    // Update local booking record with holder information
+    const updateData: any = {
+      metadata: {
+        ...((booking.metadata as object) || {}),
+        holderAmendments: {
+          firstName: firstName || (booking.metadata as any)?.holderAmendments?.firstName,
+          lastName: lastName || (booking.metadata as any)?.holderAmendments?.lastName,
+          email: email || (booking.metadata as any)?.holderAmendments?.email,
+          remarks: remarks || (booking.metadata as any)?.holderAmendments?.remarks,
+          amendedAt: new Date().toISOString(),
+        },
+        lastAmendedAt: new Date().toISOString(),
+      },
+    };
 
-      if (firstName) payload.firstName = firstName;
-      if (lastName) payload.lastName = lastName;
-      if (email) payload.email = email;
-      if (remarks) payload.remarks = remarks;
+    // Also update customerEmail if provided
+    if (email) {
+      updateData.customerEmail = email;
+    }
 
-      let result: any = null;
-      let amendmentResult: any = { success: false };
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: updateData,
+    });
 
-      // If booking has a supplier reference, call LiteAPI to amend
-      if (booking.bookingRef) {
-        try {
-          result = await liteApiBookRequest<any>(
-            `/bookings/${booking.bookingRef}/amend`,
-            "PUT",
-            payload,
-          );
-          amendmentResult = {
-            success: true,
-            supplierAmended: true,
-            supplierResponse: result,
-          };
-        } catch (liteError: any) {
-          console.error(
-            "[LITEAPI] Amendment call failed, updating local only:",
-            liteError.message,
-          );
-          amendmentResult = {
-            success: true,
-            supplierAmended: false,
-            error: liteError.message,
-          };
-        }
-      }
+    res.json({
+      success: true,
+      bookingId,
+      bookingRef: booking.bookingRef,
+      amendments: {
+        firstName: firstName || null,
+        lastName: lastName || null,
+        email: email || null,
+        remarks: remarks || null,
+      },
+      supplierAmended: amendmentResult.supplierAmended,
+      booking: updatedBooking,
+    });
+  } catch (error: any) {
+    console.error('[LITEAPI] /bookings/:id/amend PUT error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-      // Update local booking record with holder information
-      const updateData: any = {
+/**
+ * @swagger
+ * /bookings/{bookingId}/amend:
+ *   patch:
+ *     summary: Legacy amend endpoint (guest name only)
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: bookingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The booking ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [guestName]
+ *             properties:
+ *               guestName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Booking amended successfully
+ *       404:
+ *         description: Booking not found or no supplier reference
+ *       500:
+ *         description: Server error
+ */
+router.patch('/bookings/:bookingId/amend', async (req: Request, res: Response) => {
+  try {
+    const bookingId = String(req.params.bookingId);
+    const { guestName } = req.body;
+
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+
+    if (!booking?.bookingRef) {
+      return res.status(404).json({ error: 'Booking not found or no supplier reference' });
+    }
+
+    const payload = {
+      guestName,
+    };
+
+    const result = await liteApiBookRequest<any>(
+      `/bookings/${booking.bookingRef}/amend`,
+      'PATCH',
+      payload
+    );
+
+    // Update local record
+    await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
         metadata: {
           ...((booking.metadata as object) || {}),
-          holderAmendments: {
-            firstName:
-              firstName ||
-              (booking.metadata as any)?.holderAmendments?.firstName,
-            lastName:
-              lastName || (booking.metadata as any)?.holderAmendments?.lastName,
-            email: email || (booking.metadata as any)?.holderAmendments?.email,
-            remarks:
-              remarks || (booking.metadata as any)?.holderAmendments?.remarks,
-            amendedAt: new Date().toISOString(),
-          },
-          lastAmendedAt: new Date().toISOString(),
+          amendedGuestName: guestName,
+          amendedAt: new Date().toISOString(),
         },
-      };
+      },
+    });
 
-      // Also update customerEmail if provided
-      if (email) {
-        updateData.customerEmail = email;
-      }
-
-      const updatedBooking = await prisma.booking.update({
-        where: { id: bookingId },
-        data: updateData,
-      });
-
-      res.json({
-        success: true,
-        bookingId,
-        bookingRef: booking.bookingRef,
-        amendments: {
-          firstName: firstName || null,
-          lastName: lastName || null,
-          email: email || null,
-          remarks: remarks || null,
-        },
-        supplierAmended: amendmentResult.supplierAmended,
-        booking: updatedBooking,
-      });
-    } catch (error: any) {
-      console.error("[LITEAPI] /bookings/:id/amend PUT error:", error.message);
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
-
-// PATCH /bookings/:bookingId/amend - Legacy amend endpoint (guest name only)
-router.patch(
-  "/bookings/:bookingId/amend",
-  async (req: Request, res: Response) => {
-    try {
-      const bookingId = String(req.params.bookingId);
-      const { guestName } = req.body;
-
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
-      });
-
-      if (!booking?.bookingRef) {
-        return res
-          .status(404)
-          .json({ error: "Booking not found or no supplier reference" });
-      }
-
-      const payload = {
-        guestName,
-      };
-
-      const result = await liteApiBookRequest<any>(
-        `/bookings/${booking.bookingRef}/amend`,
-        "PATCH",
-        payload,
-      );
-
-      // Update local record
-      await prisma.booking.update({
-        where: { id: bookingId },
-        data: {
-          metadata: {
-            ...((booking.metadata as object) || {}),
-            amendedGuestName: guestName,
-            amendedAt: new Date().toISOString(),
-          },
-        },
-      });
-
-      res.json(result);
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /bookings/:id/amend PATCH error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /bookings/:id/amend PATCH error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ============================================================================
 // Voucher Endpoints (DA Base URL)
 // ============================================================================
 
-// GET /vouchers - Retrieve all vouchers
-router.get("/vouchers", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /vouchers:
+ *   get:
+ *     summary: Retrieve all vouchers
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: Vouchers retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/vouchers', async (req: Request, res: Response) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
     const params = new URLSearchParams();
-    params.append("limit", String(limit));
-    params.append("offset", String(offset));
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
 
-    const result = await liteApiDaRequest<any>(`/vouchers?${params}`, "GET");
+    const result = await liteApiDaRequest<any>(`/vouchers?${params}`, 'GET');
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /vouchers GET error:", error.message);
+    console.error('[LITEAPI] /vouchers GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /vouchers/:voucherId - Retrieve a specific voucher
-router.get(
-  "/vouchers/:voucherId",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { voucherId } = req.params;
-
-      // Avoid shadowing static route /vouchers/history
-      if (voucherId === "history") {
-        return next();
-      }
-
-      const result = await liteApiDaRequest<any>(`/vouchers/${encodeURIComponent(voucherId)}`, "GET");
-      res.json(result);
-    } catch (error: any) {
-      console.error("[LITEAPI] /vouchers/:id GET error:", error.message);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-// POST /vouchers - Create a new voucher
-router.post("/vouchers", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /vouchers/{voucherId}:
+ *   get:
+ *     summary: Retrieve a specific voucher
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: voucherId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The voucher ID
+ *     responses:
+ *       200:
+ *         description: Voucher retrieved successfully
+ *       404:
+ *         description: Voucher not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/vouchers/:voucherId', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await liteApiDaRequest<any>("/vouchers", "POST", req.body);
+    const { voucherId } = req.params;
+
+    // Avoid shadowing static route /vouchers/history
+    if (voucherId === 'history') {
+      return next();
+    }
+
+    const result = await liteApiDaRequest<any>(`/vouchers/${encodeURIComponent(voucherId)}`, 'GET');
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /vouchers/:id GET error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /vouchers:
+ *   post:
+ *     summary: Create a new voucher
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [code, name, value]
+ *             properties:
+ *               code:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               value:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *                 default: USD
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       201:
+ *         description: Voucher created successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/vouchers', async (req: Request, res: Response) => {
+  try {
+    const result = await liteApiDaRequest<any>('/vouchers', 'POST', req.body);
 
     if (result && result.data && result.data.voucherId) {
       const voucherData = result.data;
@@ -2004,89 +2800,193 @@ router.post("/vouchers", async (req: Request, res: Response) => {
           code: voucherData.code || req.body.code,
           name: voucherData.name || req.body.name,
           value: new Decimal(voucherData.value || req.body.value || 0),
-          currency: voucherData.currency || req.body.currency || "USD",
-          status: "active",
+          currency: voucherData.currency || req.body.currency || 'USD',
+          status: 'active',
           validFrom: req.body.validFrom ? new Date(req.body.validFrom) : null,
           validTo: req.body.validTo ? new Date(req.body.validTo) : null,
-          metadata: voucherData
-        }
+          metadata: voucherData,
+        },
       });
     }
 
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /vouchers POST error:", error.message);
+    console.error('[LITEAPI] /vouchers POST error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// PUT /vouchers/:voucherId - Update a voucher
-router.put("/vouchers/:voucherId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /vouchers/{voucherId}:
+ *   put:
+ *     summary: Update a voucher
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: voucherId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The voucher ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *               value:
+ *                 type: number
+ *               currency:
+ *                 type: string
+ *               validFrom:
+ *                 type: string
+ *                 format: date-time
+ *               validTo:
+ *                 type: string
+ *                 format: date-time
+ *     responses:
+ *       200:
+ *         description: Voucher updated successfully
+ *       404:
+ *         description: Voucher not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/vouchers/:voucherId', async (req: Request, res: Response) => {
   try {
     const { voucherId } = req.params;
-    const result = await liteApiDaRequest<any>(
-      `/vouchers/${voucherId}`,
-      "PUT",
-      req.body,
-    );
+    const result = await liteApiDaRequest<any>(`/vouchers/${voucherId}`, 'PUT', req.body);
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /vouchers/:id PUT error:", error.message);
+    console.error('[LITEAPI] /vouchers/:id PUT error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// PUT /vouchers/:voucherId/status - Update voucher status
-router.put(
-  "/vouchers/:voucherId/status",
-  async (req: Request, res: Response) => {
-    try {
-      const { voucherId } = req.params;
-      const { status } = req.body;
-      const result = await liteApiDaRequest<any>(
-        `/vouchers/${voucherId}/status`,
-        "PUT",
-        { status },
-      );
-      res.json(result);
-    } catch (error: any) {
-      console.error("[LITEAPI] /vouchers/:id/status PUT error:", error.message);
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+/**
+ * @swagger
+ * /vouchers/{voucherId}/status:
+ *   put:
+ *     summary: Update voucher status
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: voucherId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The voucher ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 description: New voucher status
+ *     responses:
+ *       200:
+ *         description: Voucher status updated successfully
+ *       404:
+ *         description: Voucher not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/vouchers/:voucherId/status', async (req: Request, res: Response) => {
+  try {
+    const { voucherId } = req.params;
+    const { status } = req.body;
+    const result = await liteApiDaRequest<any>(`/vouchers/${voucherId}/status`, 'PUT', { status });
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /vouchers/:id/status PUT error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// GET /vouchers/history - Retrieve voucher usage history
-router.get("/vouchers/history", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /vouchers/history:
+ *   get:
+ *     summary: Retrieve voucher usage history
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: voucherId
+ *         schema:
+ *           type: string
+ *         description: Filter by voucher ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: Voucher history retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/vouchers/history', async (req: Request, res: Response) => {
   try {
     const { voucherId, limit = 50, offset = 0 } = req.query;
     const params = new URLSearchParams();
-    if (voucherId) params.append("voucherId", String(voucherId));
-    params.append("limit", String(limit));
-    params.append("offset", String(offset));
+    if (voucherId) params.append('voucherId', String(voucherId));
+    params.append('limit', String(limit));
+    params.append('offset', String(offset));
 
-    const result = await liteApiDaRequest<any>(
-      `/vouchers/history?${params}`,
-      "GET",
-    );
+    const result = await liteApiDaRequest<any>(`/vouchers/history?${params}`, 'GET');
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /vouchers/history GET error:", error.message);
+    console.error('[LITEAPI] /vouchers/history GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// DELETE /vouchers/:voucherId - Delete a voucher
-router.delete("/vouchers/:voucherId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /vouchers/{voucherId}:
+ *   delete:
+ *     summary: Delete a voucher
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: voucherId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The voucher ID
+ *     responses:
+ *       200:
+ *         description: Voucher deleted successfully
+ *       404:
+ *         description: Voucher not found
+ *       500:
+ *         description: Server error
+ */
+router.delete('/vouchers/:voucherId', async (req: Request, res: Response) => {
   try {
     const { voucherId } = req.params;
-    const result = await liteApiDaRequest<any>(
-      `/vouchers/${voucherId}`,
-      "DELETE",
-    );
+    const result = await liteApiDaRequest<any>(`/vouchers/${voucherId}`, 'DELETE');
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /vouchers/:id DELETE error:", error.message);
+    console.error('[LITEAPI] /vouchers/:id DELETE error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -2095,136 +2995,237 @@ router.delete("/vouchers/:voucherId", async (req: Request, res: Response) => {
 // Loyalty Endpoints (API Base URL)
 // ============================================================================
 
-// GET /loyalties - Get loyalty program settings
-router.get("/loyalties", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalties:
+ *   get:
+ *     summary: Get loyalty program settings
+ *     tags: [LiteAPI]
+ *     responses:
+ *       200:
+ *         description: Loyalty program settings retrieved successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.get('/loyalties', async (req: Request, res: Response) => {
   try {
     try {
-      const result = await liteApiRequest<any>("/loyalties", "GET");
+      const result = await liteApiRequest<any>('/loyalties', 'GET');
 
       // Update local settings from LITEAPI
       if (result && result.data) {
         await prisma.loyaltyProgramSettings.upsert({
-          where: { id: "default" },
+          where: { id: 'default' },
           create: {
-            id: "default",
+            id: 'default',
             enabled: result.data.enabled,
             cashbackRate: new Decimal(result.data.cashbackRate || 0.03),
-            programName: result.data.programName || "TripAlfa Rewards",
+            programName: result.data.programName || 'TripAlfa Rewards',
           },
           update: {
             enabled: result.data.enabled,
             cashbackRate: new Decimal(result.data.cashbackRate || 0.03),
-            programName: result.data.programName || "TripAlfa Rewards",
-          }
+            programName: result.data.programName || 'TripAlfa Rewards',
+          },
         });
       }
 
       return res.json(result);
     } catch (liteError) {
-      console.warn("[LITEAPI] /loyalties GET failed, falling back to database");
+      console.warn('[LITEAPI] /loyalties GET failed, falling back to database');
     }
 
     const localSettings = await prisma.loyaltyProgramSettings.findUnique({
-      where: { id: "default" }
+      where: { id: 'default' },
     });
 
     res.json(localSettings || { enabled: false, cashbackRate: 0 });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalties GET error:", error.message);
+    console.error('[LITEAPI] /loyalties GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// PUT /loyalties - Update loyalty program
-router.put("/loyalties", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalties:
+ *   put:
+ *     summary: Update loyalty program settings
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               enabled:
+ *                 type: boolean
+ *               cashbackRate:
+ *                 type: number
+ *               programName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Loyalty program settings updated successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.put('/loyalties', async (req: Request, res: Response) => {
   try {
     const { enabled, cashbackRate, programName } = req.body;
-    const result = await liteApiRequest<any>("/loyalties", "PUT", req.body);
+    const result = await liteApiRequest<any>('/loyalties', 'PUT', req.body);
 
     // Persist locally
     await prisma.loyaltyProgramSettings.upsert({
-      where: { id: "default" },
+      where: { id: 'default' },
       create: {
-        id: "default",
+        id: 'default',
         enabled: enabled ?? true,
         cashbackRate: new Decimal(cashbackRate || 0.03),
-        programName: programName || "TripAlfa Rewards",
+        programName: programName || 'TripAlfa Rewards',
       },
       update: {
         enabled: enabled ?? true,
         cashbackRate: new Decimal(cashbackRate || 0.03),
-        programName: programName || "TripAlfa Rewards",
-      }
+        programName: programName || 'TripAlfa Rewards',
+      },
     });
 
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalties PUT error:", error.message);
+    console.error('[LITEAPI] /loyalties PUT error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /guests/:guestId/loyalty-points - Fetch guest's loyalty points
-router.get(
-  "/guests/:guestId/loyalty-points",
-  async (req: Request, res: Response) => {
-    try {
-      const { guestId } = req.params;
-      const result = await liteApiRequest<any>(
-        `/guests/${guestId}/loyalty-points`,
-        "GET",
-      );
-      res.json(result);
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /guests/:id/loyalty-points GET error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+/**
+ * @swagger
+ * /guests/{guestId}/loyalty-points:
+ *   get:
+ *     summary: Fetch guest loyalty points
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: guestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Guest ID
+ *     responses:
+ *       200:
+ *         description: Guest loyalty points retrieved successfully
+ *       404:
+ *         description: Guest not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/guests/:guestId/loyalty-points', async (req: Request, res: Response) => {
+  try {
+    const { guestId } = req.params;
+    const result = await liteApiRequest<any>(`/guests/${guestId}/loyalty-points`, 'GET');
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /guests/:id/loyalty-points GET error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// POST /guests/:guestId/loyalty-points/redeem - Redeem guest's loyalty points
-router.post(
-  "/guests/:guestId/loyalty-points/redeem",
-  async (req: Request, res: Response) => {
-    try {
-      const { guestId } = req.params;
-      const result = await liteApiRequest<any>(
-        `/guests/${guestId}/loyalty-points/redeem`,
-        "POST",
-        req.body,
-      );
-      res.json(result);
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /guests/:id/loyalty-points/redeem POST error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+/**
+ * @swagger
+ * /guests/{guestId}/loyalty-points/redeem:
+ *   post:
+ *     summary: Redeem guest loyalty points
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: guestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Guest ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               points:
+ *                 type: number
+ *                 description: Number of points to redeem
+ *     responses:
+ *       200:
+ *         description: Points redeemed successfully
+ *       400:
+ *         description: Bad request
+ *       404:
+ *         description: Guest not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/guests/:guestId/loyalty-points/redeem', async (req: Request, res: Response) => {
+  try {
+    const { guestId } = req.params;
+    const result = await liteApiRequest<any>(
+      `/guests/${guestId}/loyalty-points/redeem`,
+      'POST',
+      req.body
+    );
+    res.json(result);
+  } catch (error: any) {
+    console.error('[LITEAPI] /guests/:id/loyalty-points/redeem POST error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ============================================================================
 // Legacy Loyalty Endpoints (Database fallback routes)
 // ============================================================================
 
-router.get("/guests", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /guests:
+ *   get:
+ *     summary: List all guests
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: List of guests retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/guests', async (req: Request, res: Response) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
     try {
       const params = new URLSearchParams();
-      params.append("limit", String(limit));
-      params.append("offset", String(offset));
-      const liteGuests = await liteApiRequest<any>(`/guests?${params}`, "GET");
+      params.append('limit', String(limit));
+      params.append('offset', String(offset));
+      const liteGuests = await liteApiRequest<any>(`/guests?${params}`, 'GET');
       return res.json(liteGuests);
-    } catch (liteError) { }
+    } catch (liteError) {}
     const guests = await prisma.user.findMany({
       take: Number(limit),
       skip: Number(offset),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         email: true,
@@ -2236,18 +3237,39 @@ router.get("/guests", async (req: Request, res: Response) => {
     });
     res.json({ guests, total: guests.length });
   } catch (error: any) {
-    console.error("[LITEAPI] /guests error:", error.message);
+    console.error('[LITEAPI] /guests error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/guests/:guestId", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /guests/{guestId}:
+ *   get:
+ *     summary: Get guest details
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: guestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Guest ID
+ *     responses:
+ *       200:
+ *         description: Guest details retrieved successfully
+ *       404:
+ *         description: Guest not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/guests/:guestId', async (req: Request, res: Response) => {
   try {
     const { guestId } = req.params;
     try {
-      const result = await liteApiRequest<any>(`/guests/${encodeURIComponent(guestId)}`, "GET");
+      const result = await liteApiRequest<any>(`/guests/${encodeURIComponent(guestId)}`, 'GET');
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     const guest = await prisma.user.findUnique({
       where: { id: String(guestId) },
       select: {
@@ -2260,86 +3282,181 @@ router.get("/guests/:guestId", async (req: Request, res: Response) => {
       },
     });
     if (guest) return res.json(guest);
-    res.status(404).json({ error: "Guest not found" });
+    res.status(404).json({ error: 'Guest not found' });
   } catch (error: any) {
-    console.error("[LITEAPI] /guests/:id error:", error.message);
+    console.error('[LITEAPI] /guests/:id error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/guests/:guestId/bookings", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /guests/{guestId}/bookings:
+ *   get:
+ *     summary: Get guest bookings
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: path
+ *         name: guestId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Guest ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of results to skip
+ *     responses:
+ *       200:
+ *         description: Guest bookings retrieved successfully
+ *       404:
+ *         description: Guest not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/guests/:guestId/bookings', async (req: Request, res: Response) => {
   try {
     const { guestId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
     try {
       const params = new URLSearchParams();
-      params.append("limit", String(limit));
-      params.append("offset", String(offset));
-      const result = await liteApiRequest<any>(
-        `/guests/${guestId}/bookings?${params}`,
-        "GET",
-      );
+      params.append('limit', String(limit));
+      params.append('offset', String(offset));
+      const result = await liteApiRequest<any>(`/guests/${guestId}/bookings?${params}`, 'GET');
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     const bookings = await prisma.booking.findMany({
       where: { userId: String(guestId) },
       take: Number(limit),
       skip: Number(offset),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
     });
     res.json({ bookings, total: bookings.length });
   } catch (error: any) {
-    console.error("[LITEAPI] /guests/:id/bookings error:", error.message);
+    console.error('[LITEAPI] /guests/:id/bookings error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post("/loyalties", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalties:
+ *   post:
+ *     summary: Create loyalty program settings
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               enabled:
+ *                 type: boolean
+ *               cashbackRate:
+ *                 type: number
+ *               programName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Loyalty program settings created successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/loyalties', async (req: Request, res: Response) => {
   try {
     const { enabled, cashbackRate, programName } = req.body;
-    const result = await liteApiRequest<any>("/loyalties", "POST", req.body);
+    const result = await liteApiRequest<any>('/loyalties', 'POST', req.body);
 
     await prisma.loyaltyProgramSettings.upsert({
-      where: { id: "default" },
+      where: { id: 'default' },
       create: {
-        id: "default",
+        id: 'default',
         enabled: enabled ?? true,
         cashbackRate: new Decimal(cashbackRate || 0.03),
-        programName: programName || "TripAlfa Rewards",
+        programName: programName || 'TripAlfa Rewards',
       },
       update: {
         enabled: enabled ?? true,
         cashbackRate: new Decimal(cashbackRate || 0.03),
-        programName: programName || "TripAlfa Rewards",
-      }
+        programName: programName || 'TripAlfa Rewards',
+      },
     });
 
     res.json(result);
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalties POST error:", error.message);
+    console.error('[LITEAPI] /loyalties POST error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Loyalty routes with /loyalty prefix
-router.get("/loyalty/loyalties", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalty/loyalties:
+ *   get:
+ *     summary: Get loyalty program settings (legacy)
+ *     tags: [LiteAPI]
+ *     responses:
+ *       200:
+ *         description: Loyalty program settings retrieved successfully
+ *       500:
+ *         description: Server error
+ */
+router.get('/loyalty/loyalties', async (req: Request, res: Response) => {
   try {
     try {
-      const result = await liteApiRequest<any>("/loyalties", "GET");
+      const result = await liteApiRequest<any>('/loyalties', 'GET');
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     res.json({
       enabled: true,
       cashbackRate: 0.03,
-      programName: "TripAlfa Rewards",
+      programName: 'TripAlfa Rewards',
     });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/loyalties GET error:", error.message);
+    console.error('[LITEAPI] /loyalty/loyalties GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.put("/loyalty/loyalties", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalty/loyalties:
+ *   put:
+ *     summary: Update loyalty program settings (legacy)
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               enabled:
+ *                 type: boolean
+ *               cashbackRate:
+ *                 type: number
+ *               programName:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Loyalty program settings updated successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.put('/loyalty/loyalties', async (req: Request, res: Response) => {
   try {
     const { enabled, cashbackRate, programName } = req.body;
     const settings = {
@@ -2349,50 +3466,131 @@ router.put("/loyalty/loyalties", async (req: Request, res: Response) => {
       updatedAt: new Date().toISOString(),
     };
     try {
-      const result = await liteApiRequest<any>("/loyalties", "PUT", settings);
+      const result = await liteApiRequest<any>('/loyalties', 'PUT', settings);
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     res.json({ success: true, settings });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/loyalties PUT error:", error.message);
+    console.error('[LITEAPI] /loyalty/loyalties PUT error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post("/loyalty/loyalties", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalty/loyalties:
+ *   post:
+ *     summary: Create loyalty program settings (legacy)
+ *     tags: [LiteAPI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               enabled:
+ *                 type: boolean
+ *               cashbackRate:
+ *                 type: number
+ *               programName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Loyalty program settings created successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.post('/loyalty/loyalties', async (req: Request, res: Response) => {
   try {
     const { enabled, cashbackRate, programName } = req.body;
     const settings = {
       enabled: enabled ?? true,
       cashbackRate: cashbackRate || 0.03,
-      programName: programName || "TripAlfa Rewards",
+      programName: programName || 'TripAlfa Rewards',
       updatedAt: new Date().toISOString(),
     };
     try {
-      const result = await liteApiRequest<any>("/loyalties", "POST", settings);
+      const result = await liteApiRequest<any>('/loyalties', 'POST', settings);
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     res.json({ success: true, settings });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/loyalties POST error:", error.message);
+    console.error('[LITEAPI] /loyalty/loyalties POST error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/loyalty/guests", async (req: Request, res: Response) => {
+/**
+ * @swagger
+ * /loyalty/guests:
+ *   get:
+ *     summary: Get list of loyalty guests
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of guests to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of guests to skip
+ *     responses:
+ *       200:
+ *         description: List of guests retrieved successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+/**
+ * @swagger
+ * /loyalty/guests:
+ *   get:
+ *     summary: Get list of loyalty guests
+ *     tags: [LiteAPI]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of guests to return
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: Number of guests to skip
+ *     responses:
+ *       200:
+ *         description: List of guests retrieved successfully
+ *       400:
+ *         description: Bad request
+ *       500:
+ *         description: Server error
+ */
+router.get('/loyalty/guests', async (req: Request, res: Response) => {
   try {
     const { limit = 50, offset = 0 } = req.query;
     try {
       const params = new URLSearchParams();
-      params.append("limit", String(limit));
-      params.append("offset", String(offset));
-      const liteGuests = await liteApiRequest<any>(`/guests?${params}`, "GET");
+      params.append('limit', String(limit));
+      params.append('offset', String(offset));
+      const liteGuests = await liteApiRequest<any>(`/guests?${params}`, 'GET');
       return res.json(liteGuests);
-    } catch (liteError) { }
+    } catch (liteError) {}
     const guests = await prisma.user.findMany({
       take: Number(limit),
       skip: Number(offset),
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: 'desc' },
       select: {
         id: true,
         email: true,
@@ -2404,18 +3602,18 @@ router.get("/loyalty/guests", async (req: Request, res: Response) => {
     });
     res.json({ guests, total: guests.length });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/guests GET error:", error.message);
+    console.error('[LITEAPI] /loyalty/guests GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/loyalty/guests/:guestId", async (req: Request, res: Response) => {
+router.get('/loyalty/guests/:guestId', async (req: Request, res: Response) => {
   try {
     const { guestId } = req.params;
     try {
-      const result = await liteApiRequest<any>(`/guests/${encodeURIComponent(guestId)}`, "GET");
+      const result = await liteApiRequest<any>(`/guests/${encodeURIComponent(guestId)}`, 'GET');
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     const guest = await prisma.user.findUnique({
       where: { id: String(guestId) },
       select: {
@@ -2428,65 +3626,56 @@ router.get("/loyalty/guests/:guestId", async (req: Request, res: Response) => {
       },
     });
     if (guest) return res.json(guest);
-    res.status(404).json({ error: "Guest not found" });
+    res.status(404).json({ error: 'Guest not found' });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/guests/:id GET error:", error.message);
+    console.error('[LITEAPI] /loyalty/guests/:id GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get(
-  "/loyalty/guests/:guestId/bookings",
-  async (req: Request, res: Response) => {
+router.get('/loyalty/guests/:guestId/bookings', async (req: Request, res: Response) => {
+  try {
+    const { guestId } = req.params;
+    const { limit = 50, offset = 0 } = req.query;
     try {
-      const { guestId } = req.params;
-      const { limit = 50, offset = 0 } = req.query;
-      try {
-        const params = new URLSearchParams();
-        params.append("limit", String(limit));
-        params.append("offset", String(offset));
-        const result = await liteApiRequest<any>(
-          `/guests/${encodeURIComponent(guestId)}/bookings?${params}`,
-          "GET",
-        );
-        return res.json(result);
-      } catch (liteError) { }
-      const bookings = await prisma.booking.findMany({
-        where: { userId: String(guestId) },
-        take: Number(limit),
-        skip: Number(offset),
-        orderBy: { createdAt: "desc" },
-      });
-      res.json({ bookings, total: bookings.length });
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /loyalty/guests/:id/bookings GET error:",
-        error.message,
+      const params = new URLSearchParams();
+      params.append('limit', String(limit));
+      params.append('offset', String(offset));
+      const result = await liteApiRequest<any>(
+        `/guests/${encodeURIComponent(guestId)}/bookings?${params}`,
+        'GET'
       );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+      return res.json(result);
+    } catch (liteError) {}
+    const bookings = await prisma.booking.findMany({
+      where: { userId: String(guestId) },
+      take: Number(limit),
+      skip: Number(offset),
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ bookings, total: bookings.length });
+  } catch (error: any) {
+    console.error('[LITEAPI] /loyalty/guests/:id/bookings GET error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-router.get("/loyalty/user/:userId", async (req: Request, res: Response) => {
+router.get('/loyalty/user/:userId', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     try {
-      const result = await liteApiRequest<any>(`/guests/${encodeURIComponent(userId)}`, "GET");
+      const result = await liteApiRequest<any>(`/guests/${encodeURIComponent(userId)}`, 'GET');
       return res.json(result);
-    } catch (liteError) { }
+    } catch (liteError) {}
     const user = await prisma.user.findUnique({
       where: { id: String(userId) },
       select: { id: true, email: true, firstName: true, lastName: true },
     });
     if (user) {
       const bookings = await prisma.booking.findMany({
-        where: { userId: String(userId), status: "confirmed" },
+        where: { userId: String(userId), status: 'confirmed' },
       });
-      const totalSpent = bookings.reduce(
-        (sum, b) => sum + Number(b.baseAmount || 0),
-        0,
-      );
+      const totalSpent = bookings.reduce((sum, b) => sum + Number(b.baseAmount || 0), 0);
       const totalPoints = Math.floor(totalSpent);
       return res.json({
         userId: user.id,
@@ -2494,262 +3683,226 @@ router.get("/loyalty/user/:userId", async (req: Request, res: Response) => {
         totalPointsEarned: totalPoints,
         totalPointsRedeemed: 0,
         pointsExpiringDate: null,
-        tier:
-          totalPoints > 10000
-            ? "gold"
-            : totalPoints > 5000
-              ? "silver"
-              : "bronze",
+        tier: totalPoints > 10000 ? 'gold' : totalPoints > 5000 ? 'silver' : 'bronze',
       });
     }
-    res.status(404).json({ error: "User not found" });
+    res.status(404).json({ error: 'User not found' });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/user/:id GET error:", error.message);
+    console.error('[LITEAPI] /loyalty/user/:id GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get(
-  "/loyalty/transactions/:userId",
-  async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.params;
-      const { limit = 20, offset = 0, type } = req.query;
-      const bookings = await prisma.booking.findMany({
-        where: {
-          userId: String(userId),
-          ...(type && type !== "all" ? { serviceType: type as string } : {}),
-        },
-        take: Number(limit),
-        skip: Number(offset),
-        orderBy: { createdAt: "desc" },
-      });
-      const transactions = bookings.map((b) => ({
-        id: b.id,
-        customerId: userId,
-        points: Math.floor(Number(b.baseAmount) || 0),
-        type: "EARN" as const,
-        description: `${b.serviceType || "Booking"} booking`,
-        bookingReference: b.bookingRef,
-        createdAt: b.createdAt.toISOString(),
-        updatedAt: b.updatedAt.toISOString(),
-      }));
-      res.json({ data: transactions, total: transactions.length });
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /loyalty/transactions/:id GET error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+router.get('/loyalty/transactions/:userId', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { limit = 20, offset = 0, type } = req.query;
+    const bookings = await prisma.booking.findMany({
+      where: {
+        userId: String(userId),
+        ...(type && type !== 'all' ? { serviceType: type as string } : {}),
+      },
+      take: Number(limit),
+      skip: Number(offset),
+      orderBy: { createdAt: 'desc' },
+    });
+    const transactions = bookings.map(b => ({
+      id: b.id,
+      customerId: userId,
+      points: Math.floor(Number(b.baseAmount) || 0),
+      type: 'EARN' as const,
+      description: `${b.serviceType || 'Booking'} booking`,
+      bookingReference: b.bookingRef,
+      createdAt: b.createdAt.toISOString(),
+      updatedAt: b.updatedAt.toISOString(),
+    }));
+    res.json({ data: transactions, total: transactions.length });
+  } catch (error: any) {
+    console.error('[LITEAPI] /loyalty/transactions/:id GET error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-router.get("/loyalty/tiers", async (req: Request, res: Response) => {
+router.get('/loyalty/tiers', async (req: Request, res: Response) => {
   try {
     const tiers = [
       {
-        id: "bronze",
-        name: "Bronze",
+        id: 'bronze',
+        name: 'Bronze',
         level: 1,
         minPoints: 0,
         maxPoints: 5000,
         discountPercentage: 5,
         pointsMultiplier: 1,
-        benefits: ["5% discount", "Earn 1x points"],
+        benefits: ['5% discount', 'Earn 1x points'],
       },
       {
-        id: "silver",
-        name: "Silver",
+        id: 'silver',
+        name: 'Silver',
         level: 2,
         minPoints: 5001,
         maxPoints: 10000,
         discountPercentage: 10,
         pointsMultiplier: 1.5,
-        benefits: ["10% discount", "Earn 1.5x points", "Priority support"],
+        benefits: ['10% discount', 'Earn 1.5x points', 'Priority support'],
       },
       {
-        id: "gold",
-        name: "Gold",
+        id: 'gold',
+        name: 'Gold',
         level: 3,
         minPoints: 10001,
         maxPoints: 25000,
         discountPercentage: 15,
         pointsMultiplier: 2,
-        benefits: [
-          "15% discount",
-          "Earn 2x points",
-          "Priority support",
-          "Free upgrades",
-        ],
+        benefits: ['15% discount', 'Earn 2x points', 'Priority support', 'Free upgrades'],
       },
       {
-        id: "platinum",
-        name: "Platinum",
+        id: 'platinum',
+        name: 'Platinum',
         level: 4,
         minPoints: 25001,
         maxPoints: 999999,
         discountPercentage: 20,
         pointsMultiplier: 3,
         benefits: [
-          "20% discount",
-          "Earn 3x points",
-          "Priority support",
-          "Free upgrades",
-          "Lounge access",
+          '20% discount',
+          'Earn 3x points',
+          'Priority support',
+          'Free upgrades',
+          'Lounge access',
         ],
       },
     ];
     res.json(tiers);
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/tiers GET error:", error.message);
+    console.error('[LITEAPI] /loyalty/tiers GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/loyalty/tiers/:tierId", async (req: Request, res: Response) => {
+router.get('/loyalty/tiers/:tierId', async (req: Request, res: Response) => {
   try {
     const { tierId } = req.params;
     const tiers: Record<string, any> = {
       bronze: {
-        id: "bronze",
-        name: "Bronze",
+        id: 'bronze',
+        name: 'Bronze',
         level: 1,
         minPoints: 0,
         maxPoints: 5000,
         discountPercentage: 5,
         pointsMultiplier: 1,
-        benefits: ["5% discount", "Earn 1x points"],
+        benefits: ['5% discount', 'Earn 1x points'],
       },
       silver: {
-        id: "silver",
-        name: "Silver",
+        id: 'silver',
+        name: 'Silver',
         level: 2,
         minPoints: 5001,
         maxPoints: 10000,
         discountPercentage: 10,
         pointsMultiplier: 1.5,
-        benefits: ["10% discount", "Earn 1.5x points", "Priority support"],
+        benefits: ['10% discount', 'Earn 1.5x points', 'Priority support'],
       },
       gold: {
-        id: "gold",
-        name: "Gold",
+        id: 'gold',
+        name: 'Gold',
         level: 3,
         minPoints: 10001,
         maxPoints: 25000,
         discountPercentage: 15,
         pointsMultiplier: 2,
-        benefits: [
-          "15% discount",
-          "Earn 2x points",
-          "Priority support",
-          "Free upgrades",
-        ],
+        benefits: ['15% discount', 'Earn 2x points', 'Priority support', 'Free upgrades'],
       },
       platinum: {
-        id: "platinum",
-        name: "Platinum",
+        id: 'platinum',
+        name: 'Platinum',
         level: 4,
         minPoints: 25001,
         maxPoints: 999999,
         discountPercentage: 20,
         pointsMultiplier: 3,
         benefits: [
-          "20% discount",
-          "Earn 3x points",
-          "Priority support",
-          "Free upgrades",
-          "Lounge access",
+          '20% discount',
+          'Earn 3x points',
+          'Priority support',
+          'Free upgrades',
+          'Lounge access',
         ],
       },
     };
     if (tiers[tierId]) return res.json(tiers[tierId]);
-    res.status(404).json({ error: "Tier not found" });
+    res.status(404).json({ error: 'Tier not found' });
   } catch (error: any) {
-    console.error("[LITEAPI] /loyalty/tiers/:id GET error:", error.message);
+    console.error('[LITEAPI] /loyalty/tiers/:id GET error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
 
-router.post(
-  "/loyalty/user/:userId/redeem-points",
-  async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.params;
-      const { points } = req.body;
-      res.json({
-        success: true,
-        pointsRemaining: 0,
-        redemptionAmount: points / 100,
-        message: "Points redeemed successfully",
-      });
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /loyalty/user/:id/redeem-points POST error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+router.post('/loyalty/user/:userId/redeem-points', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { points } = req.body;
+    res.json({
+      success: true,
+      pointsRemaining: 0,
+      redemptionAmount: points / 100,
+      message: 'Points redeemed successfully',
+    });
+  } catch (error: any) {
+    console.error('[LITEAPI] /loyalty/user/:id/redeem-points POST error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-router.get(
-  "/loyalty/user/:userId/expiring-points",
-  async (req: Request, res: Response) => {
-    try {
-      res.json({ expiringPoints: 0, expiryDate: null });
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /loyalty/user/:id/expiring-points GET error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+router.get('/loyalty/user/:userId/expiring-points', async (req: Request, res: Response) => {
+  try {
+    res.json({ expiringPoints: 0, expiryDate: null });
+  } catch (error: any) {
+    console.error('[LITEAPI] /loyalty/user/:id/expiring-points GET error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
-router.post(
-  "/loyalty/user/:userId/award-points",
-  async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.params;
-      const { points } = req.body;
-      res.json({ success: true, newBalance: points });
-    } catch (error: any) {
-      console.error(
-        "[LITEAPI] /loyalty/user/:id/award-points POST error:",
-        error.message,
-      );
-      res.status(500).json({ error: error.message });
-    }
-  },
-);
+router.post('/loyalty/user/:userId/award-points', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { points } = req.body;
+    res.json({ success: true, newBalance: points });
+  } catch (error: any) {
+    console.error('[LITEAPI] /loyalty/user/:id/award-points POST error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Reference Data Routes (Standardized)
-router.get("/liteapi/facilities", async (req: Request, res: Response) => {
+router.get('/liteapi/facilities', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) return res.status(503).json({ success: false, error: "Static DB not configured" });
-    const result = await staticDbPool.query("SELECT * FROM liteapi_facilities ORDER BY name ASC");
+    if (!staticDbPool)
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
+    const result = await staticDbPool.query('SELECT * FROM liteapi_facilities ORDER BY name ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-router.get("/liteapi/hotel-types", async (req: Request, res: Response) => {
+router.get('/liteapi/hotel-types', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) return res.status(503).json({ success: false, error: "Static DB not configured" });
-    const result = await staticDbPool.query("SELECT * FROM liteapi_hotel_types ORDER BY name ASC");
+    if (!staticDbPool)
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
+    const result = await staticDbPool.query('SELECT * FROM liteapi_hotel_types ORDER BY name ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-router.get("/liteapi/chains", async (req: Request, res: Response) => {
+router.get('/liteapi/chains', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) return res.status(503).json({ success: false, error: "Static DB not configured" });
-    const result = await staticDbPool.query("SELECT * FROM liteapi_chains ORDER BY name ASC");
+    if (!staticDbPool)
+      return res.status(503).json({ success: false, error: 'Static DB not configured' });
+    const result = await staticDbPool.query('SELECT * FROM liteapi_chains ORDER BY name ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -2757,4 +3910,3 @@ router.get("/liteapi/chains", async (req: Request, res: Response) => {
 });
 
 export default router;
-

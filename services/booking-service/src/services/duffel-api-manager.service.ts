@@ -55,7 +55,7 @@ export interface APIManagerResponse<T = any> {
 // OFFER REQUEST MANAGER
 // ============================================================================
 
-export const OfferRequestManager = {
+const OfferRequestManager = {
   /**
    * Process offer request response through cache layer
    */
@@ -139,7 +139,7 @@ export const OfferRequestManager = {
 // OFFER MANAGER
 // ============================================================================
 
-export const OfferManager = {
+const OfferManager = {
   /**
    * Process offer response through cache layer
    */
@@ -530,7 +530,7 @@ export const CancellationManager = {
 // BULK CACHE OPERATIONS
 // ============================================================================
 
-export const CacheBulkOperations = {
+const CacheBulkOperations = {
   /**
    * Invalidate all Duffel caches for a user
    */

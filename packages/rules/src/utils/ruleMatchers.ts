@@ -132,7 +132,7 @@ export function ruleAppliesToService(
 /**
  * Check if rule applies to a specific entity (supplier, branch, user)
  */
-export function ruleAppliesToEntity(
+function ruleAppliesToEntity(
   rule: { supplierIds?: string[]; branchIds?: string[]; userIds?: string[] },
   entityType: "supplier" | "branch" | "user",
   entityId?: string,

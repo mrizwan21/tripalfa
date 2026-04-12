@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { getBookingById } from "../lib/api";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { AccordionBookingCard } from "../components/booking/AccordionBookingCard";
-import { RefreshCw, ArrowLeft } from "lucide-react";
-import { Button } from "../components/ui/button";
-import type { Booking } from "../lib/srs-types";
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { getBookingById } from '../lib/api';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { AccordionBookingCard } from '../components/booking/AccordionBookingCard';
+import { RefreshCw, ArrowLeft } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import type { Booking } from '../lib/srs-types';
 
-export default function BookingCard() {
+function BookingCard() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -17,7 +17,7 @@ export default function BookingCard() {
     async function load() {
       setLoading(true);
       try {
-        const b = await getBookingById(id || "");
+        const b = await getBookingById(id || '');
         setBooking(b as Booking);
       } catch (e) {
         console.error(e);
@@ -53,7 +53,7 @@ export default function BookingCard() {
             <Button
               variant="primary"
               size="md"
-              onClick={() => navigate("/")}
+              onClick={() => navigate('/')}
               className="mt-4 px-4 py-2 bg-[var(--color-primary)] text-background rounded-md text-sm font-medium"
             >
               Go Home
@@ -98,3 +98,5 @@ export default function BookingCard() {
     </TripLogerLayout>
   );
 }
+
+export default BookingCard;

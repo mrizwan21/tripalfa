@@ -59,7 +59,7 @@ export function useWikivoyageGuide(destination: string | null) {
 /**
  * Hook to fetch multiple destination guides
  */
-export function useWikivoyageGuides(destinations: string[]) {
+function useWikivoyageGuides(destinations: string[]) {
   const [data, setData] = useState<Map<string, DestinationContent>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -107,7 +107,7 @@ export function useWikivoyageGuides(destinations: string[]) {
 /**
  * Hook to search Wikivoyage for destinations
  */
-export function useWikivoyageSearch(query: string, limit: number = 5) {
+function useWikivoyageSearch(query: string, limit: number = 5) {
   const [data, setData] = useState<WikivoyageSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -151,7 +151,7 @@ export function useWikivoyageSearch(query: string, limit: number = 5) {
 /**
  * Hook to fetch a specific section of a destination guide
  */
-export function useWikivoyageSection(
+function useWikivoyageSection(
   destination: string | null,
   section: string,
 ) {
@@ -202,7 +202,7 @@ export function useWikivoyageSection(
 /**
  * Hook for popular destination content - fetches guides for a list of popular destinations
  */
-export function usePopularDestinationGuides(destinationNames: string[]) {
+function usePopularDestinationGuides(destinationNames: string[]) {
   const [guides, setGuides] = useState<Map<string, DestinationContent>>(
     new Map(),
   );

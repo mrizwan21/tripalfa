@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-export const ContactTierSchema = z.enum(['PLATINUM', 'GOLD', 'SILVER', 'STANDARD']);
-export const CommunicationPrefSchema = z.enum(['EMAIL', 'SMS', 'BOTH', 'NONE']);
-export const EmailFrequencySchema = z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'NEVER']);
-export const ActivityTypeSchema = z.enum([
+const ContactTierSchema = z.enum(['PLATINUM', 'GOLD', 'SILVER', 'STANDARD']);
+const CommunicationPrefSchema = z.enum(['EMAIL', 'SMS', 'BOTH', 'NONE']);
+const EmailFrequencySchema = z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'NEVER']);
+const ActivityTypeSchema = z.enum([
   'BOOKING_CREATED',
   'BOOKING_MODIFIED',
   'AMENDMENT_REQUESTED',

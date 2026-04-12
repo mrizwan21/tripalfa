@@ -10,11 +10,12 @@
  * - Payment method icons
  */
 
-import React, { useState, useEffect } from "react";
-import type { FC } from "react";
-import { getStoredAuthToken } from "../lib/authToken";
-import PaymentReceiptModal from "./PaymentReceiptModal";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import type { FC } from 'react';
+import { getStoredAuthToken } from '../lib/authToken';
+import PaymentReceiptModal from './PaymentReceiptModal';
+import { Button } from '@/components/ui/button';
+import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
 
 interface Payment {
   id: string;
@@ -23,8 +24,8 @@ interface Payment {
   reference: string;
   amount: number;
   currency: string;
-  status: "completed" | "pending" | "failed" | "refunded";
-  paymentMethod: "wallet" | "credit" | "card";
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  paymentMethod: 'wallet' | 'credit' | 'card';
   paymentBreakdown?: {
     walletAmount: number;
     creditsAmount: number;
@@ -38,15 +39,15 @@ interface PaymentHistoryPanelProps {
   customerId: string;
 }
 
-type SortField = "date" | "amount" | "status";
-type SortOrder = "asc" | "desc";
+type SortField = 'date' | 'amount' | 'status';
+type SortOrder = 'asc' | 'desc';
 
 const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>("date");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
 
@@ -59,23 +60,20 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/customers/${customerId}/payment-history`,
-        {
-          headers: {
-            Authorization: `Bearer ${getStoredAuthToken()}`,
-          },
+      const response = await fetch(`/api/customers/${customerId}/payment-history`, {
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
         },
-      );
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch payment history");
+        throw new Error('Failed to fetch payment history');
       }
 
       const data = await response.json();
       setPayments(data.payments || []);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
       setLoading(false);
@@ -84,10 +82,10 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortOrder("desc");
+      setSortOrder('desc');
     }
   };
 
@@ -95,15 +93,15 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
     let aVal, bVal;
 
     switch (sortField) {
-      case "date":
+      case 'date':
         aVal = new Date(a.date).getTime();
         bVal = new Date(b.date).getTime();
         break;
-      case "amount":
+      case 'amount':
         aVal = a.amount;
         bVal = b.amount;
         break;
-      case "status":
+      case 'status':
         aVal = a.status.localeCompare(b.status);
         bVal = 0;
         break;
@@ -111,52 +109,42 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
         return 0;
     }
 
-    return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
+    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
   });
 
-  const getStatusBadge = (status: Payment["status"]) => {
+  const getStatusBadge = (status: Payment['status']) => {
     const config = {
       completed: {
-        label: "Completed",
-        color: "hsl(var(--primary))",
-        bgColor: "hsl(var(--primary) / 0.15)",
+        label: 'Completed',
+        color: 'hsl(var(--primary))',
+        bgColor: 'hsl(var(--primary) / 0.15)',
       },
       pending: {
-        label: "Pending",
-        color: "hsl(var(--accent-foreground))",
-        bgColor: "hsl(var(--accent) / 0.7)",
+        label: 'Pending',
+        color: 'hsl(var(--accent-foreground))',
+        bgColor: 'hsl(var(--accent) / 0.7)',
       },
       failed: {
-        label: "Failed",
-        color: "hsl(var(--destructive))",
-        bgColor: "hsl(var(--destructive) / 0.15)",
+        label: 'Failed',
+        color: 'hsl(var(--destructive))',
+        bgColor: 'hsl(var(--destructive) / 0.15)',
       },
       refunded: {
-        label: "Refunded",
-        color: "hsl(var(--secondary-foreground))",
-        bgColor: "hsl(var(--secondary) / 0.7)",
+        label: 'Refunded',
+        color: 'hsl(var(--secondary-foreground))',
+        bgColor: 'hsl(var(--secondary) / 0.7)',
       },
     };
     return config[status];
   };
 
-  const getPaymentMethodIcon = (method: Payment["paymentMethod"]) => {
+  const getPaymentMethodIcon = (method: Payment['paymentMethod']) => {
     const icons = {
-      wallet: "💰",
-      credit: "🎫",
-      card: "💳",
+      wallet: '💰',
+      credit: '🎫',
+      card: '💳',
     };
     return icons[method];
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const handleDownloadReceipt = (payment: Payment) => {
@@ -169,11 +157,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
       {error && (
         <div className="error-message">
           <span>⚠️ {error}</span>
-          <Button
-            variant="outline"
-            size="default"
-            onClick={fetchPaymentHistory}
-          >
+          <Button variant="outline" size="default" onClick={fetchPaymentHistory}>
             Retry
           </Button>
         </div>
@@ -205,12 +189,10 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                   variant="outline"
                   size="default"
                   className="sort-btn"
-                  onClick={() => handleSort("date")}
+                  onClick={() => handleSort('date')}
                 >
                   Date
-                  {sortField === "date" && (
-                    <span>{sortOrder === "asc" ? " ↑" : " ↓"}</span>
-                  )}
+                  {sortField === 'date' && <span>{sortOrder === 'asc' ? ' ↑' : ' ↓'}</span>}
                 </Button>
               </div>
               <div className="col col-method">
@@ -221,12 +203,10 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                   variant="outline"
                   size="default"
                   className="sort-btn"
-                  onClick={() => handleSort("amount")}
+                  onClick={() => handleSort('amount')}
                 >
                   Amount
-                  {sortField === "amount" && (
-                    <span>{sortOrder === "asc" ? " ↑" : " ↓"}</span>
-                  )}
+                  {sortField === 'amount' && <span>{sortOrder === 'asc' ? ' ↑' : ' ↓'}</span>}
                 </Button>
               </div>
               <div className="col col-status">
@@ -234,12 +214,10 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                   variant="outline"
                   size="default"
                   className="sort-btn"
-                  onClick={() => handleSort("status")}
+                  onClick={() => handleSort('status')}
                 >
                   Status
-                  {sortField === "status" && (
-                    <span>{sortOrder === "asc" ? " ↑" : " ↓"}</span>
-                  )}
+                  {sortField === 'status' && <span>{sortOrder === 'asc' ? ' ↑' : ' ↓'}</span>}
                 </Button>
               </div>
               <div className="col col-actions">
@@ -248,7 +226,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
             </div>
 
             {/* Table Rows */}
-            {sortedPayments.map((payment) => {
+            {sortedPayments.map(payment => {
               const statusConfig = getStatusBadge(payment.status);
               const methodIcon = getPaymentMethodIcon(payment.paymentMethod);
 
@@ -256,21 +234,17 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                 <div key={payment.id} className="table-row">
                   <div className="col col-reference">
                     <div className="reference-cell">
-                      <span className="airline">
-                        {payment.airline || "Flight"}
-                      </span>
+                      <span className="airline">{payment.airline || 'Flight'}</span>
                       <span className="reference">{payment.reference}</span>
                     </div>
                   </div>
                   <div className="col col-date">
-                    <span>{formatDate(payment.date)}</span>
+                    <span>{formatDateTime(payment.date)}</span>
                   </div>
                   <div className="col col-method">
                     <span className="method-badge">
                       {methodIcon}
-                      <span className="capitalize">
-                        {payment.paymentMethod}
-                      </span>
+                      <span className="capitalize">{payment.paymentMethod}</span>
                     </span>
                   </div>
                   <div className="col col-amount">
@@ -309,7 +283,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                           alert(
                             `Wallet: ${payment.currency} ${payment.paymentBreakdown?.walletAmount.toFixed(2)}\n` +
                               `Credits: ${payment.currency} ${payment.paymentBreakdown?.creditsAmount.toFixed(2)}\n` +
-                              `Card: ${payment.currency} ${payment.paymentBreakdown?.cardAmount.toFixed(2)}`,
+                              `Card: ${payment.currency} ${payment.paymentBreakdown?.cardAmount.toFixed(2)}`
                           )
                         }
                       >
@@ -564,4 +538,6 @@ const styles = `
 }
 `;
 
-export { styles };
+{
+  styles;
+}

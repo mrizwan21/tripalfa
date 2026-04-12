@@ -28,7 +28,6 @@ class LiteAPIEndpointTester {
                 headers: {
                     'X-API-Key': API_KEY || '',
                 },
-                // @ts-expect-error - node-fetch timeout option
                 timeout: 30000,
             });
 

@@ -3,9 +3,27 @@ import type { RequestHandler } from 'express';
 import { fusionAuthService } from '../services/fusionauth.service.js';
 import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth.middleware.js';
 import { prisma } from '../database.js';
-import bcrypt from 'bcryptjs';
+import { hash } from '@node-rs/bcrypt';
 
 const router: Router = Router();
+
+/**
+ * Normalizes request parameters that might be strings or string arrays.
+ */
+const getParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0];
+  return param || '';
+};
+
+/**
+ * Standardized error handler for controllers.
+ */
+const handleControllerError = (res: Response, error: unknown, status = 500) => {
+  res.status(status).json({
+    success: false,
+    error: error instanceof Error ? error.message : 'Unknown error',
+  });
+};
 
 const PASSWORD_REQUIREMENTS = {
   minLength: 8,
@@ -110,10 +128,7 @@ router.get(
         data: result,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -173,7 +188,7 @@ router.get(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const user = await fusionAuthService.getUserById(userId);
 
       if (!user) {
@@ -189,10 +204,7 @@ router.get(
         data: user,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -335,7 +347,7 @@ router.post(
         },
       });
 
-      const passwordHash = password ? await bcrypt.hash(password, 12) : null;
+      const passwordHash = password ? await hash(password, 12) : null;
 
       const localUser = await prisma.user.create({
         data: {
@@ -364,10 +376,7 @@ router.post(
         },
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );
@@ -431,7 +440,7 @@ router.put(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const { firstName, lastName, email, active } = req.body;
 
       const fusionAuthUser = await fusionAuthService.updateUser(userId, {
@@ -462,10 +471,7 @@ router.put(
         data: fusionAuthUser,
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );
@@ -514,7 +520,7 @@ router.delete(
   requireRole('SUPER_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       await fusionAuthService.deleteUser(userId);
 
       const localUser = await prisma.user.findFirst({
@@ -533,10 +539,7 @@ router.delete(
         message: 'User deleted successfully',
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );
@@ -599,7 +602,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const { applicationId, roleName } = req.body;
 
       if (!applicationId || !roleName) {
@@ -617,10 +620,7 @@ router.post(
         message: 'Role assigned successfully',
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );
@@ -683,7 +683,7 @@ router.delete(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const { applicationId, roleName } = req.body;
 
       if (!applicationId || !roleName) {
@@ -701,10 +701,7 @@ router.delete(
         message: 'Role removed successfully',
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );
@@ -764,7 +761,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const { newPassword } = req.body;
 
       if (!newPassword) {
@@ -792,7 +789,7 @@ router.post(
       });
 
       if (localUser) {
-        const passwordHash = await bcrypt.hash(newPassword, 12);
+        const passwordHash = await hash(newPassword, 12);
         await prisma.user.update({
           where: { id: localUser.id },
           data: { passwordHash },
@@ -804,10 +801,7 @@ router.post(
         message: 'Password changed successfully',
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );
@@ -856,7 +850,7 @@ router.get(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const registrations = await fusionAuthService.getUserRegistrations(userId);
 
       res.json({
@@ -864,10 +858,7 @@ router.get(
         data: registrations,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -931,7 +922,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const userId = getParam(req.params.id);
       const { applicationId, roles } = req.body;
 
       if (!applicationId) {
@@ -949,10 +940,7 @@ router.post(
         message: 'User registered to application successfully',
       });
     } catch (error: unknown) {
-      res.status(400).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error, 400);
     }
   }
 );

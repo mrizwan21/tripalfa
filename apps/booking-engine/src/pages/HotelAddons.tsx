@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Car,
   Utensils,
@@ -20,24 +20,24 @@ import {
   Diamond,
   Tag,
   Sparkles,
-} from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { api, fetchAddonPrices } from "../lib/api";
-import { formatCurrency } from "@tripalfa/ui-components";
-import { BookingStepper } from "../components/ui/BookingStepper";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { api, fetchAddonPrices } from '../lib/api';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { BookingStepper } from '../components/ui/BookingStepper';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 
-export default function HotelAddons() {
+function HotelAddons() {
   const navigate = useNavigate();
   const { config: runtimeConfig } = useTenantRuntime();
   const [searchParams] = useSearchParams();
-  const id = searchParams.get("id");
-  const checkin = searchParams.get("checkin") || "";
-  const checkout = searchParams.get("checkout") || "";
-  const adults = searchParams.get("adults") || "2";
-  const children = searchParams.get("children") || "0";
+  const id = searchParams.get('id');
+  const checkin = searchParams.get('checkin') || '';
+  const checkout = searchParams.get('checkout') || '';
+  const adults = searchParams.get('adults') || '2';
+  const children = searchParams.get('children') || '0';
   const [hotel, setHotel] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [addonPrices, setAddonPrices] = useState<Record<string, number>>({});
@@ -60,7 +60,7 @@ export default function HotelAddons() {
     if (!id) return;
     api
       .get(`/hotels/${id}`)
-      .then((res) => {
+      .then(res => {
         setHotel(res);
         setLoading(false);
       })
@@ -74,7 +74,7 @@ export default function HotelAddons() {
         const prices = await fetchAddonPrices();
         setAddonPrices(prices);
       } catch (error) {
-        console.warn("Failed to load addon prices:", error);
+        console.warn('Failed to load addon prices:', error);
         setAddonPrices({});
       }
     };
@@ -94,17 +94,11 @@ export default function HotelAddons() {
     return (
       <TripLogerLayout>
         <div className="container mx-auto px-4 py-40 flex flex-col items-center text-center gap-4">
-          <h1 className="text-3xl font-black text-foreground mb-3">
-            Hotel Booking Disabled
-          </h1>
+          <h1 className="text-3xl font-black text-foreground mb-3">Hotel Booking Disabled</h1>
           <p className="text-sm font-bold text-muted-foreground mb-6">
             Hotel booking is currently disabled by your admin settings.
           </p>
-          <Button
-            variant="primary"
-            onClick={() => navigate("/")}
-            className="h-11 px-6"
-          >
+          <Button variant="primary" onClick={() => navigate('/')} className="h-11 px-6">
             Back to Home
           </Button>
         </div>
@@ -117,7 +111,7 @@ export default function HotelAddons() {
 
     for (const [key, quantity] of Object.entries(selectedUnits)) {
       if (Number(quantity) <= 0) continue;
-      const [roomId] = key.split("_");
+      const [roomId] = key.split('_');
       const room = hotel.rooms.find((r: any) => r.id === roomId);
       if (!room?.originalPrice?.amount) {
         return false;
@@ -134,7 +128,7 @@ export default function HotelAddons() {
     Object.entries(selectedUnits).forEach(([key, quantity]) => {
       if (Number(quantity) <= 0) return;
       // key is format room.id_rate
-      const [roomId] = key.split("_");
+      const [roomId] = key.split('_');
       const room = hotel.rooms.find((r: any) => r.id === roomId);
       if (room && room.originalPrice?.amount) {
         const price = room.originalPrice.amount;
@@ -142,9 +136,8 @@ export default function HotelAddons() {
       }
     });
 
-    if (addons.refundProtect) baseTotal += addonPrices["refundProtect"] ?? 0;
-    if (addons.travelInsurance)
-      baseTotal += addonPrices["travelInsurance"] ?? 0;
+    if (addons.refundProtect) baseTotal += addonPrices['refundProtect'] ?? 0;
+    if (addons.travelInsurance) baseTotal += addonPrices['travelInsurance'] ?? 0;
     return baseTotal;
   };
 
@@ -156,25 +149,22 @@ export default function HotelAddons() {
 
         <div className="container mx-auto px-4 max-w-6xl mt-10">
           {/* Top Info Bar */}
-          <div className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] p-6 rounded-[2rem] flex flex-wrap items-center gap-8 mb-10 shadow-2xl relative overflow-hidden ring-1 ring-border/10">
+          <div className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] p-6 rounded-xl flex flex-wrap items-center gap-8 mb-10 shadow-2xl relative overflow-hidden ring-1 ring-border/10">
             <div className="absolute top-0 right-0 w-64 h-64 bg-background/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
-            <div className="w-24 h-16 rounded-2xl overflow-hidden shadow-xl border-2 border-border/10 shrink-0">
+            <div className="w-24 h-16 rounded-xl overflow-hidden shadow-xl border-2 border-border/10 shrink-0">
               <img
-                src={
-                  hotel?.image ||
-                  "https://images.unsplash.com/photo-1566073771259-6a8506099945"
-                }
+                src={hotel?.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945'}
                 className="w-full h-full object-cover"
                 alt="Hotel"
               />
             </div>
             <div className="flex-1 min-w-[200px] gap-4">
               <h3 className="text-xl font-black tracking-tight">
-                {hotel?.name || "Loading Hotel..."}
+                {hotel?.name || 'Loading Hotel...'}
               </h3>
               <p className="text-[10px] text-primary-foreground/60 font-bold uppercase tracking-[0.2em] mt-1">
-                {adults} Adult{Number(adults) > 1 ? "s" : ""} | {children} Child
-                {Number(children) !== 1 ? "ren" : ""}
+                {adults} Adult{Number(adults) > 1 ? 's' : ''} | {children} Child
+                {Number(children) !== 1 ? 'ren' : ''}
               </p>
             </div>
             <div className="flex gap-10 text-[10px] font-black uppercase tracking-widest border-l border-border/10 pl-10">
@@ -182,22 +172,22 @@ export default function HotelAddons() {
                 <p className="text-primary-foreground/60 mb-1">Check-in</p>
                 <p className="text-lg tracking-tight text-primary-foreground">
                   {checkin
-                    ? new Date(checkin).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
+                    ? new Date(checkin).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
                       })
-                    : "TBD"}
+                    : 'TBD'}
                 </p>
               </div>
               <div>
                 <p className="text-primary-foreground/60 mb-1">Check-out</p>
                 <p className="text-lg tracking-tight text-primary-foreground">
                   {checkout
-                    ? new Date(checkout).toLocaleDateString("en-GB", {
-                        day: "numeric",
-                        month: "short",
+                    ? new Date(checkout).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
                       })
-                    : "TBD"}
+                    : 'TBD'}
                 </p>
               </div>
             </div>
@@ -206,8 +196,8 @@ export default function HotelAddons() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             <div className="lg:col-span-8 space-y-10">
               {/* Refund Protect Card - Only render if price is available */}
-              {addonPrices["refundProtect"] !== undefined && (
-                <Card className="overflow-hidden border-none shadow-xl rounded-[2.5rem] bg-card group hover:shadow-2xl transition-all duration-500">
+              {addonPrices['refundProtect'] !== undefined && (
+                <Card className="overflow-hidden border-none shadow-xl rounded-xl bg-card group hover:shadow-2xl transition-all duration-500">
                   <div className="relative h-56">
                     <img
                       src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80"
@@ -216,7 +206,7 @@ export default function HotelAddons() {
                     />
                     <div className="absolute inset-0 bg-blue-900/50 backdrop-blur-md flex items-center p-10 gap-2">
                       <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-[hsl(var(--primary))] rounded-2xl flex items-center justify-center text-[hsl(var(--primary-foreground))] shadow-2xl border-4 border-border/20 gap-2">
+                        <div className="w-16 h-16 bg-[hsl(var(--primary))] rounded-xl flex items-center justify-center text-[hsl(var(--primary-foreground))] shadow-2xl border-4 border-border/20 gap-2">
                           <ShieldCheck size={32} />
                         </div>
                         <div>
@@ -234,19 +224,17 @@ export default function HotelAddons() {
                     <div className="flex justify-between items-start mb-8 gap-4">
                       <div className="flex-1 pr-10 gap-4">
                         <p className="text-muted-foreground font-medium text-sm leading-relaxed mb-6">
-                          Receive a{" "}
-                          <span className="text-[hsl(var(--primary))] font-black">
-                            FULL refund
-                          </span>{" "}
-                          if you cannot travel due to a reason listed in the
-                          T&C, including 100% refundable booking security.
+                          Receive a{' '}
+                          <span className="text-[hsl(var(--primary))] font-black">FULL refund</span>{' '}
+                          if you cannot travel due to a reason listed in the T&C, including 100%
+                          refundable booking security.
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                           {[
-                            "Sickness, accident or Injury",
-                            "Unexpected Travel Disruption",
-                            "Pre-existing medical conditions",
-                            "Adverse weather conditions",
+                            'Sickness, accident or Injury',
+                            'Unexpected Travel Disruption',
+                            'Pre-existing medical conditions',
+                            'Adverse weather conditions',
                           ].map((text, i) => (
                             <div
                               key={i}
@@ -270,14 +258,12 @@ export default function HotelAddons() {
                         <Button
                           variant="outline"
                           size="md"
-                          onClick={() =>
-                            setAddons((p) => ({ ...p, refundProtect: true }))
-                          }
+                          onClick={() => setAddons(p => ({ ...p, refundProtect: true }))}
                           disabled={!runtimeConfig.features.ancillariesEnabled}
-                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${addons.refundProtect ? "bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-xl shadow-indigo-200" : "bg-background border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"}`}
+                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${addons.refundProtect ? 'bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-xl shadow-indigo-200' : 'bg-background border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]'}`}
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${addons.refundProtect ? "border-background" : "border-border"}`}
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${addons.refundProtect ? 'border-background' : 'border-border'}`}
                           >
                             {addons.refundProtect && (
                               <div className="w-2 h-2 rounded-full bg-background" />
@@ -288,14 +274,12 @@ export default function HotelAddons() {
                         <Button
                           variant="outline"
                           size="md"
-                          onClick={() =>
-                            setAddons((p) => ({ ...p, refundProtect: false }))
-                          }
+                          onClick={() => setAddons(p => ({ ...p, refundProtect: false }))}
                           disabled={!runtimeConfig.features.ancillariesEnabled}
-                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${!addons.refundProtect ? "bg-muted border-muted text-foreground" : "bg-background border-border text-muted-foreground hover:border-border"}`}
+                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${!addons.refundProtect ? 'bg-muted border-muted text-foreground' : 'bg-background border-border text-muted-foreground hover:border-border'}`}
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!addons.refundProtect ? "border-foreground" : "border-border"}`}
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!addons.refundProtect ? 'border-foreground' : 'border-border'}`}
                           >
                             {!addons.refundProtect && (
                               <div className="w-2 h-2 rounded-full bg-foreground" />
@@ -308,17 +292,12 @@ export default function HotelAddons() {
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-0.5">
                           Additional Cost
                         </p>
-                        {addonPrices["refundProtect"] !== undefined ? (
+                        {addonPrices['refundProtect'] !== undefined ? (
                           <p className="text-xl font-black text-[hsl(var(--primary))] tracking-tighter">
-                            {formatCurrency(
-                              addonPrices["refundProtect"],
-                              "SAR",
-                            )}
+                            {formatCurrency(addonPrices['refundProtect'], 'SAR')}
                           </p>
                         ) : (
-                          <p className="text-xs text-muted-foreground">
-                            Price unavailable
-                          </p>
+                          <p className="text-xs text-muted-foreground">Price unavailable</p>
                         )}
                       </div>
                     </div>
@@ -327,8 +306,8 @@ export default function HotelAddons() {
               )}
 
               {/* Travel Insurance Card - Only render if price is available */}
-              {addonPrices["travelInsurance"] !== undefined && (
-                <Card className="overflow-hidden border-none shadow-xl rounded-[2.5rem] bg-card group hover:shadow-2xl transition-all duration-500">
+              {addonPrices['travelInsurance'] !== undefined && (
+                <Card className="overflow-hidden border-none shadow-xl rounded-xl bg-card group hover:shadow-2xl transition-all duration-500">
                   <div className="relative h-56">
                     <img
                       src="https://images.unsplash.com/photo-1544006659-f0b21f04cb1d?auto=format&fit=crop&q=80"
@@ -337,7 +316,7 @@ export default function HotelAddons() {
                     />
                     <div className="absolute inset-0 bg-indigo-900/40 backdrop-blur-md flex items-center p-10 gap-2">
                       <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-background/20 backdrop-blur-xl rounded-2xl flex items-center justify-center text-primary-foreground shadow-2xl border-4 border-border/30 gap-2">
+                        <div className="w-16 h-16 bg-background/20 backdrop-blur-xl rounded-xl flex items-center justify-center text-primary-foreground shadow-2xl border-4 border-border/30 gap-2">
                           <Heart size={32} className="fill-current" />
                         </div>
                         <div>
@@ -353,8 +332,8 @@ export default function HotelAddons() {
                   </div>
                   <div className="p-10">
                     <p className="text-muted-foreground font-medium text-sm mb-8 leading-relaxed">
-                      Travel Insurance will provide you with the peace of mind
-                      in case of any unexpected eventualities, including{" "}
+                      Travel Insurance will provide you with the peace of mind in case of any
+                      unexpected eventualities, including{' '}
                       <span className="text-indigo-600 font-black">
                         24/7 global medical assistance
                       </span>
@@ -365,14 +344,12 @@ export default function HotelAddons() {
                         <Button
                           variant="outline"
                           size="md"
-                          onClick={() =>
-                            setAddons((p) => ({ ...p, travelInsurance: true }))
-                          }
+                          onClick={() => setAddons(p => ({ ...p, travelInsurance: true }))}
                           disabled={!runtimeConfig.features.ancillariesEnabled}
-                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${addons.travelInsurance ? "bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-xl shadow-indigo-200" : "bg-background border-border text-muted-foreground hover:border-[hsl(var(--primary))]"}`}
+                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${addons.travelInsurance ? 'bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-xl shadow-indigo-200' : 'bg-background border-border text-muted-foreground hover:border-[hsl(var(--primary))]'}`}
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${addons.travelInsurance ? "border-background" : "border-border"}`}
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${addons.travelInsurance ? 'border-background' : 'border-border'}`}
                           >
                             {addons.travelInsurance && (
                               <div className="w-2 h-2 rounded-full bg-background" />
@@ -383,14 +360,12 @@ export default function HotelAddons() {
                         <Button
                           variant="outline"
                           size="md"
-                          onClick={() =>
-                            setAddons((p) => ({ ...p, travelInsurance: false }))
-                          }
+                          onClick={() => setAddons(p => ({ ...p, travelInsurance: false }))}
                           disabled={!runtimeConfig.features.ancillariesEnabled}
-                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${!addons.travelInsurance ? "bg-muted border-muted text-foreground" : "bg-background border-border text-muted-foreground hover:border-border"}`}
+                          className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 font-black text-[9px] uppercase tracking-widest transition-all focus:scale-95 ${!addons.travelInsurance ? 'bg-muted border-muted text-foreground' : 'bg-background border-border text-muted-foreground hover:border-border'}`}
                         >
                           <div
-                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!addons.travelInsurance ? "border-foreground" : "border-border"}`}
+                            className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${!addons.travelInsurance ? 'border-foreground' : 'border-border'}`}
                           >
                             {!addons.travelInsurance && (
                               <div className="w-2 h-2 rounded-full bg-foreground" />
@@ -403,17 +378,12 @@ export default function HotelAddons() {
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-0.5">
                           Additional Cost
                         </p>
-                        {addonPrices["travelInsurance"] !== undefined ? (
+                        {addonPrices['travelInsurance'] !== undefined ? (
                           <p className="text-xl font-black text-[hsl(var(--primary))] tracking-tighter">
-                            {formatCurrency(
-                              addonPrices["travelInsurance"],
-                              "SAR",
-                            )}
+                            {formatCurrency(addonPrices['travelInsurance'], 'SAR')}
                           </p>
                         ) : (
-                          <p className="text-xs text-muted-foreground">
-                            Price unavailable
-                          </p>
+                          <p className="text-xs text-muted-foreground">Price unavailable</p>
                         )}
                       </div>
                     </div>
@@ -424,8 +394,8 @@ export default function HotelAddons() {
 
             <div className="lg:col-span-4 space-y-8 sticky top-32">
               {/* Premium Fare Summary */}
-              <div className="bg-background/70 backdrop-blur-2xl border border-border/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] rounded-[2.5rem] p-8 relative overflow-hidden ring-1 ring-border">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[hsl(var(--primary))] via-purple-500 to-pink-500"></div>
+              <div className="bg-background/70 backdrop-blur-2xl border border-border/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] rounded-xl p-8 relative overflow-hidden ring-1 ring-border">
+                <div className="absolute top-0 left-0 w-full h-1 bg-[hsl(var(--primary))]"></div>
                 <h3 className="text-xl font-black mb-8 flex items-center gap-3 text-foreground">
                   <Sparkles className="text-[hsl(var(--primary))]" size={20} />
                   Booking Summary
@@ -433,7 +403,7 @@ export default function HotelAddons() {
 
                 <div className="space-y-6">
                   {/* Room Selection */}
-                  <div className="group p-4 rounded-2xl bg-background border border-border shadow-sm hover:shadow-md transition-all">
+                  <div className="group p-4 rounded-xl bg-background border border-border shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-[hsl(var(--primary))] shrink-0 gap-2">
                         <CreditCard size={18} />
@@ -446,10 +416,8 @@ export default function HotelAddons() {
                           <div>
                             {Object.entries(selectedUnits).map(([key, qty]) => {
                               if (Number(qty) <= 0) return null;
-                              const [roomId] = key.split("_");
-                              const room = hotel?.rooms?.find(
-                                (r: any) => r.id === roomId,
-                              );
+                              const [roomId] = key.split('_');
+                              const room = hotel?.rooms?.find((r: any) => r.id === roomId);
                               const hasPrice = room?.originalPrice?.amount;
                               return (
                                 <p
@@ -457,7 +425,7 @@ export default function HotelAddons() {
                                   className="text-sm font-bold text-foreground leading-tight mb-1 last:mb-0 flex items-center justify-between gap-2"
                                 >
                                   <span>
-                                    {qty} × {room?.name || "Room"}
+                                    {qty} × {room?.name || 'Room'}
                                   </span>
                                   {!hasPrice && (
                                     <span className="text-[10px] font-medium text-orange-600 ml-2">
@@ -469,19 +437,15 @@ export default function HotelAddons() {
                             })}
                           </div>
                           {!hasAllRoomPrices() ? (
-                            <p className="text-sm font-black text-orange-600">
-                              Price on Request
-                            </p>
+                            <p className="text-sm font-black text-orange-600">Price on Request</p>
                           ) : (
                             <p className="text-sm font-black text-foreground">
                               {formatCurrency(
                                 calculateTotal() -
-                                  (addons.refundProtect
-                                    ? (addonPrices["refundProtect"] ?? 0)
-                                    : 0) -
+                                  (addons.refundProtect ? (addonPrices['refundProtect'] ?? 0) : 0) -
                                   (addons.travelInsurance
-                                    ? (addonPrices["travelInsurance"] ?? 0)
-                                    : 0),
+                                    ? (addonPrices['travelInsurance'] ?? 0)
+                                    : 0)
                               )}
                             </p>
                           )}
@@ -494,7 +458,7 @@ export default function HotelAddons() {
                   </div>
 
                   {/* Add-ons */}
-                  <div className="group p-4 rounded-2xl bg-background border border-border shadow-sm hover:shadow-md transition-all">
+                  <div className="group p-4 rounded-xl bg-background border border-border shadow-sm hover:shadow-md transition-all">
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 gap-2">
                         <ShieldCheck size={18} />
@@ -509,12 +473,9 @@ export default function HotelAddons() {
                               <div className="flex justify-between text-xs font-bold text-foreground gap-4">
                                 <span>Refund Protect</span>
                                 <span>
-                                  {addonPrices["refundProtect"] !== undefined
-                                    ? formatCurrency(
-                                        addonPrices["refundProtect"],
-                                        "SAR",
-                                      )
-                                    : "Price pending"}
+                                  {addonPrices['refundProtect'] !== undefined
+                                    ? formatCurrency(addonPrices['refundProtect'], 'SAR')
+                                    : 'Price pending'}
                                 </span>
                               </div>
                             )}
@@ -522,12 +483,9 @@ export default function HotelAddons() {
                               <div className="flex justify-between text-xs font-bold text-foreground gap-4">
                                 <span>Travel Insurance</span>
                                 <span>
-                                  {addonPrices["travelInsurance"] !== undefined
-                                    ? formatCurrency(
-                                        addonPrices["travelInsurance"],
-                                        "SAR",
-                                      )
-                                    : "Price pending"}
+                                  {addonPrices['travelInsurance'] !== undefined
+                                    ? formatCurrency(addonPrices['travelInsurance'], 'SAR')
+                                    : 'Price pending'}
                                 </span>
                               </div>
                             )}
@@ -563,19 +521,15 @@ export default function HotelAddons() {
               </div>
 
               {/* Loyalty Program Input (New Request) */}
-              <div className="bg-background rounded-[2.5rem] p-8 shadow-xl border border-border relative overflow-hidden group">
+              <div className="bg-background rounded-xl p-8 shadow-xl border border-border relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-20 h-20 bg-[hsl(var(--secondary)/0.1)] rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-500"></div>
                 <h4 className="text-xs font-black text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <Diamond
-                    size={14}
-                    className="text-[hsl(var(--secondary))] fill-current"
-                  />
+                  <Diamond size={14} className="text-[hsl(var(--secondary))] fill-current" />
                   Loyalty Program
                 </h4>
                 <div className="space-y-4">
                   <p className="text-[10px] text-muted-foreground font-medium leading-tight">
-                    Enter your membership number to earn points and unlock
-                    exclusive perks.
+                    Enter your membership number to earn points and unlock exclusive perks.
                   </p>
                   <div className="relative">
                     <input
@@ -591,7 +545,7 @@ export default function HotelAddons() {
               </div>
 
               {/* Promotional Code */}
-              <div className="bg-background rounded-[2.5rem] p-8 shadow-xl border border-border group">
+              <div className="bg-background rounded-xl p-8 shadow-xl border border-border group">
                 <h4 className="text-xs font-black text-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                   <Tag size={14} className="text-[hsl(var(--primary))]" />
                   Promo Code
@@ -618,19 +572,15 @@ export default function HotelAddons() {
                 variant="outline"
                 size="sm"
                 disabled={!hasAllRoomPrices()}
-                className="w-full h-16 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] disabled:bg-muted disabled:cursor-not-allowed font-black text-xs text-[hsl(var(--primary-foreground))] shadow-[0_20px_40px_-10px_rgba(99,102,241,0.5)] rounded-[2rem] uppercase tracking-widest flex items-center justify-center gap-3 transition-all scale-95 hover:scale-100 active:scale-90"
+                className="w-full h-16 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] disabled:bg-muted disabled:cursor-not-allowed font-black text-xs text-[hsl(var(--primary-foreground))] shadow-[0_20px_40px_-10px_rgba(99,102,241,0.5)] rounded-xl uppercase tracking-widest flex items-center justify-center gap-3 transition-all scale-95 hover:scale-100 active:scale-90"
                 onClick={() => {
                   const total = calculateTotal();
                   const accommodationPrice =
                     total -
-                    (addons.refundProtect
-                      ? (addonPrices["refundProtect"] ?? 0)
-                      : 0) -
-                    (addons.travelInsurance
-                      ? (addonPrices["travelInsurance"] ?? 0)
-                      : 0);
+                    (addons.refundProtect ? (addonPrices['refundProtect'] ?? 0) : 0) -
+                    (addons.travelInsurance ? (addonPrices['travelInsurance'] ?? 0) : 0);
                   const bookingState = {
-                    type: "hotel",
+                    type: 'hotel',
                     summary: {
                       hotel: hotel,
                       accommodation: {
@@ -649,7 +599,7 @@ export default function HotelAddons() {
                   });
                 }}
               >
-                {!hasAllRoomPrices() ? "Request Pricing" : "Continue to Guests"}{" "}
+                {!hasAllRoomPrices() ? 'Request Pricing' : 'Continue to Guests'}{' '}
                 <ArrowRight size={20} />
               </Button>
             </div>
@@ -659,3 +609,5 @@ export default function HotelAddons() {
     </TripLogerLayout>
   );
 }
+
+export default HotelAddons;

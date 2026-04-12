@@ -19,7 +19,7 @@ export interface CabinClass {
   rbds: string[]; // Reservation Booking Designators
 }
 
-export const CABINS: CabinClass[] = [
+const CABINS: CabinClass[] = [
   {
     code: "ECONOMY",
     name: "Economy",
@@ -50,7 +50,7 @@ export const CABINS: CabinClass[] = [
 // BAGGAGE ALLOWANCE TYPES
 // ============================================================================
 
-export const BAGGAGE_TYPES = [
+const BAGGAGE_TYPES = [
   { code: "CHECKED", name: "Checked Baggage", description: "Checked luggage" },
   { code: "CABIN", name: "Cabin Baggage", description: "Carry-on baggage" },
   {
@@ -64,7 +64,7 @@ export const BAGGAGE_TYPES = [
 // FLIGHT AMENITIES
 // ============================================================================
 
-export const FLIGHT_AMENITIES = [
+const FLIGHT_AMENITIES = [
   { code: "WIFI", name: "WiFi", category: "Technology" },
   {
     code: "ENTERTAINMENT",
@@ -102,13 +102,13 @@ export const FLIGHT_STATIC_DATA = {
 /**
  * Get cabin by code
  */
-export function getCabinByCode(code: string) {
+function getCabinByCode(code: string) {
   return CABINS.find((c) => c.code === code);
 }
 
 /**
  * Get baggage type by code
  */
-export function getBaggageTypeByCode(code: string) {
+function getBaggageTypeByCode(code: string) {
   return BAGGAGE_TYPES.find((b) => b.code === code);
 }

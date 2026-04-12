@@ -8,7 +8,7 @@ import { Service, ServiceType } from "../types/ancillary.js";
 /**
  * Normalizes a Duffel available_service to TripAlfa Service interface
  */
-export function normalizeDuffelService(duffelService: any): any {
+function normalizeDuffelService(duffelService: any): any {
     if (!duffelService) return null;
 
     // Map Duffel types to TripAlfa ServiceType
@@ -43,7 +43,7 @@ export function normalizeDuffelService(duffelService: any): any {
 /**
  * Normalizes a list of Duffel services
  */
-export function normalizeDuffelServices(services: any[]): any[] {
+function normalizeDuffelServices(services: any[]): any[] {
     if (!services || !Array.isArray(services)) return [];
     return services.map(normalizeDuffelService).filter(Boolean);
 }
@@ -51,7 +51,7 @@ export function normalizeDuffelServices(services: any[]): any[] {
 /**
  * Extracts and normalizes categories from services
  */
-export function extractServiceCategories(services: any[]): string[] {
+function extractServiceCategories(services: any[]): string[] {
     if (!services || !Array.isArray(services)) return [];
     const categories = new Set<string>();
     services.forEach(s => {

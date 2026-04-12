@@ -14,7 +14,7 @@
  */
 
 import express, { Request, Response } from "express";
-import * as FxDb from "./fx-database";
+import * as FxDb from "./fx-database.js";
 
 // In-memory storage for testing
 const wallets = new Map<

@@ -3,6 +3,7 @@
  * ====================
  * A specialized map component for displaying flight routes.
  * Uses Mapbox GL JS for interactive maps with flight paths.
+ * cspell:ignore Mapbox
  */
 
 import React from "react";
@@ -333,5 +334,3 @@ export function FlightMap({
     </div>
   );
 }
-
-export default FlightMap;

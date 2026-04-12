@@ -304,4 +304,4 @@ const priceVerificationService = new PriceVerificationService();
 export default priceVerificationService;
 
 // Export class for testing
-export { PriceVerificationService };
+{ PriceVerificationService }

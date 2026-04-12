@@ -20,7 +20,7 @@ const logger = {
 };
 
 // Permission and user types inlined to avoid missing modules
-export enum Permission {
+enum Permission {
   VIEW_BOOKINGS = "VIEW_BOOKINGS",
   MANAGE_BOOKINGS = "MANAGE_BOOKINGS",
   VIEW_USERS = "VIEW_USERS",
@@ -29,7 +29,7 @@ export enum Permission {
   MANAGE_ROLES = "MANAGE_ROLES",
 }
 
-export enum UserRole {
+enum UserRole {
   SUPER_ADMIN = "SUPER_ADMIN",
   ADMIN = "ADMIN",
   AGENT = "AGENT",
@@ -997,4 +997,4 @@ export class AdminBookingCardController {
   }
 }
 
-export const adminBookingCardController = new AdminBookingCardController();
+const adminBookingCardController = new AdminBookingCardController();

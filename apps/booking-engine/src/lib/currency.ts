@@ -3,7 +3,7 @@
  */
 
 // Currency information
-export const CURRENCY_INFO: Record<
+const CURRENCY_INFO: Record<
   string,
   { symbol: string; name: string; decimalDigits: number }
 > = {
@@ -37,7 +37,7 @@ const COUNTRY_CURRENCY_MAP: Record<string, string> = {
 };
 
 // Default currency
-export const DEFAULT_CURRENCY = "USD";
+const DEFAULT_CURRENCY = "USD";
 
 // Current state
 let currentCurrency: string = DEFAULT_CURRENCY;
@@ -48,7 +48,7 @@ let isUpdatingRates: boolean = false;
 /**
  * Get current currency
  */
-export function getCurrentCurrency(): string {
+function getCurrentCurrency(): string {
   if (typeof window === "undefined") return DEFAULT_CURRENCY;
 
   return localStorage.getItem("currency") || DEFAULT_CURRENCY;
@@ -57,7 +57,7 @@ export function getCurrentCurrency(): string {
 /**
  * Set current currency and update localStorage
  */
-export function setCurrentCurrency(currency: string): void {
+function setCurrentCurrency(currency: string): void {
   if (typeof window === "undefined") return;
 
   localStorage.setItem("currency", currency);
@@ -67,28 +67,28 @@ export function setCurrentCurrency(currency: string): void {
 /**
  * Get currency symbol
  */
-export function getCurrencySymbol(currency: string): string {
+function getCurrencySymbol(currency: string): string {
   return CURRENCY_INFO[currency]?.symbol || currency;
 }
 
 /**
  * Get currency name
  */
-export function getCurrencyName(currency: string): string {
+function getCurrencyName(currency: string): string {
   return CURRENCY_INFO[currency]?.name || currency;
 }
 
 /**
  * Get decimal digits for currency
  */
-export function getCurrencyDecimalDigits(currency: string): number {
+function getCurrencyDecimalDigits(currency: string): number {
   return CURRENCY_INFO[currency]?.decimalDigits || 2;
 }
 
 /**
  * Detect user's currency based on IP location
  */
-export async function detectUserCurrency(): Promise<string> {
+async function detectUserCurrency(): Promise<string> {
   try {
     // Primary: Use ipapi.co (recommended service)
     try {
@@ -243,7 +243,7 @@ export function getExchangeRate(
 /**
  * Convert amount from one currency to another
  */
-export function convertCurrency(
+function convertCurrency(
   amount: number,
   fromCurrency: string,
   toCurrency: string,
@@ -259,7 +259,7 @@ export function convertCurrency(
 /**
  * Format currency with symbol and proper decimals
  */
-export function formatCurrency(amount: number, currency: string): string {
+function formatCurrency(amount: number, currency: string): string {
   const symbol = getCurrencySymbol(currency);
   const decimalDigits = getCurrencyDecimalDigits(currency);
   const formattedAmount = amount.toFixed(decimalDigits);
@@ -276,7 +276,7 @@ export function formatCurrency(amount: number, currency: string): string {
 /**
  * Format price for display with currency conversion
  */
-export function formatPrice(
+function formatPrice(
   amount: number,
   fromCurrency: string,
   toCurrency?: string,

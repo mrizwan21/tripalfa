@@ -879,4 +879,4 @@ const duffelFlightService = new DuffelFlightService();
 export default duffelFlightService;
 
 // Export class for testing
-export { DuffelFlightService };
+{ DuffelFlightService }

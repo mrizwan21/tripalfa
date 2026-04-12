@@ -10,10 +10,11 @@
  * - Email receipt option
  */
 
-import React, { useState, useRef } from "react";
-import type { FC } from "react";
-import { getStoredAuthToken } from "../lib/authToken";
-import { Button } from "@tripalfa/ui-components";
+import React, { useState, useRef } from 'react';
+import type { FC } from 'react';
+import { getStoredAuthToken } from '../lib/authToken';
+import { Button } from '@tripalfa/ui-components';
+import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
 
 interface PaymentBreakdown {
   walletAmount: number;
@@ -46,17 +47,13 @@ interface PaymentReceiptModalProps {
   onClose: () => void;
 }
 
-const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
-  receipt,
-  isOpen,
-  onClose,
-}) => {
+const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, onClose }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [emailInput, setEmailInput] = useState("");
+  const [emailInput, setEmailInput] = useState('');
   const [message, setMessage] = useState<{
-    type: "success" | "error";
+    type: 'success' | 'error';
     text: string;
   } | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
@@ -69,7 +66,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
     const printContent = printRef.current;
     if (!printContent) return;
 
-    const printWindow = window.open("", "_blank");
+    const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
     printWindow.document.write(`
@@ -97,23 +94,23 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       setMessage(null);
 
       const response = await fetch(`/api/receipts/${receipt.id}/download`, {
-        method: "POST",
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${getStoredAuthToken()}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          format: "pdf",
+          format: 'pdf',
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to download receipt");
+        throw new Error('Failed to download receipt');
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
+      const link = document.createElement('a');
       link.href = url;
       link.download = `receipt-${receipt.transactionId}.pdf`;
       document.body.appendChild(link);
@@ -121,10 +118,10 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      setMessage({ type: "success", text: "Receipt downloaded successfully!" });
+      setMessage({ type: 'success', text: 'Receipt downloaded successfully!' });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setMessage({ type: "error", text: message });
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setMessage({ type: 'error', text: message });
     } finally {
       setIsDownloading(false);
     }
@@ -132,7 +129,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
 
   const handleSendEmail = async () => {
     if (!emailInput.trim()) {
-      setMessage({ type: "error", text: "Please enter an email address" });
+      setMessage({ type: 'error', text: 'Please enter an email address' });
       return;
     }
 
@@ -141,10 +138,10 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       setMessage(null);
 
       const response = await fetch(`/api/receipts/${receipt.id}/email`, {
-        method: "POST",
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${getStoredAuthToken()}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           email: emailInput,
@@ -152,48 +149,30 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to send email");
+        throw new Error('Failed to send email');
       }
 
       setMessage({
-        type: "success",
+        type: 'success',
         text: `Receipt sent to ${emailInput}!`,
       });
       setShowEmailForm(false);
-      setEmailInput("");
+      setEmailInput('');
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setMessage({ type: "error", text: message });
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setMessage({ type: 'error', text: message });
     } finally {
       setIsSendingEmail(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return (
     <div className="payment-receipt-modal-overlay" onClick={onClose}>
-      <div
-        className="payment-receipt-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="payment-receipt-modal" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="modal-header">
           <h2>Payment Receipt</h2>
-          <Button
-            variant="outline"
-            size="default"
-            className="close-btn"
-            onClick={onClose}
-          >
+          <Button variant="outline" size="default" className="close-btn" onClick={onClose}>
             ✕
           </Button>
         </div>
@@ -201,7 +180,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
         {/* Messages */}
         {message && (
           <div className={`message-alert ${message.type}`}>
-            <span>{message.type === "success" ? "✓" : "✕"}</span>
+            <span>{message.type === 'success' ? '✓' : '✕'}</span>
             <span>{message.text}</span>
           </div>
         )}
@@ -216,11 +195,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                 <p className="receipt-subtitle">Transaction Record</p>
               </div>
               <div className="receipt-status">
-                <span
-                  className={`status-badge ${receipt.paymentStatus.toLowerCase()}`}
-                >
-                  {receipt.paymentStatus === "completed" ? "✓" : "⏳"}{" "}
-                  {receipt.paymentStatus}
+                <span className={`status-badge ${receipt.paymentStatus.toLowerCase()}`}>
+                  {receipt.paymentStatus === 'completed' ? '✓' : '⏳'} {receipt.paymentStatus}
                 </span>
               </div>
             </div>
@@ -235,15 +211,11 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Date & Time:</span>
-                  <span className="detail-value">
-                    {formatDate(receipt.paymentDate)}
-                  </span>
+                  <span className="detail-value">{formatDateTime(receipt.paymentDate)}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Booking Reference:</span>
-                  <span className="detail-value">
-                    {receipt.bookingReference}
-                  </span>
+                  <span className="detail-value">{receipt.bookingReference}</span>
                 </div>
                 {receipt.confirmation && (
                   <div className="detail-row">
@@ -290,8 +262,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                     <div className="breakdown-row">
                       <span>💰 Wallet Payment</span>
                       <span>
-                        {receipt.currency}{" "}
-                        {receipt.paymentBreakdown.walletAmount.toFixed(2)}
+                        {receipt.currency} {receipt.paymentBreakdown.walletAmount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -299,8 +270,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                     <div className="breakdown-row">
                       <span>🎫 Airline Credit</span>
                       <span>
-                        {receipt.currency}{" "}
-                        {receipt.paymentBreakdown.creditAmount.toFixed(2)}
+                        {receipt.currency} {receipt.paymentBreakdown.creditAmount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -308,8 +278,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                     <div className="breakdown-row">
                       <span>💳 Card Payment</span>
                       <span>
-                        {receipt.currency}{" "}
-                        {receipt.paymentBreakdown.cardAmount.toFixed(2)}
+                        {receipt.currency} {receipt.paymentBreakdown.cardAmount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -338,17 +307,13 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                   {receipt.customerName && (
                     <div className="detail-row">
                       <span className="detail-label">Name:</span>
-                      <span className="detail-value">
-                        {receipt.customerName}
-                      </span>
+                      <span className="detail-value">{receipt.customerName}</span>
                     </div>
                   )}
                   {receipt.customerEmail && (
                     <div className="detail-row">
                       <span className="detail-label">Email:</span>
-                      <span className="detail-value">
-                        {receipt.customerEmail}
-                      </span>
+                      <span className="detail-value">{receipt.customerEmail}</span>
                     </div>
                   )}
                 </div>
@@ -358,12 +323,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
             {/* Footer */}
             <div className="receipt-footer">
               <p>Thank you for your payment!</p>
-              <p className="receipt-note">
-                Please keep this receipt for your records.
-              </p>
-              <p className="receipt-date">
-                Printed on: {formatDate(new Date().toISOString())}
-              </p>
+              <p className="receipt-note">Please keep this receipt for your records.</p>
+              <p className="receipt-date">Printed on: {formatDateTime(new Date().toISOString())}</p>
             </div>
           </div>
         </div>
@@ -386,7 +347,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
               onClick={handleDownloadPDF}
               disabled={isDownloading}
             >
-              📥 {isDownloading ? "Downloading..." : "Download PDF"}
+              📥 {isDownloading ? 'Downloading...' : 'Download PDF'}
             </Button>
             <Button
               variant="outline"
@@ -404,8 +365,8 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                 type="email"
                 placeholder="Enter email address"
                 value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleSendEmail()}
+                onChange={e => setEmailInput(e.target.value)}
+                onKeyPress={e => e.key === 'Enter' && handleSendEmail()}
               />
               <Button
                 variant="outline"
@@ -414,7 +375,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({
                 disabled={isSendingEmail}
                 className="send-btn"
               >
-                {isSendingEmail ? "Sending..." : "Send"}
+                {isSendingEmail ? 'Sending...' : 'Send'}
               </Button>
             </div>
           )}
@@ -1028,5 +989,3 @@ const styles = `
   }
 }
 `;
-
-export { receiptStyles, styles };

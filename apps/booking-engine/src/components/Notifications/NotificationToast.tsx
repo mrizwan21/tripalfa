@@ -1,15 +1,9 @@
-import { useEffect, useState } from "react";
-import {
-  X,
-  AlertCircle,
-  CheckCircle2,
-  Info,
-  AlertTriangle,
-} from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "../ui/button";
+import { useEffect, useState } from 'react';
+import { X, AlertCircle, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Button } from '../ui/button';
 
-export type ToastType = "success" | "error" | "info" | "warning";
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 export interface Toast {
   id: string;
@@ -29,13 +23,13 @@ interface NotificationToastProps {
 
 const getIcon = (type: ToastType) => {
   switch (type) {
-    case "success":
-      return <CheckCircle2 className="w-5 h-5 text-green-600" />;
-    case "error":
-      return <AlertCircle className="w-5 h-5 text-red-600" />;
-    case "warning":
-      return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
-    case "info":
+    case 'success':
+      return <CheckCircle2 className="w-5 h-5 text-blue-600" />;
+    case 'error':
+      return <AlertCircle className="w-5 h-5 text-neutral-500" />;
+    case 'warning':
+      return <AlertTriangle className="w-5 h-5 text-neutral-500" />;
+    case 'info':
     default:
       return <Info className="w-5 h-5 text-blue-600" />;
   }
@@ -43,36 +37,33 @@ const getIcon = (type: ToastType) => {
 
 const getBackgroundColor = (type: ToastType) => {
   switch (type) {
-    case "success":
-      return "bg-green-50 border-green-200";
-    case "error":
-      return "bg-red-50 border-red-200";
-    case "warning":
-      return "bg-yellow-50 border-yellow-200";
-    case "info":
+    case 'success':
+      return 'bg-blue-50 border-blue-200';
+    case 'error':
+      return 'bg-neutral-50 border-neutral-200';
+    case 'warning':
+      return 'bg-neutral-50 border-neutral-200';
+    case 'info':
     default:
-      return "bg-blue-50 border-blue-200";
+      return 'bg-blue-50 border-blue-200';
   }
 };
 
 const getTextColor = (type: ToastType) => {
   switch (type) {
-    case "success":
-      return "text-green-800";
-    case "error":
-      return "text-red-800";
-    case "warning":
-      return "text-yellow-800";
-    case "info":
+    case 'success':
+      return 'text-blue-800';
+    case 'error':
+      return 'text-neutral-800';
+    case 'warning':
+      return 'text-neutral-800';
+    case 'info':
     default:
-      return "text-blue-800";
+      return 'text-blue-800';
   }
 };
 
-export const NotificationToast = ({
-  toast,
-  onClose,
-}: NotificationToastProps) => {
+export const NotificationToast = ({ toast, onClose }: NotificationToastProps) => {
   useEffect(() => {
     if (toast.duration) {
       const timer = setTimeout(() => {
@@ -83,7 +74,7 @@ export const NotificationToast = ({
     }
   }, [toast.id, toast.duration, onClose]);
 
-  const type = toast.type || "info";
+  const type = toast.type || 'info';
   const bgColor = getBackgroundColor(type);
   const textColor = getTextColor(type);
 
@@ -136,7 +127,7 @@ export const NotificationToastContainer = ({
 }: NotificationToastContainerProps) => {
   return (
     <div className="fixed bottom-4 right-4 z-50 space-y-3 pointer-events-auto">
-      {toasts.map((toast) => (
+      {toasts.map(toast => (
         <div key={toast.id} className="pointer-events-auto">
           <NotificationToast toast={toast} onClose={onClose} />
         </div>
@@ -156,9 +147,9 @@ export const useToast = () => {
 
   const showToast = (
     message: string,
-    type: ToastType = "info",
+    type: ToastType = 'info',
     duration: number = 3000,
-    action?: Toast["action"],
+    action?: Toast['action']
   ) => {
     const id = `toast-${Date.now()}-${Math.random()}`;
     const toast: Toast = {
@@ -169,12 +160,12 @@ export const useToast = () => {
       action,
     };
 
-    setToasts((prev) => [...prev, toast]);
+    setToasts(prev => [...prev, toast]);
     return id;
   };
 
   const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
   const removeAll = () => {

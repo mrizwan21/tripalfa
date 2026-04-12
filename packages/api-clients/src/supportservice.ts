@@ -26,7 +26,7 @@ export interface SupportMessage {
   createdAt: string;
 }
 
-export class SupportService {
+class SupportService {
   /**
    * Get base URL for support service - uses lazy evaluation to support runtime config changes
    */

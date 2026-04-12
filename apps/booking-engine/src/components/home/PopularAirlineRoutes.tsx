@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, ArrowRight, MapPin, Clock, Filter, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { cn } from '@tripalfa/ui-components';
+
+function Skeleton({ className }: { className?: string }) {
+  return <div className={cn('animate-pulse rounded-md bg-[hsl(var(--muted))]', className)} />;
+}
 
 // ============================================================================
 // TypeScript Interfaces
@@ -29,19 +32,23 @@ export interface AirlineRoute {
 type DestinationFilter = 'all' | 'dubai' | 'istanbul' | 'cairo' | 'riyadh' | 'telaviv';
 
 // MENA Destination configurations with SEO-optimized content
-const MENA_DESTINATIONS: Record<Exclude<DestinationFilter, 'all'>, {
-  city: string;
-  country: string;
-  iata: string;
-  keywords: string;
-  description: string;
-  heroImage: string;
-}> = {
+const MENA_DESTINATIONS: Record<
+  Exclude<DestinationFilter, 'all'>,
+  {
+    city: string;
+    country: string;
+    iata: string;
+    keywords: string;
+    description: string;
+    heroImage: string;
+  }
+> = {
   dubai: {
     city: 'Dubai',
     country: 'United Arab Emirates',
     iata: 'DXB',
-    keywords: 'Dubai flights, Dubai airport, cheap flights to Dubai, Emirates flights, Burj Khalifa',
+    keywords:
+      'Dubai flights, Dubai airport, cheap flights to Dubai, Emirates flights, Burj Khalifa',
     description: 'Book flights to Dubai - the jewel of the Middle East',
     heroImage: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=80',
   },
@@ -92,26 +99,266 @@ const DESTINATION_TABS: { key: DestinationFilter; label: string; icon?: string }
 // Default MENA routes as fallback
 const DEFAULT_MENA_ROUTES: AirlineRoute[] = [
   // Dubai routes
-  { origin: 'LHR', originCity: 'London', originCountry: 'UK', originContinent: 'Europe', destination: 'DXB', destCity: 'Dubai', destCountry: 'UAE', destContinent: 'Asia', airline: 'Emirates', flightNumber: 'EK 2', price: 485, duration: '7h 20m', stops: 0, isMiddleEast: true },
-  { origin: 'JFK', originCity: 'New York', originCountry: 'USA', originContinent: 'North America', destination: 'DXB', destCity: 'Dubai', destCountry: 'UAE', destContinent: 'Asia', airline: 'Emirates', flightNumber: 'EK 202', price: 820, duration: '14h 20m', stops: 0, isMiddleEast: true },
-  { origin: 'BOM', originCity: 'Mumbai', originCountry: 'India', originContinent: 'Asia', destination: 'DXB', destCity: 'Dubai', destCountry: 'UAE', destContinent: 'Asia', airline: 'Emirates', flightNumber: 'EK 501', price: 295, duration: '3h 05m', stops: 0, isMiddleEast: true },
-  { origin: 'DXB', originCity: 'Dubai', originCountry: 'UAE', originContinent: 'Asia', destination: 'DXB', destCity: 'London', destCountry: 'UK', destContinent: 'Europe', airline: 'British Airways', flightNumber: 'BA 106', price: 520, duration: '7h 35m', stops: 0, isMiddleEast: true },
+  {
+    origin: 'LHR',
+    originCity: 'London',
+    originCountry: 'UK',
+    originContinent: 'Europe',
+    destination: 'DXB',
+    destCity: 'Dubai',
+    destCountry: 'UAE',
+    destContinent: 'Asia',
+    airline: 'Emirates',
+    flightNumber: 'EK 2',
+    price: 485,
+    duration: '7h 20m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'JFK',
+    originCity: 'New York',
+    originCountry: 'USA',
+    originContinent: 'North America',
+    destination: 'DXB',
+    destCity: 'Dubai',
+    destCountry: 'UAE',
+    destContinent: 'Asia',
+    airline: 'Emirates',
+    flightNumber: 'EK 202',
+    price: 820,
+    duration: '14h 20m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'BOM',
+    originCity: 'Mumbai',
+    originCountry: 'India',
+    originContinent: 'Asia',
+    destination: 'DXB',
+    destCity: 'Dubai',
+    destCountry: 'UAE',
+    destContinent: 'Asia',
+    airline: 'Emirates',
+    flightNumber: 'EK 501',
+    price: 295,
+    duration: '3h 05m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'DXB',
+    originCity: 'Dubai',
+    originCountry: 'UAE',
+    originContinent: 'Asia',
+    destination: 'DXB',
+    destCity: 'London',
+    destCountry: 'UK',
+    destContinent: 'Europe',
+    airline: 'British Airways',
+    flightNumber: 'BA 106',
+    price: 520,
+    duration: '7h 35m',
+    stops: 0,
+    isMiddleEast: true,
+  },
   // Istanbul routes
-  { origin: 'DXB', originCity: 'Dubai', originCountry: 'UAE', originContinent: 'Asia', destination: 'IST', destCity: 'Istanbul', destCountry: 'Turkey', destContinent: 'Europe', airline: 'Turkish Airlines', flightNumber: 'TK 763', price: 380, duration: '4h 30m', stops: 0, isMiddleEast: true },
-  { origin: 'JED', originCity: 'Jeddah', originCountry: 'Saudi Arabia', originContinent: 'Asia', destination: 'IST', destCity: 'Istanbul', destCountry: 'Turkey', destContinent: 'Europe', airline: 'Turkish Airlines', flightNumber: 'TK 95', price: 320, duration: '3h 15m', stops: 0, isMiddleEast: true },
-  { origin: 'LHR', originCity: 'London', originCountry: 'UK', originContinent: 'Europe', destination: 'IST', destCity: 'Istanbul', destCountry: 'Turkey', destContinent: 'Europe', airline: 'Turkish Airlines', flightNumber: 'TK 8901', price: 290, duration: '3h 45m', stops: 0, isMiddleEast: false },
+  {
+    origin: 'DXB',
+    originCity: 'Dubai',
+    originCountry: 'UAE',
+    originContinent: 'Asia',
+    destination: 'IST',
+    destCity: 'Istanbul',
+    destCountry: 'Turkey',
+    destContinent: 'Europe',
+    airline: 'Turkish Airlines',
+    flightNumber: 'TK 763',
+    price: 380,
+    duration: '4h 30m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'JED',
+    originCity: 'Jeddah',
+    originCountry: 'Saudi Arabia',
+    originContinent: 'Asia',
+    destination: 'IST',
+    destCity: 'Istanbul',
+    destCountry: 'Turkey',
+    destContinent: 'Europe',
+    airline: 'Turkish Airlines',
+    flightNumber: 'TK 95',
+    price: 320,
+    duration: '3h 15m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'LHR',
+    originCity: 'London',
+    originCountry: 'UK',
+    originContinent: 'Europe',
+    destination: 'IST',
+    destCity: 'Istanbul',
+    destCountry: 'Turkey',
+    destContinent: 'Europe',
+    airline: 'Turkish Airlines',
+    flightNumber: 'TK 8901',
+    price: 290,
+    duration: '3h 45m',
+    stops: 0,
+    isMiddleEast: false,
+  },
   // Cairo routes
-  { origin: 'DXB', originCity: 'Dubai', originCountry: 'UAE', originContinent: 'Asia', destination: 'CAI', destCity: 'Cairo', destCountry: 'Egypt', destContinent: 'Africa', airline: 'Emirates', flightNumber: 'EK 927', price: 345, duration: '3h 45m', stops: 0, isMiddleEast: true },
-  { origin: 'JED', originCity: 'Jeddah', originCountry: 'Saudi Arabia', originContinent: 'Asia', destination: 'CAI', destCity: 'Cairo', destCountry: 'Egypt', destContinent: 'Africa', airline: 'EgyptAir', flightNumber: 'MS 302', price: 180, duration: '2h 15m', stops: 0, isMiddleEast: true },
-  { origin: 'LHR', originCity: 'London', originCountry: 'UK', originContinent: 'Europe', destination: 'CAI', destCity: 'Cairo', destCountry: 'Egypt', destContinent: 'Africa', airline: 'EgyptAir', flightNumber: 'MS 778', price: 420, duration: '5h 30m', stops: 0, isMiddleEast: false },
+  {
+    origin: 'DXB',
+    originCity: 'Dubai',
+    originCountry: 'UAE',
+    originContinent: 'Asia',
+    destination: 'CAI',
+    destCity: 'Cairo',
+    destCountry: 'Egypt',
+    destContinent: 'Africa',
+    airline: 'Emirates',
+    flightNumber: 'EK 927',
+    price: 345,
+    duration: '3h 45m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'JED',
+    originCity: 'Jeddah',
+    originCountry: 'Saudi Arabia',
+    originContinent: 'Asia',
+    destination: 'CAI',
+    destCity: 'Cairo',
+    destCountry: 'Egypt',
+    destContinent: 'Africa',
+    airline: 'EgyptAir',
+    flightNumber: 'MS 302',
+    price: 180,
+    duration: '2h 15m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'LHR',
+    originCity: 'London',
+    originCountry: 'UK',
+    originContinent: 'Europe',
+    destination: 'CAI',
+    destCity: 'Cairo',
+    destCountry: 'Egypt',
+    destContinent: 'Africa',
+    airline: 'EgyptAir',
+    flightNumber: 'MS 778',
+    price: 420,
+    duration: '5h 30m',
+    stops: 0,
+    isMiddleEast: false,
+  },
   // Riyadh routes
-  { origin: 'DXB', originCity: 'Dubai', originCountry: 'UAE', originContinent: 'Asia', destination: 'RUH', destCity: 'Riyadh', destCountry: 'Saudi Arabia', destContinent: 'Asia', airline: 'Saudia', flightNumber: 'SV 303', price: 220, duration: '1h 45m', stops: 0, isMiddleEast: true },
-  { origin: 'CAI', originCity: 'Cairo', originCountry: 'Egypt', originContinent: 'Africa', destination: 'RUH', destCity: 'Riyadh', destCountry: 'Saudi Arabia', destContinent: 'Asia', airline: 'Saudia', flightNumber: 'SV 318', price: 295, duration: '2h 30m', stops: 0, isMiddleEast: true },
-  { origin: 'LHR', originCity: 'London', originCountry: 'UK', originContinent: 'Europe', destination: 'RUH', destCity: 'Riyadh', destCountry: 'Saudi Arabia', destContinent: 'Asia', airline: 'Saudia', flightNumber: 'SV 124', price: 485, duration: '6h 15m', stops: 0, isMiddleEast: false },
+  {
+    origin: 'DXB',
+    originCity: 'Dubai',
+    originCountry: 'UAE',
+    originContinent: 'Asia',
+    destination: 'RUH',
+    destCity: 'Riyadh',
+    destCountry: 'Saudi Arabia',
+    destContinent: 'Asia',
+    airline: 'Saudia',
+    flightNumber: 'SV 303',
+    price: 220,
+    duration: '1h 45m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'CAI',
+    originCity: 'Cairo',
+    originCountry: 'Egypt',
+    originContinent: 'Africa',
+    destination: 'RUH',
+    destCity: 'Riyadh',
+    destCountry: 'Saudi Arabia',
+    destContinent: 'Asia',
+    airline: 'Saudia',
+    flightNumber: 'SV 318',
+    price: 295,
+    duration: '2h 30m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'LHR',
+    originCity: 'London',
+    originCountry: 'UK',
+    originContinent: 'Europe',
+    destination: 'RUH',
+    destCity: 'Riyadh',
+    destCountry: 'Saudi Arabia',
+    destContinent: 'Asia',
+    airline: 'Saudia',
+    flightNumber: 'SV 124',
+    price: 485,
+    duration: '6h 15m',
+    stops: 0,
+    isMiddleEast: false,
+  },
   // Tel Aviv routes
-  { origin: 'DXB', originCity: 'Dubai', originCountry: 'UAE', originContinent: 'Asia', destination: 'TLV', destCity: 'Tel Aviv', destCountry: 'Israel', destContinent: 'Asia', airline: 'El Al', flightNumber: 'LY 972', price: 420, duration: '3h 40m', stops: 0, isMiddleEast: true },
-  { origin: 'LHR', originCity: 'London', originCountry: 'UK', originContinent: 'Europe', destination: 'TLV', destCity: 'Tel Aviv', destCountry: 'Israel', destContinent: 'Asia', airline: 'El Al', flightNumber: 'LY 316', price: 395, duration: '4h 45m', stops: 0, isMiddleEast: false },
-  { origin: 'CAI', originCity: 'Cairo', originCountry: 'Egypt', originContinent: 'Africa', destination: 'TLV', destCity: 'Tel Aviv', destCountry: 'Israel', destContinent: 'Asia', airline: 'EgyptAir', flightNumber: 'MS 23', price: 280, duration: '1h 30m', stops: 0, isMiddleEast: false },
+  {
+    origin: 'DXB',
+    originCity: 'Dubai',
+    originCountry: 'UAE',
+    originContinent: 'Asia',
+    destination: 'TLV',
+    destCity: 'Tel Aviv',
+    destCountry: 'Israel',
+    destContinent: 'Asia',
+    airline: 'El Al',
+    flightNumber: 'LY 972',
+    price: 420,
+    duration: '3h 40m',
+    stops: 0,
+    isMiddleEast: true,
+  },
+  {
+    origin: 'LHR',
+    originCity: 'London',
+    originCountry: 'UK',
+    originContinent: 'Europe',
+    destination: 'TLV',
+    destCity: 'Tel Aviv',
+    destCountry: 'Israel',
+    destContinent: 'Asia',
+    airline: 'El Al',
+    flightNumber: 'LY 316',
+    price: 395,
+    duration: '4h 45m',
+    stops: 0,
+    isMiddleEast: false,
+  },
+  {
+    origin: 'CAI',
+    originCity: 'Cairo',
+    originCountry: 'Egypt',
+    originContinent: 'Africa',
+    destination: 'TLV',
+    destCity: 'Tel Aviv',
+    destCountry: 'Israel',
+    destContinent: 'Asia',
+    airline: 'EgyptAir',
+    flightNumber: 'MS 23',
+    price: 280,
+    duration: '1h 30m',
+    stops: 0,
+    isMiddleEast: false,
+  },
 ];
 
 // ============================================================================
@@ -146,7 +393,9 @@ export function PopularAirlineRoutes({
     setIsLoading(true);
     try {
       // Try to fetch from API
-      const response = await fetch('/api/content/search/flights/popular?region=middle-east&limit=20');
+      const response = await fetch(
+        '/api/content/search/flights/popular?region=middle-east&limit=20'
+      );
       if (response.ok) {
         const data = await response.json();
         if (data.outbound && Array.isArray(data.outbound)) {
@@ -182,13 +431,13 @@ export function PopularAirlineRoutes({
   };
 
   // Filter routes based on selected destination
-  const filteredRoutes = routes.filter((route) => {
+  const filteredRoutes = routes.filter(route => {
     if (activeFilter === 'all') return true;
-    
+
     const destConfig = MENA_DESTINATIONS[activeFilter];
     const targetCity = destConfig.city.toLowerCase();
     const targetIata = destConfig.iata;
-    
+
     return (
       route.destCity?.toLowerCase() === targetCity ||
       route.destCountry?.toLowerCase() === destConfig.country.toLowerCase() ||
@@ -229,7 +478,7 @@ export function PopularAirlineRoutes({
   };
 
   return (
-    <section 
+    <section
       className={cn('py-24 bg-gradient-to-b from-white to-[hsl(var(--muted))]/20', className)}
       id="mena-routes"
       aria-labelledby="mena-routes-heading"
@@ -249,14 +498,14 @@ export function PopularAirlineRoutes({
               MENA TRAVEL
             </span>
           </div>
-          
-          <h2 
+
+          <h2
             id="mena-routes-heading"
             className="text-3xl md:text-4xl lg:text-5xl font-bold text-[hsl(var(--foreground))] tracking-tight mb-4"
           >
             {title}
           </h2>
-          
+
           <p className="text-lg text-[hsl(var(--muted-foreground))] max-w-2xl leading-relaxed">
             {subtitle}
           </p>
@@ -264,10 +513,10 @@ export function PopularAirlineRoutes({
           {/* SEO Keywords */}
           <div className="mt-4 hidden md:block">
             <p className="text-sm text-[hsl(var(--muted-foreground))]/70">
-              <span className="font-medium text-[hsl(var(--primary))]">Popular searches:</span>{' '}
-              MENA airline routes • Flights to Dubai • Cheap flights to Cairo • 
-              Istanbul flights • Riyadh travel • Tel Aviv holidays • Middle East flights • 
-              North Africa travel • Popular flights in Middle East and North Africa
+              <span className="font-medium text-[hsl(var(--primary))]">Popular searches:</span> MENA
+              airline routes • Flights to Dubai • Cheap flights to Cairo • Istanbul flights • Riyadh
+              travel • Tel Aviv holidays • Middle East flights • North Africa travel • Popular
+              flights in Middle East and North Africa
             </p>
           </div>
         </div>
@@ -304,7 +553,7 @@ export function PopularAirlineRoutes({
                 {MENA_DESTINATIONS[activeFilter].city}
               </span>
             </div>
-            <button 
+            <button
               onClick={() => setActiveFilter('all')}
               className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] underline"
             >
@@ -317,7 +566,10 @@ export function PopularAirlineRoutes({
         {isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-[hsl(var(--border))]/60">
+              <div
+                key={i}
+                className="bg-white rounded-2xl p-6 border border-[hsl(var(--border))]/60"
+              >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <Skeleton className="w-12 h-12 rounded-xl" />
@@ -338,8 +590,8 @@ export function PopularAirlineRoutes({
         {!isLoading && filteredRoutes.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filteredRoutes.slice(0, 12).map((route, index) => (
-              <RouteCard 
-                key={`${route.origin}-${route.destination}-${index}`} 
+              <RouteCard
+                key={`${route.origin}-${route.destination}-${index}`}
                 route={route}
                 index={index}
               />
@@ -365,11 +617,7 @@ export function PopularAirlineRoutes({
         {/* View All CTA */}
         {!isLoading && (
           <div className="mt-12 text-center">
-            <Button 
-              variant="outline" 
-              size="lg"
-              className="rounded-xl px-8 h-12"
-            >
+            <Button variant="outline" size="lg" className="rounded-xl px-8 h-12">
               <span>View All MENA Routes</span>
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
@@ -390,12 +638,15 @@ interface RouteCardProps {
 }
 
 function RouteCard({ route, index }: RouteCardProps) {
-  const isMiddleEastRoute = route.isMiddleEast || 
+  const isMiddleEastRoute =
+    route.isMiddleEast ||
     ['DXB', 'DOH', 'AUH', 'JED', 'RUH', 'CAI', 'IST', 'TLV', 'BAH', 'MCT'].includes(route.origin) ||
-    ['DXB', 'DOH', 'AUH', 'JED', 'RUH', 'CAI', 'IST', 'TLV', 'BAH', 'MCT'].includes(route.destination);
+    ['DXB', 'DOH', 'AUH', 'JED', 'RUH', 'CAI', 'IST', 'TLV', 'BAH', 'MCT'].includes(
+      route.destination
+    );
 
   return (
-    <Card 
+    <Card
       className={cn(
         'group p-5 hover:shadow-xl hover:shadow-black/[0.06] transition-all duration-300 hover:-translate-y-1 cursor-pointer border-[hsl(var(--border))]/60',
         'relative overflow-hidden'
@@ -404,16 +655,25 @@ function RouteCard({ route, index }: RouteCardProps) {
     >
       {/* Subtle gradient background on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary))]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      
+
       <div className="relative">
         {/* Airline & Price Row */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              'w-11 h-11 rounded-xl flex items-center justify-center',
-              isMiddleEastRoute ? 'bg-gradient-to-br from-[#F45D48]/10 to-[#F45D48]/5' : 'bg-[hsl(var(--muted))]/60'
-            )}>
-              <Plane className={cn('h-5 w-5', isMiddleEastRoute ? 'text-[#F45D48]' : 'text-[hsl(var(--muted-foreground))]')} />
+            <div
+              className={cn(
+                'w-11 h-11 rounded-xl flex items-center justify-center',
+                isMiddleEastRoute
+                  ? 'bg-gradient-to-br from-[#F45D48]/10 to-[#F45D48]/5'
+                  : 'bg-[hsl(var(--muted))]/60'
+              )}
+            >
+              <Plane
+                className={cn(
+                  'h-5 w-5',
+                  isMiddleEastRoute ? 'text-[#F45D48]' : 'text-[hsl(var(--muted-foreground))]'
+                )}
+              />
             </div>
             <div>
               <p className="font-semibold text-sm text-[hsl(var(--foreground))]">{route.airline}</p>
@@ -429,14 +689,23 @@ function RouteCard({ route, index }: RouteCardProps) {
         {/* Flight Route Visualization */}
         <div className="flex items-center justify-between">
           <div className="text-center">
-            <p className="text-lg font-bold text-[hsl(var(--foreground))] tracking-tight">{route.origin}</p>
-            <p className="text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[60px] mx-auto">{route.originCity}</p>
+            <p className="text-lg font-bold text-[hsl(var(--foreground))] tracking-tight">
+              {route.origin}
+            </p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[60px] mx-auto">
+              {route.originCity}
+            </p>
           </div>
-          
+
           <div className="flex-1 px-3 text-center">
             <div className="flex items-center gap-1.5">
               <div className="flex-1 h-px bg-[hsl(var(--border))]" />
-              <Plane className={cn('h-4 w-4 rotate-90', isMiddleEastRoute ? 'text-[#F45D48]' : 'text-[hsl(var(--muted-foreground))]')} />
+              <Plane
+                className={cn(
+                  'h-4 w-4 rotate-90',
+                  isMiddleEastRoute ? 'text-[#F45D48]' : 'text-[hsl(var(--muted-foreground))]'
+                )}
+              />
               <div className="flex-1 h-px bg-[hsl(var(--border))]" />
             </div>
             <p className="text-[11px] text-[hsl(var(--muted-foreground))] mt-2 flex items-center justify-center gap-1">
@@ -444,10 +713,14 @@ function RouteCard({ route, index }: RouteCardProps) {
               {route.duration || '—'} • {route.stops === 0 ? 'Direct' : `${route.stops} stop`}
             </p>
           </div>
-          
+
           <div className="text-center">
-            <p className="text-lg font-bold text-[hsl(var(--foreground))] tracking-tight">{route.destination}</p>
-            <p className="text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[60px] mx-auto">{route.destCity}</p>
+            <p className="text-lg font-bold text-[hsl(var(--foreground))] tracking-tight">
+              {route.destination}
+            </p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))] truncate max-w-[60px] mx-auto">
+              {route.destCity}
+            </p>
           </div>
         </div>
 

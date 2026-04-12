@@ -9,10 +9,11 @@
  * - Payment breakdown view
  */
 
-import React, { useState, useEffect } from "react";
-import type { FC } from "react";
-import { getStoredAuthToken } from "../lib/authToken";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import type { FC } from 'react';
+import { getStoredAuthToken } from '../lib/authToken';
+import { Button } from '@/components/ui/button';
+import { formatDate } from '@tripalfa/shared-utils/date-utils';
 
 interface BookingDetails {
   id: string;
@@ -29,7 +30,7 @@ interface BookingDetails {
   passengers: number;
   totalAmount: number;
   currency: string;
-  paymentStatus: "paid" | "pending" | "failed" | "partial";
+  paymentStatus: 'paid' | 'pending' | 'failed' | 'partial';
   paymentBreakdown?: {
     walletAmount: number;
     creditAmount: number;
@@ -53,7 +54,7 @@ interface BookingPaymentStatusPanelProps {
   onNavigateToBooking?: (bookingId: string) => void;
 }
 
-type SortField = "date" | "amount" | "status";
+type SortField = 'date' | 'amount' | 'status';
 
 const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
   customerId,
@@ -62,8 +63,8 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
   const [data, setData] = useState<BookingPaymentStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>("date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
 
   useEffect(() => {
@@ -75,23 +76,20 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `/api/customers/${customerId}/booking-payment-status`,
-        {
-          headers: {
-            Authorization: `Bearer ${getStoredAuthToken()}`,
-          },
+      const response = await fetch(`/api/customers/${customerId}/booking-payment-status`, {
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
         },
-      );
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch booking status");
+        throw new Error('Failed to fetch booking status');
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
       setLoading(false);
@@ -100,10 +98,10 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortOrder("asc");
+      setSortOrder('asc');
     }
   };
 
@@ -114,67 +112,57 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
       let comparison = 0;
 
       switch (sortField) {
-        case "date":
-          comparison =
-            new Date(a.departureDate).getTime() -
-            new Date(b.departureDate).getTime();
+        case 'date':
+          comparison = new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime();
           break;
-        case "amount":
+        case 'amount':
           comparison = a.totalAmount - b.totalAmount;
           break;
-        case "status":
+        case 'status':
           comparison = a.paymentStatus.localeCompare(b.paymentStatus);
           break;
       }
 
-      return sortOrder === "asc" ? comparison : -comparison;
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
 
     return sorted;
   };
 
-  const getStatusConfig = (status: BookingDetails["paymentStatus"]) => {
+  const getStatusConfig = (status: BookingDetails['paymentStatus']) => {
     const config = {
       paid: {
-        label: "✓ Paid",
-        color: "hsl(var(--primary))",
-        icon: "✓",
-        bgColor: "hsl(var(--primary) / 0.15)",
+        label: '✓ Paid',
+        color: 'hsl(var(--primary))',
+        icon: '✓',
+        bgColor: 'hsl(var(--primary) / 0.15)',
       },
       pending: {
-        label: "⏳ Pending",
-        color: "hsl(var(--accent-foreground))",
-        icon: "⏳",
-        bgColor: "hsl(var(--accent) / 0.7)",
+        label: '⏳ Pending',
+        color: 'hsl(var(--accent-foreground))',
+        icon: '⏳',
+        bgColor: 'hsl(var(--accent) / 0.7)',
       },
       failed: {
-        label: "✕ Failed",
-        color: "hsl(var(--destructive))",
-        icon: "✕",
-        bgColor: "hsl(var(--destructive) / 0.15)",
+        label: '✕ Failed',
+        color: 'hsl(var(--destructive))',
+        icon: '✕',
+        bgColor: 'hsl(var(--destructive) / 0.15)',
       },
       partial: {
-        label: "◐ Partial",
-        color: "hsl(var(--secondary-foreground))",
-        icon: "◐",
-        bgColor: "hsl(var(--secondary) / 0.7)",
+        label: '◐ Partial',
+        color: 'hsl(var(--secondary-foreground))',
+        icon: '◐',
+        bgColor: 'hsl(var(--secondary) / 0.7)',
       },
     };
     return config[status];
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: true,
     });
   };
@@ -204,7 +192,7 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
           <div className="booking-summary">
             <p className="summary-text">
               You have <strong>{data.totalCount}</strong> upcoming booking
-              {data.totalCount !== 1 ? "s" : ""}
+              {data.totalCount !== 1 ? 's' : ''}
             </p>
           </div>
 
@@ -213,29 +201,29 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
             <Button
               variant="outline"
               size="default"
-              className={`sort-btn ${sortField === "date" ? "active" : ""}`}
-              onClick={() => handleSort("date")}
+              className={`sort-btn ${sortField === 'date' ? 'active' : ''}`}
+              onClick={() => handleSort('date')}
             >
               Departure Date
-              {sortField === "date" && (sortOrder === "asc" ? " ↑" : " ↓")}
+              {sortField === 'date' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`sort-btn ${sortField === "amount" ? "active" : ""}`}
-              onClick={() => handleSort("amount")}
+              className={`sort-btn ${sortField === 'amount' ? 'active' : ''}`}
+              onClick={() => handleSort('amount')}
             >
               Amount
-              {sortField === "amount" && (sortOrder === "asc" ? " ↑" : " ↓")}
+              {sortField === 'amount' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`sort-btn ${sortField === "status" ? "active" : ""}`}
-              onClick={() => handleSort("status")}
+              className={`sort-btn ${sortField === 'status' ? 'active' : ''}`}
+              onClick={() => handleSort('status')}
             >
               Payment Status
-              {sortField === "status" && (sortOrder === "asc" ? " ↑" : " ↓")}
+              {sortField === 'status' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
             </Button>
           </div>
 
@@ -244,21 +232,16 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
             <div className="empty-state">
               <p>✈️</p>
               <p>No upcoming bookings</p>
-              <p className="empty-subtext">
-                Your next adventure awaits! Book now.
-              </p>
+              <p className="empty-subtext">Your next adventure awaits! Book now.</p>
             </div>
           ) : (
             <div className="bookings-list">
-              {sortedBookings.map((booking) => {
+              {sortedBookings.map(booking => {
                 const statusConfig = getStatusConfig(booking.paymentStatus);
                 const mainRoute = booking.routes[0];
 
                 return (
-                  <div
-                    key={booking.id}
-                    className={`booking-card ${booking.paymentStatus}`}
-                  >
+                  <div key={booking.id} className={`booking-card ${booking.paymentStatus}`}>
                     {/* Header */}
                     <div className="booking-header">
                       <div className="booking-header-main">
@@ -269,27 +252,19 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
 
                         <div className="booking-route">
                           <div className="route-segment">
-                            <span className="airport-code">
-                              {mainRoute.departure}
-                            </span>
+                            <span className="airport-code">{mainRoute.departure}</span>
                             <span className="route-arrow">→</span>
-                            <span className="airport-code">
-                              {mainRoute.arrival}
-                            </span>
+                            <span className="airport-code">{mainRoute.arrival}</span>
                           </div>
-                          <span className="route-airline">
-                            {booking.airline}
-                          </span>
+                          <span className="route-airline">{booking.airline}</span>
                         </div>
 
                         <div className="booking-date">
                           <span className="date-icon">📅</span>
-                          <span className="date-value">
-                            {formatDate(booking.departureDate)}
-                          </span>
+                          <span className="date-value">{formatDate(booking.departureDate)}</span>
                           <span className="days-until">
                             ({booking.daysUntilDeparture} day
-                            {booking.daysUntilDeparture !== 1 ? "s" : ""})
+                            {booking.daysUntilDeparture !== 1 ? 's' : ''})
                           </span>
                         </div>
                       </div>
@@ -309,9 +284,7 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                     <div className="booking-details">
                       <div className="detail-item">
                         <span className="detail-label">Passengers</span>
-                        <span className="detail-value">
-                          {booking.passengers}
-                        </span>
+                        <span className="detail-value">{booking.passengers}</span>
                       </div>
 
                       <div className="detail-item">
@@ -324,64 +297,43 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                       {booking.returnDate && (
                         <div className="detail-item">
                           <span className="detail-label">Return</span>
-                          <span className="detail-value">
-                            {formatDate(booking.returnDate)}
-                          </span>
+                          <span className="detail-value">{formatDate(booking.returnDate)}</span>
                         </div>
                       )}
 
                       <div className="detail-item">
                         <span className="detail-label">Confirmation</span>
-                        <span className="detail-value">
-                          {booking.confirmation}
-                        </span>
+                        <span className="detail-value">{booking.confirmation}</span>
                       </div>
                     </div>
 
                     {/* Payment Breakdown (if payment status is pending or partial) */}
                     {booking.paymentBreakdown &&
-                      ["pending", "partial"].includes(
-                        booking.paymentStatus,
-                      ) && (
+                      ['pending', 'partial'].includes(booking.paymentStatus) && (
                         <div className="payment-breakdown">
                           <p className="breakdown-label">Payment Breakdown:</p>
                           <div className="breakdown-items">
                             {booking.paymentBreakdown.walletAmount > 0 && (
                               <div className="breakdown-item">
-                                <span className="breakdown-method">
-                                  💰 Wallet
-                                </span>
+                                <span className="breakdown-method">💰 Wallet</span>
                                 <span className="breakdown-amount">
-                                  {data.currency}{" "}
-                                  {booking.paymentBreakdown.walletAmount.toFixed(
-                                    2,
-                                  )}
+                                  {data.currency} {booking.paymentBreakdown.walletAmount.toFixed(2)}
                                 </span>
                               </div>
                             )}
                             {booking.paymentBreakdown.creditAmount > 0 && (
                               <div className="breakdown-item">
-                                <span className="breakdown-method">
-                                  🎫 Airline Credit
-                                </span>
+                                <span className="breakdown-method">🎫 Airline Credit</span>
                                 <span className="breakdown-amount">
-                                  {data.currency}{" "}
-                                  {booking.paymentBreakdown.creditAmount.toFixed(
-                                    2,
-                                  )}
+                                  {data.currency} {booking.paymentBreakdown.creditAmount.toFixed(2)}
                                 </span>
                               </div>
                             )}
                             {booking.paymentBreakdown.cardAmount > 0 && (
                               <div className="breakdown-item">
-                                <span className="breakdown-method">
-                                  💳 Card
-                                </span>
+                                <span className="breakdown-method">💳 Card</span>
                                 <span className="breakdown-amount">
-                                  {data.currency}{" "}
-                                  {booking.paymentBreakdown.cardAmount.toFixed(
-                                    2,
-                                  )}
+                                  {data.currency} {booking.paymentBreakdown.cardAmount.toFixed(2)}
                                 </span>
                               </div>
                             )}
@@ -399,21 +351,13 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                       >
                         View Booking
                       </Button>
-                      {booking.paymentStatus === "pending" && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="action-btn"
-                        >
+                      {booking.paymentStatus === 'pending' && (
+                        <Button variant="outline" size="default" className="action-btn">
                           Complete Payment
                         </Button>
                       )}
-                      {booking.paymentStatus === "failed" && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="action-btn warning"
-                        >
+                      {booking.paymentStatus === 'failed' && (
+                        <Button variant="outline" size="default" className="action-btn warning">
                           Retry Payment
                         </Button>
                       )}
@@ -422,13 +366,10 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                         size="default"
                         className="action-btn secondary"
                         onClick={() =>
-                          setExpandedBooking(
-                            expandedBooking === booking.id ? null : booking.id,
-                          )
+                          setExpandedBooking(expandedBooking === booking.id ? null : booking.id)
                         }
                       >
-                        {expandedBooking === booking.id ? "Hide" : "Show"}{" "}
-                        Details
+                        {expandedBooking === booking.id ? 'Hide' : 'Show'} Details
                       </Button>
                     </div>
 
@@ -439,22 +380,18 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                         {booking.routes.map((route, idx) => (
                           <div key={idx} className="flight-route">
                             <div className="route-header">
-                              <span>{idx === 0 ? "Outbound" : "Return"}</span>
+                              <span>{idx === 0 ? 'Outbound' : 'Return'}</span>
                               <span>{route.airline}</span>
                             </div>
                             <div className="route-times">
                               <div>
                                 <p className="airport">{route.departure}</p>
-                                <p className="time">
-                                  {formatTime(route.departureTime)}
-                                </p>
+                                <p className="time">{formatTime(route.departureTime)}</p>
                               </div>
                               <div className="flight-icon">✈️</div>
                               <div>
                                 <p className="airport">{route.arrival}</p>
-                                <p className="time">
-                                  {formatTime(route.arrivalTime)}
-                                </p>
+                                <p className="time">{formatTime(route.arrivalTime)}</p>
                               </div>
                             </div>
                           </div>
@@ -932,4 +869,6 @@ const styles = `
 }
 `;
 
-export { styles };
+{
+  styles;
+}

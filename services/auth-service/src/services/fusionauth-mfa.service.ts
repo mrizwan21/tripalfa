@@ -37,7 +37,7 @@ export interface MFAVerificationResult {
 /**
  * Multi-Factor Authentication Service for FusionAuth
  */
-export class FusionAuthMFAService {
+class FusionAuthMFAService {
   private static instance: FusionAuthMFAService;
   private client: AxiosInstance;
 

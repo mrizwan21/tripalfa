@@ -62,7 +62,7 @@ const isTestMode =
   import.meta.env.VITE_TEST_MODE === "true" ||
   (globalThis as any).TEST_MODE_FLIGHTS === true;
 
-export const testPassengerSchema = passengerSchema.extend({
+const testPassengerSchema = passengerSchema.extend({
   dob: z.string().optional(),
   passportExpiry: z.string().optional(),
 });

@@ -53,7 +53,6 @@ class HotelsImporter {
                         headers: {
                             'X-API-Key': process.env.LITEAPI_API_KEY || '',
                         },
-                        // @ts-expect-error - node-fetch timeout option
                         timeout: 30000,
                     });
 

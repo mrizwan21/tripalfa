@@ -32,7 +32,7 @@ const DEFAULT_OPTIONS: ValidationOptions = {
  * validateApiId('off_abc123') // returns 'off_abc123'
  * validateApiId('off_../etc') // throws 'Invalid ID: contains dangerous characters'
  */
-export function validateApiId(
+function validateApiId(
   id: string,
   options: ValidationOptions = {},
 ): string {
@@ -105,7 +105,7 @@ export function validateLiteApiId(id: string): string {
  * @returns The UUID string if valid
  * @throws Error if ID is not a valid UUID
  */
-export function validateUuid(id: string): string {
+function validateUuid(id: string): string {
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

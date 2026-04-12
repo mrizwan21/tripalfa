@@ -57,7 +57,7 @@ export type PrismaWalletLedger = Prisma.WalletLedgerGetPayload<{}>;
  * @param prismaWallet - The wallet from a Prisma query
  * @returns A Wallet with proper type conversions applied
  */
-export function mapPrismaWallet(prismaWallet: PrismaWallet): Wallet {
+function mapPrismaWallet(prismaWallet: PrismaWallet): Wallet {
   return {
     id: prismaWallet.id,
     userId: prismaWallet.userId,
@@ -78,7 +78,7 @@ export function mapPrismaWallet(prismaWallet: PrismaWallet): Wallet {
  * @param prismaTx - The transaction from a Prisma query
  * @returns A WalletTransaction with proper type conversions applied
  */
-export function mapPrismaTransaction(
+function mapPrismaTransaction(
   prismaTx: PrismaWalletTransaction,
 ): WalletTransaction {
   return {
@@ -104,14 +104,14 @@ export function mapPrismaTransaction(
   };
 }
 
-export enum UserType {
+enum UserType {
   CUSTOMER = "customer",
   AGENCY = "agency",
   TRAVEL_SUPPLIER = "travel_supplier",
   ADMIN = "admin",
 }
 
-export enum TransactionType {
+enum TransactionType {
   TOPUP = "topup",
   DEBIT = "debit",
   CUSTOMER_PURCHASE = "customer_purchase",
@@ -125,14 +125,14 @@ export enum TransactionType {
   REVERSAL = "reversal",
 }
 
-export enum TransactionFlow {
+enum TransactionFlow {
   CUSTOMER_TO_SUPPLIER = "customer_to_supplier",
   SUPPLIER_TO_AGENCY = "supplier_to_agency",
   AGENCY_TO_CUSTOMER = "agency_to_customer",
   INTERNAL = "internal",
 }
 
-export enum TransactionStatus {
+enum TransactionStatus {
   PENDING = "pending",
   COMPLETED = "completed",
   FAILED = "failed",
@@ -288,7 +288,7 @@ export interface DebitOptions {
   idempotencyKey: string;
 }
 
-export interface TransferOptions {
+interface TransferOptions {
   userId: string;
   fromCurrency: string;
   toCurrency: string;
@@ -297,7 +297,7 @@ export interface TransferOptions {
 }
 
 // Multi-party transaction flows
-export interface CustomerPurchaseFlow {
+interface CustomerPurchaseFlow {
   customerId: string;
   agencyId: string;
   supplierId: string;
@@ -308,7 +308,7 @@ export interface CustomerPurchaseFlow {
   idempotencyKey: string;
 }
 
-export interface SupplierSettlementFlow {
+interface SupplierSettlementFlow {
   supplierId: string;
   agencyId: string;
   settlementAmount: number;
@@ -318,7 +318,7 @@ export interface SupplierSettlementFlow {
   idempotencyKey: string;
 }
 
-export interface RefundOptions {
+interface RefundOptions {
   originalTransactionId: string;
   userId: string;
   amount?: number; // null for full refund
@@ -328,7 +328,7 @@ export interface RefundOptions {
 
 // API Request/Response types
 
-export interface TopupRequest {
+interface TopupRequest {
   userId: string;
   currency: string;
   amount: number;
@@ -338,7 +338,7 @@ export interface TopupRequest {
   idempotencyKey: string;
 }
 
-export interface DebitRequest {
+interface DebitRequest {
   userId: string;
   currency: string;
   amount: number;
@@ -346,7 +346,7 @@ export interface DebitRequest {
   idempotencyKey: string;
 }
 
-export interface WalletTransferRequest {
+interface WalletTransferRequest {
   userId: string;
   fromCurrency: string;
   toCurrency: string;
@@ -354,20 +354,20 @@ export interface WalletTransferRequest {
   idempotencyKey: string;
 }
 
-export interface TransferResponse {
+interface TransferResponse {
   success: boolean;
   transaction?: Transaction;
   error?: string;
 }
 
-export interface WalletBalanceResponse {
+interface WalletBalanceResponse {
   walletId: string;
   currency: string;
   balance: number;
   status: string;
 }
 
-export interface TransactionHistoryRequest {
+interface TransactionHistoryRequest {
   userId: string;
   limit?: number;
   offset?: number;

@@ -17,7 +17,7 @@ const swaggerSpec = createSwaggerSpec({
   ],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupUserSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

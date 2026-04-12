@@ -10,6 +10,24 @@ import { prisma } from '../database.js';
 const router: Router = Router();
 
 /**
+ * Normalizes request parameters that might be strings or string arrays.
+ */
+const getParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0];
+  return param || '';
+};
+
+/**
+ * Standardized error handler for controllers.
+ */
+const handleControllerError = (res: Response, error: unknown, status = 500) => {
+  res.status(status).json({
+    success: false,
+    error: error instanceof Error ? error.message : 'Unknown error',
+  });
+};
+
+/**
  * @swagger
  * /auth/fusionauth/roles/{applicationId}:
  *   get:
@@ -54,9 +72,7 @@ router.get(
   async (req: AuthRequest, res: Response) => {
     try {
       const roles = await fusionAuthRoleService.getApplicationRoles(
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId
+        getParam(req.params.applicationId)
       );
 
       res.json({
@@ -64,10 +80,7 @@ router.get(
         data: roles,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -144,9 +157,7 @@ router.post(
       }
 
       const role = await fusionAuthRoleService.createRole(
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId,
+        getParam(req.params.applicationId),
         {
           name,
           description,
@@ -224,9 +235,7 @@ router.put(
   async (req: AuthRequest, res: Response) => {
     try {
       const role = await fusionAuthRoleService.updateRole(
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId,
+        getParam(req.params.applicationId),
         Array.isArray(req.params.roleName) ? req.params.roleName[0] : req.params.roleName,
         req.body
       );
@@ -294,9 +303,7 @@ router.delete(
   async (req: AuthRequest, res: Response) => {
     try {
       await fusionAuthRoleService.deleteRole(
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId,
+        getParam(req.params.applicationId),
         Array.isArray(req.params.roleName) ? req.params.roleName[0] : req.params.roleName
       );
 
@@ -368,10 +375,8 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       await fusionAuthRoleService.assignRoleToUser(
-        Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId,
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId,
+        getParam(req.params.userId),
+        getParam(req.params.applicationId),
         Array.isArray(req.params.roleName) ? req.params.roleName[0] : req.params.roleName
       );
 
@@ -443,10 +448,8 @@ router.delete(
   async (req: AuthRequest, res: Response) => {
     try {
       await fusionAuthRoleService.removeRoleFromUser(
-        Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId,
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId,
+        getParam(req.params.userId),
+        getParam(req.params.applicationId),
         Array.isArray(req.params.roleName) ? req.params.roleName[0] : req.params.roleName
       );
 
@@ -512,10 +515,8 @@ router.get(
   async (req: AuthRequest, res: Response) => {
     try {
       const roles = await fusionAuthRoleService.getUserRoles(
-        Array.isArray(req.params.userId) ? req.params.userId[0] : req.params.userId,
-        Array.isArray(req.params.applicationId)
-          ? req.params.applicationId[0]
-          : req.params.applicationId
+        getParam(req.params.userId),
+        getParam(req.params.applicationId)
       );
 
       res.json({
@@ -523,10 +524,7 @@ router.get(
         data: roles,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -576,10 +574,7 @@ router.post(
         message: 'B2B roles initialized successfully',
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -629,10 +624,7 @@ router.post(
         message: 'B2C roles initialized successfully',
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -784,10 +776,7 @@ router.post(
         data: codes,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -836,9 +825,7 @@ router.get(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const companyId = Array.isArray(req.params.companyId)
-        ? req.params.companyId[0]
-        : req.params.companyId;
+      const companyId = getParam(req.params.companyId);
       const config = await fusionAuthSSOService.getSSOConfig(companyId);
 
       res.json({
@@ -846,10 +833,7 @@ router.get(
         data: config,
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -904,9 +888,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const companyId = Array.isArray(req.params.companyId)
-        ? req.params.companyId[0]
-        : req.params.companyId;
+      const companyId = getParam(req.params.companyId);
       const config = await fusionAuthSSOService.configureSAMLSSO({
         ...req.body,
         companyId,
@@ -976,9 +958,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const companyId = Array.isArray(req.params.companyId)
-        ? req.params.companyId[0]
-        : req.params.companyId;
+      const companyId = getParam(req.params.companyId);
       const config = await fusionAuthSSOService.configureOIDCSSO({
         ...req.body,
         companyId,
@@ -1184,9 +1164,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const companyId = Array.isArray(req.params.companyId)
-        ? req.params.companyId[0]
-        : req.params.companyId;
+      const companyId = getParam(req.params.companyId);
       await fusionAuthSSOService.enableSSO(companyId);
 
       res.json({
@@ -1246,9 +1224,7 @@ router.post(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const companyId = Array.isArray(req.params.companyId)
-        ? req.params.companyId[0]
-        : req.params.companyId;
+      const companyId = getParam(req.params.companyId);
       await fusionAuthSSOService.disableSSO(companyId);
 
       res.json({
@@ -1310,9 +1286,7 @@ router.get(
   authMiddleware as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const companyId = Array.isArray(req.params.companyId)
-        ? req.params.companyId[0]
-        : req.params.companyId;
+      const companyId = getParam(req.params.companyId);
       const enabled = await fusionAuthSSOService.isSSOEnabled(companyId);
 
       res.json({
@@ -1320,10 +1294,7 @@ router.get(
         data: { enabled },
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );
@@ -1367,7 +1338,7 @@ router.get(
 router.get('/sso/domain/:domain', async (req: Request, res: Response) => {
   try {
     const config = await fusionAuthSSOService.getSSOProviderForDomain(
-      Array.isArray(req.params.domain) ? req.params.domain[0] : req.params.domain
+      getParam(req.params.domain)
     );
 
     res.json({

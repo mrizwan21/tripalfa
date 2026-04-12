@@ -1,6 +1,4 @@
-import { getCoreDb } from '@tripalfa/shared-database';
-
-const prisma = getCoreDb();
+import { prisma } from '../database.js';
 
 /**
  * Generate a unique ticket number in format TICKET-YYYYMMDD-XXXXX

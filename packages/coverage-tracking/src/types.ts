@@ -141,7 +141,7 @@ export const DEFAULT_COVERAGE_CONFIG: CoverageConfig = {
  * Service mapping for coverage tracking
  * Maps service names to their paths and test locations
  */
-export const SERVICE_MAPPING: Record<string, { path: string; testGlob: string }> = {
+const SERVICE_MAPPING: Record<string, { path: string; testGlob: string }> = {
   'payment-service': {
     path: 'services/payment-service',
     testGlob: 'src/**/*.{test,spec}.ts',

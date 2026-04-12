@@ -779,5 +779,5 @@ class KiwiDepositService {
 
 // ─── Export ────────────────────────────────────────────────────────────────────
 
-export const kiwiDepositService = new KiwiDepositService();
+const kiwiDepositService = new KiwiDepositService();
 export default kiwiDepositService;

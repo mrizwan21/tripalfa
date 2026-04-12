@@ -1,7 +1,7 @@
 import { getCoreDb } from '../database.js';
 import { v4 as uuidv4 } from 'uuid';
 
-export class VisitorService {
+class VisitorService {
   /**
    * Track visitor session
    */
@@ -308,4 +308,4 @@ export class VisitorService {
   }
 }
 
-export const visitorService = new VisitorService();
+const visitorService = new VisitorService();

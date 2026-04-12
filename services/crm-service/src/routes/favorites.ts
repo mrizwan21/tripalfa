@@ -333,10 +333,10 @@ router.post('/folders', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!favorites.has(req.params.id)) {
+    if (!favorites.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Favorite not found' });
     }
-    favorites.delete(req.params.id);
+    favorites.delete(req.params.id as string);
     res.status(200).json({ success: true, message: 'Favorite removed' });
   } catch (error: unknown) {
     res.status(500).json({ success: false, error: 'Failed to remove favorite' });

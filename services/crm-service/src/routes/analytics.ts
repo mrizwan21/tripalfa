@@ -156,7 +156,7 @@ router.get('/customers', async (req: Request, res: Response) => {
         active,
         newThisMonth,
         satisfactionScore,
-        byTier: tierStats.map(stat => ({
+        byTier: tierStats.map((stat: any) => ({
           tier: stat.tier || 'unknown',
           count: stat._count.id,
           totalSpent: stat._sum.totalSpent || 0,
@@ -438,15 +438,15 @@ router.get('/visitors', async (req: Request, res: Response) => {
           averageDuration: '0m', // Would need to calculate from durationSeconds
           bounceRate: 0, // Would need to calculate from single-page sessions
         },
-        byDevice: byDevice.map(d => ({
+        byDevice: byDevice.map((d: any) => ({
           deviceType: d.deviceType || 'unknown',
           count: d._count.id,
         })),
-        byCountry: byCountry.map(c => ({
+        byCountry: byCountry.map((c: any) => ({
           country: c.country || 'unknown',
           count: c._count.id,
         })),
-        bySource: bySource.map(s => ({
+        bySource: bySource.map((s: any) => ({
           source: s.utmSource || 'unknown',
           count: s._count.id,
         })),
@@ -591,7 +591,7 @@ router.get('/lead-scores', async (req: Request, res: Response) => {
       success: true,
       data: {
         leadScores,
-        gradeDistribution: gradeDistribution.map(g => ({
+        gradeDistribution: gradeDistribution.map((g: any) => ({
           grade: g.grade,
           count: g._count.id,
         })),

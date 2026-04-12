@@ -17,8 +17,7 @@
     "type-check": "pnpm exec tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^7.4.0",
-    "@tripalfa/shared-types": "workspace:*"
+    "@prisma/client": "^7.4.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

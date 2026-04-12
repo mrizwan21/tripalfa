@@ -223,7 +223,7 @@ export const CacheService = {
 };
 
 // Graceful shutdown
-export async function closeRedis() {
+async function closeRedis() {
   if (redisClient) {
     await redisClient.quit();
     redisClient = null;

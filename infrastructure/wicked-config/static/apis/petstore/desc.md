@@ -1,1 +1,0 @@
-This is the sample Swagger file from [swagger.io](http://swagger.io). This is picked as a sample as the backend service is always available at no charge, which makes it easier to wire it in your own API gateway.

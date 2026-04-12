@@ -220,7 +220,7 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.patch('/:id/publish', (req: Request, res: Response) => {
   try {
-    const workflow = workflows.get(req.params.id);
+    const workflow = workflows.get(req.params.id as string);
     if (!workflow) return res.status(404).json({ success: false, error: 'Workflow not found' });
 
     workflow.status = 'ACTIVE';

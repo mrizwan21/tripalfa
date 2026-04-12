@@ -293,7 +293,7 @@ interface DestinationContentSectionProps {
   onDestinationClick?: (destination: string) => void;
 }
 
-export function DestinationContentSection({
+function DestinationContentSection({
   title,
   subtitle,
   destinationGuides,

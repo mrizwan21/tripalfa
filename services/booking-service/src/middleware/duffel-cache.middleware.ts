@@ -32,7 +32,7 @@ import {
 /**
  * Wraps res.json() to cache responses automatically
  */
-export function setupCacheInterceptor(
+function setupCacheInterceptor(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -62,7 +62,7 @@ export function setupCacheInterceptor(
 /**
  * Cache middleware for GET /api/flights/offer-requests/:id
  */
-export async function cacheOfferRequestMiddleware(
+async function cacheOfferRequestMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -96,7 +96,7 @@ export async function cacheOfferRequestMiddleware(
 /**
  * Cache middleware for GET /api/flights/offers/:id
  */
-export async function cacheOfferMiddleware(
+async function cacheOfferMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -126,7 +126,7 @@ export async function cacheOfferMiddleware(
 /**
  * Cache middleware for GET /api/flights/orders/:id
  */
-export async function cacheOrderMiddleware(
+async function cacheOrderMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -322,7 +322,7 @@ export async function invalidateCacheAfterMutationMiddleware(
 /**
  * Track cache hit/miss statistics
  */
-export function cacheStatsMiddleware(
+function cacheStatsMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -356,7 +356,7 @@ export function cacheStatsMiddleware(
 /**
  * Warm up cache with frequently accessed data
  */
-export async function warmCacheMiddleware(
+async function warmCacheMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -384,7 +384,7 @@ export async function warmCacheMiddleware(
 /**
  * Try cache on API errors
  */
-export async function cacheErrorFallbackMiddleware(
+async function cacheErrorFallbackMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -416,7 +416,7 @@ export async function cacheErrorFallbackMiddleware(
 /**
  * Apply all cache middlewares to a router
  */
-export function applyCacheMiddlewares(router: any) {
+function applyCacheMiddlewares(router: any) {
   // Setup cache interceptor first
   router.use(setupCacheInterceptor);
 

@@ -10,13 +10,14 @@
  * - Transaction history
  */
 
-import React, { useState, useEffect } from "react";
-import type { FC } from "react";
-import { getStoredAuthToken } from "../lib/authToken";
+import React, { useState, useEffect } from 'react';
+import type { FC } from 'react';
+import { getStoredAuthToken } from '../lib/authToken';
+import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
 
 interface WalletTransaction {
   id: string;
-  type: "credit" | "debit";
+  type: 'credit' | 'debit';
   amount: number;
   description: string;
   date: string;
@@ -35,18 +36,15 @@ interface WalletManagementPanelProps {
   onFundsAdded?: () => void;
 }
 
-type AddFundsTab = "add" | "transactions";
+type AddFundsTab = 'add' | 'transactions';
 
-const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
-  customerId,
-  onFundsAdded,
-}) => {
+const WalletManagementPanel: FC<WalletManagementPanelProps> = ({ customerId, onFundsAdded }) => {
   const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<AddFundsTab>("add");
-  const [amount, setAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("card");
+  const [activeTab, setActiveTab] = useState<AddFundsTab>('add');
+  const [amount, setAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -66,13 +64,13 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch wallet information");
+        throw new Error('Failed to fetch wallet information');
       }
 
       const data = await response.json();
       setWalletInfo(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
       setLoading(false);
@@ -83,7 +81,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
     e.preventDefault();
 
     if (!amount || parseFloat(amount) <= 0) {
-      alert("Please enter a valid amount");
+      alert('Please enter a valid amount');
       return;
     }
 
@@ -91,48 +89,35 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/customers/${customerId}/wallet/add-funds`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${getStoredAuthToken()}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: parseFloat(amount),
-            paymentMethod,
-          }),
+      const response = await fetch(`/api/customers/${customerId}/wallet/add-funds`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${getStoredAuthToken()}`,
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          paymentMethod,
+        }),
+      });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.message || "Failed to add funds");
+        throw new Error(data.message || 'Failed to add funds');
       }
 
       setSuccess(true);
-      setAmount("");
+      setAmount('');
       await fetchWalletInfo();
       onFundsAdded?.();
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
       setIsProcessing(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const presetAmounts = [50, 100, 200, 500];
@@ -167,9 +152,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
               <p className="balance-amount">
                 {walletInfo.currency} {walletInfo.balance.toFixed(2)}
               </p>
-              <p className="balance-updated">
-                Updated: {formatDate(walletInfo.lastUpdate)}
-              </p>
+              <p className="balance-updated">Updated: {formatDateTime(walletInfo.lastUpdate)}</p>
             </div>
             <div className="balance-icon">💰</div>
           </div>
@@ -177,25 +160,22 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
           {/* Tab Navigation */}
           <div className="wallet-tabs">
             <button
-              className={`tab-btn ${activeTab === "add" ? "active" : ""}`}
-              onClick={() => setActiveTab("add")}
+              className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
+              onClick={() => setActiveTab('add')}
             >
               Add Funds
             </button>
             <button
-              className={`tab-btn ${activeTab === "transactions" ? "active" : ""}`}
-              onClick={() => setActiveTab("transactions")}
+              className={`tab-btn ${activeTab === 'transactions' ? 'active' : ''}`}
+              onClick={() => setActiveTab('transactions')}
             >
               Transactions
             </button>
           </div>
 
           {/* Add Funds Tab */}
-          {activeTab === "add" && (
-            <form
-              onSubmit={handleAddFunds}
-              className="add-funds-form space-y-6"
-            >
+          {activeTab === 'add' && (
+            <form onSubmit={handleAddFunds} className="add-funds-form space-y-6">
               <div className="form-group">
                 <label htmlFor="amount">Amount to Add</label>
                 <div className="amount-input-wrapper">
@@ -208,7 +188,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                     max="99999"
                     placeholder="0.00"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={e => setAmount(e.target.value)}
                     disabled={isProcessing}
                     required
                   />
@@ -219,7 +199,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
               <div className="form-group">
                 <label>Quick Amounts</label>
                 <div className="preset-amounts">
-                  {presetAmounts.map((preset) => (
+                  {presetAmounts.map(preset => (
                     <button
                       key={preset}
                       type="button"
@@ -239,7 +219,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                 <select
                   id="paymentMethod"
                   value={paymentMethod}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  onChange={e => setPaymentMethod(e.target.value)}
                   disabled={isProcessing}
                 >
                   <option value="card">💳 Credit/Debit Card</option>
@@ -250,15 +230,8 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
 
               {/* Terms */}
               <div className="terms-checkbox">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  defaultChecked
-                  disabled={isProcessing}
-                />
-                <label htmlFor="terms">
-                  I agree to the wallet terms and conditions
-                </label>
+                <input type="checkbox" id="terms" defaultChecked disabled={isProcessing} />
+                <label htmlFor="terms">I agree to the wallet terms and conditions</label>
               </div>
 
               {/* Submit Button */}
@@ -273,14 +246,14 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                     Processing...
                   </>
                 ) : (
-                  `Add ${walletInfo.currency} ${amount || "0"} to Wallet`
+                  `Add ${walletInfo.currency} ${amount || '0'} to Wallet`
                 )}
               </button>
             </form>
           )}
 
           {/* Transactions Tab */}
-          {activeTab === "transactions" && (
+          {activeTab === 'transactions' && (
             <div className="transactions-list">
               {walletInfo.transactions.length === 0 ? (
                 <div className="empty-transactions">
@@ -288,18 +261,16 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
                 </div>
               ) : (
                 <>
-                  {walletInfo.transactions.map((tx) => (
+                  {walletInfo.transactions.map(tx => (
                     <div key={tx.id} className="transaction-item">
-                      <div className="tx-icon">
-                        {tx.type === "credit" ? "➕" : "➖"}
-                      </div>
+                      <div className="tx-icon">{tx.type === 'credit' ? '➕' : '➖'}</div>
                       <div className="tx-details">
                         <p className="tx-description">{tx.description}</p>
-                        <p className="tx-date">{formatDate(tx.date)}</p>
+                        <p className="tx-date">{formatDateTime(tx.date)}</p>
                       </div>
                       <div className="tx-amount">
                         <span className={`amount ${tx.type}`}>
-                          {tx.type === "credit" ? "+" : "-"}
+                          {tx.type === 'credit' ? '+' : '-'}
                           {walletInfo.currency} {tx.amount.toFixed(2)}
                         </span>
                         <span className="balance">
@@ -317,9 +288,7 @@ const WalletManagementPanel: FC<WalletManagementPanelProps> = ({
           <div className="wallet-info-box">
             <h4>About Your Wallet</h4>
             <ul>
-              <li>
-                Use your wallet balance for faster checkout on future bookings
-              </li>
+              <li>Use your wallet balance for faster checkout on future bookings</li>
               <li>Wallet funds don't expire</li>
               <li>Get refunds directly to your wallet</li>
               <li>Combine wallet with airline credits and card payments</li>
@@ -747,4 +716,6 @@ const styles = `
 }
 `;
 
-export { styles };
+{
+  styles;
+}

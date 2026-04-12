@@ -1,5 +1,21 @@
 import * as React from 'react';
 
+/**
+ * Shared class builder for form input elements.
+ * Eliminates duplication between Input, Textarea, and Select components.
+ */
+function buildInputClasses(
+  inputSize?: 'small' | 'medium' | 'large',
+  error?: boolean,
+  className?: string,
+): string {
+  const classes = ['input'];
+  if (inputSize) classes.push(`input--${inputSize}`);
+  if (error) classes.push('input--error');
+  if (className) classes.push(className);
+  return classes.join(' ');
+}
+
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   inputSize?: 'small' | 'medium' | 'large';
   error?: boolean;
@@ -7,12 +23,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ inputSize, error, className = '', ...props }, ref) => {
-    const classes = ['input'];
-    if (inputSize) classes.push(`input--${inputSize}`);
-    if (error) classes.push('input--error');
-    if (className) classes.push(className);
-
-    return <input ref={ref} className={classes.join(' ')} {...props} />;
+    return <input ref={ref} className={buildInputClasses(inputSize, error, className)} {...props} />;
   }
 );
 Input.displayName = 'Input';
@@ -24,12 +35,7 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ inputSize, error, className = '', ...props }, ref) => {
-    const classes = ['input'];
-    if (inputSize) classes.push(`input--${inputSize}`);
-    if (error) classes.push('input--error');
-    if (className) classes.push(className);
-
-    return <textarea ref={ref} className={classes.join(' ')} {...props} />;
+    return <textarea ref={ref} className={buildInputClasses(inputSize, error, className)} {...props} />;
   }
 );
 Textarea.displayName = 'Textarea';
@@ -41,13 +47,8 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ inputSize, error, className = '', children, ...props }, ref) => {
-    const classes = ['input'];
-    if (inputSize) classes.push(`input--${inputSize}`);
-    if (error) classes.push('input--error');
-    if (className) classes.push(className);
-
     return (
-      <select ref={ref} className={classes.join(' ')} {...props}>
+      <select ref={ref} className={buildInputClasses(inputSize, error, className)} {...props}>
         {children}
       </select>
     );

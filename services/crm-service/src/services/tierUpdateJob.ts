@@ -258,4 +258,4 @@ export class TierUpdateJob {
 }
 
 // Export singleton instance for scheduled jobs
-export const tierUpdateJob = new TierUpdateJob();
+const tierUpdateJob = new TierUpdateJob();

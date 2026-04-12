@@ -47,7 +47,7 @@ export function authMiddleware(
 /**
  * Generate a JWT token for a user (used in sign-up/login)
  */
-export function generateToken(userId: string): string {
+function generateToken(userId: string): string {
   return jwt.sign({ userId, iat: Math.floor(Date.now() / 1000) }, JWT_SECRET, {
     expiresIn: "24h",
   });

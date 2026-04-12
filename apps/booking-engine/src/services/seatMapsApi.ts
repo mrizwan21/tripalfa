@@ -9,7 +9,7 @@
  * - Post-Booking: Seat management for existing orders
  */
 
-import { api } from "../lib/api";
+import { api } from "../lib/apiClient";
 
 type SeatMap = Record<string, any>;
 type SelectedSeat = Record<string, any>;

@@ -12,7 +12,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { randomBytes } from 'crypto';
+import { randomBytes as cryptoRandomBytes } from 'crypto';
 
 /**
  * Payment processor types
@@ -230,7 +230,7 @@ class PaymentGatewayService {
     // For demo purposes, we'll simulate Stripe API calls
     // In production, use actual Stripe SDK
     const stripeResponse = {
-      id: `pi_${randomBytes(12).toString('hex')}`,
+      id: `pi_${(cryptoRandomBytes(12) as any).toString('hex')}`,
       status: 'succeeded',
       amount: Math.round(request.amount * 100),
       currency: request.currency.toLowerCase(),
@@ -277,7 +277,7 @@ class PaymentGatewayService {
     // For demo purposes, we'll simulate PayPal API calls
     // In production, use actual PayPal SDK
     const paypalResponse = {
-      id: `PAYID-${randomBytes(12).toString('hex')}`,
+      id: `PAYID-${(cryptoRandomBytes(12) as any).toString('hex')}`,
       status: 'COMPLETED',
       create_time: new Date().toISOString(),
     };
@@ -333,7 +333,7 @@ class PaymentGatewayService {
     transaction: TransactionRecord,
     amount: number
   ): Promise<PaymentResponse> {
-    const refundId = `re_${randomBytes(12).toString('hex')}`;
+    const refundId = `re_${(cryptoRandomBytes(12) as any).toString('hex')}`;
 
     console.log(`💰 Stripe refund processed: ${refundId} (${amount} ${transaction.currency})`);
 
@@ -358,7 +358,7 @@ class PaymentGatewayService {
     transaction: TransactionRecord,
     amount: number
   ): Promise<PaymentResponse> {
-    const refundId = `REF-${randomBytes(12).toString('hex')}`;
+    const refundId = `REF-${(cryptoRandomBytes(12) as any).toString('hex')}`;
 
     console.log(`💰 PayPal refund processed: ${refundId} (${amount} ${transaction.currency})`);
 

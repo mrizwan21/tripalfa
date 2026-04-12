@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import {
   Search,
   MapPin,
@@ -13,27 +13,21 @@ import {
   TrendingUp,
   Loader2,
   BookOpen,
-} from "lucide-react";
-import { SearchAutocomplete } from "../components/ui/SearchAutocomplete";
-import { GuestSelector } from "../components/ui/GuestSelector";
-import { DualMonthCalendar } from "../components/ui/DualMonthCalendar";
-import { Button } from "../components/ui/button";
-import { format } from "date-fns";
-import {
-  usePopularDestinations,
-  usePopularHotels,
-} from "../hooks/useStaticData";
-import { useWikivoyageGuide } from "../hooks/useWikivoyage";
-import { DestinationContentCard } from "../components/DestinationContentCard";
-import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
-import {
-  DEFAULT_CONTENT_CONFIG,
-  loadTenantContentConfig,
-} from "../lib/tenantContentConfig";
+} from 'lucide-react';
+import { SearchAutocomplete } from '../components/ui/SearchAutocomplete';
+import { GuestSelector } from '../components/ui/GuestSelector';
+import { DualMonthCalendar } from '../components/ui/DualMonthCalendar';
+import { Button } from '../components/ui/button';
+import { format } from 'date-fns';
+import { usePopularDestinations, usePopularHotels } from '../hooks/useStaticData';
+import { useWikivoyageGuide } from '../hooks/useWikivoyage';
+import { DestinationContentCard } from '../components/DestinationContentCard';
+import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
+import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
 
 type Suggestion = Record<string, any>;
 
-const PLACEHOLDER_HOTEL_IMAGE = "/images/placeholder-hotel.jpg";
+const PLACEHOLDER_HOTEL_IMAGE = '/images/placeholder-hotel.jpg';
 
 // Type definitions for data from PostgreSQL
 interface PopularDestination {
@@ -63,15 +57,15 @@ interface PopularHotel {
   primaryImage: string | null;
 }
 
-export default function HotelHome() {
+function HotelHome() {
   const navigate = useNavigate();
   const { config: runtimeConfig } = useTenantRuntime();
   const [contentConfig, setContentConfig] = useState(DEFAULT_CONTENT_CONFIG);
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState('');
   const [checkinDate, setCheckinDate] = useState<Date | null>(null);
   const [checkoutDate, setCheckoutDate] = useState<Date | null>(null);
   const [countryCode, setCountryCode] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState('All');
   const [carouselStart, setCarouselStart] = useState(0);
   const marketingHotelHome = contentConfig.marketing.hotelHome;
   const hotelBenefits = marketingHotelHome.benefits;
@@ -118,7 +112,7 @@ export default function HotelHome() {
 
   // ─── Wikivoyage Destination Content ────────────────────────────────────────────
   // Featured destination for Wikivoyage content - pick from top destinations
-  const featuredDestination = popularDestinations[0]?.name || "Paris";
+  const featuredDestination = popularDestinations[0]?.name || 'Paris';
   const { data: wikivoyageContent, isLoading: isLoadingWiki } =
     useWikivoyageGuide(featuredDestination);
 
@@ -127,11 +121,10 @@ export default function HotelHome() {
       return;
     }
     const params = new URLSearchParams();
-    if (location) params.set("location", location);
-    if (countryCode) params.set("countryCode", countryCode);
-    if (checkinDate) params.set("checkin", format(checkinDate, "yyyy-MM-dd"));
-    if (checkoutDate)
-      params.set("checkout", format(checkoutDate, "yyyy-MM-dd"));
+    if (location) params.set('location', location);
+    if (countryCode) params.set('countryCode', countryCode);
+    if (checkinDate) params.set('checkin', format(checkinDate, 'yyyy-MM-dd'));
+    if (checkoutDate) params.set('checkout', format(checkoutDate, 'yyyy-MM-dd'));
     navigate(`/hotels/list?${params.toString()}`);
   };
 
@@ -167,11 +160,7 @@ export default function HotelHome() {
           <p className="text-sm font-bold text-muted-foreground mb-6">
             {marketingHotelHome.disabledSubtitle}
           </p>
-          <Button
-            variant="primary"
-            onClick={() => navigate("/")}
-            className="h-11 px-6"
-          >
+          <Button variant="primary" onClick={() => navigate('/')} className="h-11 px-6">
             {marketingHotelHome.backToHomeLabel}
           </Button>
         </div>
@@ -182,11 +171,11 @@ export default function HotelHome() {
   return (
     <TripLogerLayout>
       {/* Hero Section */}
-      <div className="relative h-[650px] flex items-center justify-center overflow-hidden gap-2">
+      <div className="relative h-[650px] flex items-center justify-center overflow-visible gap-2">
         {/* Background with purple gradient overlay */}
         <div className="absolute inset-0 bg-cover bg-center hero-bg-hotel z-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--secondary)/0.8)] via-[hsl(var(--primary)/0.6)] to-[hsl(var(--accent)/0.4)]"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-[hsl(var(--primary))]"></div>
+          <div className="absolute inset-0 bg-foreground/40"></div>
         </div>
 
         <div className="container mx-auto px-4 relative z-10 flex flex-col items-center gap-4">
@@ -204,7 +193,7 @@ export default function HotelHome() {
 
           {/* Glassmorphic Search Card */}
           <div
-            className="w-full max-w-5xl bg-background/10 backdrop-blur-md border border-border/20 rounded-3xl p-6 shadow-2xl"
+            className="w-full max-w-5xl bg-background/10 backdrop-blur-md border border-border/20 rounded-xl p-6 shadow-2xl"
             data-testid="hotel-search-form"
           >
             {/* Tabs */}
@@ -219,10 +208,7 @@ export default function HotelHome() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() =>
-                  runtimeConfig.features.flightBookingEnabled &&
-                  navigate("/flights")
-                }
+                onClick={() => runtimeConfig.features.flightBookingEnabled && navigate('/flights')}
                 disabled={!runtimeConfig.features.flightBookingEnabled}
                 className="px-6 rounded-full text-background hover:bg-background/10 disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -237,14 +223,9 @@ export default function HotelHome() {
                   type="hotel"
                   placeholder={
                     searchFormLabels?.destinationPlaceholder ||
-                    "City, Property, District or Address"
+                    'City, Property, District or Address'
                   }
-                  icon={
-                    <MapPin
-                      size={18}
-                      className="text-[hsl(var(--secondary))]"
-                    />
-                  }
+                  icon={<MapPin size={18} className="text-[hsl(var(--secondary))]" />}
                   value={location}
                   onChange={setLocation}
                   onSelect={(item: Suggestion) => {
@@ -339,7 +320,7 @@ export default function HotelHome() {
           {marketingHotelHome.deals.title}
         </h2>
 
-        <div className="bg-[hsl(var(--secondary))] rounded-2xl p-8 mb-16 flex flex-col md:flex-row gap-8 items-center">
+        <div className="bg-[hsl(var(--secondary))] rounded-xl p-8 mb-16 flex flex-col md:flex-row gap-8 items-center">
           <div className="flex-1 text-background gap-4">
             <h3 className="text-3xl font-bold mb-4 text-xl font-semibold tracking-tight">
               {marketingHotelHome.deals.spotlightTitle}
@@ -377,13 +358,9 @@ export default function HotelHome() {
                 {marketingHotelHome.popularDestinations.subtitle}
                 {popularDestinations.length > 0 && (
                   <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                    {popularDestinations.length}{" "}
-                    {marketingHotelHome.popularDestinations.nameLabel.toLowerCase()}
-                    s{" "}
-                    {
-                      marketingHotelHome.popularDestinations
-                        .dataSourceSuffixLabel
-                    }
+                    {popularDestinations.length}{' '}
+                    {marketingHotelHome.popularDestinations.nameLabel.toLowerCase()}s{' '}
+                    {marketingHotelHome.popularDestinations.dataSourceSuffixLabel}
                   </span>
                 )}
               </p>
@@ -405,7 +382,7 @@ export default function HotelHome() {
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
               <p className="text-red-600 text-sm">
                 {searchFormLabels?.errorLoadingDestinationsLabel ||
-                  "Unable to load destinations. Please try again later."}
+                  'Unable to load destinations. Please try again later.'}
               </p>
             </div>
           )}
@@ -415,52 +392,41 @@ export default function HotelHome() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {popularDestinations.length > 0
-                  ? popularDestinations
-                      .slice(carouselStart, carouselStart + 4)
-                      .map((dest) => (
-                        <div
-                          key={dest.id}
-                          className="group rounded-xl overflow-hidden shadow-lg border border-border cursor-pointer"
-                          onClick={() => {
-                            navigate(
-                              `/hotels/list?location=${encodeURIComponent(dest.name)}&countryCode=${dest.countryCode}`,
-                            );
-                          }}
-                        >
-                          <div className="relative h-64 overflow-hidden">
-                            <img
-                              src={getDestinationImage(dest)}
-                              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                              alt={dest.name}
-                            />
-                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/80 to-transparent p-4 pt-12">
-                              <h3 className="text-background font-bold text-lg">
-                                {dest.name}
-                              </h3>
-                              <p className="text-background/80 text-xs font-medium">
-                                {dest.countryName}
+                  ? popularDestinations.slice(carouselStart, carouselStart + 4).map(dest => (
+                      <div
+                        key={dest.id}
+                        className="group rounded-xl overflow-hidden shadow-lg border border-border cursor-pointer"
+                        onClick={() => {
+                          navigate(
+                            `/hotels/list?location=${encodeURIComponent(dest.name)}&countryCode=${dest.countryCode}`
+                          );
+                        }}
+                      >
+                        <div className="relative h-64 overflow-hidden">
+                          <img
+                            src={getDestinationImage(dest)}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            alt={dest.name}
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-foreground/80 p-4 pt-12">
+                            <h3 className="text-background font-bold text-lg">{dest.name}</h3>
+                            <p className="text-background/80 text-xs font-medium">
+                              {dest.countryName}
+                            </p>
+                            {dest.hotelCount > 0 && (
+                              <p className="text-background/60 text-xs mt-1">
+                                {dest.hotelCount.toLocaleString()} hotels
                               </p>
-                              {dest.hotelCount > 0 && (
-                                <p className="text-background/60 text-xs mt-1">
-                                  {dest.hotelCount.toLocaleString()} hotels
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="p-4 bg-card">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              className="w-full text-foreground"
-                            >
-                              {
-                                marketingHotelHome.popularDestinations
-                                  .viewDetailsLabel
-                              }
-                            </Button>
+                            )}
                           </div>
                         </div>
-                      ))
+                        <div className="p-4 bg-card">
+                          <Button variant="secondary" size="sm" className="w-full text-foreground">
+                            {marketingHotelHome.popularDestinations.viewDetailsLabel}
+                          </Button>
+                        </div>
+                      </div>
+                    ))
                   : /* Empty state */
                     Array.from({ length: 4 }).map((_, i) => (
                       <div
@@ -477,16 +443,13 @@ export default function HotelHome() {
                     variant="primary"
                     size="sm"
                     className="h-10 w-10 rounded-full p-0 shadow-lg shadow-indigo-200 disabled:cursor-not-allowed"
-                    onClick={() =>
-                      setCarouselStart(Math.max(0, carouselStart - 4))
-                    }
+                    onClick={() => setCarouselStart(Math.max(0, carouselStart - 4))}
                     disabled={carouselStart === 0}
                   >
                     <ChevronLeft size={20} />
                   </Button>
                   <span className="text-xs text-muted-foreground">
-                    {carouselStart + 1}–
-                    {Math.min(carouselStart + 4, popularDestinations.length)} of{" "}
+                    {carouselStart + 1}–{Math.min(carouselStart + 4, popularDestinations.length)} of{' '}
                     {popularDestinations.length}
                   </span>
                   <Button
@@ -494,12 +457,7 @@ export default function HotelHome() {
                     size="sm"
                     className="h-10 w-10 rounded-full p-0 shadow-lg shadow-indigo-200 disabled:cursor-not-allowed"
                     onClick={() =>
-                      setCarouselStart(
-                        Math.min(
-                          popularDestinations.length - 4,
-                          carouselStart + 4,
-                        ),
-                      )
+                      setCarouselStart(Math.min(popularDestinations.length - 4, carouselStart + 4))
                     }
                     disabled={carouselStart + 4 >= popularDestinations.length}
                   >
@@ -538,7 +496,7 @@ export default function HotelHome() {
           {/* Hotel Cards Grid */}
           {!isLoadingHotels && popularHotels.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {popularHotels.map((hotel) => (
+              {popularHotels.map(hotel => (
                 <div
                   key={hotel.id}
                   className="group rounded-xl overflow-hidden shadow-lg border border-border cursor-pointer bg-card hover:shadow-xl transition-shadow"
@@ -566,11 +524,7 @@ export default function HotelHome() {
                           {Array.from({
                             length: Math.min(hotel.starRating, 5),
                           }).map((_, i) => (
-                            <Star
-                              key={i}
-                              size={10}
-                              className="fill-yellow-400 text-yellow-400"
-                            />
+                            <Star key={i} size={10} className="fill-yellow-400 text-yellow-400" />
                           ))}
                         </div>
                       )}
@@ -625,27 +579,25 @@ export default function HotelHome() {
               isLoading={isLoadingWiki}
               variant="featured"
               onExplore={() =>
-                navigate(
-                  `/hotels/list?location=${encodeURIComponent(featuredDestination)}`,
-                )
+                navigate(`/hotels/list?location=${encodeURIComponent(featuredDestination)}`)
               }
             />
           </section>
         )}
 
         {/* ─── Trending Destinations Section (from PostgreSQL) ─────────────────────────────── */}
-        <section className="bg-background rounded-3xl p-8 shadow-sm border border-border mb-16">
+        <section className="bg-background rounded-xl p-8 shadow-sm border border-border mb-16">
           <div className="flex items-center gap-8 border-b pb-4 mb-8 overflow-x-auto">
             <h3 className="font-bold text-lg whitespace-nowrap flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-[hsl(var(--secondary))]" />
               {marketingHotelHome.trending.title}
             </h3>
-            {marketingHotelHome.trending.tabs.map((tab) => (
+            {marketingHotelHome.trending.tabs.map(tab => (
               <Button
                 variant="ghost"
                 size="md"
                 key={tab}
-                className={`text-sm font-bold pb-4 -mb-4 border-b-2 transition-colors whitespace-nowrap px-2 ${activeTab === tab ? "border-[hsl(var(--secondary))] text-[hsl(var(--secondary))]" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+                className={`text-sm font-bold pb-4 -mb-4 border-b-2 transition-colors whitespace-nowrap px-2 ${activeTab === tab ? 'border-[hsl(var(--secondary))] text-[hsl(var(--secondary))]' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
                 onClick={() => setActiveTab(tab)}
               >
                 {tab}
@@ -662,31 +614,26 @@ export default function HotelHome() {
               <ul className="text-xs text-blue-500 space-y-2 font-medium">
                 {popularDestinations
                   .filter(
-                    (d) =>
-                      activeTab === "All" ||
+                    d =>
+                      activeTab === 'All' ||
                       d.destinationType
                         ?.toLowerCase()
-                        .includes(
-                          activeTab
-                            .toLowerCase()
-                            .replace("ies", "y")
-                            .replace("s", ""),
-                        ),
+                        .includes(activeTab.toLowerCase().replace('ies', 'y').replace('s', ''))
                   )
                   .slice(0, 5)
-                  .map((d) => (
+                  .map(d => (
                     <li
                       key={d.id}
                       className="hover:underline cursor-pointer"
                       onClick={() =>
                         navigate(
-                          `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`,
+                          `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`
                         )
                       }
                     >
                       {d.name}, {d.countryCode}
                       <span className="ml-1 text-muted-foreground">
-                        ({d.hotelCount?.toLocaleString()}{" "}
+                        ({d.hotelCount?.toLocaleString()}{' '}
                         {marketingHotelHome.trending.columnLabels.countLabel})
                       </span>
                     </li>
@@ -700,13 +647,13 @@ export default function HotelHome() {
                 {marketingHotelHome.trending.columnLabels.secondary}
               </p>
               <ul className="text-xs text-blue-500 space-y-2 font-medium">
-                {popularDestinations.slice(5, 10).map((d) => (
+                {popularDestinations.slice(5, 10).map(d => (
                   <li
                     key={d.id}
                     className="hover:underline cursor-pointer"
                     onClick={() =>
                       navigate(
-                        `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`,
+                        `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`
                       )
                     }
                   >
@@ -722,13 +669,13 @@ export default function HotelHome() {
                 {marketingHotelHome.trending.columnLabels.tertiary}
               </p>
               <ul className="text-xs text-blue-500 space-y-2 font-medium">
-                {popularDestinations.slice(10, 15).map((d) => (
+                {popularDestinations.slice(10, 15).map(d => (
                   <li
                     key={d.id}
                     className="hover:underline cursor-pointer"
                     onClick={() =>
                       navigate(
-                        `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`,
+                        `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`
                       )
                     }
                   >
@@ -744,13 +691,13 @@ export default function HotelHome() {
                 {marketingHotelHome.trending.columnLabels.quaternary}
               </p>
               <ul className="text-xs text-blue-500 space-y-2 font-medium">
-                {popularDestinations.slice(15, 20).map((d) => (
+                {popularDestinations.slice(15, 20).map(d => (
                   <li
                     key={d.id}
                     className="hover:underline cursor-pointer"
                     onClick={() =>
                       navigate(
-                        `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`,
+                        `/hotels/list?location=${encodeURIComponent(d.name)}&countryCode=${d.countryCode}`
                       )
                     }
                   >
@@ -765,3 +712,5 @@ export default function HotelHome() {
     </TripLogerLayout>
   );
 }
+
+export default HotelHome;

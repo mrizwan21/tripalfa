@@ -16,8 +16,8 @@
  *     • Refundability
  */
 
-import React, { useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   MapPin,
   Star,
@@ -42,29 +42,29 @@ import {
   Eye,
   Map,
   Maximize2,
-} from "lucide-react";
-import { Button } from "../components/ui/button";
-import { formatCurrency } from "@tripalfa/ui-components";
-import { HOTEL_STATIC_DATA } from "../lib/constants/hotel-static-data";
-import { BookingStepper } from "../components/ui/BookingStepper";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { GuestReviewsModal } from "../components/hotel/GuestReviewsModal";
-import { ImageGallery } from "../components/hotel/ImageGallery";
-import { Facilities } from "../components/hotel/Facilities";
-import { HotelMap } from "../components/map";
-import { useHotelDetailData } from "../hooks/useHotelDetailData";
-import { useWeatherData } from "../hooks/useWeatherData";
-import { WeatherWidget } from "../components/hotel/WeatherWidget";
-import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { HOTEL_STATIC_DATA } from '../lib/constants/hotel-static-data';
+import { BookingStepper } from '../components/ui/BookingStepper';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { GuestReviewsModal } from '../components/hotel/GuestReviewsModal';
+import { ImageGallery } from '../components/hotel/ImageGallery';
+import { Facilities } from '../components/hotel/Facilities';
+import { HotelMap } from '../components/map';
+import { useHotelDetailData } from '../hooks/useHotelDetailData';
+import { useWeatherData } from '../hooks/useWeatherData';
+import { WeatherWidget } from '../components/hotel/WeatherWidget';
+import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 
 type MergedRoom = Record<string, any>;
 type RoomRate = Record<string, any>;
 type HotelAmenity = Record<string, any>;
 
 const REVIEW_CARD_CLASS =
-  "snap-center shrink-0 w-[400px] bg-muted p-8 rounded-[2rem] border border-border";
+  'snap-center shrink-0 w-[400px] bg-muted p-8 rounded-[2rem] border border-border';
 const REVIEW_AVATAR_CLASS =
-  "w-10 h-10 bg-background rounded-full flex items-center justify-center font-black text-foreground shadow-md text-sm";
+  'w-10 h-10 bg-background rounded-full flex items-center justify-center font-black text-foreground shadow-md text-sm';
 
 // Aliases – BedDouble/Ruler removed in newer lucide-react; use Bed/Maximize2
 const BedDoubleIcon = Bed;
@@ -74,20 +74,20 @@ const RulerIcon = Maximize2;
 
 function getHotelAmenityCategoryIcon(category: string): React.ReactNode {
   switch (category.toLowerCase()) {
-    case "dining":
+    case 'dining':
       return <Utensils size={14} />;
-    case "recreation":
-    case "wellness":
+    case 'recreation':
+    case 'wellness':
       return <Waves size={14} />;
-    case "transportation":
+    case 'transportation':
       return <Car size={14} />;
-    case "services":
+    case 'services':
       return <User size={14} />;
-    case "security":
+    case 'security':
       return <Lock size={14} />;
-    case "business":
+    case 'business':
       return <Info size={14} />;
-    case "facilities":
+    case 'facilities':
       return <Bed size={14} />;
     default:
       return <Info size={14} />;
@@ -96,19 +96,19 @@ function getHotelAmenityCategoryIcon(category: string): React.ReactNode {
 
 function getRoomAmenityCategoryIcon(category: string): React.ReactNode {
   switch (category.toLowerCase()) {
-    case "bathroom":
+    case 'bathroom':
       return <Waves size={12} />;
-    case "comfort":
+    case 'comfort':
       return <Bed size={12} />;
-    case "entertainment":
+    case 'entertainment':
       return <Star size={12} />;
-    case "kitchen":
+    case 'kitchen':
       return <Coffee size={12} />;
-    case "views":
+    case 'views':
       return <Eye size={12} />;
-    case "security":
+    case 'security':
       return <Lock size={12} />;
-    case "technology":
+    case 'technology':
       return <Wifi size={12} />;
     default:
       return <Info size={12} />;
@@ -123,9 +123,7 @@ function getRoomAmenityCategoryIcon(category: string): React.ReactNode {
  */
 function getBoardLabel(code?: string | null): string | null {
   if (!code) return null;
-  const boardType = HOTEL_STATIC_DATA.BOARD_TYPES.all.find(
-    (b) => b.code === code,
-  );
+  const boardType = HOTEL_STATIC_DATA.BOARD_TYPES.all.find(b => b.code === code);
   return boardType?.name ?? code;
 }
 
@@ -150,9 +148,9 @@ function RateRow({
   const imageUrl =
     room.primaryImage ??
     room.images[0]?.url ??
-    hotelImages.find((i) => i.isPrimary)?.url ??
+    hotelImages.find(i => i.isPrimary)?.url ??
     hotelImages[0]?.url ??
-    "https://images.unsplash.com/photo-1611892440504-42a792e24d32";
+    'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
 
   const boardLabel = getBoardLabel(rate.boardBasis) ?? rate.boardBasisName;
 
@@ -165,11 +163,7 @@ function RateRow({
         <div className="flex gap-8 items-center">
           {/* Room image (from DB or hotel fallback) */}
           <div className="w-48 h-32 rounded-3xl overflow-hidden shrink-0 shadow-2xl border-4 border-border group-hover:scale-105 transition-transform duration-500">
-            <img
-              src={imageUrl}
-              className="w-full h-full object-cover"
-              alt={room.name}
-            />
+            <img src={imageUrl} className="w-full h-full object-cover" alt={room.name} />
           </div>
           <div className="space-y-3">
             <p className="text-xl font-black text-foreground tracking-tight">
@@ -184,11 +178,11 @@ function RateRow({
                     key={i}
                     className="inline-flex items-center gap-1 px-3 py-1 bg-muted text-[10px] font-black text-muted-foreground rounded-full uppercase tracking-tighter"
                   >
-                    {f.includes("View") ? (
+                    {f.includes('View') ? (
                       <Eye size={10} />
-                    ) : f.includes("Bed") ? (
+                    ) : f.includes('Bed') ? (
                       <BedDoubleIcon size={10} />
-                    ) : f.includes("m²") ? (
+                    ) : f.includes('m²') ? (
                       <RulerIcon size={10} />
                     ) : null}
                     {f}
@@ -232,11 +226,11 @@ function RateRow({
             </p>
             <p className="text-xs font-bold text-muted-foreground leading-relaxed">
               {rate.cancellationPolicy ||
-                "Full payment due at booking. Cancellation policies vary by rate."}
+                'Full payment due at booking. Cancellation policies vary by rate.'}
             </p>
             {rate.cancellationDeadline && (
               <p className="text-[10px] font-bold text-amber-600 flex items-center gap-1">
-                <Clock size={10} /> Free cancellation until{" "}
+                <Clock size={10} /> Free cancellation until{' '}
                 {new Date(rate.cancellationDeadline).toLocaleDateString()}
               </p>
             )}
@@ -277,9 +271,7 @@ function RateRow({
                 <p className="text-3xl font-black text-foreground tracking-tighter leading-none">
                   {formatCurrency(rate.price.amount)}
                 </p>
-                <p className="text-[10px] font-bold text-muted-foreground mt-1">
-                  per night
-                </p>
+                <p className="text-[10px] font-bold text-muted-foreground mt-1">per night</p>
               </div>
             </>
           ) : (
@@ -300,9 +292,7 @@ function RateRow({
             >
               <span className="text-xl font-bold">−</span>
             </Button>
-            <span className="text-lg font-black text-foreground w-6 text-center">
-              {count}
-            </span>
+            <span className="text-lg font-black text-foreground w-6 text-center">{count}</span>
             <Button
               variant="primary"
               size="sm"
@@ -340,7 +330,7 @@ function RoomSection({
       : [
           {
             offerId: `placeholder-${room.id}`,
-            price: { amount: 0, currency: "USD" },
+            price: { amount: 0, currency: 'USD' },
             isRefundable: false,
           } as RoomRate,
         ];
@@ -372,11 +362,7 @@ function RoomSection({
         </div>
         {/* Source indicator (dev aid) */}
         <span className="text-[9px] opacity-40 font-bold normal-case">
-          {room.source === "merged"
-            ? "◉ DB+API"
-            : room.source === "db"
-              ? "◉ DB"
-              : "◉ API"}
+          {room.source === 'merged' ? '◉ DB+API' : room.source === 'db' ? '◉ DB' : '◉ API'}
         </span>
       </div>
 
@@ -410,7 +396,7 @@ function RoomSection({
 
 // ── Main Page ────────────────────────────────────────────────────────────────
 
-export default function HotelDetail(): React.JSX.Element {
+function HotelDetail(): React.JSX.Element {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -419,20 +405,17 @@ export default function HotelDetail(): React.JSX.Element {
   // Read search params from navigation state (set by HotelList)
   const searchState = (location.state as any) || {};
 
-  const [selectedUnits, setSelectedUnits] = useState<Record<string, number>>(
-    {},
-  );
+  const [selectedUnits, setSelectedUnits] = useState<Record<string, number>>({});
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   // ── Data: 95% PostgreSQL + 5% Realtime API ────────────────────────────
-  const { data, loading, ratesLoading, error, refetchRates } =
-    useHotelDetailData(id, {
-      checkin: searchState.checkin,
-      checkout: searchState.checkout,
-      currency: searchState.currency ?? "USD",
-      guestNationality: searchState.guestNationality ?? "AE",
-      occupancies: searchState.occupancies ?? [{ adults: 2 }],
-    });
+  const { data, loading, ratesLoading, error, refetchRates } = useHotelDetailData(id, {
+    checkin: searchState.checkin,
+    checkout: searchState.checkout,
+    currency: searchState.currency ?? 'USD',
+    guestNationality: searchState.guestNationality ?? 'AE',
+    occupancies: searchState.occupancies ?? [{ adults: 2 }],
+  });
 
   // Check if we have coordinates for weather data
   const weatherCoordinates =
@@ -452,17 +435,11 @@ export default function HotelDetail(): React.JSX.Element {
     return (
       <TripLogerLayout>
         <div className="container mx-auto px-4 py-40 flex flex-col items-center text-center gap-4">
-          <h1 className="text-3xl font-black text-foreground mb-3">
-            Hotel Booking Disabled
-          </h1>
+          <h1 className="text-3xl font-black text-foreground mb-3">Hotel Booking Disabled</h1>
           <p className="text-sm font-bold text-muted-foreground mb-6">
             Your admin has currently disabled hotel booking for this tenant.
           </p>
-          <Button
-            variant="primary"
-            onClick={() => navigate("/")}
-            className="h-11 px-6"
-          >
+          <Button variant="primary" onClick={() => navigate('/')} className="h-11 px-6">
             Back to Home
           </Button>
         </div>
@@ -471,7 +448,7 @@ export default function HotelDetail(): React.JSX.Element {
   }
 
   const handleUnitChange = (key: string, delta: number) => {
-    setSelectedUnits((prev) => ({
+    setSelectedUnits(prev => ({
       ...prev,
       [key]: Math.max(0, (prev[key] || 0) + delta),
     }));
@@ -488,9 +465,7 @@ export default function HotelDetail(): React.JSX.Element {
           <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">
             Loading Property Details…
           </p>
-          <p className="text-muted-foreground text-xs mt-2">
-            Fetching hotel data from database
-          </p>
+          <p className="text-muted-foreground text-xs mt-2">Fetching hotel data from database</p>
         </div>
       </TripLogerLayout>
     );
@@ -500,32 +475,22 @@ export default function HotelDetail(): React.JSX.Element {
     return (
       <TripLogerLayout>
         <div className="p-20 text-center">
-          <p className="text-2xl font-black text-muted-foreground mb-4">
-            Hotel not found
-          </p>
+          <p className="text-2xl font-black text-muted-foreground mb-4">Hotel not found</p>
           <p className="text-sm text-muted-foreground">{error}</p>
         </div>
       </TripLogerLayout>
     );
   }
 
-  const {
-    hotel,
-    images,
-    hotelAmenitiesByCategory,
-    rooms,
-    reviews,
-    stats,
-    description,
-  } = data;
+  const { hotel, images, hotelAmenitiesByCategory, rooms, reviews, stats, description } = data;
 
   // ── Build Facilities categories (hotel-level amenities from DB) ──────
   const facilitiesCategories = Object.entries(hotelAmenitiesByCategory).map(
     ([category, amenities]) => ({
       title: category.toUpperCase(),
       icon: getHotelAmenityCategoryIcon(category),
-      items: (amenities as HotelAmenity[]).map((a) => a.name),
-    }),
+      items: (amenities as HotelAmenity[]).map(a => a.name),
+    })
   );
 
   return (
@@ -536,17 +501,11 @@ export default function HotelDetail(): React.JSX.Element {
         <div className="container mx-auto px-4 max-w-6xl mt-8">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 text-[13px] font-medium text-muted-foreground mb-6 px-2">
-            <span
-              className="hover:text-foreground cursor-pointer"
-              onClick={() => navigate("/")}
-            >
+            <span className="hover:text-foreground cursor-pointer" onClick={() => navigate('/')}>
               Home
             </span>
             <ChevronRight size={14} />
-            <span
-              className="hover:text-foreground cursor-pointer"
-              onClick={() => navigate(-1)}
-            >
+            <span className="hover:text-foreground cursor-pointer" onClick={() => navigate(-1)}>
               Search Result
             </span>
             <ChevronRight size={14} />
@@ -560,7 +519,7 @@ export default function HotelDetail(): React.JSX.Element {
               <ImageGallery
                 images={
                   images.length > 0
-                    ? images.map((img) => ({
+                    ? images.map(img => ({
                         url: img.url,
                         hero: img.isPrimary,
                       }))
@@ -568,7 +527,7 @@ export default function HotelDetail(): React.JSX.Element {
                         {
                           url:
                             data.primaryImage ||
-                            "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+                            'https://images.unsplash.com/photo-1566073771259-6a8506099945',
                           hero: true,
                         },
                       ]
@@ -582,15 +541,9 @@ export default function HotelDetail(): React.JSX.Element {
               {/* Star rating from DB */}
               {hotel.starRating && (
                 <div className="flex gap-1 mb-3">
-                  {Array.from({ length: Math.round(hotel.starRating) }).map(
-                    (_, i) => (
-                      <Star
-                        key={i}
-                        size={16}
-                        className="text-secondary fill-current"
-                      />
-                    ),
-                  )}
+                  {Array.from({ length: Math.round(hotel.starRating) }).map((_, i) => (
+                    <Star key={i} size={16} className="text-secondary fill-current" />
+                  ))}
                 </div>
               )}
 
@@ -600,12 +553,9 @@ export default function HotelDetail(): React.JSX.Element {
 
               {/* Address from DB */}
               <p className="text-[13px] font-bold text-muted-foreground mb-2 leading-relaxed flex items-start gap-2">
-                <MapPin
-                  size={14}
-                  className="text-muted-foreground mt-0.5 shrink-0"
-                />
+                <MapPin size={14} className="text-muted-foreground mt-0.5 shrink-0" />
                 {hotel.address ||
-                  `${hotel.city}${hotel.state ? ", " + hotel.state : ""}, ${hotel.country}`}
+                  `${hotel.city}${hotel.state ? ', ' + hotel.state : ''}, ${hotel.country}`}
               </p>
 
               {/* Chain/brand from DB */}
@@ -614,7 +564,7 @@ export default function HotelDetail(): React.JSX.Element {
                   {hotel.chainName}
                   {hotel.brandName && hotel.chainName !== hotel.brandName
                     ? ` — ${hotel.brandName}`
-                    : ""}
+                    : ''}
                 </p>
               )}
 
@@ -629,7 +579,7 @@ export default function HotelDetail(): React.JSX.Element {
                   className="text-foreground font-bold underline cursor-pointer text-sm"
                   onClick={() => setIsReviewModalOpen(true)}
                 >
-                  ({stats.reviewCount > 0 ? stats.reviewCount : "—"} reviews)
+                  ({stats.reviewCount > 0 ? stats.reviewCount : '—'} reviews)
                 </span>
               </div>
 
@@ -637,8 +587,7 @@ export default function HotelDetail(): React.JSX.Element {
                 {/* Description from DB */}
                 <p className="text-[13px] text-muted-foreground font-medium leading-relaxed">
                   {description
-                    ? description.slice(0, 280) +
-                      (description.length > 280 ? "…" : "")
+                    ? description.slice(0, 280) + (description.length > 280 ? '…' : '')
                     : `Situated in ${hotel.city}, ${hotel.name} features accommodation with free WiFi and excellent amenities.`}
                 </p>
 
@@ -695,9 +644,7 @@ export default function HotelDetail(): React.JSX.Element {
                 variant="primary"
                 className="w-full h-14 shadow-xl shadow-indigo-200 text-background font-black text-sm uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
                 onClick={() =>
-                  document
-                    .getElementById("room-prices")
-                    ?.scrollIntoView({ behavior: "smooth" })
+                  document.getElementById('room-prices')?.scrollIntoView({ behavior: 'smooth' })
                 }
               >
                 Choose Your Room <ChevronRight size={18} />
@@ -708,20 +655,18 @@ export default function HotelDetail(): React.JSX.Element {
           {/* Navigation Tabs */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-12 sticky top-24 z-30">
             {[
-              { id: "location", label: "Location", icon: Map },
-              { id: "facilities", label: "Facilities", icon: Bed },
-              { id: "reviews", label: "Reviews", icon: MessageSquare },
-              { id: "rules", label: "Rules & Conditions", icon: FileCheck },
-              { id: "room-prices", label: "Room Prices", icon: Key },
-            ].map((tab) => (
+              { id: 'location', label: 'Location', icon: Map },
+              { id: 'facilities', label: 'Facilities', icon: Bed },
+              { id: 'reviews', label: 'Reviews', icon: MessageSquare },
+              { id: 'rules', label: 'Rules & Conditions', icon: FileCheck },
+              { id: 'room-prices', label: 'Room Prices', icon: Key },
+            ].map(tab => (
               <Button
                 key={tab.id}
                 variant="secondary"
                 size="sm"
                 onClick={() =>
-                  document
-                    .getElementById(tab.id)
-                    ?.scrollIntoView({ behavior: "smooth" })
+                  document.getElementById(tab.id)?.scrollIntoView({ behavior: 'smooth' })
                 }
                 className="h-14 rounded-xl flex items-center justify-center gap-3 transition-transform active:scale-95"
               >
@@ -751,7 +696,7 @@ export default function HotelDetail(): React.JSX.Element {
                 name: hotel.name,
                 address:
                   hotel.address ||
-                  `${hotel.city}${hotel.state ? ", " + hotel.state : ""}, ${hotel.country}`,
+                  `${hotel.city}${hotel.state ? ', ' + hotel.state : ''}, ${hotel.country}`,
                 latitude: hotel.latitude,
                 longitude: hotel.longitude,
                 rating: stats.ratingAvg,
@@ -775,7 +720,7 @@ export default function HotelDetail(): React.JSX.Element {
             <p className="text-xs text-muted-foreground font-bold mb-8">
               {data.hotelAmenities.length > 0
                 ? `${data.hotelAmenities.length} facilities from hotel database`
-                : "Facility data loading…"}
+                : 'Facility data loading…'}
             </p>
 
             {facilitiesCategories.length > 0 ? (
@@ -795,8 +740,7 @@ export default function HotelDetail(): React.JSX.Element {
             <div className="flex items-center justify-between mb-8 gap-2">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-black text-foreground tracking-tight flex items-center gap-3">
-                  <MessageSquare className="text-muted-foreground" /> Guest
-                  Reviews
+                  <MessageSquare className="text-muted-foreground" /> Guest Reviews
                 </h2>
                 {stats.ratingAvg && (
                   <div className="px-4 py-2 bg-foreground rounded-xl text-background font-black text-xl">
@@ -820,14 +764,14 @@ export default function HotelDetail(): React.JSX.Element {
                     <div className="flex items-center justify-between mb-4 gap-2">
                       <div className="flex items-center gap-3">
                         <div className={REVIEW_AVATAR_CLASS}>
-                          {(r.authorName || "G").slice(0, 2).toUpperCase()}
+                          {(r.authorName || 'G').slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <span className="text-sm font-bold text-foreground block">
-                            {r.authorName || "Guest"}
+                            {r.authorName || 'Guest'}
                           </span>
                           <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                            {r.authorCountry || ""}
+                            {r.authorCountry || ''}
                           </span>
                         </div>
                       </div>
@@ -838,19 +782,17 @@ export default function HotelDetail(): React.JSX.Element {
                       )}
                     </div>
                     {r.title && (
-                      <h4 className="font-bold text-foreground mb-2 line-clamp-1">
-                        "{r.title}"
-                      </h4>
+                      <h4 className="font-bold text-foreground mb-2 line-clamp-1">"{r.title}"</h4>
                     )}
                     <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-3 mb-4">
                       {r.reviewText}
                     </p>
                     {r.stayDate && (
                       <p className="text-[10px] font-bold text-muted-foreground">
-                        Reviewed:{" "}
-                        {new Date(r.stayDate).toLocaleDateString("en-US", {
-                          month: "short",
-                          year: "numeric",
+                        Reviewed:{' '}
+                        {new Date(r.stayDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          year: 'numeric',
                         })}
                       </p>
                     )}
@@ -861,17 +803,15 @@ export default function HotelDetail(): React.JSX.Element {
               /* Placeholder reviews when DB has none */
               <div className="flex gap-6 overflow-x-auto pb-8 -mx-4 px-4 snap-x">
                 {[
-                  "Great location, excellent service!",
-                  "Beautiful hotel, will return!",
-                  "Amazing facilities and staff!",
+                  'Great location, excellent service!',
+                  'Beautiful hotel, will return!',
+                  'Amazing facilities and staff!',
                 ].map((title, i) => (
                   <div key={i} className={REVIEW_CARD_CLASS}>
                     <div className="flex items-center gap-3 mb-4">
                       <div className={REVIEW_AVATAR_CLASS}>GU</div>
                       <div>
-                        <span className="text-sm font-bold text-foreground block">
-                          Guest
-                        </span>
+                        <span className="text-sm font-bold text-foreground block">Guest</span>
                         <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
                           Verified Stay
                         </span>
@@ -880,12 +820,10 @@ export default function HotelDetail(): React.JSX.Element {
                         9.{5 - i}
                       </span>
                     </div>
-                    <h4 className="font-bold text-foreground mb-2">
-                      "{title}"
-                    </h4>
+                    <h4 className="font-bold text-foreground mb-2">"{title}"</h4>
                     <p className="text-xs font-medium text-muted-foreground leading-relaxed line-clamp-3">
-                      Wonderful experience at {hotel.name}. The facilities were
-                      top-notch and the location couldn't be better.
+                      Wonderful experience at {hotel.name}. The facilities were top-notch and the
+                      location couldn't be better.
                     </p>
                   </div>
                 ))}
@@ -903,19 +841,15 @@ export default function HotelDetail(): React.JSX.Element {
             </h2>
             <div className="space-y-4">
               <div className="flex justify-between py-4 border-b border-border gap-4">
-                <span className="text-sm font-bold text-muted-foreground">
-                  Check-in
-                </span>
+                <span className="text-sm font-bold text-muted-foreground">Check-in</span>
                 <span className="text-sm font-black text-foreground">
-                  From {hotel.checkInTime || "14:00"}
+                  From {hotel.checkInTime || '14:00'}
                 </span>
               </div>
               <div className="flex justify-between py-4 border-b border-border gap-4">
-                <span className="text-sm font-bold text-muted-foreground">
-                  Check-out
-                </span>
+                <span className="text-sm font-bold text-muted-foreground">Check-out</span>
                 <span className="text-sm font-black text-foreground">
-                  Until {hotel.checkOutTime || "12:00"}
+                  Until {hotel.checkOutTime || '12:00'}
                 </span>
               </div>
               <div className="flex justify-between py-4 border-b border-border gap-4">
@@ -923,26 +857,21 @@ export default function HotelDetail(): React.JSX.Element {
                   Cancellation / Prepayment
                 </span>
                 <span className="text-sm font-black text-foreground text-right max-w-xs">
-                  Policies vary by room type and rate. See individual room rates
-                  below.
+                  Policies vary by room type and rate. See individual room rates below.
                 </span>
               </div>
               <div className="flex justify-between py-4 border-b border-border gap-4">
-                <span className="text-sm font-bold text-muted-foreground">
-                  Pets
-                </span>
+                <span className="text-sm font-bold text-muted-foreground">Pets</span>
                 <span className="text-sm font-black text-foreground">
-                  {data.hotelAmenities.some((a) => a.code === "PETS_FRIENDLY")
-                    ? "Pets allowed ✓"
-                    : "Contact hotel for pet policy"}
+                  {data.hotelAmenities.some(a => a.code === 'PETS_FRIENDLY')
+                    ? 'Pets allowed ✓'
+                    : 'Contact hotel for pet policy'}
                 </span>
               </div>
               {/* Contact info from DB */}
               {data.contacts.length > 0 && data.contacts[0].phone && (
                 <div className="flex justify-between py-4 border-b border-border gap-4">
-                  <span className="text-sm font-bold text-muted-foreground">
-                    Contact
-                  </span>
+                  <span className="text-sm font-bold text-muted-foreground">Contact</span>
                   <span className="text-sm font-black text-foreground">
                     {data.contacts[0].phone}
                   </span>
@@ -1001,35 +930,33 @@ export default function HotelDetail(): React.JSX.Element {
                     Room Details Available on Request
                   </p>
                   <p className="text-sm font-bold text-muted-foreground">
-                    Room type data will load once search dates are selected.
-                    Available room amenities for this property:
+                    Room type data will load once search dates are selected. Available room
+                    amenities for this property:
                   </p>
                 </div>
 
                 {/* Show room amenity master catalog grouped by category */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {Object.entries(data.roomAmenitiesByCategory).map(
-                    ([category, amenities]) => (
-                      <div key={category}>
-                        <div className="flex items-center gap-2 mb-3">
-                          {getRoomAmenityCategoryIcon(category)}
-                          <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
-                            {category}
-                          </span>
-                        </div>
-                        <div className="space-y-2">
-                          {(amenities as any[]).map((a, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
-                              <span className="text-xs font-bold text-muted-foreground">
-                                {a.name}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                  {Object.entries(data.roomAmenitiesByCategory).map(([category, amenities]) => (
+                    <div key={category}>
+                      <div className="flex items-center gap-2 mb-3">
+                        {getRoomAmenityCategoryIcon(category)}
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                          {category}
+                        </span>
                       </div>
-                    ),
-                  )}
+                      <div className="space-y-2">
+                        {(amenities as any[]).map((a, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
+                            <span className="text-xs font-bold text-muted-foreground">
+                              {a.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1051,7 +978,7 @@ export default function HotelDetail(): React.JSX.Element {
                   Reservation Summary
                 </p>
                 <p className="font-black text-2xl text-primary-foreground tracking-tight">
-                  {totalSelected} Room{totalSelected > 1 ? "s" : ""} Selected
+                  {totalSelected} Room{totalSelected > 1 ? 's' : ''} Selected
                 </p>
               </div>
             </div>
@@ -1101,3 +1028,5 @@ function ShoppingBagIcon({ size }: { size: number }) {
     </svg>
   );
 }
+
+export default HotelDetail;

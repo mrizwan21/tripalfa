@@ -1,4 +1,4 @@
-import { getCoreDb } from '@tripalfa/shared-database';
+import { prisma } from '../database.js';
 import {
   CreateTicketRequest,
   UpdateTicketRequest,
@@ -8,8 +8,6 @@ import {
 } from '../types';
 import { AppError } from '../middleware/errorHandler';
 import { generateTicketNumber } from '../utils/ticketUtils';
-
-const prisma = getCoreDb();
 
 export class TicketService {
   /**

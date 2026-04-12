@@ -8,6 +8,24 @@ import { prisma } from '../database.js';
 
 const router: Router = Router();
 
+/**
+ * Normalizes request parameters that might be strings or string arrays.
+ */
+const getParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0];
+  return param || '';
+};
+
+/**
+ * Standardized error handler for controllers.
+ */
+const handleControllerError = (res: Response, error: unknown, status = 500) => {
+  res.status(status).json({
+    success: false,
+    error: error instanceof Error ? error.message : 'Unknown error',
+  });
+};
+
 interface PendingAuthCode {
   accessToken: string;
   refreshToken?: string;
@@ -64,11 +82,8 @@ router.get('/health', async (req: Request, res: Response) => {
       data: health,
     });
   } catch (error: unknown) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+      handleControllerError(res, error);
+    }
 });
 
 /**
@@ -286,11 +301,8 @@ router.post('/login', async (req: Request, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    res.status(401).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+      handleControllerError(res, error, 401);
+    }
 });
 
 /**
@@ -564,11 +576,8 @@ router.post('/refresh', async (req: Request, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    res.status(401).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+      handleControllerError(res, error, 401);
+    }
 });
 
 /**
@@ -642,11 +651,8 @@ router.post('/logout', authMiddleware, async (req: AuthRequest, res: Response) =
       message: 'Logged out successfully',
     });
   } catch (error: unknown) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+      handleControllerError(res, error);
+    }
 });
 
 /**
@@ -701,11 +707,8 @@ router.get('/userinfo', authMiddleware, async (req: AuthRequest, res: Response) 
       data: userInfo,
     });
   } catch (error: unknown) {
-    res.status(401).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+      handleControllerError(res, error, 401);
+    }
 });
 
 /**
@@ -810,11 +813,8 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
       },
     });
   } catch (error: unknown) {
-    res.status(500).json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
+      handleControllerError(res, error);
+    }
 });
 
 export default router;

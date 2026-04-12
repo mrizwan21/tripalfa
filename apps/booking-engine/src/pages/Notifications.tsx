@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import { listNotifications, markNotificationRead } from "../lib/api";
-import { format } from "date-fns";
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { listNotifications, markNotificationRead } from '../lib/api';
+import { format } from 'date-fns';
 import {
   Bell,
   CheckCircle2,
@@ -13,44 +13,41 @@ import {
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
   AlertCircle,
-} from "lucide-react";
-import { Button } from "../components/ui/button";
-import { cn } from "@tripalfa/ui-components";
-import { NotificationDetailsPopup } from "../components/NotificationDetailsPopup";
-import { Toaster } from "../components/ui/toast";
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { cn } from '@tripalfa/ui-components';
+import { NotificationDetailsPopup } from '../components/NotificationDetailsPopup';
+import { Toaster } from '../components/ui/toast';
 import {
   mapApiNotificationToItem,
   type NotificationItem,
   type NotificationType,
   type NotificationStatus,
-} from "../lib/notification-types";
+} from '../lib/notification-types';
 
 const POLLING_INTERVAL = 30000;
 
-export default function Notifications() {
+function Notifications() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedNotification, setSelectedNotification] =
-    useState<NotificationItem | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout>(undefined);
   const lastTotalNotificationCountRef = useRef(0);
   const [toasts, setToasts] = useState<
     Array<{
       id: string;
-      type: "success" | "error" | "info" | "warning";
+      type: 'success' | 'error' | 'info' | 'warning';
       title: string;
       message?: string;
       notification?: NotificationItem;
     }>
   >([]);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState<NotificationType | "ALL">("ALL");
-  const [statusFilter, setStatusFilter] = useState<NotificationStatus | "ALL">(
-    "ALL",
-  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<NotificationType | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<NotificationStatus | 'ALL'>('ALL');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -70,16 +67,16 @@ export default function Notifications() {
 
       if (previousTotalCount > 0 && currentTotalCount > previousTotalCount) {
         const newNotifications = mappedNotifications.slice(previousTotalCount);
-        newNotifications.forEach((notification) => {
+        newNotifications.forEach(notification => {
           const toastType =
-            notification.type === "SUCCESS"
-              ? "success"
-              : notification.type === "ERROR"
-                ? "error"
-                : notification.type === "WARNING"
-                  ? "warning"
-                  : "info";
-          setToasts((prev) => [
+            notification.type === 'SUCCESS'
+              ? 'success'
+              : notification.type === 'ERROR'
+                ? 'error'
+                : notification.type === 'WARNING'
+                  ? 'warning'
+                  : 'info';
+          setToasts(prev => [
             ...prev,
             {
               id: `toast-${notification.id}-${Date.now()}`,
@@ -92,7 +89,7 @@ export default function Notifications() {
         });
       }
     } catch (err) {
-      setError("Failed to load notifications. Please try again.");
+      setError('Failed to load notifications. Please try again.');
       setItems([]);
     } finally {
       setLoading(false);
@@ -109,8 +106,7 @@ export default function Notifications() {
     }, POLLING_INTERVAL);
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        if (pollingIntervalRef.current)
-          clearInterval(pollingIntervalRef.current);
+        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
       } else {
         load();
         pollingIntervalRef.current = setInterval(() => {
@@ -118,17 +114,15 @@ export default function Notifications() {
         }, POLLING_INTERVAL);
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
   async function markRead(id: string) {
-    const updatedItems = items.map((i) =>
-      i.id === id ? { ...i, read: true } : i,
-    );
+    const updatedItems = items.map(i => (i.id === id ? { ...i, read: true } : i));
     setItems(updatedItems);
     lastTotalNotificationCountRef.current = updatedItems.length;
     await markNotificationRead(id);
@@ -146,7 +140,7 @@ export default function Notifications() {
   };
 
   const handleRemoveToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
   const filteredAndPaginatedItems = useMemo(() => {
@@ -154,17 +148,14 @@ export default function Notifications() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (item) =>
+        item =>
           item.title.toLowerCase().includes(query) ||
           item.description.toLowerCase().includes(query) ||
-          (item.passengerName &&
-            item.passengerName.toLowerCase().includes(query)),
+          (item.passengerName && item.passengerName.toLowerCase().includes(query))
       );
     }
-    if (typeFilter !== "ALL")
-      filtered = filtered.filter((item) => item.type === typeFilter);
-    if (statusFilter !== "ALL")
-      filtered = filtered.filter((item) => item.status === statusFilter);
+    if (typeFilter !== 'ALL') filtered = filtered.filter(item => item.type === typeFilter);
+    if (statusFilter !== 'ALL') filtered = filtered.filter(item => item.status === statusFilter);
     const startIndex = (currentPage - 1) * pageSize;
     return filtered.slice(startIndex, startIndex + pageSize);
   }, [items, searchQuery, typeFilter, statusFilter, currentPage, pageSize]);
@@ -174,17 +165,14 @@ export default function Notifications() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (item) =>
+        item =>
           item.title.toLowerCase().includes(query) ||
           item.description.toLowerCase().includes(query) ||
-          (item.passengerName &&
-            item.passengerName.toLowerCase().includes(query)),
+          (item.passengerName && item.passengerName.toLowerCase().includes(query))
       );
     }
-    if (typeFilter !== "ALL")
-      filtered = filtered.filter((item) => item.type === typeFilter);
-    if (statusFilter !== "ALL")
-      filtered = filtered.filter((item) => item.status === statusFilter);
+    if (typeFilter !== 'ALL') filtered = filtered.filter(item => item.type === typeFilter);
+    if (statusFilter !== 'ALL') filtered = filtered.filter(item => item.status === statusFilter);
     return filtered.length;
   }, [items, searchQuery, typeFilter, statusFilter]);
 
@@ -194,15 +182,15 @@ export default function Notifications() {
     setCurrentPage(1);
   }, [searchQuery, typeFilter, statusFilter]);
 
-  const unreadCount = items.filter((i) => !i.read).length;
+  const unreadCount = items.filter(i => !i.read).length;
 
   const handleMarkAllAsRead = async () => {
-    const unreadItems = items.filter((item) => !item.read);
+    const unreadItems = items.filter(item => !item.read);
     if (unreadItems.length === 0) return;
-    const updatedItems = items.map((item) => ({ ...item, read: true }));
+    const updatedItems = items.map(item => ({ ...item, read: true }));
     setItems(updatedItems);
     lastTotalNotificationCountRef.current = updatedItems.length;
-    await Promise.all(unreadItems.map((item) => markNotificationRead(item.id)));
+    await Promise.all(unreadItems.map(item => markNotificationRead(item.id)));
   };
 
   return (
@@ -212,7 +200,7 @@ export default function Notifications() {
           <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
             Notifications
             {unreadCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-background text-xs font-medium gap-4">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-background text-xs font-medium gap-4">
                 {unreadCount}
               </span>
             )}
@@ -221,11 +209,7 @@ export default function Notifications() {
             Personalized alerts about your trips and account.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleMarkAllAsRead}
-          disabled={unreadCount === 0}
-        >
+        <Button variant="outline" onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
           Mark all as read
         </Button>
       </div>
@@ -238,16 +222,14 @@ export default function Notifications() {
               type="text"
               placeholder="Search notifications..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))]"
             />
           </div>
           <div className="flex flex-wrap gap-2">
             <select
               value={typeFilter}
-              onChange={(e) =>
-                setTypeFilter(e.target.value as NotificationType | "ALL")
-              }
+              onChange={e => setTypeFilter(e.target.value as NotificationType | 'ALL')}
               className="px-3 py-2 border border-border rounded-lg text-sm"
             >
               <option value="ALL">All Types</option>
@@ -258,9 +240,7 @@ export default function Notifications() {
             </select>
             <select
               value={statusFilter}
-              onChange={(e) =>
-                setStatusFilter(e.target.value as NotificationStatus | "ALL")
-              }
+              onChange={e => setStatusFilter(e.target.value as NotificationStatus | 'ALL')}
               className="px-3 py-2 border border-border rounded-lg text-sm"
             >
               <option value="ALL">All Status</option>
@@ -273,12 +253,12 @@ export default function Notifications() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-600 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent" />
           <p className="mt-3 text-sm text-muted-foreground">Loading...</p>
         </div>
       ) : error ? (
         <div className="text-center py-16">
-          <AlertCircle size={32} className="text-red-500 mx-auto mb-3" />
+          <AlertCircle size={32} className="text-neutral-500 mx-auto mb-3" />
           <h3 className="text-lg font-medium">Error loading notifications</h3>
           <Button onClick={load} className="mt-3">
             Try Again
@@ -292,49 +272,43 @@ export default function Notifications() {
       ) : (
         <>
           <div className="space-y-3">
-            {filteredAndPaginatedItems.map((n) => (
+            {filteredAndPaginatedItems.map(n => (
               <div
                 key={n.id}
                 className={cn(
-                  "group relative bg-card rounded-lg border transition-all",
-                  n.read
-                    ? "border-border opacity-75"
-                    : "border-border shadow-sm",
+                  'group relative bg-card rounded-lg border transition-all',
+                  n.read ? 'border-border opacity-75' : 'border-border shadow-sm'
                 )}
               >
                 <div className="p-4 flex items-start gap-3">
                   <div
                     className={cn(
-                      "h-10 w-10 rounded-lg flex items-center justify-center",
-                      n.type === "SUCCESS"
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-muted text-muted-foreground",
+                      'h-10 w-10 rounded-lg flex items-center justify-center',
+                      n.type === 'SUCCESS'
+                        ? 'bg-muted text-[hsl(var(--primary))]'
+                        : 'bg-muted text-muted-foreground'
                     )}
                   >
-                    {n.type === "SUCCESS" ? (
-                      <CheckCircle2 size={18} />
-                    ) : (
-                      <Bell size={18} />
-                    )}
+                    {n.type === 'SUCCESS' ? <CheckCircle2 size={18} /> : <Bell size={18} />}
                   </div>
                   <div className="flex-1 gap-4">
                     <div className="flex justify-between items-start gap-4">
                       <h4
                         className={cn(
-                          "font-medium",
-                          n.read ? "text-muted-foreground" : "text-foreground",
+                          'font-medium',
+                          n.read ? 'text-muted-foreground' : 'text-foreground'
                         )}
                       >
                         {n.title}
                       </h4>
                       <span className="text-xs text-muted-foreground">
-                        {format(new Date(n.when), "MMM d, h:mm a")}
+                        {format(new Date(n.when), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <p
                       className={cn(
-                        "mt-0.5 text-sm",
-                        n.read ? "text-muted-foreground" : "text-foreground",
+                        'mt-0.5 text-sm',
+                        n.read ? 'text-muted-foreground' : 'text-foreground'
                       )}
                     >
                       {n.message}
@@ -345,7 +319,7 @@ export default function Notifications() {
                           variant="outline"
                           size="md"
                           onClick={() => markRead(n.id)}
-                          className="text-xs font-medium text-purple-600"
+                          className="text-xs font-medium text-[hsl(var(--primary))]"
                         >
                           Mark as read
                         </Button>
@@ -382,7 +356,7 @@ export default function Notifications() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -390,9 +364,7 @@ export default function Notifications() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -422,3 +394,5 @@ export default function Notifications() {
     </div>
   );
 }
+
+export default Notifications;

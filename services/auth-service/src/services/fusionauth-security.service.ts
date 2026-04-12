@@ -37,13 +37,13 @@ export interface SecurityCheckResult {
  * FusionAuth Security Service
  * Integrates IP management and security policies with FusionAuth
  */
-export class FusionAuthService {
-  private static instance: FusionAuthService;
+class FusionAuthSecurityService {
+  private static instance: FusionAuthSecurityService;
 
   private constructor() {}
 
-  static getInstance(): FusionAuthService {
-    if (!FusionAuthService.instance) {
+  static getInstance(): FusionAuthSecurityService {
+    if (!FusionAuthSecurityService.instance) {
       FusionAuthService.instance = new FusionAuthService();
     }
     return FusionAuthService.instance;
@@ -400,4 +400,4 @@ export class FusionAuthService {
   }
 }
 
-export const fusionAuthService = FusionAuthService.getInstance();
+export const fusionAuthSecurityService = FusionAuthSecurityService.getInstance();

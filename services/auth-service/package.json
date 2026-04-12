@@ -20,8 +20,7 @@
     "dotenv": "^16.3.1",
     "express": "^5.0.6",
     "jsonwebtoken": "^9.0.2",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "@node-rs/bcrypt": "1.10.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

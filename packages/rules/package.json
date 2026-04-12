@@ -40,8 +40,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^20.0.0",
-    "typescript": "^5.9.3",
-    "zod": "^3.22.0"
+      "typescript": "^5.9.3"
   },
   "peerDependencies": {
     "@prisma/client": "^7.4.0",

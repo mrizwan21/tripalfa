@@ -58,7 +58,7 @@ export const NAV_LINKS = [
   { label: "Alerts", href: "/alerts", icon: Bell },
 ];
 
-export const FLIGHT_CLASSES = [
+const FLIGHT_CLASSES = [
   { value: "ECONOMY", label: "Economy" },
   { value: "PREMIUM_ECONOMY", label: "Premium Economy" },
   { value: "BUSINESS", label: "Business" },

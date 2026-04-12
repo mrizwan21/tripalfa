@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search,
   MapPin,
@@ -26,47 +26,39 @@ import {
   Sparkles,
   Grid3X3,
   LayoutGrid,
-} from "lucide-react";
-import hotelApi from "../api/hotelApi";
-import { formatCurrency } from "@tripalfa/ui-components";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { usePopularDestinations } from "../hooks/useStaticData";
-import { useFacilities, getPopularFacilities } from "../hooks/useFacilities";
-import { useHotelFilters } from "../hooks/useHotelFilters";
-import { Button } from "../components/ui/button";
-import { Card } from "../components/ui/card";
-import { HotelMap } from "../components/map/HotelMap";
-import {
-  HotelSearchFilters,
-  HotelFilters,
-} from "../components/hotel/HotelSearchFilters";
-import { HOTEL_STATIC_DATA } from "../lib/constants/hotel-static-data";
-import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
+} from 'lucide-react';
+import hotelApi from '../api/hotelApi';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { usePopularDestinations } from '../hooks/useStaticData';
+import { useFacilities, getPopularFacilities } from '../hooks/useFacilities';
+import { useHotelFilters } from '../hooks/useHotelFilters';
+import { Button } from '../components/ui/button';
+import { Card } from '../components/ui/card';
+import { HotelMap } from '../components/map/HotelMap';
+import { HotelSearchFilters, HotelFilters } from '../components/hotel/HotelSearchFilters';
+import { HOTEL_STATIC_DATA } from '../lib/constants/hotel-static-data';
+import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 
 // AMENITY_ICONS is accessed via HOTEL_STATIC_DATA.AMENITY_ICONS
-const AMENITY_ICONS: Record<string, string> =
-  (HOTEL_STATIC_DATA as any).AMENITY_ICONS ?? {};
+const AMENITY_ICONS: Record<string, string> = (HOTEL_STATIC_DATA as any).AMENITY_ICONS ?? {};
 
 // View modes
-type ViewMode = "list" | "grid" | "map";
+type ViewMode = 'list' | 'grid' | 'map';
 
-export default function HotelSearch() {
+function HotelSearch() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { config: runtimeConfig } = useTenantRuntime();
   const popularDestinations = usePopularDestinations(5);
 
   // Form State
-  const [location, setLocation] = useState(
-    searchParams.get("location") || "Dubai",
-  );
-  const [checkin, setCheckin] = useState(searchParams.get("checkin") || "");
-  const [checkout, setCheckout] = useState(searchParams.get("checkout") || "");
-  const [adults, setAdults] = useState(Number(searchParams.get("adults")) || 2);
-  const [children, setChildren] = useState(
-    Number(searchParams.get("children")) || 0,
-  );
-  const [rooms, setRooms] = useState(Number(searchParams.get("rooms")) || 1);
+  const [location, setLocation] = useState(searchParams.get('location') || 'Dubai');
+  const [checkin, setCheckin] = useState(searchParams.get('checkin') || '');
+  const [checkout, setCheckout] = useState(searchParams.get('checkout') || '');
+  const [adults, setAdults] = useState(Number(searchParams.get('adults')) || 2);
+  const [children, setChildren] = useState(Number(searchParams.get('children')) || 0);
+  const [rooms, setRooms] = useState(Number(searchParams.get('rooms')) || 1);
 
   // Results State
   const [hotels, setHotels] = useState<any[]>([]);
@@ -75,18 +67,13 @@ export default function HotelSearch() {
   const [isCached, setIsCached] = useState(false);
 
   // View State
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [selectedHotelId, setSelectedHotelId] = useState<string | null>(null);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Filter State - using custom hook for URL persistence
-  const {
-    filters,
-    setFilters,
-    resetFilters,
-    activeFilterCount,
-    filterQueryParams,
-  } = useHotelFilters();
+  const { filters, setFilters, resetFilters, activeFilterCount, filterQueryParams } =
+    useHotelFilters();
 
   // Fetch facilities from API
   const { facilities, isLoading: facilitiesLoading } = useFacilities();
@@ -96,7 +83,7 @@ export default function HotelSearch() {
     const byStar: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     const byFacility: Record<number, number> = {};
 
-    hotels.forEach((hotel) => {
+    hotels.forEach(hotel => {
       // Count by star rating
       if (hotel.rating) {
         const stars = Math.floor(hotel.rating);
@@ -119,13 +106,13 @@ export default function HotelSearch() {
     let sorted = [...hotels];
 
     switch (filters.sortBy) {
-      case "price_asc":
+      case 'price_asc':
         sorted.sort((a, b) => (a.price?.amount || 0) - (b.price?.amount || 0));
         break;
-      case "price_desc":
+      case 'price_desc':
         sorted.sort((a, b) => (b.price?.amount || 0) - (a.price?.amount || 0));
         break;
-      case "rating":
+      case 'rating':
         sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       default:
@@ -138,19 +125,17 @@ export default function HotelSearch() {
 
   // Filter hotels based on all filters (client-side additional filtering)
   const filteredHotels = useMemo(() => {
-    return sortedHotels.filter((hotel) => {
+    return sortedHotels.filter(hotel => {
       // Star filter
       if (filters.starRating.length > 0) {
         const hotelStars = Math.floor(hotel.rating || 0);
-        const matchesStar = filters.starRating.some((s) => hotelStars >= s);
+        const matchesStar = filters.starRating.some(s => hotelStars >= s);
         if (!matchesStar) return false;
       }
 
       // Price filter
-      if (filters.priceMin && (hotel.price?.amount || 0) < filters.priceMin)
-        return false;
-      if (filters.priceMax && (hotel.price?.amount || 0) > filters.priceMax)
-        return false;
+      if (filters.priceMin && (hotel.price?.amount || 0) < filters.priceMin) return false;
+      if (filters.priceMax && (hotel.price?.amount || 0) > filters.priceMax) return false;
 
       // Refundable only
       if (filters.refundableOnly && !hotel.refundable) return false;
@@ -184,8 +169,7 @@ export default function HotelSearch() {
       // Add facility filtering if facilities are selected
       if (filters.facilityIds.length > 0) {
         searchPayload.facilityIds = filters.facilityIds;
-        searchPayload.strictFacilitiesFiltering =
-          filters.strictFacilitiesFiltering;
+        searchPayload.strictFacilitiesFiltering = filters.strictFacilitiesFiltering;
       }
 
       const result = await hotelApi.search(searchPayload);
@@ -196,15 +180,15 @@ export default function HotelSearch() {
 
       // Update URL params with search criteria
       const params = new URLSearchParams(searchParams);
-      params.set("location", location);
-      params.set("checkin", checkin);
-      params.set("checkout", checkout);
-      params.set("adults", String(adults));
-      params.set("children", String(children));
-      params.set("rooms", String(rooms));
+      params.set('location', location);
+      params.set('checkin', checkin);
+      params.set('checkout', checkout);
+      params.set('adults', String(adults));
+      params.set('children', String(children));
+      params.set('rooms', String(rooms));
       setSearchParams(params, { replace: true });
     } catch (error) {
-      console.error("Search failed:", error);
+      console.error('Search failed:', error);
       setHotels([]);
     } finally {
       setIsLoading(false);
@@ -232,16 +216,13 @@ export default function HotelSearch() {
     // Scroll to hotel in list
     const element = document.getElementById(`hotel-${hotelId}`);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, []);
 
   // Auto-search on mount if params exist
   useEffect(() => {
-    if (
-      runtimeConfig.features.hotelBookingEnabled &&
-      searchParams.get("location")
-    ) {
+    if (runtimeConfig.features.hotelBookingEnabled && searchParams.get('location')) {
       handleSearch();
     }
   }, [runtimeConfig.features.hotelBookingEnabled]);
@@ -251,22 +232,22 @@ export default function HotelSearch() {
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   if (!runtimeConfig.features.hotelBookingEnabled) {
     return (
       <TripLogerLayout>
         <div className="bg-[hsl(var(--background))] min-h-screen pt-28 flex items-center justify-center px-4 gap-2">
-          <Card className="w-full max-w-xl p-10 text-center rounded-[2rem] border border-border shadow-sm space-y-4">
+          <Card className="w-full max-w-xl p-10 text-center rounded-xl border border-border shadow-sm space-y-4">
             <h1 className="text-2xl font-black text-foreground tracking-tight">
               Hotel Search Disabled
             </h1>
             <p className="text-sm font-bold text-muted-foreground">
               Your admin has currently disabled hotel booking for this tenant.
             </p>
-            <Button onClick={() => navigate("/")} className="h-11 px-6">
+            <Button onClick={() => navigate('/')} className="h-11 px-6">
               Back to Home
             </Button>
           </Card>
@@ -280,9 +261,9 @@ export default function HotelSearch() {
       <div className="bg-[hsl(var(--background))] min-h-screen pt-28">
         {/* Hero Section with Search */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--primary))] via-[hsl(var(--primary))] to-[hsl(var(--accent))]">
+          <div className="absolute inset-0 bg-[hsl(var(--primary))]">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20" />
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/40 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-foreground/40" />
           </div>
 
           <div className="container mx-auto px-4 max-w-6xl relative z-10 py-16">
@@ -296,7 +277,7 @@ export default function HotelSearch() {
             </div>
 
             {/* Premium Search Card */}
-            <Card className="p-0 bg-background/95 backdrop-blur-2xl shadow-[0_30px_60px_-20px_rgba(0,0,0,0.4)] border border-border/50 rounded-[2.5rem] overflow-visible relative">
+            <Card className="p-0 bg-background/95 backdrop-blur-2xl shadow-[0_30px_60px_-20px_rgba(0,0,0,0.4)] border border-border/50 rounded-xl overflow-visible relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <div className="px-6 py-2 bg-[hsl(var(--secondary))] rounded-full text-[9px] font-black uppercase tracking-[0.2em] text-[hsl(var(--secondary-foreground))] shadow-lg shadow-yellow-200/50">
                   Best Price Guaranteed
@@ -318,8 +299,8 @@ export default function HotelSearch() {
                       <input
                         type="text"
                         value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-2xl text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background transition-all"
+                        onChange={e => setLocation(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-xl text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background transition-all"
                         placeholder="Where are you going?"
                       />
                     </div>
@@ -338,8 +319,8 @@ export default function HotelSearch() {
                       <input
                         type="date"
                         value={checkin}
-                        onChange={(e) => setCheckin(e.target.value)}
-                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-2xl text-sm font-bold text-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background cursor-pointer transition-all"
+                        onChange={e => setCheckin(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-xl text-sm font-bold text-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background cursor-pointer transition-all"
                       />
                     </div>
                   </div>
@@ -357,8 +338,8 @@ export default function HotelSearch() {
                       <input
                         type="date"
                         value={checkout}
-                        onChange={(e) => setCheckout(e.target.value)}
-                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-2xl text-sm font-bold text-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background cursor-pointer transition-all"
+                        onChange={e => setCheckout(e.target.value)}
+                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-xl text-sm font-bold text-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background cursor-pointer transition-all"
                       />
                     </div>
                   </div>
@@ -375,12 +356,12 @@ export default function HotelSearch() {
                       />
                       <select
                         value={adults}
-                        onChange={(e) => setAdults(Number(e.target.value))}
-                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-2xl text-sm font-bold text-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background cursor-pointer transition-all appearance-none"
+                        onChange={e => setAdults(Number(e.target.value))}
+                        className="w-full h-14 pl-12 pr-4 bg-muted border-2 border-transparent rounded-xl text-sm font-bold text-foreground focus:outline-none focus:border-[hsl(var(--primary))] focus:bg-background hover:bg-background cursor-pointer transition-all appearance-none"
                       >
-                        {[1, 2, 3, 4, 5, 6].map((n) => (
+                        {[1, 2, 3, 4, 5, 6].map(n => (
                           <option key={n} value={n}>
-                            {n} Adult{n > 1 ? "s" : ""}
+                            {n} Adult{n > 1 ? 's' : ''}
                           </option>
                         ))}
                       </select>
@@ -396,7 +377,7 @@ export default function HotelSearch() {
                     <Button
                       onClick={handleSearch}
                       disabled={isLoading}
-                      className="w-full h-14 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] font-black rounded-2xl shadow-xl shadow-indigo-200 uppercase text-[10px] tracking-[0.2em] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                      className="w-full h-14 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] font-black rounded-xl shadow-xl shadow-indigo-200 uppercase text-[10px] tracking-[0.2em] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                     >
                       {isLoading ? (
                         <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
@@ -428,33 +409,31 @@ export default function HotelSearch() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                {(popularDestinations.data || [])
-                  .slice(0, 5)
-                  .map((dest: any, i: number) => (
-                    <div
-                      key={i}
-                      onClick={() => {
-                        setLocation(dest.city);
-                        handleSearch();
-                      }}
-                      className="group relative h-64 rounded-[2rem] overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
-                    >
-                      <img
-                        src={dest.imageUrl || "/images/placeholder-hotel.jpg"}
-                        alt={dest.city}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
-                      <div className="absolute bottom-6 left-6">
-                        <h3 className="text-2xl font-black text-background tracking-tight text-xl font-semibold tracking-tight">
-                          {dest.city}
-                        </h3>
-                        <p className="text-[10px] font-bold text-background/70 uppercase tracking-widest mt-1">
-                          {dest.hotelCount ? `${dest.hotelCount}+ Hotels` : ""}
-                        </p>
-                      </div>
+                {(popularDestinations.data || []).slice(0, 5).map((dest: any, i: number) => (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      setLocation(dest.city);
+                      handleSearch();
+                    }}
+                    className="group relative h-64 rounded-xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
+                  >
+                    <img
+                      src={dest.imageUrl || '/images/placeholder-hotel.jpg'}
+                      alt={dest.city}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-foreground/80" />
+                    <div className="absolute bottom-6 left-6">
+                      <h3 className="text-2xl font-black text-background tracking-tight text-xl font-semibold tracking-tight">
+                        {dest.city}
+                      </h3>
+                      <p className="text-[10px] font-bold text-background/70 uppercase tracking-widest mt-1">
+                        {dest.hotelCount ? `${dest.hotelCount}+ Hotels` : ''}
+                      </p>
                     </div>
-                  ))}
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
@@ -490,16 +469,11 @@ export default function HotelSearch() {
                 ) : filteredHotels.length === 0 ? (
                   /* No Results */
                   <div className="text-center py-32">
-                    <Building2
-                      size={64}
-                      className="mx-auto text-muted-foreground/40 mb-6"
-                    />
+                    <Building2 size={64} className="mx-auto text-muted-foreground/40 mb-6" />
                     <h3 className="text-2xl font-black text-muted-foreground text-xl font-semibold tracking-tight">
                       No hotels found
                     </h3>
-                    <p className="text-muted-foreground mt-2">
-                      Try adjusting your search criteria
-                    </p>
+                    <p className="text-muted-foreground mt-2">Try adjusting your search criteria</p>
                     <Button
                       onClick={handleResetFilters}
                       className="mt-4 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)]"
@@ -510,7 +484,7 @@ export default function HotelSearch() {
                 ) : (
                   <div className="space-y-6">
                     {/* Results Header */}
-                    <div className="flex flex-wrap items-center justify-between gap-4 bg-card rounded-2xl p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-4 bg-card rounded-xl p-4 shadow-sm">
                       <div>
                         <div className="flex items-center gap-3">
                           <h2 className="text-2xl font-black text-foreground">
@@ -534,45 +508,45 @@ export default function HotelSearch() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setViewMode("list")}
-                            className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-card shadow-sm" : ""}`}
+                            onClick={() => setViewMode('list')}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-card shadow-sm' : ''}`}
                           >
                             <List
                               size={18}
                               className={
-                                viewMode === "list"
-                                  ? "text-[hsl(var(--primary))]"
-                                  : "text-muted-foreground"
+                                viewMode === 'list'
+                                  ? 'text-[hsl(var(--primary))]'
+                                  : 'text-muted-foreground'
                               }
                             />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setViewMode("grid")}
-                            className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-card shadow-sm" : ""}`}
+                            onClick={() => setViewMode('grid')}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-card shadow-sm' : ''}`}
                           >
                             <Grid3X3
                               size={18}
                               className={
-                                viewMode === "grid"
-                                  ? "text-[hsl(var(--primary))]"
-                                  : "text-muted-foreground"
+                                viewMode === 'grid'
+                                  ? 'text-[hsl(var(--primary))]'
+                                  : 'text-muted-foreground'
                               }
                             />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setViewMode("map")}
-                            className={`p-2 rounded-lg transition-colors ${viewMode === "map" ? "bg-card shadow-sm" : ""}`}
+                            onClick={() => setViewMode('map')}
+                            className={`p-2 rounded-lg transition-colors ${viewMode === 'map' ? 'bg-card shadow-sm' : ''}`}
                           >
                             <Map
                               size={18}
                               className={
-                                viewMode === "map"
-                                  ? "text-[hsl(var(--primary))]"
-                                  : "text-muted-foreground"
+                                viewMode === 'map'
+                                  ? 'text-[hsl(var(--primary))]'
+                                  : 'text-muted-foreground'
                               }
                             />
                           </Button>
@@ -581,10 +555,10 @@ export default function HotelSearch() {
                     </div>
 
                     {/* Map View */}
-                    {viewMode === "map" && (
-                      <div className="bg-card rounded-2xl shadow-lg overflow-hidden h-[600px]">
+                    {viewMode === 'map' && (
+                      <div className="bg-card rounded-xl shadow-lg overflow-hidden h-[600px]">
                         <HotelMap
-                          hotels={filteredHotels.map((h) => ({
+                          hotels={filteredHotels.map(h => ({
                             id: h.id,
                             name: h.name,
                             latitude: h.latitude,
@@ -603,12 +577,12 @@ export default function HotelSearch() {
                     )}
 
                     {/* List/Grid View */}
-                    {viewMode !== "map" && (
+                    {viewMode !== 'map' && (
                       <div
                         className={
-                          viewMode === "grid"
-                            ? "grid grid-cols-1 md:grid-cols-2 gap-6"
-                            : "space-y-6"
+                          viewMode === 'grid'
+                            ? 'grid grid-cols-1 md:grid-cols-2 gap-6'
+                            : 'space-y-6'
                         }
                       >
                         {filteredHotels.map((hotel: any) => (
@@ -616,14 +590,14 @@ export default function HotelSearch() {
                             key={hotel.id}
                             id={`hotel-${hotel.id}`}
                             className={`group overflow-hidden border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 ${
-                              viewMode === "list"
-                                ? "flex h-72 bg-card rounded-[2rem]"
-                                : "bg-card rounded-[2rem]"
-                            } ${selectedHotelId === hotel.id ? "ring-4 ring-[hsl(var(--accent))]" : ""}`}
+                              viewMode === 'list'
+                                ? 'flex h-72 bg-card rounded-xl'
+                                : 'bg-card rounded-xl'
+                            } ${selectedHotelId === hotel.id ? 'ring-4 ring-[hsl(var(--accent))]' : ''}`}
                           >
                             {/* Hotel Image */}
                             <div
-                              className={`${viewMode === "list" ? "w-[35%]" : "h-48"} relative overflow-hidden`}
+                              className={`${viewMode === 'list' ? 'w-[35%]' : 'h-48'} relative overflow-hidden`}
                             >
                               <img
                                 src={hotel.image}
@@ -632,16 +606,14 @@ export default function HotelSearch() {
                               />
                               <div className="absolute top-4 left-4">
                                 <span className="bg-background/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[hsl(var(--primary))] shadow-xl border border-border/50">
-                                  {hotel.refundable
-                                    ? "Free Cancellation"
-                                    : "Top Rated"}
+                                  {hotel.refundable ? 'Free Cancellation' : 'Top Rated'}
                                 </span>
                               </div>
                             </div>
 
                             {/* Hotel Info */}
                             <div
-                              className={`flex-1 p-6 ${viewMode === "list" ? "flex flex-col" : ""}`}
+                              className={`flex-1 p-6 ${viewMode === 'list' ? 'flex flex-col' : ''}`}
                             >
                               <div className="flex justify-between items-start gap-4">
                                 <div className="flex-1 pr-4 gap-4">
@@ -652,8 +624,8 @@ export default function HotelSearch() {
                                         size={14}
                                         className={
                                           i < (hotel.rating || 4)
-                                            ? "text-yellow-400 fill-current"
-                                            : "text-muted-foreground/40"
+                                            ? 'text-yellow-400 fill-current'
+                                            : 'text-muted-foreground/40'
                                         }
                                       />
                                     ))}
@@ -662,10 +634,7 @@ export default function HotelSearch() {
                                     {hotel.name}
                                   </h3>
                                   <div className="flex items-center gap-1.5 text-muted-foreground">
-                                    <MapPin
-                                      size={14}
-                                      className="text-[hsl(var(--primary))]"
-                                    />
+                                    <MapPin size={14} className="text-[hsl(var(--primary))]" />
                                     <span className="text-[11px] font-black uppercase tracking-tighter">
                                       {hotel.location}
                                     </span>
@@ -677,9 +646,7 @@ export default function HotelSearch() {
                                   </p>
                                   <p className="text-2xl font-black text-[hsl(var(--primary))] tracking-tighter">
                                     {formatCurrency(
-                                      hotel.price?.amount ||
-                                        hotel.pricePerNight ||
-                                        500,
+                                      hotel.price?.amount || hotel.pricePerNight || 500
                                     )}
                                   </p>
                                   <p className="text-[10px] text-muted-foreground font-bold mt-1">
@@ -690,26 +657,20 @@ export default function HotelSearch() {
 
                               <div className="mt-4 p-3 bg-muted rounded-xl flex flex-wrap gap-3">
                                 <span className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase">
-                                  <Wifi size={14} className="text-blue-500" />{" "}
-                                  WiFi
+                                  <Wifi size={14} className="text-blue-500" /> WiFi
                                 </span>
                                 <span className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase">
-                                  <Coffee
-                                    size={14}
-                                    className="text-orange-500"
-                                  />{" "}
-                                  Breakfast
+                                  <Coffee size={14} className="text-orange-500" /> Breakfast
                                 </span>
                                 <span className="flex items-center gap-1.5 text-[10px] font-black text-muted-foreground uppercase">
-                                  <Waves size={14} className="text-cyan-500" />{" "}
-                                  Pool
+                                  <Waves size={14} className="text-cyan-500" /> Pool
                                 </span>
                               </div>
 
                               <div className="mt-auto flex items-center justify-between pt-4 gap-2">
                                 <div className="flex items-center gap-3">
                                   <div className="bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-lg gap-2">
-                                    {hotel.rating || "4.5"}
+                                    {hotel.rating || '4.5'}
                                   </div>
                                   <div>
                                     <p className="text-[10px] font-black uppercase tracking-tighter text-foreground leading-none">
@@ -722,12 +683,9 @@ export default function HotelSearch() {
                                 </div>
                                 <Button
                                   className="bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] h-11 px-6 font-black rounded-xl shadow-lg shadow-indigo-100 uppercase text-[9px] tracking-wide transition-all hover:scale-105 active:scale-95"
-                                  onClick={() =>
-                                    navigate(`/hotels/${hotel.id}`)
-                                  }
+                                  onClick={() => navigate(`/hotels/${hotel.id}`)}
                                 >
-                                  View Rooms{" "}
-                                  <ChevronRight size={16} className="ml-1" />
+                                  View Rooms <ChevronRight size={16} className="ml-1" />
                                 </Button>
                               </div>
                             </div>
@@ -759,3 +717,5 @@ export default function HotelSearch() {
     </TripLogerLayout>
   );
 }
+
+export default HotelSearch;

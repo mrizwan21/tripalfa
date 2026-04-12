@@ -176,4 +176,4 @@ export type {
   CouponValidationResult,
   PricingCalculationRequest,
 };
-export { PricingApiError };
+{ PricingApiError }

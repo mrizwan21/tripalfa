@@ -77,7 +77,7 @@ function getWeatherIcon(icon: string, size: number = 24): React.ReactNode {
 /**
  * Current Weather Card
  */
-export function WeatherCurrentCard({
+function WeatherCurrentCard({
   current,
   units = "metric",
   loading = false,
@@ -195,7 +195,7 @@ export function WeatherCurrentCard({
 /**
  * Daily Forecast Cards
  */
-export function WeatherForecastCards({
+function WeatherForecastCards({
   daily,
   units = "metric",
 }: {

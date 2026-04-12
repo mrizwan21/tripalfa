@@ -18,7 +18,6 @@ async function testEndpoint(endpoint: string): Promise<void> {
                 'X-API-Key': process.env.LITEAPI_API_KEY || '',
                 'Accept': 'application/json',
             },
-            // @ts-expect-error - node-fetch timeout option
             timeout: 30000,
         });
 

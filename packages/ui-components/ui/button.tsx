@@ -2,79 +2,39 @@ import * as React from 'react';
 import { cn } from '@tripalfa/shared-utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 
-/* ============================================
-   BUTTON DESIGN TOKENS - STANDARDIZED SIZES
-   ============================================ */
-const buttonTokens = {
-  heights: {
-    sm: '2rem' /* 32px */,
-    default: '2.5rem' /* 40px */,
-    lg: '3rem' /* 48px */,
-    icon: '2.5rem' /* 40px */,
-  },
-  padding: {
-    sm: '0.75rem' /* 12px */,
-    default: '1rem' /* 16px */,
-    lg: '1.5rem' /* 24px */,
-    icon: '0' /* 0 - centered */,
-  },
-  fontSize: {
-    sm: '0.875rem' /* 14px */,
-    default: '1rem' /* 16px */,
-    lg: '1.125rem' /* 18px */,
-  },
-  borderRadius: {
-    sm: '4px',
-    default: '4px',
-    lg: '8px',
-  },
-} as const;
-
 const buttonVariants = cva(
   'inline-flex items-center justify-center text-base font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98] gap-2',
   {
     variants: {
       variant: {
-        // Primary - Uses brand colors (customizable per tenant)
         default:
           'bg-[hsl(var(--brand-primary))] text-[hsl(var(--brand-primary-foreground))] shadow-sm hover:opacity-90 border border-transparent',
 
-        // Secondary - Uses brand secondary colors
         secondary:
           'bg-[hsl(var(--brand-secondary))] text-[hsl(var(--brand-secondary-foreground))] shadow-sm hover:opacity-80 border border-transparent',
 
-        // Outline - Transparent with border
         outline:
           'border border-[hsl(var(--border))] bg-transparent text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))] hover:border-[hsl(var(--border))]',
 
-        // Ghost - No background
         ghost:
           'bg-transparent text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]',
 
-        // Link - Text only
         link: 'bg-transparent text-[hsl(var(--brand-primary))] underline-offset-4 hover:underline hover:text-[hsl(var(--brand-primary))]',
 
-        // Destructive - Error state (consistent across tenants)
         destructive:
           'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] shadow-sm hover:opacity-90 border border-transparent',
 
-        // Success - Consistent green
         success:
           'bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))] shadow-sm hover:opacity-90 border border-transparent',
 
-        // Warning - Consistent amber
         warning:
           'bg-[hsl(var(--warning))] text-[hsl(var(--warning-foreground))] shadow-sm hover:opacity-90 border border-transparent',
       },
       size: {
-        // Small button
-        sm: `h-[${buttonTokens.heights.sm}] px-[${buttonTokens.padding.sm}] text-[${buttonTokens.fontSize.sm}] rounded-[${buttonTokens.borderRadius.sm}]`,
-        // Default button (most common)
-        default: `h-[${buttonTokens.heights.default}] px-[${buttonTokens.padding.default}] text-[${buttonTokens.fontSize.default}] rounded-[${buttonTokens.borderRadius.default}]`,
-        // Large button
-        lg: `h-[${buttonTokens.heights.lg}] px-[${buttonTokens.padding.lg}] text-[${buttonTokens.fontSize.lg}] rounded-[${buttonTokens.borderRadius.lg}]`,
-        // Icon-only button (square)
-        icon: `h-[${buttonTokens.heights.icon}] w-[${buttonTokens.heights.icon}] p-0 rounded-[${buttonTokens.borderRadius.default}]`,
+        sm: 'h-8 px-3 text-sm rounded',
+        default: 'h-10 px-4 text-base rounded',
+        lg: 'h-12 px-6 text-lg rounded-md',
+        icon: 'h-10 w-10 p-0 rounded',
       },
     },
     defaultVariants: {
@@ -83,40 +43,6 @@ const buttonVariants = cva(
     },
   }
 );
-
-// Apply inline styles for dynamic values
-const getButtonStyles = (size: string): React.CSSProperties => {
-  const styles: Record<string, React.CSSProperties> = {
-    sm: {
-      height: buttonTokens.heights.sm,
-      paddingLeft: buttonTokens.padding.sm,
-      paddingRight: buttonTokens.padding.sm,
-      fontSize: buttonTokens.fontSize.sm,
-      borderRadius: buttonTokens.borderRadius.sm,
-    },
-    default: {
-      height: buttonTokens.heights.default,
-      paddingLeft: buttonTokens.padding.default,
-      paddingRight: buttonTokens.padding.default,
-      fontSize: buttonTokens.fontSize.default,
-      borderRadius: buttonTokens.borderRadius.default,
-    },
-    lg: {
-      height: buttonTokens.heights.lg,
-      paddingLeft: buttonTokens.padding.lg,
-      paddingRight: buttonTokens.padding.lg,
-      fontSize: buttonTokens.fontSize.lg,
-      borderRadius: buttonTokens.borderRadius.lg,
-    },
-    icon: {
-      height: buttonTokens.heights.icon,
-      width: buttonTokens.heights.icon,
-      padding: 0,
-      borderRadius: buttonTokens.borderRadius.default,
-    },
-  };
-  return styles[size] || styles.default;
-};
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}

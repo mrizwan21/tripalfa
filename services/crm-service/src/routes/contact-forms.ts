@@ -266,7 +266,7 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.post('/:id/submit', (req: Request, res: Response) => {
   try {
-    const form = forms.get(req.params.id);
+    const form = forms.get(req.params.id as string);
     if (!form) return res.status(404).json({ success: false, error: 'Form not found' });
 
     form.conversions++;
@@ -372,7 +372,7 @@ router.post('/:id/submit', (req: Request, res: Response) => {
 router.patch('/:id/kyc-trigger', (req: Request, res: Response) => {
   try {
     const { enable } = req.body;
-    const form = forms.get(req.params.id);
+    const form = forms.get(req.params.id as string);
     if (!form) return res.status(404).json({ success: false, error: 'Form not found' });
 
     form.kycAutoTrigger = enable;

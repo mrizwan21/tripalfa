@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
+import React, { useEffect, useState } from 'react';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import {
   Search,
   HelpCircle,
@@ -15,20 +15,11 @@ import {
   ArrowRight,
   PlayCircle,
   BookOpen,
-} from "lucide-react";
-import {
-  DEFAULT_CONTENT_CONFIG,
-  loadTenantContentConfig,
-} from "@/lib/tenantContentConfig";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '@/lib/tenantContentConfig';
+import { Button } from '@/components/ui/button';
 
-const FAQItem = ({
-  question,
-  answer,
-}: {
-  question: string;
-  answer: string;
-}) => {
+const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="group border-b border-border last:border-0">
@@ -39,36 +30,30 @@ const FAQItem = ({
         className="w-full py-6 flex items-center justify-between text-left transition-all group-hover:px-2 gap-2"
       >
         <span
-          className={`text-base font-bold transition-colors ${isOpen ? "text-[hsl(var(--primary))]" : "text-foreground"}`}
+          className={`text-base font-bold transition-colors ${isOpen ? 'text-[hsl(var(--primary))]' : 'text-foreground'}`}
         >
           {question}
         </span>
         <div
-          className={`p-2 rounded-full transition-all duration-300 ${isOpen ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rotate-180" : "bg-muted text-muted-foreground rotate-0"}`}
+          className={`p-2 rounded-full transition-all duration-300 ${isOpen ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rotate-180' : 'bg-muted text-muted-foreground rotate-0'}`}
         >
           <ChevronDown size={18} />
         </div>
       </Button>
       <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? "max-h-96 pb-6 opacity-100" : "max-h-0 opacity-0"}`}
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96 pb-6 opacity-100' : 'max-h-0 opacity-0'}`}
       >
-        <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl px-2">
-          {answer}
-        </p>
+        <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl px-2">{answer}</p>
       </div>
     </div>
   );
 };
 
-export default function HelpCenter() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categories, setCategories] = useState(
-    DEFAULT_CONTENT_CONFIG.helpCenter.categories,
-  );
+function HelpCenter() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState(DEFAULT_CONTENT_CONFIG.helpCenter.categories);
   const [faqs, setFaqs] = useState(DEFAULT_CONTENT_CONFIG.helpCenter.faqs);
-  const [contact, setContact] = useState(
-    DEFAULT_CONTENT_CONFIG.helpCenter.contact,
-  );
+  const [contact, setContact] = useState(DEFAULT_CONTENT_CONFIG.helpCenter.contact);
   const categoryIcons = [
     <HelpCircle key="help" size={24} className="text-[hsl(var(--primary))]" />,
     <BookOpen key="book" size={24} className="text-[hsl(var(--primary))]" />,
@@ -91,7 +76,7 @@ export default function HelpCenter() {
     <TripLogerLayout>
       <div className="bg-[hsl(var(--background))] min-h-screen pt-20 overflow-hidden relative">
         {/* Futuristic Background Elements */}
-        <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-[hsl(var(--primary)/0.1)] to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-[600px] bg-[hsl(var(--primary)/0.1)] pointer-events-none" />
         <div className="absolute top-[10%] left-[5%] w-96 h-96 bg-purple-200/20 rounded-full blur-[120px] pointer-events-none animate-pulse" />
         <div className="absolute top-[20%] right-[5%] w-80 h-80 bg-blue-200/20 rounded-full blur-[100px] pointer-events-none animate-pulse [animation-delay:1s]" />
 
@@ -102,17 +87,13 @@ export default function HelpCenter() {
               <Sparkles size={14} /> Help Center & Support
             </div>
             <h1 className="text-4xl md:text-6xl font-black text-[hsl(var(--primary))] tracking-tight leading-tight">
-              How can we{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--primary))] to-pink-500">
-                navigate
-              </span>{" "}
-              <br /> your journey today?
+              How can we <span className="text-[#0071e3]">navigate</span> <br /> your journey today?
             </h1>
 
             {/* Futuristic Search Bar */}
             <div className="max-w-3xl mx-auto pt-8 relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-[hsl(var(--primary))] to-indigo-600 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
-              <div className="relative flex items-center bg-card rounded-2xl shadow-2xl p-2 border border-border/20 gap-2">
+              <div className="absolute -inset-1 bg-[hsl(var(--primary))] rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+              <div className="relative flex items-center bg-card rounded-xl shadow-2xl p-2 border border-border/20 gap-2">
                 <div className="pl-6 pr-4 text-muted-foreground">
                   <Search size={22} />
                 </div>
@@ -121,7 +102,7 @@ export default function HelpCenter() {
                   placeholder="Search for answers (e.g. 'refund', 'baggage', 'elite perks')..."
                   className="flex-1 h-14 bg-transparent outline-none text-foreground font-medium text-lg placeholder:text-muted-foreground gap-4"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                 />
                 <Button
                   variant="outline"
@@ -139,16 +120,14 @@ export default function HelpCenter() {
             {categories.map((cat, i) => (
               <div
                 key={i}
-                className="group bg-card/60 backdrop-blur-md p-8 rounded-[2rem] border border-border shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer flex flex-col justify-between h-64"
+                className="group bg-card/60 backdrop-blur-md p-8 rounded-xl border border-border shadow-xl hover:shadow-2xl transition-all hover:-translate-y-2 cursor-pointer flex flex-col justify-between h-64"
               >
                 <div className="space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-card shadow-inner flex items-center justify-center group-hover:scale-110 transition-transform duration-500 gap-2">
+                  <div className="w-14 h-14 rounded-xl bg-card shadow-inner flex items-center justify-center group-hover:scale-110 transition-transform duration-500 gap-2">
                     {categoryIcons[i % categoryIcons.length]}
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-black text-[hsl(var(--primary))]">
-                      {cat.title}
-                    </h3>
+                    <h3 className="text-lg font-black text-[hsl(var(--primary))]">{cat.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed font-medium">
                       {cat.desc}
                     </p>
@@ -170,11 +149,10 @@ export default function HelpCenter() {
                   Frequently Asked Questions
                 </h2>
                 <p className="text-muted-foreground font-medium">
-                  Instant answers to the most common queries from our global
-                  travelers.
+                  Instant answers to the most common queries from our global travelers.
                 </p>
               </div>
-              <div className="bg-card/80 backdrop-blur-md p-10 rounded-[3rem] border border-border shadow-2xl">
+              <div className="bg-card/80 backdrop-blur-md p-10 rounded-xl border border-border shadow-2xl">
                 <div className="divide-y divide-border">
                   {faqs.map((faq, i) => (
                     <FAQItem key={i} question={faq.q} answer={faq.a} />
@@ -183,7 +161,7 @@ export default function HelpCenter() {
                 <Button
                   variant="default"
                   size="default"
-                  className="mt-10 w-full py-4 bg-muted border border-border rounded-2xl text-muted-foreground font-black text-[10px] uppercase tracking-widest hover:bg-card hover:shadow-md transition-all flex items-center justify-center gap-2"
+                  className="mt-10 w-full py-4 bg-muted border border-border rounded-xl text-muted-foreground font-black text-[10px] uppercase tracking-widest hover:bg-card hover:shadow-md transition-all flex items-center justify-center gap-2"
                 >
                   Show More Questions <ChevronDown size={14} />
                 </Button>
@@ -192,22 +170,21 @@ export default function HelpCenter() {
 
             {/* Contact Side */}
             <div className="lg:col-span-4 space-y-8">
-              <div className="bg-[hsl(var(--primary))] p-10 rounded-[3rem] text-[hsl(var(--primary-foreground))] space-y-8 relative overflow-hidden group">
+              <div className="bg-[hsl(var(--primary))] p-10 rounded-xl text-[hsl(var(--primary-foreground))] space-y-8 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[hsl(var(--primary)/0.2)] rounded-full blur-[60px] translate-x-1/2 -translate-y-1/2 group-hover:scale-150 transition-transform duration-1000" />
                 <div className="space-y-2 relative z-10">
                   <h3 className="text-2xl font-black text-xl font-semibold tracking-tight">
                     Still need help?
                   </h3>
                   <p className="text-blue-200/70 text-sm font-medium">
-                    Our elite support desk is available <br /> 24/7 for tailored
-                    assistance.
+                    Our elite support desk is available <br /> 24/7 for tailored assistance.
                   </p>
                 </div>
                 <div className="space-y-4 relative z-10">
                   <Button
                     variant="default"
                     size="default"
-                    className="w-full bg-card text-[hsl(var(--primary))] p-4 rounded-2xl flex items-center gap-4 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 group/btn"
+                    className="w-full bg-card text-[hsl(var(--primary))] p-4 rounded-xl flex items-center gap-4 hover:shadow-xl hover:scale-[1.02] transition-all active:scale-95 group/btn"
                   >
                     <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-[hsl(var(--primary))] group-hover/btn:bg-[hsl(var(--primary))] group-hover/btn:text-[hsl(var(--primary-foreground))] transition-colors gap-2">
                       <MessageCircle size={20} />
@@ -222,7 +199,7 @@ export default function HelpCenter() {
                   <Button
                     variant="default"
                     size="default"
-                    className="w-full bg-card/10 backdrop-blur-md border border-border/10 text-primary-foreground p-4 rounded-2xl flex items-center gap-4 hover:bg-card/20 transition-all hover:scale-[1.02] active:scale-95"
+                    className="w-full bg-card/10 backdrop-blur-md border border-border/10 text-primary-foreground p-4 rounded-xl flex items-center gap-4 hover:bg-card/20 transition-all hover:scale-[1.02] active:scale-95"
                   >
                     <div className="w-10 h-10 rounded-xl bg-card/20 flex items-center justify-center text-primary-foreground gap-2">
                       <Phone size={20} />
@@ -237,7 +214,7 @@ export default function HelpCenter() {
                   <Button
                     variant="default"
                     size="default"
-                    className="w-full bg-card/10 backdrop-blur-md border border-border/10 text-primary-foreground p-4 rounded-2xl flex items-center gap-4 hover:bg-card/20 transition-all hover:scale-[1.02] active:scale-95"
+                    className="w-full bg-card/10 backdrop-blur-md border border-border/10 text-primary-foreground p-4 rounded-xl flex items-center gap-4 hover:bg-card/20 transition-all hover:scale-[1.02] active:scale-95"
                   >
                     <div className="w-10 h-10 rounded-xl bg-card/20 flex items-center justify-center text-primary-foreground gap-2">
                       <Mail size={20} />
@@ -252,10 +229,10 @@ export default function HelpCenter() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-[hsl(var(--secondary))] to-yellow-500 p-8 rounded-[3rem] shadow-xl space-y-6 group cursor-pointer overflow-hidden relative">
+              <div className="bg-[hsl(var(--secondary))] p-8 rounded-xl shadow-xl space-y-6 group cursor-pointer overflow-hidden relative">
                 <div className="absolute top-0 left-0 w-full h-full bg-card/10 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex items-center justify-between gap-2">
-                  <div className="p-3 bg-card/20 rounded-2xl text-secondary-foreground">
+                  <div className="p-3 bg-card/20 rounded-xl text-secondary-foreground">
                     <PlayCircle size={28} />
                   </div>
                   <div className="px-3 py-1 bg-secondary-foreground/10 rounded-full text-[8px] font-black uppercase tracking-widest text-secondary-foreground">
@@ -263,27 +240,21 @@ export default function HelpCenter() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="text-lg font-black text-secondary-foreground">
-                    Video Tutorials
-                  </h4>
+                  <h4 className="text-lg font-black text-secondary-foreground">Video Tutorials</h4>
                   <p className="text-xs font-bold text-secondary-foreground/60 italic leading-relaxed">
-                    Master the TripLoger ecosystem in under 60 seconds with our
-                    visual guides.
+                    Master the TripLoger ecosystem in under 60 seconds with our visual guides.
                   </p>
                 </div>
               </div>
 
-              <div className="bg-card p-8 rounded-[3rem] border border-border shadow-xl space-y-6">
-                <div className="p-3 bg-blue-50 w-fit rounded-2xl text-blue-600">
+              <div className="bg-card p-8 rounded-xl border border-border shadow-xl space-y-6">
+                <div className="p-3 bg-blue-50 w-fit rounded-xl text-blue-600">
                   <BookOpen size={24} />
                 </div>
                 <div className="space-y-2">
-                  <h4 className="text-lg font-black text-[hsl(var(--primary))]">
-                    Developer API
-                  </h4>
+                  <h4 className="text-lg font-black text-[hsl(var(--primary))]">Developer API</h4>
                   <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                    Build your own custom tools using our high-performance
-                    travel engine.
+                    Build your own custom tools using our high-performance travel engine.
                   </p>
                 </div>
                 <Button
@@ -301,3 +272,5 @@ export default function HelpCenter() {
     </TripLogerLayout>
   );
 }
+
+export default HelpCenter;

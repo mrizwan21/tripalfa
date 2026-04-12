@@ -102,570 +102,7 @@ async function duffelRequest<T>(
 
 /**
  * @swagger
- * /api/duffel/orders/{id}:
- *   get:
- *     summary: Get order by ID
- *     tags: [Duffel]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Order retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       404:
- *         description: Not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.get('/orders/:id', cacheOrderMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    // Try Duffel API first
-    try {
-      const duffelResponse = await duffelRequest<any>(`/air/orders/${id}`);
-
-      // Process through API Manager (caches in Redis + Neon)
-      await OrderManager.processResponse(id, duffelResponse.data);
-
-      return res.json({
-        success: true,
-        data: duffelResponse.data,
-      });
-    } catch (duffelError) {
-      // Fallback to database
-      const order = await prisma.duffelOrder.findUnique({
-        where: { externalId: String(id) },
-      });
-
-      if (order) {
-        return res.json({
-          success: true,
-          data: order,
-          source: 'database',
-        });
-      }
-
-      // Try by local ID
-      const localOrder = await prisma.duffelOrder.findUnique({
-        where: { id: String(id) },
-      });
-
-      if (localOrder) {
-        return res.json({
-          success: true,
-          data: localOrder,
-          source: 'database',
-        });
-      }
-
-      return res.status(404).json({ error: 'Order not found' });
-    }
-  } catch (error: any) {
-    console.error('[Duffel] Get order error:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * @swagger
- * /api/duffel/orders:
- *   get:
- *     summary: List all orders
- *     tags: [Duffel]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Orders retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.get('/orders', async (req: Request, res: Response) => {
-  try {
-    const { limit = 20, offset = 0, status } = req.query;
-
-    const orders = await prisma.duffelOrder.findMany({
-      where: status ? { status: status as string } : undefined,
-      take: Number(limit),
-      skip: Number(offset),
-      orderBy: { createdAt: 'desc' },
-    });
-
-    res.json({
-      success: true,
-      data: orders,
-      pagination: {
-        limit: Number(limit),
-        offset: Number(offset),
-        total: orders.length,
-      },
-    });
-  } catch (error: any) {
-    console.error('[Duffel] List orders error:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * @swagger
- * /api/duffel/orders/{id}:
- *   patch:
- *     summary: Update order
- *     tags: [Duffel]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *     responses:
- *       200:
- *         description: Order updated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.patch('/orders/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updateData = req.body;
-
-    // Call Duffel API
-    const duffelResponse = await duffelRequest<any>(`/air/orders/${id}`, 'PATCH', {
-      data: updateData,
-    });
-
-    // Update in database
-    await prisma.duffelOrder.updateMany({
-      where: { externalId: String(id) },
-      data: {
-        status: duffelResponse.data.status,
-        updatedAt: new Date(),
-      },
-    });
-
-    res.json({
-      success: true,
-      data: duffelResponse.data,
-    });
-  } catch (error: any) {
-    console.error('[Duffel] Update order error:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * @swagger
- * /api/duffel/orders/{id}/available-services:
- *   get:
- *     summary: Get available services for an order
- *     tags: [Duffel]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Available services retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.get(
-  '/orders/:id/available-services',
-  cacheAvailableServicesMiddleware,
-  async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-
-      // Call Duffel API
-      const duffelResponse = await duffelRequest<any>(`/air/orders/${id}/available_services`);
-
-      // Process through API Manager (caches in Redis)
-      await AvailableServicesManager.processResponse(id, duffelResponse.data);
-
-      res.json({
-        success: true,
-        data: duffelResponse.data,
-        cached: false,
-        source: 'api',
-      });
-    } catch (error: any) {
-      console.error('[Duffel] Get available services error:', error.message);
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-/**
- * @swagger
- * /api/duffel/orders/{id}/price:
- *   post:
- *     summary: Price an order with payment method
- *     tags: [Duffel]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [payment]
- *             properties:
- *               payment:
- *                 type: object
- *     responses:
- *       200:
- *         description: Order priced
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.post(
-  '/orders/:id/price',
-  invalidateCacheAfterMutationMiddleware,
-  async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const { payment } = req.body;
-
-      // Call Duffel API
-      const duffelResponse = await duffelRequest<any>(`/air/orders/${id}/price`, 'POST', {
-        data: { payment },
-      });
-
-      // Invalidate services cache after pricing
-      await AvailableServicesManager.invalidate(id);
-
-      res.json({
-        success: true,
-        data: duffelResponse.data,
-      });
-    } catch (error: any) {
-      console.error('[Duffel] Price order error:', error.message);
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-/**
- * @swagger
- * /api/duffel/order-services:
- *   post:
- *     summary: Add services to an order
- *     tags: [Duffel]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [order_id, services]
- *             properties:
- *               order_id:
- *                 type: string
- *               services:
- *                 type: array
- *     responses:
- *       200:
- *         description: Services added
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.post(
-  '/order-services',
-  invalidateCacheAfterMutationMiddleware,
-  async (req: Request, res: Response) => {
-    try {
-      const { order_id, services } = req.body;
-
-      if (!order_id) {
-        return res.status(400).json({ error: 'order_id is required' });
-      }
-
-      if (!services || !Array.isArray(services)) {
-        return res.status(400).json({ error: 'services is required' });
-      }
-
-      // Call Duffel API
-      const duffelResponse = await duffelRequest<any>('/air/order_services', 'POST', {
-        data: {
-          order_id,
-          services,
-        },
-      });
-
-      res.json({
-        success: true,
-        data: duffelResponse.data,
-      });
-    } catch (error: any) {
-      console.error('[Duffel] Add services error:', error.message);
-      res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-// ============================================================================
-// STANDARDIZED ANCILLARY SERVICES
-// ============================================================================
-
-/**
- * @swagger
- * /api/flights/ancillary/services:
- *   get:
- *     summary: Get available ancillary services for an offer or order
- *     tags: [Duffel]
- *     parameters:
- *       - in: query
- *         name: offerId
- *         schema:
- *           type: string
- *       - in: query
- *         name: orderId
- *         schema:
- *           type: string
- *       - in: query
- *         name: serviceType
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Ancillary services retrieved
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   type: object
- *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
- */
-router.get('/ancillary/services', async (req: Request, res: Response) => {
-  try {
-    const { offerId, orderId, serviceType } = req.query;
-
-    if (!offerId && !orderId) {
-      return res.status(400).json({ error: 'Either offerId or orderId is required' });
-    }
-
-    let rawServices = [];
-    let source = 'api';
-
-    if (orderId) {
-      // Try cache first
-      const cached = await AvailableServicesManager.getAvailableServices(orderId as string);
-      if (cached?.data) {
-        rawServices = cached.data;
-        source = 'redis';
-      } else {
-        // Fetch from Duffel
-        const duffelResponse = await duffelRequest<any>(
-          `/air/orders/${orderId}/available_services`
-        );
-        rawServices = duffelResponse.data || [];
-        // Cache it
-        await AvailableServicesManager.processResponse(orderId as string, duffelResponse.data);
-      }
-    } else if (offerId) {
-      // Try to get offer from cache
-      const cachedOffer = await OfferManager.getOffer(offerId as string);
-      if (cachedOffer?.data) {
-        rawServices = cachedOffer.data.available_services || [];
-        source = cachedOffer.source;
-      } else {
-        // Fetch fresh offer from Duffel
-        const duffelResponse = await duffelRequest<any>(`/air/offers/${offerId}`);
-        rawServices = duffelResponse.data?.available_services || [];
-        source = 'api';
-        // Cache it
-        await OfferManager.processResponse(offerId as string, duffelResponse.data);
-      }
-    }
-
-    // Normalize for frontend
-    let normalizedServices = normalizeDuffelServices(rawServices);
-
-    // Filter by type if requested
-    if (serviceType) {
-      normalizedServices = normalizedServices.filter(s => s.type === serviceType);
-    }
-
-    res.json({
-      success: true,
-      data: {
-        services: normalizedServices,
-        categories: extractServiceCategories(rawServices),
-        provider: 'duffel',
-        source,
-      },
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error: any) {
-    console.error('[Duffel] Ancillary services error:', error.message);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * @swagger
- * /api/flights/ancillary/services/select:
+ * /api/duffel/ancillary/services/select:
  *   post:
  *     summary: Select or add services to a booking/order
  *     tags: [Duffel]
@@ -685,7 +122,7 @@ router.get('/ancillary/services', async (req: Request, res: Response) => {
  *                 type: array
  *     responses:
  *       200:
- *         description: Services selected
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -771,9 +208,9 @@ router.post('/ancillary/services/select', async (req: Request, res: Response) =>
 // ============================================================================
 /**
  * @swagger
- * /api/duffel/order-cancellations:
+ * /api/duffel/cfar-claims:
  *   post:
- *     summary: Create a cancellation request
+ *     summary: Create a CFAR claim (request refund under CFAR)
  *     tags: [Duffel]
  *     requestBody:
  *       required: true
@@ -781,15 +218,15 @@ router.post('/ancillary/services/select', async (req: Request, res: Response) =>
  *         application/json:
  *           schema:
  *             type: object
- *             required: [order_id]
+ *             required: [cfar_contract_id]
  *             properties:
- *               order_id:
+ *               cfar_contract_id:
  *                 type: string
- *               userId:
+ *               reason:
  *                 type: string
  *     responses:
  *       200:
- *         description: Cancellation request created
+ *         description: CFAR claim created
  *         content:
  *           application/json:
  *             schema:
@@ -891,9 +328,9 @@ router.post(
 
 /**
  * @swagger
- * /api/duffel/orders/{id}:
+ * /api/duffel/order-cancellations/{id}:
  *   get:
- *     summary: Get order by ID
+ *     summary: Get cancellation by ID
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -903,7 +340,7 @@ router.post(
  *           type: string
  *     responses:
  *       200:
- *         description: Order retrieved
+ *         description: Cancellation retrieved
  *         content:
  *           application/json:
  *             schema:
@@ -977,10 +414,11 @@ router.get(
 );
 
 /**
+/**
  * @swagger
- * /api/duffel/orders:
+ * /api/duffel/order-cancellations:
  *   get:
- *     summary: List all orders
+ *     summary: List all cancellations
  *     tags: [Duffel]
  *     parameters:
  *       - in: query
@@ -991,13 +429,9 @@ router.get(
  *         name: offset
  *         schema:
  *           type: integer
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
  *     responses:
  *       200:
- *         description: Orders retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1007,6 +441,15 @@ router.get(
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -1043,10 +486,11 @@ router.get('/order-cancellations', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-cancellations/{id}:
- *   get:
- *     summary: Get cancellation by ID
+ * /api/duffel/order-cancellations/{id}/confirm:
+ *   post:
+ *     summary: Confirm a cancellation
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -1056,7 +500,7 @@ router.get('/order-cancellations', async (req: Request, res: Response) => {
  *           type: string
  *     responses:
  *       200:
- *         description: Cancellation retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1066,8 +510,8 @@ router.get('/order-cancellations', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
- *       404:
- *         description: Not found
+ *       400:
+ *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
@@ -1205,6 +649,7 @@ router.post('/cfar-offers', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
  * /api/duffel/cfar-offers/{id}:
  *   get:
@@ -1218,7 +663,7 @@ router.post('/cfar-offers', async (req: Request, res: Response) => {
  *           type: string
  *     responses:
  *       200:
- *         description: CFAR offer retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1228,6 +673,15 @@ router.post('/cfar-offers', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -1407,9 +861,9 @@ router.get('/cfar-contracts/:id', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /api/duffel/order-cancellations:
+ * /api/duffel/cfar-claims:
  *   post:
- *     summary: Create a cancellation request
+ *     summary: Create a CFAR claim (request refund under CFAR)
  *     tags: [Duffel]
  *     requestBody:
  *       required: true
@@ -1417,15 +871,15 @@ router.get('/cfar-contracts/:id', async (req: Request, res: Response) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [order_id]
+ *             required: [cfar_contract_id]
  *             properties:
- *               order_id:
+ *               cfar_contract_id:
  *                 type: string
- *               userId:
+ *               reason:
  *                 type: string
  *     responses:
  *       200:
- *         description: Cancellation request created
+ *         description: CFAR claim created
  *         content:
  *           application/json:
  *             schema:
@@ -1508,10 +962,11 @@ router.post(
 );
 
 /**
+/**
  * @swagger
- * /api/duffel/cfar-offers/{id}:
+ * /api/duffel/cfar-claims/{id}:
  *   get:
- *     summary: Get a CFAR offer by ID
+ *     summary: Get a CFAR claim by ID
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -1521,7 +976,7 @@ router.post(
  *           type: string
  *     responses:
  *       200:
- *         description: CFAR offer retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1531,6 +986,15 @@ router.post(
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -1562,10 +1026,11 @@ router.get('/cfar-claims/:id', async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
+/**
  * @swagger
- * /api/flights/ancillary/services/select:
+ * /api/duffel/order-change-requests:
  *   post:
- *     summary: Select or add services to a booking/order
+ *     summary: Create an order change request
  *     tags: [Duffel]
  *     requestBody:
  *       required: true
@@ -1573,17 +1038,15 @@ router.get('/cfar-claims/:id', async (req: Request, res: Response) => {
  *         application/json:
  *           schema:
  *             type: object
- *             required: [services]
+ *             required: [order_id, slices]
  *             properties:
- *               offerId:
+ *               order_id:
  *                 type: string
- *               orderId:
- *                 type: string
- *               services:
+ *               slices:
  *                 type: array
  *     responses:
  *       200:
- *         description: Services selected
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1662,10 +1125,11 @@ router.post('/order-change-requests', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-cancellations/{id}:
+ * /api/duffel/order-change-requests/{id}:
  *   get:
- *     summary: Get cancellation by ID
+ *     summary: Get order change request by ID
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -1675,7 +1139,7 @@ router.post('/order-change-requests', async (req: Request, res: Response) => {
  *           type: string
  *     responses:
  *       200:
- *         description: Cancellation retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1685,8 +1149,8 @@ router.post('/order-change-requests', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
- *       404:
- *         description: Not found
+ *       400:
+ *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
@@ -1738,10 +1202,11 @@ router.get('/order-change-requests/:id', async (req: Request, res: Response) => 
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/orders:
+ * /api/duffel/order-changes:
  *   post:
- *     summary: Create a flight order (booking)
+ *     summary: Create a pending order change
  *     tags: [Duffel]
  *     requestBody:
  *       required: true
@@ -1749,25 +1214,13 @@ router.get('/order-change-requests/:id', async (req: Request, res: Response) => 
  *         application/json:
  *           schema:
  *             type: object
- *             required: [selected_offers, passengers]
+ *             required: [selected_order_change_offer]
  *             properties:
- *               selected_offers:
- *                 type: array
- *               passengers:
- *                 type: array
- *               payments:
- *                 type: array
- *               metadata:
+ *               selected_order_change_offer:
  *                 type: object
- *               contact:
- *                 type: object
- *               userId:
- *                 type: string
- *               loyalty_programme_accounts:
- *                 type: array
  *     responses:
  *       200:
- *         description: Order created
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1822,20 +1275,25 @@ router.post('/order-changes', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-cancellations/{id}/confirm:
+ * /api/duffel/order-changes/confirm:
  *   post:
- *     summary: Confirm a cancellation
+ *     summary: Confirm an order change
  *     tags: [Duffel]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_change_id]
+ *             properties:
+ *               order_change_id:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Cancellation confirmed
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1845,6 +1303,15 @@ router.post('/order-changes', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -1888,10 +1355,11 @@ router.post('/order-changes/confirm', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/orders/{id}:
+ * /api/duffel/order-changes/{id}:
  *   get:
- *     summary: Get order by ID
+ *     summary: Get order change by ID
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -1901,7 +1369,7 @@ router.post('/order-changes/confirm', async (req: Request, res: Response) => {
  *           type: string
  *     responses:
  *       200:
- *         description: Order retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -1911,8 +1379,8 @@ router.post('/order-changes/confirm', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
- *       404:
- *         description: Not found
+ *       400:
+ *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
@@ -1955,26 +1423,36 @@ router.get('/order-changes/:id', async (req: Request, res: Response) => {
 // ============================================================================
 
 /**
+/**
  * @swagger
- * /api/duffel/cfar-claims:
- *   post:
- *     summary: Create a CFAR claim (request refund under CFAR)
+ * /api/duffel/seat-maps:
+ *   get:
+ *     summary: Get seat maps
  *     tags: [Duffel]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [cfar_contract_id]
- *             properties:
- *               cfar_contract_id:
- *                 type: string
- *               reason:
- *                 type: string
+ *     parameters:
+ *       - in: query
+ *         name: offer_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: order_id
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: offerId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: orderId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: segment_id
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: CFAR claim created
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -2044,9 +1522,9 @@ router.get('/seat-maps', cacheSeatMapMiddleware, async (req: Request, res: Respo
 
 /**
  * @swagger
- * /api/flights/ancillary/services/select:
+ * /api/duffel/payment-intents:
  *   post:
- *     summary: Select or add services to a booking/order
+ *     summary: Create a payment intent
  *     tags: [Duffel]
  *     requestBody:
  *       required: true
@@ -2054,17 +1532,19 @@ router.get('/seat-maps', cacheSeatMapMiddleware, async (req: Request, res: Respo
  *         application/json:
  *           schema:
  *             type: object
- *             required: [services]
+ *             required: [order_id]
  *             properties:
- *               offerId:
+ *               order_id:
  *                 type: string
- *               orderId:
+ *               amount:
  *                 type: string
- *               services:
- *                 type: array
+ *               currency:
+ *                 type: string
+ *               payment_method:
+ *                 type: object
  *     responses:
  *       200:
- *         description: Services selected
+ *         description: create a payment intent
  *         content:
  *           application/json:
  *             schema:
@@ -2144,10 +1624,11 @@ router.post(
 );
 
 /**
+/**
  * @swagger
- * /api/duffel/cfar-contracts/{id}:
+ * /api/duffel/payment-intents/{id}:
  *   get:
- *     summary: Get a CFAR contract by ID
+ *     summary: Get payment intent by ID
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -2157,7 +1638,7 @@ router.post(
  *           type: string
  *     responses:
  *       200:
- *         description: CFAR contract retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -2167,6 +1648,15 @@ router.post(
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2195,23 +1685,19 @@ router.get('/payment-intents/:id', async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /api/duffel/order-changes:
+ * /api/duffel/payment-intents/{id}/confirm:
  *   post:
- *     summary: Create a pending order change
+ *     summary: Confirm a payment intent
  *     tags: [Duffel]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [selected_order_change_offer]
- *             properties:
- *               selected_order_change_offer:
- *                 type: object
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Order change created
+ *         description: confirm a payment intent
  *         content:
  *           application/json:
  *             schema:
@@ -2221,15 +1707,6 @@ router.get('/payment-intents/:id', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
- *       400:
- *         description: Bad request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 error:
- *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2297,9 +1774,9 @@ router.post(
 
 /**
  * @swagger
- * /api/duffel/orders/{id}/price:
+ * /api/duffel/orders/{id}/pay:
  *   post:
- *     summary: Price an order with payment method
+ *     summary: Pay for an order
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -2313,13 +1790,12 @@ router.post(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [payment]
  *             properties:
- *               payment:
- *                 type: object
+ *               payment_method_type:
+ *                 type: string
  *     responses:
  *       200:
- *         description: Order priced
+ *         description: pay for an order
  *         content:
  *           application/json:
  *             schema:
@@ -2329,6 +1805,15 @@ router.post(
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2419,7 +1904,7 @@ router.post(
 
 /**
  * @swagger
- * /api/duffel/orders/{id}:
+ * /api/duffel/order-cancellations/{id}:
  *   patch:
  *     summary: Update order
  *     tags: [Duffel]
@@ -2561,14 +2046,21 @@ router.post(
 // ============================================================================
 
 /**
+/**
  * @swagger
- * /api/flights/ancillary/services/categories:
+ * /api/duffel/offers/{id}/available-services:
  *   get:
- *     summary: Get available service categories
+ *     summary: Get available services for an offer
  *     tags: [Duffel]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Service categories retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -2578,6 +2070,15 @@ router.post(
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2608,26 +2109,25 @@ router.get('/offers/:id/available-services', async (req: Request, res: Response)
 
 /**
  * @swagger
- * /api/duffel/orders:
- *   get:
- *     summary: List all orders
+ * /api/duffel/bags:
+ *   post:
+ *     summary: Add baggage to an order
  *     tags: [Duffel]
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [order_id, services]
+ *             properties:
+ *               order_id:
+ *                 type: string
+ *               services:
+ *                 type: array
  *     responses:
  *       200:
- *         description: Orders retrieved
+ *         description: add baggage to an order
  *         content:
  *           application/json:
  *             schema:
@@ -2637,6 +2137,15 @@ router.get('/offers/:id/available-services', async (req: Request, res: Response)
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2754,12 +2263,17 @@ router.get(
 // ============================================================================
 
 /**
+/**
  * @swagger
- * /api/duffel/order-cancellations:
+ * /api/duffel/loyalty-programme-accounts:
  *   get:
- *     summary: List all cancellations
+ *     summary: List loyalty programme accounts
  *     tags: [Duffel]
  *     parameters:
+ *       - in: query
+ *         name: passenger_id
+ *         schema:
+ *           type: string
  *       - in: query
  *         name: limit
  *         schema:
@@ -2770,7 +2284,7 @@ router.get(
  *           type: integer
  *     responses:
  *       200:
- *         description: Cancellations retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -2780,6 +2294,15 @@ router.get(
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2812,10 +2335,11 @@ router.get('/loyalty-programme-accounts', async (req: Request, res: Response) =>
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/cfar-claims:
+ * /api/duffel/loyalty-programme-accounts:
  *   post:
- *     summary: Create a CFAR claim (request refund under CFAR)
+ *     summary: Create a loyalty programme account
  *     tags: [Duffel]
  *     requestBody:
  *       required: true
@@ -2823,15 +2347,17 @@ router.get('/loyalty-programme-accounts', async (req: Request, res: Response) =>
  *         application/json:
  *           schema:
  *             type: object
- *             required: [cfar_contract_id]
+ *             required: [passenger_id, airline_iata_code, account_number]
  *             properties:
- *               cfar_contract_id:
+ *               passenger_id:
  *                 type: string
- *               reason:
+ *               airline_iata_code:
+ *                 type: string
+ *               account_number:
  *                 type: string
  *     responses:
  *       200:
- *         description: CFAR claim created
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -2890,10 +2416,11 @@ router.post('/loyalty-programme-accounts', async (req: Request, res: Response) =
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/cfar-claims/{id}:
+ * /api/duffel/loyalty-programme-accounts/{id}:
  *   get:
- *     summary: Get a CFAR claim by ID
+ *     summary: Get loyalty programme account by ID
  *     tags: [Duffel]
  *     parameters:
  *       - in: path
@@ -2903,7 +2430,7 @@ router.post('/loyalty-programme-accounts', async (req: Request, res: Response) =
  *           type: string
  *     responses:
  *       200:
- *         description: CFAR claim retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -2913,6 +2440,15 @@ router.post('/loyalty-programme-accounts', async (req: Request, res: Response) =
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -2940,24 +2476,21 @@ router.get('/loyalty-programme-accounts/:id', async (req: Request, res: Response
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-changes/confirm:
- *   post:
- *     summary: Confirm an order change
+ * /api/duffel/loyalty-programme-accounts/{id}:
+ *   delete:
+ *     summary: Delete a loyalty programme account
  *     tags: [Duffel]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [order_change_id]
- *             properties:
- *               order_change_id:
- *                 type: string
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Order change confirmed
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3007,10 +2540,11 @@ router.delete('/loyalty-programme-accounts/:id', async (req: Request, res: Respo
 // ============================================================================
 
 /**
+/**
  * @swagger
- * /api/duffel/order-cancellations:
+ * /api/duffel/airline-initiated-changes:
  *   get:
- *     summary: List all cancellations
+ *     summary: List airline-initiated changes
  *     tags: [Duffel]
  *     parameters:
  *       - in: query
@@ -3023,7 +2557,7 @@ router.delete('/loyalty-programme-accounts/:id', async (req: Request, res: Respo
  *           type: integer
  *     responses:
  *       200:
- *         description: Cancellations retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3033,6 +2567,15 @@ router.delete('/loyalty-programme-accounts/:id', async (req: Request, res: Respo
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:
@@ -3065,26 +2608,29 @@ router.get('/airline-initiated-changes', async (req: Request, res: Response) => 
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-change-requests:
- *   post:
- *     summary: Create an order change request
+ * /api/duffel/airline-initiated-changes/{id}:
+ *   patch:
+ *     summary: Update airline-initiated change
  *     tags: [Duffel]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     requestBody:
- *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [order_id, slices]
  *             properties:
- *               order_id:
+ *               action_taken:
  *                 type: string
- *               slices:
- *                 type: array
  *     responses:
  *       200:
- *         description: Order change request created
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3142,24 +2688,21 @@ router.patch('/airline-initiated-changes/:id', async (req: Request, res: Respons
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-changes:
+ * /api/duffel/airline-initiated-changes/{id}/accept:
  *   post:
- *     summary: Create a pending order change
+ *     summary: Accept airline-initiated change
  *     tags: [Duffel]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [selected_order_change_offer]
- *             properties:
- *               selected_order_change_offer:
- *                 type: object
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
  *     responses:
  *       200:
- *         description: Order change created
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3213,26 +2756,24 @@ router.post('/airline-initiated-changes/:id/accept', async (req: Request, res: R
 // ============================================================================
 
 /**
+/**
  * @swagger
- * /api/duffel/order-change-requests:
- *   post:
- *     summary: Create an order change request
+ * /api/duffel/airports:
+ *   get:
+ *     summary: Search airports and cities
  *     tags: [Duffel]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [order_id, slices]
- *             properties:
- *               order_id:
- *                 type: string
- *               slices:
- *                 type: array
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
  *     responses:
  *       200:
- *         description: Order change request created
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3346,20 +2887,32 @@ router.get('/airports', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/order-change-requests/{id}:
+ * /api/duffel/places/suggestions:
  *   get:
- *     summary: Get order change request by ID
+ *     summary: Find airports within a geographic area
  *     tags: [Duffel]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
+ *       - in: query
+ *         name: lat
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: lng
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: rad
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: query
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: Order change request retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3369,8 +2922,8 @@ router.get('/airports', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
- *       404:
- *         description: Not found
+ *       400:
+ *         description: Bad request
  *         content:
  *           application/json:
  *             schema:
@@ -3502,20 +3055,28 @@ router.get('/places/suggestions', async (req: Request, res: Response) => {
 });
 
 /**
+/**
  * @swagger
- * /api/duffel/cfar-claims/{id}:
+ * /api/duffel/nearby-airports:
  *   get:
- *     summary: Get a CFAR claim by ID
+ *     summary: Find nearby airports
  *     tags: [Duffel]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
+ *       - in: query
+ *         name: lat
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: lng
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: radius
  *         schema:
  *           type: string
  *     responses:
  *       200:
- *         description: CFAR claim retrieved
+ *         description: Success
  *         content:
  *           application/json:
  *             schema:
@@ -3525,6 +3086,15 @@ router.get('/places/suggestions', async (req: Request, res: Response) => {
  *                   type: boolean
  *                 data:
  *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
  *       500:
  *         description: Server error
  *         content:

@@ -90,7 +90,7 @@ function getServiceUrl(serviceName: string, port?: string): string {
 }
 
 // Startup validation function - run at module load to detect configuration issues
-export function validateServiceConfiguration(): {
+function validateServiceConfiguration(): {
   valid: boolean;
   warnings: string[];
   errors: string[];
@@ -151,7 +151,7 @@ if (process.env.NODE_ENV !== 'test') {
   validateServiceConfiguration();
 }
 
-export const SERVICES: Record<string, ServiceConfig> = {
+const SERVICES: Record<string, ServiceConfig> = {
   notificationService: {
     name: 'Notification Service',
     baseUrl: getServiceUrl('NOTIFICATION_SERVICE'),
@@ -370,7 +370,7 @@ export const SERVICES: Record<string, ServiceConfig> = {
 // NOTIFICATION ENDPOINTS (15 Total)
 // ============================================
 
-export const NOTIFICATION_ENDPOINTS: EndpointConfig[] = [
+const NOTIFICATION_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'notification_send',
     method: 'POST',
@@ -557,7 +557,7 @@ export const NOTIFICATION_ENDPOINTS: EndpointConfig[] = [
 // RULE ENGINE ENDPOINTS (13 Total)
 // ============================================
 
-export const RULE_ENGINE_ENDPOINTS: EndpointConfig[] = [
+const RULE_ENGINE_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'rule_create',
     method: 'POST',
@@ -694,7 +694,7 @@ export const RULE_ENGINE_ENDPOINTS: EndpointConfig[] = [
 // AUDIT ENDPOINTS
 // ============================================
 
-export const AUDIT_ENDPOINTS: EndpointConfig[] = [
+const AUDIT_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'audit_get_logs',
     method: 'GET',
@@ -731,7 +731,7 @@ export const AUDIT_ENDPOINTS: EndpointConfig[] = [
 // TAX ENDPOINTS
 // ============================================
 
-export const TAX_ENDPOINTS: EndpointConfig[] = [
+const TAX_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'tax_calculate',
     method: 'GET',
@@ -758,7 +758,7 @@ export const TAX_ENDPOINTS: EndpointConfig[] = [
 // BOOKING ENDPOINTS
 // ============================================
 
-export const BOOKING_ENDPOINTS: EndpointConfig[] = [
+const BOOKING_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'booking_list',
     method: 'GET',
@@ -885,7 +885,7 @@ export const BOOKING_ENDPOINTS: EndpointConfig[] = [
 // KYC ENDPOINTS
 // ============================================
 
-export const KYC_ENDPOINTS: EndpointConfig[] = [
+const KYC_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'kyc_status',
     method: 'GET',
@@ -922,7 +922,7 @@ export const KYC_ENDPOINTS: EndpointConfig[] = [
 // MARKETING ENDPOINTS
 // ============================================
 
-export const MARKETING_ENDPOINTS: EndpointConfig[] = [
+const MARKETING_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'marketing_list_campaigns',
     method: 'GET',
@@ -959,7 +959,7 @@ export const MARKETING_ENDPOINTS: EndpointConfig[] = [
 // WALLET ENDPOINTS (NEW)
 // ============================================
 
-export const WALLET_ENDPOINTS: EndpointConfig[] = [
+const WALLET_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'exchange_rates_latest',
     method: 'GET',
@@ -1046,7 +1046,7 @@ export const WALLET_ENDPOINTS: EndpointConfig[] = [
 // DUFFEL FLIGHT API ENDPOINTS
 // ============================================
 
-export const DUFFEL_ENDPOINTS: EndpointConfig[] = [
+const DUFFEL_ENDPOINTS: EndpointConfig[] = [
   // Airports/Cities Search (for Autocomplete)
   {
     id: 'duffel_search_airports',
@@ -1396,7 +1396,7 @@ export const DUFFEL_ENDPOINTS: EndpointConfig[] = [
 // B2B ADMIN ENDPOINTS - Companies
 // ============================================
 
-export const B2B_ADMIN_COMPANY_ENDPOINTS: EndpointConfig[] = [
+const B2B_ADMIN_COMPANY_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'b2b_companies_list',
     method: 'GET',
@@ -1483,7 +1483,7 @@ export const B2B_ADMIN_COMPANY_ENDPOINTS: EndpointConfig[] = [
 // B2B ADMIN ENDPOINTS - Users
 // ============================================
 
-export const B2B_ADMIN_USER_ENDPOINTS: EndpointConfig[] = [
+const B2B_ADMIN_USER_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'b2b_users_list',
     method: 'GET',
@@ -1590,7 +1590,7 @@ export const B2B_ADMIN_USER_ENDPOINTS: EndpointConfig[] = [
 // B2B ADMIN ENDPOINTS - Bookings Management
 // ============================================
 
-export const B2B_ADMIN_BOOKING_ENDPOINTS: EndpointConfig[] = [
+const B2B_ADMIN_BOOKING_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'b2b_bookings_list',
     method: 'GET',
@@ -1677,7 +1677,7 @@ export const B2B_ADMIN_BOOKING_ENDPOINTS: EndpointConfig[] = [
 // B2B ADMIN ENDPOINTS - Finance
 // ============================================
 
-export const B2B_ADMIN_FINANCE_ENDPOINTS: EndpointConfig[] = [
+const B2B_ADMIN_FINANCE_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'b2b_wallets_list',
     method: 'GET',
@@ -1856,7 +1856,7 @@ export const B2B_ADMIN_FINANCE_ENDPOINTS: EndpointConfig[] = [
 
 // Phase 2 & Phase 3 Supplier Management Endpoints
 // Routes for: Products, Mappings, Financial, Wallets, Payments, Payment Gateway Webhooks
-export const B2B_ADMIN_SUPPLIER_ENDPOINTS: EndpointConfig[] = [
+const B2B_ADMIN_SUPPLIER_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'b2b_suppliers_list',
     method: 'GET',
@@ -2282,7 +2282,7 @@ export const B2B_ADMIN_SUPPLIER_ENDPOINTS: EndpointConfig[] = [
 // B2B ADMIN ENDPOINTS - Rules
 // ============================================
 
-export const B2B_ADMIN_RULE_ENDPOINTS: EndpointConfig[] = [
+const B2B_ADMIN_RULE_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'b2b_markup_rules_list',
     method: 'GET',
@@ -2391,7 +2391,7 @@ export const B2B_ADMIN_RULE_ENDPOINTS: EndpointConfig[] = [
 // BOOKING ENGINE ENDPOINTS - Flights
 // ============================================
 
-export const BOOKING_ENGINE_FLIGHT_ENDPOINTS: EndpointConfig[] = [
+const BOOKING_ENGINE_FLIGHT_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'be_flight_search',
     method: 'POST',
@@ -2468,7 +2468,7 @@ export const BOOKING_ENGINE_FLIGHT_ENDPOINTS: EndpointConfig[] = [
 // BOOKING ENGINE ENDPOINTS - Hotels
 // ============================================
 
-export const BOOKING_ENGINE_HOTEL_ENDPOINTS: EndpointConfig[] = [
+const BOOKING_ENGINE_HOTEL_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'be_hotel_search',
     method: 'POST',
@@ -2562,7 +2562,7 @@ export const BOOKING_ENGINE_HOTEL_ENDPOINTS: EndpointConfig[] = [
 // ============================================
 // HOTEL HYBRID ENDPOINTS (Static DB + Live Rates)
 // ============================================
-export const HOTEL_HYBRID_ENDPOINTS: EndpointConfig[] = [
+const HOTEL_HYBRID_ENDPOINTS: EndpointConfig[] = [
   // Hotel search with live rates
   {
     id: "hotel-hybrid-search",
@@ -2602,7 +2602,7 @@ export const HOTEL_HYBRID_ENDPOINTS: EndpointConfig[] = [
 // BOOKING ENGINE ENDPOINTS - Offline Requests
 // ============================================
 
-export const BOOKING_ENGINE_OFFLINE_ENDPOINTS: EndpointConfig[] = [
+const BOOKING_ENGINE_OFFLINE_ENDPOINTS: EndpointConfig[] = [
   {
     id: 'be_offline_requests_list',
     method: 'GET',
@@ -2695,7 +2695,7 @@ export const BOOKING_ENGINE_OFFLINE_ENDPOINTS: EndpointConfig[] = [
 // API MANAGER CLASS
 // ============================================
 
-export class APIManager {
+class APIManager {
   private services: Map<string, ServiceConfig> = new Map();
   private endpoints: Map<string, EndpointConfig> = new Map();
   private routeMap: Map<string, EndpointConfig> = new Map();

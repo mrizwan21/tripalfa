@@ -18,7 +18,7 @@ export interface LoyaltyTransaction {
   id: string;
   customerId: string;
   points: number;
-  type: "EARN" | "REDEEM" | "EXPIRE" | "BONUS" | "ADJUSTMENT";
+  type: 'EARN' | 'REDEEM' | 'EXPIRE' | 'BONUS' | 'ADJUSTMENT';
   description: string;
   bookingReference?: string;
   createdAt: string;
@@ -51,10 +51,9 @@ export interface LoyaltyStatus {
   lastActivityDate?: string;
 }
 
-// UI-specific types for loyalty badges and progress indicators
 export interface BadgeConfig {
-  size: "xs" | "sm" | "md" | "lg";
-  variant?: "solid" | "outline";
+  size: 'xs' | 'sm' | 'md' | 'lg';
+  variant?: 'solid' | 'outline';
   showPoints?: boolean;
   showTierName?: boolean;
 }
@@ -67,44 +66,42 @@ export interface ProgressConfig {
 }
 
 export interface PointsDisplayConfig {
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
   showAnimation?: boolean;
-  format?: "simple" | "detailed";
+  format?: 'simple' | 'detailed';
 }
 
-// Tier colors and styling
 export const TIER_COLORS = {
-  SILVER: "silver",
-  GOLD: "gold",
-  PLATINUM: "gainsboro",
-  DIAMOND: "darkturquoise",
+  SILVER: 'silver',
+  GOLD: 'gold',
+  PLATINUM: 'gainsboro',
+  DIAMOND: 'darkturquoise',
 } as const;
 
 export const TIER_STYLES = {
   SILVER: {
-    color: "silver",
-    bgGradient: "from-gray-100 to-gray-300",
-    textColor: "text-gray-800",
+    color: 'silver',
+    bgGradient: 'from-gray-100 to-gray-300',
+    textColor: 'text-gray-800',
   },
   GOLD: {
-    color: "gold",
-    bgGradient: "from-yellow-100 to-yellow-300",
-    textColor: "text-yellow-900",
+    color: 'gold',
+    bgGradient: 'from-yellow-100 to-yellow-300',
+    textColor: 'text-yellow-900',
   },
   PLATINUM: {
-    color: "gainsboro",
-    bgGradient: "from-gray-100 to-gray-200",
-    textColor: "text-gray-800",
+    color: 'gainsboro',
+    bgGradient: 'from-gray-100 to-gray-200',
+    textColor: 'text-gray-800',
   },
   DIAMOND: {
-    color: "darkturquoise",
-    bgGradient: "from-cyan-100 to-cyan-400",
-    textColor: "text-cyan-900",
+    color: 'darkturquoise',
+    bgGradient: 'from-cyan-100 to-cyan-400',
+    textColor: 'text-cyan-900',
   },
 } as const;
 
-// Form-related types
 export interface RedemptionForm {
   points: number;
   bookingId?: string;
@@ -118,7 +115,6 @@ export interface RedemptionResult {
   message: string;
 }
 
-// Points-related types
 export interface PointsEarningBreakdown {
   basePoints: number;
   tierMultiplier: number;
@@ -132,7 +128,6 @@ export interface ExpiringPointsWarning {
   expiryDate: string;
 }
 
-// Feature flags
 export interface LoyaltyFeatures {
   enablePointsRedeeming: boolean;
   enableTierUpgradeNotifications: boolean;
@@ -140,7 +135,6 @@ export interface LoyaltyFeatures {
   enableBonusPoints: boolean;
 }
 
-// Analytics
 export interface LoyaltyAnalytics {
   averagePointsPerUser: number;
   averagePointsRedeemed: number;

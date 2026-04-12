@@ -1,15 +1,17 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "module": "Node16",
-    "moduleResolution": "Node16",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
+    "baseUrl": ".",
     "rootDir": "./src",
-    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"],
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
     "paths": {
       "@/*": ["./src/*"],
       "@tripalfa/shared-database": ["../../packages/shared-database"],

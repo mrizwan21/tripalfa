@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 // import LedgerService from '../services/LedgerService.js';
 
-export class WalletController {
+class WalletController {
   // Create a new wallet account
   async createAccount(req: Request, res: Response) {
     // TODO: Implement using walletOps

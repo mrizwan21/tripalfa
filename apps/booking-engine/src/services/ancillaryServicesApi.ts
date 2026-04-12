@@ -193,7 +193,7 @@ class AncillaryServicesApi {
   }
 }
 
-export const ancillaryServicesApi = new AncillaryServicesApi();
+const ancillaryServicesApi = new AncillaryServicesApi();
 export default ancillaryServicesApi;
 
 // ============================================================================
@@ -205,7 +205,7 @@ export default ancillaryServicesApi;
  * Standalone function for API integration verification
  * @param serviceId - Service ID
  */
-export async function getServiceDetails(serviceId: string): Promise<{
+async function getServiceDetails(serviceId: string): Promise<{
   success: boolean;
   data: Service;
   timestamp: string;

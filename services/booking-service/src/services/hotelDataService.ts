@@ -837,7 +837,7 @@ async function getLiveRates(params: {
 // Hybrid Public API
 // ============================================================================
 
-export const HotelDataService = {
+const HotelDataService = {
   /**
    * Search hotels - hybrid approach
    * 1. Get static data from Postgres

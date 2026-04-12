@@ -7,7 +7,7 @@ import contactRoutes from './routes/contacts';
 import activityRoutes from './routes/activities';
 import preferenceRoutes from './routes/preferences';
 
-const app = express();
+const app: Express = express();
 const PORT = process.env.PORT || 3025;
 
 // Middleware

@@ -11,6 +11,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./frontend": {
+      "types": "./dist/frontend-index.d.ts",
+      "import": "./dist/frontend-index.js",
+      "default": "./dist/frontend-index.js"
+    },
+    "./scheduler": {
+      "types": "./dist/scheduler.d.ts",
+      "import": "./dist/scheduler.js",
+      "default": "./dist/scheduler.js"
     }
   },
   "scripts": {

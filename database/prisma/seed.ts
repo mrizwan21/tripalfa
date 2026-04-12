@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { log } from '@tripalfa/shared-utils/logging';
 
 // Get database URL from environment
 const databaseUrl =
@@ -18,7 +19,7 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main(): Promise<void> {
-  console.log('🌱  Starting seed…');
+  log.info('🌱  Starting seed…');
 
   // ── Application Data ───────────────────────────────────────
   // Seed core application data that belongs in the main Neon database
@@ -34,7 +35,7 @@ async function main(): Promise<void> {
       isActive: true,
     },
   });
-  console.log('  ✔ default company');
+  log.info('Default company seeded');
 
   // Create default roles
   await prisma.role.createMany({
@@ -45,7 +46,7 @@ async function main(): Promise<void> {
       { name: 'agent', description: 'Travel agent role', isSystem: true },
     ],
   });
-  console.log('  ✔ default roles');
+  log.info('Default roles seeded');
 
   // Create default loyalty tiers
   await prisma.loyaltyTier.createMany({
@@ -57,7 +58,7 @@ async function main(): Promise<void> {
       { name: 'Platinum', level: 4, minPoints: 20000, multiplier: 1.3 },
     ],
   });
-  console.log('  ✔ default loyalty tiers');
+  log.info('Default loyalty tiers seeded');
 
   // Create default notification templates
   await prisma.notificationTemplate.createMany({
@@ -93,7 +94,7 @@ async function main(): Promise<void> {
       },
     ],
   });
-  console.log('  ✔ default notification templates');
+  log.info('Default notification templates seeded');
 
   // Create default commission rules
   await prisma.commissionRule.createMany({
@@ -121,7 +122,7 @@ async function main(): Promise<void> {
       },
     ],
   });
-  console.log('  ✔ default commission rules');
+  log.info('Default commission rules seeded');
 
   // Create default markup rules
   await prisma.markupRule.createMany({
@@ -149,18 +150,18 @@ async function main(): Promise<void> {
       },
     ],
   });
-  console.log('  ✔ default markup rules');
+  log.info('Default markup rules seeded');
 
   // Note: Static lookup tables (airports, airlines, countries, currencies, etc.)
   // are managed separately in the static database and should not be seeded here.
   // These tables are populated via dedicated import scripts in packages/static-data.
 
-  console.log('\n🎉  Seed complete.');
+  log.info('🎉  Seed complete.');
 }
 
 main()
   .catch(e => {
-    console.error('❌  Seed error:', e);
+    log.error('Seed failed', e as Error);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

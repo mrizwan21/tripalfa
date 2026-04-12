@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Plane,
   ChevronLeft,
@@ -20,20 +20,20 @@ import {
   Luggage,
   User,
   TrendingUp,
-} from "lucide-react";
-import { Button } from "../components/ui/button";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { formatCurrency } from "@tripalfa/ui-components";
-import { fetchLoyaltyPrograms } from "../lib/api";
-import { useLoyaltyBalance } from "../hooks/useLoyaltyBalance";
-import { TierProgressBar } from "../components/loyalty/TierProgressBar";
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { formatCurrency } from '@tripalfa/ui-components';
+import { fetchLoyaltyPrograms } from '../lib/api';
+import { useLoyaltyBalance } from '../hooks/useLoyaltyBalance';
+import { TierProgressBar } from '../components/loyalty/TierProgressBar';
 import {
   SeatSelectionPopup,
   BaggageSelectionPopup,
   MealSelectionPopup,
   SpecialServicesPopup,
-} from "../components/ancillary";
-import { Label } from "../components/ui/label";
+} from '../components/ancillary';
+import { Label } from '../components/ui/label';
 import {
   calculateAncillarySummary,
   getPassengerAvatar,
@@ -46,7 +46,7 @@ import {
   type BaggageOption,
   type SpecialServiceOption,
   type MealOption,
-} from "../lib/ancillary-types";
+} from '../lib/ancillary-types';
 
 type FlightSegment = Record<string, any>;
 
@@ -57,12 +57,17 @@ interface LoyaltyProgram {
   programName: string;
 }
 
-export default function AddOns() {
+function AddOns() {
   const navigate = useNavigate();
   const location = useLocation();
 
   // Extract dynamic data from navigation state
-  const { flight, selectedFare, passengers, selectedAncillaries: quickAddIds } = location.state || {};
+  const {
+    flight,
+    selectedFare,
+    passengers,
+    selectedAncillaries: quickAddIds,
+  } = location.state || {};
 
   // Loyalty hook for tier and points calculations
   const { balance: loyaltyStatus } = useLoyaltyBalance();
@@ -71,26 +76,25 @@ export default function AddOns() {
 
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
   const [couponApplied, setCouponApplied] = useState(false);
-  const [couponCode, setCouponCode] = useState("");
+  const [couponCode, setCouponCode] = useState('');
   const [loyaltyPrograms, setLoyaltyPrograms] = useState<LoyaltyProgram[]>([]);
-  const [selectedProgram, setSelectedProgram] = useState<string>("");
-  const [frequentFlyerNumber, setFrequentFlyerNumber] = useState("");
+  const [selectedProgram, setSelectedProgram] = useState<string>('');
+  const [frequentFlyerNumber, setFrequentFlyerNumber] = useState('');
   const [loyaltyDropdownOpen, setLoyaltyDropdownOpen] = useState(false);
 
   // Ancillary popup visibility states
   const [showSeatPopup, setShowSeatPopup] = useState(false);
   const [showBaggagePopup, setShowBaggagePopup] = useState(false);
   const [showMealPopup, setShowMealPopup] = useState(false);
-  const [showSpecialServicesPopup, setShowSpecialServicesPopup] =
-    useState(false);
+  const [showSpecialServicesPopup, setShowSpecialServicesPopup] = useState(false);
 
   // Ancillary selections
   const [selectedSeats, setSelectedSeats] = useState<SelectedSeat[]>([]);
   const [selectedBaggage, setSelectedBaggage] = useState<SelectedBaggage[]>([]);
   const [selectedMeals, setSelectedMeals] = useState<SelectedMeal[]>([]);
-  const [selectedSpecialServices, setSelectedSpecialServices] = useState<
-    SelectedSpecialService[]
-  >([]);
+  const [selectedSpecialServices, setSelectedSpecialServices] = useState<SelectedSpecialService[]>(
+    []
+  );
 
   // Fetch loyalty programs on mount
   useEffect(() => {
@@ -99,7 +103,7 @@ export default function AddOns() {
         const programs = await fetchLoyaltyPrograms();
         setLoyaltyPrograms(programs);
       } catch (error) {
-        console.error("Failed to load loyalty programs:", error);
+        console.error('Failed to load loyalty programs:', error);
       }
     };
     loadLoyaltyPrograms();
@@ -114,9 +118,9 @@ export default function AddOns() {
     for (let i = 0; i < (passengers?.adults || 1); i++) {
       passengerList.push({
         id: `adult-${i + 1}`,
-        type: "Adult",
+        type: 'Adult',
         firstName: `Adult ${i + 1}`,
-        lastName: "",
+        lastName: '',
         avatar: getPassengerAvatar(`Adult ${i + 1}`),
       });
       id++;
@@ -126,9 +130,9 @@ export default function AddOns() {
     for (let i = 0; i < (passengers?.children || 0); i++) {
       passengerList.push({
         id: `child-${i + 1}`,
-        type: "Child",
+        type: 'Child',
         firstName: `Child ${i + 1}`,
-        lastName: "",
+        lastName: '',
         avatar: getPassengerAvatar(`Child ${i + 1}`),
       });
       id++;
@@ -138,9 +142,9 @@ export default function AddOns() {
     for (let i = 0; i < (passengers?.infants || 0); i++) {
       passengerList.push({
         id: `infant-${i + 1}`,
-        type: "Infant",
+        type: 'Infant',
         firstName: `Infant ${i + 1}`,
-        lastName: "",
+        lastName: '',
         avatar: getPassengerAvatar(`Infant ${i + 1}`),
       });
       id++;
@@ -155,7 +159,7 @@ export default function AddOns() {
 
     return flight.segments.map((seg: FlightSegment, idx: number) => ({
       id: `segment-${idx + 1}`,
-      flightNumber: seg.flightNumber || `${seg.airline || "XX"}${100 + idx}`,
+      flightNumber: seg.flightNumber || `${seg.airline || 'XX'}${100 + idx}`,
       origin: seg.origin,
       destination: seg.destination,
       originCity: seg.originCity,
@@ -168,22 +172,20 @@ export default function AddOns() {
   }, [flight]);
 
   // Passengers eligible for seat selection (exclude infants)
-  const seatEligiblePassengers = formattedPassengers.filter(
-    (p) => p.type !== "Infant",
-  );
+  const seatEligiblePassengers = formattedPassengers.filter(p => p.type !== 'Infant');
 
   // Check if flight is LCC (low cost carrier)
-  const isLCC = flight?.isLCC || flight?.carrierType === "LCC" || false;
+  const isLCC = flight?.isLCC || flight?.carrierType === 'LCC' || false;
 
   // Real-time ancillary options derived from flight data
   const availableBaggageOptions: BaggageOption[] = useMemo(() => {
     return (flight?.ancillaries || [])
-      .filter((s: any) => s.type === "baggage")
+      .filter((s: any) => s.type === 'baggage')
       .map((s: any) => ({
         id: s.id,
-        type: "checked",
+        type: 'checked',
         weight: s.raw?.metadata?.weight || 23,
-        weightUnit: s.raw?.metadata?.weight_unit || "kg",
+        weightUnit: s.raw?.metadata?.weight_unit || 'kg',
         price: s.price,
         currency: s.currency,
         description: s.name,
@@ -192,13 +194,13 @@ export default function AddOns() {
 
   const availableMealsOptions: MealOption[] = useMemo(() => {
     return (flight?.ancillaries || [])
-      .filter((s: any) => s.type === "meal")
+      .filter((s: any) => s.type === 'meal')
       .map((s: any) => ({
         id: s.id,
-        code: s.raw?.metadata?.type || "MEAL",
+        code: s.raw?.metadata?.type || 'MEAL',
         name: s.name,
         description: s.raw?.metadata?.description,
-        type: "special",
+        type: 'special',
         price: s.price,
         currency: s.currency,
       }));
@@ -206,10 +208,10 @@ export default function AddOns() {
 
   const availableSpecialServicesOptions: SpecialServiceOption[] = useMemo(() => {
     return (flight?.ancillaries || [])
-      .filter((s: any) => s.type === "other")
+      .filter((s: any) => s.type === 'other')
       .map((s: any) => ({
         id: s.id,
-        code: s.raw?.metadata?.type || "SSR",
+        code: s.raw?.metadata?.type || 'SSR',
         name: s.name,
         description: s.raw?.metadata?.description,
         price: s.price,
@@ -227,26 +229,26 @@ export default function AddOns() {
         const service = flight.ancillaries.find((s: any) => s.id === id);
         if (!service) return;
 
-        if (service.type === "baggage") {
+        if (service.type === 'baggage') {
           baggage.push({
-            passengerId: formattedPassengers[0]?.id || "adult-1",
-            passengerName: formattedPassengers[0]?.firstName || "Adult 1",
-            segmentId: formattedSegments[0]?.id || "segment-1",
-            flightNumber: formattedSegments[0]?.flightNumber || "FL101",
+            passengerId: formattedPassengers[0]?.id || 'adult-1',
+            passengerName: formattedPassengers[0]?.firstName || 'Adult 1',
+            segmentId: formattedSegments[0]?.id || 'segment-1',
+            flightNumber: formattedSegments[0]?.flightNumber || 'FL101',
             baggageId: service.id,
             weight: service.raw?.metadata?.weight || 23,
-            weightUnit: service.raw?.metadata?.weight_unit || "kg",
+            weightUnit: service.raw?.metadata?.weight_unit || 'kg',
             price: service.price,
             currency: service.currency,
           });
         } else {
           special.push({
-            passengerId: formattedPassengers[0]?.id || "adult-1",
-            passengerName: formattedPassengers[0]?.firstName || "Adult 1",
-            segmentId: formattedSegments[0]?.id || "segment-1",
-            flightNumber: formattedSegments[0]?.flightNumber || "FL101",
+            passengerId: formattedPassengers[0]?.id || 'adult-1',
+            passengerName: formattedPassengers[0]?.firstName || 'Adult 1',
+            segmentId: formattedSegments[0]?.id || 'segment-1',
+            flightNumber: formattedSegments[0]?.flightNumber || 'FL101',
             serviceId: service.id,
-            serviceCode: service.raw?.metadata?.type || "SSR",
+            serviceCode: service.raw?.metadata?.type || 'SSR',
             serviceName: service.name,
             price: service.price,
             currency: service.currency,
@@ -276,9 +278,7 @@ export default function AddOns() {
   const baseFare = farePerPerson * adults + farePerPerson * 0.8 * children;
 
   const toggleAddon = (id: string) => {
-    setSelectedAddons((prev) =>
-      prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id],
-    );
+    setSelectedAddons(prev => (prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]));
   };
 
   const calculateAddonTotal = () => {
@@ -300,7 +300,7 @@ export default function AddOns() {
     Platinum: 1.75,
     Diamond: 2,
   };
-  const pointsMultiplier = tierMultipliers[tier || "Bronze"] || 1;
+  const pointsMultiplier = tierMultipliers[tier || 'Bronze'] || 1;
   const pointsEarned = Math.round(finalTotal * pointsMultiplier);
   const nextTierPoints = 50000; // Example target for next tier
   const pointsNeeded = Math.max(0, nextTierPoints - (balance || 0));
@@ -311,12 +311,8 @@ export default function AddOns() {
       <TripLogerLayout>
         <div className="flex h-screen items-center justify-center gap-4">
           <div className="text-center">
-            <h2 className="text-2xl font-black text-foreground mb-4">
-              No flight selected
-            </h2>
-            <Button onClick={() => navigate("/flights")}>
-              Go Back to Search
-            </Button>
+            <h2 className="text-2xl font-black text-foreground mb-4">No flight selected</h2>
+            <Button onClick={() => navigate('/flights')}>Go Back to Search</Button>
           </div>
         </div>
       </TripLogerLayout>
@@ -325,10 +321,7 @@ export default function AddOns() {
 
   return (
     <TripLogerLayout>
-      <div
-        className="bg-[hsl(var(--background))] min-h-screen font-sans"
-        data-testid="addons-page"
-      >
+      <div className="bg-[hsl(var(--background))] min-h-screen font-sans" data-testid="addons-page">
         {/* Top Sticky Header: Route Summary */}
         <div className="bg-[hsl(var(--primary))] sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3 max-w-7xl flex items-center divide-x divide-white/10 gap-2">
@@ -369,20 +362,20 @@ export default function AddOns() {
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[hsl(var(--secondary))]">
                     {new Date(seg.departureTime).toLocaleDateString([], {
-                      month: "short",
-                      day: "numeric",
-                    })}{" "}
-                    |{" "}
+                      month: 'short',
+                      day: 'numeric',
+                    })}{' '}
+                    |{' '}
                     {new Date(seg.departureTime).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
+                      hour: '2-digit',
+                      minute: '2-digit',
                     })}
                   </p>
                   <p className="text-xs font-bold text-[hsl(var(--primary-foreground))] mt-1">
                     {seg.airline}
                   </p>
                   <p className="text-[10px] text-[hsl(var(--primary-foreground))/0.7]">
-                    {i === 0 ? "Outgoing" : "Segment"}
+                    {i === 0 ? 'Outgoing' : 'Segment'}
                   </p>
                 </div>
               </div>
@@ -404,12 +397,12 @@ export default function AddOns() {
               </Button>
 
               {/* Refund Protect Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl overflow-hidden group">
+              <div className="bg-card rounded-xl border border-border shadow-xl overflow-hidden group">
                 <div className="h-64 relative bg-[url('https://images.unsplash.com/photo-1557804506-669a67965ba0')] bg-cover bg-center">
-                  <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+                  <div className="absolute inset-0 bg-foreground/60" />
                   <div className="absolute inset-0 p-10 flex flex-col justify-end gap-4">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-14 h-14 rounded-2xl bg-[hsl(var(--primary))] flex items-center justify-center text-[hsl(var(--primary-foreground))] shadow-xl shadow-purple-500/20 gap-2">
+                      <div className="w-14 h-14 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center text-[hsl(var(--primary-foreground))] shadow-xl gap-2">
                         <Shield size={32} />
                       </div>
                       <h2 className="text-3xl font-black text-[hsl(var(--secondary))]">
@@ -417,13 +410,13 @@ export default function AddOns() {
                       </h2>
                     </div>
                     <p className="text-background/80 text-sm font-medium leading-relaxed max-w-md">
-                      Receive a FULL refund if you cannot travel due to a reason
-                      listed in the T&C, including 100% refundable booking.
+                      Receive a FULL refund if you cannot travel due to a reason listed in the T&C,
+                      including 100% refundable booking.
                     </p>
                   </div>
                 </div>
                 <div className="p-10 space-y-8">
-                  <div className="flex items-center justify-between bg-muted/50 p-6 rounded-3xl border border-border gap-2">
+                  <div className="flex items-center justify-between bg-muted/50 p-6 rounded-xl border border-border gap-2">
                     <h3 className="text-lg font-black text-foreground">
                       100% of your ticket are covered
                     </h3>
@@ -437,21 +430,16 @@ export default function AddOns() {
 
                   <div className="grid grid-cols-2 gap-x-12 gap-y-4">
                     {[
-                      "Sickness, accident or injury",
-                      "Pre-existing medical conditions",
-                      "Death of immediate family",
-                      "Travel Disruption",
-                      "Adverse weather",
-                      "Theft of documents",
+                      'Sickness, accident or injury',
+                      'Pre-existing medical conditions',
+                      'Death of immediate family',
+                      'Travel Disruption',
+                      'Adverse weather',
+                      'Theft of documents',
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <Check
-                          size={16}
-                          className="text-[hsl(var(--primary))]"
-                        />
-                        <span className="text-sm font-bold text-muted-foreground">
-                          {item}
-                        </span>
+                        <Check size={16} className="text-[hsl(var(--primary))]" />
+                        <span className="text-sm font-bold text-muted-foreground">{item}</span>
                       </div>
                     ))}
                     <Button
@@ -463,7 +451,7 @@ export default function AddOns() {
                     </Button>
                   </div>
 
-                  <div className="bg-purple-50/50 rounded-2xl p-6 border border-purple-100 flex items-center justify-between gap-2">
+                  <div className="bg-muted rounded-xl p-6 border border-border flex items-center justify-between gap-2">
                     <div className="space-y-2">
                       <p className="text-xs font-black text-foreground">
                         Refund Protect has a 5* rating on TrustPilot
@@ -474,10 +462,10 @@ export default function AddOns() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Star
-                        className="text-green-500 fill-green-500"
+                        className="text-[hsl(var(--primary))] fill-[hsl(var(--primary))]"
                         size={20}
                       />
-                      <span className="text-sm font-black text-green-500">
+                      <span className="text-sm font-black text-[hsl(var(--primary))]">
                         Trustpilot
                       </span>
                     </div>
@@ -488,27 +476,24 @@ export default function AddOns() {
                       <Button
                         variant="outline"
                         size="md"
-                        onClick={() => toggleAddon("refund")}
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${selectedAddons.includes("refund")
-                          ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200"
-                          : "border-2 border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                          }`}
+                        onClick={() => toggleAddon('refund')}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                          selectedAddons.includes('refund')
+                            ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg'
+                            : 'border-2 border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]'
+                        }`}
                       >
-                        {selectedAddons.includes("refund")
-                          ? "Selected"
-                          : "Add to Cart"}
+                        {selectedAddons.includes('refund') ? 'Selected' : 'Add to Cart'}
                       </Button>
                       <Button
                         variant="outline"
                         size="md"
-                        onClick={() =>
-                          selectedAddons.includes("refund") &&
-                          toggleAddon("refund")
-                        }
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${!selectedAddons.includes("refund")
-                          ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-purple-50"
-                          : "border-border text-muted-foreground"
-                          }`}
+                        onClick={() => selectedAddons.includes('refund') && toggleAddon('refund')}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
+                          !selectedAddons.includes('refund')
+                            ? 'border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-muted'
+                            : 'border-border text-muted-foreground'
+                        }`}
                       >
                         No thanks
                       </Button>
@@ -517,16 +502,14 @@ export default function AddOns() {
                       <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
                         Only
                       </p>
-                      <p className="text-2xl font-black text-foreground">
-                        {formatCurrency(240)}
-                      </p>
+                      <p className="text-2xl font-black text-foreground">{formatCurrency(240)}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Baggage - TraceMe Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl overflow-hidden">
+              <div className="bg-card rounded-xl border border-border shadow-xl overflow-hidden">
                 <div className="h-56 relative bg-[url('https://images.unsplash.com/photo-1581092160562-40aa08e78837')] bg-cover bg-center">
                   <div className="absolute inset-0 bg-foreground/40" />
                   <div className="absolute inset-0 p-10 flex flex-col justify-end gap-4">
@@ -534,36 +517,28 @@ export default function AddOns() {
                       <div className="w-12 h-12 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center text-[hsl(var(--primary-foreground))] gap-2">
                         <Briefcase size={24} />
                       </div>
-                      <h2 className="text-2xl font-black text-background">
-                        Baggage - TraceMe
-                      </h2>
+                      <h2 className="text-2xl font-black text-background">Baggage - TraceMe</h2>
                     </div>
                     <p className="text-background/80 text-xs font-medium">
-                      Avoid inconvenience & expenses due to mishandled and
-                      delayed bags.
+                      Avoid inconvenience & expenses due to mishandled and delayed bags.
                     </p>
                   </div>
                 </div>
                 <div className="p-10">
-                  <div className="flex items-center justify-between mb-8 bg-muted/50 p-6 rounded-3xl border border-border gap-2">
-                    <h3 className="text-lg font-black text-foreground">
-                      Secure your Bags
-                    </h3>
+                  <div className="flex items-center justify-between mb-8 bg-muted/50 p-6 rounded-xl border border-border gap-2">
+                    <h3 className="text-lg font-black text-foreground">Secure your Bags</h3>
                     <span className="bg-[hsl(var(--secondary))] text-[hsl(var(--primary))] text-[10px] font-black px-4 py-1.5 rounded-lg">
                       Recommended!
                     </span>
                   </div>
                   <ul className="space-y-4 mb-10">
                     {[
-                      "Receive Smart ID tags for your bags recognized at over 250 airports globally",
-                      "Receive your recovered bags at your destination airport",
-                      "Receive $1,000 if your bags are not available at the airport within 100 hours",
+                      'Receive Smart ID tags for your bags recognized at over 250 airports globally',
+                      'Receive your recovered bags at your destination airport',
+                      'Receive $1,000 if your bags are not available at the airport within 100 hours',
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
-                        <Check
-                          size={16}
-                          className="text-[hsl(var(--primary))] mt-1 shrink-0"
-                        />
+                        <Check size={16} className="text-[hsl(var(--primary))] mt-1 shrink-0" />
                         <span className="text-sm font-bold text-muted-foreground leading-relaxed">
                           {item}
                         </span>
@@ -576,50 +551,43 @@ export default function AddOns() {
                         variant="outline"
                         size="md"
                         data-testid="baggage-addon"
-                        onClick={() => toggleAddon("baggage")}
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${selectedAddons.includes("baggage")
-                          ? "bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200"
-                          : "border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                          }`}
+                        onClick={() => toggleAddon('baggage')}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
+                          selectedAddons.includes('baggage')
+                            ? 'bg-[hsl(var(--primary))] border-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg'
+                            : 'border-border text-muted-foreground hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]'
+                        }`}
                       >
-                        {selectedAddons.includes("baggage")
-                          ? "Selected"
-                          : "Add to Cart"}
+                        {selectedAddons.includes('baggage') ? 'Selected' : 'Add to Cart'}
                       </Button>
                       <Button
                         variant="outline"
                         size="md"
-                        onClick={() =>
-                          selectedAddons.includes("baggage") &&
-                          toggleAddon("baggage")
-                        }
-                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${!selectedAddons.includes("baggage")
-                          ? "border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-purple-50"
-                          : "border-border text-muted-foreground"
-                          }`}
+                        onClick={() => selectedAddons.includes('baggage') && toggleAddon('baggage')}
+                        className={`px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest border-2 transition-all ${
+                          !selectedAddons.includes('baggage')
+                            ? 'border-[hsl(var(--primary))] text-[hsl(var(--primary))] bg-muted'
+                            : 'border-border text-muted-foreground'
+                        }`}
                       >
                         No thanks
                       </Button>
                     </div>
-                    <p className="text-2xl font-black text-foreground">
-                      {formatCurrency(240)}
-                    </p>
+                    <p className="text-2xl font-black text-foreground">{formatCurrency(240)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Seat Selection Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl overflow-hidden">
-                <div className="h-48 relative bg-gradient-to-br from-purple-600 to-indigo-700">
+              <div className="bg-card rounded-xl border border-border shadow-xl overflow-hidden">
+                <div className="h-48 relative bg-near-black">
                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05')] bg-cover bg-center opacity-30" />
                   <div className="absolute inset-0 p-10 flex flex-col justify-end gap-4">
                     <div className="flex items-center gap-4 mb-2">
                       <div className="w-12 h-12 rounded-xl bg-background/20 backdrop-blur flex items-center justify-center text-background gap-2">
                         <Armchair size={24} />
                       </div>
-                      <h2 className="text-2xl font-black text-background">
-                        Seat Selection
-                      </h2>
+                      <h2 className="text-2xl font-black text-background">Seat Selection</h2>
                     </div>
                     <p className="text-background/80 text-xs font-medium">
                       Choose your preferred seats for a comfortable journey
@@ -632,7 +600,7 @@ export default function AddOns() {
                       {seatEligiblePassengers.map((p, i) => (
                         <div
                           key={p.id}
-                          className="w-8 h-8 rounded-full bg-purple-100 border-2 border-background flex items-center justify-center text-xs font-bold text-purple-600 gap-2"
+                          className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-bold text-foreground gap-2"
                         >
                           {p.firstName.charAt(0)}
                         </div>
@@ -640,17 +608,17 @@ export default function AddOns() {
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {seatEligiblePassengers.length} passenger
-                      {seatEligiblePassengers.length !== 1 ? "s" : ""} -{" "}
-                      {formattedSegments.length} flight
-                      {formattedSegments.length !== 1 ? "s" : ""}
+                      {seatEligiblePassengers.length !== 1 ? 's' : ''} - {formattedSegments.length}{' '}
+                      flight
+                      {formattedSegments.length !== 1 ? 's' : ''}
                     </span>
                   </div>
 
                   {selectedSeats.length > 0 && (
-                    <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
-                      <p className="text-sm font-bold text-green-700">
+                    <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
+                      <p className="text-sm font-bold text-foreground">
                         {selectedSeats.length} seat
-                        {selectedSeats.length !== 1 ? "s" : ""} selected -{" "}
+                        {selectedSeats.length !== 1 ? 's' : ''} selected -{' '}
                         {formatCurrency(ancillarySummary.seats)}
                       </p>
                     </div>
@@ -661,11 +629,9 @@ export default function AddOns() {
                       variant="outline"
                       size="md"
                       onClick={() => setShowSeatPopup(true)}
-                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200 hover:bg-[hsl(var(--primary)/0.9)] transition-all"
+                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg hover:bg-[hsl(var(--primary)/0.9)] transition-all"
                     >
-                      {selectedSeats.length > 0
-                        ? "Modify Seats"
-                        : "Select Seats"}
+                      {selectedSeats.length > 0 ? 'Modify Seats' : 'Select Seats'}
                     </Button>
                     <p className="text-lg font-black text-muted-foreground">
                       From {formatCurrency(isLCC ? 150 : 250)}
@@ -675,22 +641,20 @@ export default function AddOns() {
               </div>
 
               {/* Meal Selection Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl overflow-hidden">
-                <div className="h-48 relative bg-gradient-to-br from-orange-500 to-red-600">
+              <div className="bg-card rounded-xl border border-border shadow-xl overflow-hidden">
+                <div className="h-48 relative bg-neutral-700">
                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1544025162-d76694265947')] bg-cover bg-center opacity-30" />
                   <div className="absolute inset-0 p-10 flex flex-col justify-end gap-4">
                     <div className="flex items-center gap-4 mb-2">
                       <div className="w-12 h-12 rounded-xl bg-background/20 backdrop-blur flex items-center justify-center text-background gap-2">
                         <Utensils size={24} />
                       </div>
-                      <h2 className="text-2xl font-black text-background">
-                        In-Flight Meals
-                      </h2>
+                      <h2 className="text-2xl font-black text-background">In-Flight Meals</h2>
                     </div>
                     <p className="text-background/80 text-xs font-medium">
                       {isLCC
-                        ? "Pre-order delicious meals for your flight"
-                        : "Choose your preferred meal options"}
+                        ? 'Pre-order delicious meals for your flight'
+                        : 'Choose your preferred meal options'}
                     </p>
                   </div>
                 </div>
@@ -700,7 +664,7 @@ export default function AddOns() {
                       {formattedPassengers.map((p, i) => (
                         <div
                           key={p.id}
-                          className="w-8 h-8 rounded-full bg-orange-100 border-2 border-background flex items-center justify-center text-xs font-bold text-orange-600 gap-2"
+                          className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-bold text-foreground gap-2"
                         >
                           {p.firstName.charAt(0)}
                         </div>
@@ -708,17 +672,17 @@ export default function AddOns() {
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {formattedPassengers.length} passenger
-                      {formattedPassengers.length !== 1 ? "s" : ""} -{" "}
-                      {formattedSegments.length} flight
-                      {formattedSegments.length !== 1 ? "s" : ""}
+                      {formattedPassengers.length !== 1 ? 's' : ''} - {formattedSegments.length}{' '}
+                      flight
+                      {formattedSegments.length !== 1 ? 's' : ''}
                     </span>
                   </div>
 
                   {selectedMeals.length > 0 && (
-                    <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
-                      <p className="text-sm font-bold text-green-700">
+                    <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
+                      <p className="text-sm font-bold text-foreground">
                         {selectedMeals.length} meal
-                        {selectedMeals.length !== 1 ? "s" : ""} selected -{" "}
+                        {selectedMeals.length !== 1 ? 's' : ''} selected -{' '}
                         {formatCurrency(ancillarySummary.meals)}
                       </p>
                     </div>
@@ -729,31 +693,27 @@ export default function AddOns() {
                       variant="outline"
                       size="md"
                       onClick={() => setShowMealPopup(true)}
-                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200 hover:bg-[hsl(var(--primary)/0.9)] transition-all"
+                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg hover:bg-[hsl(var(--primary)/0.9)] transition-all"
                     >
-                      {selectedMeals.length > 0
-                        ? "Modify Meals"
-                        : "Select Meals"}
+                      {selectedMeals.length > 0 ? 'Modify Meals' : 'Select Meals'}
                     </Button>
                     <p className="text-lg font-black text-muted-foreground">
-                      {isLCC ? `From ${formatCurrency(350)}` : "Included"}
+                      {isLCC ? `From ${formatCurrency(350)}` : 'Included'}
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Extra Baggage Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl overflow-hidden">
-                <div className="h-48 relative bg-gradient-to-br from-teal-500 to-cyan-600">
+              <div className="bg-card rounded-xl border border-border shadow-xl overflow-hidden">
+                <div className="h-48 relative bg-neutral-600">
                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1565026057447-bc90a3dceb87')] bg-cover bg-center opacity-30" />
                   <div className="absolute inset-0 p-10 flex flex-col justify-end gap-4">
                     <div className="flex items-center gap-4 mb-2">
                       <div className="w-12 h-12 rounded-xl bg-background/20 backdrop-blur flex items-center justify-center text-background gap-2">
                         <Luggage size={24} />
                       </div>
-                      <h2 className="text-2xl font-black text-background">
-                        Extra Baggage
-                      </h2>
+                      <h2 className="text-2xl font-black text-background">Extra Baggage</h2>
                     </div>
                     <p className="text-background/80 text-xs font-medium">
                       Add additional checked baggage to your booking
@@ -764,28 +724,26 @@ export default function AddOns() {
                   <div className="flex items-center gap-4 mb-6">
                     <div className="flex -space-x-2">
                       {formattedPassengers
-                        .filter((p) => p.type !== "Infant")
+                        .filter(p => p.type !== 'Infant')
                         .map((p, i) => (
                           <div
                             key={p.id}
-                            className="w-8 h-8 rounded-full bg-teal-100 border-2 border-background flex items-center justify-center text-xs font-bold text-teal-600 gap-2"
+                            className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-bold text-foreground gap-2"
                           >
                             {p.firstName.charAt(0)}
                           </div>
                         ))}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {isLCC
-                        ? "No baggage included"
-                        : "23kg per passenger included"}
+                      {isLCC ? 'No baggage included' : '23kg per passenger included'}
                     </span>
                   </div>
 
                   {selectedBaggage.length > 0 && (
-                    <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
-                      <p className="text-sm font-bold text-green-700">
+                    <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
+                      <p className="text-sm font-bold text-foreground">
                         {selectedBaggage.length} extra bag
-                        {selectedBaggage.length !== 1 ? "s" : ""} -{" "}
+                        {selectedBaggage.length !== 1 ? 's' : ''} -{' '}
                         {formatCurrency(ancillarySummary.baggage)}
                       </p>
                     </div>
@@ -796,11 +754,9 @@ export default function AddOns() {
                       variant="outline"
                       size="md"
                       onClick={() => setShowBaggagePopup(true)}
-                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200 hover:bg-[hsl(var(--primary)/0.9)] transition-all"
+                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg hover:bg-[hsl(var(--primary)/0.9)] transition-all"
                     >
-                      {selectedBaggage.length > 0
-                        ? "Modify Baggage"
-                        : "Add Baggage"}
+                      {selectedBaggage.length > 0 ? 'Modify Baggage' : 'Add Baggage'}
                     </Button>
                     <p className="text-lg font-black text-muted-foreground">
                       From {formatCurrency(500)}
@@ -810,17 +766,15 @@ export default function AddOns() {
               </div>
 
               {/* Special Services Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl overflow-hidden">
-                <div className="h-48 relative bg-gradient-to-br from-pink-500 to-rose-600">
+              <div className="bg-card rounded-xl border border-border shadow-xl overflow-hidden">
+                <div className="h-48 relative bg-neutral-500">
                   <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d')] bg-cover bg-center opacity-20" />
                   <div className="absolute inset-0 p-10 flex flex-col justify-end gap-4">
                     <div className="flex items-center gap-4 mb-2">
                       <div className="w-12 h-12 rounded-xl bg-background/20 backdrop-blur flex items-center justify-center text-background gap-2">
                         <User size={24} />
                       </div>
-                      <h2 className="text-2xl font-black text-background">
-                        Special Services
-                      </h2>
+                      <h2 className="text-2xl font-black text-background">Special Services</h2>
                     </div>
                     <p className="text-background/80 text-xs font-medium">
                       Request wheelchair, bassinet, or other assistance
@@ -833,25 +787,22 @@ export default function AddOns() {
                       {formattedPassengers.map((p, i) => (
                         <div
                           key={p.id}
-                          className="w-8 h-8 rounded-full bg-pink-100 border-2 border-background flex items-center justify-center text-xs font-bold text-pink-600 gap-2"
+                          className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs font-bold text-foreground gap-2"
                         >
                           {p.firstName.charAt(0)}
                         </div>
                       ))}
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      Subject to availability
-                    </span>
+                    <span className="text-sm text-muted-foreground">Subject to availability</span>
                   </div>
 
                   {selectedSpecialServices.length > 0 && (
-                    <div className="mb-6 p-4 bg-green-50 rounded-xl border border-green-100">
-                      <p className="text-sm font-bold text-green-700">
+                    <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
+                      <p className="text-sm font-bold text-foreground">
                         {selectedSpecialServices.length} service
-                        {selectedSpecialServices.length !== 1 ? "s" : ""}{" "}
-                        requested -{" "}
+                        {selectedSpecialServices.length !== 1 ? 's' : ''} requested -{' '}
                         {ancillarySummary.specialServices === 0
-                          ? "Free"
+                          ? 'Free'
                           : formatCurrency(ancillarySummary.specialServices)}
                       </p>
                     </div>
@@ -862,15 +813,11 @@ export default function AddOns() {
                       variant="outline"
                       size="md"
                       onClick={() => setShowSpecialServicesPopup(true)}
-                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-200 hover:bg-[hsl(var(--primary)/0.9)] transition-all"
+                      className="px-10 py-4 rounded-xl text-xs font-black uppercase tracking-widest bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-lg hover:bg-[hsl(var(--primary)/0.9)] transition-all"
                     >
-                      {selectedSpecialServices.length > 0
-                        ? "Modify Services"
-                        : "Request Service"}
+                      {selectedSpecialServices.length > 0 ? 'Modify Services' : 'Request Service'}
                     </Button>
-                    <p className="text-lg font-black text-muted-foreground">
-                      Usually Free
-                    </p>
+                    <p className="text-lg font-black text-muted-foreground">Usually Free</p>
                   </div>
                 </div>
               </div>
@@ -879,9 +826,9 @@ export default function AddOns() {
             {/* Sidebar: Fare Summary */}
             <div className="lg:w-96 space-y-6">
               {/* Main Summary Card */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-xl p-8 space-y-8">
+              <div className="bg-card rounded-xl border border-border shadow-xl p-8 space-y-8">
                 <div className="flex items-center gap-3 pb-6 border-b border-border">
-                  <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-[hsl(var(--primary))] gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-[hsl(var(--primary))] gap-2">
                     <CreditCard size={20} />
                   </div>
                   <h3 className="text-lg font-black text-foreground uppercase tracking-widest">
@@ -892,30 +839,25 @@ export default function AddOns() {
                 {/* Air Ticket Breakdown */}
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <Plane
-                      size={16}
-                      className="text-[hsl(var(--primary))] mt-1"
-                    />
+                    <Plane size={16} className="text-[hsl(var(--primary))] mt-1" />
                     <div className="flex-1 space-y-2">
                       <div className="flex justify-between text-xs font-bold text-muted-foreground gap-4">
                         <span>Air Ticket :</span>
                         <div className="text-right">
                           <p>
                             {formatCurrency(farePerPerson)} x {adults} Adult
-                            {adults > 1 ? "s" : ""}
+                            {adults > 1 ? 's' : ''}
                           </p>
                           {children > 0 && (
                             <p>
-                              {formatCurrency(farePerPerson * 0.8)} x {children}{" "}
-                              Child{children > 1 ? "ren" : ""}
+                              {formatCurrency(farePerPerson * 0.8)} x {children} Child
+                              {children > 1 ? 'ren' : ''}
                             </p>
                           )}
                         </div>
                       </div>
                       <div className="flex justify-between items-center pt-2 gap-4">
-                        <span className="text-sm font-black text-foreground">
-                          Base Fare:
-                        </span>
+                        <span className="text-sm font-black text-foreground">Base Fare:</span>
                         <span className="text-sm font-black text-foreground">
                           {formatCurrency(baseFare * 0.85)}
                         </span>
@@ -940,9 +882,7 @@ export default function AddOns() {
                           key={i}
                           className="flex justify-between text-[11px] font-bold text-muted-foreground gap-4"
                         >
-                          <span className="capitalize">
-                            {addon.replace("-", " ")} Service:
-                          </span>
+                          <span className="capitalize">{addon.replace('-', ' ')} Service:</span>
                           <span>
                             {formatCurrency(240)} x {adults}
                           </span>
@@ -954,9 +894,7 @@ export default function AddOns() {
                       </p>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t border-dashed border-border gap-4">
-                      <span className="text-sm font-black text-foreground">
-                        Add-ons Total:
-                      </span>
+                      <span className="text-sm font-black text-foreground">Add-ons Total:</span>
                       <span className="text-sm font-black text-foreground">
                         {formatCurrency(addonTotal)}
                       </span>
@@ -986,29 +924,21 @@ export default function AddOns() {
                       {selectedBaggage.length > 0 && (
                         <div className="flex justify-between text-[11px] font-bold text-muted-foreground gap-4">
                           <span>Extra Baggage ({selectedBaggage.length}):</span>
-                          <span>
-                            {formatCurrency(ancillarySummary.baggage)}
-                          </span>
+                          <span>{formatCurrency(ancillarySummary.baggage)}</span>
                         </div>
                       )}
                       {selectedSpecialServices.length > 0 && (
                         <div className="flex justify-between text-[11px] font-bold text-muted-foreground gap-4">
-                          <span>
-                            Special Services ({selectedSpecialServices.length}):
-                          </span>
+                          <span>Special Services ({selectedSpecialServices.length}):</span>
                           <span>
                             {ancillarySummary.specialServices === 0
-                              ? "Free"
-                              : formatCurrency(
-                                ancillarySummary.specialServices,
-                              )}
+                              ? 'Free'
+                              : formatCurrency(ancillarySummary.specialServices)}
                           </span>
                         </div>
                       )}
                       <div className="flex justify-between items-center pt-2 border-t border-dashed border-border gap-4">
-                        <span className="text-sm font-black text-foreground">
-                          Ancillary Total:
-                        </span>
+                        <span className="text-sm font-black text-foreground">Ancillary Total:</span>
                         <span className="text-sm font-black text-foreground">
                           {formatCurrency(ancillaryTotal)}
                         </span>
@@ -1018,7 +948,7 @@ export default function AddOns() {
                 )}
 
                 {/* Totals Bar */}
-                <div className="bg-[hsl(var(--secondary))] rounded-[2rem] p-8 -mx-4 shadow-xl shadow-yellow-100">
+                <div className="bg-[hsl(var(--secondary))] rounded-xl p-8 -mx-4 shadow-xl">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center gap-4">
                       <span className="text-sm font-black text-[hsl(var(--secondary-foreground))] uppercase">
@@ -1050,7 +980,7 @@ export default function AddOns() {
               </div>
 
               {/* Tier Benefits & Points Earning */}
-              <div className="bg-card rounded-[2rem] border border-border shadow-lg p-8 space-y-6">
+              <div className="bg-card rounded-xl border border-border shadow-lg p-8 space-y-6">
                 {/* Current Tier */}
                 <div className="flex items-center justify-between pb-4 border-b border-border gap-2">
                   <div className="flex items-center gap-3">
@@ -1059,9 +989,7 @@ export default function AddOns() {
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         Current Tier
                       </p>
-                      <p className="text-sm font-black text-foreground">
-                        {tier || "Bronze"}
-                      </p>
+                      <p className="text-sm font-black text-foreground">{tier || 'Bronze'}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -1081,7 +1009,7 @@ export default function AddOns() {
                   </p>
                   <div className="w-full bg-muted rounded-full h-2 mb-2 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-purple-500 to-purple-600 h-full rounded-full transition-all"
+                      className="bg-[hsl(var(--primary))] h-full rounded-full transition-all"
                       style={{ width: `${Math.min(progressToNextTier, 100)}%` }}
                     />
                   </div>
@@ -1091,21 +1019,20 @@ export default function AddOns() {
                 </div>
 
                 {/* Points Earning */}
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-4 border border-purple-100">
+                <div className="bg-muted rounded-xl p-4 border border-border">
                   <div className="flex items-center justify-between mb-2 gap-2">
                     <div className="flex items-center gap-2">
-                      <TrendingUp className="text-green-600" size={16} />
+                      <TrendingUp className="text-[hsl(var(--primary))]" size={16} />
                       <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                         Points you'll earn
                       </span>
                     </div>
-                    <span className="text-sm font-black text-green-600">
+                    <span className="text-sm font-black text-[hsl(var(--primary))]">
                       +{pointsEarned.toLocaleString()}
                     </span>
                   </div>
                   <p className="text-[9px] text-muted-foreground">
-                    With {pointsMultiplier.toFixed(2)}x multiplier (
-                    {tier || "Bronze"} tier)
+                    With {pointsMultiplier.toFixed(2)}x multiplier ({tier || 'Bronze'} tier)
                   </p>
                 </div>
 
@@ -1116,40 +1043,29 @@ export default function AddOns() {
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-[9px]">
-                      <Check size={14} className="text-green-500 shrink-0" />
+                      <Check size={14} className="text-[hsl(var(--primary))] shrink-0" />
                       <span className="text-muted-foreground">
-                        {(tierMultipliers[tier || "Bronze"] || 1).toFixed(2)}x
-                        points multiplier
+                        {(tierMultipliers[tier || 'Bronze'] || 1).toFixed(2)}x points multiplier
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[9px]">
-                      <Check size={14} className="text-green-500 shrink-0" />
-                      <span className="text-muted-foreground">
-                        Priority customer support
-                      </span>
+                      <Check size={14} className="text-[hsl(var(--primary))] shrink-0" />
+                      <span className="text-muted-foreground">Priority customer support</span>
                     </div>
                     <div className="flex items-center gap-2 text-[9px]">
-                      <Check size={14} className="text-green-500 shrink-0" />
-                      <span className="text-muted-foreground">
-                        Exclusive flight deals & offers
-                      </span>
+                      <Check size={14} className="text-[hsl(var(--primary))] shrink-0" />
+                      <span className="text-muted-foreground">Exclusive flight deals & offers</span>
                     </div>
-                    {tier === "Diamond" && (
+                    {tier === 'Diamond' && (
                       <>
                         <div className="flex items-center gap-2 text-[9px]">
-                          <Check
-                            size={14}
-                            className="text-purple-500 shrink-0"
-                          />
+                          <Check size={14} className="text-[hsl(var(--primary))] shrink-0" />
                           <span className="text-muted-foreground font-bold">
                             Diamond concierge service
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-[9px]">
-                          <Check
-                            size={14}
-                            className="text-purple-500 shrink-0"
-                          />
+                          <Check size={14} className="text-[hsl(var(--primary))] shrink-0" />
                           <span className="text-muted-foreground font-bold">
                             Free annual seat upgrades
                           </span>
@@ -1161,12 +1077,10 @@ export default function AddOns() {
               </div>
 
               {/* Coupon Section */}
-              <div className="bg-card rounded-[2rem] border border-border shadow-lg p-8">
+              <div className="bg-card rounded-xl border border-border shadow-lg p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <Ticket className="text-[hsl(var(--primary))]" size={20} />
-                  <p className="text-xs font-black text-foreground">
-                    You have a discount coupon?
-                  </p>
+                  <p className="text-xs font-black text-foreground">You have a discount coupon?</p>
                 </div>
                 <p className="text-[10px] font-bold text-muted-foreground mb-4 uppercase tracking-widest">
                   Please add your discount voucher
@@ -1175,13 +1089,13 @@ export default function AddOns() {
                   <input
                     type="text"
                     value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
+                    onChange={e => setCouponCode(e.target.value)}
                     placeholder="TRIPALFA129"
                     className="flex-1 h-12 rounded-xl bg-muted border border-border px-4 text-[10px] font-bold outline-none focus:border-[hsl(var(--primary))] gap-4"
                   />
                   <Button
                     onClick={() => {
-                      if (couponCode.toUpperCase() === "TRIPALFA129") {
+                      if (couponCode.toUpperCase() === 'TRIPALFA129') {
                         setCouponApplied(true);
                       }
                     }}
@@ -1193,16 +1107,14 @@ export default function AddOns() {
               </div>
 
               {/* Loyalty Program */}
-              <div className="bg-card rounded-[2rem] border border-border shadow-lg p-8">
+              <div className="bg-card rounded-xl border border-border shadow-lg p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <Gift className="text-[hsl(var(--primary))]" size={20} />
-                  <h4 className="text-sm font-black text-foreground">
-                    Loyalty Program
-                  </h4>
+                  <h4 className="text-sm font-black text-foreground">Loyalty Program</h4>
                 </div>
                 <p className="text-[10px] text-muted-foreground font-bold leading-relaxed mb-6 uppercase tracking-widest">
-                  Being part of a family is a rewarding experience. Which is why
-                  we have redefined loyalty.
+                  Being part of a family is a rewarding experience. Which is why we have redefined
+                  loyalty.
                 </p>
                 <div className="space-y-4">
                   {/* Loyalty Program Dropdown */}
@@ -1210,27 +1122,19 @@ export default function AddOns() {
                     <Button
                       variant="outline"
                       size="md"
-                      onClick={() =>
-                        setLoyaltyDropdownOpen(!loyaltyDropdownOpen)
-                      }
+                      onClick={() => setLoyaltyDropdownOpen(!loyaltyDropdownOpen)}
                       className="w-full flex items-center justify-between h-12 px-4 rounded-xl border border-border text-sm font-bold text-muted-foreground hover:border-[hsl(var(--primary))] transition-colors gap-2"
                     >
                       <span
-                        className={
-                          selectedProgram
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        }
+                        className={selectedProgram ? 'text-foreground' : 'text-muted-foreground'}
                       >
                         {selectedProgram
-                          ? loyaltyPrograms.find(
-                            (p) => p.id === selectedProgram,
-                          )?.programName
-                          : "Select Loyalty Program"}
+                          ? loyaltyPrograms.find(p => p.id === selectedProgram)?.programName
+                          : 'Select Loyalty Program'}
                       </span>
                       <ChevronDown
                         size={18}
-                        className={`transition-transform ${loyaltyDropdownOpen ? "rotate-180" : ""}`}
+                        className={`transition-transform ${loyaltyDropdownOpen ? 'rotate-180' : ''}`}
                       />
                     </Button>
                     {loyaltyDropdownOpen && (
@@ -1240,7 +1144,7 @@ export default function AddOns() {
                             Loading programs...
                           </div>
                         ) : (
-                          loyaltyPrograms.map((program) => (
+                          loyaltyPrograms.map(program => (
                             <Button
                               variant="outline"
                               size="md"
@@ -1249,10 +1153,9 @@ export default function AddOns() {
                                 setSelectedProgram(program.id);
                                 setLoyaltyDropdownOpen(false);
                               }}
-                              className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors ${selectedProgram === program.id
-                                ? "bg-purple-50"
-                                : ""
-                                }`}
+                              className={`w-full text-left px-4 py-3 hover:bg-muted transition-colors ${
+                                selectedProgram === program.id ? 'bg-muted' : ''
+                              }`}
                             >
                               <div className="text-sm font-bold text-foreground">
                                 {program.programName}
@@ -1272,14 +1175,14 @@ export default function AddOns() {
                       name="frequent-flyer-number"
                       type="text"
                       value={frequentFlyerNumber}
-                      onChange={(e) => setFrequentFlyerNumber(e.target.value)}
+                      onChange={e => setFrequentFlyerNumber(e.target.value)}
                       placeholder="Frequent Flyer Number"
                       className="flex-1 h-12 rounded-xl border border-border px-4 text-sm font-bold outline-none focus:border-[hsl(var(--primary))] gap-4"
                     />
                     <Button
                       onClick={() => {
                         if (selectedProgram && frequentFlyerNumber) {
-                          console.log("Loyalty saved:", {
+                          console.log('Loyalty saved:', {
                             program: selectedProgram,
                             number: frequentFlyerNumber,
                           });
@@ -1294,22 +1197,21 @@ export default function AddOns() {
               </div>
 
               {/* Terms & Submit */}
-              <div className="bg-card rounded-[2rem] border border-border p-8 space-y-6">
+              <div className="bg-card rounded-xl border border-border p-8 space-y-6">
                 <Label className="flex gap-4 cursor-pointer group text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   <div className="w-5 h-5 rounded border-2 border-[hsl(var(--secondary))] shrink-0 mt-1 flex items-center justify-center gap-2">
                     <div className="w-2.5 h-2.5 bg-[hsl(var(--secondary))] rounded-sm" />
                   </div>
                   <p className="text-[10px] text-muted-foreground font-bold leading-relaxed group-hover:text-foreground transition-colors">
-                    I have read and accept your travel conditions, Fare Rules,
-                    the airline's general terms and conditions, and I have
-                    verified that I have entered my booking information
-                    correctly.
+                    I have read and accept your travel conditions, Fare Rules, the airline's general
+                    terms and conditions, and I have verified that I have entered my booking
+                    information correctly.
                   </p>
                 </Label>
                 <Button
                   data-testid="continue-button"
                   onClick={() =>
-                    navigate("/passenger-details", {
+                    navigate('/passenger-details', {
                       state: {
                         flight,
                         passengers,
@@ -1325,7 +1227,7 @@ export default function AddOns() {
                       },
                     })
                   }
-                  className="w-full py-5 rounded-2xl bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-[hsl(var(--primary-foreground))] font-black text-sm uppercase tracking-[3px] shadow-[0_12px_40_rgba(139,92,246,0.3)] transition-all active:scale-95"
+                  className="w-full py-5 rounded-xl bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-[hsl(var(--primary-foreground))] font-black text-sm uppercase tracking-[3px] shadow-lg transition-all active:scale-95"
                 >
                   Submit
                 </Button>
@@ -1339,7 +1241,7 @@ export default function AddOns() {
       <SeatSelectionPopup
         isOpen={showSeatPopup}
         onClose={() => setShowSeatPopup(false)}
-        onConfirm={(seats) => {
+        onConfirm={seats => {
           setSelectedSeats(seats);
           setShowSeatPopup(false);
         }}
@@ -1353,12 +1255,12 @@ export default function AddOns() {
       <BaggageSelectionPopup
         isOpen={showBaggagePopup}
         onClose={() => setShowBaggagePopup(false)}
-        onConfirm={(baggage) => {
+        onConfirm={baggage => {
           setSelectedBaggage(baggage);
           setShowBaggagePopup(false);
         }}
         isLCC={isLCC}
-        passengers={formattedPassengers.filter((p) => p.type !== "Infant")}
+        passengers={formattedPassengers.filter(p => p.type !== 'Infant')}
         segments={formattedSegments}
         availableOptions={availableBaggageOptions}
         existingSelections={selectedBaggage}
@@ -1367,7 +1269,7 @@ export default function AddOns() {
       <MealSelectionPopup
         isOpen={showMealPopup}
         onClose={() => setShowMealPopup(false)}
-        onConfirm={(meals) => {
+        onConfirm={meals => {
           setSelectedMeals(meals);
           setShowMealPopup(false);
         }}
@@ -1381,7 +1283,7 @@ export default function AddOns() {
       <SpecialServicesPopup
         isOpen={showSpecialServicesPopup}
         onClose={() => setShowSpecialServicesPopup(false)}
-        onConfirm={(services) => {
+        onConfirm={services => {
           setSelectedSpecialServices(services);
           setShowSpecialServicesPopup(false);
         }}
@@ -1393,3 +1295,5 @@ export default function AddOns() {
     </TripLogerLayout>
   );
 }
+
+export default AddOns;

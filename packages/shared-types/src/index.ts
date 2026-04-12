@@ -1,11 +1,13 @@
 // Shared TypeScript types and adapter interfaces used across services
+export * from './service-bootstrap';
+
 export enum Intent {
-  READ_STATIC = "READ_STATIC",
-  QUERY_STATIC = "QUERY_STATIC",
-  WRITE = "WRITE",
-  READ_REALTIME = "QUERY_REALTIME",
-  QUERY_REALTIME = "READ_REALTIME",
-  ADAPTER = "ADAPTER",
+  READ_STATIC = 'READ_STATIC',
+  QUERY_STATIC = 'QUERY_STATIC',
+  WRITE = 'WRITE',
+  READ_REALTIME = 'QUERY_REALTIME',
+  QUERY_REALTIME = 'READ_REALTIME',
+  ADAPTER = 'ADAPTER',
 }
 
 // Adapter interface for external integrations
@@ -72,28 +74,29 @@ export {
   MealPlan,
   RoomType,
   BedType,
-} from "./hotel-deals";
+} from './hotel-deals';
 
 // ============================================================================
 // DOMAIN TYPES FROM TYPES DIRECTORY
 // ============================================================================
 
-import { PaymentStatus } from "../types/enums";
-export { PaymentStatus } from "../types/enums";
-export * from "../types/enums";
-export * from "../types/index";
+import { PaymentStatus } from '../types/enums';
+export { PaymentStatus } from '../types/enums';
+export * from '../types/enums';
+export * from '../types/index';
 // Add individual exports for types that hooks.ts needs
-export * from "../types/company";
-export * from "../types/user";
-export * from "../types/rbac";
-export * from "../types/booking";
-export * from "../types/loyalty";
-export * from "../types/supplier";
-export * from "../types/payment";
-export * from "../types/finance";
-export * from "../types/pricing";
-export * from "../types/reference";
-export * from "../types/system";
+export * from '../types/company';
+export * from '../types/user';
+export * from '../types/rbac';
+export * from '../types/booking';
+export * from '../types/loyalty';
+export * from '../types/supplier';
+export * from '../types/payment';
+export * from '../types/finance';
+export * from '../types/pricing';
+export * from '../types/reference';
+export * from '../types/system';
+export * from './types/contentConfig';
 
 // ============================================================================
 // PRICING DOMAIN TYPES
@@ -104,40 +107,40 @@ export * from "../types/system";
 // ============================================================================
 
 export enum OfflineRequestStatus {
-  PENDING_STAFF = "PENDING_STAFF",
-  PRICING_SUBMITTED = "PRICING_SUBMITTED",
-  PENDING_CUSTOMER_APPROVAL = "PENDING_CUSTOMER_APPROVAL",
-  APPROVED = "APPROVED",
-  PAYMENT_PENDING = "PAYMENT_PENDING",
-  COMPLETED = "COMPLETED",
-  REJECTED = "REJECTED",
-  CANCELLED = "CANCELLED",
+  PENDING_STAFF = 'PENDING_STAFF',
+  PRICING_SUBMITTED = 'PRICING_SUBMITTED',
+  PENDING_CUSTOMER_APPROVAL = 'PENDING_CUSTOMER_APPROVAL',
+  APPROVED = 'APPROVED',
+  PAYMENT_PENDING = 'PAYMENT_PENDING',
+  COMPLETED = 'COMPLETED',
+  REJECTED = 'REJECTED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum OfflineRequestType {
-  SCHEDULE_CHANGE = "schedule_change",
-  PASSENGER_NAME_CHANGE = "passenger_name_change",
-  SEAT_SELECTION = "seat_selection",
-  ANCILLARY_UPDATE = "ancillary_update",
-  BOOKING_MODIFICATION = "booking_modification",
-  CANCELLATION_WITH_REBOOKING = "cancellation_with_rebooking",
+  SCHEDULE_CHANGE = 'schedule_change',
+  PASSENGER_NAME_CHANGE = 'passenger_name_change',
+  SEAT_SELECTION = 'seat_selection',
+  ANCILLARY_UPDATE = 'ancillary_update',
+  BOOKING_MODIFICATION = 'booking_modification',
+  CANCELLATION_WITH_REBOOKING = 'cancellation_with_rebooking',
 }
 
 export enum OfflineRequestPriority {
-  LOW = "low",
-  MEDIUM = "medium",
-  HIGH = "high",
-  CRITICAL = "critical",
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical',
 }
 
 export enum OfflineRequestAuditAction {
-  CREATED = "CREATED",
-  PRICING_SUBMITTED = "PRICING_SUBMITTED",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-  PAYMENT_RECORDED = "PAYMENT_RECORDED",
-  COMPLETED = "COMPLETED",
-  CANCELLED = "CANCELLED",
+  CREATED = 'CREATED',
+  PRICING_SUBMITTED = 'PRICING_SUBMITTED',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+  PAYMENT_RECORDED = 'PAYMENT_RECORDED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export interface Timeline {
@@ -214,7 +217,7 @@ export interface OfflineRequestAuditLog {
   offlineRequestId: string;
   action: OfflineRequestAuditAction;
   actorId: string;
-  actorType: "staff" | "customer" | "system";
+  actorType: 'staff' | 'customer' | 'system';
   oldValues?: Record<string, any>;
   newValues?: Record<string, any>;
   details?: Record<string, any>;
@@ -248,7 +251,7 @@ export interface AdminBookingCard {
   confirmationNumber: string;
   status: BookingStatus;
   bookingType: BookingType;
-  customerType: "B2B" | "B2C";
+  customerType: 'B2B' | 'B2C';
 
   // Customer Information
   customer: {
@@ -256,14 +259,14 @@ export interface AdminBookingCard {
     name: string;
     email: string;
     phone: string;
-    type: "individual" | "corporate";
+    type: 'individual' | 'corporate';
     companyId?: string;
     branchId?: string;
   };
 
   // Service Details
   serviceDetails: {
-    type: "flight" | "hotel" | "package" | "transfer" | "visa" | "insurance";
+    type: 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
     segments: ServiceSegment[];
     supplier: {
       id: string;
@@ -300,7 +303,7 @@ export interface AdminBookingCard {
     assignedAgent: string;
     branch: string;
     queueStatus: QueueStatus;
-    priority: "low" | "medium" | "high" | "urgent";
+    priority: 'low' | 'medium' | 'high' | 'urgent';
     tags: string[];
     notes: AdminNote[];
     auditTrail: AuditEvent[];
@@ -352,20 +355,11 @@ export interface AdminSearchFilters {
 
 export interface BulkOperations {
   selectAllMatching: (filters: AdminSearchFilters) => void;
-  bulkUpdateStatus: (
-    status: BookingStatus,
-    bookingIds: string[],
-  ) => Promise<void>;
+  bulkUpdateStatus: (status: BookingStatus, bookingIds: string[]) => Promise<void>;
   bulkAssignAgent: (agentId: string, bookingIds: string[]) => Promise<void>;
   bulkAddTags: (tags: string[], bookingIds: string[]) => Promise<void>;
-  bulkSendNotifications: (
-    message: string,
-    bookingIds: string[],
-  ) => Promise<void>;
-  bulkExport: (
-    format: "pdf" | "excel" | "csv",
-    bookingIds: string[],
-  ) => Promise<Blob>;
+  bulkSendNotifications: (message: string, bookingIds: string[]) => Promise<void>;
+  bulkExport: (format: 'pdf' | 'excel' | 'csv', bookingIds: string[]) => Promise<Blob>;
 }
 
 export interface WorkflowAutomation {
@@ -414,25 +408,19 @@ export interface DocumentManagement {
 
 // Type definitions for enums and interfaces
 export type BookingStatus =
-  | "pending"
-  | "confirmed"
-  | "cancelled"
-  | "refunded"
-  | "ticketed"
-  | "imported";
-export type BookingType = "instant" | "hold" | "request" | "imported";
+  | 'pending'
+  | 'confirmed'
+  | 'cancelled'
+  | 'refunded'
+  | 'ticketed'
+  | 'imported';
+export type BookingType = 'instant' | 'hold' | 'request' | 'imported';
 // export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'; // Removed to avoid conflict with enum
-export type PaymentMethod = "wallet" | "credit_card" | "supplier_credit";
-export type QueueType = "hold" | "refund" | "amendment" | "special_request";
-export type QueueStatus = "pending" | "processing" | "completed" | "failed";
-export type Priority = "low" | "medium" | "high" | "urgent";
-export type ServiceType =
-  | "flight"
-  | "hotel"
-  | "package"
-  | "transfer"
-  | "visa"
-  | "insurance";
+export type PaymentMethod = 'wallet' | 'credit_card' | 'supplier_credit';
+export type QueueType = 'hold' | 'refund' | 'amendment' | 'special_request';
+export type QueueStatus = 'pending' | 'processing' | 'completed' | 'failed';
+export type Priority = 'low' | 'medium' | 'high' | 'urgent';
+export type ServiceType = 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
 
 interface ServiceSegment {
   id: string;
@@ -570,7 +558,7 @@ interface CalendarEvent {
 }
 
 interface ConflictResolutionStrategy {
-  type: "last_wins" | "merge" | "manual";
+  type: 'last_wins' | 'merge' | 'manual';
   rules: any[];
 }
 
@@ -607,7 +595,7 @@ interface DocumentType {
 interface UploadProgress {
   fileName: string;
   progress: number;
-  status: "uploading" | "completed" | "failed";
+  status: 'uploading' | 'completed' | 'failed';
 }
 
 interface VersionControl {
@@ -627,7 +615,7 @@ interface ESignatureIntegration {
   provider: string;
   templateId?: string;
   signers: Signer[];
-  status: "pending" | "completed" | "failed";
+  status: 'pending' | 'completed' | 'failed';
 }
 
 interface Signer {

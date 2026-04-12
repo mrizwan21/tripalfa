@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import fs from 'fs/promises';
 
-export class FlyerService {
+class FlyerService {
   private flyerStoragePath = process.env.FLYER_STORAGE_PATH || './uploads/flyers';
 
   /**
@@ -323,4 +323,4 @@ export class FlyerService {
   }
 }
 
-export const flyerService = new FlyerService();
+const flyerService = new FlyerService();

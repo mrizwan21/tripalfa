@@ -29,114 +29,114 @@ export interface ConversionResult {
 }
 
 // Popular currencies for travel
-export const POPULAR_CURRENCIES: CurrencyCode[] = [
-  "USD",
-  "EUR",
-  "GBP",
-  "AED",
-  "SAR",
-  "QAR",
-  "KWD",
-  "BHD",
-  "JPY",
-  "CNY",
-  "INR",
-  "PKR",
-  "PHP",
-  "THB",
-  "SGD",
-  "MYR",
-  "AUD",
-  "NZD",
-  "CAD",
-  "CHF",
-  "SEK",
-  "NOK",
-  "DKK",
+const POPULAR_CURRENCIES: CurrencyCode[] = [
+  'USD',
+  'EUR',
+  'GBP',
+  'AED',
+  'SAR',
+  'QAR',
+  'KWD',
+  'BHD',
+  'JPY',
+  'CNY',
+  'INR',
+  'PKR',
+  'PHP',
+  'THB',
+  'SGD',
+  'MYR',
+  'AUD',
+  'NZD',
+  'CAD',
+  'CHF',
+  'SEK',
+  'NOK',
+  'DKK',
 ];
 
 // Currency symbols
 export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  AED: "د.إ",
-  SAR: "﷼",
-  QAR: "﷼",
-  KWD: "د.ك",
-  BHD: ".د.ب",
-  JPY: "¥",
-  CNY: "¥",
-  INR: "₹",
-  PKR: "₨",
-  PHP: "₱",
-  THB: "฿",
-  SGD: "S$",
-  MYR: "RM",
-  AUD: "A$",
-  NZD: "NZ$",
-  CAD: "C$",
-  CHF: "CHF",
-  SEK: "kr",
-  NOK: "kr",
-  DKK: "kr",
-  ZAR: "R",
-  TRY: "₺",
-  RUB: "₽",
-  BRL: "R$",
-  MXN: "$",
-  HKD: "HK$",
-  KRW: "₩",
-  IDR: "Rp",
-  VND: "₫",
-  EGP: "E£",
-  MAD: "د.م.",
-  TND: "د.ت",
-  JOD: "د.ا",
-  LBP: "ل.ل",
-  OMR: "﷼",
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  AED: 'د.إ',
+  SAR: '﷼',
+  QAR: '﷼',
+  KWD: 'د.ك',
+  BHD: '.د.ب',
+  JPY: '¥',
+  CNY: '¥',
+  INR: '₹',
+  PKR: '₨',
+  PHP: '₱',
+  THB: '฿',
+  SGD: 'S$',
+  MYR: 'RM',
+  AUD: 'A$',
+  NZD: 'NZ$',
+  CAD: 'C$',
+  CHF: 'CHF',
+  SEK: 'kr',
+  NOK: 'kr',
+  DKK: 'kr',
+  ZAR: 'R',
+  TRY: '₺',
+  RUB: '₽',
+  BRL: 'R$',
+  MXN: '$',
+  HKD: 'HK$',
+  KRW: '₩',
+  IDR: 'Rp',
+  VND: '₫',
+  EGP: 'E£',
+  MAD: 'د.م.',
+  TND: 'د.ت',
+  JOD: 'د.ا',
+  LBP: 'ل.ل',
+  OMR: '﷼',
 };
 
 // Currency names
 export const CURRENCY_NAMES: Record<CurrencyCode, string> = {
-  USD: "US Dollar",
-  EUR: "Euro",
-  GBP: "British Pound",
-  AED: "UAE Dirham",
-  SAR: "Saudi Riyal",
-  QAR: "Qatari Riyal",
-  KWD: "Kuwaiti Dinar",
-  BHD: "Bahraini Dinar",
-  JPY: "Japanese Yen",
-  CNY: "Chinese Yuan",
-  INR: "Indian Rupee",
-  PKR: "Pakistani Rupee",
-  PHP: "Philippine Peso",
-  THB: "Thai Baht",
-  SGD: "Singapore Dollar",
-  MYR: "Malaysian Ringgit",
-  AUD: "Australian Dollar",
-  NZD: "New Zealand Dollar",
-  CAD: "Canadian Dollar",
-  CHF: "Swiss Franc",
-  SEK: "Swedish Krona",
-  NOK: "Norwegian Krone",
-  DKK: "Danish Krone",
-  ZAR: "South African Rand",
-  TRY: "Turkish Lira",
-  RUB: "Russian Ruble",
-  BRL: "Brazilian Real",
-  MXN: "Mexican Peso",
-  HKD: "Hong Kong Dollar",
-  KRW: "South Korean Won",
-  IDR: "Indonesian Rupiah",
-  VND: "Vietnamese Dong",
-  EGP: "Egyptian Pound",
-  MAD: "Moroccan Dirham",
-  TND: "Tunisian Dinar",
-  JOD: "Jordanian Dinar",
-  LBP: "Lebanese Pound",
-  OMR: "Omani Rial",
+  USD: 'US Dollar',
+  EUR: 'Euro',
+  GBP: 'British Pound',
+  AED: 'UAE Dirham',
+  SAR: 'Saudi Riyal',
+  QAR: 'Qatari Riyal',
+  KWD: 'Kuwaiti Dinar',
+  BHD: 'Bahraini Dinar',
+  JPY: 'Japanese Yen',
+  CNY: 'Chinese Yuan',
+  INR: 'Indian Rupee',
+  PKR: 'Pakistani Rupee',
+  PHP: 'Philippine Peso',
+  THB: 'Thai Baht',
+  SGD: 'Singapore Dollar',
+  MYR: 'Malaysian Ringgit',
+  AUD: 'Australian Dollar',
+  NZD: 'New Zealand Dollar',
+  CAD: 'Canadian Dollar',
+  CHF: 'Swiss Franc',
+  SEK: 'Swedish Krona',
+  NOK: 'Norwegian Krone',
+  DKK: 'Danish Krone',
+  ZAR: 'South African Rand',
+  TRY: 'Turkish Lira',
+  RUB: 'Russian Ruble',
+  BRL: 'Brazilian Real',
+  MXN: 'Mexican Peso',
+  HKD: 'Hong Kong Dollar',
+  KRW: 'South Korean Won',
+  IDR: 'Indonesian Rupiah',
+  VND: 'Vietnamese Dong',
+  EGP: 'Egyptian Pound',
+  MAD: 'Moroccan Dirham',
+  TND: 'Tunisian Dinar',
+  JOD: 'Jordanian Dinar',
+  LBP: 'Lebanese Pound',
+  OMR: 'Omani Rial',
 };
 
 class ExchangeRateApi {
@@ -150,10 +150,8 @@ class ExchangeRateApi {
    * Get latest exchange rates
    * @param base - Base currency (default: USD)
    */
-  async getLatestRates(
-    base: CurrencyCode = "USD",
-  ): Promise<ExchangeRatesResponse> {
-    const normalizedBase = String(base || "USD").toUpperCase();
+  async getLatestRates(base: CurrencyCode = 'USD'): Promise<ExchangeRatesResponse> {
+    const normalizedBase = String(base || 'USD').toUpperCase();
 
     // Check cache
     const now = Date.now();
@@ -169,11 +167,11 @@ class ExchangeRateApi {
       const response = await fetch(
         `/api/exchange-rates/latest?base=${encodeURIComponent(normalizedBase)}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
       if (!response.ok) {
@@ -182,8 +180,8 @@ class ExchangeRateApi {
 
       const data = await response.json();
 
-      if (!data?.rates || typeof data.rates !== "object") {
-        throw new Error("Invalid exchange rates response");
+      if (!data?.rates || typeof data.rates !== 'object') {
+        throw new Error('Invalid exchange rates response');
       }
 
       const normalizedRates: Record<CurrencyCode, number> = {};
@@ -211,11 +209,11 @@ class ExchangeRateApi {
 
       return payload;
     } catch (error: any) {
-      console.error("Exchange Rate API error:", error);
+      console.error('Exchange Rate API error:', error);
 
       // Return cached rates if available and base currency matches
       if (this.cache.rates && this.cache.rates.base === normalizedBase) {
-        console.warn("Returning stale cached exchange rates due to API error");
+        console.warn('Returning stale cached exchange rates due to API error');
         return this.cache.rates;
       }
 
@@ -229,11 +227,7 @@ class ExchangeRateApi {
    * @param from - Source currency
    * @param to - Target currency
    */
-  async convert(
-    amount: number,
-    from: CurrencyCode,
-    to: CurrencyCode,
-  ): Promise<ConversionResult> {
+  async convert(amount: number, from: CurrencyCode, to: CurrencyCode): Promise<ConversionResult> {
     // If same currency, return as-is
     if (from === to) {
       return {
@@ -247,7 +241,7 @@ class ExchangeRateApi {
     }
 
     // Get rates (base is USD)
-    const rates = await this.getLatestRates("USD");
+    const rates = await this.getLatestRates('USD');
 
     // Get rates for both currencies
     const fromRate = rates.rates[from];
@@ -289,15 +283,13 @@ class ExchangeRateApi {
    */
   async getMultipleRates(
     base: CurrencyCode,
-    targets: CurrencyCode[],
+    targets: CurrencyCode[]
   ): Promise<Record<CurrencyCode, number>> {
-    const rates = await this.getLatestRates("USD");
+    const rates = await this.getLatestRates('USD');
     const normalizedBase = String(base).toUpperCase();
     const baseRate = rates.rates[normalizedBase];
     if (!baseRate) {
-      throw new Error(
-        `Missing exchange rate for base currency: ${normalizedBase}`,
-      );
+      throw new Error(`Missing exchange rate for base currency: ${normalizedBase}`);
     }
     const result: Record<CurrencyCode, number> = {};
 
@@ -307,8 +299,7 @@ class ExchangeRateApi {
       if (!targetRate) {
         continue;
       }
-      result[normalizedTarget] =
-        Math.round((targetRate / baseRate) * 10000) / 10000;
+      result[normalizedTarget] = Math.round((targetRate / baseRate) * 10000) / 10000;
     }
 
     return result;
@@ -319,7 +310,7 @@ class ExchangeRateApi {
    */
   formatCurrency(amount: number, currency: CurrencyCode): string {
     const symbol = CURRENCY_SYMBOLS[currency] || currency;
-    const formatted = new Intl.NumberFormat("en-US", {
+    const formatted = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);

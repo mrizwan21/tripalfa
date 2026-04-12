@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Wallet,
   ChevronDown,
@@ -19,10 +19,10 @@ import {
   RefreshCw,
   Luggage,
   Plus,
-} from "lucide-react";
-import { Button } from "../components/ui/button";
-import { TripLogerLayout } from "../components/layout/TripLogerLayout";
-import { formatCurrency } from "@tripalfa/ui-components";
+} from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { TripLogerLayout } from '../components/layout/TripLogerLayout';
+import { formatCurrency } from '@tripalfa/ui-components';
 import {
   api,
   confirmFlightBooking,
@@ -35,13 +35,13 @@ import {
   confirmPayment,
   processSupplierPayment,
   fetchAddonPrices,
-} from "../lib/api";
-import { createFlightOrder } from "../services/duffelApiManager";
-import { useQuery } from "@tanstack/react-query";
-import { useTenantRuntime } from "@/components/providers/TenantRuntimeProvider";
-import { calculatePricingBreakdown } from "@/lib/tenantRuntimeConfig";
+} from '../lib/api';
+import { createFlightOrder } from '../services/duffelApiManager';
+import { useQuery } from '@tanstack/react-query';
+import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
+import { calculatePricingBreakdown } from '@/lib/tenantRuntimeConfig';
 
-export default function BookingCheckout() {
+function BookingCheckout() {
   const navigate = useNavigate();
   const { state } = useLocation();
   const { config: runtimeConfig } = useTenantRuntime();
@@ -49,23 +49,19 @@ export default function BookingCheckout() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>(
-    runtimeConfig.checkout.defaultPaymentMethod,
+    runtimeConfig.checkout.defaultPaymentMethod
   );
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
   const [walletInfo, setWalletInfo] = useState<any>(null);
   const [addonPrices, setAddonPrices] = useState<Record<string, number>>({});
-  const [holdPaymentDeadline, setHoldPaymentDeadline] = useState<string | null>(
-    null,
-  );
+  const [holdPaymentDeadline, setHoldPaymentDeadline] = useState<string | null>(null);
 
   // Extract booking data and summary from state
   const bookingData = state?.bookingData;
   const summary = state?.summary;
   const offer = state?.offer; // Duffel offer from FlightDetail
   const flight = state?.flight; // Flight display data
-  const passengers = bookingData?.passengers || [
-    { firstName: "Guest", lastName: "User" },
-  ];
+  const passengers = bookingData?.passengers || [{ firstName: 'Guest', lastName: 'User' }];
   const billingAddress = bookingData?.billingAddress;
   const addOns = state?.addOns || bookingData?.addOns || {};
   const passedAddonPrices = state?.addonPrices || {};
@@ -82,7 +78,7 @@ export default function BookingCheckout() {
           setAddonPrices(prices);
         }
       } catch (error) {
-        console.warn("Failed to load addon prices:", error);
+        console.warn('Failed to load addon prices:', error);
         setAddonPrices(passedAddonPrices || {});
       }
     };
@@ -90,8 +86,7 @@ export default function BookingCheckout() {
   }, [passedAddonPrices]);
 
   // Calculate prices
-  const flightPrice =
-    summary?.flight?.price || offer?.total_amount || flight?.amount || 0;
+  const flightPrice = summary?.flight?.price || offer?.total_amount || flight?.amount || 0;
   const taxes = summary?.flight?.taxes || 0;
   const ancillariesTotal =
     (summary?.ancillaries?.seats || 0) +
@@ -103,55 +98,41 @@ export default function BookingCheckout() {
     .map(([id]) => ({
       id,
       label:
-        id === "travelInsurance"
-          ? "Travel Insurance"
-          : id === "refundProtect"
-            ? "Refund Protect"
-            : "Baggage Trace",
+        id === 'travelInsurance'
+          ? 'Travel Insurance'
+          : id === 'refundProtect'
+            ? 'Refund Protect'
+            : 'Baggage Trace',
       price: addonPrices[id as keyof typeof addonPrices] ?? 0,
     }));
 
   const addOnsTotal = selectedAddOns.reduce((sum, item) => sum + item.price, 0);
-  const baseTotal =
-    summary?.totals?.final ||
-    flightPrice + taxes + addOnsTotal + ancillariesTotal;
-  const pricingBreakdown = calculatePricingBreakdown(
-    baseTotal,
-    runtimeConfig.pricing,
-  );
+  const baseTotal = summary?.totals?.final || flightPrice + taxes + addOnsTotal + ancillariesTotal;
+  const pricingBreakdown = calculatePricingBreakdown(baseTotal, runtimeConfig.pricing);
   const totalPayable = pricingBreakdown.finalTotal;
 
   // Fetch actual wallet balance
   const { data: wallets } = useQuery<any[]>({
-    queryKey: ["wallets"],
+    queryKey: ['wallets'],
     queryFn: () => fetchWallets() as Promise<any[]>,
   });
 
   // Get the Duffel supplier wallet
-  const supplierWallet = wallets?.find(
-    (w: any) => w.type === "duffel" || w.provider === "duffel",
-  );
+  const supplierWallet = wallets?.find((w: any) => w.type === 'duffel' || w.provider === 'duffel');
   const walletBalance = supplierWallet?.balance || wallets?.[0]?.balance || 0;
   const effectivePaymentMethod = runtimeConfig.checkout.enforceSupplierWallet
-    ? "wallet"
+    ? 'wallet'
     : selectedPaymentMethod;
-  const requiresWalletBalance = effectivePaymentMethod === "wallet";
-  const hasInsufficientBalance =
-    requiresWalletBalance && walletBalance < totalPayable;
-  const holdDeadlineDate = holdPaymentDeadline
-    ? new Date(holdPaymentDeadline)
-    : null;
-  const holdDeadlineLabel = holdDeadlineDate
-    ? holdDeadlineDate.toLocaleString()
-    : null;
-  const holdDeadlineExpired = holdDeadlineDate
-    ? holdDeadlineDate.getTime() <= Date.now()
-    : false;
+  const requiresWalletBalance = effectivePaymentMethod === 'wallet';
+  const hasInsufficientBalance = requiresWalletBalance && walletBalance < totalPayable;
+  const holdDeadlineDate = holdPaymentDeadline ? new Date(holdPaymentDeadline) : null;
+  const holdDeadlineLabel = holdDeadlineDate ? holdDeadlineDate.toLocaleString() : null;
+  const holdDeadlineExpired = holdDeadlineDate ? holdDeadlineDate.getTime() <= Date.now() : false;
 
   useEffect(() => {
     if (supplierWallet) {
       setWalletInfo(supplierWallet);
-      console.log("[Checkout] Using Duffel supplier wallet:", {
+      console.log('[Checkout] Using Duffel supplier wallet:', {
         balance: supplierWallet.balance,
         currency: supplierWallet.currency,
         provider: supplierWallet.provider,
@@ -167,9 +148,7 @@ export default function BookingCheckout() {
     }
 
     if (!allowedMethods.includes(selectedPaymentMethod as any)) {
-      const fallbackMethod = allowedMethods.includes(
-        runtimeConfig.checkout.defaultPaymentMethod,
-      )
+      const fallbackMethod = allowedMethods.includes(runtimeConfig.checkout.defaultPaymentMethod)
         ? runtimeConfig.checkout.defaultPaymentMethod
         : allowedMethods[0];
       setSelectedPaymentMethod(fallbackMethod);
@@ -181,51 +160,49 @@ export default function BookingCheckout() {
     const fetchPaymentMethods = async () => {
       try {
         setLoadingPaymentMethods(true);
-        await getPaymentMethods("duffel", "test");
+        await getPaymentMethods('duffel', 'test');
 
         const allowedMethods = runtimeConfig.checkout.enforceSupplierWallet
-          ? ["wallet"]
+          ? ['wallet']
           : runtimeConfig.checkout.allowedPaymentMethods;
 
         setPaymentMethods(
-          allowedMethods.map((methodId) => ({
+          allowedMethods.map(methodId => ({
             id: methodId,
             name:
-              methodId === "wallet"
-                ? "Supplier Wallet"
-                : methodId === "bank_transfer"
-                  ? "Bank Transfer"
-                  : methodId === "upi"
-                    ? "UPI"
-                    : "Card",
+              methodId === 'wallet'
+                ? 'Supplier Wallet'
+                : methodId === 'bank_transfer'
+                  ? 'Bank Transfer'
+                  : methodId === 'upi'
+                    ? 'UPI'
+                    : 'Card',
             type: methodId,
-          })),
+          }))
         );
 
-        const nextDefault = allowedMethods.includes(
-          runtimeConfig.checkout.defaultPaymentMethod,
-        )
+        const nextDefault = allowedMethods.includes(runtimeConfig.checkout.defaultPaymentMethod)
           ? runtimeConfig.checkout.defaultPaymentMethod
-          : allowedMethods[0] || "wallet";
+          : allowedMethods[0] || 'wallet';
         setSelectedPaymentMethod(nextDefault);
         setLoadingPaymentMethods(false);
       } catch (error) {
-        console.error("Failed to fetch payment methods:", error);
+        console.error('Failed to fetch payment methods:', error);
         setLoadingPaymentMethods(false);
         const fallbackMethods = runtimeConfig.checkout.enforceSupplierWallet
-          ? ["wallet"]
+          ? ['wallet']
           : runtimeConfig.checkout.allowedPaymentMethods;
         setPaymentMethods(
-          fallbackMethods.map((methodId) => ({
+          fallbackMethods.map(methodId => ({
             id: methodId,
-            name: methodId === "wallet" ? "Supplier Wallet" : methodId,
+            name: methodId === 'wallet' ? 'Supplier Wallet' : methodId,
             type: methodId,
-          })),
+          }))
         );
         setSelectedPaymentMethod(
           fallbackMethods.includes(runtimeConfig.checkout.defaultPaymentMethod)
             ? runtimeConfig.checkout.defaultPaymentMethod
-            : fallbackMethods[0] || "wallet",
+            : fallbackMethods[0] || 'wallet'
         );
       }
     };
@@ -240,36 +217,21 @@ export default function BookingCheckout() {
     try {
       let result;
 
-      if (
-        !runtimeConfig.features.flightBookingEnabled &&
-        summary?.type !== "hotel"
-      ) {
-        throw new Error(
-          "Flight booking is currently disabled by your admin settings.",
-        );
+      if (!runtimeConfig.features.flightBookingEnabled && summary?.type !== 'hotel') {
+        throw new Error('Flight booking is currently disabled by your admin settings.');
       }
 
-      if (
-        !runtimeConfig.features.hotelBookingEnabled &&
-        summary?.type === "hotel"
-      ) {
-        throw new Error(
-          "Hotel booking is currently disabled by your admin settings.",
-        );
+      if (!runtimeConfig.features.hotelBookingEnabled && summary?.type === 'hotel') {
+        throw new Error('Hotel booking is currently disabled by your admin settings.');
       }
 
-      if (
-        effectivePaymentMethod === "wallet" &&
-        !runtimeConfig.features.walletEnabled
-      ) {
-        throw new Error(
-          "Wallet payments are currently disabled by your admin settings.",
-        );
+      if (effectivePaymentMethod === 'wallet' && !runtimeConfig.features.walletEnabled) {
+        throw new Error('Wallet payments are currently disabled by your admin settings.');
       }
 
       const paymentDetails = {
         amount: totalPayable,
-        currency: offer?.total_currency || "USD",
+        currency: offer?.total_currency || 'USD',
         method: effectivePaymentMethod,
       };
 
@@ -277,28 +239,23 @@ export default function BookingCheckout() {
       if (offer) {
         try {
           if (offer?.payment_requirements?.requires_instant_payment === true) {
-            throw new Error(
-              "Selected offer requires instant payment and cannot be held.",
-            );
+            throw new Error('Selected offer requires instant payment and cannot be held.');
           }
 
-          console.log(
-            "[Checkout] Starting Duffel booking flow with wallet payment",
-          );
+          console.log('[Checkout] Starting Duffel booking flow with wallet payment');
           // Step 1: Create flight order with passenger details
           const createOrderParams = {
             selectedOffers: [offer.id],
-            orderType: "hold" as const,
+            orderType: 'hold' as const,
             passengers: passengers.map((p: any) => ({
-              id:
-                p.id || `passenger_${Math.random().toString(36).substr(2, 9)}`,
-              email: p.email || "",
-              type: "adult",
+              id: p.id || `passenger_${Math.random().toString(36).substr(2, 9)}`,
+              email: p.email || '',
+              type: 'adult',
               given_name: p.firstName || p.given_name,
               family_name: p.lastName || p.family_name,
-              phone_number: p.phone || "",
-              born_at: p.dob ? new Date(p.dob).toISOString().split("T")[0] : "",
-              gender: p.gender?.charAt(0).toUpperCase() || "M",
+              phone_number: p.phone || '',
+              born_at: p.dob ? new Date(p.dob).toISOString().split('T')[0] : '',
+              gender: p.gender?.charAt(0).toUpperCase() || 'M',
             })),
           };
 
@@ -306,14 +263,12 @@ export default function BookingCheckout() {
           const orderResult = await createFlightOrder(createOrderParams);
           const orderId = orderResult.id || orderResult.data?.id;
           const paymentRequiredBy =
-            orderResult.payment_required_by ||
-            orderResult.data?.payment_required_by ||
-            null;
+            orderResult.payment_required_by || orderResult.data?.payment_required_by || null;
 
           setHoldPaymentDeadline(paymentRequiredBy);
 
           if (!orderId) {
-            throw new Error("Failed to create flight order");
+            throw new Error('Failed to create flight order');
           }
 
           // Step 2: Create payment intent
@@ -321,75 +276,61 @@ export default function BookingCheckout() {
             order_id: orderId,
             amount: {
               amount: Math.round(totalPayable * 100), // Convert to cents
-              currency: offer.total_currency || "USD",
+              currency: offer.total_currency || 'USD',
             },
           };
 
-          const paymentIntentResult =
-            await createPaymentIntent(paymentIntentParams);
-          const paymentIntentId =
-            paymentIntentResult.id || paymentIntentResult.data?.id;
+          const paymentIntentResult = await createPaymentIntent(paymentIntentParams);
+          const paymentIntentId = paymentIntentResult.id || paymentIntentResult.data?.id;
 
           if (!paymentIntentId) {
-            throw new Error("Failed to create payment intent");
+            throw new Error('Failed to create payment intent');
           }
 
           // Step 3: Confirm the payment using Duffel API with wallet
-          console.log(
-            "[Checkout] Step 3: Confirming Duffel payment with wallet",
-          );
+          console.log('[Checkout] Step 3: Confirming Duffel payment with wallet');
 
           const confirmPaymentParams = {
             paymentIntentId,
             orderId,
             amount: totalPayable,
-            currency: offer.total_currency || "USD",
+            currency: offer.total_currency || 'USD',
             paymentMethodId: effectivePaymentMethod,
-            provider: "duffel",
-            environment: "test",
+            provider: 'duffel',
+            environment: 'test',
           };
 
-          const paymentConfirmResult =
-            await confirmPayment(confirmPaymentParams);
-          console.log(
-            "[Checkout] Duffel payment confirmed:",
-            paymentConfirmResult,
-          );
+          const paymentConfirmResult = await confirmPayment(confirmPaymentParams);
+          console.log('[Checkout] Duffel payment confirmed:', paymentConfirmResult);
 
           // Step 4: Process payment through supplier wallet (TripAlfa system)
-          console.log(
-            "[Checkout] Step 4: Processing supplier wallet payment for order:",
-            orderId,
-          );
+          console.log('[Checkout] Step 4: Processing supplier wallet payment for order:', orderId);
 
           const supplierPaymentResult = await processSupplierPayment(
             orderId,
             totalPayable,
-            effectivePaymentMethod,
+            effectivePaymentMethod
           );
 
-          console.log(
-            "[Checkout] Supplier wallet payment processed:",
-            supplierPaymentResult,
-          );
+          console.log('[Checkout] Supplier wallet payment processed:', supplierPaymentResult);
 
           // Step 5: Confirm the order after successful payment
-          console.log("[Checkout] Step 5: Confirming flight order:", orderId);
+          console.log('[Checkout] Step 5: Confirming flight order:', orderId);
 
           const confirmResult = await confirmFlightOrder(orderId);
 
           if (
             confirmResult &&
             (confirmResult.success ||
-              confirmResult.status === "confirmed" ||
-              confirmResult.data?.status === "confirmed")
+              confirmResult.status === 'confirmed' ||
+              confirmResult.data?.status === 'confirmed')
           ) {
-            navigate("/confirmation", {
+            navigate('/confirmation', {
               state: {
                 ...state,
                 bookingId: orderId,
-                bookingType: "flight",
-                orderStatus: "confirmed",
+                bookingType: 'flight',
+                orderStatus: 'confirmed',
                 paymentMethod: effectivePaymentMethod,
                 paymentConfirmed: true,
                 supplierPaymentProcessed: true,
@@ -398,58 +339,52 @@ export default function BookingCheckout() {
               },
             });
           } else {
-            throw new Error("Failed to confirm flight order");
+            throw new Error('Failed to confirm flight order');
           }
         } catch (duffelError) {
-          console.error("Duffel booking error:", duffelError);
+          console.error('Duffel booking error:', duffelError);
           throw duffelError;
         }
       } else {
         // Fall back to original logic for non-Duffel bookings
         // Determine if it's a flight or hotel booking based on summary type
-        if (summary?.type === "hotel") {
+        if (summary?.type === 'hotel') {
           const bookingId = bookingData?.id || state?.bookingId;
           if (bookingId) {
             result = await confirmHotelBooking(bookingId, paymentDetails);
           } else {
-            throw new Error(
-              "Missing booking reference. Please restart booking.",
-            );
+            throw new Error('Missing booking reference. Please restart booking.');
           }
         } else {
           const bookingId = bookingData?.id || state?.bookingId;
           if (bookingId) {
             result = await confirmFlightBooking(bookingId, paymentDetails);
           } else {
-            throw new Error(
-              "Missing booking reference. Please restart booking.",
-            );
+            throw new Error('Missing booking reference. Please restart booking.');
           }
         }
 
         if (
           result &&
-          (result.success ||
-            result.status === "confirmed" ||
-            result.data?.status === "confirmed")
+          (result.success || result.status === 'confirmed' || result.data?.status === 'confirmed')
         ) {
-          navigate("/confirmation", {
+          navigate('/confirmation', {
             state: {
               ...state,
               bookingId: result.bookingId || result.id || bookingData?.id,
               paymentMode: selectedPaymentMethod,
               passengerName: passengers[0].firstName,
               totalPaid: totalPayable,
-              status: "confirmed",
+              status: 'confirmed',
             },
           });
         } else {
-          throw new Error("Payment confirmation failed.");
+          throw new Error('Payment confirmation failed.');
         }
       }
     } catch (err: any) {
-      console.error("Payment error:", err);
-      alert(err.message || "An error occurred during payment.");
+      console.error('Payment error:', err);
+      alert(err.message || 'An error occurred during payment.');
     } finally {
       setIsProcessing(false);
     }
@@ -476,23 +411,19 @@ export default function BookingCheckout() {
                 Confirm Payment
               </h2>
               <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center mb-10 leading-relaxed max-w-xs">
-                You are about to authorize a payment of{" "}
-                {formatCurrency(totalPayable)} from your TripLoger Wallet.
+                You are about to authorize a payment of {formatCurrency(totalPayable)} from your
+                TripLoger Wallet.
               </p>
 
               <div className="w-full bg-muted rounded-3xl p-8 mb-10 space-y-4">
                 <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
                   <span>Available Balance</span>
-                  <span className="text-foreground">
-                    {formatCurrency(walletBalance)}
-                  </span>
+                  <span className="text-foreground">{formatCurrency(walletBalance)}</span>
                 </div>
                 <div className="h-px bg-border/50" />
                 <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
                   <span>Transaction Amount</span>
-                  <span className="text-red-500">
-                    {formatCurrency(totalPayable)}
-                  </span>
+                  <span className="text-red-500">{formatCurrency(totalPayable)}</span>
                 </div>
                 <div className="h-px bg-border/50" />
                 <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
@@ -505,7 +436,7 @@ export default function BookingCheckout() {
                   <>
                     <div className="h-px bg-border/50" />
                     <div
-                      className={`flex justify-between text-[10px] font-black uppercase tracking-widest px-2 gap-4 ${holdDeadlineExpired ? "text-red-500" : "text-amber-600"}`}
+                      className={`flex justify-between text-[10px] font-black uppercase tracking-widest px-2 gap-4 ${holdDeadlineExpired ? 'text-red-500' : 'text-amber-600'}`}
                     >
                       <span>Hold Expires</span>
                       <span>{holdDeadlineLabel}</span>
@@ -522,11 +453,10 @@ export default function BookingCheckout() {
                 >
                   Cancel
                 </Button>
-                {hasInsufficientBalance &&
-                runtimeConfig.features.walletTopupEnabled ? (
+                {hasInsufficientBalance && runtimeConfig.features.walletTopupEnabled ? (
                   <Button
                     variant="secondary"
-                    onClick={() => navigate("/wallet/topup")}
+                    onClick={() => navigate('/wallet/topup')}
                     className="h-14 rounded-2xl text-foreground font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
                   >
                     Top-up Wallet <Plus size={16} strokeWidth={3} />
@@ -566,9 +496,7 @@ export default function BookingCheckout() {
             {/* Left Col: Review & Payment */}
             <div className="lg:col-span-8 space-y-10">
               <div className="space-y-2">
-                <h1 className="text-4xl font-black text-foreground tracking-tight">
-                  Review & Pay
-                </h1>
+                <h1 className="text-4xl font-black text-foreground tracking-tight">Review & Pay</h1>
                 <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em]">
                   Securely complete your premium booking
                 </p>
@@ -592,15 +520,12 @@ export default function BookingCheckout() {
                   </div>
                   <div className="space-y-4">
                     {passengers.map((p: any, i: number) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between gap-2"
-                      >
+                      <div key={i} className="flex items-center justify-between gap-2">
                         <span className="text-[11px] font-bold text-foreground">
                           {p.firstName} {p.lastName}
                         </span>
                         <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                          {i === 0 ? "Primary" : "Adult"}
+                          {i === 0 ? 'Primary' : 'Adult'}
                         </span>
                       </div>
                     ))}
@@ -657,7 +582,7 @@ export default function BookingCheckout() {
                           Balance Available
                         </p>
                         <p
-                          className={`text-5xl font-black tracking-tighter ${hasInsufficientBalance ? "text-red-500" : "text-primary-foreground"}`}
+                          className={`text-5xl font-black tracking-tighter ${hasInsufficientBalance ? 'text-red-500' : 'text-primary-foreground'}`}
                         >
                           {formatCurrency(walletBalance)}
                         </p>
@@ -671,7 +596,7 @@ export default function BookingCheckout() {
                         )}
                         {holdDeadlineLabel && (
                           <div
-                            className={`flex items-center gap-2 ${holdDeadlineExpired ? "text-red-500" : "text-amber-500"}`}
+                            className={`flex items-center gap-2 ${holdDeadlineExpired ? 'text-red-500' : 'text-amber-500'}`}
                           >
                             <Info size={12} />
                             <span className="text-[9px] font-black uppercase tracking-widest">
@@ -683,11 +608,10 @@ export default function BookingCheckout() {
                     </div>
 
                     <div className="w-full md:w-64">
-                      {hasInsufficientBalance &&
-                      runtimeConfig.features.walletTopupEnabled ? (
+                      {hasInsufficientBalance && runtimeConfig.features.walletTopupEnabled ? (
                         <Button
                           variant="secondary"
-                          onClick={() => navigate("/wallet/topup")}
+                          onClick={() => navigate('/wallet/topup')}
                           className="w-full h-16 text-secondary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
                         >
                           Top-up Wallet <Plus size={16} strokeWidth={3} />
@@ -707,8 +631,7 @@ export default function BookingCheckout() {
                           data-testid="complete-booking-button"
                           className="w-full h-16 text-secondary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
                         >
-                          Complete Booking{" "}
-                          <ArrowRight size={16} strokeWidth={3} />
+                          Complete Booking <ArrowRight size={16} strokeWidth={3} />
                         </Button>
                       )}
                     </div>
@@ -744,23 +667,17 @@ export default function BookingCheckout() {
                     Final Summary
                   </p>
                   <h3 className="text-xl font-black text-foreground tracking-tight leading-tight">
-                    {summary?.type === "hotel"
-                      ? summary?.hotel?.name
-                      : "Elite Business Class"}
+                    {summary?.type === 'hotel' ? summary?.hotel?.name : 'Elite Business Class'}
                   </h3>
 
                   <div className="bg-muted rounded-[2rem] p-6 space-y-6">
                     <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
-                      <span>
-                        {summary?.type === "hotel"
-                          ? "Accommodation"
-                          : "Fare & Taxes"}
-                      </span>
+                      <span>{summary?.type === 'hotel' ? 'Accommodation' : 'Fare & Taxes'}</span>
                       <span className="text-foreground">
                         {formatCurrency(
-                          summary?.type === "hotel"
+                          summary?.type === 'hotel'
                             ? summary?.hotel?.price || 0
-                            : flightPrice + taxes,
+                            : flightPrice + taxes
                         )}
                       </span>
                     </div>
@@ -770,7 +687,7 @@ export default function BookingCheckout() {
                         <p className="text-[9px] font-black text-foreground uppercase tracking-widest">
                           Specialized Services
                         </p>
-                        {selectedAddOns.map((item) => (
+                        {selectedAddOns.map(item => (
                           <div
                             key={item.id}
                             className="flex justify-between text-[10px] font-bold text-muted-foreground gap-4"
@@ -784,17 +701,13 @@ export default function BookingCheckout() {
                     {pricingBreakdown.markupAmount > 0 && (
                       <div className="flex justify-between text-[10px] font-bold text-muted-foreground gap-4">
                         <span>Markup</span>
-                        <span>
-                          {formatCurrency(pricingBreakdown.markupAmount)}
-                        </span>
+                        <span>{formatCurrency(pricingBreakdown.markupAmount)}</span>
                       </div>
                     )}
                     {pricingBreakdown.commissionAmount > 0 && (
                       <div className="flex justify-between text-[10px] font-bold text-muted-foreground gap-4">
                         <span>Commission</span>
-                        <span>
-                          {formatCurrency(pricingBreakdown.commissionAmount)}
-                        </span>
+                        <span>{formatCurrency(pricingBreakdown.commissionAmount)}</span>
                       </div>
                     )}
                     <div className="h-px bg-foreground/10" />
@@ -811,9 +724,9 @@ export default function BookingCheckout() {
                   <div className="p-5 bg-purple-50 rounded-2xl flex gap-3 border border-purple-100/50">
                     <Sparkles size={16} className="text-foreground shrink-0" />
                     <p className="text-[10px] font-bold text-purple-700 leading-relaxed uppercase tracking-wider">
-                      {summary?.type === "hotel"
-                        ? "Early check-in and breakfast included."
-                        : "Premium booking perks applied. Priority boarding included."}
+                      {summary?.type === 'hotel'
+                        ? 'Early check-in and breakfast included.'
+                        : 'Premium booking perks applied. Priority boarding included.'}
                     </p>
                   </div>
                 </div>
@@ -825,3 +738,5 @@ export default function BookingCheckout() {
     </TripLogerLayout>
   );
 }
+
+export default BookingCheckout;

@@ -59,7 +59,7 @@ clients.forEach(client => {
 /**
  * Generic request helper...
  */
-export const liteapiRequest = async <T>(
+const liteapiRequest = async <T>(
     endpoint: string,
     method: string = "GET",
     data?: any,

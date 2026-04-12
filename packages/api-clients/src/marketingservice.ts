@@ -18,7 +18,7 @@ export interface Campaign {
   };
 }
 
-export class MarketingService {
+class MarketingService {
   /**
    * Get base URL for marketing service - uses lazy evaluation to support runtime config changes
    */

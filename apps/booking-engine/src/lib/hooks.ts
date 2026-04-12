@@ -38,7 +38,7 @@ export function useLogin() {
   });
 }
 
-export function useRegister() {
+function useRegister() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -86,7 +86,7 @@ export function useUserProfile(options?: Partial<UseQueryOptions<any>>) {
  * Hook to initiate social login (Google, Facebook, Apple)
  * Redirects the user to the OAuth provider's authorization page
  */
-export function useSocialLogin() {
+function useSocialLogin() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -130,7 +130,7 @@ export function useOAuthCallback() {
 /**
  * Hook to get linked social accounts for the current user
  */
-export function useLinkedAccounts(options?: Partial<UseQueryOptions<any>>) {
+function useLinkedAccounts(options?: Partial<UseQueryOptions<any>>) {
   return useQuery({
     queryKey: ["auth", "linked-accounts"],
     queryFn: () =>
@@ -144,7 +144,7 @@ export function useLinkedAccounts(options?: Partial<UseQueryOptions<any>>) {
 /**
  * Hook to link a social account to existing user
  */
-export function useLinkSocialAccount() {
+function useLinkSocialAccount() {
   return useMutation({
     mutationFn: async (provider: SocialProvider) => {
       const response = await api.get<{ authUrl: string }>(
@@ -161,7 +161,7 @@ export function useLinkSocialAccount() {
 /**
  * Hook to unlink a social account from existing user
  */
-export function useUnlinkSocialAccount() {
+function useUnlinkSocialAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -177,7 +177,7 @@ export function useUnlinkSocialAccount() {
 // Search Hooks
 // ============================================================================
 
-export function useFlightSearch(
+function useFlightSearch(
   params: any,
   options?: Partial<UseQueryOptions<any>>,
 ) {
@@ -189,7 +189,7 @@ export function useFlightSearch(
   });
 }
 
-export function useHotelSearch(
+function useHotelSearch(
   params: any,
   options?: Partial<UseQueryOptions<any>>,
 ) {
@@ -205,7 +205,7 @@ export function useHotelSearch(
 // Booking Hooks
 // ============================================================================
 
-export function useCreateBooking() {
+function useCreateBooking() {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -216,7 +216,7 @@ export function useCreateBooking() {
   });
 }
 
-export function useUserBookings(options?: Partial<UseQueryOptions<any>>) {
+function useUserBookings(options?: Partial<UseQueryOptions<any>>) {
   return useQuery({
     queryKey: queryKeys.bookings.list("user"),
     queryFn: () => api.get(API_ENDPOINTS.USER_BOOKINGS),
@@ -224,7 +224,7 @@ export function useUserBookings(options?: Partial<UseQueryOptions<any>>) {
   });
 }
 
-export function useBookingDetail(
+function useBookingDetail(
   id: string,
   options?: Partial<UseQueryOptions<any>>,
 ) {

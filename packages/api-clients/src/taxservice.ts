@@ -22,7 +22,7 @@ export interface TaxBreakdown {
   description: string;
 }
 
-export class TaxService {
+class TaxService {
   /**
    * Get base URL for tax service - uses lazy evaluation to support runtime config changes
    */

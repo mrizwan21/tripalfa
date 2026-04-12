@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import prisma, { Decimal } from '../database.js';
+import prisma from '../database.js';
 import { staticDbPool } from '../static-db.js';
 import { validateDuffelId } from '../utils/validation.js';
 import { duffelClient } from '../utils/duffelClient.js';
@@ -151,8 +151,8 @@ router.post('/search', async (req, res: Response) => {
           data: offers.map((o: any) => ({
             id: o.id,
             offerRequestId: offerRequestResponse.id,
-            totalAmount: new Decimal(o.total_amount),
-            taxAmount: new Decimal(o.tax_amount),
+            totalAmount: String(o.total_amount),
+            taxAmount: String(o.tax_amount),
             currency: o.total_currency,
             ownerId: o.owner.iata_code,
             expiresAt: new Date(o.expires_at),
@@ -397,6 +397,9 @@ router.post('/book', async (req, res: Response) => {
     const orderId = String(orderData?.id || '');
     const bookingReference = String(orderData?.booking_reference || '');
     const slices = orderData?.slices || [];
+    const baseAmountValue = String(baseAmount);
+    const taxAmountValue = String(taxAmount);
+    const totalAmountValue = String(totalAmount);
 
     // Create local booking record
     const bookingRef = `FLT-${Date.now().toString(36).toUpperCase()}`;
@@ -411,10 +414,10 @@ router.post('/book', async (req, res: Response) => {
         paymentStatus: paymentMethod?.type === 'balance' ? 'paid' : 'pending',
         customerEmail: guestInfo?.email || passengers[0]?.email,
         customerPhone: guestInfo?.phone || passengers[0]?.phone_number,
-        baseAmount: new Decimal(baseAmount),
-        taxAmount: new Decimal(taxAmount),
-        markupAmount: new Decimal(0),
-        totalAmount: new Decimal(totalAmount),
+        baseAmount: baseAmountValue,
+        taxAmount: taxAmountValue,
+        markupAmount: '0',
+        totalAmount: totalAmountValue,
         currency: currency,
         metadata: {
           duffelOrderId: orderId,
@@ -433,9 +436,9 @@ router.post('/book', async (req, res: Response) => {
         customerPhone: guestInfo?.phone || passengers[0]?.phone_number,
         bookingReference: bookingRef,
         localBookingId: booking.id,
-        baseAmount: new Decimal(baseAmount),
-        taxAmount: new Decimal(taxAmount),
-        totalAmount: new Decimal(totalAmount),
+        baseAmount: baseAmountValue,
+        taxAmount: taxAmountValue,
+        totalAmount: totalAmountValue,
         currency: currency,
         status: 'confirmed',
         type: 'instant',

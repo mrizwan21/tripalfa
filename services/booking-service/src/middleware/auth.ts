@@ -76,7 +76,7 @@ export const authMiddleware = (
 /**
  * Role-based authorization middleware
  */
-export const requireRole = (...roles: string[]) => {
+const requireRole = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
@@ -101,7 +101,7 @@ export const requireRole = (...roles: string[]) => {
 /**
  * Permission-based authorization middleware
  */
-export const requirePermission = (...permissions: string[]) => {
+const requirePermission = (...permissions: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({
@@ -157,7 +157,7 @@ export const optionalAuth = (
  * Verify user owns the booking workflow
  * Must be used after authMiddleware
  */
-export const requireWorkflowOwnership = async (
+const requireWorkflowOwnership = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,

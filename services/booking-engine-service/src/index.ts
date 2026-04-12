@@ -1,40 +1,22 @@
-import express, { Express, ErrorRequestHandler } from 'express';
-import cors from 'cors';
+import { createServiceApp } from '@tripalfa/shared-types';
 import dotenv from 'dotenv';
+import express, { ErrorRequestHandler } from 'express';
 
-// Import routes
 import flightsRoutes from './routes/flights.js';
 import hotelsRoutes from './routes/hotels.js';
 import offlineRequestsRoutes from './routes/offline-requests.js';
 import staticDataRoutes from './routes/static-data.js';
+import { setupBookingEngineSwagger } from './swagger.js';
 
 dotenv.config();
 
-const app: Express = express();
 const PORT = process.env.BOOKING_ENGINE_SERVICE_PORT || process.env.PORT || 3021;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Request logging
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  next();
+const app = createServiceApp({
+  serviceName: 'booking-engine-service',
+  port: PORT,
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    service: 'booking-engine-service',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// API version info
 app.get('/api', (req, res) => {
   res.json({
     name: 'TripAlfa Booking Engine API',
@@ -48,26 +30,14 @@ app.get('/api', (req, res) => {
   });
 });
 
-// API Routes
 app.use('/api/flights', flightsRoutes);
 app.use('/api/hotels', hotelsRoutes);
 app.use('/api/offline-requests', offlineRequestsRoutes);
 app.use('/api/static', staticDataRoutes);
 
-// 404 Handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Not Found',
-    path: req.path,
-  });
-});
-
-// Error Handler
 const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   console.error('[BookingEngineService] Error:', err);
 
-  // Handle specific error types
   if (err.name === 'UnauthorizedError') {
     res.status(401).json({
       success: false,
@@ -94,14 +64,10 @@ const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
 
 app.use(errorHandler);
 
-import { setupBookingEngineSwagger } from './swagger.js';
-
-// Start server
 setupBookingEngineSwagger(app);
+
 app.listen(PORT, () => {
-  console.log(`🚀 Booking Engine Service running on port ${PORT}`);
-  console.log(`📍 Health check: http://localhost:${PORT}/health`);
-  console.log(`📍 API info: http://localhost:${PORT}/api`);
+  console.log(`Booking Engine Service running on port ${PORT}`);
 });
 
 export default app;

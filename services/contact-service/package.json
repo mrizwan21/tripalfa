@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint src --ext .ts",
+    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
     "test": "vitest run"
   },
   "dependencies": {
@@ -17,8 +17,6 @@
     "express": "^5.0.0",
     "helmet": "^8.0.0",
     "morgan": "^1.10.0",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

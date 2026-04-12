@@ -15,7 +15,7 @@ const swaggerSpec = createSwaggerSpec({
   tags: [{ name: 'Rules', description: 'Rule management and evaluation endpoints' }],
 });
 
-export { swaggerSpec };
+{ swaggerSpec }
 
 export function setupRuleEngineSwagger(app: Application): void {
   setupSwagger(app, swaggerSpec, '/api-docs');

@@ -33,14 +33,7 @@
  * - FX Service (real-time rates from OpenExchangeRates API via Postgres DB)
  */
 
-import axios from "axios";
-import {
-  DocumentGenerationService,
-  HotelBooking,
-  DocumentCustomerInfo,
-  PaymentBreakdown,
-  RefundDetails,
-} from "../components/documentGenerationService";
+import axios from 'axios';
 
 /**
  * Escape HTML special characters to prevent XSS attacks
@@ -48,14 +41,176 @@ import {
  * @returns Escaped text safe for HTML insertion
  */
 function escapeHtml(text: string | number | undefined | null): string {
-  if (text === undefined || text === null) return "";
+  if (text === undefined || text === null) return '';
   const str = String(text);
   return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+interface DocumentCustomerInfo {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  nationality: string;
+}
+
+interface PaymentBreakdown {
+  amount: number;
+  currency: string;
+  paymentMethod: string;
+  transactionId: string;
+}
+
+interface RefundDetails {
+  id: string;
+  refundNumber: string;
+  amount: number;
+  currency: string;
+  reason: string;
+  type: string;
+  status: string;
+  requestedAt: string;
+  processedAt: string;
+  refundedTo: string;
+  originalPaymentAmount: number;
+  cancellationFees: number;
+  taxRefund: number;
+}
+
+interface HotelBooking {
+  id: string;
+  hotelName?: string;
+  checkIn?: string;
+  checkOut?: string;
+  roomType?: string;
+  [key: string]: any;
+}
+
+class DocumentGenerationService {
+  generateHotelVoucher(booking: HotelBooking, customer: DocumentCustomerInfo): string {
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+            .voucher { background: white; max-width: 800px; margin: 0 auto; padding: 30px; border-radius: 8px; }
+            .header { border-bottom: 3px solid #667eea; padding-bottom: 15px; margin-bottom: 20px; }
+            h1 { color: #333; margin: 0; }
+            .details { background: #f9f9f9; padding: 20px; border-radius: 5px; margin: 15px 0; }
+            .detail-row { margin: 10px 0; }
+            .label { font-weight: bold; color: #666; }
+            .status { color: #28a745; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="voucher">
+            <div class="header">
+              <h1>Hotel Voucher</h1>
+              <p>Booking ID: ${escapeHtml(booking.id)}</p>
+            </div>
+            <div class="details">
+              <div class="detail-row"><span class="label">Guest Name:</span> ${escapeHtml(customer.name)}</div>
+              <div class="detail-row"><span class="label">Email:</span> ${escapeHtml(customer.email)}</div>
+              <div class="detail-row"><span class="label">Hotel:</span> ${escapeHtml(booking.hotelName || 'N/A')}</div>
+              <div class="detail-row"><span class="label">Check-in:</span> ${escapeHtml(booking.checkIn || 'N/A')}</div>
+              <div class="detail-row"><span class="label">Check-out:</span> ${escapeHtml(booking.checkOut || 'N/A')}</div>
+              <div class="detail-row"><span class="label">Room Type:</span> ${escapeHtml(booking.roomType || 'N/A')}</div>
+              <div class="detail-row"><span class="label">Status:</span> <span class="status">✓ Confirmed</span></div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  generateHotelInvoice(
+    booking: HotelBooking,
+    customer: DocumentCustomerInfo,
+    payment: PaymentBreakdown
+  ): string {
+    const tax = (payment.amount || 0) * 0.1;
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+            .invoice { background: white; max-width: 800px; margin: 0 auto; padding: 30px; border-radius: 8px; }
+            .header { border-bottom: 2px solid #667eea; padding-bottom: 20px; margin-bottom: 20px; }
+            h1 { color: #333; margin: 0; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            td { padding: 10px; border-bottom: 1px solid #ddd; }
+            td.label { font-weight: bold; width: 50%; }
+            .amount { color: #667eea; font-size: 16px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="invoice">
+            <div class="header">
+              <h1>Hotel Invoice</h1>
+              <p>Invoice #${escapeHtml(payment.transactionId)}</p>
+            </div>
+            <table>
+              <tr><td class="label">Guest Name:</td><td>${escapeHtml(customer.name)}</td></tr>
+              <tr><td class="label">Email:</td><td>${escapeHtml(customer.email)}</td></tr>
+              <tr><td class="label">Hotel:</td><td>${escapeHtml(booking.hotelName || 'N/A')}</td></tr>
+              <tr><td class="label">Check-in:</td><td>${escapeHtml(booking.checkIn || 'N/A')}</td></tr>
+              <tr><td class="label">Check-out:</td><td>${escapeHtml(booking.checkOut || 'N/A')}</td></tr>
+              <tr><td class="label">Subtotal:</td><td><span class="amount">${escapeHtml(payment.currency)} ${escapeHtml(payment.amount?.toFixed(2) || '0.00')}</span></td></tr>
+              <tr><td class="label">Tax (10%):</td><td>${escapeHtml(payment.currency)} ${escapeHtml(tax.toFixed(2))}</td></tr>
+              <tr><td class="label">Total:</td><td><span class="amount">${escapeHtml(payment.currency)} ${escapeHtml((payment.amount + tax)?.toFixed(2) || '0.00')}</span></td></tr>
+            </table>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
+  generateRefundNote(
+    refund: RefundDetails,
+    booking: HotelBooking,
+    customer: DocumentCustomerInfo
+  ): string {
+    return `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+            .note { background: white; max-width: 600px; margin: 20px auto; padding: 30px; border-radius: 8px; }
+            h1 { color: #333; }
+            .status { color: #28a745; font-weight: bold; }
+            .amount { font-size: 18px; font-weight: bold; color: #667eea; }
+            .detail-item { margin: 15px 0; padding: 10px; background: #f9f9f9; border-left: 3px solid #667eea; }
+          </style>
+        </head>
+        <body>
+          <div class="note">
+            <h1>Refund Credit Note</h1>
+            <p><strong>Refund Number:</strong> ${escapeHtml(refund.refundNumber)}</p>
+            <p><strong>Status:</strong> <span class="status">✓ Processed</span></p>
+            <div class="detail-item">
+              <div style="font-weight: bold;">Guest:</div>
+              <div>${escapeHtml(customer.name)}</div>
+            </div>
+            <div class="detail-item">
+              <div style="font-weight: bold;">Refund Amount:</div>
+              <div class="amount">${escapeHtml(refund.currency)} ${escapeHtml(refund.amount.toFixed(2))}</div>
+            </div>
+            <div class="detail-item">
+              <div style="font-weight: bold;">Reason:</div>
+              <div>${escapeHtml(refund.reason)}</div>
+            </div>
+            <p style="color: #666; margin-top: 20px;">The refund has been credited to your wallet account.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  }
 }
 
 interface HotelBookingRequest {
@@ -131,12 +286,11 @@ class HotelBookingWorkflowOrchestrator {
   private authToken: string | null;
 
   constructor(
-    walletApiUrl =
-      import.meta.env.VITE_API_URL ||
+    walletApiUrl = import.meta.env.VITE_API_URL ||
       process.env.API_GATEWAY_URL ||
-      "http://localhost:3001/api",
+      'http://localhost:3001/api',
     verbose = false,
-    authToken: string | null = null,
+    authToken: string | null = null
   ) {
     this.docService = new DocumentGenerationService();
     this.walletApiUrl = walletApiUrl;
@@ -168,7 +322,7 @@ class HotelBookingWorkflowOrchestrator {
 
   private log(message: string, data?: any) {
     if (this.verbose) {
-      console.log(`[HotelBookingOrchestrator] ${message}`, data || "");
+      console.log(`[HotelBookingOrchestrator] ${message}`, data || '');
     }
   }
 
@@ -176,33 +330,30 @@ class HotelBookingWorkflowOrchestrator {
    * Get FX conversion rate from FX service API
    * Falls back to 1.0 for same currency or if API is unavailable
    */
-  private async getConversionRate(
-    fromCurrency: string,
-    toCurrency: string,
-  ): Promise<number> {
+  private async getConversionRate(fromCurrency: string, toCurrency: string): Promise<number> {
     if (fromCurrency === toCurrency) return 1.0;
 
     try {
-      this.log("Fetching FX rate from API...", {
+      this.log('Fetching FX rate from API...', {
         fromCurrency,
         toCurrency,
       });
 
       const response = await axios.get(
         `${this.walletApiUrl}/fx/rate/${fromCurrency}/${toCurrency}`,
-        this.getRequestConfig(),
+        this.getRequestConfig()
       );
 
       if (!response.data.success) {
-        this.log("FX API returned error, using fallback rate 1.0");
+        this.log('FX API returned error, using fallback rate 1.0');
         return 1.0;
       }
 
       const rate = response.data.rate || 1.0;
-      this.log("✓ FX rate fetched successfully", { rate });
+      this.log('✓ FX rate fetched successfully', { rate });
       return rate;
     } catch (error) {
-      this.log("✗ Failed to fetch FX rate, falling back to 1.0", error);
+      this.log('✗ Failed to fetch FX rate, falling back to 1.0', error);
       return 1.0; // Fallback to 1:1 if API is unavailable
     }
   }
@@ -214,14 +365,14 @@ class HotelBookingWorkflowOrchestrator {
   private async convertWithFx(
     amount: number,
     fromCurrency: string,
-    toCurrency: string,
+    toCurrency: string
   ): Promise<{ converted: number; rate: number; fee: number; total: number }> {
     if (fromCurrency === toCurrency) {
       return { converted: amount, rate: 1.0, fee: 0, total: amount };
     }
 
     try {
-      this.log("Converting amount with FX...", {
+      this.log('Converting amount with FX...', {
         amount,
         fromCurrency,
         toCurrency,
@@ -235,13 +386,11 @@ class HotelBookingWorkflowOrchestrator {
           toCurrency,
           applyFee: true,
         },
-        this.getRequestConfig(),
+        this.getRequestConfig()
       );
 
       if (!response.data.success) {
-        this.log(
-          "FX conversion failed, returning amount without conversion",
-        );
+        this.log('FX conversion failed, returning amount without conversion');
         return {
           converted: amount,
           rate: 1.0,
@@ -258,10 +407,7 @@ class HotelBookingWorkflowOrchestrator {
         total: breakdown.totalDebit,
       };
     } catch (error) {
-      this.log(
-        "✗ FX conversion failed, returning amount without conversion",
-        error,
-      );
+      this.log('✗ FX conversion failed, returning amount without conversion', error);
       return { converted: amount, rate: 1.0, fee: 0, total: amount };
     }
   }
@@ -273,10 +419,10 @@ class HotelBookingWorkflowOrchestrator {
     customerId: string,
     amount: number,
     currency: string,
-    bookingId: string,
+    bookingId: string
   ): Promise<boolean> {
     try {
-      this.log("Debiting customer wallet...", { customerId, amount, currency });
+      this.log('Debiting customer wallet...', { customerId, amount, currency });
       const response = await axios.post(
         `${this.walletApiUrl}/wallet/debit`,
         {
@@ -286,12 +432,12 @@ class HotelBookingWorkflowOrchestrator {
           transactionId: `HOTEL-${bookingId}`,
           description: `Hotel booking payment`,
         },
-        this.getRequestConfig(),
+        this.getRequestConfig()
       );
-      this.log("✓ Customer wallet debited", response.data);
+      this.log('✓ Customer wallet debited', response.data);
       return response.data.success || true;
     } catch (error) {
-      this.log("✗ Failed to debit customer wallet", error);
+      this.log('✗ Failed to debit customer wallet', error);
       return false;
     }
   }
@@ -304,10 +450,10 @@ class HotelBookingWorkflowOrchestrator {
     amount: number,
     currency: string,
     bookingId: string,
-    reason: string,
+    reason: string
   ): Promise<boolean> {
     try {
-      this.log("Crediting customer wallet...", { customerId, amount, currency });
+      this.log('Crediting customer wallet...', { customerId, amount, currency });
       const response = await axios.post(
         `${this.walletApiUrl}/wallet/credit`,
         {
@@ -317,12 +463,12 @@ class HotelBookingWorkflowOrchestrator {
           transactionId: `REFUND-${bookingId}`,
           description: `Hotel booking ${reason}`,
         },
-        this.getRequestConfig(),
+        this.getRequestConfig()
       );
-      this.log("✓ Customer wallet credited", response.data);
+      this.log('✓ Customer wallet credited', response.data);
       return response.data.success || true;
     } catch (error) {
-      this.log("✗ Failed to credit customer wallet", error);
+      this.log('✗ Failed to credit customer wallet', error);
       return false;
     }
   }
@@ -333,10 +479,10 @@ class HotelBookingWorkflowOrchestrator {
   private async sendEmailNotification(
     email: string,
     subject: string,
-    html: string,
+    html: string
   ): Promise<boolean> {
     try {
-      this.log("Sending email notification...", { email, subject });
+      this.log('Sending email notification...', { email, subject });
       await axios.post(
         `${this.walletApiUrl}/notifications/email`,
         {
@@ -344,11 +490,11 @@ class HotelBookingWorkflowOrchestrator {
           subject,
           html,
         },
-        this.getRequestConfig(),
+        this.getRequestConfig()
       );
       return true;
     } catch (error) {
-      this.log("✗ Failed to send email", error);
+      this.log('✗ Failed to send email', error);
       return false;
     }
   }
@@ -365,18 +511,18 @@ class HotelBookingWorkflowOrchestrator {
   async confirmBooking(
     bookingRequest: HotelBookingRequest,
     booking: HotelBooking,
-    customerCurrency: string = "USD",
+    customerCurrency: string = 'USD'
   ): Promise<BookingConfirmationResult> {
     try {
-      this.log("Starting booking confirmation workflow", {
+      this.log('Starting booking confirmation workflow', {
         bookingId: booking.id,
       });
 
-      const hotelCurrency = bookingRequest.currency || "USD";
+      const hotelCurrency = bookingRequest.currency || 'USD';
       const fxResult = await this.convertWithFx(
         bookingRequest.amount,
         customerCurrency,
-        hotelCurrency,
+        hotelCurrency
       );
       const fxRate = fxResult.rate;
       const fxFee = fxResult.fee;
@@ -388,7 +534,7 @@ class HotelBookingWorkflowOrchestrator {
         bookingRef: `REF-${Date.now()}`,
         voucherId: `VCH-${Date.now()}`,
         invoiceId: `INV-${Date.now()}`,
-        documentsGenerated: { voucher: "", invoice: "" },
+        documentsGenerated: { voucher: '', invoice: '' },
         notificationsSent: {
           voucher: false,
           invoice: false,
@@ -397,7 +543,7 @@ class HotelBookingWorkflowOrchestrator {
       };
 
       // Step 0: Debit customer wallet
-      this.log("Processing wallet debit for booking...", {
+      this.log('Processing wallet debit for booking...', {
         customerId: bookingRequest.guestEmail,
         amount: totalDebit,
         currency: customerCurrency,
@@ -409,14 +555,14 @@ class HotelBookingWorkflowOrchestrator {
         bookingRequest.guestEmail,
         totalDebit,
         customerCurrency,
-        booking.id,
+        booking.id
       );
 
       if (!walletDebited) {
-        throw new Error("Failed to debit customer wallet");
+        throw new Error('Failed to debit customer wallet');
       }
 
-      this.log("✓ Wallet debited successfully", {
+      this.log('✓ Wallet debited successfully', {
         amount: totalDebit,
         currency: customerCurrency,
       });
@@ -427,35 +573,28 @@ class HotelBookingWorkflowOrchestrator {
         name: bookingRequest.guestName,
         email: bookingRequest.guestEmail,
         phone: bookingRequest.guestPhone,
-        address: "Not provided",
-        nationality: "Not specified",
+        address: 'Not provided',
+        nationality: 'Not specified',
       };
 
       // Step 2: Generate voucher with FX details
-      this.log("Generating hotel voucher...", { bookingId: booking.id });
-      const voucherHTML = this.docService.generateHotelVoucher(
-        booking,
-        customer,
-      );
+      this.log('Generating hotel voucher...', { bookingId: booking.id });
+      const voucherHTML = this.docService.generateHotelVoucher(booking, customer);
       result.documentsGenerated.voucher = voucherHTML;
       result.voucherNumber = `VOC-${booking.id}-${Date.now()}`;
-      this.log("✓ Voucher generated", { voucherNumber: result.voucherNumber });
+      this.log('✓ Voucher generated', { voucherNumber: result.voucherNumber });
 
       // Step 3: Generate invoice with FX details
-      this.log("Generating hotel invoice...", { bookingId: booking.id });
+      this.log('Generating hotel invoice...', { bookingId: booking.id });
       const tax = bookingRequest.amount * 0.1;
-      const invoiceHTML = this.docService.generateHotelInvoice(
-        booking,
-        customer,
-        {
-          amount: bookingRequest.amount,
-          currency: hotelCurrency,
-          paymentMethod: "wallet",
-          transactionId: `TXN-${Date.now()}`,
-        } as any,
-      );
+      const invoiceHTML = this.docService.generateHotelInvoice(booking, customer, {
+        amount: bookingRequest.amount,
+        currency: hotelCurrency,
+        paymentMethod: 'wallet',
+        transactionId: `TXN-${Date.now()}`,
+      } as any);
       result.documentsGenerated.invoice = invoiceHTML;
-      this.log("✓ Invoice generated");
+      this.log('✓ Invoice generated');
 
       // Step 4: Generate receipt with FX details
       const receiptHTML = this.generateBookingReceipt(
@@ -465,50 +604,44 @@ class HotelBookingWorkflowOrchestrator {
         customerCurrency,
         fxRate,
         fxFee,
-        totalDebit,
+        totalDebit
       );
 
       // Step 5: Send notifications
-      this.log("Sending notifications...");
+      this.log('Sending notifications...');
       result.notificationsSent.voucher = await this.sendEmailNotification(
         bookingRequest.guestEmail,
         `Your Hotel Voucher ${result.voucherNumber}`,
-        voucherHTML,
+        voucherHTML
       );
-      this.log(
-        `✓ Voucher notification sent: ${result.notificationsSent.voucher}`,
-      );
+      this.log(`✓ Voucher notification sent: ${result.notificationsSent.voucher}`);
 
       result.notificationsSent.invoice = await this.sendEmailNotification(
         bookingRequest.guestEmail,
         `Hotel Invoice ${result.invoiceId}`,
-        invoiceHTML,
+        invoiceHTML
       );
-      this.log(
-        `✓ Invoice notification sent: ${result.notificationsSent.invoice}`,
-      );
+      this.log(`✓ Invoice notification sent: ${result.notificationsSent.invoice}`);
 
       result.notificationsSent.confirmation = await this.sendEmailNotification(
         bookingRequest.guestEmail,
         `Booking Confirmation - ${result.bookingRef}`,
-        this.generateConfirmationEmail(bookingRequest, result.bookingRef),
+        this.generateConfirmationEmail(bookingRequest, result.bookingRef)
       );
-      this.log(
-        `✓ Confirmation notification sent: ${result.notificationsSent.confirmation}`,
-      );
+      this.log(`✓ Confirmation notification sent: ${result.notificationsSent.confirmation}`);
 
       result.success = true;
-      this.log("✓ Booking confirmation workflow completed", result);
+      this.log('✓ Booking confirmation workflow completed', result);
       return result;
     } catch (error) {
-      this.log("✗ Booking confirmation workflow failed", error);
+      this.log('✗ Booking confirmation workflow failed', error);
       return {
         success: false,
         bookingId: booking.id,
         bookingRef: `REF-${Date.now()}`,
         voucherId: `VCH-${Date.now()}`,
         invoiceId: `INV-${Date.now()}`,
-        documentsGenerated: { voucher: "", invoice: "" },
+        documentsGenerated: { voucher: '', invoice: '' },
         notificationsSent: {
           voucher: false,
           invoice: false,
@@ -533,16 +666,12 @@ class HotelBookingWorkflowOrchestrator {
     refundAmount: number,
     refundReason: string,
     customerEmail: string,
-    customerCurrency: string = "USD",
+    customerCurrency: string = 'USD'
   ): Promise<BookingCancellationResult> {
     try {
-      this.log("Starting booking cancellation workflow", { bookingId });
+      this.log('Starting booking cancellation workflow', { bookingId });
 
-      const fxResult = await this.convertWithFx(
-        refundAmount,
-        "USD",
-        customerCurrency,
-      );
+      const fxResult = await this.convertWithFx(refundAmount, 'USD', customerCurrency);
       const refundInCustomerCurrency = fxResult.converted;
 
       const result: BookingCancellationResult = {
@@ -550,14 +679,14 @@ class HotelBookingWorkflowOrchestrator {
         bookingId,
         cancellationId: `CNL-${Date.now()}`,
         refundAmount,
-        refundCurrency: "USD",
+        refundCurrency: 'USD',
         voucherCancelled: true,
-        documentsGenerated: { creditNote: "" },
+        documentsGenerated: { creditNote: '' },
         notificationsSent: { creditNote: false, refundNotification: false },
       };
 
       // Step 0: Credit customer wallet for refund
-      this.log("Processing wallet credit for refund...", {
+      this.log('Processing wallet credit for refund...', {
         customerId: customerEmail,
         amount: refundInCustomerCurrency,
         currency: customerCurrency,
@@ -568,14 +697,14 @@ class HotelBookingWorkflowOrchestrator {
         refundInCustomerCurrency,
         customerCurrency,
         bookingId,
-        "cancellation refund",
+        'cancellation refund'
       );
 
       if (!walletCredited) {
-        throw new Error("Failed to credit customer wallet");
+        throw new Error('Failed to credit customer wallet');
       }
 
-      this.log("✓ Wallet credited successfully", {
+      this.log('✓ Wallet credited successfully', {
         amount: refundInCustomerCurrency,
         currency: customerCurrency,
       });
@@ -583,86 +712,73 @@ class HotelBookingWorkflowOrchestrator {
       // Step 1: Prepare customer information
       const customer: DocumentCustomerInfo = {
         id: customerEmail,
-        name: "Guest",
+        name: 'Guest',
         email: customerEmail,
-        phone: "",
-        address: "Not provided",
-        nationality: "Not specified",
+        phone: '',
+        address: 'Not provided',
+        nationality: 'Not specified',
       };
 
       // Step 2: Generate credit note (refund note)
-      this.log("Generating credit note...", { bookingId });
+      this.log('Generating credit note...', { bookingId });
       const refund: RefundDetails = {
         id: result.cancellationId,
         refundNumber: `RFN-${bookingId}-${Date.now()}`,
         amount: refundAmount,
-        currency: "USD",
+        currency: 'USD',
         reason: refundReason,
-        type: "full",
-        status: "completed",
+        type: 'full',
+        status: 'completed',
         requestedAt: new Date().toISOString(),
         processedAt: new Date().toISOString(),
-        refundedTo: "wallet",
+        refundedTo: 'wallet',
         originalPaymentAmount: refundAmount,
         cancellationFees: 0,
         taxRefund: 0,
       };
 
-      const creditNoteHTML = this.docService.generateRefundNote(
-        refund,
-        booking as any,
-        customer,
-      );
+      const creditNoteHTML = this.docService.generateRefundNote(refund, booking as any, customer);
       result.documentsGenerated.creditNote = creditNoteHTML;
-      this.log("✓ Credit note generated", {
+      this.log('✓ Credit note generated', {
         refundNumber: refund.refundNumber,
       });
 
       // Step 3: Cancel voucher
-      this.log("Cancelling voucher...", { bookingId });
+      this.log('Cancelling voucher...', { bookingId });
       result.voucherCancelled = await this.cancelVoucher(bookingId);
       this.log(`✓ Voucher cancelled: ${result.voucherCancelled}`);
 
       // Step 4: Send notifications
-      this.log("Sending notifications...");
+      this.log('Sending notifications...');
       if (customerEmail) {
         result.notificationsSent.creditNote = await this.sendEmailNotification(
           customerEmail,
           `Refund Processed - ${refund.refundNumber}`,
-          creditNoteHTML,
+          creditNoteHTML
         );
-        this.log(
-          `✓ Credit note notification sent: ${result.notificationsSent.creditNote}`,
-        );
+        this.log(`✓ Credit note notification sent: ${result.notificationsSent.creditNote}`);
 
-        result.notificationsSent.refundNotification =
-          await this.sendEmailNotification(
-            customerEmail,
-            `Booking Cancellation & Refund - ${result.cancellationId}`,
-            this.generateRefundEmail(
-              refundInCustomerCurrency,
-              customerCurrency,
-              refundReason,
-            ),
-          );
-        this.log(
-          `✓ Refund notification sent: ${result.notificationsSent.refundNotification}`,
+        result.notificationsSent.refundNotification = await this.sendEmailNotification(
+          customerEmail,
+          `Booking Cancellation & Refund - ${result.cancellationId}`,
+          this.generateRefundEmail(refundInCustomerCurrency, customerCurrency, refundReason)
         );
+        this.log(`✓ Refund notification sent: ${result.notificationsSent.refundNotification}`);
       }
 
       result.success = true;
-      this.log("✓ Booking cancellation workflow completed", result);
+      this.log('✓ Booking cancellation workflow completed', result);
       return result;
     } catch (error) {
-      this.log("✗ Booking cancellation workflow failed", error);
+      this.log('✗ Booking cancellation workflow failed', error);
       return {
         success: false,
         bookingId,
         cancellationId: `CNL-${Date.now()}`,
         refundAmount,
-        refundCurrency: "USD",
+        refundCurrency: 'USD',
         voucherCancelled: false,
-        documentsGenerated: { creditNote: "" },
+        documentsGenerated: { creditNote: '' },
         notificationsSent: { creditNote: false, refundNotification: false },
         error: String(error),
       };
@@ -679,10 +795,10 @@ class HotelBookingWorkflowOrchestrator {
     bookingId: string,
     refundAmount: number,
     refundCurrency: string,
-    customerEmail: string,
+    customerEmail: string
   ): Promise<RefundProcessingResult> {
     try {
-      this.log("Starting refund processing workflow", {
+      this.log('Starting refund processing workflow', {
         bookingId,
         refundAmount,
       });
@@ -694,52 +810,41 @@ class HotelBookingWorkflowOrchestrator {
         refundAmount,
         refundCurrency,
         walletTransactionId: `TXN-${Date.now()}`,
-        documentsGenerated: { receipt: "" },
+        documentsGenerated: { receipt: '' },
         notificationsSent: { refundReceipt: false },
       };
 
       // Step 1: Process refund to wallet
-      this.log("Processing refund to wallet...", {
+      this.log('Processing refund to wallet...', {
         bookingId,
         amount: refundAmount,
       });
-      const txnId = await this.processWalletRefund(
-        bookingId,
-        refundAmount,
-        refundCurrency,
-      );
+      const txnId = await this.processWalletRefund(bookingId, refundAmount, refundCurrency);
       result.walletTransactionId = txnId;
-      this.log("✓ Wallet refund processed", { transactionId: txnId });
+      this.log('✓ Wallet refund processed', { transactionId: txnId });
 
       // Step 2: Generate refund receipt
-      this.log("Generating refund receipt...");
-      const receiptHTML = this.generateRefundReceipt(
+      this.log('Generating refund receipt...');
+      const receiptHTML = this.generateRefundReceipt(result.refundId, refundAmount, refundCurrency);
+      result.documentsGenerated.receipt = receiptHTML;
+      this.log('✓ Refund receipt generated');
+
+      // Step 3: Send notification
+      this.log('Sending refund confirmation...');
+      result.notificationsSent.refundReceipt = await this.sendRefundReceiptNotification(
+        customerEmail,
         result.refundId,
         refundAmount,
         refundCurrency,
+        receiptHTML
       );
-      result.documentsGenerated.receipt = receiptHTML;
-      this.log("✓ Refund receipt generated");
-
-      // Step 3: Send notification
-      this.log("Sending refund confirmation...");
-      result.notificationsSent.refundReceipt =
-        await this.sendRefundReceiptNotification(
-          customerEmail,
-          result.refundId,
-          refundAmount,
-          refundCurrency,
-          receiptHTML,
-        );
-      this.log(
-        `✓ Refund receipt sent: ${result.notificationsSent.refundReceipt}`,
-      );
+      this.log(`✓ Refund receipt sent: ${result.notificationsSent.refundReceipt}`);
 
       result.success = true;
-      this.log("✓ Refund processing workflow completed", result);
+      this.log('✓ Refund processing workflow completed', result);
       return result;
     } catch (error) {
-      this.log("✗ Refund processing workflow failed", error);
+      this.log('✗ Refund processing workflow failed', error);
       return {
         success: false,
         bookingId,
@@ -747,7 +852,7 @@ class HotelBookingWorkflowOrchestrator {
         refundAmount,
         refundCurrency,
         walletTransactionId: `TXN-${Date.now()}`,
-        documentsGenerated: { receipt: "" },
+        documentsGenerated: { receipt: '' },
         notificationsSent: { refundReceipt: false },
         error: String(error),
       };
@@ -764,7 +869,7 @@ class HotelBookingWorkflowOrchestrator {
     customerCurrency: string,
     fxRate: number,
     fxFee: number,
-    totalDebit: number,
+    totalDebit: number
   ): string {
     return `
       <html>
@@ -799,8 +904,9 @@ class HotelBookingWorkflowOrchestrator {
               </table>
             </div>
 
-            ${customerCurrency !== hotelCurrency
-        ? `
+            ${
+              customerCurrency !== hotelCurrency
+                ? `
             <div class="fx-section">
               <div class="section-title">Currency Conversion</div>
               <table>
@@ -810,8 +916,8 @@ class HotelBookingWorkflowOrchestrator {
               </table>
             </div>
             `
-        : ""
-      }
+                : ''
+            }
 
             <div class="section">
               <div class="section-title">Payment Method</div>
@@ -831,7 +937,7 @@ class HotelBookingWorkflowOrchestrator {
    */
   private generateConfirmationEmail(
     bookingRequest: HotelBookingRequest,
-    bookingRef: string,
+    bookingRef: string
   ): string {
     return `
       <html>
@@ -885,11 +991,7 @@ class HotelBookingWorkflowOrchestrator {
   /**
    * Generate refund email
    */
-  private generateRefundEmail(
-    refundAmount: number,
-    currency: string,
-    reason: string,
-  ): string {
+  private generateRefundEmail(refundAmount: number, currency: string, reason: string): string {
     return `
       <html>
         <head>
@@ -936,10 +1038,10 @@ class HotelBookingWorkflowOrchestrator {
   private async sendVoucherNotification(
     email: string,
     voucherNumber: string,
-    voucherHTML: string,
+    voucherHTML: string
   ): Promise<boolean> {
     try {
-      this.log("Sending voucher notification...", { email, voucherNumber });
+      this.log('Sending voucher notification...', { email, voucherNumber });
       // In production, integrate with NotificationService
       // await notificationService.sendEmail({
       //   to: email,
@@ -949,7 +1051,7 @@ class HotelBookingWorkflowOrchestrator {
       // });
       return true;
     } catch (error) {
-      this.log("Failed to send voucher notification", error);
+      this.log('Failed to send voucher notification', error);
       return false;
     }
   }
@@ -960,10 +1062,10 @@ class HotelBookingWorkflowOrchestrator {
   private async sendInvoiceNotification(
     email: string,
     invoiceId: string,
-    invoiceHTML: string,
+    invoiceHTML: string
   ): Promise<boolean> {
     try {
-      this.log("Sending invoice notification...", { email, invoiceId });
+      this.log('Sending invoice notification...', { email, invoiceId });
       // In production, integrate with NotificationService
       // await notificationService.sendEmail({
       //   to: email,
@@ -973,7 +1075,7 @@ class HotelBookingWorkflowOrchestrator {
       // });
       return true;
     } catch (error) {
-      this.log("Failed to send invoice notification", error);
+      this.log('Failed to send invoice notification', error);
       return false;
     }
   }
@@ -984,10 +1086,10 @@ class HotelBookingWorkflowOrchestrator {
   private async sendBookingConfirmation(
     email: string,
     booking: HotelBooking,
-    bookingRef: string,
+    bookingRef: string
   ): Promise<boolean> {
     try {
-      this.log("Sending booking confirmation...", { email, bookingRef });
+      this.log('Sending booking confirmation...', { email, bookingRef });
       // In production, integrate with NotificationService
       // const html = `
       //   <h1>Booking Confirmed</h1>
@@ -1004,7 +1106,7 @@ class HotelBookingWorkflowOrchestrator {
       // });
       return true;
     } catch (error) {
-      this.log("Failed to send booking confirmation", error);
+      this.log('Failed to send booking confirmation', error);
       return false;
     }
   }
@@ -1015,13 +1117,13 @@ class HotelBookingWorkflowOrchestrator {
   private async sendCreditNoteNotification(
     email: string,
     refundNumber: string,
-    creditNoteHTML: string,
+    creditNoteHTML: string
   ): Promise<boolean> {
     try {
-      this.log("Sending credit note notification...", { email, refundNumber });
+      this.log('Sending credit note notification...', { email, refundNumber });
       return true;
     } catch (error) {
-      this.log("Failed to send credit note notification", error);
+      this.log('Failed to send credit note notification', error);
       return false;
     }
   }
@@ -1033,17 +1135,17 @@ class HotelBookingWorkflowOrchestrator {
     email: string,
     bookingId: string,
     refundAmount: number,
-    currency: string,
+    currency: string
   ): Promise<boolean> {
     try {
-      this.log("Sending refund notification...", {
+      this.log('Sending refund notification...', {
         email,
         bookingId,
         refundAmount,
       });
       return true;
     } catch (error) {
-      this.log("Failed to send refund notification", error);
+      this.log('Failed to send refund notification', error);
       return false;
     }
   }
@@ -1056,13 +1158,13 @@ class HotelBookingWorkflowOrchestrator {
     refundId: string,
     refundAmount: number,
     currency: string,
-    receiptHTML: string,
+    receiptHTML: string
   ): Promise<boolean> {
     try {
-      this.log("Sending refund receipt...", { email, refundId });
+      this.log('Sending refund receipt...', { email, refundId });
       return true;
     } catch (error) {
-      this.log("Failed to send refund receipt", error);
+      this.log('Failed to send refund receipt', error);
       return false;
     }
   }
@@ -1073,10 +1175,10 @@ class HotelBookingWorkflowOrchestrator {
   private async recordWalletRefund(
     bookingId: string,
     amount: number,
-    currency: string,
+    currency: string
   ): Promise<boolean> {
     try {
-      this.log("Recording wallet refund...", { bookingId, amount });
+      this.log('Recording wallet refund...', { bookingId, amount });
       // In production, integrate with WalletService
       // await walletService.recordRefund({
       //   bookingId,
@@ -1086,7 +1188,7 @@ class HotelBookingWorkflowOrchestrator {
       // });
       return true;
     } catch (error) {
-      this.log("Failed to record wallet refund", error);
+      this.log('Failed to record wallet refund', error);
       return false;
     }
   }
@@ -1097,10 +1199,10 @@ class HotelBookingWorkflowOrchestrator {
   private async processWalletRefund(
     bookingId: string,
     amount: number,
-    currency: string,
+    currency: string
   ): Promise<string> {
     try {
-      this.log("Processing wallet refund...", { bookingId, amount });
+      this.log('Processing wallet refund...', { bookingId, amount });
       // In production, integrate with WalletService
       // const result = await walletService.creditWallet({
       //   customerId: bookingId,
@@ -1111,7 +1213,7 @@ class HotelBookingWorkflowOrchestrator {
       // return result.transactionId;
       return `TXN-${Date.now()}`;
     } catch (error) {
-      this.log("Failed to process wallet refund", error);
+      this.log('Failed to process wallet refund', error);
       throw error;
     }
   }
@@ -1121,12 +1223,12 @@ class HotelBookingWorkflowOrchestrator {
    */
   private async cancelVoucher(voucherNumber: string): Promise<boolean> {
     try {
-      this.log("Cancelling voucher...", { voucherNumber });
+      this.log('Cancelling voucher...', { voucherNumber });
       // In production, integrate with VoucherService
       // await voucherService.cancelVoucher(voucherNumber);
       return true;
     } catch (error) {
-      this.log("Failed to cancel voucher", error);
+      this.log('Failed to cancel voucher', error);
       return false;
     }
   }
@@ -1134,11 +1236,7 @@ class HotelBookingWorkflowOrchestrator {
   /**
    * Generate refund receipt HTML
    */
-  private generateRefundReceipt(
-    refundId: string,
-    amount: number,
-    currency: string,
-  ): string {
+  private generateRefundReceipt(refundId: string, amount: number, currency: string): string {
     return `
       <html>
         <head>
@@ -1167,8 +1265,4 @@ class HotelBookingWorkflowOrchestrator {
 
 export default HotelBookingWorkflowOrchestrator;
 export { HotelBookingWorkflowOrchestrator };
-export type {
-  BookingConfirmationResult,
-  BookingCancellationResult,
-  RefundProcessingResult,
-};
+export type { BookingConfirmationResult, BookingCancellationResult, RefundProcessingResult };

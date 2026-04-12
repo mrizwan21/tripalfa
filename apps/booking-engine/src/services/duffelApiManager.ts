@@ -16,7 +16,7 @@
  * - Service versioning support
  */
 
-import { api } from "../lib/api";
+import { api } from "../lib/apiClient";
 
 // ============================================================================
 // TYPE DEFINITIONS (shared with duffelBookingApi.ts)
@@ -404,7 +404,7 @@ export async function getSeatMap(
  * @param offerId - The offer ID to get seat maps for
  * @returns Processed seat maps with flattened seats
  */
-export async function getProcessedSeatMapsForOffer(offerId: string): Promise<{
+async function getProcessedSeatMapsForOffer(offerId: string): Promise<{
   success: boolean;
   data?: {
     seatMaps: ProcessedSeatMap[];
@@ -428,7 +428,7 @@ export async function getProcessedSeatMapsForOffer(offerId: string): Promise<{
  * @param orderId - The order ID to get seat maps for
  * @returns Processed seat maps with current seat assignments
  */
-export async function getProcessedSeatMapsForOrder(orderId: string): Promise<{
+async function getProcessedSeatMapsForOrder(orderId: string): Promise<{
   success: boolean;
   data?: {
     seatMaps: ProcessedSeatMap[];
@@ -452,7 +452,7 @@ export async function getProcessedSeatMapsForOrder(orderId: string): Promise<{
  * @param payload - Seat selection payload
  * @returns Confirmation of seat selection
  */
-export async function selectSeatsForOrder(
+async function selectSeatsForOrder(
   payload: SeatSelectionPayload,
 ): Promise<{
   success: boolean;
@@ -472,7 +472,7 @@ export async function selectSeatsForOrder(
 /**
  * Get available seats from a processed seat map
  */
-export function getAvailableSeatsFromMap(
+function getAvailableSeatsFromMap(
   seatMap: ProcessedSeatMap,
 ): FlattenedSeat[] {
   return seatMap.seats.filter((seat) => seat.available);
@@ -481,7 +481,7 @@ export function getAvailableSeatsFromMap(
 /**
  * Calculate total cost for selected seats
  */
-export function calculateSeatsTotalCost(seats: FlattenedSeat[]): {
+function calculateSeatsTotalCost(seats: FlattenedSeat[]): {
   total: number;
   currency: string | null;
 } {

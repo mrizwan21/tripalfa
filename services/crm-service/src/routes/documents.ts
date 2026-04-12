@@ -208,7 +208,7 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.post('/:id/download', (req: Request, res: Response) => {
   try {
-    const doc = documents.get(req.params.id);
+    const doc = documents.get(req.params.id as string);
     if (!doc) return res.status(404).json({ success: false, error: 'Document not found' });
 
     doc.downloadCount++;
@@ -269,10 +269,10 @@ router.post('/:id/download', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!documents.has(req.params.id)) {
+    if (!documents.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Document not found' });
     }
-    documents.delete(req.params.id);
+    documents.delete(req.params.id as string);
     res.status(200).json({ success: true, message: 'Document deleted' });
   } catch (error: unknown) {
     res.status(500).json({ success: false, error: 'Failed to delete document' });

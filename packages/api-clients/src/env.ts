@@ -203,7 +203,7 @@ export function getEnv<K extends keyof ImportMetaEnv>(
  * @param fallback - Default numeric value if env var is not set or invalid
  * @returns The parsed number or fallback
  */
-export function getEnvNumber<K extends keyof ImportMetaEnv>(
+function getEnvNumber<K extends keyof ImportMetaEnv>(
   key: K,
   fallback: number
 ): number {
@@ -218,7 +218,7 @@ export function getEnvNumber<K extends keyof ImportMetaEnv>(
  * @param fallback - Default boolean value if env var is not set
  * @returns true if value is 'true', '1', or 'yes' (case insensitive), false otherwise
  */
-export function getEnvBoolean<K extends keyof ImportMetaEnv>(
+function getEnvBoolean<K extends keyof ImportMetaEnv>(
   key: K,
   fallback: boolean
 ): boolean {
@@ -230,7 +230,7 @@ export function getEnvBoolean<K extends keyof ImportMetaEnv>(
 /**
  * Check if running in a Vite/browser environment
  */
-export function isViteEnvironment(): boolean {
+function isViteEnvironment(): boolean {
   // import.meta.env is only available in ESM modules built by Vite
   return typeof import.meta !== "undefined" && !!import.meta.env;
 }
@@ -238,7 +238,7 @@ export function isViteEnvironment(): boolean {
 /**
  * Check if running in a Node.js environment
  */
-export function isNodeEnvironment(): boolean {
+function isNodeEnvironment(): boolean {
   return (
     typeof process !== "undefined" &&
     !!process.env &&
@@ -250,7 +250,7 @@ export function isNodeEnvironment(): boolean {
  * Custom error class for environment variable errors
  * Allows programmatic detection of env-related errors
  */
-export class EnvironmentVariableError extends Error {
+class EnvironmentVariableError extends Error {
   constructor(
     message: string,
     public readonly variableName?: string,
@@ -319,7 +319,7 @@ function getRequiredServerEnv(name: string): string {
  * NOTE: These getters throw an error if the environment variable is not set.
  * This prevents silent failures. Use ServerEnvOptional for optional secrets.
  */
-export const ServerEnv = {
+const ServerEnv = {
   // Stripe
   get STRIPE_SECRET_KEY(): string {
     return getRequiredServerEnv("STRIPE_SECRET_KEY");
@@ -502,7 +502,7 @@ function getOptionalServerEnv(name: string): string | undefined {
  *
  * ⚠️ SECURITY: Same browser protection as ServerEnv - will throw if accessed from browser
  */
-export const OptionalServerEnv = {
+const OptionalServerEnv = {
   // Optional Email/SMS services
   get SENDGRID_API_KEY(): string | undefined {
     return getOptionalServerEnv("SENDGRID_API_KEY");

@@ -180,7 +180,7 @@ export class PerformanceMonitor {
 /**
  * Statistical utilities for benchmark analysis
  */
-export class BenchmarkStats {
+class BenchmarkStats {
   static calculateMean(values: number[]): number {
     return values.reduce((a, b) => a + b, 0) / values.length;
   }

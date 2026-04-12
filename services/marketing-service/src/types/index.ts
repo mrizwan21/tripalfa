@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
-export const CampaignStatusSchema = z.enum(['DRAFT', 'SCHEDULED', 'SENDING', 'COMPLETED', 'PAUSED']);
-export const RecipientStatusSchema = z.enum(['PENDING', 'SENT', 'OPENED', 'CLICKED', 'BOUNCED', 'COMPLAINED', 'CONVERTED']);
-export const DeviceTypeSchema = z.enum(['MOBILE', 'DESKTOP', 'TABLET']);
-export const LeadGradeSchema = z.enum(['A', 'B', 'C', 'D']);
-export const SubscriberStatusSchema = z.enum(['ACTIVE', 'UNSUBSCRIBED', 'BOUNCED', 'COMPLAINED', 'INACTIVE']);
+const CampaignStatusSchema = z.enum(['DRAFT', 'SCHEDULED', 'SENDING', 'COMPLETED', 'PAUSED']);
+const RecipientStatusSchema = z.enum(['PENDING', 'SENT', 'OPENED', 'CLICKED', 'BOUNCED', 'COMPLAINED', 'CONVERTED']);
+const DeviceTypeSchema = z.enum(['MOBILE', 'DESKTOP', 'TABLET']);
+const LeadGradeSchema = z.enum(['A', 'B', 'C', 'D']);
+const SubscriberStatusSchema = z.enum(['ACTIVE', 'UNSUBSCRIBED', 'BOUNCED', 'COMPLAINED', 'INACTIVE']);
 
-export const CreateEmailCampaignSchema = z.object({
+const CreateEmailCampaignSchema = z.object({
   name: z.string().min(1),
   subject: z.string().min(1),
   description: z.string().optional(),
@@ -18,7 +18,7 @@ export const CreateEmailCampaignSchema = z.object({
   scheduledFor: z.date().optional(),
 });
 
-export const SubscribeEmailSchema = z.object({
+const SubscribeEmailSchema = z.object({
   email: z.string().email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -29,7 +29,7 @@ export const SubscribeEmailSchema = z.object({
   utmCampaign: z.string().optional(),
 });
 
-export const TrackVisitorSchema = z.object({
+const TrackVisitorSchema = z.object({
   sessionId: z.string(),
   pageUrl: z.string(),
   pageType: z.string().optional(),
@@ -47,7 +47,7 @@ export const TrackVisitorSchema = z.object({
   }).optional(),
 });
 
-export const UploadFlyerSchema = z.object({
+const UploadFlyerSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   designJson: z.record(z.any()),

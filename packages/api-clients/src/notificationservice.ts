@@ -115,7 +115,7 @@ function getCachedService(baseUrl?: string): NotificationService {
  * Set the default base URL for all NotificationService instances and static methods.
  * This allows configuring a custom service URL before making API calls.
  */
-export function setDefaultBaseUrl(baseUrl: string): void {
+function setDefaultBaseUrl(baseUrl: string): void {
   defaultBaseUrl = baseUrl;
   // Clear cache when default URL changes to ensure new instances use the updated URL
   serviceInstanceCache.clear();
@@ -124,7 +124,7 @@ export function setDefaultBaseUrl(baseUrl: string): void {
 /**
  * Get the current default base URL
  */
-export function getDefaultBaseUrl(): string | undefined {
+function getDefaultBaseUrl(): string | undefined {
   return defaultBaseUrl;
 }
 
@@ -428,7 +428,7 @@ export interface DeliveryAnalytics {
 }
 // Note: DeliveryStatus is already exported as DeliveryStatusResponse above
 
-export class NotificationService {
+class NotificationService {
   private baseUrl: string;
 
   /**

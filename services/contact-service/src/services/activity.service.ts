@@ -3,7 +3,7 @@ import type { CreateActivity } from '../types';
 
 const prisma = getPrismaClient();
 
-export class ActivityService {
+class ActivityService {
   /**
    * Log activity for contact
    */

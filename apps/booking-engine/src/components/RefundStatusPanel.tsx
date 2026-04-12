@@ -9,10 +9,11 @@
  * - Contact support for issues
  */
 
-import React, { useState, useEffect } from "react";
-import type { FC } from "react";
-import { getStoredAuthToken } from "../lib/authToken";
-import { Button } from "@tripalfa/ui-components";
+import React, { useState, useEffect } from 'react';
+import type { FC } from 'react';
+import { getStoredAuthToken } from '../lib/authToken';
+import { Button } from '@tripalfa/ui-components';
+import { formatDate } from '@tripalfa/shared-utils/date-utils';
 
 interface RefundRecord {
   id: string;
@@ -20,14 +21,14 @@ interface RefundRecord {
   bookingReference: string;
   amount: number;
   currency: string;
-  status: "pending" | "processing" | "in-transit" | "completed" | "failed";
+  status: 'pending' | 'processing' | 'in-transit' | 'completed' | 'failed';
   refundReason: string;
   requestDate: string;
   expectedArrivalDate: string;
   completedDate?: string;
-  refundMethod: "original_payment" | "wallet" | "bank_transfer";
+  refundMethod: 'original_payment' | 'wallet' | 'bank_transfer';
   timeline: Array<{
-    status: RefundRecord["status"];
+    status: RefundRecord['status'];
     date: string;
     description: string;
   }>;
@@ -44,13 +45,13 @@ interface RefundStatusPanelProps {
   customerId: string;
 }
 
-type StatusFilter = "all" | "pending" | "processing" | "completed" | "failed";
+type StatusFilter = 'all' | 'pending' | 'processing' | 'completed' | 'failed';
 
 const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
   const [data, setData] = useState<RefundStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<StatusFilter>("all");
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
   const [expandedRefund, setExpandedRefund] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,75 +70,67 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch refund status");
+        throw new Error('Failed to fetch refund status');
       }
 
       const responseData = await response.json();
       setData(responseData);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
+      const message = err instanceof Error ? err.message : 'Unknown error';
       setError(message);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusConfig = (status: RefundRecord["status"]) => {
+  const getStatusConfig = (status: RefundRecord['status']) => {
     const config = {
       pending: {
-        label: "⏳ Pending",
-        color: "hsl(var(--secondary))",
-        bgColor: "hsl(var(--secondary) / 0.14)",
-        icon: "⏳",
+        label: '⏳ Pending',
+        color: 'hsl(var(--secondary))',
+        bgColor: 'hsl(var(--secondary) / 0.14)',
+        icon: '⏳',
         step: 1,
       },
       processing: {
-        label: "🔄 Processing",
-        color: "hsl(var(--primary))",
-        bgColor: "hsl(var(--primary) / 0.14)",
-        icon: "🔄",
+        label: '🔄 Processing',
+        color: 'hsl(var(--primary))',
+        bgColor: 'hsl(var(--primary) / 0.14)',
+        icon: '🔄',
         step: 2,
       },
-      "in-transit": {
-        label: "📤 In Transit",
-        color: "hsl(var(--accent))",
-        bgColor: "hsl(var(--accent) / 0.16)",
-        icon: "📤",
+      'in-transit': {
+        label: '📤 In Transit',
+        color: 'hsl(var(--accent))',
+        bgColor: 'hsl(var(--accent) / 0.16)',
+        icon: '📤',
         step: 3,
       },
       completed: {
-        label: "✓ Completed",
-        color: "hsl(var(--secondary))",
-        bgColor: "hsl(var(--secondary) / 0.14)",
-        icon: "✓",
+        label: '✓ Completed',
+        color: 'hsl(var(--secondary))',
+        bgColor: 'hsl(var(--secondary) / 0.14)',
+        icon: '✓',
         step: 4,
       },
       failed: {
-        label: "✕ Failed",
-        color: "hsl(var(--destructive))",
-        bgColor: "hsl(var(--destructive) / 0.14)",
-        icon: "✕",
+        label: '✕ Failed',
+        color: 'hsl(var(--destructive))',
+        bgColor: 'hsl(var(--destructive) / 0.14)',
+        icon: '✕',
         step: 0,
       },
     };
     return config[status];
   };
 
-  const getRefundMethodLabel = (method: RefundRecord["refundMethod"]) => {
+  const getRefundMethodLabel = (method: RefundRecord['refundMethod']) => {
     const labels = {
-      original_payment: "💳 Original Payment Method",
-      wallet: "💰 Your Wallet",
-      bank_transfer: "🏦 Bank Transfer",
+      original_payment: '💳 Original Payment Method',
+      wallet: '💰 Your Wallet',
+      bank_transfer: '🏦 Bank Transfer',
     };
     return labels[method];
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   const getDaysUntilArrival = (arrivalDate: string) => {
@@ -149,8 +142,8 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
   };
 
   const filteredRefunds =
-    data?.refunds.filter((refund) => {
-      if (filterStatus === "all") return true;
+    data?.refunds.filter(refund => {
+      if (filterStatus === 'all') return true;
       return refund.status === filterStatus;
     }) || [];
 
@@ -196,7 +189,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
               <div className="summary-content">
                 <p className="summary-label">Completed</p>
                 <p className="summary-value">
-                  {data.refunds.filter((r) => r.status === "completed").length}
+                  {data.refunds.filter(r => r.status === 'completed').length}
                 </p>
               </div>
             </div>
@@ -207,10 +200,8 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                 <p className="summary-label">In Progress</p>
                 <p className="summary-value">
                   {
-                    data.refunds.filter((r) =>
-                      ["pending", "processing", "in-transit"].includes(
-                        r.status,
-                      ),
+                    data.refunds.filter(r =>
+                      ['pending', 'processing', 'in-transit'].includes(r.status)
                     ).length
                   }
                 </p>
@@ -223,46 +214,42 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "all" ? "active" : ""}`}
-              onClick={() => setFilterStatus("all")}
+              className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('all')}
             >
               All ({data.refunds.length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "pending" ? "active" : ""}`}
-              onClick={() => setFilterStatus("pending")}
+              className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('pending')}
             >
-              Pending (
-              {data.refunds.filter((r) => r.status === "pending").length})
+              Pending ({data.refunds.filter(r => r.status === 'pending').length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "processing" ? "active" : ""}`}
-              onClick={() => setFilterStatus("processing")}
+              className={`filter-btn ${filterStatus === 'processing' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('processing')}
             >
-              Processing (
-              {data.refunds.filter((r) => r.status === "processing").length})
+              Processing ({data.refunds.filter(r => r.status === 'processing').length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "completed" ? "active" : ""}`}
-              onClick={() => setFilterStatus("completed")}
+              className={`filter-btn ${filterStatus === 'completed' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('completed')}
             >
-              Completed (
-              {data.refunds.filter((r) => r.status === "completed").length})
+              Completed ({data.refunds.filter(r => r.status === 'completed').length})
             </Button>
             <Button
               variant="outline"
               size="default"
-              className={`filter-btn ${filterStatus === "failed" ? "active" : ""}`}
-              onClick={() => setFilterStatus("failed")}
+              className={`filter-btn ${filterStatus === 'failed' ? 'active' : ''}`}
+              onClick={() => setFilterStatus('failed')}
             >
-              Failed ({data.refunds.filter((r) => r.status === "failed").length}
-              )
+              Failed ({data.refunds.filter(r => r.status === 'failed').length})
             </Button>
           </div>
 
@@ -270,25 +257,17 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
           {filteredRefunds.length === 0 ? (
             <div className="empty-state">
               <p>✨</p>
-              <p>
-                No refunds{" "}
-                {filterStatus !== "all" ? `found in this status` : "found"}
-              </p>
+              <p>No refunds {filterStatus !== 'all' ? `found in this status` : 'found'}</p>
               <p className="empty-subtext">Good news! No refunds to track.</p>
             </div>
           ) : (
             <div className="refunds-list">
-              {filteredRefunds.map((refund) => {
+              {filteredRefunds.map(refund => {
                 const statusConfig = getStatusConfig(refund.status);
-                const daysUntilArrival = getDaysUntilArrival(
-                  refund.expectedArrivalDate,
-                );
+                const daysUntilArrival = getDaysUntilArrival(refund.expectedArrivalDate);
 
                 return (
-                  <div
-                    key={refund.id}
-                    className={`refund-card ${refund.status}`}
-                  >
+                  <div key={refund.id} className={`refund-card ${refund.status}`}>
                     {/* Header */}
                     <div className="refund-header">
                       <div className="refund-info">
@@ -302,9 +281,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                         <p className="amount-value">
                           {refund.currency} {refund.amount.toFixed(2)}
                         </p>
-                        <p className="amount-method">
-                          {getRefundMethodLabel(refund.refundMethod)}
-                        </p>
+                        <p className="amount-method">{getRefundMethodLabel(refund.refundMethod)}</p>
                       </div>
                     </div>
 
@@ -321,12 +298,10 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                         <span>{statusConfig.label}</span>
                       </div>
 
-                      {refund.status === "failed" && (
+                      {refund.status === 'failed' && (
                         <div className="failed-notice">
                           <span>⚠️</span>
-                          <span>
-                            Refund processing failed. Please contact support.
-                          </span>
+                          <span>Refund processing failed. Please contact support.</span>
                         </div>
                       )}
                     </div>
@@ -335,29 +310,23 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                     <div className="refund-dates">
                       <div className="date-item">
                         <span className="date-label">Requested:</span>
-                        <span className="date-value">
-                          {formatDate(refund.requestDate)}
-                        </span>
+                        <span className="date-value">{formatDate(refund.requestDate)}</span>
                       </div>
 
-                      {refund.status === "completed" ? (
+                      {refund.status === 'completed' ? (
                         <div className="date-item">
                           <span className="date-label">Completed:</span>
                           <span className="date-value completed">
-                            {refund.completedDate
-                              ? formatDate(refund.completedDate)
-                              : "N/A"}
+                            {refund.completedDate ? formatDate(refund.completedDate) : 'N/A'}
                           </span>
                         </div>
                       ) : (
                         <div className="date-item">
                           <span className="date-label">Expected Arrival:</span>
-                          <span
-                            className={`date-value ${daysUntilArrival <= 3 ? "soon" : ""}`}
-                          >
+                          <span className={`date-value ${daysUntilArrival <= 3 ? 'soon' : ''}`}>
                             {formatDate(refund.expectedArrivalDate)}
                             {daysUntilArrival > 0 &&
-                              ` (in ${daysUntilArrival} day${daysUntilArrival !== 1 ? "s" : ""})`}
+                              ` (in ${daysUntilArrival} day${daysUntilArrival !== 1 ? 's' : ''})`}
                           </span>
                         </div>
                       )}
@@ -371,14 +340,11 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                           size="default"
                           className="expand-timeline-btn"
                           onClick={() =>
-                            setExpandedRefund(
-                              expandedRefund === refund.id ? null : refund.id,
-                            )
+                            setExpandedRefund(expandedRefund === refund.id ? null : refund.id)
                           }
                         >
-                          {expandedRefund === refund.id ? "Hide" : "Show"}{" "}
-                          Timeline
-                          {expandedRefund === refund.id ? " ▼" : " ▶"}
+                          {expandedRefund === refund.id ? 'Hide' : 'Show'} Timeline
+                          {expandedRefund === refund.id ? ' ▼' : ' ▶'}
                         </Button>
 
                         {expandedRefund === refund.id && (
@@ -392,7 +358,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                                   style={{
                                     borderLeftColor:
                                       idx === refund.timeline.length - 1
-                                        ? "transparent"
+                                        ? 'transparent'
                                         : eventConfig.color,
                                   }}
                                 >
@@ -405,15 +371,9 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                                     {eventConfig.icon}
                                   </div>
                                   <div className="timeline-content-inner">
-                                    <p className="timeline-date">
-                                      {formatDate(event.date)}
-                                    </p>
-                                    <p className="timeline-status">
-                                      {event.status}
-                                    </p>
-                                    <p className="timeline-description">
-                                      {event.description}
-                                    </p>
+                                    <p className="timeline-date">{formatDate(event.date)}</p>
+                                    <p className="timeline-status">{event.status}</p>
+                                    <p className="timeline-description">{event.description}</p>
                                   </div>
                                 </div>
                               );
@@ -425,31 +385,17 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
 
                     {/* Actions */}
                     <div className="refund-actions">
-                      {refund.status === "failed" && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="action-btn warning"
-                        >
+                      {refund.status === 'failed' && (
+                        <Button variant="outline" size="default" className="action-btn warning">
                           Contact Support
                         </Button>
                       )}
-                      {["pending", "processing", "in-transit"].includes(
-                        refund.status,
-                      ) && (
-                        <Button
-                          variant="outline"
-                          size="default"
-                          className="action-btn secondary"
-                        >
+                      {['pending', 'processing', 'in-transit'].includes(refund.status) && (
+                        <Button variant="outline" size="default" className="action-btn secondary">
                           Track Status
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="default"
-                        className="action-btn secondary"
-                      >
+                      <Button variant="outline" size="default" className="action-btn secondary">
                         View Booking
                       </Button>
                     </div>
@@ -466,25 +412,22 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
               <div className="faq-item">
                 <p className="faq-question">How long do refunds take?</p>
                 <p className="faq-answer">
-                  Most refunds are processed within 5-7 business days, depending
-                  on your bank and payment method.
+                  Most refunds are processed within 5-7 business days, depending on your bank and
+                  payment method.
                 </p>
               </div>
               <div className="faq-item">
                 <p className="faq-question">Can I cancel my refund?</p>
                 <p className="faq-answer">
-                  Refunds can only be cancelled if they haven't been processed
-                  yet. Contact support immediately.
+                  Refunds can only be cancelled if they haven't been processed yet. Contact support
+                  immediately.
                 </p>
               </div>
               <div className="faq-item">
-                <p className="faq-question">
-                  What if my refund doesn't arrive?
-                </p>
+                <p className="faq-question">What if my refund doesn't arrive?</p>
                 <p className="faq-answer">
-                  If your refund doesn't arrive within the expected timeframe,
-                  please contact support with your booking reference and
-                  transaction ID.
+                  If your refund doesn't arrive within the expected timeframe, please contact
+                  support with your booking reference and transaction ID.
                 </p>
               </div>
             </div>
@@ -988,4 +931,6 @@ const styles = `
 }
 `;
 
-export { styles };
+{
+  styles;
+}

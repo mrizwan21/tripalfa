@@ -5,10 +5,10 @@
  * Facilities are cached in localStorage for 24 hours to reduce API calls.
  */
 
-import { useState, useEffect, useCallback } from "react";
-import hotelApi, { HotelFacility } from "../api/hotelApi";
+import { useState, useEffect, useCallback } from 'react';
+import hotelApi, { HotelFacility } from '../api/hotelApi';
 
-const CACHE_KEY = "hotel_facilities_cache";
+const CACHE_KEY = 'hotel_facilities_cache';
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
 interface CachedFacilities {
@@ -26,28 +26,24 @@ interface UseFacilitiesResult {
 /**
  * Get popular facilities that are commonly used for filtering
  */
-export function getPopularFacilities(
-  facilities: HotelFacility[],
-): HotelFacility[] {
+export function getPopularFacilities(facilities: HotelFacility[]): HotelFacility[] {
   const popularCodes = [
-    "WIFI",
-    "PARKING",
-    "POOL",
-    "GYM",
-    "SPA",
-    "RESTAURANT",
-    "BAR",
-    "ROOM_SERVICE",
-    "AC",
-    "BEACH",
-    "KIDS_CLUB",
-    "BUSINESS_CENTER",
+    'WIFI',
+    'PARKING',
+    'POOL',
+    'GYM',
+    'SPA',
+    'RESTAURANT',
+    'BAR',
+    'ROOM_SERVICE',
+    'AC',
+    'BEACH',
+    'KIDS_CLUB',
+    'BUSINESS_CENTER',
   ];
 
   return facilities.filter(
-    (f) =>
-      popularCodes.includes(f.code.toUpperCase()) ||
-      popularCodes.includes(f.code),
+    f => popularCodes.includes(f.code.toUpperCase()) || popularCodes.includes(f.code)
   );
 }
 
@@ -89,10 +85,8 @@ export function useFacilities(): UseFacilitiesResult {
       };
       localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
     } catch (err) {
-      console.error("[useFacilities] Failed to fetch facilities:", err);
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch facilities"),
-      );
+      console.error('[useFacilities] Failed to fetch facilities:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch facilities'));
 
       // Try to use stale cache if available
       const cached = localStorage.getItem(CACHE_KEY);

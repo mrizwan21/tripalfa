@@ -52,7 +52,7 @@ interface FusionAuthRegistration {
 /**
  * FusionAuth Service for handling authentication with FusionAuth
  */
-export class FusionAuthService {
+class FusionAuthService {
   private static instance: FusionAuthService;
   private client: AxiosInstance;
 

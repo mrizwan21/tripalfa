@@ -346,11 +346,11 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.put('/:id', (req: Request, res: Response) => {
   try {
-    const event = events.get(req.params.id);
+    const event = events.get(req.params.id as string);
     if (!event) return res.status(404).json({ success: false, error: 'Event not found' });
 
     const updated: CalendarEvent = { ...event, ...req.body };
-    events.set(req.params.id, updated);
+    events.set(req.params.id as string, updated);
 
     res.status(200).json({ success: true, data: updated });
   } catch (error: unknown) {
@@ -408,10 +408,10 @@ router.put('/:id', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!events.has(req.params.id)) {
+    if (!events.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Event not found' });
     }
-    events.delete(req.params.id);
+    events.delete(req.params.id as string);
     res.status(200).json({ success: true, message: 'Event deleted' });
   } catch (error: unknown) {
     res.status(500).json({ success: false, error: 'Failed to delete event' });

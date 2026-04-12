@@ -106,7 +106,8 @@ router.get('/', (req: Request, res: Response) => {
  */
 router.get('/:id', (req: Request, res: Response) => {
   try {
-    const task = tasks.get(req.params.id);
+    const id = req.params.id as string;
+    const task = tasks.get(id);
     if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
     res.status(200).json({ success: true, data: task });
   } catch (error: unknown) {
@@ -260,7 +261,7 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.put('/:id', (req: Request, res: Response) => {
   try {
-    const task = tasks.get(req.params.id);
+    const task = tasks.get(req.params.id as string);
     if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
 
     const updated: Task = {
@@ -269,7 +270,7 @@ router.put('/:id', (req: Request, res: Response) => {
       updatedAt: new Date().toISOString(),
     };
 
-    tasks.set(req.params.id, updated);
+    tasks.set(req.params.id as string, updated);
 
     res.status(200).json({
       success: true,
@@ -327,7 +328,7 @@ router.put('/:id', (req: Request, res: Response) => {
 router.patch('/:id/status', (req: Request, res: Response) => {
   try {
     const { status } = req.body;
-    const task = tasks.get(req.params.id);
+    const task = tasks.get(req.params.id as string);
     if (!task) return res.status(404).json({ success: false, error: 'Task not found' });
 
     task.status = status;
@@ -374,11 +375,11 @@ router.patch('/:id/status', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!tasks.has(req.params.id)) {
+    if (!tasks.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Task not found' });
     }
 
-    tasks.delete(req.params.id);
+    tasks.delete(req.params.id as string);
 
     res.status(200).json({
       success: true,

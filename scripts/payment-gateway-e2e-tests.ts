@@ -13,7 +13,7 @@
  * 8. Wallet Integration
  */
 
-import { PaymentGatewayService, PaymentStatus } from './payment-gateway-service';
+import { PaymentGatewayService, PaymentStatus } from './payment-gateway-service.js';
 import axios, { AxiosInstance } from 'axios';
 import { randomBytes } from 'crypto';
 import * as fs from 'fs';

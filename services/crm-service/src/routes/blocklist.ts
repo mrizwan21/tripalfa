@@ -230,7 +230,7 @@ router.post('/', (req: Request, res: Response) => {
  */
 router.post('/:id/appeal', (req: Request, res: Response) => {
   try {
-    const entry = blocklist.get(req.params.id);
+    const entry = blocklist.get(req.params.id as string);
     if (!entry) return res.status(404).json({ success: false, error: 'Entry not found' });
 
     entry.appealStatus = 'PENDING';
@@ -292,10 +292,10 @@ router.post('/:id/appeal', (req: Request, res: Response) => {
  */
 router.delete('/:id', (req: Request, res: Response) => {
   try {
-    if (!blocklist.has(req.params.id)) {
+    if (!blocklist.has(req.params.id as string)) {
       return res.status(404).json({ success: false, error: 'Entry not found' });
     }
-    blocklist.delete(req.params.id);
+    blocklist.delete(req.params.id as string);
     res.status(200).json({ success: true, message: 'Entry removed' });
   } catch (error: unknown) {
     res.status(500).json({ success: false, error: 'Failed to remove entry' });

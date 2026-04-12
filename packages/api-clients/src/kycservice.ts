@@ -12,7 +12,7 @@ export interface KYCVerification {
   reviewerNotes?: string;
 }
 
-export class KYCService {
+class KYCService {
   /**
    * Get base URL for KYC service - uses lazy evaluation to support runtime config changes
    */

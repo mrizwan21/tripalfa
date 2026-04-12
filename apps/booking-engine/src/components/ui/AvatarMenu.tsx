@@ -1,25 +1,18 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLogout } from "../../lib/hooks";
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLogout } from '../../lib/hooks';
 
-export function AvatarMenu({
-  name,
-  avatarUrl,
-}: {
-  name?: string;
-  avatarUrl?: string;
-}) {
+export function AvatarMenu({ name, avatarUrl }: { name?: string; avatarUrl?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const logout = useLogout();
 
-  const [displayName, setDisplayName] = useState<string>(name || "Guest");
-  const [displayAvatar, setDisplayAvatar] = useState<string>(avatarUrl || "");
+  const [displayName, setDisplayName] = useState<string>(name || 'Guest');
+  const [displayAvatar, setDisplayAvatar] = useState<string>(avatarUrl || '');
 
   useEffect(() => {
-    const u =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const u = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     if (u && !name) {
       try {
         const parsed = JSON.parse(u);
@@ -36,11 +29,10 @@ export function AvatarMenu({
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("click", onDoc);
-    return () => document.removeEventListener("click", onDoc);
+    document.addEventListener('click', onDoc);
+    return () => document.removeEventListener('click', onDoc);
   }, []);
 
   const handleSignOut = () => {
@@ -51,21 +43,17 @@ export function AvatarMenu({
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen((s) => !s)}
+        onClick={() => setOpen(s => !s)}
         className="flex items-center gap-2 bg-card/10 hover:bg-card/20 px-3 py-1.5 rounded-full text-white shadow-sm"
         aria-haspopup="menu"
         aria-expanded={open}
         title="Account"
       >
         {displayAvatar ? (
-          <img
-            src={displayAvatar}
-            alt="Avatar"
-            className="w-8 h-8 rounded-full object-cover"
-          />
+          <img src={displayAvatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-400 to-pink-400 flex items-center justify-center text-white font-semibold gap-2">
-            {displayName ? displayName.charAt(0).toUpperCase() : "G"}
+          <span className="w-8 h-8 rounded-full bg-near-black flex items-center justify-center text-white font-semibold gap-2">
+            {displayName ? displayName.charAt(0).toUpperCase() : 'G'}
           </span>
         )}
         <span className="text-sm hidden sm:inline">{displayName}</span>
@@ -77,7 +65,7 @@ export function AvatarMenu({
             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50 rounded-md"
             onClick={() => {
               setOpen(false);
-              navigate("/account-settings");
+              navigate('/account-settings');
             }}
           >
             Account settings
@@ -86,7 +74,7 @@ export function AvatarMenu({
             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50 rounded-md"
             onClick={() => {
               setOpen(false);
-              navigate("/wallet");
+              navigate('/wallet');
             }}
           >
             Wallet
@@ -95,14 +83,14 @@ export function AvatarMenu({
             className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted/50 rounded-md"
             onClick={() => {
               setOpen(false);
-              navigate("/bookings");
+              navigate('/bookings');
             }}
           >
             My bookings
           </button>
           <div className="border-t my-1" />
           <button
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-muted/50 rounded-md"
+            className="w-full text-left px-4 py-2 text-sm text-neutral-500 hover:bg-muted/50 rounded-md"
             onClick={handleSignOut}
           >
             Sign out

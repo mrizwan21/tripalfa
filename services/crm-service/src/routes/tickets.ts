@@ -210,7 +210,7 @@ router.get('/stats', async (req: Request, res: Response) => {
  */
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const ticket = await TicketService.getTicketById(id);
 
     res.status(200).json({
@@ -374,7 +374,7 @@ router.post('/', async (req: Request, res: Response) => {
  */
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const updateData = req.body;
 
     const ticket = await TicketService.updateTicket(id, updateData);
@@ -447,7 +447,7 @@ router.put('/:id', async (req: Request, res: Response) => {
  */
 router.post('/:id/interactions', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const interactionData = req.body;
 
     // Validate required fields
@@ -522,7 +522,7 @@ router.post('/:id/interactions', async (req: Request, res: Response) => {
  */
 router.post('/:id/assign', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { agentId } = req.body;
 
     if (!agentId) {
@@ -596,7 +596,7 @@ router.post('/:id/assign', async (req: Request, res: Response) => {
  */
 router.post('/:id/resolve', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { resolution } = req.body;
 
     if (!resolution) {
@@ -657,7 +657,7 @@ router.post('/:id/resolve', async (req: Request, res: Response) => {
  */
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     // Instead of hard delete, mark as closed
     const ticket = await TicketService.updateTicket(id, { status: 'closed' });

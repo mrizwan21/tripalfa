@@ -52,7 +52,7 @@ const CHANGE_REASONS = [
   { value: "other", label: "Other Reason" },
 ];
 
-export const RequestChangeModal = ({
+const RequestChangeModal = ({
   isOpen,
   onClose,
   onSubmit,

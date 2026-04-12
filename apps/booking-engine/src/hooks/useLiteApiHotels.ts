@@ -354,7 +354,7 @@ export function useLiteApiHotels(
 // HOTEL RATES HOOK
 // ============================================================================
 
-export function useLiteApiHotelRates(
+function useLiteApiHotelRates(
   options: UseLiteApiHotelRatesOptions = {},
 ): UseLiteApiHotelRatesReturn {
   const {
@@ -475,7 +475,7 @@ export function useLiteApiHotelRates(
 // BOOKING HOOK (Prebook + Book)
 // ============================================================================
 
-export function useLiteApiBooking(
+function useLiteApiBooking(
   options: UseLiteApiBookingOptions = {},
 ): UseLiteApiBookingReturn {
   const { onPrebookSuccess, onPrebookError, onBookingSuccess, onBookingError } =
@@ -569,28 +569,28 @@ export function useLiteApiBooking(
 /**
  * Hook for hotel search with rates
  */
-export function useHotelSearch() {
+function useHotelSearch() {
   return useLiteApiHotels();
 }
 
 /**
  * Hook for hotel room rates
  */
-export function useHotelRates() {
+function useHotelRates() {
   return useLiteApiHotelRates();
 }
 
 /**
  * Hook for complete hotel booking flow
  */
-export function useHotelBooking() {
+function useHotelBooking() {
   return useLiteApiBooking();
 }
 
 /**
  * Hook for hotel price tracking
  */
-export function useHotelPriceTracker(
+function useHotelPriceTracker(
   location: string,
   checkin: string,
   checkout: string,

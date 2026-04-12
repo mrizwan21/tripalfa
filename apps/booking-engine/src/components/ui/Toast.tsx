@@ -57,7 +57,7 @@ const positionClasses: Record<ToastPosition, string> = {
   "bottom-left": "bottom-4 left-4",
 };
 
-export const Toast: React.FC<ToastProps> = ({
+const Toast: React.FC<ToastProps> = ({
   id,
   type,
   title,
@@ -196,7 +196,7 @@ type ToastItem = Omit<ToastProps, "onClose"> & {
 const toasts: ToastItem[] = [];
 let onToastChange: ((toasts: ToastItem[]) => void) | null = null;
 
-export const toast = {
+const toast = {
   success: (message: string) => {
     console.log(`Toast success: ${message}`);
   },

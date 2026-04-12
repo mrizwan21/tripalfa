@@ -60,13 +60,13 @@ export function TravelerSelector({
   }, []);
 
   const updateTraveler = (key: keyof TravelerConfig, delta: number) => {
-    const option = travelerOptions.find((o) => o.key === key)!;
+    const option = travelerOptions.find(o => o.key === key)!;
     const newValue = Math.max(option.min, Math.min(option.max, value[key] + delta));
     onChange({ ...value, [key]: newValue });
   };
 
   const totalTravelers = value.adults + value.children + value.infants;
-  const currentCabin = cabinClasses.find((c) => c.id === cabinClass)?.label || 'Economy';
+  const currentCabin = cabinClasses.find(c => c.id === cabinClass)?.label || 'Economy';
 
   return (
     <div ref={containerRef} className={cn('relative', className)}>
@@ -86,10 +86,19 @@ export function TravelerSelector({
         >
           <Users className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
           <div className="flex flex-col items-start">
-            <span className="text-xs text-[hsl(var(--muted-foreground))] leading-none">Travelers</span>
-            <span className="font-semibold text-[hsl(var(--foreground))] leading-tight">{totalTravelers}</span>
+            <span className="text-xs text-[hsl(var(--muted-foreground))] leading-none">
+              Travelers
+            </span>
+            <span className="font-semibold text-[hsl(var(--foreground))] leading-tight">
+              {totalTravelers}
+            </span>
           </div>
-          <ChevronDown className={cn('h-3.5 w-3.5 ml-auto text-[hsl(var(--muted-foreground))] transition-transform duration-200', isOpen && 'rotate-180')} />
+          <ChevronDown
+            className={cn(
+              'h-3.5 w-3.5 ml-auto text-[hsl(var(--muted-foreground))] transition-transform duration-200',
+              isOpen && 'rotate-180'
+            )}
+          />
         </button>
 
         {/* Cabin Class Selector */}
@@ -103,21 +112,31 @@ export function TravelerSelector({
             className={cn(
               'flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 outline-none min-w-[140px]',
               'border border-[hsl(var(--border))] bg-white hover:border-[hsl(var(--primary))/0.4] hover:shadow-sm',
-              isCabinOpen && 'border-[hsl(var(--primary))] ring-2 ring-[hsl(var(--primary))]/15 shadow-sm'
+              isCabinOpen &&
+                'border-[hsl(var(--primary))] ring-2 ring-[hsl(var(--primary))]/15 shadow-sm'
             )}
           >
             <div className="flex flex-col items-start">
-              <span className="text-xs text-[hsl(var(--muted-foreground))] leading-none">Cabin</span>
-              <span className="font-semibold text-[hsl(var(--foreground))] leading-tight">{currentCabin}</span>
+              <span className="text-xs text-[hsl(var(--muted-foreground))] leading-none">
+                Cabin
+              </span>
+              <span className="font-semibold text-[hsl(var(--foreground))] leading-tight">
+                {currentCabin}
+              </span>
             </div>
-            <ChevronDown className={cn('h-3.5 w-3.5 ml-auto text-[hsl(var(--muted-foreground))] transition-transform duration-200', isCabinOpen && 'rotate-180')} />
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 ml-auto text-[hsl(var(--muted-foreground))] transition-transform duration-200',
+                isCabinOpen && 'rotate-180'
+              )}
+            />
           </button>
         )}
       </div>
 
       {/* Travelers Dropdown */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl shadow-black/[0.08] ring-1 ring-black/[0.05] z-50 overflow-hidden animate-scale-in">
+        <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-xl shadow-black/[0.08] ring-1 ring-black/[0.05] z-50 overflow-hidden animate-scale-in">
           <div className="p-4 space-y-4">
             {travelerOptions.map(({ key, label, description, min, max }) => (
               <div key={key} className="flex items-center justify-between">
@@ -143,7 +162,9 @@ export function TravelerSelector({
                   <button
                     type="button"
                     onClick={() => updateTraveler(key, 1)}
-                    disabled={value[key] >= max || (key === 'infants' && value[key] >= value.adults)}
+                    disabled={
+                      value[key] >= max || (key === 'infants' && value[key] >= value.adults)
+                    }
                     className={cn(
                       'flex items-center justify-center w-8 h-8 rounded-lg border transition-all duration-150',
                       value[key] >= max || (key === 'infants' && value[key] >= value.adults)
@@ -162,7 +183,7 @@ export function TravelerSelector({
 
       {/* Cabin Class Dropdown */}
       {isCabinOpen && onCabinChange && (
-        <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl shadow-black/[0.08] ring-1 ring-black/[0.05] z-50 overflow-hidden animate-scale-in">
+        <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl shadow-black/[0.08] ring-1 ring-black/[0.05] z-50 overflow-hidden animate-scale-in">
           <div className="p-2">
             {cabinClasses.map(({ id, label }) => (
               <button

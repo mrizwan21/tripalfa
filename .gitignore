@@ -127,10 +127,14 @@ public
 
 # Transpiled JavaScript from TypeScript (keep config files)
 # These .js files are generated from .ts/.tsx sources and should not be committed
+scripts/*.js
+scripts/*.js.map
 apps/**/src/**/*.js
 apps/**/src/**/*.js.map
 services/**/src/**/*.js
 services/**/src/**/*.js.map
+packages/**/src/**/*.js
+packages/**/scripts/**/*.js
 !**/vite.config.js
 !**/vitest.config.js
 !**/playwright.config.js
@@ -138,7 +142,7 @@ services/**/src/**/*.js.map
 !**/jest.config.js
 !**/webpack.config.js
 !**/rollup.config.js
-
+!**/mcp-server.config.js
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -194,9 +198,8 @@ database/static-db/backups/
 # Large data files
 infrastructure/scripts/hotelbeds/
 
-# Legacy phase-specific env files
-.env.phase*.example
-.env.production.template
+# Prisma generated files
+packages/shared-database/src/generated/
 
 # Legacy phase-specific env files
 .env.phase*.example

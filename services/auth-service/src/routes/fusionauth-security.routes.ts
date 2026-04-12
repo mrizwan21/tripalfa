@@ -1,8 +1,26 @@
 import { Router, Request, Response } from 'express';
-import { fusionAuthService } from '../services/fusionauth-security.service.js';
+import { fusionAuthSecurityService } from '../services/fusionauth-security.service.js';
 import { authMiddleware, requireRole, AuthRequest } from '../middleware/auth.middleware.js';
 
 const router: Router = Router();
+
+/**
+ * Normalizes request parameters that might be strings or string arrays.
+ */
+const getParam = (param: string | string[] | undefined): string => {
+  if (Array.isArray(param)) return param[0];
+  return param || '';
+};
+
+/**
+ * Standardized error handler for controllers.
+ */
+const handleControllerError = (res: Response, error: unknown, status = 500) => {
+  res.status(status).json({
+    success: false,
+    error: error instanceof Error ? error.message : 'Unknown error',
+  });
+};
 
 /**
  * @swagger
@@ -76,7 +94,7 @@ router.post('/security/check', async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await fusionAuthService.performSecurityCheck({
+    const result = await fusionAuthSecurityService.performSecurityCheck({
       userId,
       ipAddress,
       userAgent,
@@ -143,8 +161,8 @@ router.get(
   requireRole('SUPER_ADMIN', 'B2B_ADMIN') as any,
   async (req: AuthRequest, res: Response) => {
     try {
-      const blocked = await fusionAuthService.isIpBlocked(
-        Array.isArray(req.params.ip) ? req.params.ip[0] : req.params.ip,
+      const blocked = await fusionAuthSecurityService.isIpBlocked(
+        getParam(req.params.ip),
         req.user?.sub,
         req.user?.companyId
       );
@@ -154,10 +172,7 @@ router.get(
         data: { blocked },
       });
     } catch (error: unknown) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      handleControllerError(res, error);
     }
   }
 );

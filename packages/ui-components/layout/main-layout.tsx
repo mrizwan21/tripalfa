@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
 // Admin Panel - Main Layout
-import { useState } from "react";
-import { Sidebar, Header } from "./sidebar";
+import { useState } from 'react';
+import { Sidebar, Header } from './sidebar';
 
 interface MainLayoutProps {
   children: React.ReactNode;
