@@ -1,17 +1,17 @@
 {
   "api": {
-    "upstream_url": "http://host.docker.internal:3007",
-    "request_path": "/booking",
-    "strip_uri": true,
+    "upstream_url": "http://localhost:3001",
+    "request_path": "/api",
+    "strip_uri": false,
     "preserve_host": false
   },
   "plugins": [
     {
       "config": {
-        "key_names": ["apikey"],
-        "hide_credentials": true
+        "minute": 12000,
+        "policy": "local"
       },
-      "name": "key-auth"
+      "name": "rate-limiting"
     }
   ]
 }

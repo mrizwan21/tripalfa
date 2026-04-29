@@ -1,18 +1,6 @@
-// Utility: cn (classNames)
-// Simple utility to join class names conditionally
-export function cn(...args: any[]): string {
-  return args.flat(Infinity).filter(Boolean).join(" ");
-}
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
 
-// Utility: formatCurrency
-export function formatCurrency(
-  value: number,
-  currency: string = "USD",
-): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
 }

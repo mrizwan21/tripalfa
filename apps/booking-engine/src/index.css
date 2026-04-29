@@ -1,6 +1,6 @@
 /* fallow-ignore-file */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-@import '../../packages/ui-components/design-tokens.css';
+@import '@tripalfa/design-tokens/tokens.css';
 @import 'tailwindcss';
 
 /* ============================================

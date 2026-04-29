@@ -4,7 +4,7 @@ exclude_paths:
   - ".codacy/**"
   - "**/.codacy.yml"
   # JavaScript/TypeScript (no linting needed)
-  - services/booking-service/dist/routes/duffel.js
+  - packages/booking-service/dist/routes/duffel.js
   # Documentation (markdown files - not code)
   - "**/*.md"
   - "**/*.mdx"

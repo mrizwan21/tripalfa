@@ -1,60 +1,23 @@
 {
-  "$schema": "https://json.schemastore.org/package",
   "name": "@tripalfa/shared-types",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Shared TypeScript types, enums, and interfaces for OTA Platform",
   "type": "module",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist/src/index.js",
-    "./types/*": "./dist/types/*.js",
-    "./types/enums": "./dist/types/enums.js",
-    "./types/hotel-deals": "./dist/types/hotel-deals.js",
-    "./types/loyalty": "./dist/types/loyalty.js",
-    "./types/pricing": "./dist/types/pricing.js",
-    "./types/booking": "./dist/types/booking.js",
-    "./types/user": "./dist/types/user.js"
-  },
-  "typesVersions": {
-    "*": {
-      "types/*": [
-        "./dist/types/*.d.ts"
-      ],
-      "types/enums": [
-        "./dist/types/enums.d.ts"
-      ],
-      "types/hotel-deals": [
-        "./dist/types/hotel-deals.d.ts"
-      ],
-      "types/loyalty": [
-        "./dist/types/loyalty.d.ts"
-      ],
-      "types/pricing": [
-        "./dist/types/pricing.d.ts"
-      ],
-      "types/booking": [
-        "./dist/types/booking.d.ts"
-      ],
-      "types/user": [
-        "./dist/types/user.d.ts"
-      ]
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "scripts": {
-    "build": "pnpm exec tsc -p tsconfig.json",
-    "dev": "pnpm exec tsc -p tsconfig.build.json --watch",
-    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
-    "type-check": "pnpm exec tsc -p tsconfig.build.json --noEmit",
+    "build": "tsc",
+    "dev": "tsc --watch",
     "clean": "rm -rf dist"
   },
-  "files": [
-    "dist"
-  ],
-  "eslintIgnore": [
-    "packages/shared-types/package.json"
-  ],
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "@types/node": "^25.5.2",
+    "typescript": "^6.0.2"
   }
 }

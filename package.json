@@ -7,7 +7,6 @@
   "type": "module",
   "workspaces": [
     "apps/*",
-    "services/*",
     "packages/*"
   ],
   "scripts": {
@@ -29,16 +28,22 @@
     "sync:exchange-rates": "pnpm --filter @tripalfa/static-data sync:exchange-rates",
     "sync:timezone": "pnpm --filter @tripalfa/static-data sync:timezone",
     "sync:start": "pnpm --filter @tripalfa/static-data sync:start",
-    "db:fix-static": "node scripts/fix-static-data-import.js",
-    "postinstall": "prisma generate --schema=database/prisma/schema.prisma"
+    "db:fix-static": "node tools/scripts/static/fix-static-data-import.js",
+    "gateway:build": "node tools/scripts/gateway/build-kong-from-wicked.mjs",
+    "gateway:sync": "bash tools/scripts/bin/gateway_sync_local.sh",
+    "gateway:start": "bash tools/scripts/bin/kong_start_local.sh",
+    "gateway:stop": "bash tools/scripts/bin/kong_stop_local.sh",
+    "gateway:status": "bash tools/scripts/bin/kong_status_local.sh",
+    "gateway:preflight": "bash tools/scripts/bin/gateway_preflight_local.sh",
+    "postinstall": "pnpm --filter @tripalfa/shared-database db:generate"
+    ,
+    "gateway:verify-routes": "node tools/scripts/gateway/verify-route-coverage.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^8.57.1",
-    "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@prisma/config": "^7.7.0",
     "@types/cors": "^2.8.0",
-    "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.0",
@@ -78,6 +83,12 @@
       "@types/react": "^19.2.14",
       "@types/react-dom": "^19.2.3",
       "@types/express-serve-static-core": "^5.1.0"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "@nestjs/core",
+      "@swc/core",
+      "electron",
+      "msgpackr-extract"
+    ]
   }
 }

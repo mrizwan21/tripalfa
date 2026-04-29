@@ -1,0 +1,25 @@
+:root {
+  --trip-bg: #f6f8fb;
+  --trip-surface: #ffffff;
+  --trip-border: #e5e7eb;
+  --trip-text: #0f172a;
+  --trip-muted: #64748b;
+  --trip-primary: #1d4ed8;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--trip-bg);
+  color: var(--trip-text);
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+a {
+  color: var(--trip-primary);
+}

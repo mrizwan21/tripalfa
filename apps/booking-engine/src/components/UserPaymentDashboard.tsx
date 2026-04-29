@@ -19,7 +19,7 @@ import WalletManagementPanel from "./WalletManagementPanel";
 import AirlineCreditsPanel from "./AirlineCreditsPanel";
 import BookingPaymentStatusPanel from "./BookingPaymentStatusPanel";
 import RefundStatusPanel from "./RefundStatusPanel";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 type DashboardTab = "overview" | "payments" | "wallet" | "credits" | "refunds";
 

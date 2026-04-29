@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 export default function AddOnService({ addons }: { addons: any[] }) {
   const [selected, setSelected] = useState<Record<string, boolean>>({});

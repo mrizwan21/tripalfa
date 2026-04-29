@@ -49,7 +49,7 @@ import {
   type SelectedSpecialService,
 } from '../lib/ancillary-types';
 import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 
 type Booking = Record<string, any>;
 

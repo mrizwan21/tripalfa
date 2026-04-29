@@ -1,0 +1,17 @@
+{
+  "api": {
+    "upstream_url": "https://api.liteapi.travel/v3.0",
+    "request_path": "/api/external/liteapi",
+    "strip_uri": true,
+    "preserve_host": false
+  },
+  "plugins": [
+    {
+      "config": {
+        "minute": 6000,
+        "policy": "local"
+      },
+      "name": "rate-limiting"
+    }
+  ]
+}

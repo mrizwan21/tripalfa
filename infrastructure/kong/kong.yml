@@ -1,0 +1,479 @@
+_format_version: "3.0"
+_transform: true
+services:
+  -
+    name: "booking-engine-service"
+    protocol: "http"
+    host: "localhost"
+    port: 3021
+    path: "/"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "internal"
+      - "booking-engine"
+      - "frontend"
+  -
+    name: "booking-service"
+    protocol: "http"
+    host: "localhost"
+    port: 3001
+    path: "/"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "internal"
+      - "booking"
+  -
+    name: "b2b-portal-service"
+    protocol: "http"
+    host: "localhost"
+    port: 3001
+    path: "/"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "internal"
+      - "b2b"
+      - "frontend"
+  -
+    name: "call-center-service"
+    protocol: "http"
+    host: "localhost"
+    port: 3001
+    path: "/"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "internal"
+      - "call-center"
+      - "frontend"
+  -
+    name: "super-admin-service"
+    protocol: "http"
+    host: "localhost"
+    port: 3001
+    path: "/"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "internal"
+      - "super-admin"
+      - "frontend"
+  -
+    name: "external-duffel"
+    protocol: "https"
+    host: "api.duffel.com"
+    port: 443
+    path: "/air"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "external"
+      - "duffel"
+      - "supplier"
+  -
+    name: "external-liteapi"
+    protocol: "https"
+    host: "api.liteapi.travel"
+    port: 443
+    path: "/v3.0"
+    retries: 2
+    connect_timeout: 6000
+    write_timeout: 15000
+    read_timeout: 15000
+    tags:
+      - "external"
+      - "liteapi"
+      - "supplier"
+routes:
+  -
+    name: "booking-engine-flights"
+    service:
+      name: "booking-engine-service"
+    paths:
+      - "/api/flights"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-engine-hotels"
+    service:
+      name: "booking-engine-service"
+    paths:
+      - "/api/hotels"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-engine-offline"
+    service:
+      name: "booking-engine-service"
+    paths:
+      - "/api/offline-requests"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-engine-static"
+    service:
+      name: "booking-engine-service"
+    paths:
+      - "/api/static"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-admin"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/admin"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-wallet"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/wallet"
+      - "/api/wallets"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-duffel"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/duffel"
+      - "/api/flights/ancillary"
+      - "/api/airline-credits"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-liteapi"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/liteapi"
+      - "/api/rates"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-orders"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/bookings"
+      - "/api/flight-booking"
+      - "/api/hotel-booking"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-supporting"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/payment"
+      - "/api/payments"
+      - "/api/exchange-rates"
+      - "/api/translations"
+      - "/api/weather"
+      - "/api/user"
+      - "/api/search"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "gateway-health"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/gateway/health-status"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "gateway-audit"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api/gateway/audit-logs"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "external-duffel"
+    service:
+      name: "external-duffel"
+    paths:
+      - "/api/external/duffel"
+    strip_path: true
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "external-liteapi"
+    service:
+      name: "external-liteapi"
+    paths:
+      - "/api/external/liteapi"
+    strip_path: true
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "booking-fallback"
+    service:
+      name: "booking-service"
+    paths:
+      - "/api"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+plugins:
+  -
+    name: "cors"
+    config:
+      origins:
+        - "*"
+      methods:
+        - "GET"
+        - "POST"
+        - "PUT"
+        - "PATCH"
+        - "DELETE"
+        - "OPTIONS"
+      headers:
+        - "Authorization"
+        - "Content-Type"
+        - "X-Requested-With"
+        - "x-sales-channel"
+        - "x-tenant-id"
+      exposed_headers:
+        - "X-Request-Id"
+      credentials: true
+      max_age: 3600
+  -
+    name: "rate-limiting"
+    config:
+      minute: 12000
+      policy: "local"
+    service:
+      name: "booking-engine-service"
+  -
+    name: "rate-limiting"
+    config:
+      minute: 12000
+      policy: "local"
+    service:
+      name: "booking-service"
+  -
+    name: "rate-limiting"
+    config:
+      minute: 6000
+      policy: "local"
+    service:
+      name: "external-duffel"
+  -
+    name: "rate-limiting"
+    config:
+      minute: 6000
+      policy: "local"
+    service:
+      name: "external-liteapi"

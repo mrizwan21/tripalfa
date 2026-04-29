@@ -23,14 +23,12 @@
         ]
     },
     "include": [
-        "scripts/**/*.ts",
         "types/**/*.d.ts"
     ],
     "exclude": [
         "node_modules",
         "dist",
         "apps",
-        "services",
         "packages"
     ]
 }

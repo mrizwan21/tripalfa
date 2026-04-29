@@ -1,91 +1,23 @@
 {
   "name": "@tripalfa/shared-utils",
   "version": "1.0.0",
-  "private": true,
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./logger": {
-      "types": "./dist/logger.d.ts",
-      "import": "./dist/logger.js",
-      "default": "./dist/logger.js"
-    },
-    "./utils": {
-      "types": "./dist/utils.d.ts",
-      "import": "./dist/utils.js",
-      "default": "./dist/utils.js"
-    },
-    "./api": {
-      "types": "./dist/api.d.ts",
-      "import": "./dist/api.js",
-      "default": "./dist/api.js"
-    },
-    "./constants": {
-      "types": "./dist/constants.d.ts",
-      "import": "./dist/constants.js",
-      "default": "./dist/constants.js"
-    },
-    "./hooks": {
-      "types": "./dist/hooks.d.ts",
-      "import": "./dist/hooks.js",
-      "default": "./dist/hooks.js"
-    },
-    "./types": {
-      "types": "./dist/types.d.ts",
-      "import": "./dist/types.js",
-      "default": "./dist/types.js"
-    },
-    "./date-utils": {
-      "types": "./dist/date-utils.d.ts",
-      "import": "./dist/date-utils.js",
-      "default": "./dist/date-utils.js"
-    },
-    "./format": {
-      "types": "./dist/format-utils.d.ts",
-      "import": "./dist/format-utils.js",
-      "default": "./dist/format-utils.js"
-    },
-    "./currency": {
-      "types": "./dist/currency-utils.d.ts",
-      "import": "./dist/currency-utils.js",
-      "default": "./dist/currency-utils.js"
-    },
-    "./monitoring": {
-      "types": "./dist/monitoring.d.ts",
-      "import": "./dist/monitoring.js",
-      "default": "./dist/monitoring.js"
-    }
+    ".": "./src/index.ts",
+    "./utils": "./src/utils.ts",
+    "./date-utils": "./src/date-utils.ts"
   },
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "build": "pnpm exec tsc -p tsconfig.json",
-    "dev": "pnpm exec tsc -p tsconfig.build.json --watch",
-    "lint": "pnpm exec eslint 'src/**/*.{ts,tsx}' --no-error-on-unmatched-pattern",
-    "type-check": "pnpm exec tsc -p tsconfig.build.json --noEmit",
-    "clean": "rm -rf dist"
+    "build": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "node-cache": "^5.1.2",
-    "@tripalfa/shared-types": "workspace:*",
-    "clsx": "^2.1.0",
-    "date-fns": "^4.1.0",
-    "express-rate-limit": "^8.0.0",
-    "pino": "^9.0.0",
-    "winston": "^3.13.0",
-    "zod": "^3.23.8"
+    "clsx": "^2.1.1"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/express": "^4.17.21"
-  },
-  "peerDependencies": {
-    "express": "^4.18.0"
+    "typescript": "^6.0.2",
+    "vitest": "^4.0.18"
   }
 }

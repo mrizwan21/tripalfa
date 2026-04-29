@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 interface ImageGalleryProps {
   images: { url: string; hero?: boolean }[];

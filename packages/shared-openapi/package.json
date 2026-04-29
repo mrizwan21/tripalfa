@@ -1,7 +1,7 @@
 {
   "name": "@tripalfa/shared-openapi",
   "version": "1.0.0",
-  "description": "Shared OpenAPI/Swagger utilities for TripAlfa microservices",
+  "description": "Shared OpenAPI/Swagger specification generator for OTA Platform services",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -13,16 +13,19 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc --watch",
+    "generate": "node scripts/generate-specs.js",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0",
-    "yaml": "^2.3.4"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^25.2.3",
     "@types/swagger-jsdoc": "^6.0.4",
-    "@types/swagger-ui-express": "^4.1.6",
-    "typescript": "^5.4.0"
+    "@types/swagger-ui-express": "^4.1.8",
+    "typescript": "^6.0.2"
   }
 }

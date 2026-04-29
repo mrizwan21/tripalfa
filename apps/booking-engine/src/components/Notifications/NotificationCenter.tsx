@@ -1,21 +1,21 @@
 import { useState, useMemo } from 'react';
 import { Search, Filter, Trash2, Eye, Settings, Loader2 } from 'lucide-react';
-import { Button } from '@tripalfa/ui-components/ui/button';
-import { Input } from '@tripalfa/ui-components/ui/input';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@tripalfa/ui-components/ui/card';
+} from '../ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@tripalfa/ui-components/ui/select';
+} from '../ui/select';
 import { useNotifications } from '@/hooks/useNotifications';
 
 // Simple Badge component inline

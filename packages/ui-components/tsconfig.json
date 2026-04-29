@@ -1,33 +1,25 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "declaration": true,
-    "noEmit": false,
-    "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "types": [],
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": false,
-    "forceConsistentCasingInFileNames": true,
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "react-jsx",
-    "ignoreDeprecations": "5.0",
-    "baseUrl": ".",
+    "jsxImportSource": "react",
+    "types": ["jest", "@testing-library/jest-dom"],
     "paths": {
-      "@/*": ["./*"],
-      "@/components/ui/*": ["./ui/*"],
-      "@tripalfa/shared-utils": ["../shared-utils"],
-      "@tripalfa/shared-utils/*": ["../shared-utils/*"],
-      "@tripalfa/shared-types": ["../shared-types"],
-      "@tripalfa/shared-types/*": ["../shared-types/*"]
+      "react": ["./node_modules/@types/react"],
+      "react-dom": ["./node_modules/@types/react-dom"]
     }
   },
-  "include": ["."],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.stories.tsx"]
 }

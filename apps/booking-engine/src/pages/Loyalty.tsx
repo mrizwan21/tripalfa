@@ -27,7 +27,7 @@ import { PointsDisplay } from '../components/loyalty/PointsDisplay';
 import { Card } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
-import { Label } from '@/components/ui/label';
+import { Label } from '../components/ui/label';
 
 type TierBenefits = Record<string, any>;
 

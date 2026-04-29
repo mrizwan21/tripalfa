@@ -53,13 +53,13 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "generate:static": "pnpm dlx tsx scripts/generate-static-data.ts",
-    "generate:static:watch": "pnpm dlx tsx watch scripts/generate-static-data.ts",
+    "generate:static": "pnpm --filter @tripalfa/static-data build",
+    "generate:static:watch": "pnpm --filter @tripalfa/static-data dev",
     "dev": "pnpm exec vite",
     "dev:test": "NODE_ENV=test VITE_TEST_MODE=true pnpm exec vite --config vite.config.e2e.ts --port 5174",
     "build": "pnpm exec vite build",
     "preview": "pnpm exec vite preview",
-    "test": "pnpm exec vitest",
+    "test": "pnpm exec vitest run --passWithNoTests",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:mock": "TEST_MODE_MOCK=true playwright test --config=playwright.config.ts",
     "test:e2e:ui": "playwright test --config=playwright.config.ts --ui",

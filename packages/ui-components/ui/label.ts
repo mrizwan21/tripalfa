@@ -1,0 +1,1 @@
+export { Label } from '../src/components/Label';

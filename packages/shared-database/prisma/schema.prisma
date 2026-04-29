@@ -1,0 +1,2736 @@
+// ============================================================
+// OTA PLATFORM - UNIFIED DATABASE SCHEMA (AUTO-MERGED)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantType {
+  MASTER
+  SUB_AGENT
+  CORPORATE
+}
+
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Tenant {
+  id             String       @id @default(uuid())
+  agentCode      String       @unique
+  name           String
+  type           TenantType   @default(SUB_AGENT)
+  status         TenantStatus @default(ACTIVE)
+  databaseUrl    String
+  databaseSchema String
+
+  // Hierarchy
+  parentId    String?
+  parent      Tenant?  @relation("AgencyHierarchy", fields: [parentId], references: [id])
+  subAgencies Tenant[] @relation("AgencyHierarchy")
+
+  // Profile
+  logoUrl      String?
+  contactEmail String?
+  contactPhone String?
+  address      String?
+  city         String?
+  country      String?
+
+  // Licensing
+  iataNo   String?
+  officeId String?
+  vatNo    String?
+
+  // Financial
+  creditLimit Float  @default(0)
+  paymentType String @default("CREDIT")
+
+  // Product Access
+  accessFlights Boolean @default(true)
+  accessHotels  Boolean @default(true)
+  accessCars    Boolean @default(false)
+
+  // Rights
+  enableB2B2C      Boolean @default(false)
+  canManageMarkups Boolean @default(true)
+  canManageUsers   Boolean @default(true)
+
+  // Cached Analytics
+  cachedRevenue  Float @default(0)
+  cachedBookings Int   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  salesChannels SalesChannelConfig[]
+  apiKeys       ApiKey[]
+
+  dateOfOperations       DateTime?
+  address1               String?
+  address2               String?
+  address3               String?
+  state                  String?
+  postCode               String?
+  telephone              String?
+  mobile                 String?
+  fax                    String?
+  contactName            String?
+  designation            String?
+  contactMobile          String?
+  websiteUrl             String?
+  referredBy             String?
+  remarks                String?
+  language               String?   @default("English")
+  salesEmail             String?
+  salesPhone             String?
+  salesMobile            String?
+  salesContactName       String?
+  bankName               String?
+  bankAddress            String?
+  bankSwiftCode          String?
+  bankPhone              String?
+  bankFax                String?
+  bankAccountNo          String?
+  abtaNo                 String?
+  atolNo                 String?
+  creditLimitAlert       Float     @default(0)
+  tempCreditLimit        Float     @default(0)
+  tempCreditLimitStart   DateTime?
+  tempCreditLimitEnd     DateTime?
+  tdsApplicable          Float     @default(0) // Percentage
+  tdsExemption           Float     @default(0) // Fixed
+  dailyTicketValue       Float     @default(0)
+  payPeriod              String?   @default("Monthly") // Next Day, 2-3 Days, Weekly, Fortnightly, Monthly
+  annualTurnover         Float     @default(0)
+  reserveVolumeMonthly   Float     @default(0)
+  noOfEmployees          Int       @default(0)
+  noOfBranches           Int       @default(0)
+  accessInsurance        Boolean   @default(false)
+  accessPackages         Boolean   @default(false)
+  accessSightseeing      Boolean   @default(false)
+  accessTransfers        Boolean   @default(false)
+  accessDynamicSearch    Boolean   @default(true)
+  canManageBranches      Boolean   @default(true)
+  canManageRoles         Boolean   @default(true)
+  canManageCreditCards   Boolean   @default(false)
+  canImportPNR           Boolean   @default(true)
+  canAllowAutoTicket     Boolean   @default(true)
+  canAccessIITFare       Boolean   @default(false)
+  canManageSupplierCreds Boolean   @default(false)
+  canManagePGCreds       Boolean   @default(false)
+  showLogoOnDashboard    Boolean   @default(true)
+  allowAirCanx           Boolean   @default(true)
+  perfSparkline          Int[]     @default([])
+  isActive               Boolean   @default(true)
+
+  @@index([agentCode])
+  @@index([status])
+  @@index([type])
+  @@map("tenants")
+}
+
+model User {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  username     String @unique
+  email        String @unique
+  passwordHash String
+  name         String
+  role         String @default("AGENT")
+
+  salesChannelId     String?
+  salesChannelConfig SalesChannelConfig? @relation(fields: [salesChannelId], references: [id])
+
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([email])
+  @@index([username])
+  @@map("users")
+}
+
+model SalesChannelConfig {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  channelCode String  @unique
+  name        String
+  description String?
+  slug        String? @unique
+  isActive    Boolean @default(true)
+
+  markupOverride  Float?
+  commissionShare Float?
+
+  settings Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  @@unique([tenantId, channelCode])
+  @@index([tenantId])
+  @@index([channelCode])
+  @@map("sales_channels")
+}
+
+model ApiKey {
+  id       String  @id @default(uuid())
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+  userId   String?
+
+  key    String   @unique
+  name   String
+  scopes String[]
+
+  expiresAt  DateTime?
+  isActive   Boolean   @default(true)
+  lastUsedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
+  @@index([tenantId])
+  @@map("api_keys")
+}
+
+model AuditLog {
+  id       String  @id @default(uuid())
+  tenantId String?
+  userId   String?
+
+  action     String
+  resource   String
+  resourceId String?
+  oldValue   String?
+  newValue   String?
+  ipAddress  String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  timestamp DateTime @default(now())
+  actorId   String?
+  actorName String?
+  entity    String // e.g., 'Supplier', 'TravellerProfile'
+  entityId  String?
+  details   String? // JSON stringified context
+  severity  String   @default("INFO") // 'INFO', 'WARN', 'CRITICAL'
+
+  @@index([tenantId, createdAt])
+  @@index([action])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+enum SalesChannel {
+  POS_DC
+  POS_SA
+  POS_CA
+  SUBAGENT
+  WEBSITE
+  MOBILE
+}
+
+enum BookingStatus {
+  NEW_BOOKING
+  PROVISIONAL
+  AUTHORIZED
+  TICKETED
+  DOCUMENTED
+  DISPATCHED
+  CANCELLED
+  VOID
+  REFUNDED
+  REFUND_ON_HOLD
+  REJECTED
+}
+
+enum SegmentStatus {
+  HK
+  UC
+  RQ
+  HX
+  NO
+}
+
+enum ServiceRequestType {
+  REFUND
+  RESCHEDULE
+  CANCEL
+  CLIENT_SWITCH
+}
+
+enum ServiceRequestStatus {
+  OPEN
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+enum DocumentType {
+  TICKET
+  VOUCHER
+  INVOICE
+  CREDIT_NOTE
+  DEBIT_NOTE
+  RECEIPT
+}
+
+enum ApprovalLevel {
+  LEVEL_1
+  LEVEL_2
+  LEVEL_3
+  LINE_MANAGER
+  FINANCE_MANAGER
+}
+
+model Booking {
+  id                      String         @id @default(uuid())
+  bookingRef              String         @unique
+  pnr                     String?
+  tenantId                String
+  salesChannel            SalesChannel   @default(SUBAGENT)
+  agentCode               String
+  service                 String
+  productType             String?
+  status                  BookingStatus  @default(NEW_BOOKING)
+  segmentStatus           SegmentStatus?
+  ticketed                Boolean        @default(false)
+  dispatched              Boolean        @default(false)
+  bookingDate             DateTime       @default(now())
+  travelDate              String
+  tripStartDate           DateTime?
+  ticketDeadline          DateTime?
+  issuedDate              DateTime?
+  passengerName           String
+  amount                  Float
+  currency                String
+  markup                  Float          @default(0)
+  netFare                 Float
+  supplierCost            Float?
+  route                   String?
+  hotelName               String?
+  destination             String?
+  passengerDob            String?
+  passengerNationality    String?
+  passengerPassport       String?
+  passengerPassportExpiry String?
+  corporateId             String?
+  subagentId              String?
+  enquiryId               String?
+  paymentStatus           String?
+  paymentMethod           String?
+  paymentDate             DateTime?
+  receiptNo               String?
+  invoiceNo               String?
+  ticketNo                String?
+  lockedBy                String?
+  lockedAt                DateTime?
+  remarks                 String?
+  amendmentHistory        Json?
+  inventoryBlockId        String?
+  inventoryDbUrl          String?
+  workflowState           String?
+  metadata                Json?           @default("{}")
+
+  // Legacy/Service specific fields
+  userId        String?
+  customerEmail String?
+  customerPhone String?
+  serviceType   String?
+  baseAmount    Float?
+  totalAmount   Float?
+  taxAmount     Float?
+  markupAmount  Float?
+
+  bookingSegments      Segment[]
+  documents            Document[]
+  statusHistory        StatusChangeLog[]
+  approvals            Approval[]
+  serviceRequests      ServiceRequest[]
+  clientSwitchApproval ClientSwitchApproval?
+
+  // NEW RELATIONS
+  queues            BookingQueue[]
+  bookingPassengers BookingPassenger[]
+  invoices          Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tktLater            Boolean         @default(false)
+  autoCancelScheduled Boolean         @default(false)
+  balanceDueDate      DateTime?
+  refundAmount        Float?
+  penaltyAmount       Float?
+  passengerResidency  String?
+  clientSwitchBlocked Boolean         @default(false) // true after VOID/REFUND/CANX
+  approvalStatus      String? // Pending, ½ Approved, Fully Approved
+  refundStatus        String? // None, Pending, Processing, Processed, Failed, OnHold
+  authorizationStatus String? // 'Provisional', 'Authorized', 'Rejected'
+  authorizationBy     String?
+  authorizedAt        DateTime?
+  rejectionReason     String?
+  originalBookingId   String?
+  modificationDelta   Float           @default(0)
+  retryCount          Int             @default(0)
+  errorMessage        String?
+  notifications       Json?           @default("[]")
+  inventoryBlock      InventoryBlock? @relation(fields: [inventoryBlockId], references: [id])
+  dispatchEvents      DispatchEvent[]
+
+  @@index([tenantId])
+  @@index([salesChannel])
+  @@index([status])
+  @@index([agentCode])
+  @@index([bookingDate])
+  @@index([corporateId])
+  @@index([subagentId])
+  @@map("bookings")
+}
+
+model Segment {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  type              String
+  gdsPnr            String?
+  validatingCarrier String?
+  status            SegmentStatus @default(HK)
+  confirmationNo    String?
+  airline           String?
+  airlineCode       String?
+  flightNumber      String?
+  origin            String?
+  destination       String?
+  departureDateTime DateTime?
+  arrivalDateTime   DateTime?
+  class             String?
+  fareBasisCode     String?
+  totalStops        Int?
+  airlinePnr        String?
+  duration          String?
+  sequenceNumber    Int           @default(0)
+  segmentType       String?
+  tripType          String?
+  operatedBy        String?
+  promoCode         String?
+  hotelName         String?
+  hotelChain        String?
+  starCategory      Int?
+  checkInDate       DateTime?
+  checkOutDate      DateTime?
+  noOfNights        Int?
+  roomType          String?
+  mealPlan          String?
+  noOfRooms         Int?
+  noOfOccupants     Int?
+  occupantsAdults   Int?
+  occupantsChildren Int?
+  carSupplier       String?
+  pickupLocation    String?
+  dropOffLocation   String?
+  pickupDateTime    DateTime?
+  dropOffDateTime   DateTime?
+  carType           String?
+  leadDriver        String?
+  supplierCurrency  String?
+  fareDetails       Json?
+  costing           Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  supplierPaymentDueDate DateTime?
+  additionalReferenceNo  String?
+  originAirport          String?
+  destinationAirport     String?
+  terminal               String?
+  openSegment            Boolean   @default(false)
+  rateCode               String?
+  hotelAddress           String?
+  cityCode               String?
+  phone                  String?
+  email                  String?
+  cancellationDate       DateTime?
+  cancellationConditions String?
+  specialRequest         String?
+  notes                  String?
+  serviceDescription     String?
+  serviceQuantity        Int?
+  pickupAddress          String?
+  dropOffAddress         String?
+  carName                String?
+  carGroup               String?
+  additionalDriver       String?
+  driverDob              String?
+  passengerIds           Json?
+  calculationMode        String? // Auto, Manual
+  miscCharges            Json? // Miscellaneous/Other charges
+
+  @@index([bookingId])
+  @@index([status])
+  @@index([type])
+  @@map("booking_segments")
+}
+
+model Document {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  type           DocumentType
+  documentNo     String
+  status         String       @default("Active")
+  refundStatus   String?
+  fareDetails    Json?
+  tstDetails     Json?
+  baggage        String?
+  nvdNva         Json?
+  ticketingDate  DateTime?
+  fareType       String?
+  airlineCode    String?
+  voucherDetails Json?
+  refundAmount   Float?
+  agencyCharge   Float?
+  airlineCharge  Float?
+  issuedAt       DateTime?
+  issuedBy       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  iataNo             String?
+  checkDigit         String?
+  conjunctionTickets Int? // Number of conjunction tickets
+  gdsValidated       Boolean @default(false)
+  refundedAmount     Float?
+  nonRefundedAmount  Float?
+
+  @@index([bookingId])
+  @@index([type])
+  @@index([status])
+  @@map("documents")
+}
+
+model ServiceRequest {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  type   ServiceRequestType
+  status ServiceRequestStatus @default(OPEN)
+
+  requestDate    DateTime @default(now())
+  requestedBy    String
+  requestFrom    String?
+  requestRemarks String?
+
+  approvalDate    DateTime?
+  approvedBy      String?
+  approvalRemarks String?
+
+  processedDate DateTime?
+  processedBy   String?
+  productType   String?
+
+  approvals Approval[]
+
+  lastModifiedDate DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([type, status])
+  @@map("service_requests")
+}
+
+model Approval {
+  id               String          @id @default(uuid())
+  bookingId        String?
+  booking          Booking?        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  serviceRequestId String?
+  serviceRequest   ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  level         ApprovalLevel
+  approverEmail String
+  approverName  String?
+  status        String        @default("Pending")
+  actionDate    DateTime?
+  remarks       String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([serviceRequestId])
+  @@index([level])
+  @@map("approvals")
+}
+
+model StatusChangeLog {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  fromStatus    String?
+  toStatus      String
+  changedBy     String
+  changedByName String?
+  changedAt     DateTime @default(now())
+  reason        String?
+
+  @@index([bookingId])
+  @@index([changedAt])
+  @@map("status_change_logs")
+}
+
+model ClientSwitchApproval {
+  id        String  @id @default(uuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  fromCorporateId String
+  toCorporateId   String
+  reason          String
+  status          String @default("Pending")
+
+  level1Approver String?
+  level1Status   String?
+  level1Date     DateTime?
+  level1Remarks  String?
+
+  level2Approver String?
+  level2Status   String?
+  level2Date     DateTime?
+  level2Remarks  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("client_switch_approvals")
+}
+
+model Enquiry {
+  id        String @id @default(uuid())
+  enquiryId String @unique
+  tenantId  String
+
+  type          String  @default("Quote")
+  corporateId   String?
+  travellerId   String?
+  travellerName String?
+  status        String  @default("Pending")
+
+  itineraries         Json
+  approverEmails      Json
+  sendToEmployeeFirst Boolean @default(false)
+  quoteWithoutCost    Boolean @default(false)
+  sendFareRules       Boolean @default(false)
+  includeCheapest     Boolean @default(false)
+  format              String  @default("PDF")
+  upsertData          Json?
+  remarks             String?
+
+  createdBy      String
+  assignedTo     String?
+  approvedDate   DateTime?
+  approverRemark String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([corporateId])
+  @@index([status])
+  @@map("enquiries")
+}
+
+model CorporateTraveller {
+  id            String @id @default(uuid())
+  tenantId      String
+  employeeId    String @unique
+  corporateId   String
+  corporateName String
+
+  title       String?
+  firstName   String
+  lastName    String
+  designation String?
+  department  String?
+  costCenter  String?
+
+  email String
+  phone String?
+
+  fop               String
+  availableCredit   Float?
+  creditLimit       Float?
+  vip               Boolean @default(false)
+  cip               Boolean @default(false)
+  frequentFlyerNos  Json?
+  preferences       Json?
+  travelCoordinator String?
+  last3Bookings     Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([corporateId])
+  @@index([email])
+  @@map("corporate_travellers")
+}
+
+enum ContactType {
+  CORPORATE
+  SUB_AGENT
+  INDIVIDUAL
+  WALK_IN
+}
+
+enum ActivityType {
+  BOOKING
+  EMAIL
+  CALL
+  MEETING
+  NOTE
+  TASK
+  REMINDER
+}
+
+model Contact {
+  id        String      @id @default(uuid())
+  tenantId  String
+  agentCode String
+  type      ContactType
+  status    String      @default("Active")
+
+  companyName String?
+  firstName   String?
+  lastName    String?
+  designation String?
+  department  String?
+
+  email   String
+  phone   String?
+  mobile  String?
+  fax     String?
+  website String?
+
+  address    String?
+  city       String?
+  userId     String?
+  tier       String?
+  comments   String?
+  totalSpent Float?
+  state      String?
+  country    String?
+  postCode   String?
+
+  iataNo   String?
+  officeId String?
+  vatNo    String?
+
+  creditLimit Float  @default(0)
+  paymentType String @default("CREDIT")
+  payPeriod   String @default("Monthly")
+
+  frequentFlyerNos  Json?
+  travelPreferences Json?
+  travelPolicy      Json?
+
+  salesChannel String?
+  tags         String[]
+  notes        String?
+
+  assignedTo      String?
+  lastBookingDate DateTime?
+  totalBookings   Int       @default(0)
+  totalSpend      Float     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  activities  Activity[]
+  preferences Preference[]
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([email])
+  @@index([status])
+  @@index([salesChannel])
+  @@map("contacts")
+}
+
+model Activity {
+  id        String  @id @default(uuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  type        ActivityType
+  title       String?
+  bookingId   String?
+  ticketId    String?
+  subject     String
+  description String?
+  slug        String?      @unique
+  bookingRef  String?
+  amount      Float?
+
+  scheduledAt DateTime?
+  completedAt DateTime?
+
+  createdBy  String
+  assignedTo String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([contactId])
+  @@index([type])
+  @@index([scheduledAt])
+  @@map("activities")
+}
+
+model Preference {
+  id        String  @id @default(uuid())
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  category   String
+  key        String
+  value      String
+  priority   Int     @default(0)
+  isRequired Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contactId, category, key])
+  @@index([contactId])
+  @@index([category])
+  @@map("preferences")
+}
+
+enum InventoryType {
+  Flight
+  Hotel
+}
+
+enum InventoryStatus {
+  Active
+  Depleted
+  Expired
+  CarryForwarded
+}
+
+enum InventoryTransactionType {
+  Purchase
+  Sale
+  CarryForward
+  Adjustment
+  GroupSale
+}
+
+model InventoryBlock {
+  id        String        @id @default(uuid())
+  type      InventoryType
+  provider  String
+  reference String
+
+  totalQuantity     Int
+  availableQuantity Int
+  costPerUnit       Float
+  sellPricePerUnit  Float
+  expiryDate        DateTime
+  status            InventoryStatus @default(Active)
+
+  parentBlockId String?
+  parentBlock   InventoryBlock?  @relation("BlockCarryForward", fields: [parentBlockId], references: [id])
+  childBlocks   InventoryBlock[] @relation("BlockCarryForward")
+
+  tenantId  String?
+  agentCode String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions InventoryTransaction[]
+
+  bookings Booking[]
+
+  @@index([tenantId])
+  @@index([provider])
+  @@index([status])
+  @@index([expiryDate])
+  @@index([type])
+  @@map("inventory_blocks")
+}
+
+model InventoryTransaction {
+  id               String         @id @default(uuid())
+  inventoryBlockId String
+  inventoryBlock   InventoryBlock @relation(fields: [inventoryBlockId], references: [id])
+
+  bookingId   String?
+  bookingRef  String?
+  quantity    Int
+  type        InventoryTransactionType
+  description String?
+  slug        String?                  @unique
+
+  tenantId  String?
+  agentCode String?
+
+  createdAt DateTime @default(now())
+
+  @@index([inventoryBlockId])
+  @@index([bookingId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("inventory_transactions")
+}
+
+model InventoryAllocation {
+  id               String @id @default(uuid())
+  inventoryBlockId String
+  bookingRef       String
+  tenantId         String
+
+  quantity      Int
+  reservedUntil DateTime
+  status        String    @default("Reserved")
+  confirmedAt   DateTime?
+  releasedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([inventoryBlockId])
+  @@index([bookingRef])
+  @@index([tenantId])
+  @@index([status])
+  @@map("inventory_allocations")
+}
+
+enum NotificationChannel {
+  email
+  sms
+  push
+  in_app
+}
+
+enum NotificationPriority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum NotificationStatus {
+  pending
+  sent
+  failed
+  retrying
+}
+
+model NotificationTemplate {
+  id           String              @id @default(uuid())
+  name         String
+  code         String              @unique
+  channel      NotificationChannel
+  subject      String?
+  bodyTemplate String
+  variables    Json?
+
+  isActive  Boolean @default(true)
+  isDefault Boolean @default(false)
+
+  tenantId  String?
+  agentCode String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  logs NotificationLog[]
+
+  @@index([channel])
+  @@index([tenantId])
+  @@map("notification_templates")
+}
+
+model NotificationLog {
+  id         String                @id @default(uuid())
+  templateId String?
+  template   NotificationTemplate? @relation(fields: [templateId], references: [id])
+
+  channel  NotificationChannel
+  priority NotificationPriority @default(medium)
+  status   NotificationStatus   @default(pending)
+
+  to  String
+  cc  String?
+  bcc String?
+
+  subject     String?
+  body        String?
+  attachments Json?
+
+  tenantId   String?
+  bookingRef String?
+  userId     String?
+
+  provider          String?
+  providerMessageId String?
+  providerError     String?
+
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  nextRetryAt DateTime?
+  sentAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([channel])
+  @@index([tenantId])
+  @@index([bookingRef])
+  @@index([createdAt])
+  @@index([nextRetryAt])
+  @@map("notification_logs")
+}
+
+enum WalletOwnerType {
+  CUSTOMER
+  AGENT
+  CORPORATE
+  SUPPLIER
+  SUB_AGENT
+}
+
+enum WalletStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  PENDING_ACTIVATION
+}
+
+enum TransactionCategory {
+  FLIGHT_BOOKING
+  HOTEL_BOOKING
+  MARKUP_EARNING
+  COMMISSION_EARNING
+  REFUND
+  CREDIT_LIMIT
+  AUTO_RELOAD
+  MANUAL_ADJUSTMENT
+  PAYMENT
+  HOLD
+}
+
+enum HoldStatus {
+  ACTIVE
+  RELEASED
+  CONVERTED
+  EXPIRED
+}
+
+model Wallet {
+  id        String          @id @default(uuid())
+  walletNo  String          @unique
+  ownerType WalletOwnerType @default(AGENT)
+  ownerId   String
+  ownerName String          @default("Default Wallet")
+
+  balance     Float  @default(0)
+  creditLimit Float  @default(0)
+  currency    String @default("USD")
+
+  autoReloadEnabled   Boolean @default(false)
+  autoReloadAmount    Float?
+  autoReloadThreshold Float?
+  autoReloadCurrency  String? @default("USD")
+
+  status          WalletStatus @default(ACTIVE)
+  defaultCurrency String       @default("USD")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions       WalletTransaction[]
+  holds              WalletHold[]
+  creditLimits       AgentCreditLimit[]
+  walletRefunds      WalletRefund[]
+  currencyAccounts   CurrencyAccount[]
+  reconciliationLogs WalletReconciliationLog[]
+  corporateAccounts  CorporateAccount[]
+  supplierWallets    SupplierWallet[]
+
+  @@index([ownerType, ownerId])
+  @@index([status])
+  @@map("wallets")
+}
+
+model CurrencyAccount {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  currency String
+  balance  Float  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  computedBalance  Float               @default(0) // Total balance in this currency
+  availableBalance Float               @default(0) // Available for use
+  blockedBalance   Float               @default(0) // On hold/reserved
+  ledgerAccountId  String? // Link to double-entry ledger account
+  ledgerAccount    LedgerAccount?      @relation(fields: [ledgerAccountId], references: [id])
+  transactions     WalletTransaction[]
+
+  @@unique([walletId, currency])
+  @@index([currency])
+  @@map("currency_accounts")
+}
+
+model WalletTransaction {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  referenceId  String
+  amount       Float
+  currency     String
+  balanceAfter Float
+  category     TransactionCategory
+  status       String              @default("Completed")
+  description  String
+
+  createdAt DateTime @default(now())
+  userId    String? // The user who performed the transaction
+  userName  String? // The name of the user who performed the transaction
+
+  transactionNo     String                @unique // TXN-{timestamp}-{random}
+  currencyAccountId String
+  currencyAccount   CurrencyAccount       @relation(fields: [currencyAccountId], references: [id], onDelete: Cascade)
+  type              WalletTransactionType
+  bookingId         String?
+  bookingRef        String?
+  paymentMethod     PaymentMethod?
+  paymentReference  String? // External payment reference (e.g., Stripe charge ID)
+  fxRate            Float? // Exchange rate used
+  originalAmount    Float? // Original amount before conversion
+  originalCurrency  String? // Original currency
+  reference         String? // Internal reference
+  notes             String?
+  processedAt       DateTime?
+
+  @@index([walletId])
+  @@index([category])
+  @@index([createdAt])
+  @@index([referenceId])
+  @@map("wallet_transactions")
+}
+
+model WalletHold {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  bookingRef String
+  amount     Float
+  currency   String
+  status     HoldStatus @default(ACTIVE)
+  reason     String?
+
+  expiresAt   DateTime?
+  releasedAt  DateTime?
+  convertedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  holdNo            String  @unique // HOLD-{timestamp}-{random}
+  currencyAccountId String
+  bookingId         String?
+  description       String?
+  slug              String? @unique
+
+  @@index([walletId])
+  @@index([status])
+  @@index([bookingRef])
+  @@map("wallet_holds")
+}
+
+model AgentCreditLimit {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  creditLimit          Float     @default(0)
+  tempCreditLimit      Float     @default(0)
+  tempCreditLimitStart DateTime?
+  tempCreditLimitEnd   DateTime?
+
+  alertThreshold Float  @default(0)
+  tdsPercentage  Float  @default(0)
+  tdsExemption   Float  @default(0)
+  payPeriod      String @default("Monthly")
+  annualTurnover Float  @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usedCredit           Float     @default(0)
+  availableCredit      Float     @default(0)
+  currency             String    @default("USD")
+  tempCreditStart      DateTime?
+  tempCreditEnd        DateTime?
+  creditAlertThreshold Float     @default(0.8) // Alert when 80% used
+  status               String    @default("ACTIVE") // ACTIVE, SUSPENDED, EXCEEDED
+  lastCheckedAt        DateTime  @default(now())
+
+  @@unique([walletId])
+  @@index([walletId])
+  @@map("agent_credit_limits")
+}
+
+model WalletRefund {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  bookingRef     String
+  originalAmount Float
+  penaltyAmount  Float   @default(0)
+  refundAmount   Float
+  currency       String
+  status         String  @default("Pending")
+  reason         String?
+
+  processedAt DateTime?
+  processedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refundNo              String  @unique // REF-{timestamp}
+  originalTransactionId String
+  bookingId             String?
+  reasonCategory        String? // CANCELLATION, ERROR, CUSTOMER_REQUEST
+  notes                 String?
+
+  @@index([walletId])
+  @@index([bookingRef])
+  @@index([status])
+  @@map("wallet_refunds")
+}
+
+model WalletReconciliationLog {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id])
+
+  balanceBefore  Float
+  balanceAfter   Float
+  adjustedAmount Float
+  reason         String
+
+  reconciledBy String
+  reconciledAt DateTime @default(now())
+
+  reconciliationDate   DateTime @default(now())
+  currency             String
+  systemBalance        Float // Balance according to transactions
+  ledgerBalance        Float // Balance according to ledger
+  discrepancy          Float // Difference
+  discrepancyTolerance Float    @default(0.01) // Tolerance for rounding
+  status               String   @default("PENDING") // PENDING, RECONCILED, DISCREPANCY_FOUND
+  adjustmentAmount     Float?
+  adjustmentReason     String?
+  notes                String?
+  processedBy          String?
+  createdAt            DateTime @default(now())
+
+  @@index([walletId])
+  @@index([reconciledAt])
+  @@map("wallet_reconciliation_logs")
+}
+
+model CorporateAccount {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  corporateId   String
+  corporateName String
+  billingCycle  String @default("Monthly")
+  invoiceDay    Int    @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  paymentTerms       Int                @default(30) // Days to pay
+  creditLimit        Float              @default(0)
+  outstandingBalance Float              @default(0)
+  autoInvoiceEnabled Boolean            @default(true)
+  invoiceEmail       String?
+  status             String             @default("ACTIVE")
+  invoices           CorporateInvoice[]
+
+  @@index([walletId])
+  @@index([corporateId])
+  @@map("corporate_accounts")
+}
+
+model SupplierWallet {
+  id       String @id @default(uuid())
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  supplierCode String
+  supplierName String
+  supplierType String
+  balance      Float  @default(0)
+  currency     String @default("USD")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  supplierId         String
+  settlementCycle    String               @default("MONTHLY") // DAILY, WEEKLY, MONTHLY
+  settlementCurrency String               @default("USD")
+  payableBalance     Float                @default(0) // Amount owed to supplier
+  paidBalance        Float                @default(0)
+  bankName           String?
+  accountNumber      String?
+  iban               String?
+  swiftCode          String?
+  status             String               @default("ACTIVE")
+  lastSettlementDate DateTime?
+  settlements        SupplierSettlement[]
+
+  @@index([walletId])
+  @@index([supplierCode])
+  @@map("supplier_wallets")
+}
+
+enum MarkupValueType {
+  Percentage
+  Fixed
+}
+
+enum MarkupRuleLevel {
+  BASE
+  OVERRIDE
+  EXCEPTION
+}
+
+enum CommissionSourceType {
+  Airline
+  HotelSupplier
+  GDS
+  DirectContract
+}
+
+enum CommissionType {
+  Percentage
+  Fixed
+  Tiered
+}
+
+enum TaxValueType {
+  Percentage
+  Fixed
+  Tiered
+}
+
+enum TaxRuleLevel {
+  BASE
+  OVERRIDE
+  EXCEPTION
+}
+
+model MarkupRule {
+  id          String          @id @default(uuid())
+  name        String
+  description String?
+  slug        String?         @unique
+  serviceType String
+  valueType   MarkupValueType
+  value       Float
+  isActive    Boolean         @default(true)
+  priority    Int             @default(0)
+  ruleLevel   MarkupRuleLevel @default(BASE)
+
+  salesChannels String[]
+
+  airlineCode     String?
+  airlineGroup    String?
+  originCode      String?
+  destinationCode String?
+  marketRegion    String?
+  rbdClass        String?
+  journeyType     String?
+  cabinClass      String?
+
+  hotelId    String?
+  hotelChain String?
+  hotelStars Int?
+  mealPlan   String?
+
+  supplierCode String?
+  customerId   String?
+  customerType String?
+  customerTier String?
+
+  tenantId  String?
+  agentCode String?
+
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceType, isActive, priority])
+  @@index([airlineCode, destinationCode])
+  @@index([hotelId, hotelChain])
+  @@index([tenantId])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("markup_rules")
+}
+
+model MarkupRuleAuditLog {
+  id             String   @id @default(uuid())
+  ruleId         String
+  action         String
+  previousValues String?
+  newValues      String?
+  changedBy      String?
+  changedAt      DateTime @default(now())
+  ipAddress      String?
+
+  @@index([ruleId, action])
+  @@index([changedAt])
+  @@map("markup_rule_audit_logs")
+}
+
+model CommissionRule {
+  id             String               @id @default(uuid())
+  name           String
+  description    String?
+  slug           String?              @unique
+  sourceType     CommissionSourceType
+  serviceType    String
+  commissionType CommissionType
+  baseCommission Float
+  isActive       Boolean              @default(true)
+
+  supplierCode String?
+  supplierId   String?
+  contractRef  String?
+
+  airlineCode     String?
+  airlineGroup    String?
+  originCode      String?
+  destinationCode String?
+  rbdClass        String?
+  cabinClass      String?
+
+  hotelId    String?
+  hotelChain String?
+  hotelStars Int?
+  mealPlan   String?
+
+  salesChannels String[]
+
+  tenantId  String?
+  agentCode String?
+
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sharingRules CommissionSharingRule[]
+  transactions CommissionTransaction[]
+
+  @@index([sourceType, serviceType, isActive])
+  @@index([supplierCode])
+  @@index([tenantId])
+  @@map("commission_rules")
+}
+
+model CommissionRuleAuditLog {
+  id             String   @id @default(uuid())
+  ruleId         String
+  action         String
+  previousValues String?
+  newValues      String?
+  changedBy      String?
+  changedAt      DateTime @default(now())
+  ipAddress      String?
+
+  @@index([ruleId, action])
+  @@index([changedAt])
+  @@map("commission_rule_audit_logs")
+}
+
+model TaxRule {
+  id          String       @id @default(uuid())
+  name        String
+  description String?
+  slug        String?      @unique
+  serviceType String
+  valueType   TaxValueType
+  value       Float
+  isActive    Boolean      @default(true)
+  priority    Int          @default(0)
+  ruleLevel   TaxRuleLevel @default(BASE)
+
+  // Tax-specific fields
+  taxCode      String? // e.g., "VAT", "GST", "ServiceTax"
+  taxAuthority String? // e.g., "Government", "Local"
+  isRecoverable Boolean @default(false)
+  appliesToNet  Boolean @default(true) // Applies to net amount (true) or gross amount (false)
+
+  // Condition fields (similar to markup/commission)
+  salesChannels String[]
+
+  airlineCode     String?
+  airlineGroup    String?
+  originCode      String?
+  destinationCode String?
+  marketRegion    String?
+  rbdClass        String?
+  journeyType     String?
+  cabinClass      String?
+
+  hotelId    String?
+  hotelChain String?
+  hotelStars Int?
+  mealPlan   String?
+
+  supplierCode String?
+  customerId   String?
+  customerType String?
+  customerTier String?
+
+  tenantId  String?
+  agentCode String?
+
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+
+  createdBy String?
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([serviceType, isActive, priority])
+  @@index([taxCode])
+  @@index([tenantId])
+  @@index([effectiveFrom, effectiveTo])
+  @@map("tax_rules")
+}
+
+model TaxRuleAuditLog {
+  id             String   @id @default(uuid())
+  ruleId         String
+  action         String
+  previousValues String?
+  newValues      String?
+  changedBy      String?
+  changedAt      DateTime @default(now())
+  ipAddress      String?
+
+  @@index([ruleId, action])
+  @@index([changedAt])
+  @@map("tax_rule_audit_logs")
+}
+
+model LedgerTransaction {
+  id             String   @id @default(uuid())
+  referenceId    String // Connects to a Booking Ref or Settlement Ref
+  amount         Float
+  currency       String
+  runningBalance Float
+  category       String // e.g., 'Flight Booking', 'Hotel Booking', 'Markup Earning'
+  status         String   @default("Completed")
+  description    String
+  date           DateTime @default(now())
+}
+
+model DispatchEvent {
+  id        String   @id @default(uuid())
+  bookingId String
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  type      String // 'email', 'download', 'issue', 'modify', 'refund'
+  label     String
+  status    String   @default("Success")
+  recipient String?
+  timestamp DateTime @default(now())
+}
+
+model ApprovalHistory {
+  id            String    @id @default(uuid())
+  bookingId     String
+  approvalLevel Int // 1, 2, or 3
+  approverEmail String
+  approverName  String?
+  status        String // Pending, Approved, Rejected
+  actionDate    DateTime?
+  remarks       String?
+  createdAt     DateTime  @default(now())
+
+  @@index([bookingId])
+  @@index([approvalLevel])
+}
+
+model CommissionSharingRule {
+  id               String         @id @default(uuid())
+  commissionRuleId String
+  commissionRule   CommissionRule @relation(fields: [commissionRuleId], references: [id], onDelete: Cascade)
+
+  // Sharing Configuration
+  shareType  String // 'Percentage', 'Fixed', 'Tiered'
+  shareValue Float // Percentage or fixed amount to share
+
+  // Recipient
+  recipientType String // 'SubAgent', 'Corporate', 'DirectClient', 'Internal'
+  customerId    String? // Specific customer/client ID
+  customerType  String? // Customer segment
+  customerTier  String? // Loyalty tier
+
+  // Conditions
+  minBookingValue Float? // Minimum booking value to qualify
+  maxShareValue   Float? // Maximum share cap
+  priority        Int     @default(0)
+  isActive        Boolean @default(true)
+
+  // Temporal
+  effectiveFrom DateTime?
+  effectiveTo   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions CommissionTransaction[]
+
+  @@index([commissionRuleId, recipientType, isActive])
+  @@index([priority])
+}
+
+model CommissionTransaction {
+  id               String                 @id @default(uuid())
+  bookingRef       String // Related booking reference
+  commissionRuleId String
+  commissionRule   CommissionRule         @relation(fields: [commissionRuleId], references: [id])
+  sharingRuleId    String?
+  sharingRule      CommissionSharingRule? @relation(fields: [sharingRuleId], references: [id])
+
+  // Financial
+  baseCommission Float // Total commission received from supplier
+  sharedAmount   Float // Amount shared with recipient
+  retainedAmount Float // Amount retained by agency
+  currency       String @default("USD")
+
+  // Recipient
+  recipientType String // Who received the share
+  recipientId   String? // Specific recipient ID
+
+  // Status
+  status String    @default("Pending") // 'Pending', 'Paid', 'Reversed'
+  paidAt DateTime?
+
+  // Metadata
+  description String?
+  slug        String?  @unique
+  createdAt   DateTime @default(now())
+
+  @@index([bookingRef, status])
+  @@index([commissionRuleId])
+  @@index([createdAt])
+}
+
+model TravellerProfile {
+  id       String @id @default(uuid())
+  tenantId String @default("default")
+
+  // Basic Profile Information
+  title         String  @default("Mr")
+  firstName     String
+  middleName    String?
+  lastName      String
+  preferredName String?
+  dateOfBirth   String
+  gender        String? // Male, Female, Non-Binary
+  nationality   String?
+  travellerType String  @default("Regular") // VIP, CIP, Regular
+  username      String?
+  status        String  @default("Active") // Active, Inactive
+
+  // Contact Information (Encrypted)
+  email           String? // Encrypted
+  alternateEmail  String? // Encrypted
+  mobile          String? // Encrypted
+  alternateMobile String? // Encrypted
+  phone           String? // Encrypted
+  fax             String?
+
+  // Addresses (JSON for flexibility)
+  homeAddress     Json? // {streetAddress, country, state, city, suburb, postCode}
+  businessAddress Json?
+  deliveryAddress Json?
+
+  // Emergency Contact (Encrypted)
+  emergencyContactName     String?
+  emergencyContactRelation String?
+  emergencyPhone           String? // Encrypted
+  emergencyEmail           String? // Encrypted
+
+  // Profile Metadata
+  noEmail Boolean @default(false)
+  remarks String?
+
+  // Encryption Metadata
+  encryptionIv Json? // Stores the IV for each encrypted field
+
+  // Multi-language Support
+  preferredLanguage String? @default("en") // en, ar, fr, es, etc.
+
+  // Compliance & Consent
+  gdprConsent              Boolean   @default(false)
+  gdprConsentDate          DateTime?
+  dataRetentionExpiry      DateTime? // Auto-delete after this date
+  marketingConsent         Boolean   @default(false)
+  thirdPartySharingConsent Boolean   @default(false)
+
+  // Third-party Integration
+  externalCRMId String? // External CRM system ID
+  lastSyncedAt  DateTime?
+  syncStatus    String    @default("SYNCED") // SYNCED, PENDING, FAILED, ERROR
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  passports         ClientPassport[]
+  visas             ClientVisa[]
+  dependents        ClientDependent[]
+  preferences       ClientPreferences?
+  documents         ClientDocument[]
+  personalCards     ClientPersonalCard[]
+  associatedClients ClientAssociation[]
+  communicationLogs CommunicationLog[]
+  customAlerts      CustomAlert[]
+  integrationLogs   IntegrationLog[]
+
+  @@index([tenantId, status])
+  @@index([email, mobile])
+  @@index([travellerType])
+  @@index([createdAt])
+}
+
+model ClientPassport {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  passportNumber String // Encrypted
+  dateOfBirth    String
+  nationality    String
+  issuingCountry String
+  expiryDate     String
+  isPrimary      Boolean @default(false)
+  status         String  @default("Active") // Active, About to Expire, Expired
+
+  // Encryption
+  encryptionIv String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([travellerId])
+  @@index([expiryDate, status])
+}
+
+model ClientVisa {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  visaNumber   String // Encrypted
+  country      String
+  type         String? // Tourist, Business, Student, etc.
+  dateOfIssue  String
+  dateOfExpiry String
+
+  // Encryption
+  encryptionIv String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([travellerId])
+  @@index([dateOfExpiry])
+}
+
+model ClientDependent {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  status        String  @default("Active")
+  title         String?
+  firstName     String
+  middleName    String?
+  lastName      String
+  preferredName String?
+  gender        String
+  dateOfBirth   String
+  relation      String
+
+  // Contact (Encrypted)
+  email           String? // Encrypted
+  mobile          String? // Encrypted
+  alternateMobile String? // Encrypted
+
+  // Preferences (JSON)
+  flightPreferences Json?
+  hotelPreferences  Json?
+  carPreferences    Json?
+
+  // Passport & Visa (embedded or relation)
+  passportNumber      String? // Encrypted
+  passportExpiry      String?
+  passportNationality String?
+  visaNumber          String? // Encrypted
+  visaExpiry          String?
+
+  // Encryption
+  encryptionIv Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([travellerId])
+}
+
+model ClientPreferences {
+  id          String           @id @default(uuid())
+  travellerId String           @unique
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  // Flight Preferences (JSON)
+  flightPreferences Json? // {longHaulSeat, shortHaulSeat, mealPreference, stopOverPreference, classPreference, preferredAirlines[], loyaltyPrograms[], osiRemarks[], interests[]}
+
+  // Hotel Preferences (JSON)
+  hotelPreferences Json? // {roomPreference, smokingPreference, starRating, facilities[], loyaltyPrograms[]}
+
+  // Car Preferences (JSON)
+  carPreferences Json? // {carType, carHireCompany, loyaltyPrograms[]}
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([travellerId])
+}
+
+model ClientDocument {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  title        String
+  fileName     String
+  fileSize     Int // in bytes
+  fileType     String // PDF, JPG, PNG, etc.
+  fileUrl      String? // Secure storage URL
+  documentType String // Passport, Visa, Ticket, Receipt, Other
+
+  // Encryption for sensitive documents
+  encrypted     Boolean @default(false)
+  encryptionKey String? // Reference to encrypted file key
+
+  uploadedBy String?
+  uploadedAt DateTime @default(now())
+
+  @@index([travellerId])
+  @@index([documentType])
+}
+
+model ClientPersonalCard {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  cardName        String
+  cardOption      String // Credit, Debit
+  cardType        String // Visa, MasterCard, Amex, etc.
+  nameOnCard      String
+  cardNumber      String // Encrypted - Last 4 digits only visible
+  cardNumberLast4 String // Last 4 digits for display
+  expiryDate      String
+  product         String?
+
+  // Encryption
+  encryptionIv String?
+  encrypted    Boolean @default(true)
+
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([travellerId])
+}
+
+model ClientAssociation {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  associatedClientId   String // ID of associated client
+  associatedClientName String
+  associationType      String? // Family, Corporate, Travel Companion, etc.
+
+  associatedAt DateTime @default(now())
+
+  @@index([travellerId])
+  @@index([associatedClientId])
+}
+
+model CustomAlert {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+
+  alertType String // PASSPORT_EXPIRY, VISA_EXPIRY, BIRTHDAY, DOCUMENT_EXPIRY, CUSTOM
+  title     String
+  message   String
+  severity  String @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+
+  triggerDate    DateTime
+  isRecurring    Boolean  @default(false)
+  recurrenceRule String? // Cron expression for recurring alerts
+
+  isActive    Boolean   @default(true)
+  isDismissed Boolean   @default(false)
+  dismissedAt DateTime?
+  dismissedBy String?
+
+  notificationChannels Json? // ["EMAIL", "SMS", "IN_APP", "WEBHOOK"]
+  metadata             Json? // Additional context
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([travellerId, isActive])
+  @@index([triggerDate, severity])
+}
+
+model IntegrationLog {
+  id          String            @id @default(uuid())
+  travellerId String?
+  traveller   TravellerProfile? @relation(fields: [travellerId], references: [id], onDelete: SetNull)
+
+  integrationType String // CRM, GDS, LOYALTY, PAYMENT, EMAIL_SERVICE
+  provider        String // Salesforce, HubSpot, Amadeus, Sabre, etc.
+  operation       String // SYNC, CREATE, UPDATE, DELETE, QUERY
+
+  requestPayload  String? // Encrypted if contains PII
+  responsePayload String?
+  statusCode      Int?
+  errorMessage    String?
+
+  duration      Int? // milliseconds
+  syncDirection String @default("OUTBOUND") // OUTBOUND, INBOUND
+
+  status      String    @default("PENDING") // PENDING, SUCCESS, FAILED, RETRY
+  retryCount  Int       @default(0)
+  nextRetryAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([travellerId])
+  @@index([integrationType, status])
+  @@index([createdAt])
+}
+
+model SubUser {
+  id       String @id @default(uuid())
+  username String @unique
+  name     String
+  email    String @unique
+  role     String @default("Agent") // 'Admin', 'Agent'
+
+  // v12 Profile Details
+  title           String?
+  firstName       String?
+  lastName        String?
+  gender          String?
+  language        String? @default("English")
+  allowAutoTicket Boolean @default(true)
+
+  // Address & Contact
+  streetAddress String?
+  city          String?
+  state         String?
+  postCode      String?
+  telephone     String?
+  mobile        String?
+  remarks       String?
+
+  creditLimit     Float    @default(0)
+  availableCredit Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  favorites FavoriteAsset[]
+}
+
+model Branch {
+  id    String  @id @default(uuid())
+  name  String
+  email String?
+
+  // v12 Address Shard
+  address1   String?
+  address2   String?
+  address3   String?
+  city       String?
+  userId     String?
+  tier       String?
+  comments   String?
+  totalSpent Float?
+  state      String?
+  postCode   String?
+  country    String?
+
+  // v12 Contact Cluster
+  telephone     String?
+  mobile        String?
+  fax           String?
+  contactName   String?
+  contactEmail  String?
+  contactMobile String?
+
+  remark    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FavoriteAsset {
+  id        String   @id @default(uuid())
+  subUserId String
+  subUser   SubUser  @relation(fields: [subUserId], references: [id])
+  type      String // 'Flight', 'Hotel'
+  assetId   String
+  name      String
+  details   Json
+  createdAt DateTime @default(now())
+}
+
+model Supplier {
+  id     String  @id @default(uuid())
+  name   String
+  code   String  @unique // e.g., 'SABRE', 'LITEAPI'
+  type   String // 'GDS', 'Bedbank', 'NDC'
+  status Boolean @default(true)
+
+  // v12 Contact Shard
+  address    String?
+  city       String?
+  state      String?
+  postCode   String?
+  country    String?
+  telephone1 String?
+  telephone2 String?
+  mobile     String?
+  fax        String?
+  email      String?
+  website    String?
+  logoUrl    String?
+
+  // v12 Financial Shards
+  taxId         String? // General Tax ID
+  panNo         String? // Permanent Account Number
+  serviceTaxNo  String?
+  atolNo        String? // Air Travel Organiser's Licence
+  bankName      String?
+  accountNumber String?
+  swiftCode     String?
+  rtgsCode      String?
+  currency      String  @default("USD")
+
+  // Settlement Governance
+  settlementPeriod String   @default("Monthly") // 'Fortnightly', 'Monthly', 'Weekly', 'On Request'
+  securityDeposit  Float    @default(0)
+  contractDate     DateTime @default(now())
+  financialRemarks String?
+
+  // Governance & Alerts
+  creditLimit      Float   @default(0)
+  availableCredit  Float   @default(0)
+  onboardingStatus String  @default("PENDING") // 'PENDING', 'AUTHORIZED', 'ACTIVE'
+  loginStatus      Boolean @default(true)
+
+  contracts SupplierContract[]
+  metrics   SupplierMetric[]
+  alerts    SupplierAlert[]
+}
+
+model SupplierAlert {
+  id         String   @id @default(uuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  type       String // 'BALANCE_LOW', 'LATENCY_HIGH', 'ERROR_RATE_HIGH'
+  threshold  Float
+  status     String   @default("ACTIVE") // 'ACTIVE', 'TRIGGERED', 'RESOLVED'
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model SupplierContract {
+  id          String   @id @default(uuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  contractRef String
+  startDate   DateTime
+  endDate     DateTime
+  terms       String?
+  netMarkup   Float    @default(0)
+  isActive    Boolean  @default(true)
+}
+
+model SupplierMetric {
+  id          String   @id @default(uuid())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  timestamp   DateTime @default(now())
+  latencyMs   Int
+  successRate Float
+  errorCount  Int      @default(0)
+  pnrVelocity Int      @default(0) // Bookings per hour
+}
+
+model CommunicationLog {
+  id          String           @id @default(uuid())
+  travellerId String
+  traveller   TravellerProfile @relation(fields: [travellerId], references: [id], onDelete: Cascade)
+  timestamp   DateTime         @default(now())
+  type        String // 'EMAIL', 'CALL', 'SMS', 'SYSTEM'
+  subject     String
+  content     String?
+  status      String           @default("SENT")
+}
+
+enum WalletTransactionType {
+  CREDIT // Add funds
+  DEBIT // Deduct funds
+  HOLD // Reserve funds
+  RELEASE // Release hold
+  TRANSFER // Transfer between wallets
+  REFUND // Refund to wallet
+  FEE // Transaction fee
+  ADJUSTMENT // Manual adjustment
+  RECONCILIATION // Reconciliation adjustment
+  AUTO_RELOAD // Automatic wallet reload
+}
+
+enum WalletTransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REVERSED
+  QUEUED
+}
+
+enum WalletHistoryType {
+  DEPOSIT
+  WITHDRAWAL
+  BOOKING_DEBIT
+  BOOKING_CREDIT
+  REFUND
+  TRANSFER_IN
+  TRANSFER_OUT
+  HOLD_PLACED
+  HOLD_RELEASED
+  ADJUSTMENT
+  RECONCILIATION
+  AUTO_RELOAD
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  WALLET
+  CHEQUE
+  ON_HOLD
+  SKIP_PAYMENT
+}
+
+model CurrencyExchangeRate {
+  id String @id @default(uuid())
+
+  // Currency Pair
+  baseCurrency  String // e.g., USD
+  quoteCurrency String // e.g., BHD
+
+  // Rate Information
+  rate        Float // Exchange rate
+  inverseRate Float // 1/rate
+  source      String? // e.g., "ECB", "OpenExchangeRates", "Manual"
+
+  // Validity
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+
+  // Metadata
+  isLocked  Boolean @default(false) // True if locked for a booking
+  bookingId String? // If locked for a specific booking
+
+  createdAt DateTime @default(now())
+
+  @@unique([baseCurrency, quoteCurrency, validFrom])
+  @@index([baseCurrency, quoteCurrency])
+  @@index([validFrom])
+}
+
+model CorporateInvoice {
+  id        String @id @default(uuid())
+  invoiceNo String @unique // INV-{corporateId}-{timestamp}
+
+  // Corporate Account Reference
+  corporateAccountId String
+  corporateAccount   CorporateAccount @relation(fields: [corporateAccountId], references: [id], onDelete: Cascade)
+
+  // Invoice Details
+  billingPeriodStart DateTime
+  billingPeriodEnd   DateTime
+  totalAmount        Float
+  currency           String   @default("USD")
+
+  // Line Items
+  lineItems Json? // Array of {bookingRef, description, amount}
+
+  // Status
+  status String @default("PENDING") // PENDING, SENT, PAID, OVERDUE, CANCELLED
+
+  // Dates
+  dueDate DateTime
+  sentAt  DateTime?
+  paidAt  DateTime?
+
+  // Payment
+  paymentMethod    PaymentMethod?
+  paymentReference String?
+
+  // Metadata
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([corporateAccountId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model SupplierSettlement {
+  id           String @id @default(uuid())
+  settlementNo String @unique // SETT-{supplierId}-{timestamp}
+
+  // Supplier Wallet Reference
+  supplierWalletId String
+  supplierWallet   SupplierWallet @relation(fields: [supplierWalletId], references: [id], onDelete: Cascade)
+
+  // Settlement Details
+  settlementPeriodStart DateTime
+  settlementPeriodEnd   DateTime
+  totalAmount           Float
+  currency              String
+
+  // Line Items
+  lineItems Json? // Array of {bookingRef, description, amount, currency}
+
+  // Exchange Rate (if multi-currency)
+  exchangeRate  Float?
+  localAmount   Float?
+  localCurrency String?
+
+  // Status
+  status String @default("PENDING") // PENDING, PROCESSING, PAID, FAILED
+
+  // Payment
+  paymentMethod    PaymentMethod?
+  paymentReference String?
+  paidAt           DateTime?
+
+  // Adjustments
+  adjustments      Float   @default(0)
+  adjustmentReason String?
+
+  // Metadata
+  notes       String?
+  processedBy String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([supplierWalletId])
+  @@index([status])
+  @@index([settlementPeriodStart])
+}
+
+model LedgerAccount {
+  id          String @id @default(uuid())
+  accountNo   String @unique // ACC-{type}-{number}
+  accountName String
+  accountType String // ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+
+  // Parent Account (for hierarchy)
+  parentAccountId String?
+  parentAccount   LedgerAccount?  @relation("LedgerHierarchy", fields: [parentAccountId], references: [id])
+  childAccounts   LedgerAccount[] @relation("LedgerHierarchy")
+
+  // Currency
+  currency String @default("USD")
+
+  // Balance
+  balance     Float @default(0)
+  debitTotal  Float @default(0)
+  creditTotal Float @default(0)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Metadata
+  description String?
+  slug        String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  currencyAccounts CurrencyAccount[]
+  ledgerEntries    LedgerEntry[]
+
+  @@index([accountType])
+  @@index([currency])
+  @@index([isActive])
+}
+
+model LedgerEntry {
+  id      String @id @default(uuid())
+  entryNo String @unique // LE-{timestamp}-{random}
+
+  // Transaction Reference
+  transactionId String?
+  bookingId     String?
+  bookingRef    String?
+
+  // Double-Entry: Each transaction has 2 entries (debit and credit)
+  entryType String // DEBIT or CREDIT
+  amount    Float
+  currency  String
+
+  // Account
+  accountId String
+  account   LedgerAccount @relation(fields: [accountId], references: [id])
+
+  // Description
+  description String?
+  slug        String? @unique
+
+  // Metadata
+  createdAt DateTime @default(now())
+
+  @@index([accountId])
+  @@index([bookingId])
+  @@index([createdAt])
+}
+
+model FinancialEvent {
+  id String @id @default(uuid())
+
+  // Event Details
+  eventType String // WALLET_CREDIT, WALLET_DEBIT, HOLD_PLACED, HOLD_RELEASED, etc.
+  entity    String // Wallet, Booking, Transaction, etc.
+  entityId  String
+
+  // Financial Impact
+  amount        Float
+  currency      String
+  balanceBefore Float?
+  balanceAfter  Float?
+
+  // Context
+  metadata Json?
+
+  // Status
+  status String @default("COMPLETED")
+
+  // Metadata
+  createdAt DateTime @default(now())
+
+  // Service alignment
+  paymentMethod String?
+
+  // Reverse relations for unified includes
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  invoiceId String?
+
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+  @@map("financial_events")
+}
+
+model BookingQueue {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  queueType String // 'verification', 'ticketing', 'refund', etc.
+  status    String  @default("pending")
+  priority  String  @default("medium")
+  notes     String?
+  metadata  Json? // Stores extra context (details, customerName, etc.)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([status])
+  @@map("booking_queues")
+}
+
+model BookingPassenger {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  firstName     String
+  lastName      String
+  email         String?
+  phone         String?
+  passengerType String  @default("ADULT")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookingId])
+  @@map("booking_passengers")
+}
+
+model Invoice {
+  id            String  @id @default(uuid())
+  invoiceNumber String  @unique
+  bookingId     String
+  booking       Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  totalAmount Float
+  currency    String @default("USD")
+  status      String @default("PENDING")
+
+  billingPeriodStart DateTime?
+  billingPeriodEnd   DateTime?
+  dueDate            DateTime?
+  paidAt             DateTime?
+  paymentMethod      String?
+  paymentReference   String?
+
+  lineItems Json? // Array of objects
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Compatibility relations
+  payments FinancialEvent[]
+
+  @@index([bookingId])
+  @@index([invoiceNumber])
+  @@map("invoices")
+}
+
+model DuffelOrder {
+  id              String   @id @default(uuid())
+  orderId         String   @unique
+  bookingId       String
+  clientKey       String
+  pnr             String?
+  status          String   @default("CREATED")
+  totalAmount     Float    @default(0)
+  totalCurrency   String   @default("USD")
+  passengers      Json
+  slices          Json
+  taxAmount       Float?
+  taxCurrency     String?
+  ticketingStatus String?
+  paymentStatus   String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model DuffelOfferRequest {
+  id            String       @id
+  userId        String?
+  origin        String
+  destination   String
+  departureDate DateTime
+  returnDate    DateTime?
+  passengers    Json
+  cabinClass    String       @default("economy")
+  rawResponse   Json
+  offers        DuffelOffer[]
+  createdAt     DateTime     @default(now())
+}
+
+model DuffelOffer {
+  id             String             @id
+  offerRequestId String
+  offerRequest   DuffelOfferRequest @relation(fields: [offerRequestId], references: [id])
+  totalAmount    String
+  taxAmount      String?
+  currency       String
+  ownerId        String
+  expiresAt      DateTime
+  rawResponse    Json
+  createdAt      DateTime           @default(now())
+}
+
+model LiteApiBooking {
+  id              String   @id @default(uuid())
+  bookingId       String   @unique
+  otaBookingId    String?
+  localBookingId  String?  // Linked to Booking.id
+  status          String
+  hotelId         String?
+  hotelName       String
+  checkIn         DateTime
+  checkOut        DateTime
+  price           Float?
+  totalAmount     String?
+  currency        String
+  cancellationPax Json?
+  rooms           Json?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PrebookSession {
+  id            String   @id @default(uuid())
+  sessionId     String?  @unique
+  transactionId String?  @unique // Used by LiteAPI
+  flightType    String   @default("duffel")
+  offerId       String?
+  hotelId       String?
+  price         String?
+  currency      String?
+  guestEmail    String?
+  guestName     String?
+  expiresAt     DateTime?
+  status        String   @default("pending")
+  bookingId     String?
+  searchParams  Json?
+  selectedOffer Json?
+  tenantId      String?
+  salesChannel  String   @default("SUBAGENT")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model OfflineChangeRequest {
+  id              String   @id @default(uuid())
+  requestRef      String?  @unique
+  bookingId       String
+  bookingRef      String?
+  requestType     String
+  status          String   @default("PENDING")
+  requestedBy     String?
+  requestedRole   String?
+  submittedBy     String?  // Legacy field support
+  assignedTo      String?
+  priority        String   @default("MEDIUM")
+  subject         String?
+  description     String?
+  attachments     Json?
+  internalRemarks String?
+  requestDetails  Json?
+  resolutionData  Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  auditLogs       OfflineRequestAuditLog[]
+  notifications   OfflineRequestNotificationQueue[]
+}
+
+model OfflineRequestAuditLog {
+  id          String   @id @default(uuid())
+  requestId   String
+  request     OfflineChangeRequest @relation(fields: [requestId], references: [id])
+  action      String
+  performedBy String
+  role        String
+  oldStatus   String?
+  newStatus   String?
+  details     Json?
+  createdAt   DateTime @default(now())
+}
+
+model OfflineRequestNotificationQueue {
+  id          String    @id @default(uuid())
+  requestId   String
+  request     OfflineChangeRequest @relation(fields: [requestId], references: [id])
+  type        String
+  recipient   String
+  status      String    @default("PENDING")
+  payload     Json?
+  error       String?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+}
+
+model SupplierHotelMapping {
+  id              String   @id @default(uuid())
+  supplierHotelId String
+  localHotelId    String?
+  hotelName       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([supplierHotelId])
+  @@index([localHotelId])
+}
+
+model BoardType {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================================
+// CENTRALIZED MODULES (SUPER ADMIN & CALL CENTER)
+// ============================================================
+
+model SupportTicket {
+  id          String   @id @default(uuid())
+  tenantId    String?
+  userId      String?
+  subject     String
+  description String
+  status      String   @default("OPEN") // OPEN, IN_PROGRESS, RESOLVED, CLOSED
+  priority    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  assignedTo  String?
+  relatedTo   String?  // Reference to a bookingId or other entity
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  messages    TicketMessage[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("support_tickets")
+}
+
+model TicketMessage {
+  id        String   @id @default(uuid())
+  ticketId  String
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId    String?
+  sender    String   // 'USER', 'AGENT', 'SYSTEM'
+  message   String
+  isInternal Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@map("ticket_messages")
+}
+
+model WhiteLabelTheme {
+  id                String   @id @default(uuid())
+  tenantId          String   @unique
+  logoUrl           String?
+  primaryColor      String   @default("#000000")
+  secondaryColor    String   @default("#ffffff")
+  fontFamily        String   @default("Inter")
+  customCss         String?
+  featureFlags      Json?    // e.g., { "enableChat": true }
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("white_label_themes")
+}
+
+model SystemConfig {
+  id             String   @id @default(uuid())
+  key            String   @unique
+  value          Json
+  description    String?
+  isPublic       Boolean  @default(false)
+  lastUpdatedBy  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([key])
+  @@map("system_configs")
+}
+
+model WebhookLog {
+  id           String   @id @default(uuid())
+  supplier     String
+  eventType    String
+  raw_payload  Json
+  processed    Boolean  @default(false)
+  processedAt  DateTime?
+  error        String?
+  retryCount   Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([supplier])
+  @@index([eventType])
+  @@index([processed])
+  @@map("webhook_logs")
+}

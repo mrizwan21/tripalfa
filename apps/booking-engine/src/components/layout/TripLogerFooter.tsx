@@ -7,7 +7,7 @@ import {
   Send,
   Mail,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 export default function TripLogerFooter(): React.JSX.Element {
   return (

@@ -8,7 +8,7 @@
  * Primary source: PostgreSQL static-data-service running locally on port 3002
  * Frontend fetches directly from /static/* endpoint (no API manager routing)
  *
- * @see docs/migrations/STATIC_DATA_MIGRATION.md
+ * @see docs/operations/DATABASE_POLICY.md
  */
 
 import {
@@ -17,7 +17,7 @@ import {
 } from '@tripalfa/static-data/frontend';
 
 // Re-export searchHotelDestinations from the shared package
-export { searchHotelDestinations };
+export const searchHotelDestinations = baseSearchDestinations;
 
 // ============================================================================
 // APP-SPECIFIC EXTENSIONS

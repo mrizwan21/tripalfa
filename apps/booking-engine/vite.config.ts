@@ -9,7 +9,7 @@ export default defineConfig({
       // More specific aliases must come first before general '@' alias
       {
         find: "@/components/ui",
-        replacement: path.resolve(__dirname, "../../packages/ui-components/ui"),
+        replacement: path.resolve(__dirname, "./src/components/ui"),
       },
       // General aliases
       {
@@ -39,7 +39,6 @@ export default defineConfig({
           "react-vendor": [
             "react",
             "react-dom",
-            "react-router",
             "react-router-dom",
           ],
           // Split TanStack Query

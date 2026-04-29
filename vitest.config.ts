@@ -13,7 +13,6 @@ export default defineConfig({
       include: [
         'apps/**/src/**/*.ts',
         'apps/**/src/**/*.tsx',
-        'services/**/src/**/*.ts',
         'packages/**/src/**/*.ts',
       ],
       exclude: [

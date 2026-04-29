@@ -4,8 +4,8 @@
 import React, { useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { transferBetweenWallets, getFxPreview } from "../services/walletApi.js";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Button } from './ui/button';
+import { Label } from './ui/label';
 
 interface Wallet {
   id: string;

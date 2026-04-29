@@ -1,31 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
   "ignore": [
-    "apps/Admin/src/components/optics/**",
-    "apps/Admin/src/features/bookings/types.ts",
-    "apps/Admin/src/features/notifications/**",
-    "apps/Admin/src/features/rules/components/**",
-    "apps/Admin/src/features/suppliers/components/api-gateway/**",
-    "apps/Admin/src/features/suppliers/hooks/useGateway.ts",
-    "apps/Admin/src/features/users/pages/columns.tsx",
-    "apps/Admin/src/hooks/useTheme.ts",
-    "apps/Admin/src/layout/AdminLayout.tsx",
-    "apps/Admin/src/modules/crm/**",
-    "apps/Admin/src/services/api-manager/**",
-    "apps/Admin/src/services/CurrencyService.ts",
-    "apps/Admin/src/services/notification-client/**",
-    "apps/Admin/src/services/ReportsService.ts",
-    "apps/Admin/src/services/rule-engine-client/**",
-    "apps/Admin/src/shared/components/inputs/CityAutocomplete.tsx",
-    "apps/Admin/src/shared/components/layout/AdminLayout.tsx",
-    "apps/Admin/src/shared/components/layout/DashboardLayout.tsx",
-    "apps/Admin/src/shared/lib/**",
-    "apps/Admin/src/shared/providers/theme-provider.tsx",
-    "apps/Admin/src/shared/services/permissionService.ts",
-    "apps/Admin/src/theme/**",
-    "apps/Admin/src/config/seo.ts",
-    "apps/Admin/src/config/routing.tsx",
-    "apps/Admin/src/contexts/ThemeContext.tsx",
     "apps/booking-engine/src/components/**",
     "apps/booking-engine/src/api/**",
     "apps/booking-engine/src/hooks/**",
@@ -53,28 +28,16 @@
     "**/src/middlewares/**",
     "**/src/middleware/**",
     "**/src/utils/**",
-    "services/marketing-service/src/**",
-    "services/notification-service/src/**",
-    "services/payment-service/src/**",
-    "services/wallet-service/src/**",
-    "services/booking-service/src/**",
-    "services/booking-engine-service/src/static-db.ts",
-    "services/booking-engine-service/src/middlewares/**",
-    "services/booking-engine-service/src/utils/**",
-    "services/Admin-service/src/docs/**",
-    "services/Admin-service/src/types/index.ts",
-    "services/Admin-service/src/services/payment-gateway/**",
-    "services/rule-engine-service/src/**",
-    "services/user-service/src/**",
-    "services/organization-service/src/types/**",
+    "packages/notification-service/src/**",
+    "packages/booking-service/src/**",
+    "packages/booking-engine-service/src/static-db.ts",
+    "packages/booking-engine-service/src/middlewares/**",
+    "packages/booking-engine-service/src/utils/**",
     "packages/ui-components/src/**",
-    "packages/ui-components/test.ts",
     "packages/shared-utils/src/cache-manager.ts",
     "packages/shared-utils/src/featureFlags.ts",
     "packages/shared-utils/src/monitoring.ts",
     "packages/shared-utils/tracing.ts",
-    "packages/shared-utils/src/api.ts",
-    "packages/shared-utils/src/hooks.ts",
     "packages/shared-utils/logger.ts",
     "packages/shared-types/src/static.types.ts",
     "packages/shared-types/src/test.ts",
@@ -89,9 +52,7 @@
     "packages/shared-database/src/index.ts",
     "packages/static-data/src/frontend-index.ts",
     "vitest.config.ts",
-    "vitest.workspace.ts",
-    "apps/Admin/vitest.config.ts",
-    "services/wallet-service/jest.config.cjs"
+    "vitest.workspace.ts"
   ],
   "ignoreBinaries": ["prisma", "playwright"],
   "ignoreExportsUsedInFile": true,
@@ -197,15 +158,23 @@
   ],
   "workspaces": {
     ".": {
-      "entry": ["scripts/**/*.ts", "*.config.ts"],
-      "project": ["scripts/**/*.ts", "types/**/*.d.ts"]
+      "entry": ["*.config.ts"],
+      "project": ["types/**/*.d.ts"]
     },
     "apps/booking-engine": {
       "entry": ["src/main.tsx", "src/App.tsx"],
       "project": ["src/**/*.{ts,tsx}"]
     },
-    "apps/Admin": {
-      "entry": ["src/app/main.tsx", "src/app/App.tsx"],
+    "apps/b2b-portal": {
+      "entry": ["src/main.tsx", "src/App.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/call-center-portal": {
+      "entry": ["src/main.tsx", "src/App.tsx"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/super-admin-portal": {
+      "entry": ["src/main.tsx", "src/AppRouter.tsx"],
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/*": {
@@ -227,10 +196,6 @@
     "packages/static-data": {
       "entry": ["src/server.ts", "src/scheduler.ts", "src/frontend-index.ts"],
       "project": ["src/**/*.ts"]
-    },
-    "services/*": {
-      "entry": ["src/index.ts", "src/server.ts"],
-      "project": ["src/**/*.ts", "!dist/**"]
     }
   }
 }

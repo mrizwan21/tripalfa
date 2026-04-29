@@ -17,7 +17,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '@/lib/tenantContentConfig';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 
 const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);

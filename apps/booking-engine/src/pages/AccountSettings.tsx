@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import PageHeader from '../components/layout/PageHeader';
 import { Card } from '../components/ui/card';
 import { formatCurrency } from '@tripalfa/ui-components';
-import { Label } from '@/components/ui/label';
+import { Label } from '../components/ui/label';
 import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
 
 type CardItem = {

@@ -1,0 +1,42 @@
+{
+  "name": "@tripalfa/shared-features",
+  "version": "1.0.0",
+  "description": "Shared domain feature modules for OTA Platform portals",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./styles/b2b-portal-theme.css": "./styles/b2b-portal-theme.css"
+  },
+  "files": [
+    "dist",
+    "styles"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.100.5",
+    "axios": "^1.15.2",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.477.0",
+    "react": "^19.2.4",
+    "react-router-dom": "^7.14.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "typescript": "^5.0.4",
+    "vite": "^8.0.10"
+  }
+}

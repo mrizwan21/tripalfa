@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Armchair, CheckCircle2, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 interface Seat {
   id: string;

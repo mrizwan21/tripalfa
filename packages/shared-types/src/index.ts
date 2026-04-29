@@ -1,633 +1,881 @@
-// Shared TypeScript types and adapter interfaces used across services
-export * from './service-bootstrap';
+/// <reference types="node" />
 
-export enum Intent {
-  READ_STATIC = 'READ_STATIC',
-  QUERY_STATIC = 'QUERY_STATIC',
-  WRITE = 'WRITE',
-  READ_REALTIME = 'QUERY_REALTIME',
-  QUERY_REALTIME = 'READ_REALTIME',
-  ADAPTER = 'ADAPTER',
+// ============================================================
+// OTA PLATFORM - SHARED TYPES
+// ============================================================
+// Centralized type definitions used across all services
+// ============================================================
+
+// ============================================================
+// SALES CHANNELS
+// ============================================================
+
+export enum SalesChannel {
+  POS_DC = 'POS_DC',       // On Behalf of Direct Customer (Midoffice Front Desk)
+  POS_SA = 'POS_SA',       // On Behalf of Subagent (Midoffice Front Desk)
+  POS_CA = 'POS_CA',       // On Behalf of Corporate (Midoffice Front Desk / SBT)
+  SUBAGENT = 'SUBAGENT',   // B2B Dashboard
+  WEBSITE = 'WEBSITE',     // B2C Website
+  MOBILE = 'MOBILE',       // Mobile App
 }
 
-// Adapter interface for external integrations
-export interface Adapter {
-  name: string;
-  request(payload: any): Promise<any>;
+export const SALES_CHANNEL_LABELS: Record<SalesChannel, string> = {
+  [SalesChannel.POS_DC]: 'Direct Customer',
+  [SalesChannel.POS_SA]: 'Sub-Agent Counter',
+  [SalesChannel.POS_CA]: 'Corporate Counter',
+  [SalesChannel.SUBAGENT]: 'B2B Sub-Agent',
+  [SalesChannel.WEBSITE]: 'B2C Website',
+  [SalesChannel.MOBILE]: 'Mobile App',
+};
+
+// ============================================================
+// BOOKING STATUS
+// ============================================================
+
+export enum BookingStatus {
+  NEW_BOOKING = 'NEW_BOOKING',
+  PROVISIONAL = 'PROVISIONAL',
+  AUTHORIZED = 'AUTHORIZED',
+  TICKETED = 'TICKETED',
+  DOCUMENTED = 'DOCUMENTED',
+  DISPATCHED = 'DISPATCHED',
+  CANCELLED = 'CANCELLED',
+  VOID = 'VOID',
+  REFUNDED = 'REFUNDED',
+  REFUND_ON_HOLD = 'REFUND_ON_HOLD',
+  REJECTED = 'REJECTED',
 }
 
-// Flight search result
-export interface FlightResult {
-  id: string;
-  airline: string;
-  flightNumber: string;
-  departure: {
-    airport: string;
-    time: Date;
-  };
-  arrival: {
-    airport: string;
-    time: Date;
-  };
-  price: number;
-  currency: string;
-  availableSeats: number;
+export enum SegmentStatus {
+  HK = 'HK',  // Confirmed
+  UC = 'UC',  // Unconfirmed
+  RQ = 'RQ',  // On Request
+  HX = 'HX',  // Cancelled by airline
+  NO = 'NO',  // No record
 }
 
-// Hotel search result
-export interface HotelResult {
-  id: string;
-  name: string;
-  location: string;
-  rating: number;
-  pricePerNight: number;
-  currency: string;
-  availableRooms: number;
-  amenities: string[];
+// ============================================================
+// SERVICE TYPES
+// ============================================================
+
+export enum ServiceType {
+  FLIGHT = 'Flight',
+  HOTEL = 'Hotel',
+  CAR = 'Car',
+  FLIGHT_ANCILLARY = 'FA',
+  FOREX = 'FC',
+  OTHER = 'O',
+  PACKAGE = 'Package',
+  INSURANCE = 'Insurance',
+  SIGHTSEEING = 'Sightseeing',
+  TRANSFER = 'Transfer',
 }
 
-// Realtime data for ingest
-export interface RealtimeData {
-  id: string;
-  vendor: string;
-  productId: string;
-  payload: any;
-  ts: string;
-  sequence: number;
+export enum ProductType {
+  FLIGHT = 'Flight',
+  HOTEL = 'Hotel',
+  CAR = 'Car',
+  FA = 'FA',
+  FC = 'FC',
+  O = 'O',
 }
 
-// Metric for monitoring
-export interface Metric {
-  name: string;
-  value: number;
-  ts?: string;
-  tags?: Record<string, string>;
+// ============================================================
+// DOCUMENT TYPES
+// ============================================================
+
+export enum DocumentType {
+  TICKET = 'TICKET',
+  VOUCHER = 'VOUCHER',
+  INVOICE = 'INVOICE',
+  CREDIT_NOTE = 'CREDIT_NOTE',
+  DEBIT_NOTE = 'DEBIT_NOTE',
+  RECEIPT = 'RECEIPT',
 }
 
-// ============================================================================
-// HOTEL DEALS TYPES
-// ============================================================================
-export {
-  HotelDealType,
-  PropertyType,
-  LocationType,
-  MealPlan,
-  RoomType,
-  BedType,
-} from './hotel-deals';
+// ============================================================
+// SERVICE REQUEST
+// ============================================================
 
-// ============================================================================
-// DOMAIN TYPES FROM TYPES DIRECTORY
-// ============================================================================
+export enum ServiceRequestType {
+  REFUND = 'REFUND',
+  RESCHEDULE = 'RESCHEDULE',
+  CANCEL = 'CANCEL',
+  CLIENT_SWITCH = 'CLIENT_SWITCH',
+}
 
-import { PaymentStatus } from '../types/enums';
-export { PaymentStatus } from '../types/enums';
-export * from '../types/enums';
-export * from '../types/index';
-// Add individual exports for types that hooks.ts needs
-export * from '../types/company';
-export * from '../types/user';
-export * from '../types/rbac';
-export * from '../types/booking';
-export * from '../types/loyalty';
-export * from '../types/supplier';
-export * from '../types/payment';
-export * from '../types/finance';
-export * from '../types/pricing';
-export * from '../types/reference';
-export * from '../types/system';
-export * from './types/contentConfig';
-
-// ============================================================================
-// PRICING DOMAIN TYPES
-// ============================================================================
-
-// ============================================================================
-// OFFLINE REQUEST MANAGEMENT TYPES
-// ============================================================================
-
-export enum OfflineRequestStatus {
-  PENDING_STAFF = 'PENDING_STAFF',
-  PRICING_SUBMITTED = 'PRICING_SUBMITTED',
-  PENDING_CUSTOMER_APPROVAL = 'PENDING_CUSTOMER_APPROVAL',
+export enum ServiceRequestStatus {
+  OPEN = 'OPEN',
   APPROVED = 'APPROVED',
-  PAYMENT_PENDING = 'PAYMENT_PENDING',
+  PROCESSING = 'PROCESSING',
   COMPLETED = 'COMPLETED',
   REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
 }
 
-export enum OfflineRequestType {
-  SCHEDULE_CHANGE = 'schedule_change',
-  PASSENGER_NAME_CHANGE = 'passenger_name_change',
-  SEAT_SELECTION = 'seat_selection',
-  ANCILLARY_UPDATE = 'ancillary_update',
-  BOOKING_MODIFICATION = 'booking_modification',
-  CANCELLATION_WITH_REBOOKING = 'cancellation_with_rebooking',
+// ============================================================
+// APPROVAL WORKFLOW
+// ============================================================
+
+export enum ApprovalLevel {
+  LEVEL_1 = 'LEVEL_1',
+  LEVEL_2 = 'LEVEL_2',
+  LEVEL_3 = 'LEVEL_3',
+  LINE_MANAGER = 'LINE_MANAGER',
+  FINANCE_MANAGER = 'FINANCE_MANAGER',
 }
 
-export enum OfflineRequestPriority {
+// ============================================================
+// TENANT TYPES
+// ============================================================
+
+export enum TenantType {
+  MASTER = 'MASTER',
+  SUB_AGENT = 'SUB_AGENT',
+  CORPORATE = 'CORPORATE',
+}
+
+// ============================================================
+// WALLET & PAYMENT
+// ============================================================
+
+export enum WalletOwnerType {
+  CUSTOMER = 'CUSTOMER',
+  AGENT = 'AGENT',
+  CORPORATE = 'CORPORATE',
+  SUPPLIER = 'SUPPLIER',
+  SUB_AGENT = 'SUB_AGENT',
+}
+
+export enum WalletStatus {
+  ACTIVE = 'ACTIVE',
+  SUSPENDED = 'SUSPENDED',
+  CLOSED = 'CLOSED',
+}
+
+export enum TransactionCategory {
+  FLIGHT_BOOKING = 'Flight Booking',
+  HOTEL_BOOKING = 'Hotel Booking',
+  MARKUP_EARNING = 'Markup Earning',
+  COMMISSION_EARNING = 'Commission Earning',
+  REFUND = 'Refund',
+  CREDIT_LIMIT = 'Credit Limit',
+  AUTO_RELOAD = 'Auto Reload',
+  MANUAL_ADJUSTMENT = 'Manual Adjustment',
+}
+
+export interface CreateWalletInput {
+  ownerType: string;
+  ownerId: string;
+  ownerName: string;
+  defaultCurrency?: string;
+  autoReloadEnabled?: boolean;
+  autoReloadAmount?: number;
+  autoReloadThreshold?: number;
+  autoReloadCurrency?: string;
+}
+
+export interface WalletRechargeInput {
+  walletId: string;
+  amount: number;
+  currency: string;
+  paymentMethod?: string;
+  paymentReference?: string;
+  description?: string;
+  userId: string;
+  userName: string;
+}
+
+export interface WalletDebitInput {
+  walletId: string;
+  amount: number;
+  currency: string;
+  bookingId?: string;
+  bookingRef?: string;
+  description?: string;
+  userId: string;
+  userName: string;
+}
+
+export interface WalletHoldInput {
+  walletId: string;
+  amount: number;
+  currency: string;
+  bookingId: string;
+  bookingRef: string;
+  reason: string;
+  expiresAt: Date;
+  userId: string;
+  userName: string;
+}
+
+export interface WalletTransferInput {
+  fromWalletId: string;
+  toWalletId: string;
+  amount: number;
+  currency: string;
+  description?: string;
+  userId: string;
+  userName: string;
+}
+
+export const CURRENCY_PRECISION: Record<string, number> = {
+  BHD: 3, JOD: 3, KWD: 3, OMR: 3, TND: 3,
+  JPY: 0, KRW: 0, VND: 0,
+  USD: 2, EUR: 2, GBP: 2, SAR: 2, AED: 2,
+  INR: 2, PKR: 2, BDT: 2, CNY: 2, HKD: 2,
+  SGD: 2, MYR: 2, THB: 2, AUD: 2, CAD: 2,
+  CHF: 2, SEK: 2, NOK: 2, DKK: 2, ZAR: 2,
+  RUB: 2, BRL: 2, MXN: 2, NZD: 2,
+};
+
+// ============================================================
+// INVENTORY
+// ============================================================
+
+export enum InventoryType {
+  FLIGHT = 'Flight',
+  HOTEL = 'Hotel',
+}
+
+export enum InventoryStatus {
+  ACTIVE = 'Active',
+  DEPLETED = 'Depleted',
+  EXPIRED = 'Expired',
+  CARRY_FORWARDED = 'CarryForwarded',
+}
+
+export enum InventoryTransactionType {
+  PURCHASE = 'Purchase',
+  SALE = 'Sale',
+  CARRY_FORWARD = 'CarryForward',
+  ADJUSTMENT = 'Adjustment',
+  GROUP_SALE = 'GroupSale',
+}
+
+// ============================================================
+// MARKUP & COMMISSION
+// ============================================================
+
+export enum MarkupValueType {
+  PERCENTAGE = 'Percentage',
+  FIXED = 'Fixed',
+}
+
+export enum MarkupRuleLevel {
+  BASE = 'BASE',
+  OVERRIDE = 'OVERRIDE',
+  EXCEPTION = 'EXCEPTION',
+}
+
+export enum CommissionSourceType {
+  AIRLINE = 'Airline',
+  HOTEL_SUPPLIER = 'HotelSupplier',
+  GDS = 'GDS',
+  DIRECT_CONTRACT = 'DirectContract',
+}
+
+export enum CommissionType {
+  PERCENTAGE = 'Percentage',
+  FIXED = 'Fixed',
+  TIERED = 'Tiered',
+}
+
+// ============================================================
+// USER & ROLE
+// ============================================================
+
+export enum UserRole {
+  ADMIN = 'Admin',
+  MANAGER = 'Manager',
+  AGENT = 'Agent',
+  VIEWER = 'Viewer',
+  FINANCE = 'Finance',
+  SUPER_ADMIN = 'SuperAdmin',
+}
+
+// ============================================================
+// NOTIFICATION
+// ============================================================
+
+export enum NotificationChannel {
+  EMAIL = 'email',
+  SMS = 'sms',
+  PUSH = 'push',
+  IN_APP = 'in_app',
+}
+
+export enum NotificationPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical',
+  URGENT = 'urgent',
 }
 
-export enum OfflineRequestAuditAction {
-  CREATED = 'CREATED',
-  PRICING_SUBMITTED = 'PRICING_SUBMITTED',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  PAYMENT_RECORDED = 'PAYMENT_RECORDED',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
+export enum NotificationStatus {
+  PENDING = 'pending',
+  SENT = 'sent',
+  FAILED = 'failed',
+  RETRYING = 'retrying',
 }
 
-export interface Timeline {
-  requestedAt?: string;
-  requestedBy?: string;
-  staffPricedAt?: string;
-  customerNotifiedAt?: string;
-  customerApprovedAt?: string;
-  paymentDueAt?: string;
-  paymentCompletedAt?: string;
-  documentsIssuedAt?: string;
-  completedAt?: string;
-  rejectedAt?: string;
-  cancelledAt?: string;
+// ============================================================
+// SUPPLIER
+// ============================================================
+
+export enum SupplierType {
+  DUFFEL = 'duffel',
+  LITEAPI = 'liteapi',
+  AMADEUS = 'amadeus',
+  TRAVELPORT = 'travelport',
 }
 
-export interface PriceDifference {
-  baseFareDiff?: number;
-  taxesDiff?: number;
-  markupDiff?: number;
-  totalDiff: number;
+export enum SupplierStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  DEGRADED = 'degraded',
 }
 
-export interface StaffPricing {
-  newBaseFare?: number;
-  newTaxes?: number;
-  newMarkup?: number;
-  newTotalPrice: number;
-  currency: string;
-  staffNotes?: string;
-  supplierReference?: string;
-  supplierPNR?: string;
-  pricedAt?: string;
-  pricedBy?: string;
+// ============================================================
+// COMMON INTERFACES
+// ============================================================
+
+// ============================================================
+// COMMON INTERFACES
+// ============================================================
+
+export interface BaseEntity {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface CustomerApproval {
-  approved: boolean;
-  approvedAt?: string;
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
-export interface Payment {
-  paymentId: string;
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface AuthenticatedRequest {
+  userId: string;
+  tenantId: string;
+  agentCode: string;
+  salesChannel: SalesChannel;
+  role: UserRole;
+}
+
+export interface BookingFilter {
+  salesChannel?: SalesChannel;
+  service?: ServiceType;
+  status?: BookingStatus;
+  dateFrom?: string;
+  dateTo?: string;
+  agentCode?: string;
+  corporateId?: string;
+  subagentId?: string;
+  search?: string;
+}
+
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+export interface Money {
   amount: number;
-  method?: string;
-  transactionRef?: string;
-  paidAt?: string;
+  currency: string;
+}
+
+// ============================================================
+// WEBHOOK
+// ============================================================
+
+export type DuffelEventType =
+  | 'order.created'
+  | 'order.updated'
+  | 'order.cancelled'
+  | 'flight_schedule_changed'
+  | 'airline_initiated_change'
+  | 'seat_map_updated'
+  | 'order_change_completed';
+
+export type LiteApiEventType =
+  | 'booking.confirmed'
+  | 'booking.cancelled'
+  | 'booking.modified'
+  | 'booking.pending';
+
+export interface WebhookLog {
+  id: string;
+  source: 'duffel' | 'liteapi';
+  eventType: string;
+  payload: any;
+  processed: boolean;
+  processedAt?: Date;
+  error?: string;
+  retryCount: number;
+  createdAt: Date;
+}
+
+export const WEBHOOK_SUPPLIER_MAP: Record<string, string> = {
+  duffel: 'duffel',
+  liteapi: 'innstant',
+};
+
+export const DUFFEL_EVENTS: readonly DuffelEventType[] = [
+  'order.created',
+  'order.updated',
+  'order.cancelled',
+  'flight_schedule_changed',
+  'airline_initiated_change',
+  'seat_map_updated',
+  'order_change_completed',
+];
+
+export const LITEAPI_EVENTS: readonly LiteApiEventType[] = [
+  'booking.confirmed',
+  'booking.cancelled',
+  'booking.modified',
+  'booking.pending',
+];
+
+// ============================================================
+// SHARED AUTH
+// ============================================================
+
+export interface AuthRequestBase {
+  userId?: string;
+  tenantId?: string;
+  agentCode?: string;
+  salesChannel?: string;
+  role?: string;
+}
+
+export function extractTokenFromHeader(req: { headers: { authorization?: string } }): string | undefined {
+  const authHeader = req.headers['authorization'];
+  return authHeader && authHeader.split(' ')[1];
+}
+
+export function assignDecodedToRequest(req: AuthRequestBase, decoded: any): void {
+  req.userId = decoded.userId;
+  req.tenantId = decoded.tenantId;
+  req.agentCode = decoded.agentCode;
+  req.salesChannel = decoded.salesChannel;
+  req.role = decoded.role;
+}
+
+// ============================================================
+// FLIGHT SEGMENT UNIFIED TYPE
+// ============================================================
+
+export interface FlightSegment {
+  // Shared base fields
+  airline: string;
+  flightNumber: string;
+  duration: string;
+  
+  // Optional ID field
+  id?: string;
+  
+  // Origin
+  from?: string; // used by B2B
+  origin?: string; // used by B2C (FlightSegmentResult)
+  fromCity?: string;
+  originCity?: string;
+  fromAirport?: string;
+  
+  // Destination
+  to?: string;
+  destination?: string;
+  toCity?: string;
+  destinationCity?: string;
+  toAirport?: string;
+  
+  // Timing
+  departure?: string;
+  departureTime?: string;
+  arrival?: string;
+  arrivalTime?: string;
+  
+  // Extra Info
+  airlineCode?: string;
+  aircraft?: string;
+  class?: string;
+  refundable?: 'Refundable' | 'Non-Refundable' | 'Partially Refundable' | boolean;
+  baggage?: string;
+  cabinBaggage?: string;
+  terminal?: string;
+  departureTerminal?: string | null;
+  arrivalTerminal?: string | null;
+  layoverDuration?: string | null;
+}
+
+// ============================================================
+// TENANT CONFIGURATION SHARED TYPES
+// ============================================================
+
+export interface ProductAccessInput {
+  accessFlights?: boolean;
+  accessHotels?: boolean;
+  accessCars?: boolean;
+  accessInsurance?: boolean;
+  accessPackages?: boolean;
+  accessSightseeing?: boolean;
+  accessTransfers?: boolean;
+  accessDynamicSearch?: boolean;
+}
+
+export interface CompanyPermissionsInput {
+  enableB2B2C?: boolean;
+  canManageBranches?: boolean;
+  canManageUsers?: boolean;
+  canManageRoles?: boolean;
+  canManageMarkups?: boolean;
+  canManageCreditCards?: boolean;
+  canImportPNR?: boolean;
+  canAllowAutoTicket?: boolean;
+  canAccessIITFare?: boolean;
+  canManageSupplierCreds?: boolean;
+  canManagePGCreds?: boolean;
+  showLogoOnDashboard?: boolean;
+  allowAirCanx?: boolean;
+}
+
+// ============================================================
+// MARKUP CALCULATION SHARED HELPERS
+// ============================================================
+
+export const MARKUP_CONDITION_FIELDS = [
+  'airlineCode', 'airlineGroup', 'originCode', 'destinationCode',
+  'marketRegion', 'rbdClass', 'journeyType', 'cabinClass',
+  'hotelId', 'hotelChain', 'hotelStars', 'mealPlan',
+  'supplierCode', 'customerId', 'customerType', 'customerTier',
+] as const;
+
+export function calculateSpecificity(rule: Record<string, any>): number {
+  let score = 0;
+  MARKUP_CONDITION_FIELDS.forEach(field => {
+    if (rule[field] !== null && rule[field] !== undefined && rule[field] !== '') {
+      score += 10;
+    }
+  });
+
+  if (rule.ruleLevel === 'EXCEPTION') score += 100;
+  else if (rule.ruleLevel === 'OVERRIDE') score += 50;
+
+  score += rule.priority || 0;
+  return score;
+}
+
+export interface AppliedMarkupRuleResult {
+  ruleId: string;
+  ruleName: string;
+  ruleLevel: string;
+  valueType: string;
+  value: number;
+  markupAmount: number;
+  priority: number;
+}
+
+export interface MarkupCalculationResult {
+  netFare: number;
+  totalMarkup: number;
+  finalPrice: number;
+  appliedRules: AppliedMarkupRuleResult[];
+}
+
+export function applyMarkupRulesWithConflictResolution(
+  netFare: number,
+  sortedRules: Array<Record<string, any>>,
+  formatPrecision: (val: number) => number = (val) => parseFloat(val.toFixed(2))
+): MarkupCalculationResult {
+  const appliedRules: AppliedMarkupRuleResult[] = [];
+  let totalMarkup = 0;
+  let hasException = false;
+  let hasOverride = false;
+
+  for (const rule of sortedRules) {
+    let markupAmount = 0;
+
+    if (rule.valueType === 'Percentage' || rule.ruleType === 'PERCENTAGE') {
+      markupAmount = (netFare * rule.value) / 100;
+    } else {
+      markupAmount = rule.value;
+    }
+
+    const ruleLevel = rule.ruleLevel || 'BASE';
+
+    if (ruleLevel === 'EXCEPTION') {
+      if (!hasException) {
+        totalMarkup = markupAmount;
+        appliedRules.length = 0;
+        appliedRules.push({
+          ruleId: rule.id,
+          ruleName: rule.name,
+          ruleLevel,
+          valueType: rule.valueType || 'Fixed',
+          value: rule.value,
+          markupAmount,
+          priority: rule.priority || 0,
+        });
+        hasException = true;
+        break;
+      }
+    } else if (ruleLevel === 'OVERRIDE') {
+      if (!hasException) {
+        if (!hasOverride) {
+          totalMarkup = markupAmount;
+          const baseRules = appliedRules.filter(r => r.ruleLevel === 'BASE');
+          baseRules.forEach(r => {
+            totalMarkup -= r.markupAmount;
+          });
+          appliedRules.push({
+            ruleId: rule.id,
+            ruleName: rule.name,
+            ruleLevel,
+            valueType: rule.valueType || 'Fixed',
+            value: rule.value,
+            markupAmount,
+            priority: rule.priority || 0,
+          });
+          hasOverride = true;
+        }
+      }
+    } else {
+      if (!hasException && !hasOverride) {
+        totalMarkup += markupAmount;
+        appliedRules.push({
+          ruleId: rule.id,
+          ruleName: rule.name,
+          ruleLevel,
+          valueType: rule.valueType || 'Fixed',
+          value: rule.value,
+          markupAmount,
+          priority: rule.priority || 0,
+        });
+      }
+    }
+  }
+
+  return {
+    netFare,
+    totalMarkup: formatPrecision(totalMarkup),
+    finalPrice: formatPrecision(netFare + totalMarkup),
+    appliedRules,
+  };
+}
+
+export function validateMarkupRuleBasics(input: {
+  name?: string;
+  serviceType?: string;
+  valueType?: string;
+  value?: number;
+}): string[] {
+  const errors: string[] = [];
+
+  if (!input.name || input.name.trim() === '') errors.push('Rule name is required');
+  if (!input.serviceType || !['Flight', 'Hotel', 'All'].includes(input.serviceType)) {
+    errors.push('Service type must be Flight, Hotel, or All');
+  }
+  if (!input.valueType || !['Percentage', 'Fixed'].includes(input.valueType)) {
+    errors.push('Value type must be Percentage or Fixed');
+  }
+  if (typeof input.value !== 'number') errors.push('Value must be a valid number');
+
+  return errors;
+}
+
+export function validateTemporalConditions(input: {
+  effectiveFrom?: Date | null;
+  effectiveTo?: Date | null;
+}): string[] {
+  const errors: string[] = [];
+
+  if (input.effectiveFrom && input.effectiveTo) {
+    if (new Date(input.effectiveFrom) >= new Date(input.effectiveTo)) {
+      errors.push('Effective from date must be before effective to date');
+    }
+  }
+
+  return errors;
+}
+
+export function validateNonNegative(val: any, field: string, errors: string[]): void {
+  if (typeof val !== 'number' || val < 0) {
+    errors.push(`${field} must be a non-negative number`);
+  }
+}
+
+export const formatPrecision = (val: number) => parseFloat(val.toFixed(2));
+
+/**
+ * Check if a rule is currently active within its temporal constraints
+ * @param rule Rule with optional effectiveFrom and effectiveTo dates
+ * @returns true if rule is active (within date range or no date constraints)
+ */
+export function isRuleTemporallyActive(rule: {
+  effectiveFrom?: Date | null;
+  effectiveTo?: Date | null;
+  isActive?: boolean;
+}): boolean {
+  const now = new Date();
+
+  if (rule.effectiveFrom && new Date(rule.effectiveFrom) > now) {
+    return false;
+  }
+
+  if (rule.effectiveTo && new Date(rule.effectiveTo) < now) {
+    return false;
+  }
+
+  return rule.isActive !== false;
+}
+
+/**
+ * Filter markup rules by active status and matching conditions, then sort by specificity
+ * @param rules Array of markup rules to process
+ * @param conditions Conditions object to match against
+ * @param matcher Function to determine if a rule matches the given conditions
+ * @returns Filtered and sorted array of matching rules
+ */
+export function filterAndSortMarkupRules(
+  rules: Array<Record<string, any>>,
+  conditions: any,
+  matcher: (rule: any, conditions: any) => boolean
+): Array<Record<string, any>> {
+  return rules
+    .filter(rule => rule.isActive && isRuleTemporallyActive(rule) && matcher(rule, conditions))
+    .sort((a, b) => {
+      const specificityA = calculateSpecificity(a);
+      const specificityB = calculateSpecificity(b);
+      return specificityB - specificityA;
+    });
+}
+
+// ============================================================
+// FRONTEND CONTENT CONFIG
+// ============================================================
+
+export interface AlertsItemConfig {
+  title?: string;
+  message?: string;
+  ctaText?: string;
+  ctaUrl?: string;
+}
+
+export interface TenantContentConfig {
+  alerts: {
+    items: AlertsItemConfig[];
+  };
+  helpCenter: {
+    categories: Array<{ title: string; desc: string; icon?: string }>;
+    faqs: Array<{ q: string; a: string }>;
+    contact: {
+      email: string;
+      phone: string;
+      whatsapp: string;
+    };
+  };
+  [key: string]: any;
+}
+
+export const DEFAULT_CONTENT_CONFIG: TenantContentConfig = {
+  alerts: {
+    items: [],
+  },
+  helpCenter: {
+    categories: [],
+    faqs: [],
+    contact: {
+      email: "support@tripalfa.com",
+      phone: "+1-000-000-0000",
+      whatsapp: "+1-000-000-0000",
+    },
+  },
+};
+
+// ============================================================
+// OFFLINE REQUEST TYPES
+// ============================================================
+
+export enum OfflineRequestStatus {
+  PENDING_STAFF = "PENDING_STAFF",
+  PRICING_SUBMITTED = "PRICING_SUBMITTED",
+  PENDING_CUSTOMER_APPROVAL = "PENDING_CUSTOMER_APPROVAL",
+  APPROVED = "APPROVED",
+  PAYMENT_PENDING = "PAYMENT_PENDING",
+  COMPLETED = "COMPLETED",
+  REJECTED = "REJECTED",
+  CANCELLED = "CANCELLED",
+}
+
+export enum OfflineRequestPriority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  URGENT = "URGENT",
+}
+
+export enum OfflineRequestType {
+  DATE_CHANGE = "DATE_CHANGE",
+  ROUTE_CHANGE = "ROUTE_CHANGE",
+  NAME_CORRECTION = "NAME_CORRECTION",
+  CANCELLATION = "CANCELLATION",
+  REFUND = "REFUND",
+  OTHER = "OTHER",
 }
 
 export interface OfflineChangeRequest {
   id: string;
-  requestRef: string;
+  requestRef?: string;
   bookingId: string;
-  bookingRef: string;
-  requestType: OfflineRequestType;
-  status: OfflineRequestStatus;
-  priority?: OfflineRequestPriority;
-  originalDetails?: Record<string, any>;
-  requestedChanges?: Record<string, any>;
-  staffPricing?: StaffPricing;
-  priceDifference?: PriceDifference;
-  customerApproval?: CustomerApproval;
-  payment?: Payment;
-  reissuedDocuments?: Record<string, any>;
-  timeline: Timeline;
-  tags?: string[];
-  internalNotes?: string[];
-  createdAt: string;
+  bookingRef?: string;
+  requestType: OfflineRequestType | string;
+  status: OfflineRequestStatus | string;
+  priority?: OfflineRequestPriority | string;
+  requestedBy?: string;
+  assignedTo?: string;
+  subject?: string;
+  description?: string;
+  remarks?: string;
+  metadata?: Record<string, any>;
+  pricing?: {
+    originalAmount?: number;
+    newAmount?: number;
+    difference?: number;
+    currency?: string;
+  };
+  timeline?: Array<{
+    at: string;
+    status: string;
+    actor?: string;
+    remarks?: string;
+  }>;
+  createdAt?: string;
   updatedAt?: string;
-}
-
-export interface OfflineRequestAuditLog {
-  id: string;
-  offlineRequestId: string;
-  action: OfflineRequestAuditAction;
-  actorId: string;
-  actorType: 'staff' | 'customer' | 'system';
-  oldValues?: Record<string, any>;
-  newValues?: Record<string, any>;
-  details?: Record<string, any>;
-  createdAt: string;
 }
 
 export interface CreateOfflineRequestPayload {
   bookingId: string;
-  bookingRef: string;
-  requestType: OfflineRequestType;
-  requestedChanges: Record<string, any>;
-  priority?: OfflineRequestPriority;
-}
-
-export interface SubmitPricingPayload {
-  newBaseFare?: number;
-  newTaxes?: number;
-  newMarkup?: number;
-  newTotalPrice: number;
-  currency: string;
-  staffNotes?: string;
-  supplierReference?: string;
-  supplierPNR?: string;
-}
-
-// Admin Booking Card Types
-export interface AdminBookingCard {
-  // Core Booking Information
-  id: string;
-  bookingRef: string;
-  confirmationNumber: string;
-  status: BookingStatus;
-  bookingType: BookingType;
-  customerType: 'B2B' | 'B2C';
-
-  // Customer Information
-  customer: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    type: 'individual' | 'corporate';
-    companyId?: string;
-    branchId?: string;
-  };
-
-  // Service Details
-  serviceDetails: {
-    type: 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
-    segments: ServiceSegment[];
-    supplier: {
-      id: string;
-      name: string;
-      pnr: string;
-      supplierRef: string;
-    };
-  };
-
-  // Financial Information
-  financials: {
-    customerPrice: number;
-    supplierPrice: number;
-    markup: number;
-    taxes: number;
-    fees: number;
-    currency: string;
-    paymentStatus: PaymentStatus;
-    paymentMethod: PaymentMethod;
-    profit: number;
-  };
-
-  // Timeline Information
-  timeline: {
-    bookedAt: Date;
-    travelDate: Date;
-    returnDate?: Date;
-    holdUntil?: Date;
-    lastModified: Date;
-  };
-
-  // Admin-Specific Features
-  adminFeatures: {
-    assignedAgent: string;
-    branch: string;
-    queueStatus: QueueStatus;
-    priority: 'low' | 'medium' | 'high' | 'urgent';
-    tags: string[];
-    notes: AdminNote[];
-    auditTrail: AuditEvent[];
-  };
-
-  // Documents & Communications
-  documents: BookingDocument[];
-  communications: CommunicationLog[];
-
-  // Special Features
-  specialFeatures: {
-    specialRequests: string[];
-    amendments: AmendmentRequest[];
-    refunds: RefundRequest[];
-    notifications: Notification[];
-  };
-}
-
-export interface RealTimeStatus {
-  currentStatus: BookingStatus;
-  statusHistory: StatusChange[];
-  queuePosition: number;
-  estimatedProcessingTime: string;
-  lastUpdated: Date;
-  autoRefresh: boolean;
-}
-
-export interface AdminSearchFilters {
   bookingRef?: string;
-  customerName?: string;
-  customerEmail?: string;
-  pnr?: string;
-  supplierRef?: string;
-  companyId?: string;
-  branchId?: string;
-  agentId?: string;
-  dateRange?: {
-    from: Date;
-    to: Date;
-  };
-  status: BookingStatus[];
-  bookingType: BookingType[];
-  queueType: QueueType[];
-  priority: Priority[];
-  paymentStatus: PaymentStatus[];
-  serviceType: ServiceType[];
-  tags: string[];
-}
-
-export interface BulkOperations {
-  selectAllMatching: (filters: AdminSearchFilters) => void;
-  bulkUpdateStatus: (status: BookingStatus, bookingIds: string[]) => Promise<void>;
-  bulkAssignAgent: (agentId: string, bookingIds: string[]) => Promise<void>;
-  bulkAddTags: (tags: string[], bookingIds: string[]) => Promise<void>;
-  bulkSendNotifications: (message: string, bookingIds: string[]) => Promise<void>;
-  bulkExport: (format: 'pdf' | 'excel' | 'csv', bookingIds: string[]) => Promise<Blob>;
-}
-
-export interface WorkflowAutomation {
-  autoAssignRules: AutoAssignRule[];
-  escalationRules: EscalationRule[];
-  notificationTriggers: NotificationTrigger[];
-  approvalWorkflows: ApprovalWorkflow[];
-  SLAManagement: SLAConfiguration[];
-}
-
-export interface QueueManagement {
-  dragAndDrop: {
-    enableReordering: boolean;
-    enableStatusChange: boolean;
-    enableAssignment: boolean;
-  };
-
-  queueVisualization: {
-    kanbanView: KanbanView;
-    listView: ListView;
-    calendarView: CalendarView;
-  };
-}
-
-export interface RealTimeCollaboration {
-  liveEditing: {
-    concurrentEditing: boolean;
-    conflictResolution: ConflictResolutionStrategy;
-    editHistory: EditHistory[];
-  };
-
-  teamCommunication: {
-    mentionUsers: (users: string[], message: string) => void;
-    privateNotes: PrivateNote[];
-    teamChat: TeamChat[];
-  };
-}
-
-export interface DocumentManagement {
-  documentTypes: DocumentType[];
-  uploadProgress: UploadProgress;
-  versionControl: VersionControl;
-  eSignature: ESignatureIntegration;
-  documentSharing: DocumentSharing;
-}
-
-// Type definitions for enums and interfaces
-export type BookingStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'cancelled'
-  | 'refunded'
-  | 'ticketed'
-  | 'imported';
-export type BookingType = 'instant' | 'hold' | 'request' | 'imported';
-// export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'; // Removed to avoid conflict with enum
-export type PaymentMethod = 'wallet' | 'credit_card' | 'supplier_credit';
-export type QueueType = 'hold' | 'refund' | 'amendment' | 'special_request';
-export type QueueStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type Priority = 'low' | 'medium' | 'high' | 'urgent';
-export type ServiceType = 'flight' | 'hotel' | 'package' | 'transfer' | 'visa' | 'insurance';
-
-interface ServiceSegment {
-  id: string;
-  type: string;
-  departure: string;
-  arrival: string;
-  date: Date;
-  details: any;
-}
-
-interface AdminNote {
-  id: string;
-  content: string;
-  author: string;
-  createdAt: Date;
-}
-
-interface AuditEvent {
-  id: string;
-  action: string;
-  actor: string;
-  timestamp: Date;
-  details: any;
-}
-
-interface BookingDocument {
-  id: string;
-  type: string;
-  url: string;
-  createdAt: Date;
-  createdBy: string;
-}
-
-interface CommunicationLog {
-  id: string;
-  type: string;
-  content: string;
-  timestamp: Date;
-  sender: string;
-  recipient: string;
-}
-
-interface AmendmentRequest {
-  id: string;
-  type: string;
-  reason: string;
-  status: string;
-  createdAt: Date;
-}
-
-interface RefundRequest {
-  id: string;
-  amount: number;
-  reason: string;
-  status: string;
-  createdAt: Date;
-}
-
-interface Notification {
-  id: string;
-  type: string;
-  message: string;
-  createdAt: Date;
-  read: boolean;
-}
-
-interface StatusChange {
-  status: BookingStatus;
-  timestamp: Date;
-  actor: string;
-}
-
-interface AutoAssignRule {
-  id: string;
-  conditions: any;
-  assignee: string;
-}
-
-interface EscalationRule {
-  id: string;
-  conditions: any;
-  escalateTo: string;
-  timeLimit: number;
-}
-
-interface NotificationTrigger {
-  id: string;
-  event: string;
-  recipients: string[];
-  channels: string[];
-}
-
-interface ApprovalWorkflow {
-  id: string;
-  steps: ApprovalStep[];
-}
-
-interface ApprovalStep {
-  id: string;
-  approvers: string[];
-  conditions: any;
-}
-
-interface SLAConfiguration {
-  id: string;
-  serviceType: ServiceType;
-  responseTime: number;
-  resolutionTime: number;
-}
-
-interface KanbanView {
-  columns: KanbanColumn[];
-}
-
-interface KanbanColumn {
-  id: string;
-  title: string;
-  bookings: AdminBookingCard[];
-}
-
-interface ListView {
-  bookings: AdminBookingCard[];
-}
-
-interface CalendarView {
-  events: CalendarEvent[];
-}
-
-interface CalendarEvent {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  bookingId: string;
-}
-
-interface ConflictResolutionStrategy {
-  type: 'last_wins' | 'merge' | 'manual';
-  rules: any[];
-}
-
-interface EditHistory {
-  id: string;
-  editor: string;
-  changes: any;
-  timestamp: Date;
-}
-
-interface PrivateNote {
-  id: string;
-  content: string;
-  author: string;
-  createdAt: Date;
-  visibleTo: string[];
-}
-
-interface TeamChat {
-  id: string;
-  message: string;
-  author: string;
-  timestamp: Date;
-  bookingId: string;
-}
-
-interface DocumentType {
-  id: string;
-  name: string;
-  required: boolean;
-  templateId?: string;
-}
-
-interface UploadProgress {
-  fileName: string;
-  progress: number;
-  status: 'uploading' | 'completed' | 'failed';
-}
-
-interface VersionControl {
-  currentVersion: number;
-  versions: DocumentVersion[];
-}
-
-interface DocumentVersion {
-  id: string;
-  version: number;
-  url: string;
-  createdAt: Date;
-  createdBy: string;
-}
-
-interface ESignatureIntegration {
-  provider: string;
-  templateId?: string;
-  signers: Signer[];
-  status: 'pending' | 'completed' | 'failed';
-}
-
-interface Signer {
-  id: string;
-  name: string;
-  email: string;
-  order: number;
-}
-
-interface DocumentSharing {
-  id: string;
-  sharedWith: string[];
-  permissions: string[];
-  expiresAt?: Date;
+  requestType: OfflineRequestType | string;
+  priority?: OfflineRequestPriority | string;
+  subject?: string;
+  description: string;
+  details?: Record<string, any>;
 }

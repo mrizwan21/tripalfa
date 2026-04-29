@@ -15,7 +15,7 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "rootDir": "./src",
     "outDir": "./dist",
     "baseUrl": ".",
@@ -26,7 +26,13 @@
       "@tripalfa/shared-utils": ["packages/shared-utils"],
       "@tripalfa/shared-utils/*": ["packages/shared-utils/*"],
       "@tripalfa/shared-database": ["packages/shared-database"],
-      "@tripalfa/shared-database/*": ["packages/shared-database/*"]
+      "@tripalfa/shared-database/*": ["packages/shared-database/*"],
+      "@tripalfa/shared-express": ["packages/shared-express"],
+      "@tripalfa/shared-express/*": ["packages/shared-express/*"],
+      "@tripalfa/shared-openapi": ["packages/shared-openapi"],
+      "@tripalfa/shared-openapi/*": ["packages/shared-openapi/*"],
+      "@tripalfa/wallet": ["packages/wallet"],
+      "@tripalfa/wallet/*": ["packages/wallet/*"]
     }
   },
   "include": ["src"],

@@ -25,7 +25,7 @@ import { LoyaltyTierBadge } from '../components/loyalty/LoyaltyTierBadge';
 import { TierProgressBar } from '../components/loyalty/TierProgressBar';
 import type { TierBenefits } from '../types/loyalty';
 import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
-import { Label } from '@/components/ui/label';
+import { Label } from '../components/ui/label';
 
 type Booking = {
   id: string;

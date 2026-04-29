@@ -66,7 +66,7 @@ const SupplierRemittancePopup = ({ isOpen, onClose }: { isOpen: boolean; onClose
 import { NotificationDetailsPopup } from '../components/NotificationDetailsPopup';
 import type { Booking } from '../lib/srs-types';
 import type { NotificationItem } from '../lib/notification-types';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 
 function HotelBookingCard() {
   const { id } = useParams();

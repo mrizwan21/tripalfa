@@ -1,254 +1,179 @@
-/* Design Tokens for TripAlfa - Apple-Inspired Design System */
-/* Reference: design-standards/apple/DESIGN.md */
+/**
+ * Apple Design System Tokens
+ * Reference: docs/DESIGN.md
+ * 
+ * These CSS custom properties define the Apple-inspired design system
+ * for the TripAlfa booking engine.
+ */
 
 :root {
   /* ============================================
-     APPLE COLOR PALETTE
-     Primary accent: Apple Blue (#0071e3)
+     COLOR PALETTE - Apple Design System
      ============================================ */
+
+  /* Primary Colors */
   --apple-blue: #0071e3;
   --link-blue: #0066cc;
   --bright-blue: #2997ff;
+  
+  /* Semantic Colors */
+  --apple-error: #ff3b30;
+  --apple-success: #34c759;
+  --apple-warning: #ff9500;
 
-  /* Primary */
+  /* Neutral Colors */
   --pure-black: #000000;
   --light-gray: #f5f5f7;
   --near-black: #1d1d1f;
+  --white: #ffffff;
 
-  /* Dark Surfaces */
+  /* Text Colors */
+  --text-primary-light: rgba(0, 0, 0, 0.8);
+  --text-tertiary-light: rgba(0, 0, 0, 0.48);
+  --text-primary-dark: #ffffff;
+
+  /* Dark Surface Colors */
   --dark-surface-1: #272729;
   --dark-surface-2: #262628;
-  --dark-surface-3: #2a2a2d;
-  --dark-surface-4: #242426;
+  --dark-surface-3: #28282a;
+  --dark-surface-4: #2a2a2d;
+  --dark-surface-5: #242426;
 
   /* Button States */
   --button-active: #ededf2;
-  --filter-bg: #fafafc;
-
-  /* Overlay */
+  --button-default-light: #fafafc;
   --overlay: rgba(210, 210, 215, 0.64);
+  --white-32: rgba(255, 255, 255, 0.32);
+
+  /* Shadows */
+  --card-shadow: rgba(0, 0, 0, 0.22) 3px 5px 30px 0px;
 
   /* ============================================
-     BRANDING COLORS - CUSTOMIZABLE PER TENANT
-     Mapped to Apple design tokens
+     TYPOGRAPHY - SF Pro via Inter
      ============================================ */
-  --brand-primary: 211 100% 50%;
-  --brand-primary-foreground: 0 0% 100%;
-  --brand-secondary: 240 5% 96%;
-  --brand-secondary-foreground: 240 6% 10%;
-  --brand-accent: 211 100% 62%;
-  --brand-accent-foreground: 0 0% 100%;
 
-  --primary: var(--brand-primary);
-  --primary-foreground: var(--brand-primary-foreground);
-  --secondary: var(--brand-secondary);
-  --secondary-foreground: var(--brand-secondary-foreground);
-  --accent: var(--brand-accent);
-  --accent-foreground: var(--brand-accent-foreground);
+  --font-display: 'SF Pro Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-text: 'SF Pro Text', 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-text);
+
+  /* Font Sizes - Display (20px+) */
+  --text-display-hero: 3.50rem; /* 56px */
+  --text-section-heading: 2.50rem; /* 40px */
+  --text-tile-heading: 1.75rem; /* 28px */
+  --text-card-title: 1.31rem; /* 21px */
+  --text-sub-heading: 1.31rem; /* 21px */
+  --text-nav-heading: 2.13rem; /* 34px */
+
+  /* Font Sizes - Text (19px and below) */
+  --text-sub-nav: 1.50rem; /* 24px */
+  --text-body: 1.06rem; /* 17px */
+  --text-body-emphasis: 1.06rem; /* 17px */
+  --text-button-large: 1.13rem; /* 18px */
+  --text-button: 1.06rem; /* 17px */
+  --text-link: 0.88rem; /* 14px */
+  --text-caption: 0.88rem; /* 14px */
+  --text-caption-bold: 0.88rem; /* 14px */
+  --text-micro: 0.75rem; /* 12px */
+  --text-micro-bold: 0.75rem; /* 12px */
+  --text-nano: 0.63rem; /* 10px */
+
+  /* Font Weights */
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Line Heights */
+  --leading-tight: 1.07;
+  --leading-tighter: 1.10;
+  --leading-tight-card: 1.14;
+  --leading-tight-sub: 1.19;
+  --leading-normal: 1.47;
+  --leading-relaxed: 1.50;
+  --leading-button: 1.00;
+  --leading-button-relaxed: 2.41;
+  --leading-link: 1.43;
+  --leading-caption: 1.29;
+  --leading-micro: 1.33;
+
+  /* Letter Spacing */
+  --tracking-display: -0.28px;
+  --tracking-body: -0.374px;
+  --tracking-tile: 0.196px;
+  --tracking-card: 0.231px;
+  --tracking-nav: -0.374px;
+  --tracking-link: -0.224px;
+  --tracking-caption: -0.224px;
+  --tracking-micro: -0.12px;
+  --tracking-nano: -0.08px;
 
   /* ============================================
-     SEMANTIC COLORS
+     SPACING SYSTEM - Apple Scale
+     Base unit: 8px
      ============================================ */
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 100%;
-  --success: 142 76% 36%;
-  --success-foreground: 0 0% 100%;
-  --warning: 38 92% 50%;
-  --warning-foreground: 240 6% 10%;
-  --info: 211 100% 50%;
-  --info-foreground: 0 0% 100%;
+
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-5: 5px;
+  --spacing-6: 6px;
+  --spacing-7: 7px;
+  --spacing-8: 8px;
+  --spacing-9: 9px;
+  --spacing-10: 10px;
+  --spacing-11: 11px;
+  --spacing-14: 14px;
+  --spacing-15: 15px;
+  --spacing-17: 17px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
 
   /* ============================================
-     NEUTRAL COLORS - APPLE GRAYSCALE
+     BORDER RADIUS - Apple Scale
      ============================================ */
-  --muted: 240 5% 96%;
-  --muted-foreground: 240 4% 46%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 6% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 6% 10%;
-  --background: 0 0% 100%;
-  --foreground: 240 6% 10%;
-  --border: 240 5% 88%;
-  --input: 240 5% 88%;
-  --ring: var(--brand-primary);
 
-  /* ============================================
-     TYPOGRAPHY - APPLE SF PRO SCALE
-     SF Pro Display at 20px+, SF Pro Text below
-     ============================================ */
-  --font-family-display:
-    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Helvetica,
-    Arial, sans-serif;
-  --font-family-body:
-    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial,
-    sans-serif;
-
-  /* Display Hero: 56px / 600 / 1.07 / -0.28px */
-  --font-display: 56px;
-  --font-display-lh: 1.07;
-  --font-display-ls: -0.28px;
-
-  /* Section Heading: 40px / 600 / 1.10 */
-  --font-heading: 40px;
-  --font-heading-lh: 1.1;
-  --font-heading-ls: normal;
-
-  /* Tile Heading: 28px / 400 / 1.14 / 0.196px */
-  --font-tile: 28px;
-  --font-tile-lh: 1.14;
-  --font-tile-ls: 0.196px;
-
-  /* Card Title: 21px / 700 / 1.19 / 0.231px */
-  --font-card-title: 21px;
-  --font-card-title-lh: 1.19;
-  --font-card-title-ls: 0.231px;
-
-  /* Sub-heading: 21px / 400 / 1.19 / 0.231px */
-  --font-subheading: 21px;
-  --font-subheading-lh: 1.19;
-  --font-subheading-ls: 0.231px;
-
-  /* Body: 17px / 400 / 1.47 / -0.374px */
-  --font-body: 17px;
-  --font-body-lh: 1.47;
-  --font-body-ls: -0.374px;
-
-  /* Body Emphasis: 17px / 600 / 1.24 / -0.374px */
-  --font-body-emphasis: 17px;
-  --font-body-emphasis-lh: 1.24;
-  --font-body-emphasis-ls: -0.374px;
-
-  /* Link/Caption: 14px / 400 / 1.43 / -0.224px */
-  --font-caption: 14px;
-  --font-caption-lh: 1.43;
-  --font-caption-ls: -0.224px;
-
-  /* Micro: 12px / 400 / 1.33 / -0.12px */
-  --font-micro: 12px;
-  --font-micro-lh: 1.33;
-  --font-micro-ls: -0.12px;
-
-  /* Legacy font-size tokens */
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1.0625rem;
-  --font-size-lg: 1.3125rem;
-  --font-size-xl: 1.75rem;
-  --font-size-2xl: 2.5rem;
-  --font-size-3xl: 3.5rem;
-
-  /* ============================================
-     SPACING - APPLE 8PX BASE UNIT
-     ============================================ */
-  --space-1: 0.125rem; /* 2px */
-  --space-2: 0.25rem; /* 4px */
-  --space-3: 0.3125rem; /* 5px */
-  --space-4: 0.375rem; /* 6px */
-  --space-5: 0.4375rem; /* 7px */
-  --space-6: 0.5rem; /* 8px */
-  --space-7: 0.625rem; /* 10px */
-  --space-8: 0.6875rem; /* 11px */
-  --space-9: 0.875rem; /* 14px */
-  --space-10: 0.9375rem; /* 15px */
-  --space-11: 1.0625rem; /* 17px */
-  --space-12: 1.25rem; /* 20px */
-  --space-13: 1.5rem; /* 24px */
-  --space-14: 2rem; /* 32px */
-  --space-15: 2.5rem; /* 40px */
-  --space-16: 3rem; /* 48px */
-  --space-17: 4rem; /* 64px */
-  --space-18: 6rem; /* 96px */
-
-  /* Legacy spacing aliases */
-  --space-xs: 0.25rem;
-  --space-sm: 0.5rem;
-  --space-md: 1rem;
-  --space-lg: 1.5rem;
-  --space-xl: 2rem;
-  --space-2xl: 3rem;
-  --space-3xl: 4rem;
-
-  /* ============================================
-     SHADOWS - APPLE ELEVATION SYSTEM
-     Shadow is rare: one soft diffused shadow or nothing
-     ============================================ */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-  --shadow-md: 0 2px 4px 0 rgb(0 0 0 / 0.06);
-  --shadow-lg: rgba(0, 0, 0, 0.22) 3px 5px 30px 0px;
-  --shadow-xl: rgba(0, 0, 0, 0.22) 5px 8px 40px 0px;
-
-  /* ============================================
-     ELEVATION SYSTEM - APPLE DEPTH
-     ============================================ */
-  --elevation-flat: none;
-  --elevation-contained: 0 0 0 1px rgba(0, 0, 0, 0.04);
-  --elevation-emphasized: 0 0 0 2px rgba(0, 0, 0, 0.06);
-  --elevation-accent: 0 0 0 2px #0071e3;
-  --elevation-ambient: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --elevation-dramatic: rgba(0, 0, 0, 0.22) 3px 5px 30px 0px;
-
-  /* Navigation Glass */
-  --elevation-nav: 0 1px 0 rgba(0, 0, 0, 0.1);
-
-  /* ============================================
-     BORDER RADIUS - APPLE SCALE
-     ============================================ */
-  --radius-micro: 0.3125rem; /* 5px */
-  --radius-standard: 0.5rem; /* 8px */
-  --radius-comfortable: 0.6875rem; /* 11px */
-  --radius-large: 0.75rem; /* 12px */
-  --radius-pill: 61.25rem; /* 980px */
+  --radius-micro: 5px;
+  --radius-sm: 8px;
+  --radius-comfortable: 11px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-pill: 980px;
   --radius-circle: 50%;
 
-  /* Standard aliases */
-  --radius-xs: 0.3125rem; /* 5px */
-  --radius-sm: 0.5rem; /* 8px */
-  --radius: 0.5rem; /* 8px */
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem; /* 12px */
-  --radius-xl: 0.6875rem; /* 11px */
-  --radius-2xl: 1.5rem; /* 24px */
-  --radius-full: 61.25rem; /* 980px pill */
+  /* ============================================
+     COMPONENT HEIGHTS
+     ============================================ */
+
+  --nav-height: 48px;
+  --touch-target-min: 44px;
+  --height-xs: 28px;
+  --height-sm: 36px;
+  --height-md: 44px;
+  --height-lg: 52px;
+  --height-xl: 60px;
+  --height-2xl: 72px;
 
   /* ============================================
-     Z-INDEX
+     ADDITIONAL SHADOWS
      ============================================ */
-  --z-dropdown: 500;
-  --z-sticky: 600;
-  --z-overlay: 700;
-  --z-modal: 800;
-  --z-popover: 900;
-  --z-tooltip: 1000;
-  --z-toast: 1050;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-apple: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-apple: var(--card-shadow);
 
   /* ============================================
      TRANSITIONS
      ============================================ */
+
   --transition-fast: 150ms cubic-bezier(0.25, 0.1, 0.25, 1);
   --transition-base: 250ms cubic-bezier(0.25, 0.1, 0.25, 1);
   --transition-slow: 400ms cubic-bezier(0.25, 0.1, 0.25, 1);
-}
 
-/* Dark mode overrides - Apple Dark Theme */
-.dark {
-  --background: 0 0% 0%;
-  --foreground: 0 0% 96%;
-  --card: 240 2% 16%;
-  --card-foreground: 0 0% 96%;
-  --popover: 240 2% 14%;
-  --popover-foreground: 0 0% 96%;
-  --muted: 240 2% 18%;
-  --muted-foreground: 240 2% 64%;
-  --border: 240 2% 20%;
-  --input: 240 2% 20%;
-  --ring: 211 100% 62%;
-  --primary: 211 100% 62%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 240 2% 16%;
-  --secondary-foreground: 0 0% 96%;
-  --accent: 211 100% 72%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 72% 51%;
-  --destructive-foreground: 0 0% 100%;
+  /* ============================================
+     BACKDROP EFFECTS
+     ============================================ */
+
+  --nav-glass-bg: rgba(0, 0, 0, 0.8);
+  --nav-glass-backdrop: saturate(180%) blur(20px);
 }

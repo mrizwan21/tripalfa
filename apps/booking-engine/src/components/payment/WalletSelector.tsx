@@ -1,6 +1,6 @@
 import React from "react";
 import { WalletAccount } from "../../lib/srs-types";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 export function WalletSelector({
   accounts,

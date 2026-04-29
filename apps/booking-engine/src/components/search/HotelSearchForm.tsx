@@ -22,8 +22,8 @@ import {
   Plus,
 } from '@phosphor-icons/react';
 import { cn } from '@tripalfa/shared-utils/utils';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 interface HotelSearchFormProps {
   searchLabels: {

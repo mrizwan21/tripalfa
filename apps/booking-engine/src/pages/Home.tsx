@@ -36,7 +36,7 @@ import { Card } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { api, fetchAirports } from '../lib/api';
 import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
-import { Label } from '@/components/ui/label';
+import { Label } from '../components/ui/label';
 import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
 
 interface CartSummaryResponse {

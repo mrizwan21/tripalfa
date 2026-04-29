@@ -38,7 +38,7 @@ import { searchFlights, fetchAirlines, fetchFlightResults } from '../lib/api';
 import { BookingFilters } from '../components/booking/BookingFilters';
 import { ModifySearchPanel } from '../components/booking/ModifySearchPanel';
 import type { Flight } from '../lib/srs-types';
-import { Label } from '@/components/ui/label';
+import { Label } from '../components/ui/label';
 
 function FlightList() {
   const navigate = useNavigate();

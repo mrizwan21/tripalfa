@@ -1,0 +1,17 @@
+{
+  "api": {
+    "upstream_url": "https://api.duffel.com/air",
+    "request_path": "/api/external/duffel",
+    "strip_uri": true,
+    "preserve_host": false
+  },
+  "plugins": [
+    {
+      "config": {
+        "minute": 6000,
+        "policy": "local"
+      },
+      "name": "rate-limiting"
+    }
+  ]
+}

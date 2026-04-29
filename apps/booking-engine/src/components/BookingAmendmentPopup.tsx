@@ -3,7 +3,7 @@ import { X, Upload, Calendar, User, Plane, Check } from "lucide-react";
 
 import { NotificationItem } from "../lib/notification-types";
 import { Button } from "@tripalfa/ui-components";
-import { Label } from "@/components/ui/label";
+import { Label } from './ui/label';
 
 interface BookingAmendmentPopupProps {
   isOpen: boolean;

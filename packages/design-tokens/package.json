@@ -1,0 +1,41 @@
+{
+  "name": "@tripalfa/design-tokens",
+  "version": "1.0.0",
+  "description": "Unified design tokens for TripAlfa OTA Platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "tokens.css",
+    "tokens.scss",
+    "tokens.json"
+  ],
+  "scripts": {
+    "build": "tsup && npm run generate",
+    "dev": "tsup --watch",
+    "generate": "node --import tsx src/generate-files.ts",
+    "lint": "eslint src --ext .ts,.tsx",
+    "clean": "rm -rf dist tokens.css tokens.scss tokens.json",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "design-tokens",
+    "design-system",
+    "tripalfa",
+    "ota"
+  ],
+  "author": "TripAlfa Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^9.0.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

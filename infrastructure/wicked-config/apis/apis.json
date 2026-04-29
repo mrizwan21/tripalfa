@@ -1,44 +1,60 @@
 {
   "apis": [
     {
-      "name": "API Gateway",
-      "id": "api-gateway",
+      "name": "Booking Engine Service",
+      "id": "booking-engine-service",
       "plans": ["unlimited"],
-      "desc": "Main Travel Kingdom API Gateway - handles all search, static data, auth, booking, and wallet endpoints",
-      "tags": ["public", "gateway"],
+      "desc": "Booking engine domain APIs for flights, hotels, offline requests, and static data",
+      "tags": ["internal", "booking-engine", "frontend"],
       "auth": "none"
     },
     {
       "name": "Booking Service",
       "id": "booking-service",
       "plans": ["unlimited"],
-      "desc": "Travel Kingdom booking management API for creating and managing reservations",
+      "desc": "Core booking management APIs for reservations, admin operations, wallet, and supplier integrations",
       "tags": ["internal", "booking"],
-      "auth": "key-auth"
+      "auth": "none"
     },
     {
-      "name": "User Service",
-      "id": "user-service",
+      "name": "B2B Portal API Surface",
+      "id": "b2b-portal-service",
       "plans": ["unlimited"],
-      "desc": "Travel Kingdom user management and authentication API",
-      "tags": ["internal", "users"],
-      "auth": "key-auth"
+      "desc": "B2B portal scoped API surface through the shared platform backend",
+      "tags": ["internal", "b2b", "frontend"],
+      "auth": "none"
     },
     {
-      "name": "Payment Service",
-      "id": "payment-service",
+      "name": "Call Center API Surface",
+      "id": "call-center-service",
       "plans": ["unlimited"],
-      "desc": "Travel Kingdom payment processing and wallet management API",
-      "tags": ["internal", "payments"],
-      "auth": "key-auth"
+      "desc": "Call center scoped API surface through the shared platform backend",
+      "tags": ["internal", "call-center", "frontend"],
+      "auth": "none"
     },
     {
-      "name": "Admin Service",
-      "id": "admin-service",
+      "name": "Super Admin API Surface",
+      "id": "super-admin-service",
       "plans": ["unlimited"],
-      "desc": "Admin API service for B2B Admin portal - handles staff onboarding, admin functions, and /admin/* routes through the API gateway",
-      "tags": ["internal", "admin", "b2b"],
-      "auth": "key-auth"
+      "desc": "Super-admin scoped API surface through the shared platform backend",
+      "tags": ["internal", "super-admin", "frontend"],
+      "auth": "none"
+    },
+    {
+      "name": "Duffel External API",
+      "id": "external-duffel",
+      "plans": ["unlimited"],
+      "desc": "Centralized gateway-managed Duffel supplier integration",
+      "tags": ["external", "duffel", "supplier"],
+      "auth": "none"
+    },
+    {
+      "name": "LiteAPI External API",
+      "id": "external-liteapi",
+      "plans": ["unlimited"],
+      "desc": "Centralized gateway-managed LiteAPI supplier integration",
+      "tags": ["external", "liteapi", "supplier"],
+      "auth": "none"
     }
   ],
   "_links": {

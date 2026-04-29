@@ -80,8 +80,8 @@ scrape_configs:
       - targets: ["localhost:3012"]
     metrics_path: /metrics
 
-  # B2B Admin Service
-  - job_name: "b2b-admin-service"
+  # B2B Portal Service
+  - job_name: "b2b-portal-service"
     static_configs:
       - targets: ["localhost:3020"]
     metrics_path: /metrics

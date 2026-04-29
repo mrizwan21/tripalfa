@@ -483,7 +483,7 @@ describe('StaticDataApiClient', () => {
             
             expect(result).toEqual(mockResponse);
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:3002/api/hotels/amenities/Free%20WiFi,Pool?limit=20',
+                'http://localhost:3002/api/hotels/amenities/Free%20WiFi%2CPool?limit=20',
                 {
                     headers: {
                         'Content-Type': 'application/json',

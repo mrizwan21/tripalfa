@@ -27,7 +27,7 @@ import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { useBoardTypes, useHotelAmenities, useHotelTypes } from '../hooks/useStaticData';
 import { HotelMap } from '../components/map';
 import type { HotelSearchParams } from '../services/liteApiManager';
-import { Label } from '@/components/ui/label';
+import { Label } from '../components/ui/label';
 type Suggestion = Record<string, any>;
 
 interface Hotel {

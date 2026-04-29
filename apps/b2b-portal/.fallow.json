@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "entry": ["./src/main.tsx"],
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "build",
+    "*.test.ts",
+    "*.test.tsx",
+    "*.spec.ts",
+    "*.spec.tsx",
+    "playwright.config.ts",
+    "postcss.config.js",
+    "tailwind.config.js",
+    "vite.config.ts",
+    "src/api/*Api.ts"
+  ],
+  "ignoreExports": [
+    "src/api/*Api.ts"
+  ]
+}

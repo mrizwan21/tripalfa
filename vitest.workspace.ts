@@ -1,5 +1,4 @@
 export default [
   'apps/*',
-  'packages/*',
-  'services/*'
+  'packages/*'
 ];

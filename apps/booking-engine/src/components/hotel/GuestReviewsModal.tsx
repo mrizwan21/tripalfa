@@ -10,8 +10,8 @@ import {
   ChevronRight,
   Check,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Label } from "@/components/ui/label";
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
 
 interface GuestReviewsModalProps {
   isOpen: boolean;

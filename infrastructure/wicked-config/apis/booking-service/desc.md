@@ -1,10 +1,10 @@
-{
-"id": "booking-service",
-"name": "Booking Service API",
-"desc": "Travel Kingdom booking management API for creating and managing reservations",
-"auth": "key-auth",
-"requiredGroup": null,
-"plans": ["unlimited"],
-"tags": ["internal", "booking"],
-"deprecated": false
-}
+# Booking Service API
+
+Shared platform backend APIs used across:
+
+- Booking Engine
+- B2B Portal
+- Call Center Portal
+- Super Admin Portal
+
+This service hosts core booking flows, admin operations, wallet flows, and supplier-facing booking adapters.

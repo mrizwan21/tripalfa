@@ -2,7 +2,7 @@ import React from "react";
 import { Booking } from "../../../lib/srs-types";
 import { FileText, Download } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
+import { Button } from '../../../ui/button';
 
 interface InvoicesSectionProps {
   booking: Booking;

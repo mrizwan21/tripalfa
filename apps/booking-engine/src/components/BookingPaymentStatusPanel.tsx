@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
 import { formatDate } from '@tripalfa/shared-utils/date-utils';
 
 interface BookingDetails {

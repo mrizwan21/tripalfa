@@ -1,8 +1,8 @@
 import React, { type ChangeEvent } from 'react';
 import { MapPin, CalendarDays, Clock, X, Search, Car } from 'lucide-react';
 import { cn } from '@tripalfa/shared-utils/utils';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 interface CarsSearchFormProps {
   searchLabels?: {

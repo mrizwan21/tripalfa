@@ -7,7 +7,7 @@ import {
   Package,
   ArrowRightLeft,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 export function BookingFilters({ onFilter }: { onFilter: (f: any) => void }) {
   return (

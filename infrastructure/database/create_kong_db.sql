@@ -1,0 +1,2 @@
+CREATE USER kong WITH PASSWORD 'kong';
+CREATE DATABASE kong OWNER kong;

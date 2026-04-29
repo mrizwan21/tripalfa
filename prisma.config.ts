@@ -20,9 +20,9 @@ function getDatabaseUrl(): string {
 }
 
 export default defineConfig({
-    schema: "database/prisma/schema.prisma",
+    schema: "packages/shared-database/prisma/schema.prisma",
     migrations: {
-        path: "database/prisma/migrations",
+        path: "packages/shared-database/prisma/migrations",
     },
     datasource: {
         // Application DB only (Neon/PostgreSQL). Never route Prisma to STATIC_DATABASE_URL.

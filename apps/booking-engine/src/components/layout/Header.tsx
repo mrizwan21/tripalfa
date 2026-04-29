@@ -8,7 +8,7 @@ import { api } from "../../lib/api";
 import { NAV_LINKS, APP_NAME } from "../../lib/constants";
 import { useTranslation } from "../../lib/translation";
 import { useCurrency } from "../../lib/currency";
-import { Button } from "@/components/ui/button";
+import { Button } from '../ui/button';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

@@ -1,21 +1,21 @@
 import { useState, useEffect } from "react";
 import { Save, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from '../ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+} from '../ui/card';
+import { Switch } from '../ui/switch';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '../ui/select';
 import { useNotificationPreferences } from "@/hooks/useNotifications";
 
 interface PreferencesForm {

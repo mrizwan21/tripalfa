@@ -1,33 +1,34 @@
 import * as React from "react";
 import { cn } from "@tripalfa/ui-components";
 
-export interface SwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+type SwitchProps = {
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
-}
+  disabled?: boolean;
+  className?: string;
+};
 
-export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  ({ className, checked, onCheckedChange, ...props }, ref) => (
+export function Switch({ checked = false, onCheckedChange, disabled, className }: SwitchProps) {
+  return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
-      ref={ref}
-      onClick={() => onCheckedChange?.(!checked)}
+      disabled={disabled}
+      onClick={() => !disabled && onCheckedChange?.(!checked)}
       className={cn(
-        "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--primary)/0.5)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-[hsl(var(--primary))]" : "bg-gray-200",
-        className,
+        "inline-flex h-6 w-11 items-center rounded-full border transition-colors",
+        checked ? "bg-blue-600 border-blue-600" : "bg-muted border-border",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+        className
       )}
-      {...props}
     >
       <span
         className={cn(
-          "pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform duration-200",
-          checked ? "translate-x-5" : "translate-x-0",
+          "mx-0.5 h-5 w-5 rounded-full bg-white transition-transform",
+          checked ? "translate-x-5" : "translate-x-0"
         )}
       />
     </button>
-  ),
-);
-Switch.displayName = "Switch";
+  );
+}

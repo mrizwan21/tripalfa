@@ -139,7 +139,7 @@ const testOverrideRules = {
 };
 
 const securitySensitiveFilePatterns = [
-    "services/**/*.ts",
+    "packages/**/src/**/*.ts",
     "apps/**/services/**/*.ts",
     "apps/**/middleware/**/*.ts",
     "apps/**/lib/**/*.ts",
@@ -184,8 +184,8 @@ const reactOverrideRules = {
 
 const multiTenancyExemptFiles = [
     "packages/rules/src/services/**/*.ts",
-    "services/*-service/src/**/*.ts",
-    "services/booking-service/src/**/*.ts",
+    "packages/*-service/src/**/*.ts",
+    "packages/booking-service/src/**/*.ts",
 ];
 
 const ignorePatterns = [
@@ -216,7 +216,6 @@ const ignorePatterns = [
     "secrets/**",
     "scripts/*.cjs",
     "scripts/import-hotel-details-simple.cjs",
-    "services/*/dist/**",
     "wicked-config/**",
     "infrastructure/**",
 ];

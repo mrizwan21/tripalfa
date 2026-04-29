@@ -1,0 +1,81 @@
+{
+  "routes": [
+    {
+      "name": "booking-engine-flights",
+      "service": "booking-engine-service",
+      "paths": ["/api/flights"]
+    },
+    {
+      "name": "booking-engine-hotels",
+      "service": "booking-engine-service",
+      "paths": ["/api/hotels"]
+    },
+    {
+      "name": "booking-engine-offline",
+      "service": "booking-engine-service",
+      "paths": ["/api/offline-requests"]
+    },
+    {
+      "name": "booking-engine-static",
+      "service": "booking-engine-service",
+      "paths": ["/api/static"]
+    },
+    {
+      "name": "booking-admin",
+      "service": "booking-service",
+      "paths": ["/api/admin"]
+    },
+    {
+      "name": "booking-wallet",
+      "service": "booking-service",
+      "paths": ["/api/wallet", "/api/wallets"]
+    },
+    {
+      "name": "booking-duffel",
+      "service": "booking-service",
+      "paths": ["/api/duffel", "/api/flights/ancillary", "/api/airline-credits"]
+    },
+    {
+      "name": "booking-liteapi",
+      "service": "booking-service",
+      "paths": ["/api/liteapi", "/api/rates"]
+    },
+    {
+      "name": "booking-orders",
+      "service": "booking-service",
+      "paths": ["/api/bookings", "/api/flight-booking", "/api/hotel-booking"]
+    },
+    {
+      "name": "booking-supporting",
+      "service": "booking-service",
+      "paths": ["/api/payment", "/api/payments", "/api/exchange-rates", "/api/translations", "/api/weather", "/api/user", "/api/search"]
+    },
+    {
+      "name": "gateway-health",
+      "service": "booking-service",
+      "paths": ["/api/gateway/health-status"]
+    },
+    {
+      "name": "gateway-audit",
+      "service": "booking-service",
+      "paths": ["/api/gateway/audit-logs"]
+    },
+    {
+      "name": "external-duffel",
+      "service": "external-duffel",
+      "paths": ["/api/external/duffel"],
+      "strip_path": true
+    },
+    {
+      "name": "external-liteapi",
+      "service": "external-liteapi",
+      "paths": ["/api/external/liteapi"],
+      "strip_path": true
+    },
+    {
+      "name": "booking-fallback",
+      "service": "booking-service",
+      "paths": ["/api"]
+    }
+  ]
+}

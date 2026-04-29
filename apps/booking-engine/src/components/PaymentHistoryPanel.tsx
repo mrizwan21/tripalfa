@@ -14,7 +14,7 @@ import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
 import PaymentReceiptModal from './PaymentReceiptModal';
-import { Button } from '@/components/ui/button';
+import { Button } from '../ui/button';
 import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
 
 interface Payment {

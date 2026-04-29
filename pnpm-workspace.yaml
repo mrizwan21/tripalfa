@@ -1,6 +1,5 @@
 packages:
   - "apps/*"
-  - "services/*"
   - "packages/*"
 
 # Build dependency controls for faster, more reliable installs

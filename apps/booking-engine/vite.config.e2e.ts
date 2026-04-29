@@ -16,7 +16,7 @@ export default defineConfig({
     alias: [
       {
         find: "@/components/ui",
-        replacement: path.resolve(__dirname, "../../packages/ui-components/ui"),
+        replacement: path.resolve(__dirname, "./src/components/ui"),
       },
       {
         find: "@tripalfa/shared-utils",

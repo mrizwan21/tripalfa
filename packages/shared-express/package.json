@@ -1,0 +1,41 @@
+{
+  "name": "@tripalfa/shared-express",
+  "version": "1.0.0",
+  "description": "Shared Express.js middleware utilities for OTA Platform services",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./requestUtils": {
+      "types": "./dist/requestUtils.d.ts",
+      "import": "./dist/requestUtils.js",
+      "require": "./dist/requestUtils.js"
+    },
+    "./middleware/channelContext": {
+      "types": "./dist/middleware/channelContext.d.ts",
+      "import": "./dist/middleware/channelContext.js",
+      "require": "./dist/middleware/channelContext.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/morgan": "^1.9.9",
+    "typescript": "^6.0.2"
+  }
+}

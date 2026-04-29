@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { X, AlertCircle, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
