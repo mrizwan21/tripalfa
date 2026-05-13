@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 export function CardForm({ onPay }: { onPay: (payload: any) => void }) {
   const [card, setCard] = useState({ number: "", expiry: "", cvv: "" });
@@ -36,8 +36,8 @@ export function CardForm({ onPay }: { onPay: (payload: any) => void }) {
         />
       </div>
       <Button
-        variant="default"
-        size="default"
+        variant="primary"
+        size="md"
         className="px-4 py-2 text-white rounded"
         type="submit"
       >

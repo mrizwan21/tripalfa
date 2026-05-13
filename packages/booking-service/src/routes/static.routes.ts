@@ -1,8 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from "@tripalfa/shared-database";
 
 const router: Router = Router();
-const prisma = new PrismaClient();
 
 /**
  * @swagger
@@ -42,6 +41,31 @@ const prisma = new PrismaClient();
  *                         type: string
  */
 router.get('/airports', async (req: Request, res: Response) => {
+  const q = String(req.query.q ?? '').trim();
+  if (q.length < 2) return res.json({ data: [] });
+
+  const pattern = `%${q}%`;
+  const upperQ = q.toUpperCase();
+  const rows = await prisma.$queryRaw<
+    { iata_code: string; name: string; city: string; country: string }[]
+  >`
+    SELECT iata_code, name, city, country
+    FROM airports
+    WHERE (
+      iata_code ILIKE ${upperQ + '%'}
+      OR city ILIKE ${pattern}
+      OR name ILIKE ${pattern}
+    )
+    ORDER BY
+      CASE WHEN iata_code ILIKE ${upperQ + '%'} THEN 0 ELSE 1 END,
+      city ASC
+    LIMIT 10
+  `;
+  return res.json({ data: rows });
+});
+
+// Route compatibility for client requests with /static prefix
+router.get('/static/airports', async (req: Request, res: Response) => {
   const q = String(req.query.q ?? '').trim();
   if (q.length < 2) return res.json({ data: [] });
 
@@ -119,6 +143,36 @@ router.get('/airlines', async (_req: Request, res: Response) => {
   return res.json({
     data: data.map(r => ({
       iata_code: r.iata_code,
+      name: r.name,
+      logo_url: r.logo_url,
+      country: r.country,
+      alliance: r.alliance,
+      checkin_url: r.checkin_url,
+    })),
+  });
+});
+
+// Route compatibility for client requests with /static prefix
+router.get('/static/airlines', async (_req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<
+    {
+      iata_code: string;
+      name: string;
+      logo_url: string | null;
+      country: string | null;
+      alliance: string | null;
+      checkin_url: string | null;
+    }[]
+  >`
+    SELECT iata_code, name, logo_url, country, alliance, checkin_url
+    FROM airlines
+    WHERE is_active = true
+    ORDER BY name ASC
+  `;
+
+  return res.json({
+    data: data.map(r => ({
+      code: r.iata_code,
       name: r.name,
       logo_url: r.logo_url,
       country: r.country,
@@ -337,6 +391,31 @@ router.get('/countries', async (_req: Request, res: Response) => {
   });
 });
 
+// Route compatibility for client requests with /static prefix
+router.get('/static/countries', async (_req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<
+    {
+      code: string;
+      name: string;
+      dial_code: string | null;
+      flag_emoji: string | null;
+      is_active: boolean;
+    }[]
+  >`
+    SELECT code, name, dial_code, flag_emoji, is_active
+    FROM countries
+    WHERE is_active = true
+    ORDER BY name ASC
+  `;
+
+  return res.json({
+    data: data.map(r => ({
+      code: r.code,
+      name: r.name,
+    })),
+  });
+});
+
 /**
  * @swagger
  * /api/countries/{code}/states:
@@ -430,6 +509,32 @@ router.get('/currencies', async (_req: Request, res: Response) => {
       symbol: r.symbol,
       decimal_places: r.decimal_places,
       is_active: r.is_active,
+    })),
+  });
+});
+
+// Route compatibility for client requests with /static prefix
+router.get('/static/currencies', async (_req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<
+    {
+      code: string;
+      name: string;
+      symbol: string;
+      decimal_places: number;
+      is_active: boolean;
+    }[]
+  >`
+    SELECT code, name, symbol, decimal_places, is_active
+    FROM currencies
+    WHERE is_active = true
+    ORDER BY name ASC
+  `;
+
+  return res.json({
+    data: data.map(r => ({
+      code: r.code,
+      name: r.name,
+      symbol: r.symbol,
     })),
   });
 });
@@ -685,6 +790,27 @@ router.get('/board-basis', async (_req: Request, res: Response) => {
   return res.json({ data });
 });
 
+// Route compatibility for client requests with /static prefix
+router.get('/static/board-types', async (_req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<
+    {
+      code: string;
+      label: string;
+    }[]
+  >`
+    SELECT code, label FROM board_basis_types ORDER BY label ASC
+  `;
+  
+  // Transform to match expected format
+  const transformed = data.map(r => ({
+    code: r.code,
+    name: r.label,
+    is_popular: r.code === 'BB' || r.code === 'HB', // Mark common ones as popular
+  }));
+  
+  return res.json({ data: transformed });
+});
+
 /**
  * @swagger
  * /api/property-types:
@@ -714,6 +840,27 @@ router.get('/property-types', async (_req: Request, res: Response) => {
     SELECT code, label FROM property_types ORDER BY label ASC
   `;
   return res.json({ data });
+});
+
+// Route compatibility for client requests with /static prefix
+router.get('/static/hotel-types', async (_req: Request, res: Response) => {
+  const data = await prisma.$queryRaw<
+    {
+      code: string;
+      label: string;
+    }[]
+  >`
+    SELECT code, label FROM property_types ORDER BY label ASC
+  `;
+  
+  // Transform to match expected format
+  const transformed = data.map(r => ({
+    code: r.code,
+    name: r.label,
+    is_popular: r.code === 'HOTEL' || r.code === 'RESORT', // Mark common ones as popular
+  }));
+  
+  return res.json({ data: transformed });
 });
 
 /**
@@ -826,6 +973,46 @@ router.get('/amenities', async (req: Request, res: Response) => {
   });
 });
 
+// Route compatibility for client requests with /static prefix
+router.get('/static/amenities', async (req: Request, res: Response) => {
+  const filterableOnly = req.query.filterable === 'true';
+
+  let query = `
+    SELECT id, name, icon, category, filterable, display_order
+    FROM amenities
+  `;
+
+  if (filterableOnly) {
+    query += ` WHERE filterable = true`;
+  }
+
+  query += ` ORDER BY category ASC, display_order ASC`;
+
+  const data = await prisma.$queryRawUnsafe<
+    {
+      id: number;
+      name: string;
+      icon: string | null;
+      category: string | null;
+      filterable: boolean;
+      display_order: number;
+    }[]
+  >(query);
+
+  // Transform to match expected format (client expects code instead of id, and is_popular field)
+  const transformed = data.map(r => ({
+    code: r.id.toString(),
+    name: r.name,
+    icon: r.icon,
+    category: r.category,
+    filterable: r.filterable,
+    display_order: r.display_order,
+    is_popular: r.filterable, // Mark filterable amenities as popular
+  }));
+
+  return res.json({ data: transformed });
+});
+
 /**
  * @swagger
  * /api/cancellation-policies:
@@ -868,6 +1055,66 @@ router.get('/cancellation-policies', async (_req: Request, res: Response) => {
       deadline_hours: r.deadline_hours,
     })),
   });
+});
+
+// Route compatibility for client requests - destinations
+router.get('/static/destinations', async (req: Request, res: Response) => {
+  const { type, limit } = req.query;
+  
+  let query = `
+    SELECT d.id, d.name, d.city, d.country, d.code, d.is_popular
+    FROM destinations d
+  `;
+  
+  // Add type filter if provided
+  if (type) {
+    query += ` WHERE d.type = ${type}`;
+  }
+  
+  query += ` ORDER BY d.is_popular DESC, d.name ASC`;
+  
+  if (limit) {
+    query += ` LIMIT ${limit}`;
+  }
+  
+  const data = await prisma.$queryRawUnsafe<any[]>(query);
+  
+  // Transform to match expected format
+  const transformed = data.map(r => ({
+    id: r.id,
+    name: r.name,
+    city: r.city,
+    country: r.country,
+    code: r.code,
+    is_popular: r.is_popular || false,
+  }));
+  
+  return res.json({ data: transformed });
+});
+
+// Route compatibility for client requests - popular destinations
+router.get('/static/popular-destinations', async (req: Request, res: Response) => {
+  const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+  
+  const data = await prisma.$queryRaw<any[]>`
+    SELECT d.id, d.name, d.city, d.country, d.code, d.is_popular
+    FROM destinations d
+    WHERE d.is_popular = true
+    ORDER BY d.name ASC
+    LIMIT ${limit}
+  `;
+  
+  // Transform to match expected format
+  const transformed = data.map(r => ({
+    id: r.id,
+    name: r.name,
+    city: r.city,
+    country: r.country,
+    code: r.code,
+    is_popular: true,
+  }));
+  
+  return res.json({ data: transformed });
 });
 
 export default router;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plane, ArrowRight, MapPin, Clock, Filter, Sparkles } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { Card } from '../ui/card';
 import { cn } from '@tripalfa/ui-components';
 

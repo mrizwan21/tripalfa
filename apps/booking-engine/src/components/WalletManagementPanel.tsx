@@ -13,7 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
-import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
+import { formatDateTime } from '@tripalfa/shared-utils';
 
 interface WalletTransaction {
   id: string;

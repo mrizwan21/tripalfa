@@ -8,7 +8,7 @@
  * - Static data (TTL: 24 hours)
  */
 
-import { createClient, RedisClientType } from "redis";
+import { createClient } from "redis";
 
 // Cache TTL constants (in seconds)
 export const CACHE_TTL = {
@@ -35,9 +35,10 @@ export const CacheKeys = {
 };
 
 // Redis client singleton
-let redisClient: RedisClientType | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let redisClient: any = null;
 
-export async function getRedisClient(): Promise<RedisClientType> {
+export async function getRedisClient() {
   if (!redisClient) {
     const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 

@@ -10,7 +10,7 @@ import {
   ChevronRight,
   Check,
 } from "lucide-react";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { Label } from '../ui/label';
 
 interface GuestReviewsModalProps {

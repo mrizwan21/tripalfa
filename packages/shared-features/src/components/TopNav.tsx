@@ -14,8 +14,9 @@ const NAV_ITEMS: { label: string; path: string; icon: LucideIcon; badge?: string
  { label: 'Authorization Workspace', path: '/authorization', icon: ShieldCheck, allowedRoles: ['Admin', 'Sales Executive', 'Accountant'] },
  { label: 'Communication Hub', path: '/communication', icon: Megaphone, allowedRoles: ['Admin', 'Sales Executive'] },
  { label: 'Newsletter', path: '/newsletter', icon: Mail },
- { label: 'Support', path: '/support', icon: Headphones },
- { label: 'System Admin', path: '/system-admin', icon: Server, badge: 'MASTER', allowedRoles: ['Admin'] },
+  { label: 'B2B', path: '/b2b', icon: Building2, allowedRoles: ['Admin'] },
+  { label: 'Support', path: '/support', icon: Headphones },
+  { label: 'System Admin', path: '/system-admin', icon: Server, badge: 'MASTER', allowedRoles: ['Admin'] },
  // Critical v12 Features
  { label: 'PNR Import', path: '/pnr-import', icon: Upload, allowedRoles: ['Admin', 'Ticketing Lead'] },
  { label: 'Credit Facility', path: '/credit-facility', icon: CreditCard, allowedRoles: ['Admin', 'Accountant'] },

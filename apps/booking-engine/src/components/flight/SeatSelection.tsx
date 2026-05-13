@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Armchair, CheckCircle2, Info } from "lucide-react";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 interface Seat {
   id: string;
@@ -94,7 +94,7 @@ export function SeatSelection() {
                     return (
                       <Button
                         variant="outline"
-                        size="default"
+                        size="md"
                         key={sIdx}
                         disabled={isOccupied}
                         onClick={() =>
@@ -151,8 +151,8 @@ export function SeatSelection() {
               </p>
             </div>
             <Button
-              variant="default"
-              size="default"
+              variant="primary"
+              size="md"
               className="h-14 px-8 bg-primary text-primary-foreground rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/90 transition-all active:scale-95 shadow-lg shadow-purple-100"
             >
               Confirm Seat

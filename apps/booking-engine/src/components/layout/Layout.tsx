@@ -13,18 +13,22 @@ export function Layout() {
     location.pathname === "/hotels";
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50/50 font-sans text-slate-900 gap-4">
+    <div className="flex min-h-screen flex-col bg-white font-sans text-[#242424]">
       <TripLogerHeader />
-      <main className="flex-1 pt-24 pb-12 gap-4">
+      <main className="flex-1 pt-[60px]">
         <div
           className={cn(
-            "container mx-auto px-6",
-            isHome ? "max-w-7xl" : "max-w-[1440px]",
+            "container mx-auto px-4 md:px-6",
+            isHome ? "max-w-[1200px]" : "max-w-[1200px]",
           )}
         >
-          <div className="flex gap-10">
-            {!isHome && <Sidebar />}
-            <div className="flex-1 min-w-0 gap-4">
+          <div className="flex gap-8 py-6">
+            {!isHome && (
+              <div className="hidden lg:block w-64 shrink-0">
+                <Sidebar />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
               <Outlet />
             </div>
           </div>

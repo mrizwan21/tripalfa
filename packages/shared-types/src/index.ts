@@ -772,15 +772,44 @@ export function filterAndSortMarkupRules(
 // ============================================================
 
 export interface AlertsItemConfig {
+  id?: string;
   title?: string;
   message?: string;
   ctaText?: string;
   ctaUrl?: string;
+  type?: 'system' | 'booking' | 'payment' | 'alert';
+  productType?: 'Flight' | 'Hotel' | 'Car' | 'All';
+  status?: 'active' | 'inactive' | 'pending' | 'resolved';
+  createdAt?: string;
+  triggeredAt?: string;
+  expiresAt?: string;
+  criteria?: Record<string, any>;
+   /** Alert domain types for internal usage */
+   alertType?: 'price_drop' | 'price_increase' | 'booking_status' | 'reminder' | 'promotion' | 'system';
+   alertProductType?: 'flight' | 'hotel' | 'car' | 'all';
+   alertStatus?: 'active' | 'paused' | 'triggered' | 'expired';
+}
+
+export interface AlertsConfig {
+  items: AlertsItemConfig[];
+  subscriptions?: any[];
 }
 
 export interface TenantContentConfig {
   alerts: {
     items: AlertsItemConfig[];
+    subscriptions?: Array<{
+      id: string;
+      name: string;
+      description: string;
+      enabled: boolean;
+      channels: {
+        email: boolean;
+        push: boolean;
+        sms: boolean;
+      };
+      category: string;
+    }>;
   };
   helpCenter: {
     categories: Array<{ title: string; desc: string; icon?: string }>;
@@ -789,14 +818,55 @@ export interface TenantContentConfig {
       email: string;
       phone: string;
       whatsapp: string;
+      chatLabel?: string;
     };
   };
+  dashboard: {
+    title: string;
+    subtitle: string;
+    actions?: {
+      loyalty?: string;
+      alerts?: string;
+      bookings?: string;
+      wallet?: string;
+    };
+    cards?: {
+      totalBookings?: string;
+      flights?: string;
+      hotels?: string;
+      cars?: string;
+      walletSnapshot?: string;
+      noWallets?: string;
+      viewWallet?: string;
+      topUps?: string;
+      documents?: string;
+      documentsHint?: string;
+      manageDocuments?: string;
+    };
+    chart: {
+      title?: string;
+      subtitle?: string;
+      snapshot?: string;
+      flights: string;
+      hotels: string;
+      cars: string;
+    };
+    recentBookings?: {
+      title?: string;
+      subtitle?: string;
+      empty?: string;
+      bookingFallback?: string;
+      idPrefix?: string;
+    };
+  };
+  marketing: any;
   [key: string]: any;
 }
 
 export const DEFAULT_CONTENT_CONFIG: TenantContentConfig = {
   alerts: {
     items: [],
+    subscriptions: [],
   },
   helpCenter: {
     categories: [],
@@ -805,13 +875,177 @@ export const DEFAULT_CONTENT_CONFIG: TenantContentConfig = {
       email: "support@tripalfa.com",
       phone: "+1-000-000-0000",
       whatsapp: "+1-000-000-0000",
+      chatLabel: "Live Chat",
+    },
+  },
+  dashboard: {
+    title: "Dashboard",
+    subtitle: "Overview of your bookings and activity",
+    actions: {
+      loyalty: "Loyalty",
+      alerts: "Alerts",
+      bookings: "Bookings",
+      wallet: "Wallet",
+    },
+    cards: {
+      totalBookings: "Total Bookings",
+      flights: "Flights",
+      hotels: "Hotels",
+      cars: "Cars",
+      walletSnapshot: "Wallet Snapshot",
+      noWallets: "No Wallets",
+      viewWallet: "View Wallet",
+      topUps: "Top-ups",
+      documents: "Documents",
+      documentsHint: "View your booking documents",
+      manageDocuments: "Manage Documents",
+    },
+chart: {
+      title: "Booking Statistics",
+      subtitle: "Your booking trends",
+      snapshot: "This Month",
+      flights: "Flights",
+      hotels: "Hotels",
+      cars: "Cars",
+    },
+    recentBookings: {
+      title: "Recent Bookings",
+      subtitle: "Your latest travel bookings",
+      empty: "No recent bookings",
+      bookingFallback: "View all bookings",
+      idPrefix: "TA",
+    },
+  },
+marketing: {
+    flightHome: {
+      heroTitle: "Fly Smarter, Book Easier",
+      heroSubtitle: "Search and book flights worldwide with the best prices guaranteed.",
+      disabledTitle: "Flight Booking Temporarily Unavailable",
+      disabledSubtitle: "We're upgrading our flight systems. Please check back soon.",
+      backToHomeLabel: "Back to Home",
+      tabs: { stays: "Stays", flights: "Flights" },
+      benefits: [
+        { title: "Best Price Guarantee", subtitle: "Find a lower price and we'll match it" },
+        { title: "No Hidden Fees", subtitle: "Transparent pricing with no surprises" },
+        { title: "Free Cancellation", subtitle: "Flexible booking options available" },
+      ],
+      searchFormLabels: {
+        departure: "Departure",
+        return: "Return",
+        fromPlaceholder: "Where from?",
+        toPlaceholder: "Where to?",
+        searchCtaLabel: "Search Flights",
+        searchMultiCityCtaLabel: "Search Multi-City",
+        originPlaceholder: "Origin airport",
+        destinationPlaceholder: "Destination airport",
+        disabledLabel: "Search disabled",
+        legFromLabel: "From",
+        legToLabel: "To",
+      },
+      tripTypeLabels: {
+        oneWay: "One Way",
+        roundTrip: "Round Trip",
+        multiCity: "Multi-City",
+      },
+      popularFlights: {
+        title: "Popular Flights",
+        subtitle: "Top routes to popular destinations",
+      },
+      featuredGuide: {
+        title: "Travel Guide",
+        subtitle: "Expert recommendations for your trip",
+        poweredByLabel: "Powered by TripAlfa",
+      },
+    },
+    hotelHome: {
+      disabledTitle: "Hotel Booking Temporarily Unavailable",
+      disabledSubtitle: "We're upgrading our hotel systems. Please check back soon.",
+      backToHomeLabel: "Back to Home",
+      badge: "Special Offer",
+      heroTitle: "Find Your Perfect Stay",
+      heroSubtitle: "Search and book hotels worldwide with the best prices guaranteed.",
+      tabs: { stays: "Stays", flights: "Flights" },
+      deals: {
+        spotlightTitle: "Today's Best Deals",
+        spotlightDescription: "Exclusive discounts on top-rated hotels",
+        ctaLabel: "View Deal",
+        imageUrls: [],
+      },
+      popularDestinations: {
+        title: "Popular Destinations",
+        subtitle: "Explore top hotel destinations",
+        nameLabel: "Destination",
+      },
+      featuredHotels: {
+        title: "Featured Hotels",
+        subtitle: "Handpicked properties for you",
+        emptyLabel: "No featured hotels available",
+      },
+      featuredGuide: {
+        title: "Travel Guide",
+        subtitle: "Expert recommendations",
+        poweredByLabel: "Powered by TripAlfa",
+      },
+      trending: {
+        title: "Trending",
+        tabs: [],
+        columnLabels: {
+          primary: "Property",
+          countLabel: "Reviews",
+          secondary: "Location",
+          tertiary: "Price",
+          quaternary: "Rating",
+        },
+      },
+      benefits: [
+        { title: "Best Price Guarantee", subtitle: "Find a lower price and we'll match it" },
+        { title: "Free Cancellation", subtitle: "Flexible booking options available" },
+        { title: "24/7 Support", subtitle: "We're here to help anytime" },
+      ],
+      searchFormLabels: {
+        destination: "Destination",
+        checkIn: "Check-in",
+        checkOut: "Check-out",
+        destinationPlaceholder: "Where are you going?",
+        searchCtaLabel: "Search Hotels",
+        disabledLabel: "Search disabled",
+      },
+      tripTypeLabels: {
+        roundTrip: "Round Trip",
+        oneWay: "One Way",
+      },
+    },
+    carHome: {},
+    home: {
+      nav: {
+        brandName: "TripAlfa",
+        flights: "Flights",
+        hotels: "Hotels",
+        packages: "Packages",
+        cars: "Cars",
+        aiSearchLabel: "AI Search",
+      },
+      hero: {
+        badge: "Special Offer",
+        title: "Fly Smarter, Book Easier",
+        subtitle: "Search and book flights worldwide with the best prices guaranteed.",
+      },
+      tabs: { stays: "Stays", flights: "Flights" },
+      searchFormLabels: {},
+      popularDestinations: {
+        title: "Popular Destinations",
+        subtitle: "Explore top destinations with great flight deals",
+        viewAllLabel: "View All",
+        nameLabel: "Destination",
+        priceLabel: "Price",
+        flightsFromLabel: "Flights from",
+        dataSourceSuffixLabel: "from Skyscanner",
+        viewDetailsLabel: "View Details",
+        featuredLabel: "Featured",
+      },
     },
   },
 };
-
-// ============================================================
-// OFFLINE REQUEST TYPES
-// ============================================================
 
 export enum OfflineRequestStatus {
   PENDING_STAFF = "PENDING_STAFF",

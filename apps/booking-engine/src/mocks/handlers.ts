@@ -1,9 +1,9 @@
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse } from 'msw';
 
 // Mock API handlers for frontend testing
 export const handlers = [
   // Authentication
-  http.post("/api/auth/login", async ({ request }) => {
+  http.post('/api/auth/login', async ({ request }) => {
     const body = (await request.json()) as any;
     const { email, password, testMode } = body as {
       email: string;
@@ -14,22 +14,22 @@ export const handlers = [
     // In test mode, accept any credentials
     if (testMode || (email && password)) {
       return HttpResponse.json({
-        accessToken: "mock_jwt_token_12345",
-        refreshToken: "mock_refresh_token_67890",
+        accessToken: 'mock_jwt_token_12345',
+        refreshToken: 'mock_refresh_token_67890',
         user: {
-          id: "user_123",
-          email: email || "test@example.com",
-          name: "Test User",
-          role: "customer",
+          id: 'user_123',
+          email: email || 'test@example.com',
+          name: 'Test User',
+          role: 'customer',
         },
       });
     }
 
-    return HttpResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    return HttpResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }),
 
   // Registration
-  http.post("/api/auth/register", async ({ request }) => {
+  http.post('/api/auth/register', async ({ request }) => {
     const body = (await request.json()) as any;
     const { email, password, firstName, lastName } = body as {
       email: string;
@@ -40,84 +40,79 @@ export const handlers = [
 
     if (email && password) {
       return HttpResponse.json({
-        accessToken: "mock_jwt_token_reg_12345",
-        refreshToken: "mock_refresh_token_reg_67890",
+        accessToken: 'mock_jwt_token_reg_12345',
+        refreshToken: 'mock_refresh_token_reg_67890',
         user: {
-          id: "user_" + Date.now(),
+          id: 'user_' + Date.now(),
           email,
-          name:
-            `${firstName || ""} ${lastName || ""}`.trim() ||
-            email.split("@")[0],
-          role: "customer",
+          name: `${firstName || ''} ${lastName || ''}`.trim() || email.split('@')[0],
+          role: 'customer',
         },
       });
     }
 
-    return HttpResponse.json({ error: "Registration failed" }, { status: 400 });
+    return HttpResponse.json({ error: 'Registration failed' }, { status: 400 });
   }),
 
   // Logout
-  http.post("/api/auth/logout", async () => {
+  http.post('/api/auth/logout', async () => {
     return HttpResponse.json({
       success: true,
-      message: "Logged out successfully",
+      message: 'Logged out successfully',
     });
   }),
 
   // Forgot Password
-  http.post("/api/auth/forgot-password", async ({ request }) => {
+  http.post('/api/auth/forgot-password', async ({ request }) => {
     const body = (await request.json()) as any;
     const { email } = body as { email: string };
 
     if (email) {
       return HttpResponse.json({
         success: true,
-        message: "Password reset link sent to your email",
+        message: 'Password reset link sent to your email',
       });
     }
 
-    return HttpResponse.json({ error: "Email is required" }, { status: 400 });
+    return HttpResponse.json({ error: 'Email is required' }, { status: 400 });
   }),
 
   // Reset Password
-  http.post("/api/auth/reset-password", async ({ request }) => {
+  http.post('/api/auth/reset-password', async ({ request }) => {
     const body = (await request.json()) as any;
     const { token, password } = body as { token: string; password: string };
 
     if (token && password) {
       return HttpResponse.json({
         success: true,
-        message: "Password reset successfully",
+        message: 'Password reset successfully',
       });
     }
 
-    return HttpResponse.json(
-      { error: "Token and password are required" },
-      { status: 400 },
-    );
+    return HttpResponse.json({ error: 'Token and password are required' }, { status: 400 });
   }),
 
   // Flight search
-  http.get("/api/flights/search", ({ request }) => {
+  http.get('/api/flights/search', ({ request }) => {
     // Support pagination via ?page=1&pageSize=10
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
     const total = 39;
     const flights = Array.from({ length: total }, (_, i) => ({
       id: `flight_${i + 1}`,
       airline: `Test Airlines ${i + 1}`,
       flight_number: `TA${100 + i}`,
       departure: {
-        airport: "JFK",
-        time: `2026-03-15T${(10 + (i % 10)).toString().padStart(2, "0")}:00:00Z`,
+        airport: 'JFK',
+        time: `2026-03-15T${(10 + (i % 10)).toString().padStart(2, '0')}:00:00Z`,
       },
       arrival: {
-        airport: "LHR",
-        time: `2026-03-15T${(22 + (i % 2)).toString().padStart(2, "0")}:00:00Z`,
+        airport: 'LHR',
+        time: `2026-03-15T${(22 + (i % 2)).toString().padStart(2, '0')}:00:00Z`,
       },
       price: 1200 + i * 10,
-      currency: "USD",
+      currency: 'USD',
     }));
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
@@ -131,19 +126,19 @@ export const handlers = [
   }),
 
   // Hotel search with pagination
-  http.get("/api/hotels/search", ({ request }) => {
+  http.get('/api/hotels/search', ({ request }) => {
     // Support pagination via ?page=1&pageSize=10
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get("page") || "1", 10);
-    const pageSize = parseInt(url.searchParams.get("pageSize") || "10", 10);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10', 10);
     const total = 25;
     const hotels = Array.from({ length: total }, (_, i) => ({
       id: `hotel_${i + 1}`,
       name: `Test Hotel ${i + 1}`,
-      location: ["New York", "London", "Paris", "Tokyo"][i % 4],
+      location: ['New York', 'London', 'Paris', 'Tokyo'][i % 4],
       price: 200 + i * 5,
       rating: 4 + (i % 2) * 0.5,
-      amenities: ["WiFi", "Pool", "Gym", "Spa"].slice(0, (i % 4) + 1),
+      amenities: ['WiFi', 'Pool', 'Gym', 'Spa'].slice(0, (i % 4) + 1),
     }));
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
@@ -157,36 +152,36 @@ export const handlers = [
   }),
 
   // Booking creation
-  http.post("/api/bookings", async ({ request }) => {
+  http.post('/api/bookings', async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       booking_id: `booking_${Date.now()}`,
-      status: "confirmed",
+      status: 'confirmed',
       ...body,
       created_at: new Date().toISOString(),
     });
   }),
 
   // Payment processing
-  http.post("/api/payments", async ({ request }) => {
+  http.post('/api/payments', async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       payment_id: `payment_${Date.now()}`,
-      status: "succeeded",
+      status: 'succeeded',
       amount: body.amount,
       currency: body.currency,
     });
   }),
 
   // Notifications
-  http.get("/api/notifications", () => {
+  http.get('/api/notifications', () => {
     return HttpResponse.json({
       notifications: [
         {
-          id: "notif_1",
-          type: "booking_confirmed",
-          title: "Booking Confirmed",
-          message: "Your flight booking has been confirmed",
+          id: 'notif_1',
+          type: 'booking_confirmed',
+          title: 'Booking Confirmed',
+          message: 'Your flight booking has been confirmed',
           read: false,
           created_at: new Date().toISOString(),
         },
@@ -195,14 +190,14 @@ export const handlers = [
   }),
 
   // Wallet operations
-  http.get("/api/wallet/balance", () => {
+  http.get('/api/wallet/balance', () => {
     return HttpResponse.json({
       balance: 500,
-      currency: "USD",
+      currency: 'USD',
     });
   }),
 
-  http.post("/api/wallet/fund", async ({ request }) => {
+  http.post('/api/wallet/fund', async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       transaction_id: `txn_${Date.now()}`,
@@ -212,7 +207,7 @@ export const handlers = [
   }),
 
   // User preferences
-  http.get("/api/user/preferences", () => {
+  http.get('/api/user/preferences', () => {
     return HttpResponse.json({
       email_enabled: true,
       sms_enabled: true,
@@ -221,7 +216,7 @@ export const handlers = [
     });
   }),
 
-  http.put("/api/user/preferences", async ({ request }) => {
+  http.put('/api/user/preferences', async ({ request }) => {
     const body = (await request.json()) as any;
     return HttpResponse.json({
       ...body,
@@ -234,122 +229,106 @@ export const handlers = [
   // ============================================================================
 
   // Payment success webhook
-  http.post("/api/webhooks/payments/success", async ({ request }) => {
+  http.post('/api/webhooks/payments/success', async ({ request }) => {
     const body = (await request.json()) as any;
-    const { transactionId, bookingId, amount, currency, customerId } =
-      body as any;
+    const { transactionId, bookingId, amount, currency, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPaymentSuccessWebhook", {
+        new CustomEvent('mockPaymentSuccessWebhook', {
           detail: {
-            gateway: "stripe",
+            gateway: 'stripe',
             transactionId,
             bookingId,
             amount,
             currency,
-            status: "succeeded",
+            status: 'succeeded',
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       received: true,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
 
   // Payment failure webhook
-  http.post("/api/webhooks/payments/failure", async ({ request }) => {
+  http.post('/api/webhooks/payments/failure', async ({ request }) => {
     const body = (await request.json()) as any;
-    const {
-      transactionId,
-      bookingId,
-      amount,
-      currency,
-      failureCode,
-      customerId,
-    } = body as any;
+    const { transactionId, bookingId, amount, currency, failureCode, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPaymentFailureWebhook", {
+        new CustomEvent('mockPaymentFailureWebhook', {
           detail: {
-            gateway: "stripe",
+            gateway: 'stripe',
             transactionId,
             bookingId,
             amount,
             currency,
-            status: "failed",
+            status: 'failed',
             failureCode,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       received: true,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
 
   // Refund webhook
-  http.post("/api/webhooks/payments/refund", async ({ request }) => {
+  http.post('/api/webhooks/payments/refund', async ({ request }) => {
     const body = (await request.json()) as any;
-    const { transactionId, refundId, bookingId, amount, currency, customerId } =
-      body as any;
+    const { transactionId, refundId, bookingId, amount, currency, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockRefundWebhook", {
+        new CustomEvent('mockRefundWebhook', {
           detail: {
-            gateway: "stripe",
+            gateway: 'stripe',
             transactionId,
             refundId,
             bookingId,
             amount,
             currency,
-            status: "succeeded",
+            status: 'succeeded',
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       received: true,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
 
   // Chargeback webhook
-  http.post("/api/webhooks/payments/chargeback", async ({ request }) => {
+  http.post('/api/webhooks/payments/chargeback', async ({ request }) => {
     const body = (await request.json()) as any;
-    const {
-      transactionId,
-      chargebackId,
-      bookingId,
-      amount,
-      currency,
-      reason,
-      customerId,
-    } = body as any;
+    const { transactionId, chargebackId, bookingId, amount, currency, reason, customerId } =
+      body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockChargebackWebhook", {
+        new CustomEvent('mockChargebackWebhook', {
           detail: {
-            gateway: "stripe",
+            gateway: 'stripe',
             transactionId,
             chargebackId,
             bookingId,
@@ -358,67 +337,67 @@ export const handlers = [
             reason,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       received: true,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
 
   // Webhook with signature validation
-  http.post("/api/webhooks/payments/signature-test", async ({ request }) => {
-    const signature = request.headers.get("x-webhook-signature");
+  http.post('/api/webhooks/payments/signature-test', async ({ request }) => {
+    const signature = request.headers.get('x-webhook-signature');
     const body = (await request.json()) as any;
 
-    if (signature === "valid_signature_123") {
+    if (signature === 'valid_signature_123') {
       // Trigger frontend event for testing
-      if (typeof window !== "undefined") {
+      if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent("mockWebhookWithValidSignature", {
+          new CustomEvent('mockWebhookWithValidSignature', {
             detail: {
-              gateway: "stripe",
+              gateway: 'stripe',
               signature,
               payload: body,
             },
-          }),
+          })
         );
       }
 
       return HttpResponse.json({
         received: true,
         signature_valid: true,
-        status: "processed",
+        status: 'processed',
       });
     } else {
       // Trigger frontend event for testing
-      if (typeof window !== "undefined") {
+      if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent("mockWebhookWithInvalidSignature", {
+          new CustomEvent('mockWebhookWithInvalidSignature', {
             detail: {
-              gateway: "stripe",
+              gateway: 'stripe',
               signature,
               payload: body,
             },
-          }),
+          })
         );
       }
 
       return HttpResponse.json(
         {
-          error: "Invalid signature",
+          error: 'Invalid signature',
           signature_valid: false,
         },
-        { status: 401 },
+        { status: 401 }
       );
     }
   }),
 
   // Idempotent webhook
-  http.post("/api/webhooks/payments/idempotent", async ({ request }) => {
+  http.post('/api/webhooks/payments/idempotent', async ({ request }) => {
     const body = (await request.json()) as any;
     const { eventId, transactionId, status, customerId } = body as any;
 
@@ -426,25 +405,25 @@ export const handlers = [
     const processedEvents = (global as any).processedWebhookEvents || new Set();
     if (processedEvents.has(eventId)) {
       // Trigger frontend event for testing
-      if (typeof window !== "undefined") {
+      if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent("mockIdempotentWebhook", {
+          new CustomEvent('mockIdempotentWebhook', {
             detail: {
-              gateway: "stripe",
+              gateway: 'stripe',
               eventId,
               transactionId,
               status,
               customerId,
               duplicate: true,
             },
-          }),
+          })
         );
       }
 
       return HttpResponse.json({
         received: true,
         duplicate: true,
-        status: "already_processed",
+        status: 'already_processed',
       });
     }
 
@@ -453,76 +432,76 @@ export const handlers = [
     (global as any).processedWebhookEvents = processedEvents;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockIdempotentWebhook", {
+        new CustomEvent('mockIdempotentWebhook', {
           detail: {
-            gateway: "stripe",
+            gateway: 'stripe',
             eventId,
             transactionId,
             status,
             customerId,
             duplicate: false,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       received: true,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
 
   // Webhook retry handling
-  http.post("/api/webhooks/payments/retry", async ({ request }) => {
+  http.post('/api/webhooks/payments/retry', async ({ request }) => {
     const body = (await request.json()) as any;
     const { eventId, retryCount, error } = body as any;
 
     // Simulate failure on first attempt
     if (retryCount === 1) {
       // Trigger frontend event for testing
-      if (typeof window !== "undefined") {
+      if (typeof window !== 'undefined') {
         window.dispatchEvent(
-          new CustomEvent("mockWebhookProcessingFailure", {
+          new CustomEvent('mockWebhookProcessingFailure', {
             detail: {
-              gateway: "stripe",
+              gateway: 'stripe',
               eventId,
               retryCount,
               error,
             },
-          }),
+          })
         );
       }
 
       return HttpResponse.json(
         {
-          error: "Temporary service unavailable",
+          error: 'Temporary service unavailable',
           retry: true,
         },
-        { status: 503 },
+        { status: 503 }
       );
     }
 
     // Success on retry
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockWebhookRetrySuccess", {
+        new CustomEvent('mockWebhookRetrySuccess', {
           detail: {
-            gateway: "stripe",
+            gateway: 'stripe',
             eventId,
             retryCount,
-            status: "processed",
+            status: 'processed',
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       received: true,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
@@ -532,25 +511,25 @@ export const handlers = [
   // ============================================================================
 
   // Wallet credit
-  http.post("/api/wallet/credit", async ({ request }) => {
+  http.post('/api/wallet/credit', async ({ request }) => {
     const body = (await request.json()) as any;
     const { walletId, amount, currency, userId } = body as any;
 
     const newBalance = 1200.0; // Mock balance
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockWalletCredit", {
+        new CustomEvent('mockWalletCredit', {
           detail: {
             walletId,
             amount,
             currency,
-            type: "credit",
+            type: 'credit',
             userId,
             newBalance,
           },
-        }),
+        })
       );
     }
 
@@ -564,26 +543,26 @@ export const handlers = [
   }),
 
   // Wallet debit
-  http.post("/api/wallet/debit", async ({ request }) => {
+  http.post('/api/wallet/debit', async ({ request }) => {
     const body = (await request.json()) as any;
     const { walletId, amount, currency, bookingId, userId } = body as any;
 
     const remainingBalance = 1000.0; // Mock balance
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockWalletDebit", {
+        new CustomEvent('mockWalletDebit', {
           detail: {
             walletId,
             amount,
             currency,
-            type: "debit",
+            type: 'debit',
             bookingId,
             userId,
             remainingBalance,
           },
-        }),
+        })
       );
     }
 
@@ -597,24 +576,24 @@ export const handlers = [
   }),
 
   // Low balance alert
-  http.post("/api/wallet/check-balance", async ({ request }) => {
+  http.post('/api/wallet/check-balance', async ({ request }) => {
     const body = (await request.json()) as any;
     const { walletId, threshold, userId } = body as any;
 
     const currentBalance = 50.0; // Mock low balance
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockLowWalletBalance", {
+        new CustomEvent('mockLowWalletBalance', {
           detail: {
             walletId,
             currentBalance,
             threshold,
-            currency: "USD",
+            currency: 'USD',
             userId,
           },
-        }),
+        })
       );
     }
 
@@ -626,16 +605,16 @@ export const handlers = [
   }),
 
   // Wallet transfer
-  http.post("/api/wallet/transfer", async ({ request }) => {
+  http.post('/api/wallet/transfer', async ({ request }) => {
     const body = (await request.json()) as any;
     const { fromWalletId, toWalletId, amount, currency, userId } = body as any;
 
     const remainingBalance = 700.0; // Mock balance
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockWalletTransfer", {
+        new CustomEvent('mockWalletTransfer', {
           detail: {
             fromWalletId,
             toWalletId,
@@ -644,7 +623,7 @@ export const handlers = [
             userId,
             remainingBalance,
           },
-        }),
+        })
       );
     }
 
@@ -658,22 +637,22 @@ export const handlers = [
   }),
 
   // Transaction history
-  http.get("/api/wallet/transactions", () => {
+  http.get('/api/wallet/transactions', () => {
     const transactions = [
-      { id: "txn1", type: "credit", amount: 500.0, date: "2026-01-01" },
-      { id: "txn2", type: "debit", amount: 200.0, date: "2026-01-02" },
+      { id: 'txn1', type: 'credit', amount: 500.0, date: '2026-01-01' },
+      { id: 'txn2', type: 'debit', amount: 200.0, date: '2026-01-02' },
     ];
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockTransactionHistory", {
+        new CustomEvent('mockTransactionHistory', {
           detail: {
-            walletId: "wallet-123",
+            walletId: 'wallet-123',
             transactions,
-            userId: "user-123",
+            userId: 'user-123',
           },
-        }),
+        })
       );
     }
 
@@ -684,14 +663,14 @@ export const handlers = [
   }),
 
   // Failed wallet transaction
-  http.post("/api/wallet/transaction-failed", async ({ request }) => {
+  http.post('/api/wallet/transaction-failed', async ({ request }) => {
     const body = (await request.json()) as any;
     const { walletId, amount, currency, error, userId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockWalletTransactionFailed", {
+        new CustomEvent('mockWalletTransactionFailed', {
           detail: {
             walletId,
             amount,
@@ -699,7 +678,7 @@ export const handlers = [
             error,
             userId,
           },
-        }),
+        })
       );
     }
 
@@ -714,17 +693,16 @@ export const handlers = [
   // ============================================================================
 
   // Hold order creation
-  http.post("/api/hold-orders", async ({ request }) => {
+  http.post('/api/hold-orders', async ({ request }) => {
     const body = (await request.json()) as any;
-    const { totalAmount, currency, customerId, customerName, type } =
-      body as any;
+    const { totalAmount, currency, customerId, customerName, type } = body as any;
 
     const holdOrderId = `HOLD${Date.now()}`;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockHoldOrderCreated", {
+        new CustomEvent('mockHoldOrderCreated', {
           detail: {
             holdOrderId,
             totalAmount,
@@ -733,65 +711,61 @@ export const handlers = [
             customerName,
             type,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       hold_order_id: holdOrderId,
-      status: "created",
+      status: 'created',
       expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
     });
   }),
 
   // Payment finalization
-  http.post(
-    "/api/payments/finalize/:holdOrderId",
-    async ({ request, params }) => {
-      const { holdOrderId } = params as any;
-      const body = (await request.json()) as any;
-      const { paymentMethod, amount, currency } = body as any;
+  http.post('/api/payments/finalize/:holdOrderId', async ({ request, params }) => {
+    const { holdOrderId } = params as any;
+    const body = (await request.json()) as any;
+    const { paymentMethod, amount, currency } = body as any;
 
-      // Trigger frontend event for testing
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("mockPaymentFinalization", {
-            detail: {
-              holdOrderId,
-              paymentMethod,
-              amount,
-              currency,
-              bookingId: `BK${Date.now()}`,
-              status: "confirmed",
-            },
-          }),
-        );
-      }
+    // Trigger frontend event for testing
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('mockPaymentFinalization', {
+          detail: {
+            holdOrderId,
+            paymentMethod,
+            amount,
+            currency,
+            bookingId: `BK${Date.now()}`,
+            status: 'confirmed',
+          },
+        })
+      );
+    }
 
-      return HttpResponse.json({
-        booking_id: `BK${Date.now()}`,
-        payment_id: `PAY${Date.now()}`,
-        status: "confirmed",
-        documents_generated: true,
-        notifications_sent: true,
-      });
-    },
-  ),
+    return HttpResponse.json({
+      booking_id: `BK${Date.now()}`,
+      payment_id: `PAY${Date.now()}`,
+      status: 'confirmed',
+      documents_generated: true,
+      notifications_sent: true,
+    });
+  }),
 
   // ============================================================================
   // PAYMENT PROCESSING MOCKS
   // ============================================================================
 
   // Payment success
-  http.post("/api/payments/success", async ({ request }) => {
+  http.post('/api/payments/success', async ({ request }) => {
     const body = (await request.json()) as any;
-    const { transactionId, bookingId, amount, currency, method, customerId } =
-      body as any;
+    const { transactionId, bookingId, amount, currency, method, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPaymentSuccess", {
+        new CustomEvent('mockPaymentSuccess', {
           detail: {
             transactionId,
             bookingId,
@@ -800,25 +774,25 @@ export const handlers = [
             method,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
-      status: "success",
+      status: 'success',
       notification_sent: true,
     });
   }),
 
   // Payment failure
-  http.post("/api/payments/failure", async ({ request }) => {
+  http.post('/api/payments/failure', async ({ request }) => {
     const body = (await request.json()) as any;
     const { bookingId, amount, currency, error, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPaymentFailure", {
+        new CustomEvent('mockPaymentFailure', {
           detail: {
             bookingId,
             amount,
@@ -826,33 +800,26 @@ export const handlers = [
             error,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
-      status: "failed",
+      status: 'failed',
       error,
       notification_sent: true,
     });
   }),
 
   // Refund processing
-  http.post("/api/payments/refund", async ({ request }) => {
+  http.post('/api/payments/refund', async ({ request }) => {
     const body = (await request.json()) as any;
-    const {
-      transactionId,
-      bookingId,
-      refundAmount,
-      currency,
-      reason,
-      customerId,
-    } = body as any;
+    const { transactionId, bookingId, refundAmount, currency, reason, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockRefundProcessed", {
+        new CustomEvent('mockRefundProcessed', {
           detail: {
             transactionId,
             bookingId,
@@ -861,33 +828,27 @@ export const handlers = [
             reason,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       refund_id: `REF${Date.now()}`,
-      status: "processed",
+      status: 'processed',
       notification_sent: true,
     });
   }),
 
   // Partial payment
-  http.post("/api/payments/partial", async ({ request }) => {
+  http.post('/api/payments/partial', async ({ request }) => {
     const body = (await request.json()) as any;
-    const {
-      bookingId,
-      paidAmount,
-      totalAmount,
-      currency,
-      remainingAmount,
-      customerId,
-    } = body as any;
+    const { bookingId, paidAmount, totalAmount, currency, remainingAmount, customerId } =
+      body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPartialPayment", {
+        new CustomEvent('mockPartialPayment', {
           detail: {
             bookingId,
             paidAmount,
@@ -896,12 +857,12 @@ export const handlers = [
             remainingAmount,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
-      status: "partial",
+      status: 'partial',
       paid_amount: paidAmount,
       remaining_amount: remainingAmount,
       notification_sent: true,
@@ -909,22 +870,21 @@ export const handlers = [
   }),
 
   // Payment reminder
-  http.post("/api/payments/reminder", async ({ request }) => {
+  http.post('/api/payments/reminder', async ({ request }) => {
     const body = (await request.json()) as any;
-    const { bookingId, dueDate, amount, currency, customerId, daysUntilDue } =
-      body as any;
+    const { bookingId, dueDate, amount, currency, customerId, daysUntilDue } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       if (daysUntilDue === 3) {
         window.dispatchEvent(
-          new CustomEvent("mockPaymentReminderTrigger", {
+          new CustomEvent('mockPaymentReminderTrigger', {
             detail: { daysUntilDue },
-          }),
+          })
         );
       } else if (daysUntilDue === 1) {
         window.dispatchEvent(
-          new CustomEvent("mockUrgentPaymentReminder", {
+          new CustomEvent('mockUrgentPaymentReminder', {
             detail: {
               daysUntilDue,
               bookingId,
@@ -932,27 +892,27 @@ export const handlers = [
               currency,
               customerId,
             },
-          }),
+          })
         );
       }
     }
 
     return HttpResponse.json({
       reminder_id: `REM${Date.now()}`,
-      status: "sent",
+      status: 'sent',
       notification_sent: true,
     });
   }),
 
   // Booking with pending payment
-  http.post("/api/bookings/pending-payment", async ({ request }) => {
+  http.post('/api/bookings/pending-payment', async ({ request }) => {
     const body = (await request.json()) as any;
     const { bookingId, dueDate, amount, currency, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockBookingWithPendingPayment", {
+        new CustomEvent('mockBookingWithPendingPayment', {
           detail: {
             bookingId,
             dueDate,
@@ -960,13 +920,13 @@ export const handlers = [
             currency,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       booking_id: bookingId,
-      status: "pending_payment",
+      status: 'pending_payment',
       reminder_scheduled: true,
     });
   }),
@@ -976,17 +936,16 @@ export const handlers = [
   // ============================================================================
 
   // Bank transfer initiated
-  http.post("/api/bank/transfers/initiate", async ({ request }) => {
+  http.post('/api/bank/transfers/initiate', async ({ request }) => {
     const body = await request.json();
-    const { amount, currency, bankName, accountLast4, customerId } =
-      body as any;
+    const { amount, currency, bankName, accountLast4, customerId } = body as any;
 
     const transferId = `btx_${Date.now()}`;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockBankTransferInitiated", {
+        new CustomEvent('mockBankTransferInitiated', {
           detail: {
             transferId,
             amount,
@@ -995,27 +954,26 @@ export const handlers = [
             accountLast4,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       transfer_id: transferId,
-      status: "initiated",
+      status: 'initiated',
       notification_sent: true,
     });
   }),
 
   // Bank transfer completed
-  http.post("/api/bank/transfers/complete", async ({ request }) => {
+  http.post('/api/bank/transfers/complete', async ({ request }) => {
     const body = await request.json();
-    const { transferId, amount, currency, bankName, reference, customerId } =
-      body as any;
+    const { transferId, amount, currency, bankName, reference, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockBankTransferCompleted", {
+        new CustomEvent('mockBankTransferCompleted', {
           detail: {
             transferId,
             amount,
@@ -1024,27 +982,26 @@ export const handlers = [
             reference,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       transfer_id: transferId,
-      status: "completed",
+      status: 'completed',
       notification_sent: true,
     });
   }),
 
   // Bank transfer failed
-  http.post("/api/bank/transfers/fail", async ({ request }) => {
+  http.post('/api/bank/transfers/fail', async ({ request }) => {
     const body = await request.json();
-    const { transferId, amount, currency, bankName, error, customerId } =
-      body as any;
+    const { transferId, amount, currency, bankName, error, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockBankTransferFailed", {
+        new CustomEvent('mockBankTransferFailed', {
           detail: {
             transferId,
             amount,
@@ -1053,33 +1010,27 @@ export const handlers = [
             error,
             customerId,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       transfer_id: transferId,
-      status: "failed",
+      status: 'failed',
       error,
       notification_sent: true,
     });
   }),
 
   // Bank account verification
-  http.post("/api/bank/accounts/verify", async ({ request }) => {
+  http.post('/api/bank/accounts/verify', async ({ request }) => {
     const body = await request.json();
-    const {
-      accountId,
-      bankName,
-      accountLast4,
-      verificationStatus,
-      customerId,
-    } = body as any;
+    const { accountId, bankName, accountLast4, verificationStatus, customerId } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockBankAccountVerification", {
+        new CustomEvent('mockBankAccountVerification', {
           detail: {
             accountId,
             bankName,
@@ -1087,7 +1038,7 @@ export const handlers = [
             verificationStatus,
             customerId,
           },
-        }),
+        })
       );
     }
 
@@ -1099,30 +1050,30 @@ export const handlers = [
   }),
 
   // Wire transfer details
-  http.get("/api/bank/wire-details", ({ request }) => {
+  http.get('/api/bank/wire-details', ({ request }) => {
     const url = new URL(request.url);
-    const amount = url.searchParams.get("amount") || "5000";
-    const currency = url.searchParams.get("currency") || "USD";
+    const amount = url.searchParams.get('amount') || '5000';
+    const currency = url.searchParams.get('currency') || 'USD';
 
     const wireDetails = {
-      accountName: "TripAlfa Inc",
-      accountNumber: "1234567890",
-      routingNumber: "021000021",
-      bankName: "Chase Bank",
-      swiftCode: "CHASUS33",
+      accountName: 'TripAlfa Inc',
+      accountNumber: '1234567890',
+      routingNumber: '021000021',
+      bankName: 'Chase Bank',
+      swiftCode: 'CHASUS33',
       amount: parseFloat(amount),
       currency,
     };
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockWireTransferDetails", {
+        new CustomEvent('mockWireTransferDetails', {
           detail: {
             ...wireDetails,
-            customerId: "user-123",
+            customerId: 'user-123',
           },
-        }),
+        })
       );
     }
 
@@ -1137,96 +1088,409 @@ export const handlers = [
   // ============================================================================
 
   // Payment gateway processing
-  http.post("/api/gateway/process", async ({ request }) => {
+  http.post('/api/gateway/process', async ({ request }) => {
     const body = await request.json();
     const { bookingId, amount, currency } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPaymentGatewayProcessing", {
+        new CustomEvent('mockPaymentGatewayProcessing', {
           detail: { bookingId, amount, currency },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
-      status: "processing",
+      status: 'processing',
       gateway_reference: `gw_${Date.now()}`,
     });
   }),
 
   // Payment gateway rejection
-  http.post("/api/gateway/reject", async ({ request }) => {
+  http.post('/api/gateway/reject', async ({ request }) => {
     const body = await request.json();
     const { bookingId, amount, currency, error } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockPaymentGatewayRejection", {
+        new CustomEvent('mockPaymentGatewayRejection', {
           detail: {
             bookingId,
             amount,
             currency,
-            error: error || "insufficient_funds",
+            error: error || 'insufficient_funds',
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
-      status: "rejected",
-      error: error || "insufficient_funds",
+      status: 'rejected',
+      error: error || 'insufficient_funds',
     });
   }),
 
   // Refund processing
-  http.post("/api/gateway/refund", async ({ request }) => {
+  http.post('/api/gateway/refund', async ({ request }) => {
     const body = await request.json();
     const { bookingId, refundAmount, currency, reason } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockRefundProcessing", {
+        new CustomEvent('mockRefundProcessing', {
           detail: {
             bookingId,
             refundAmount,
             currency,
             reason,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       refund_id: `ref_gw_${Date.now()}`,
-      status: "processing",
+      status: 'processing',
     });
   }),
 
   // Admin refund initiation
-  http.post("/api/admin/refunds/initiate", async ({ request }) => {
+  http.post('/api/admin/refunds/initiate', async ({ request }) => {
     const body = await request.json();
     const { bookingId, amount, reason } = body as any;
 
     // Trigger frontend event for testing
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent("mockRefundInitiation", {
+        new CustomEvent('mockRefundInitiation', {
           detail: {
             bookingId,
             amount,
             reason,
           },
-        }),
+        })
       );
     }
 
     return HttpResponse.json({
       refund_request_id: `rr_${Date.now()}`,
-      status: "initiated",
+      status: 'initiated',
+    });
+  }),
+
+  // ============================================================================
+  // BRANDING AND SETTINGS MOCKS (fixes 404 errors)
+  // ============================================================================
+
+  // Branding settings
+  http.get('/api/branding/settings', () => {
+    return HttpResponse.json({
+      features: {
+        walletEnabled: true,
+        walletTopupEnabled: true,
+        flightBookingEnabled: true,
+        hotelBookingEnabled: true,
+        seatSelectionEnabled: true,
+        ancillariesEnabled: true,
+      },
+      pricing: {
+        markupPercent: 0,
+        markupFlat: 0,
+        commissionPercent: 0,
+        commissionFlat: 0,
+        commissionChargeableToCustomer: false,
+      },
+      checkout: {
+        defaultPaymentMethod: 'wallet',
+        allowedPaymentMethods: ['wallet', 'card'],
+        enforceSupplierWallet: true,
+      },
+      branding: {
+        appName: 'TripAlfa',
+        logoUrl: '/logo.png',
+        defaultAvatarUrl: '',
+        rtlEnabled: true,
+      },
+    });
+  }),
+
+  // Branding colors
+  http.get('/api/branding/colors', () => {
+    return HttpResponse.json({
+      data: {
+        primaryColor: '#3b82f6',
+        primaryForeground: '0 0% 100%',
+        secondaryColor: '#64748b',
+        secondaryForeground: '240 6% 10%',
+        accentColor: '#f59e0b',
+        accentForeground: '0 0% 100%',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+        buttonRadius: '0.5rem',
+        inputRadius: '0.5rem',
+      },
+    });
+  }),
+
+  // Branding settings alternative endpoint (for TripLogerHeader)
+  http.get('/branding/settings', () => {
+    return HttpResponse.json({
+      features: {
+        walletEnabled: true,
+        walletTopupEnabled: true,
+        flightBookingEnabled: true,
+        hotelBookingEnabled: true,
+      },
+      branding: {
+        appName: 'TripAlfa',
+        logoUrl: '/logo.png',
+      },
+    });
+  }),
+
+  // Rules - markup (with query params matching)
+  http.get('/api/rules/markup', ({ request }) => {
+    const url = new URL(request.url);
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          id: 'markup_1',
+          markupType: 'PERCENT',
+          markupValue: 5,
+          isActive: url.searchParams.get('isActive') !== 'false',
+          priority: 1,
+          validFrom: new Date().toISOString(),
+        },
+      ],
+    });
+  }),
+
+  // Rules - commissions (with query params matching)
+  http.get('/api/rules/commissions', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          id: 'commission_1',
+          commissionPercent: 10,
+          commissionRate: 0.1,
+          isActive: true,
+        },
+      ],
+    });
+  }),
+
+  // LiteAPI - languages (for TripLogerHeader language dropdown)
+  http.get('/api/liteapi/languages', () => {
+    return HttpResponse.json([
+      { code: 'en', name: 'English', flag: '🇺🇸', isRtl: false },
+      { code: 'ar', name: 'Arabic', flag: '🇸🇦', isRtl: true },
+      { code: 'es', name: 'Spanish', flag: '🇪🇸', isRtl: false },
+      { code: 'fr', name: 'French', flag: '🇫🇷', isRtl: false },
+      { code: 'de', name: 'German', flag: '🇩🇪', isRtl: false },
+    ]);
+  }),
+
+  // Static data endpoints
+  http.get('/api/static/amenities', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'WIFI', name: 'Wi-Fi', is_popular: true },
+        { code: 'POOL', name: 'Swimming Pool', is_popular: true },
+        { code: 'GYM', name: 'Gym', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/board-types', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'RO', name: 'Room Only' },
+        { code: 'BB', name: 'Bed & Breakfast', is_popular: true },
+        { code: 'HB', name: 'Half Board', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/hotel-types', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'HOTEL', name: 'Hotel', is_popular: true },
+        { code: 'RESORT', name: 'Resort', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/chains', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'MARRIOTT', name: 'Marriott' },
+        { code: 'HILTON', name: 'Hilton' },
+      ],
+    });
+  }),
+
+  http.get('/api/static/star-ratings', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { id: '3', name: '3 Star' },
+        { id: '4', name: '4 Star', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/room-types', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'STD', name: 'Standard Room', is_popular: true },
+        { code: 'DLX', name: 'Deluxe Room', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/view-types', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'CITY', name: 'City View' },
+        { code: 'SEA', name: 'Sea View', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/payment-types', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'PREPAID', name: 'Prepaid', is_popular: true },
+        { code: 'PAY_AT_HOTEL', name: 'Pay at Hotel', is_popular: true },
+      ],
+    });
+  }),
+
+  http.get('/api/static/destinations', ({ request }) => {
+    const url = new URL(request.url);
+    const popular = url.searchParams.get('popular');
+    const data = [
+      { id: 'NYC', name: 'New York', country: 'US', city: 'New York', code: 'NYC' },
+      { id: 'LON', name: 'London', country: 'GB', city: 'London', code: 'LON' },
+      { id: 'PAR', name: 'Paris', country: 'FR', city: 'Paris', code: 'PAR' },
+      { id: 'DXB', name: 'Dubai', country: 'AE', city: 'Dubai', code: 'DXB', isPopular: true },
+    ];
+    if (popular === 'true') {
+      return HttpResponse.json({ success: true, data: data.filter(d => d.code === 'DXB') });
+    }
+    return HttpResponse.json({ success: true, data });
+  }),
+
+  http.get('/api/static/airports', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+    const allAirports = [
+      { code: 'JFK', name: 'John F. Kennedy International' },
+      { code: 'LHR', name: 'London Heathrow' },
+      { code: 'CDG', name: 'Paris Charles de Gaulle' },
+      { code: 'DXB', name: 'Dubai International' },
+    ];
+    if (q) {
+      const filtered = allAirports.filter(
+        a =>
+          a.code.toLowerCase().includes(q.toLowerCase()) ||
+          a.name.toLowerCase().includes(q.toLowerCase())
+      );
+      return HttpResponse.json({ success: true, data: filtered });
+    }
+    return HttpResponse.json({ success: true, data: allAirports });
+  }),
+
+  http.get('/api/static/airlines', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+    const allAirlines = [
+      { code: 'AA', name: 'American Airlines' },
+      { code: 'BA', name: 'British Airways' },
+      { code: 'EK', name: 'Emirates' },
+      { code: 'LH', name: 'Lufthansa' },
+    ];
+    if (q) {
+      const filtered = allAirlines.filter(
+        a =>
+          a.code.toLowerCase().includes(q.toLowerCase()) ||
+          a.name.toLowerCase().includes(q.toLowerCase())
+      );
+      return HttpResponse.json({ success: true, data: filtered });
+    }
+    return HttpResponse.json({ success: true, data: allAirlines });
+  }),
+
+  http.get('/api/static/countries', ({ request }) => {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+    const allCountries = [
+      { code: 'US', name: 'United States' },
+      { code: 'GB', name: 'United Kingdom' },
+      { code: 'FR', name: 'France' },
+      { code: 'AE', name: 'United Arab Emirates' },
+    ];
+    if (q) {
+      const filtered = allCountries.filter(
+        c =>
+          c.code.toLowerCase().includes(q.toLowerCase()) ||
+          c.name.toLowerCase().includes(q.toLowerCase())
+      );
+      return HttpResponse.json({ success: true, data: filtered });
+    }
+    return HttpResponse.json({ success: true, data: allCountries });
+  }),
+
+  http.get('/api/static/currencies', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { code: 'USD', name: 'US Dollar', symbol: '$' },
+        { code: 'EUR', name: 'Euro', symbol: '€' },
+        { code: 'GBP', name: 'British Pound', symbol: '£' },
+        { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ' },
+      ],
+    });
+  }),
+
+  http.get('/api/static/popular-hotels', ({ request }) => {
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '12', 10);
+    const hotels = [
+      { id: 'h1', name: 'Burj Al Arab', location: 'Dubai' },
+      { id: 'h2', name: 'The Plaza', location: 'New York' },
+      { id: 'h3', name: 'Ritz Paris', location: 'Paris' },
+    ];
+    return HttpResponse.json({ success: true, data: hotels.slice(0, limit) });
+  }),
+
+  http.get('/api/static/loyalty-programs', () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        { id: 'lp1', name: 'TripAlfa Rewards' },
+        { id: 'lp2', name: 'SkyTeam' },
+      ],
+    });
+  }),
+
+  // User preferences
+  http.put('/user/preferences', async ({ request }) => {
+    const body = await request.json();
+    return HttpResponse.json({
+      success: true,
+      preferences: body,
     });
   }),
 ];

@@ -14,7 +14,7 @@ import React, { useState, useRef } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
 import { Button } from '@tripalfa/ui-components';
-import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
+import { formatDateTime } from '@tripalfa/shared-utils';
 
 interface PaymentBreakdown {
   walletAmount: number;
@@ -172,7 +172,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, on
         {/* Header */}
         <div className="modal-header">
           <h2>Payment Receipt</h2>
-          <Button variant="outline" size="default" className="close-btn" onClick={onClose}>
+          <Button variant="outline" size="md" className="close-btn" onClick={onClose}>
             ✕
           </Button>
         </div>
@@ -334,7 +334,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, on
           <div className="action-group">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="action-btn primary no-print"
               onClick={handlePrint}
             >
@@ -342,7 +342,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, on
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="action-btn no-print"
               onClick={handleDownloadPDF}
               disabled={isDownloading}
@@ -351,7 +351,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, on
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="action-btn no-print"
               onClick={() => setShowEmailForm(!showEmailForm)}
             >
@@ -370,7 +370,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, on
               />
               <Button
                 variant="outline"
-                size="default"
+                size="md"
                 onClick={handleSendEmail}
                 disabled={isSendingEmail}
                 className="send-btn"
@@ -382,7 +382,7 @@ const PaymentReceiptModal: FC<PaymentReceiptModalProps> = ({ receipt, isOpen, on
 
           <Button
             variant="outline"
-            size="default"
+            size="md"
             className="action-btn secondary no-print"
             onClick={onClose}
           >

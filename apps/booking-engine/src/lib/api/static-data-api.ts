@@ -175,7 +175,7 @@ class StaticDataApiClient {
     private apiKey?: string;
     private defaultHeaders: HeadersInit;
 
-    constructor(baseUrl: string = 'http://localhost:3002/api', apiKey?: string) {
+    constructor(baseUrl: string = `${import.meta.env.VITE_GATEWAY_URL || '/api'}/static`, apiKey?: string) {
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
         

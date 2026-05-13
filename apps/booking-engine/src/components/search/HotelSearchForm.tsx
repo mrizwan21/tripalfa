@@ -1,350 +1,215 @@
 'use client';
 
 /**
- * Hotel Search Form - Premium International OTA Design
- *
- * Upgraded with:
- * - Strict height tokens for perfect alignment
- * - Premium glassmorphism design
- * - Enhanced guest/rooms selector with smooth animations
- * - Professional typography and spacing */
+ * Hotel Search Form - Kayak.com style
+ * 
+ * Labels (different from flights):
+ * - Hotel: Where to? (not From/To)
+ * - Hotel: Check-in / Check-out (not Departure/Return)
+ * - Consistent 56px field heights
+ * - Clean, aligned layout with proper spacing
+ */
 
-import React, { useState, useRef, useEffect, type ChangeEvent } from 'react';
-import {
-  MapPin,
-  CalendarBlank,
-  Users,
-  X,
-  MagnifyingGlass,
-  Bed,
-  GlobeHemisphereWest,
-  Minus,
-  Plus,
-} from '@phosphor-icons/react';
+import React, { useState } from 'react';
+import { Buildings, MapPin, Users, CalendarBlank, MagnifyingGlass } from '@phosphor-icons/react';
 import { cn } from '@tripalfa/shared-utils/utils';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { format } from 'date-fns';
+import { DualMonthCalendar } from '../ui/DualMonthCalendar';
 
-interface HotelSearchFormProps {
-  searchLabels: {
-    destination: string;
-    checkIn: string;
-    checkOut: string;
-    destinationPlaceholder: string;
-    searchCtaLabel: string;
-    disabledLabel?: string;
-  };
-  isSearchEnabled?: boolean;
-  onSearch?: (data: HotelSearchData) => void;
-}
+// ─── Types ───
 
 export interface HotelSearchData {
   destination: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
+  checkInDate: string;
+  checkOutDate: string;
+  adults: number;
+  children: number;
   rooms: number;
 }
 
-// Animated Icon with hover effect
-function AnimatedIcon({
-  icon: Icon,
-  className,
-  size = 20,
-  weight = 'duotone',
-}: {
-  icon: React.ComponentType<any>;
-  className?: string;
-  size?: number;
-  weight?: 'thin' | 'light' | 'regular' | 'fill' | 'duotone';
-}) {
-  return (
-    <Icon
-      className={cn(
-        'transition-all duration-300 group-focus-within:scale-110 group-focus-within:text-[hsl(var(--primary))]',
-        className
-      )}
-      size={size}
-      weight={weight}
-    />
-  );
+interface HotelSearchFormProps {
+  onSearch: (data: HotelSearchData) => void;
+  isSearchEnabled: boolean;
+  searchLabels?: {
+    destination?: string;
+    checkIn?: string;
+    checkOut?: string;
+    destinationPlaceholder?: string;
+    searchCtaLabel?: string;
+    disabledLabel?: string;
+  };
 }
 
-// Guest Selector Dropdown
-function GuestSelector({
-  guests,
-  rooms,
-  onGuestsChange,
-  onRoomsChange,
-  onClose,
-}: {
-  guests: number;
-  rooms: number;
-  onGuestsChange: (guests: number) => void;
-  onRoomsChange: (rooms: number) => void;
-  onClose: () => void;
-}) {
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onClose]);
-
-  const CounterRow = ({
-    label,
-    value,
-    onChange,
-    min,
-    max,
-    sublabel,
-  }: {
-    label: string;
-    value: number;
-    onChange: (val: number) => void;
-    min: number;
-    max: number;
-    sublabel?: string;
-  }) => (
-    <div className="flex items-center justify-between py-3 px-4">
-      <div>
-        <p className="text-sm font-medium text-gray-900">{label}</p>
-        {sublabel && <p className="text-xs text-gray-400 mt-0.5">{sublabel}</p>}
-      </div>
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(Math.max(min, value - 1))}
-          disabled={value <= min}
-          className={cn(
-            'w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-200',
-            value <= min
-              ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-[hsl(var(--primary))]/30 hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5'
-          )}
-        >
-          <Minus size={14} weight="bold" />
-        </button>
-        <span className="w-6 text-center text-sm font-semibold text-gray-900">{value}</span>
-        <button
-          type="button"
-          onClick={() => onChange(Math.min(max, value + 1))}
-          disabled={value >= max}
-          className={cn(
-            'w-8 h-8 rounded-full flex items-center justify-center border transition-all duration-200',
-            value >= max
-              ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-[hsl(var(--primary))]/30 hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5'
-          )}
-        >
-          <Plus size={14} weight="bold" />
-        </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div
-      ref={popoverRef}
-      className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-2xl shadow-black/10 ring-1 ring-gray-200/50 z-50 animate-in fade-in zoom-in-95 duration-200 overflow-hidden"
-    >
-      <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-          Guests & Rooms
-        </p>
-      </div>
-      <CounterRow
-        label="Adults"
-        sublabel="Age 13+"
-        value={guests}
-        onChange={onGuestsChange}
-        min={1}
-        max={10}
-      />
-      <div className="border-t border-gray-100" />
-      <CounterRow
-        label="Children"
-        sublabel="Ages 2-12"
-        value={0}
-        onChange={() => {}}
-        min={0}
-        max={6}
-      />
-      <div className="border-t border-gray-100" />
-      <CounterRow
-        label="Rooms"
-        sublabel="Number of rooms"
-        value={rooms}
-        onChange={onRoomsChange}
-        min={1}
-        max={5}
-      />
-      <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50">
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full py-2.5 rounded-xl bg-[hsl(var(--primary))] text-white text-sm font-semibold hover:bg-[hsl(var(--primary))]/90 transition-colors duration-200"
-        >
-          Done
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function HotelSearchForm({
-  searchLabels,
-  isSearchEnabled = true,
-  onSearch,
-}: HotelSearchFormProps) {
+export function HotelSearchForm({ onSearch, isSearchEnabled, searchLabels }: HotelSearchFormProps) {
   const [destination, setDestination] = useState('');
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState(2);
+  const [checkInDate, setCheckInDate] = useState<Date | null>(null);
+  const [checkOutDate, setCheckOutDate] = useState<Date | null>(null);
+  const [adults, setAdults] = useState(2);
+  const [children, setChildren] = useState(0);
   const [rooms, setRooms] = useState(1);
-  const [showGuestSelector, setShowGuestSelector] = useState(false);
+  const [showTravelerPanel, setShowTravelerPanel] = useState(false);
 
   const handleSearch = () => {
-    if (onSearch) {
-      onSearch({ destination, checkIn, checkOut, guests, rooms });
-    }
+    onSearch({
+      destination,
+      checkInDate: checkInDate ? format(checkInDate, 'yyyy-MM-dd') : '',
+      checkOutDate: checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : '',
+      adults,
+      children,
+      rooms,
+    });
   };
 
   return (
-    <div className="relative">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-        {/* Destination Input */}
-        <div className="lg:col-span-4 relative group">
-          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <MapPin size={12} weight="fill" className="text-[hsl(var(--primary))]" />
-            {searchLabels.destination}
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center pointer-events-none">
-              <AnimatedIcon icon={MapPin} size={20} className="text-gray-400" />
-            </div>
-            <Input
+    <div className="w-full max-w-5xl mx-auto p-4 lg:p-5">
+      <div className="flex flex-col lg:flex-row flex-nowrap bg-white border border-gray-200 rounded-xl overflow-visible hover:border-gray-300 transition-colors focus-within:border-[#003b95] focus-within:ring-2 focus-within:ring-[#003b95]/10">
+        {/* Destination Field */}
+        <div className="relative flex-1 min-w-0 group">
+          <div className="px-5 py-2 h-[56px] flex flex-col justify-center">
+            <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1 mb-0">
+              <MapPin size={10} weight="fill" className="text-[#003b95]" />
+              Where to?
+            </label>
+            <input
               type="text"
-              placeholder={searchLabels.destinationPlaceholder}
-              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg hover:border-gray-300"
+              placeholder="Destination, hotel name"
+              className="w-full h-5 bg-transparent text-[15px] font-semibold text-gray-900 placeholder:text-gray-400 outline-none truncate leading-5"
               value={destination}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setDestination(e.target.value)}
-              onFocus={() => {}}
+              onChange={(e) => setDestination(e.target.value)}
+              disabled={!isSearchEnabled}
             />
-            {destination && (
-              <button
-                type="button"
-                onClick={() => setDestination('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-gray-100 transition-all duration-200 group/clear"
-              >
-                <X
-                  className="h-3 w-3 text-gray-400 group-hover/clear:text-gray-600 transition-colors"
-                  strokeWidth={2.5}
-                />
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Check-in Date */}
-        <div className="lg:col-span-2 group">
-          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <CalendarBlank size={12} weight="fill" className="text-[hsl(var(--primary))]" />
-            {searchLabels.checkIn}
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center pointer-events-none">
-              <AnimatedIcon icon={CalendarBlank} size={20} className="text-gray-400" />
-            </div>
-            <Input
+        {/* Check-in */}
+        <div className="relative flex-1 min-w-0 group border-t lg:border-t-0 lg:border-l border-gray-200">
+          <div className="px-5 py-2 h-[56px] flex flex-col justify-center">
+            <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1 mb-0">
+              <CalendarBlank size={10} weight="fill" className="text-[#003b95]" />
+              Check-in
+            </label>
+            <input
               type="date"
-              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg hover:border-gray-300"
-              value={checkIn}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setCheckIn(e.target.value)}
+              className="w-full h-5 bg-transparent text-[15px] font-semibold text-gray-900 outline-none cursor-pointer appearance-none leading-5 p-0 m-0 border-0"
+              value={checkInDate ? format(checkInDate, 'yyyy-MM-dd') : ''}
+              onChange={(e) => {
+                const d = e.target.value ? new Date(e.target.value) : null;
+                setCheckInDate(d);
+              }}
+              disabled={!isSearchEnabled}
+              style={{ padding: 0, margin: 0, border: 'none' }}
             />
           </div>
         </div>
 
-        {/* Check-out Date */}
-        <div className="lg:col-span-2 group">
-          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <CalendarBlank size={12} weight="fill" className="text-[hsl(var(--primary))]" />
-            {searchLabels.checkOut}
-          </Label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 w-12 flex items-center justify-center pointer-events-none">
-              <AnimatedIcon icon={CalendarBlank} size={20} className="text-gray-400" />
-            </div>
-            <Input
-              type="date"
-              className="pl-12 h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg hover:border-gray-300"
-              value={checkOut}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setCheckOut(e.target.value)}
-            />
-          </div>
+        {/* Check-out */}
+        <div className="relative flex-1 min-w-0 group border-t lg:border-t-0 lg:border-l border-gray-200">
+        <div className="px-5 py-2 h-[56px] flex flex-col justify-center">
+          <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1 mb-0">
+            <CalendarBlank size={10} weight="fill" className="text-[#003b95]" />
+            Check-out
+          </label>
+          <input
+            type="date"
+            className="w-full h-5 bg-transparent text-[15px] font-semibold text-gray-900 outline-none cursor-pointer appearance-none leading-5 p-0 m-0 border-0"
+            value={checkOutDate ? format(checkOutDate, 'yyyy-MM-dd') : ''}
+            onChange={(e) => {
+              const d = e.target.value ? new Date(e.target.value) : null;
+              setCheckOutDate(d);
+            }}
+            disabled={!isSearchEnabled}
+            style={{ padding: 0, margin: 0, border: 'none' }}
+          />
+        </div>
         </div>
 
-        {/* Guests & Rooms */}
-        <div className="lg:col-span-2 group relative">
-          <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <Bed size={12} weight="fill" className="text-[hsl(var(--primary))]" />
-            Guests & Rooms
-          </Label>
-          <button
-            type="button"
-            onClick={() => setShowGuestSelector(!showGuestSelector)}
-            className="w-full flex items-center h-14 rounded-xl border border-gray-200/80 bg-white/90 backdrop-blur-md text-sm font-medium transition-all duration-300 hover:border-gray-300 hover:bg-white focus:border-[hsl(var(--primary))]/50 focus:ring-4 focus:ring-[hsl(var(--primary))]/10 focus:bg-white focus:shadow-lg px-3"
-          >
-            <Users size={20} weight="duotone" className="text-gray-400 mr-3 shrink-0" />
-            <span className="text-gray-700 truncate">
-              {guests} Adult{guests > 1 ? 's' : ''}, {rooms} Room{rooms > 1 ? 's' : ''}
+        {/* Travelers */}
+        <div className="relative flex-1 min-w-0 group border-t lg:border-t-0 lg:border-l border-gray-200">
+          <div className="px-5 py-2 h-[56px] flex flex-col justify-center cursor-pointer" onClick={() => setShowTravelerPanel(!showTravelerPanel)}>
+            <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1 mb-0">
+              <Users size={10} weight="fill" className="text-[#003b95]" />
+              Travelers
+            </label>
+            <span className="text-[15px] font-semibold text-gray-900 leading-5">
+              {adults} Adults, {children} Kids
             </span>
-          </button>
-          {showGuestSelector && (
-            <GuestSelector
-              guests={guests}
-              rooms={rooms}
-              onGuestsChange={setGuests}
-              onRoomsChange={setRooms}
-              onClose={() => setShowGuestSelector(false)}
-            />
+          </div>
+          {/* Traveler Dropdown Panel */}
+          {showTravelerPanel && (
+            <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-2xl shadow-black/10 ring-1 ring-gray-200/60 z-50 p-4 w-72 animate-scale-in">
+              {/* Adults */}
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900">Adults</p>
+                  <p className="text-xs text-gray-500">Age 18+</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#003b95] transition-colors">
+                    <span className="text-lg font-bold text-gray-600">-</span>
+                  </button>
+                  <span className="w-6 text-center font-semibold text-sm">{adults}</span>
+                  <button onClick={() => setAdults(Math.min(8, adults + 1))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#003b95] transition-colors">
+                    <span className="text-lg font-bold text-gray-600">+</span>
+                  </button>
+                </div>
+              </div>
+              {/* Children */}
+              <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900">Children</p>
+                  <p className="text-xs text-gray-500">Age 0-17</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#003b95] transition-colors">
+                    <span className="text-lg font-bold text-gray-600">-</span>
+                  </button>
+                  <span className="w-6 text-center font-semibold text-sm">{children}</span>
+                  <button onClick={() => setChildren(Math.min(6, children + 1))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#003b95] transition-colors">
+                    <span className="text-lg font-bold text-gray-600">+</span>
+                  </button>
+                </div>
+              </div>
+              {/* Rooms */}
+              <div className="flex items-center justify-between py-2 border-t border-gray-100">
+                <div>
+                  <p className="font-semibold text-sm text-gray-900">Rooms</p>
+                  <p className="text-xs text-gray-500">Number of rooms</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setRooms(Math.max(1, rooms - 1))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#003b95] transition-colors">
+                    <span className="text-lg font-bold text-gray-600">-</span>
+                  </button>
+                  <span className="w-6 text-center font-semibold text-sm">{rooms}</span>
+                  <button onClick={() => setRooms(Math.min(5, rooms + 1))} className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:border-[#003b95] transition-colors">
+                    <span className="text-lg font-bold text-gray-600">+</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
         {/* Search Button */}
-        <div className="lg:col-span-2">
+        <div className="flex items-stretch p-2 lg:p-2 lg:pl-0 border-t lg:border-t-0 shrink-0">
           <button
             type="button"
             disabled={!isSearchEnabled}
             onClick={handleSearch}
             className={cn(
-              'w-full h-14 rounded-xl font-semibold text-sm flex items-center justify-center gap-2.5 transition-all duration-300 outline-none',
-              'bg-[hsl(var(--primary))] text-white',
-              'hover:bg-[hsl(var(--primary))]/90 shadow-lg hover:shadow-xl hover:-translate-y-0.5',
-              'active:translate-y-0 active:shadow-md',
-              'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:translate-y-0'
+              'w-full lg:w-auto h-[50px] px-5 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all duration-200 outline-none',
+              'bg-[#003b95] text-white',
+              'hover:bg-[#002a6e] shadow-md hover:shadow-lg',
+              'active:scale-[0.98]',
+              'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none'
             )}
           >
-            <MagnifyingGlass size={20} weight="duotone" />
-            {searchLabels.searchCtaLabel}
+            <MagnifyingGlass size={18} weight="bold" />
+            <span>Search Hotels</span>
           </button>
         </div>
       </div>
-
-      {/* Disabled Message */}
-      {!isSearchEnabled && (
-        <div className="mt-4 text-center py-3">
-          <p className="text-sm font-medium text-gray-500 bg-gray-50/80 backdrop-blur-sm inline-flex items-center gap-2 px-4 py-2 rounded-full ring-1 ring-gray-200/50">
-            <GlobeHemisphereWest size={14} weight="duotone" />
-            {searchLabels.disabledLabel}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
+
+export default HotelSearchForm;

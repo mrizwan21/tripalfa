@@ -13,7 +13,7 @@ import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
 import { Button } from '@tripalfa/ui-components';
-import { formatDate } from '@tripalfa/shared-utils/date-utils';
+import { formatDate } from '@tripalfa/shared-utils';
 
 interface RefundRecord {
   id: string;
@@ -153,7 +153,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <Button variant="outline" size="default" onClick={fetchRefundStatus}>
+          <Button variant="outline" size="md" onClick={fetchRefundStatus}>
             Retry
           </Button>
         </div>
@@ -213,7 +213,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
           <div className="refund-filters">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
               onClick={() => setFilterStatus('all')}
             >
@@ -221,7 +221,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'pending' ? 'active' : ''}`}
               onClick={() => setFilterStatus('pending')}
             >
@@ -229,7 +229,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'processing' ? 'active' : ''}`}
               onClick={() => setFilterStatus('processing')}
             >
@@ -237,7 +237,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'completed' ? 'active' : ''}`}
               onClick={() => setFilterStatus('completed')}
             >
@@ -245,7 +245,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'failed' ? 'active' : ''}`}
               onClick={() => setFilterStatus('failed')}
             >
@@ -337,7 +337,7 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                       <div className="refund-timeline">
                         <Button
                           variant="outline"
-                          size="default"
+                          size="md"
                           className="expand-timeline-btn"
                           onClick={() =>
                             setExpandedRefund(expandedRefund === refund.id ? null : refund.id)
@@ -386,16 +386,16 @@ const RefundStatusPanel: FC<RefundStatusPanelProps> = ({ customerId }) => {
                     {/* Actions */}
                     <div className="refund-actions">
                       {refund.status === 'failed' && (
-                        <Button variant="outline" size="default" className="action-btn warning">
+                        <Button variant="outline" size="md" className="action-btn warning">
                           Contact Support
                         </Button>
                       )}
                       {['pending', 'processing', 'in-transit'].includes(refund.status) && (
-                        <Button variant="outline" size="default" className="action-btn secondary">
+                        <Button variant="outline" size="md" className="action-btn secondary">
                           Track Status
                         </Button>
                       )}
-                      <Button variant="outline" size="default" className="action-btn secondary">
+                      <Button variant="outline" size="md" className="action-btn secondary">
                         View Booking
                       </Button>
                     </div>

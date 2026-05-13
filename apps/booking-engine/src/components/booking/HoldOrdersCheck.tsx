@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import HoldOrderForm from "./HoldOrderForm";
 import HoldOrderDetails from "./HoldOrderDetails";
 import "./HoldOrdersCheck.css";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 interface HoldOrdersCheckProps {
   offerId: string;
@@ -149,7 +149,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({
             </div>
             <Button
               variant="ghost"
-              size="default"
+              size="md"
               className="error-close px-4 py-2 text-sm font-medium rounded-md transition-colors hover:bg-gray-100"
               onClick={() => setError("")}
             >
@@ -238,7 +238,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({
           <div className="completion-actions">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="btn-primary"
               onClick={() => (window.location.href = "/bookings")}
             >
@@ -246,7 +246,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="btn-secondary"
               onClick={() => window.location.reload()}
             >
@@ -265,7 +265,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({
           <div className="error-actions">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="btn-primary"
               onClick={() => (window.location.href = "/bookings")}
             >
@@ -273,7 +273,7 @@ const HoldOrdersCheck: React.FC<HoldOrdersCheckProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="btn-secondary"
               onClick={checkEligibility}
             >

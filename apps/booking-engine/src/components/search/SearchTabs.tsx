@@ -1,12 +1,12 @@
 'use client';
 
 /**
- * Search Tabs - Premium International OTA Design
+ * Search Tabs - Modern OTA Design
  *
- * Upgraded with:
- * - Phosphor animated icons (duotone with active state)
- * - Smooth sliding indicator animation
- * - Premium hover effects and transitions
+ * Features:
+ * - Clean minimal tab design with subtle active indicator line
+ * - Inspired by Booking.com / Kayak / Expedia
+ * - Smooth transitions and accessible keyboard navigation
  */
 
 import React from 'react';
@@ -38,25 +38,10 @@ export function SearchTabs({ activeTab, onTabChange, tabs, className }: SearchTa
   ];
 
   const tabItems = tabs || defaultTabs;
-  const activeIndex = tabItems.findIndex(t => t.id === activeTab);
 
   return (
-    <div className={cn('relative', className)}>
-      <div
-        className="relative inline-flex items-center bg-gray-100/60 backdrop-blur-md rounded-xl p-1.5 shadow-inner shadow-gray-200/50"
-        role="tablist"
-        aria-orientation="horizontal"
-      >
-        {/* Sliding indicator */}
-        <div
-          className="absolute inset-y-1.5 rounded-xl bg-white shadow-lg shadow-black/5 ring-1 ring-gray-200/50 transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
-          style={{
-            left: `calc(${activeIndex * 25}% + 6px)`,
-            width: `calc(25% - 12px)`,
-          }}
-          aria-hidden="true"
-        />
-
+    <div className={cn('relative', className)} role="tablist" aria-orientation="horizontal">
+      <div className="flex items-center gap-1 px-4 py-2">
         {tabItems.map(({ id, label, icon: Icon, disabled }) => {
           const isActive = id === activeTab;
           return (
@@ -68,22 +53,25 @@ export function SearchTabs({ activeTab, onTabChange, tabs, className }: SearchTa
               disabled={disabled}
               onClick={() => !disabled && onTabChange(id)}
               className={cn(
-                'relative z-10 flex items-center gap-2.5 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-300 outline-none group/tab',
+                'relative flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 outline-none',
                 'disabled:opacity-40 disabled:cursor-not-allowed',
-                isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
+                isActive
+                  ? 'text-[#003b95]'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
               )}
             >
               <Icon
                 className={cn(
-                  'h-5 w-5 transition-all duration-300',
-                  isActive
-                    ? 'text-[hsl(var(--primary))] scale-110'
-                    : 'group-hover/tab:scale-110 group-hover/tab:text-gray-700'
+                  'h-5 w-5 transition-all duration-200',
+                  isActive ? 'text-[#003b95]' : 'text-gray-400'
                 )}
                 size={20}
-                weight={isActive ? 'duotone' : 'regular'}
+                weight={isActive ? 'fill' : 'regular'}
               />
-              <span className="tracking-wide">{label}</span>
+              <span className="hidden sm:inline">{label}</span>
+              {isActive && (
+                <div className="absolute bottom-0 left-2 right-2 h-0.5 bg-[#003b95] rounded-full" />
+              )}
             </button>
           );
         })}

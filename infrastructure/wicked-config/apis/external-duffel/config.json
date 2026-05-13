@@ -5,13 +5,5 @@
     "strip_uri": true,
     "preserve_host": false
   },
-  "plugins": [
-    {
-      "config": {
-        "minute": 6000,
-        "policy": "local"
-      },
-      "name": "rate-limiting"
-    }
-  ]
+  "plugins": []
 }

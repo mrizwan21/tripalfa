@@ -90,12 +90,12 @@ function WeatherWidget({
   if (loading) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
       >
         <div className="animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-          <div className="h-8 bg-muted rounded w-2/3 mb-2" />
-          <div className="h-3 bg-muted rounded w-1/3" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-4" />
+          <div className="h-8 bg-gray-100 rounded w-2/3 mb-2" />
+          <div className="h-3 bg-gray-100 rounded w-1/3" />
         </div>
       </div>
     );
@@ -104,9 +104,9 @@ function WeatherWidget({
   if (error || !weather) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
       >
-        <p className="text-muted-foreground text-sm">Weather unavailable</p>
+        <p className="text-gray-500 text-sm">Weather unavailable</p>
       </div>
     );
   }
@@ -121,23 +121,23 @@ function WeatherWidget({
 
   return (
     <div
-      className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
     >
       <div className="flex items-center justify-between mb-4 gap-2">
         <div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
             Weather in {destination.city}
           </p>
-          <p className="text-4xl font-black text-foreground">{temp}°C</p>
+          <p className="text-4xl font-black text-gray-900">{temp}°C</p>
         </div>
         <WeatherIcon condition={condition} size={56} />
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground capitalize">
+        <p className="text-sm text-gray-500 capitalize">
           {description}
         </p>
-        <div className="flex gap-4 text-xs text-muted-foreground">
+        <div className="flex gap-4 text-xs text-gray-500">
           <span>Feels like {feelsLike}°C</span>
           <span>•</span>
           <span>Humidity {humidity}%</span>
@@ -170,11 +170,11 @@ function CurrencyWidget({
   if (loading) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
       >
         <div className="animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-          <div className="h-8 bg-muted rounded w-2/3" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-4" />
+          <div className="h-8 bg-gray-100 rounded w-2/3" />
         </div>
       </div>
     );
@@ -183,9 +183,9 @@ function CurrencyWidget({
   if (error || !rate) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
       >
-        <p className="text-muted-foreground text-sm">
+        <p className="text-gray-500 text-sm">
           Currency conversion unavailable
         </p>
       </div>
@@ -198,28 +198,28 @@ function CurrencyWidget({
 
   return (
     <div
-      className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
     >
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
         Currency Exchange
       </p>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted-foreground text-sm">
+          <span className="text-gray-500 text-sm">
             {originSymbol} 100
           </span>
-          <span className="text-muted-foreground">→</span>
-          <span className="text-foreground font-bold text-lg">
+          <span className="text-gray-500">→</span>
+          <span className="text-gray-900 font-bold text-lg">
             {destSymbol} {conversion?.result.toFixed(2)}
           </span>
         </div>
 
-        <div className="pt-3 border-t border-border">
-          <p className="text-xs text-muted-foreground">
+        <div className="pt-3 border-t border-gray-200">
+          <p className="text-xs text-gray-500">
             1 {originCurrency} = {rate.toFixed(4)} {destinationCurrency}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[10px] text-gray-500 mt-1">
             {CURRENCY_NAMES[originCurrency]} →{" "}
             {CURRENCY_NAMES[destinationCurrency]}
           </p>
@@ -268,18 +268,18 @@ function SearchProgress({
   }, [tips.length]);
 
   return (
-    <div className="bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border">
+    <div className="bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200">
       <div className="flex items-center justify-between mb-4 gap-2">
-        <p className="text-sm font-bold text-foreground">
+        <p className="text-sm font-bold text-gray-900">
           Searching flights...
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-gray-500">
           ~{estimatedTime}s remaining
         </p>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 bg-border rounded-full overflow-hidden mb-4">
+      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
         <div
           className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
@@ -289,7 +289,7 @@ function SearchProgress({
       {/* Animated tip */}
       <div className="h-12 flex items-center gap-2">
         <p
-          className="text-xs text-muted-foreground animate-fade-in"
+          className="text-xs text-gray-500 animate-fade-in"
           key={currentTip}
         >
           {tips[currentTip]}
@@ -309,14 +309,14 @@ export function FlightSearchLoading({
   className = "",
 }: FlightSearchLoadingProps): React.JSX.Element {
   return (
-    <div className={`min-h-screen bg-background ${className}`}>
+    <div className={`min-h-screen bg-white ${className}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-foreground mb-2">
+          <h1 className="text-3xl font-black text-gray-900 mb-2">
             Finding Your Perfect Flight
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-500">
             Searching {origin.city} ({origin.code}) → {destination.city} (
             {destination.code})
           </p>
@@ -356,38 +356,38 @@ export function FlightSearchLoading({
         </div>
 
         {/* Destination Info */}
-        <div className="mt-8 bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border">
+        <div className="mt-8 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                 Destination
               </p>
-              <p className="text-xl font-bold text-foreground">
+              <p className="text-xl font-bold text-gray-900">
                 {destination.city}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 {destination.country}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                 Airport
               </p>
-              <p className="text-xl font-bold text-foreground">
+              <p className="text-xl font-bold text-gray-900">
                 {destination.code}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 {destination.name}
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                 Local Currency
               </p>
-              <p className="text-xl font-bold text-foreground">
+              <p className="text-xl font-bold text-gray-900">
                 {CURRENCY_SYMBOLS[destination.currency]} {destination.currency}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 {CURRENCY_NAMES[destination.currency]}
               </p>
             </div>

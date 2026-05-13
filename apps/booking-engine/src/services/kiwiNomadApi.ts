@@ -18,8 +18,8 @@
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const KIWI_PROXY = "/kiwi"; // Vite proxies /kiwi → tequila.kiwi.com
-const KIWI_KEY = "I84HckfkK9C__-m346nQvVzC95XqQYhw";
-const KIWI_AFFIL = "technocenseitsolutionstripalfanomad";
+const KIWI_KEY = import.meta.env.VITE_KIWI_API_KEY || "";
+const KIWI_AFFIL = import.meta.env.VITE_KIWI_AFFIL_ID || "";
 
 // ─── Public types ─────────────────────────────────────────────────────────────
 

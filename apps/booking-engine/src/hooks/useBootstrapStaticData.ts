@@ -112,6 +112,7 @@ export function useBootstrapStaticData(): void {
  */
 function usePrefetchStaticData() {
   const queryClient = useQueryClient();
+  const apiBaseUrl = import.meta.env.VITE_GATEWAY_URL || '/api';
 
   return {
     prefetchFlightData: async () => {
@@ -121,7 +122,7 @@ function usePrefetchStaticData() {
             queryKey: ["airports"],
             queryFn: async () => {
               const res = await fetch(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/static/airports`
+                `${apiBaseUrl}/static/airports`
               );
               if (!res.ok) throw new Error('Failed to fetch airports');
               return res.json();
@@ -131,7 +132,7 @@ function usePrefetchStaticData() {
             queryKey: ["airlines"],
             queryFn: async () => {
               const res = await fetch(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/static/airlines`
+                `${apiBaseUrl}/static/airlines`
               );
               if (!res.ok) throw new Error('Failed to fetch airlines');
               return res.json();
@@ -150,7 +151,7 @@ function usePrefetchStaticData() {
             queryKey: ["countries"],
             queryFn: async () => {
               const res = await fetch(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/static/countries`
+                `${apiBaseUrl}/static/countries`
               );
               if (!res.ok) throw new Error('Failed to fetch countries');
               return res.json();
@@ -160,7 +161,7 @@ function usePrefetchStaticData() {
             queryKey: ["hotelAmenities"],
             queryFn: async () => {
               const res = await fetch(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/static/hotel-amenities`
+                `${apiBaseUrl}/static/hotel-amenities`
               );
               if (!res.ok) throw new Error('Failed to fetch amenities');
               return res.json();
@@ -170,7 +171,7 @@ function usePrefetchStaticData() {
             queryKey: ["hotelTypes"],
             queryFn: async () => {
               const res = await fetch(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/static/hotel-types`
+                `${apiBaseUrl}/static/hotel-types`
               );
               if (!res.ok) throw new Error('Failed to fetch hotel types');
               return res.json();
@@ -189,7 +190,7 @@ function usePrefetchStaticData() {
             queryKey: ["currencies"],
             queryFn: async () => {
               const res = await fetch(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:3001/api'}/static/currencies`
+                `${apiBaseUrl}/static/currencies`
               );
               if (!res.ok) throw new Error('Failed to fetch currencies');
               return res.json();

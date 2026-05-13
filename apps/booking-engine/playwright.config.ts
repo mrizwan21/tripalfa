@@ -41,6 +41,14 @@ export default defineConfig({
   },
 
   projects: [
+    // ── Global API mock setup ───────────────────────────────────────────────
+    {
+      name: "global-mock",
+      testDir: "./tests/helpers",
+      testMatch: /global-mock\.setup\.ts/,
+      fullyParallel: false,
+    },
+
     // ── Auth setup ─────────────────────────────────────────────────────────
     // Performs a single login and saves localStorage to storageState.json.
     // All feature projects depend on this and reuse the saved state.
@@ -48,23 +56,28 @@ export default defineConfig({
       name: "setup",
       testDir: "./tests/helpers",
       testMatch: /auth\.setup\.ts/,
+      fullyParallel: false,
+      dependencies: ["global-mock"],
     },
 
     // ── Feature tests (Chromium) ────────────────────────────────────────────
     {
       name: "chromium",
+      testDir: "./tests/e2e",
       use: {
         ...devices["Desktop Chrome"],
         storageState: "tests/fixtures/storageState.json",
       },
-      dependencies: ["setup"],
+      dependencies: ["setup", "global-mock"],
     },
 
     // ── Auth tests run without saved state (they test the login page itself)
     {
       name: "auth",
+      testDir: "./tests/e2e/auth",
       testMatch: /auth\/.+\.spec\.ts/,
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup", "global-mock"],
     },
   ],
 

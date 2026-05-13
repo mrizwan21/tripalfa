@@ -71,7 +71,20 @@ export function TenantProvider({
   const [error, setError] = useState<string | null>(null);
   const [flatTenants, setFlatTenants] = useState<TenantHierarchyNode[]>([]);
 
-  const isSuperAdmin = true;
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  // Check if user has super admin role from auth context
+  useEffect(() => {
+    try {
+      const authUser = localStorage.getItem('authUser');
+      if (authUser) {
+        const user = JSON.parse(authUser);
+        setIsSuperAdmin(user.isAdmin || user.roles?.includes('SUPER_ADMIN') || false);
+      }
+    } catch {
+      setIsSuperAdmin(false);
+    }
+  }, []);
 
   const fetchTenantTree = useCallback(async () => {
     setIsLoading(true);

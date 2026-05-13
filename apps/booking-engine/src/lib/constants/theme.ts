@@ -1,49 +1,154 @@
 /**
- * Theme Constants for TripAlfa Booking Engine
- *
- * Centralized color definitions for consistent theming across the application.
- * Updated to use navy as primary and red as accent.
+ * TripAlfa Design System - Kayak.com Inspired
+ * 
+ * Design Principles (based on Kayak's approach):
+ * - Typography: Single font family, hierarchy through type weight/size only
+ * - Color: Minimal palette, light/dark mode support, accessibility-first
+ * - Empathy: Focus on human experience and simplicity
+ * - Familiarity: Align with existing mental models
+ * - Scalability: Multi-brand, multi-market support
  */
 
 const COLORS = {
-  // Primary colors
-  primary: 'rgb(21 36 103)', // Navy - main brand color
-  primaryHover: 'rgb(10 28 80)', // Darker navy for hover states
+  // Primary - TripAlfa Navy (consistent brand)
+  primary: '#003b95',
+  primaryDark: '#002a6e',
+  primaryLight: '#004bb5',
 
-  // Accent colors
-  accent: 'rgb(236 92 76)', // Red - for ratings, highlights
-  accentLight: 'rgb(255 215 0)', // Gold - legacy accent (use sparingly)
+  // Accent - Vibrant Orange/Red for CTAs (Kayak-style)
+  accent: '#ff5722',
+  accentLight: '#ff8a65',
+  accentDark: '#e64a19',
 
-  // Legacy colors (for backward compatibility)
-  purple: 'rgb(139 92 246)',
-  purpleLight: 'rgb(167 139 250)',
-  gold: 'rgb(255 215 0)',
+  // Semantic Colors - Minimal usage
+  success: '#10b981',
+  warning: '#f59e0b',
+  error: '#ef4444',
+  info: '#3b82f6',
 
-  // Semantic colors
-  success: 'rgb(16 185 129)',
-  warning: 'rgb(245 158 11)',
-  error: 'rgb(239 68 68)',
-  info: 'rgb(59 130 246)',
+  // Neutrals - Clean grays for hierarchy
+  neutral: {
+    50: '#fafafa',
+    100: '#f5f5f5',
+    200: '#e5e5e5',
+    300: '#d4d4d4',
+    400: '#a3a3a3',
+    500: '#737373',
+    600: '#525252',
+    700: '#404040',
+    800: '#262626',
+    900: '#171717',
+  },
 
-  // Neutral colors
-  white: 'rgb(255 255 255)',
-  black: 'rgb(0 0 0)',
-  slate: {
-    50: 'rgb(248 250 252)',
-    100: 'rgb(241 245 249)',
-    200: 'rgb(226 232 240)',
-    300: 'rgb(203 213 225)',
-    400: 'rgb(148 163 184)',
-    500: 'rgb(100 116 139)',
-    600: 'rgb(71 85 105)',
-    700: 'rgb(51 65 85)',
-    800: 'rgb(30 41 59)',
-    900: 'rgb(15 23 42)',
+  // Backgrounds
+  background: {
+    primary: '#ffffff',
+    secondary: '#f8f9fa',
+    tertiary: '#f1f3f4',
+  },
+
+  // Text hierarchy
+  text: {
+    primary: '#171717',
+    secondary: '#525252',
+    muted: '#a3a3a3',
+    inverse: '#ffffff',
+  },
+
+  // Borders
+  border: {
+    light: '#e5e5e5',
+    medium: '#d4d4d4',
+    dark: '#a3a3a3',
   },
 } as const;
 
+// Typography - Single font family with responsive scaling
+const TYPOGRAPHY = {
+  // Font family - Inter for clean, modern readability
+  fontFamily: {
+    sans: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    mono: '"JetBrains Mono", "Fira Code", monospace',
+  },
+
+  // Font weights for hierarchy
+  fontWeight: {
+    regular: 400,
+    medium: 500,
+    semibold: 600,
+    bold: 700,
+  },
+
+  // Responsive type scale - mobile first
+  fontSize: {
+    // Display - Hero sections
+    display: {
+      sm: '2.5rem',    // 40px
+      md: '3rem',      // 48px
+      lg: '3.5rem',    // 56px
+      xl: '4rem',      // 64px
+    },
+    
+    // Headings
+    h1: {
+      sm: '1.75rem',   // 28px
+      md: '2rem',      // 32px
+      lg: '2.5rem',    // 40px
+    },
+    h2: {
+      sm: '1.5rem',    // 24px
+      md: '1.875rem',  // 30px
+      lg: '2.25rem',   // 36px
+    },
+    h3: {
+      sm: '1.25rem',   // 20px
+      md: '1.5rem',    // 24px
+      lg: '1.75rem',   // 28px
+    },
+    h4: {
+      sm: '1.125rem',  // 18px
+      md: '1.25rem',   // 20px
+    },
+
+    // Body text
+    body: {
+      lg: '1.125rem',  // 18px
+      md: '1rem',      // 16px
+      sm: '0.875rem',  // 14px
+      xs: '0.75rem',   // 12px
+    },
+
+    // Labels and captions
+    label: {
+      lg: '0.875rem',  // 14px
+      md: '0.75rem',   // 12px
+      sm: '0.6875rem', // 11px
+    },
+  },
+
+  // Line heights for readability
+  lineHeight: {
+    tight: 1.1,
+    snug: 1.25,
+    normal: 1.5,
+    relaxed: 1.75,
+  },
+
+  // Letter spacing
+  letterSpacing: {
+    tighter: '-0.03em',
+    tight: '-0.02em',
+    normal: '0',
+    wide: '0.01em',
+    wider: '0.02em',
+  },
+} as const;
+
+// Spacing - 8px base unit
 const SPACING = {
-  baseUnit: 8,
+  baseUnit: 4, // 4px base
+
+  // Scale tokens
   scale: {
     0: '0px',
     0.5: '2px',
@@ -67,148 +172,154 @@ const SPACING = {
     20: '80px',
     24: '96px',
   },
-  page: {
-    paddingX: 'p-page-x',
-    paddingXLarge: 'p-page-x-lg',
-    paddingY: 'p-page-y',
-    paddingYLarge: 'p-page-y-lg',
-  },
-  section: {
-    gap: 'gap-section',
-    gapLarge: 'gap-section-lg',
-    marginBottom: 'mb-section',
-    marginBottomLarge: 'mb-section-lg',
-  },
-  card: {
-    padding: 'p-card',
-    paddingLarge: 'p-card-lg',
-    headerPadding: 'p-6',
-    contentPadding: 'p-card-lg pt-0',
-    footerPadding: 'p-card-lg pt-0',
-  },
-  list: {
-    gap: 'gap-list',
-    gapLarge: 'gap-list-lg',
-  },
-  input: {
-    paddingX: 'px-input-x',
-    paddingY: 'py-input-y',
+
+  // Component-specific spacing
+  component: {
+    button: {
+      paddingX: '16px',
+      paddingY: '10px',
+      paddingXLarge: '24px',
+      paddingYLarge: '14px',
+    },
+    input: {
+      paddingX: '12px',
+      paddingY: '10px',
+    },
+    card: {
+      padding: '16px',
+      paddingLarge: '24px',
+    },
+    modal: {
+      padding: '24px',
+      paddingLarge: '32px',
+    },
   },
 } as const;
 
-// CSS class mappings for Tailwind
-const THEME_CLASSES = {
-  primary: 'bg-primary',
-  primaryHover: 'hover:bg-primary/90',
-  accent: 'bg-accent',
-  textPrimary: 'text-primary',
-  textAccent: 'text-accent',
-  borderPrimary: 'border-primary',
+// Border radius - Consistent, rounded aesthetic
+const RADIUS = {
+  none: '0px',
+  sm: '4px',
+  DEFAULT: '8px',
+  md: '10px',
+  lg: '12px',
+  xl: '16px',
+  '2xl': '20px',
+  '3xl': '24px',
+  full: '9999px',
 } as const;
+
+// Shadows - Subtle, layered depth
+const SHADOWS = {
+  none: 'none',
+  sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+  DEFAULT: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+  md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+  xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+  '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+} as const;
+
+// Z-index scale
+const Z_INDEX = {
+  base: 0,
+  dropdown: 1000,
+  sticky: 1100,
+  modal: 1200,
+  popover: 1300,
+  tooltip: 1400,
+} as const;
+
+// Breakpoints - Mobile first
+const BREAKPOINTS = {
+  sm: '640px',
+  md: '768px',
+  lg: '1024px',
+  xl: '1280px',
+  '2xl': '1536px',
+} as const;
+
+// Animation tokens
+const ANIMATION = {
+  duration: {
+    fast: '150ms',
+    normal: '200ms',
+    slow: '300ms',
+    slower: '500ms',
+  },
+  easing: {
+    default: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    in: 'cubic-bezier(0.4, 0, 1, 1)',
+    out: 'cubic-bezier(0, 0, 0.2, 1)',
+    'in-out': 'cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+} as const;
+
+// Focus states - Clear, visible focus rings for accessibility
+const FOCUS_RINGS = {
+  default: '0 0 0 2px #ffffff, 0 0 0 4px #003b95',
+  inset: 'inset 0 0 0 2px #003b95',
+  outline: '0 0 0 3px rgba(0, 59, 149, 0.5)',
+} as const;
+
+// Surface variants
+const SURFACES = {
+  default: 'bg-white border border-gray-200 rounded-lg',
+  elevated: 'bg-white border border-gray-200 rounded-lg shadow-md',
+  floating: 'bg-white border border-gray-200 rounded-xl shadow-xl',
+  flat: 'bg-gray-50 border-none rounded-lg',
+} as const;
+
+// Dark mode colors
+const DARK_MODE = {
+  colors: {
+    background: {
+      primary: '#171717',
+      secondary: '#262626',
+      tertiary: '#404040',
+    },
+    text: {
+      primary: '#fafafa',
+      secondary: '#d4d4d4',
+      muted: '#a3a3a3',
+    },
+    border: {
+      light: '#404040',
+      medium: '#525252',
+    },
+  },
+} as const;
+
+// Export all tokens
+export const DESIGN_SYSTEM = {
+  colors: COLORS,
+  typography: TYPOGRAPHY,
+  spacing: SPACING,
+  radius: RADIUS,
+  shadows: SHADOWS,
+  zIndex: Z_INDEX,
+  breakpoints: BREAKPOINTS,
+  animation: ANIMATION,
+  focusRings: FOCUS_RINGS,
+  surfaces: SURFACES,
+  darkMode: DARK_MODE,
+} as const;
+
+// Legacy export for backward compatibility
+export const COLORS_THEME = COLORS;
+export const TYPOGRAPHY_LEGACY = TYPOGRAPHY;
+export const SPACING_LEGACY = SPACING;
 
 // Demo mode configuration
 export const DEMO_CONFIG = {
-  // Enable demo mode with fallback data when API returns empty
   enabled: import.meta.env.VITE_DEMO_MODE === 'true',
-
-  // Default wallet balance for demo mode
   defaultWalletBalance: 2500,
-
-  // Default currency for demo
   defaultCurrency: 'USD',
 } as const;
 
+// Type exports
 export type ColorKey = keyof typeof COLORS;
-
-const TYPOGRAPHY = {
-  headings: {
-    h72: 'text-[72px] leading-[1.1] tracking-[-0.03em] font-bold',
-    h64: 'text-[64px] leading-[1.1] tracking-[-0.03em] font-bold',
-    h56: 'text-[56px] leading-[1.1] tracking-[-0.03em] font-bold',
-    h48: 'text-[48px] leading-[1.1] tracking-[-0.03em] font-bold',
-    h40: 'text-[40px] leading-[1.1] tracking-[-0.03em] font-bold',
-    h32: 'text-[32px] leading-[1.2] tracking-[-0.02em] font-bold',
-    h24: 'text-[24px] leading-[1.2] tracking-[-0.02em] font-bold',
-    h20: 'text-[20px] leading-[1.3] tracking-[-0.01em] font-bold',
-    h16: 'text-[16px] leading-[1.3] tracking-[-0.01em] font-bold',
-    h14: 'text-[14px] leading-[1.4] tracking-[-0.01em] font-bold',
-  },
-  body: {
-    'body-lg': 'text-[18px] leading-[1.5] tracking-[0em] font-normal',
-    'body-md': 'text-[16px] leading-[1.5] tracking-[0em] font-normal',
-    'body-sm': 'text-[14px] leading-[1.5] tracking-[0em] font-normal',
-    caption: 'text-[12px] leading-[1.5] tracking-[0.01em] font-normal',
-  },
-} as const;
-
-const SURFACES = {
-  base: 'border bg-background rounded-md',
-  raised: 'border bg-background rounded-md shadow-xs',
-  elevated: 'border bg-background rounded-lg shadow-md',
-  floating: 'border bg-background rounded-2xl shadow-xl',
-} as const;
-
-// Semantic color usage per WIG guidelines
-const SEMANTIC_COLORS = {
-  // Neutrals for backgrounds and text
-  text: {
-    primary: 'text-foreground',
-    secondary: 'text-muted-foreground',
-    muted: 'text-neutral-500',
-  },
-  // Brand accent for highlights and CTAs
-  brand: {
-    default: 'bg-primary text-white',
-    foreground: 'text-primary',
-    border: 'border-primary',
-    light: 'bg-primary-50 text-primary',
-  },
-  // Errors - always pair with text or icons
-  error: {
-    default: 'bg-error text-white',
-    foreground: 'text-error',
-    border: 'border-error',
-    light: 'bg-error-50 text-error',
-  },
-  // Success for positive states
-  success: {
-    default: 'bg-success text-white',
-    foreground: 'text-success',
-    border: 'border-success',
-    light: 'bg-success-50 text-success',
-  },
-  // Warning for caution states
-  warning: {
-    default: 'bg-warning text-black',
-    foreground: 'text-warning',
-    border: 'border-warning',
-    light: 'bg-warning-50 text-warning',
-  },
-} as const;
-
-// Focus states per WIG - clear, visible focus rings
-const FOCUS_STYLES = {
-  default:
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-  within:
-    'focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
-} as const;
-
-// Interaction states
-const INTERACTION_STATES = {
-  hover: 'hover:opacity-90 transition-opacity duration-150',
-  active: 'active:scale-[0.98] transition-transform duration-150',
-  disabled: 'disabled:opacity-50 disabled:pointer-events-none',
-} as const;
-
-// Loading states per WIG - minimum duration to avoid flicker
-const LOADING_STATES = {
-  button: 'opacity-80 cursor-wait',
-  skeleton: 'animate-pulse bg-neutral-200',
-} as const;
-
-// Hit target minimums per WIG
-const HIT_TARGETS = {
-  minimum: 'min-h-[24px] min-w-[24px]',
-  mobile: 'min-h-[44px] min-w-[44px]',
-} as const;
+export type TypographyKey = keyof typeof TYPOGRAPHY;
+export type SpacingKey = keyof typeof SPACING['scale'];
+export type RadiusKey = keyof typeof RADIUS;
+export type ShadowKey = keyof typeof SHADOWS;

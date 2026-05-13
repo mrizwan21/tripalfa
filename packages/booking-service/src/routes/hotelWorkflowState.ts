@@ -1,4 +1,4 @@
-import { BaseWorkflowState, BookingSteps } from './commonTypes';
+import { BaseWorkflowState, BookingSteps } from './commonTypes.js';
 
 /**
  * Specific workflow state for hotel bookings.

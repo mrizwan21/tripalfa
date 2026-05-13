@@ -7,15 +7,7 @@
  * @see https://duffel.com/docs/api/v2/seat-maps/get-seat-maps
  */
 
-import type { api as ApiClientInstance } from "../lib/apiClient";
-
-// Lazy import to avoid circular dependency
-type ApiClient = typeof ApiClientInstance;
-let api: ApiClient | undefined;
-function getApi() {
-  if (!api) api = require("../lib/api").api as ApiClient;
-  return api;
-}
+import { api } from "../lib/apiClient";
 
 import type {
   DuffelSeatMap,
@@ -99,7 +91,7 @@ class DuffelSeatMapsService {
       }
 
       // Call Duffel API through backend proxy
-      const response = await getApi().get<DuffelGetSeatMapsResponse>(
+      const response = await api.get<DuffelGetSeatMapsResponse>(
         `/api/flights/seat-maps?offer_id=${encodeURIComponent(offerId)}`,
       );
 
@@ -183,7 +175,7 @@ class DuffelSeatMapsService {
       }
 
       // Call Duffel API through backend proxy
-      const response = await getApi().get<DuffelGetSeatMapsResponse>(
+      const response = await api.get<DuffelGetSeatMapsResponse>(
         `/api/flights/seat-maps?order_id=${encodeURIComponent(orderId)}`,
       );
 
@@ -242,7 +234,7 @@ class DuffelSeatMapsService {
     try {
       console.log("[DuffelSeatMaps] Selecting seats:", payload);
 
-      const response = await getApi().post(
+      const response = await api.post(
         "/api/flights/orders/select-seats",
         payload,
       );

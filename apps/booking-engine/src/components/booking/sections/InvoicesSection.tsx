@@ -2,7 +2,7 @@ import React from "react";
 import { Booking } from "../../../lib/srs-types";
 import { FileText, Download } from "lucide-react";
 import { format } from "date-fns";
-import { Button } from '../../../ui/button';
+import { Button } from '@/components/ui/button';
 
 interface InvoicesSectionProps {
   booking: Booking;
@@ -39,7 +39,7 @@ export const InvoicesSection: React.FC<InvoicesSectionProps> = ({
 
         <Button
           variant="outline"
-          size="default"
+          size="md"
           className="p-2 text-[var(--color-primary)] hover:bg-[var(--color-bg-tertiary)] rounded-full transition-colors"
           title="Download Invoice"
         >

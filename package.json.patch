@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test:autonomous": "node e2e-tests/monitor-agents.ts",
+    "test:agents": "bash e2e-tests/run-autonomous-tests.sh",
+    "test:booking": "npx playwright test e2e-tests/agents/agent-booking.ts --config=e2e-tests/playwright.config.ts --headed",
+    "test:b2b": "npx playwright test e2e-tests/agents/agent-b2b.ts --config=e2e-tests/playwright.config.ts --headed",
+    "test:callcenter": "npx playwright test e2e-tests/agents/agent-callcenter.ts --config=e2e-tests/playwright.config.ts --headed",
+    "test:admin": "npx playwright test e2e-tests/agents/agent-admin.ts --config=e2e-tests/playwright.config.ts --headed",
+    "test:all": "npx playwright test e2e-tests/agents/*.ts --config=e2e-tests/playwright.config.ts --headed --workers=4"
+  }
+}

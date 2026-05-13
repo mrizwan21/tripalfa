@@ -119,13 +119,13 @@ const AuthCallback = () => {
 
   if (status === "processing") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-muted to-blue-50 flex flex-col justify-center items-center gap-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col justify-center items-center gap-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(var(--primary))] mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-foreground text-2xl font-semibold tracking-tight">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#003b95] mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 text-2xl font-semibold tracking-tight">
             Completing sign in...
           </h2>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-gray-500 mt-2">
             Please wait while we verify your account.
           </p>
         </div>
@@ -135,7 +135,7 @@ const AuthCallback = () => {
 
   if (status === "error") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-muted to-blue-50 flex flex-col justify-center items-center gap-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col justify-center items-center gap-4">
         <div className="text-center max-w-md p-8">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 gap-2">
             <svg
@@ -152,17 +152,17 @@ const AuthCallback = () => {
               />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2 text-2xl font-semibold tracking-tight">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2 text-2xl font-semibold tracking-tight">
             Sign in Failed
           </h2>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-gray-500 mb-6">
             {error || "An error occurred during authentication."}
           </p>
           <Button
             variant="primary"
             size="md"
             onClick={() => navigate("/login")}
-            className="px-6 py-2 bg-[hsl(var(--primary))] text-background rounded-lg hover:bg-[hsl(var(--primary))/0.9] transition-colors"
+            className="px-6 py-2 bg-[#003b95] text-white rounded-lg hover:bg-[#002a6e] transition-colors"
           >
             Back to Sign In
           </Button>
@@ -173,10 +173,10 @@ const AuthCallback = () => {
 
   // Success state - should redirect automatically
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted to-blue-50 flex flex-col justify-center items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-blue-50 flex flex-col justify-center items-center gap-4">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-        <h2 className="text-xl font-semibold text-foreground text-2xl font-semibold tracking-tight">
+        <h2 className="text-xl font-semibold text-gray-900 text-2xl font-semibold tracking-tight">
           Redirecting...
         </h2>
       </div>

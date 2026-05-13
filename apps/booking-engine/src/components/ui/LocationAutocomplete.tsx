@@ -1,9 +1,24 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import * as Popover from '@radix-ui/react-popover';
-import { Plane, Building2, Loader2 } from 'lucide-react';
-import { fetchAirports } from '../../lib/api';
+'use client';
 
-interface Location {
+/**
+ * Location Autocomplete - Kayak.com style airport dropdown
+ * 
+ * From screenshot (ST Flight Airport dropdown.png):
+ * - White card, rounded-xl
+ * - Gray circular icon with airplane
+ * - City name bold, subtitle below
+ * - Code badge (e.g. "LON") on the right
+ * - "All airports" entry at the top for cities
+ */
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Plane, X } from 'lucide-react';
+import { cn } from '@tripalfa/shared-utils/utils';
+import { fetchAirports } from '@/lib/api';
+
+// --- Types ---
+
+export interface Location {
   code: string;
   name: string;
   city: string;
@@ -14,184 +29,161 @@ interface Location {
 interface LocationAutocompleteProps {
   label?: string;
   placeholder?: string;
-  icon?: React.ReactNode;
-  value?: string;
-  onChange?: (val: string) => void;
-  onSelect?: (location: Location) => void;
+  displayStyle?: 'pill' | 'input';
+  value?: Location | null;
+  onChange?: (location: Location | null) => void;
 }
 
+// --- Component ---
+
 export function LocationAutocomplete({
-  label,
-  placeholder = 'Where to?',
-  icon,
+  label = 'From',
+  placeholder = 'From?',
+  displayStyle = 'input',
   value,
   onChange,
-  onSelect,
 }: LocationAutocompleteProps) {
-  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [results, setResults] = useState<Location[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const searchRef = useRef(search);
-  const [staticLocations, setStaticLocations] = useState<Location[]>([]);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Load popular airports and cities on mount
+  // Close on click outside
   useEffect(() => {
-    const loadStaticLocations = async () => {
-      try {
-        const { fetchInitialSuggestions } = await import('../../lib/api');
-        const locations = await fetchInitialSuggestions(20);
-
-        // Map to our internal Location interface if needed
-        const mapped: Location[] = locations.map((loc: any) => ({
-          code: loc.code || 'XXX',
-          name: loc.title || loc.name || '',
-          city: loc.city || '',
-          country: loc.country || '',
-          type: (loc.type?.toLowerCase() === 'city' ? 'city' : 'airport') as 'city' | 'airport',
-        }));
-
-        setStaticLocations(mapped);
-      } catch (error) {
-        console.error('Failed to load initial static locations:', error);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
     };
-
-    loadStaticLocations();
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Fetch on search
   useEffect(() => {
-    searchRef.current = search;
-  }, [search]);
-
-  // Initialize results with static data when component mounts or when results are empty
-  useEffect(() => {
-    if (results.length === 0 && staticLocations.length > 0) {
-      setResults(staticLocations.slice(0, 50));
-    }
-  }, [staticLocations]);
-
-  useEffect(() => {
-    // If empty or short, use static data
     if (!search || search.length < 2) {
-      setResults(staticLocations.slice(0, 50));
-      setLoading(false);
+      setResults([]);
       return;
     }
 
     const timer = setTimeout(async () => {
-      if (searchRef.current !== search) return;
-
       setLoading(true);
       try {
-        // fetchAirports returns an array directly
         const airports = await fetchAirports(search);
-
-        // Map to our Location interface
         const mappedLocations: Location[] = (airports || []).map((airport: any) => ({
           code: airport.code || airport.iata_code || 'XXX',
           name: airport.title || airport.name || '',
-          city: airport.city || '',
+          city: airport.city || airport.title || '',
           country: airport.country || '',
           type: 'airport' as const,
         }));
-
-        setResults(mappedLocations.slice(0, 50));
+        setResults(mappedLocations.slice(0, 20));
       } catch (error) {
         console.error('Failed to fetch airports:', error);
-        // Fallback to empty results
         setResults([]);
       } finally {
         setLoading(false);
       }
-    }, 300); // 300ms debounce
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [search]);
 
-  const displayValue = value || search;
+  const handleSelect = (loc: Location) => {
+    onChange?.(loc);
+    setSearch('');
+    setIsOpen(false);
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange?.(null);
+    setSearch('');
+  };
+
+  const handleClick = () => {
+    if (!value) {
+      setIsOpen(true);
+      inputRef.current?.focus();
+    }
+  };
 
   return (
-    <div className="overflow-visible [&_*]:overflow-visible">
-      <Popover.Root open={open} onOpenChange={setOpen} modal={false}>
-        {/* @ts-ignore - Radix UI / React 19 type mismatch */}
-        <Popover.Anchor asChild>
-          <div className="w-full h-full relative group cursor-pointer">
-            {icon && (
-              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                {icon}
-              </div>
-            )}
-            <div
-              className={`w-full h-full flex items-center bg-card ${icon ? 'pl-12' : 'pl-4'} pr-4 rounded-lg border border-transparent hover:border-border/80 focus-within:border-[hsl(var(--primary))] transition-all`}
-            >
-              <input
-                type="text"
-                value={displayValue}
-                onChange={e => {
-                  const val = e.target.value;
-                  setSearch(val);
-                  onChange?.(val);
-                  if (!open && val.length > 0) setOpen(true);
-                }}
-                onFocus={() => {
-                  setOpen(true);
-                  if (results.length === 0) setResults(staticLocations.slice(0, 50));
-                }}
-                placeholder={placeholder}
-                className="w-full bg-transparent outline-none text-foreground placeholder:text-muted-foreground font-medium truncate"
-                autoComplete="off"
-              />
-              {loading && <Loader2 className="animate-spin text-muted-foreground" size={16} />}
-            </div>
-          </div>
-        </Popover.Anchor>
-
-        <Popover.Content
-          className="w-[var(--radix-popover-trigger-width)] bg-card rounded-lg shadow-xl border border-border p-2 z-50 max-h-[400px] overflow-y-auto animate-in fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2"
-          align="start"
-          sideOffset={8}
-          onOpenAutoFocus={e => e.preventDefault()}
+    <div ref={wrapperRef} className="relative w-full">
+      {/* Display value as a pill or input */}
+      {value ? (
+        <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg">
+          <span className="text-sm font-medium text-gray-900">
+            {value.city} ({value.code})
+          </span>
+          <button onClick={handleClear} className="p-0.5 hover:bg-gray-100 rounded-full transition-colors">
+            <X size={14} weight="bold" className="text-gray-400" />
+          </button>
+        </div>
+      ) : (
+        <div
+          onClick={handleClick}
+          className="w-full px-3 py-2 rounded-lg cursor-pointer flex items-center gap-2"
         >
-          <div className="space-y-2">
-            {results.length === 0 && !loading ? (
-              <div className="p-4 text-center text-muted-foreground text-sm">
-                No locations found
-              </div>
-            ) : (
-              results.map((loc, idx) => (
-                <div
-                  key={`${loc.code}-${loc.type}-${idx}`}
-                  className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded cursor-pointer group"
-                  onClick={() => {
-                    const displayText = `${loc.name} (${loc.code})`;
-                    onChange?.(displayText);
-                    setSearch(displayText);
-                    onSelect?.(loc);
-                    setOpen(false);
-                  }}
+          <Plane size={16} weight="bold" className="text-gray-400 shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder={placeholder}
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setIsOpen(true);
+            }}
+            onFocus={() => setIsOpen(true)}
+            className="w-full bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400 outline-none"
+            autoComplete="off"
+          />
+        </div>
+      )}
+
+      {/* Dropdown - White card with Kayak-style items */}
+      {isOpen && (search.length >= 2 || loading) && (
+        <div className="absolute top-full left-0 mt-1 bg-white rounded-xl shadow-2xl shadow-black/10 ring-1 ring-gray-200/60 z-50 w-full max-w-sm overflow-hidden">
+          {loading ? (
+            <div className="p-4 text-center">
+              <div className="animate-spin w-5 h-5 border-2 border-gray-200 border-t-gray-600 rounded-full mx-auto" />
+              <p className="text-xs text-gray-400 mt-2">Searching...</p>
+            </div>
+          ) : results.length === 0 ? (
+            <div className="p-4 text-center">
+              <p className="text-sm text-gray-500">No airports found</p>
+              <p className="text-xs text-gray-400 mt-1">Try a different search term</p>
+            </div>
+          ) : (
+            <div className="max-h-72 overflow-y-auto">
+              {results.map((loc, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSelect(loc)}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
                 >
-                  <div className="mt-1 text-muted-foreground group-hover:text-foreground">
-                    {loc.type === 'city' ? <Building2 size={18} /> : <Plane size={18} />}
+                  {/* Gray circular icon with airplane */}
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                    <Plane size={18} weight="bold" className="text-gray-500" />
                   </div>
-                  <div className="flex-1 gap-4">
-                    <div className="flex justify-between items-center gap-4">
-                      <span className="font-bold text-foreground text-sm">{loc.name}</span>
-                      <span className="text-xs font-mono text-muted-foreground bg-muted/50 px-1 rounded">
-                        {loc.code}
-                      </span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {loc.city}
-                      {loc.country ? `, ${loc.country}` : ''}
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm text-gray-900 truncate">
+                      {loc.name}
+                      <span className="ml-2 text-xs font-mono font-normal text-gray-400">{loc.code}</span>
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">{loc.city}, {loc.country}</p>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </Popover.Content>
-      </Popover.Root>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
+
+export default LocationAutocomplete;

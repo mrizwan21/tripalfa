@@ -280,43 +280,43 @@ function FlightList() {
     if (activeFilter !== type) return null;
 
     const dropdownClasses =
-      'absolute top-full left-0 mt-4 bg-card/95 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-border z-50 p-8 min-w-[320px] animate-in fade-in zoom-in-95 duration-300';
+      'absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 z-50 p-6 min-w-[320px]';
 
     switch (type) {
       case 'price':
         return (
           <div className={dropdownClasses}>
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
+            <h4 className="text-sm font-bold text-[#003b95] uppercase tracking-wider mb-4">
               Price Range
             </h4>
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex gap-4">
                 <div className="flex-1 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                     Min
                   </p>
                   <input
                     type="number"
                     value={filters.minPrice}
                     onChange={e => updateFilter('minPrice', Number(e.target.value))}
-                    className="w-full h-11 px-4 bg-muted border border-border rounded-xl flex items-center text-xs font-bold text-foreground outline-none focus:border-[hsl(var(--primary))] gap-2"
+                    className="h-12 lg:h-14 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 w-full"
                   />
                 </div>
                 <div className="flex-1 space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                     Max
                   </p>
                   <input
                     type="number"
                     value={filters.maxPrice}
                     onChange={e => updateFilter('maxPrice', Number(e.target.value))}
-                    className="input"
+                    className="h-12 lg:h-14 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 w-full"
                   />
                 </div>
               </div>
-              <Button variant="primary" onClick={() => setActiveFilter(null)} className="w-full">
+              <button onClick={() => setActiveFilter(null)} className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200 w-full">
                 Apply Filter
-              </Button>
+              </button>
             </div>
           </div>
         );
@@ -324,7 +324,7 @@ function FlightList() {
         // Simplified time filter UI
         return (
           <div className={dropdownClasses + ' min-w-[380px]'}>
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
+            <h4 className="text-sm font-bold text-[#003b95] uppercase tracking-wider mb-4">
               Departure Time
             </h4>
             <div className="grid grid-cols-2 gap-4">
@@ -352,9 +352,7 @@ function FlightList() {
               ].map(t => {
                 const isActive = filters.time.includes(t.label);
                 return (
-                  <Button
-                    variant="outline"
-                    size="md"
+                  <button
                     key={t.label}
                     onClick={() => {
                       const newTimes = isActive
@@ -362,15 +360,15 @@ function FlightList() {
                         : [...filters.time, t.label];
                       updateFilter('time', newTimes);
                     }}
-                    className={`p-5 rounded-2xl border transition-all group text-left ${isActive ? 'border-[hsl(var(--primary))] bg-purple-50 ring-1 ring-[hsl(var(--primary))]' : 'border-border hover:border-[hsl(var(--primary))] hover:bg-purple-50'}`}
+                    className={`p-5 rounded-xl border transition-all group text-left ${isActive ? 'border-[#003b95] bg-[#003b95]/5 ring-2 ring-[#003b95]/10' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                   >
                     <p
-                      className={`text-[11px] font-black mb-1 ${isActive ? 'text-[hsl(var(--primary))]' : 'text-foreground'}`}
+                      className={`text-sm font-bold mb-1 ${isActive ? 'text-[#003b95]' : 'text-gray-900'}`}
                     >
                       {t.label}
                     </p>
-                    <p className="text-[10px] font-bold text-muted-foreground">{t.time}</p>
-                  </Button>
+                    <p className="text-xs text-gray-500">{t.time}</p>
+                  </button>
                 );
               })}
             </div>
@@ -379,7 +377,7 @@ function FlightList() {
       case 'stops':
         return (
           <div className={dropdownClasses}>
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
+            <h4 className="text-sm font-bold text-[#003b95] uppercase tracking-wider mb-4">
               Stops Count
             </h4>
             <div className="space-y-4">
@@ -388,7 +386,7 @@ function FlightList() {
                   key={s}
                   className="flex items-center justify-between cursor-pointer group gap-2 text-sm font-medium"
                 >
-                  <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground">
+                  <span className="text-sm text-gray-600 group-hover:text-gray-900">
                     {s}
                   </span>
                   <input
@@ -400,7 +398,7 @@ function FlightList() {
                         : filters.stops.filter(stop => stop !== s);
                       updateFilter('stops', newStops);
                     }}
-                    className="w-4 h-4 rounded border-border text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+                    className="w-4 h-4 rounded border-gray-200 text-[#003b95] focus:ring-[#003b95]"
                   />
                 </Label>
               ))}
@@ -410,13 +408,13 @@ function FlightList() {
       case 'more':
         return (
           <div className={dropdownClasses}>
-            <h4 className="text-xs font-bold text-foreground uppercase tracking-wider mb-6">
+            <h4 className="text-sm font-bold text-[#003b95] uppercase tracking-wider mb-4">
               Additional Filters
             </h4>
 
             {/* Airlines */}
             <div className="mb-6">
-              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              <h5 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
                 Preferred Airlines
               </h5>
               <div className="space-y-3">
@@ -428,7 +426,7 @@ function FlightList() {
                         key={airlineName}
                         className="flex items-center justify-between cursor-pointer group gap-2 text-sm font-medium"
                       >
-                        <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground">
+                        <span className="text-sm text-gray-600 group-hover:text-gray-900">
                           {airlineName}
                         </span>
                         <input
@@ -443,13 +441,13 @@ function FlightList() {
                               : filters.airlines.filter(a => a !== airlineName);
                             updateFilter('airlines', newAirlines);
                           }}
-                          className="w-4 h-4 rounded border-border text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+                          className="w-4 h-4 rounded border-gray-200 text-[#003b95] focus:ring-[#003b95]"
                         />
                       </Label>
                     );
                   })
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-500">
                     Search for flights to see airline filters
                   </p>
                 )}
@@ -458,7 +456,7 @@ function FlightList() {
 
             {/* Cabin Class - from static IATA enumeration */}
             <div>
-              <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              <h5 className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
                 Cabin Class
               </h5>
               <div className="space-y-3">
@@ -467,7 +465,7 @@ function FlightList() {
                     key={cabin.code}
                     className="flex items-center justify-between cursor-pointer group gap-2 text-sm font-medium"
                   >
-                    <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground">
+                    <span className="text-sm text-gray-600 group-hover:text-gray-900">
                       {cabin.name}
                     </span>
                     <input
@@ -477,20 +475,20 @@ function FlightList() {
                       value={cabin.code.toLowerCase()}
                       checked={filters.cabinClass === cabin.code.toLowerCase()}
                       onChange={e => updateFilter('cabinClass', e.target.value)}
-                      className="w-4 h-4 border-border text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+                      className="w-4 h-4 border-gray-200 text-[#003b95] focus:ring-[#003b95]"
                     />
                   </Label>
                 ))}
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-border flex gap-4">
-              <Button variant="secondary" onClick={() => setActiveFilter(null)} className="flex-1">
+            <div className="mt-8 pt-6 border-t border-gray-100 flex gap-4">
+              <button onClick={() => setActiveFilter(null)} className="border border-gray-200 text-gray-700 rounded-lg px-6 py-2.5 font-semibold text-sm hover:bg-gray-50 transition-colors flex-1">
                 Reset
-              </Button>
-              <Button variant="primary" onClick={() => setActiveFilter(null)} className="flex-[2]">
+              </button>
+              <button onClick={() => setActiveFilter(null)} className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200 flex-[2]">
                 Apply Filter
-              </Button>
+              </button>
             </div>
           </div>
         );
@@ -501,9 +499,9 @@ function FlightList() {
 
   return (
     <TripLogerLayout>
-      <div className="min-h-screen bg-muted/50 pb-20">
+      <div className="min-h-screen bg-gray-50 pb-20">
         {/* Header Section */}
-        <div className="bg-card border-b border-border sticky top-16 z-40 supports-[backdrop-filter]:bg-card/80 supports-[backdrop-filter]:backdrop-blur-xl">
+        <div className="bg-white border-b border-gray-100 sticky top-16 z-40 shadow-sm">
           <div className="container mx-auto px-4 py-4">
             <ModifySearchPanel />
           </div>
@@ -511,14 +509,12 @@ function FlightList() {
           {/* Quick Filters */}
           <div className="container mx-auto px-4 pb-4 overflow-x-auto no-scrollbar">
             <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="md"
+              <button
                 onClick={() => toggleFilter('price')}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                className={`h-11 px-6 rounded-lg border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
                   activeFilter === 'price'
-                    ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]'
-                    : 'bg-card border-border text-muted-foreground hover:border-border/80'
+                    ? 'bg-[#003b95] text-white border-[#003b95]'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
                 Price Range
@@ -526,17 +522,15 @@ function FlightList() {
                   size={14}
                   className={`transition-transform duration-300 ${activeFilter === 'price' ? 'rotate-180' : ''}`}
                 />
-              </Button>
+              </button>
               {renderDropdown('price')}
 
-              <Button
-                variant="outline"
-                size="md"
+              <button
                 onClick={() => toggleFilter('time')}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                className={`h-11 px-6 rounded-lg border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
                   activeFilter === 'time'
-                    ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]'
-                    : 'bg-card border-border text-muted-foreground hover:border-border/80'
+                    ? 'bg-[#003b95] text-white border-[#003b95]'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
                 Departure Time
@@ -544,17 +538,15 @@ function FlightList() {
                   size={14}
                   className={`transition-transform duration-300 ${activeFilter === 'time' ? 'rotate-180' : ''}`}
                 />
-              </Button>
+              </button>
               {renderDropdown('time')}
 
-              <Button
-                variant="outline"
-                size="md"
+              <button
                 onClick={() => toggleFilter('stops')}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                className={`h-11 px-6 rounded-lg border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
                   activeFilter === 'stops'
-                    ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]'
-                    : 'bg-card border-border text-muted-foreground hover:border-border/80'
+                    ? 'bg-[#003b95] text-white border-[#003b95]'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
                 Stops
@@ -562,19 +554,17 @@ function FlightList() {
                   size={14}
                   className={`transition-transform duration-300 ${activeFilter === 'stops' ? 'rotate-180' : ''}`}
                 />
-              </Button>
+              </button>
               {renderDropdown('stops')}
 
-              <div className="h-8 w-px bg-border mx-2" />
+              <div className="h-8 w-px bg-gray-200 mx-2" />
 
-              <Button
-                variant="outline"
-                size="md"
+              <button
                 onClick={() => toggleFilter('more')}
-                className={`h-11 px-6 rounded-2xl border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
+                className={`h-11 px-6 rounded-lg border flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all ${
                   activeFilter === 'more'
-                    ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] border-[hsl(var(--primary))]'
-                    : 'bg-card border-border text-muted-foreground hover:border-border/80'
+                    ? 'bg-[#003b95] text-white border-[#003b95]'
+                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                 }`}
               >
                 <SlidersHorizontal size={14} />
@@ -583,7 +573,7 @@ function FlightList() {
                   size={14}
                   className={`transition-transform duration-300 ${activeFilter === 'more' ? 'rotate-180' : ''}`}
                 />
-              </Button>
+              </button>
               {renderDropdown('more')}
             </div>
           </div>
@@ -593,15 +583,15 @@ function FlightList() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-8 gap-2">
             <div>
-              <h2 className="text-xl font-black text-foreground tracking-tight text-2xl font-semibold tracking-tight">
+              <h2 className="text-xl font-bold text-gray-900 tracking-tight">
                 {totalFlights} Flights Found
               </h2>
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Showing best results for your trip
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              <span className="text-xs text-gray-500 uppercase tracking-wider">
                 Sort by:
               </span>
               <select
@@ -609,7 +599,7 @@ function FlightList() {
                 name="flight-list-sort"
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value)}
-                className="bg-transparent text-xs font-black text-foreground uppercase tracking-widest outline-none cursor-pointer"
+                className="h-12 lg:h-14 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 cursor-pointer"
               >
                 <option value="Best Value">Best Value</option>
                 <option value="Price: Low to High">Price: Low to High</option>
@@ -621,21 +611,21 @@ function FlightList() {
           <div className="space-y-6" data-testid="flight-results">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                <Loader2 size={48} className="text-primary animate-spin" />
-                <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wider animate-pulse">
+                <Loader2 size={48} className="text-[#003b95] animate-spin" />
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider animate-pulse">
                   Searching best flights...
                 </p>
               </div>
             ) : error ? (
-              <div className="text-center py-20 card shadow-sm">
-                <div className="w-16 h-16 bg-red-500/10 rounded-xl flex items-center justify-center mx-auto mb-6 gap-2">
+              <div className="text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="w-16 h-16 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-6 gap-2">
                   <X size={28} className="text-red-500" />
                 </div>
-                <h3 className="text-lg font-bold text-foreground">Search Failed</h3>
-                <p className="text-sm text-muted-foreground mt-2 max-w-xs mx-auto">{error}</p>
-                <Button variant="primary" onClick={() => window.location.reload()} className="mt-6">
+                <h3 className="text-lg font-bold text-gray-900">Search Failed</h3>
+                <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto">{error}</p>
+                <button onClick={() => window.location.reload()} className="mt-6 bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200">
                   Try Again
-                </Button>
+                </button>
               </div>
             ) : flights.length > 0 ? (
               flights.map((flight, index) => (
@@ -643,13 +633,13 @@ function FlightList() {
                   key={flight.id}
                   data-testid={`flight-result-card-${index}`}
                   onClick={() => handleBookNow(flight)}
-                  className="group relative card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                  className="group relative bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                 >
                   <div className="absolute top-6 right-6 z-10">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-10 h-10 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                      className="w-10 h-10 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                     >
                       <Heart size={18} />
                     </Button>
@@ -661,7 +651,7 @@ function FlightList() {
                       <img
                         src={getAirlineLogo(flight)}
                         alt={flight.airline}
-                        className="h-12 w-12 object-contain rounded-xl bg-background p-1.5 border border-border"
+                        className="h-12 w-12 object-contain rounded-xl bg-gray-50 p-1.5 border border-gray-100"
                         onError={e => {
                           // Fallback if logo fails
                           (e.target as HTMLImageElement).src =
@@ -669,8 +659,8 @@ function FlightList() {
                         }}
                       />
                       <div className="text-center md:text-left">
-                        <h3 className="text-base font-bold text-foreground">{flight.airline}</h3>
-                        <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+                        <h3 className="text-base font-bold text-gray-900">{flight.airline}</h3>
+                        <p className="text-xs font-semibold text-gray-500 mt-0.5">
                           {flight.flightNumber}
                         </p>
                       </div>
@@ -681,49 +671,49 @@ function FlightList() {
                       <div className="flex items-center justify-between mb-4 gap-2">
                         <div className="text-center">
                           {/* Departure Date */}
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                             {flight.departureTime
                               ? format(parseISO(flight.departureTime), 'd MMM')
                               : '--'}
                           </p>
                           {/* Departure Time */}
-                          <p className="text-2xl font-black text-foreground tracking-tight">
+                          <p className="text-2xl font-bold text-gray-900 tracking-tight">
                             {flight.departureTime
                               ? format(parseISO(flight.departureTime), 'HH:mm')
                               : '--:--'}
                           </p>
                           {/* Origin City + Code */}
                           <div className="flex items-center justify-center gap-1 mt-1">
-                            <span className="text-sm font-black text-muted-foreground">
+                            <span className="text-sm font-bold text-gray-500">
                               {flight.origin}
                             </span>
                             {flight.segments?.[0]?.departureTerminal && (
-                              <span className="text-[9px] font-black bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md">
+                              <span className="text-[9px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md">
                                 T{flight.segments?.[0]?.departureTerminal}
                               </span>
                             )}
                           </div>
-                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                          <p className="text-[10px] font-medium text-gray-500 mt-0.5">
                             {flight.originCity || ''}
                           </p>
                         </div>
                         <div className="flex-1 px-8 relative gap-4">
                           <div className="flex items-center justify-center gap-2 mb-2">
-                            <Clock size={12} className="text-muted-foreground" />
-                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                            <Clock size={12} className="text-gray-400" />
+                            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                               {flight.duration}
                             </span>
                           </div>
-                          <div className="h-0.5 bg-border relative">
+                          <div className="h-0.5 bg-gray-200 relative">
                             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 flex justify-between gap-4">
-                              <div className="w-2 h-2 rounded-full bg-border ring-4 ring-card" />
-                              <div className="w-2 h-2 rounded-full bg-border ring-4 ring-card" />
+                              <div className="w-2 h-2 rounded-full bg-gray-200 ring-4 ring-white" />
+                              <div className="w-2 h-2 rounded-full bg-gray-200 ring-4 ring-white" />
                             </div>
-                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2">
-                              <Plane size={14} className="text-border rotate-90" />
+                            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2">
+                              <Plane size={14} className="text-gray-300 rotate-90" />
                             </div>
                           </div>
-                          <p className="text-[10px] font-bold text-[hsl(var(--primary))] text-center mt-3 uppercase tracking-widest">
+                          <p className="text-[10px] font-bold text-[#003b95] text-center mt-3 uppercase tracking-widest">
                             {flight.stops === 0
                               ? 'Non-stop'
                               : `${flight.stops} Stop${flight.stops > 1 ? 's' : ''}`}
@@ -731,30 +721,30 @@ function FlightList() {
                         </div>
                         <div className="text-center">
                           {/* Arrival Date */}
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                             {flight.arrivalTime
                               ? format(parseISO(flight.arrivalTime), 'd MMM')
                               : '--'}
                           </p>
                           {/* Arrival Time */}
-                          <p className="text-2xl font-black text-foreground tracking-tight">
+                          <p className="text-2xl font-bold text-gray-900 tracking-tight">
                             {flight.arrivalTime
                               ? format(parseISO(flight.arrivalTime), 'HH:mm')
                               : '--:--'}
                           </p>
                           <div className="flex items-center justify-center gap-1 mt-1">
-                            <span className="text-sm font-black text-muted-foreground">
+                            <span className="text-sm font-bold text-gray-500">
                               {flight.destination}
                             </span>
                             {flight.segments &&
                               flight.segments.length > 0 &&
                               flight.segments[flight.segments.length - 1]?.arrivalTerminal && (
-                                <span className="text-[9px] font-black bg-muted text-muted-foreground px-1.5 py-0.5 rounded-md">
+                                <span className="text-[9px] font-bold bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md">
                                   T{flight.segments?.[flight.segments.length - 1]?.arrivalTerminal}
                                 </span>
                               )}
                           </div>
-                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                          <p className="text-[10px] font-medium text-gray-500 mt-0.5">
                             {flight.destinationCity || ''}
                           </p>
                         </div>
@@ -762,70 +752,67 @@ function FlightList() {
                     </div>
 
                     {/* Price & Action */}
-                    <div className="flex flex-col items-center gap-3 min-w-[140px] pl-6 border-l border-border/50">
+                    <div className="flex flex-col items-center gap-3 min-w-[140px] pl-6 border-l border-gray-100">
                       <div className="text-center">
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">
                           Economy From
                         </p>
-                        <p className="text-2xl font-bold text-foreground">
+                        <p className="text-2xl font-bold text-[#1d1d1f]">
                           {formatCurrency(flight.amount)}
                         </p>
                       </div>
-                      <Button
-                        variant="primary"
+                      <button
                         onClick={e => {
                           e.stopPropagation();
                           handleBookNow(flight);
                         }}
-                        className="w-full"
+                        className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200 w-full"
                       >
                         Select Flight
-                      </Button>
+                      </button>
                     </div>
                   </div>
 
                   {/* Expandable Details Banner */}
-                  <div className="bg-muted/50 border-t border-border/40 px-8 py-3 rounded-b-[2.3rem] flex items-center justify-between gap-2">
+                  <div className="bg-gray-50 border-t border-gray-100/40 px-8 py-3 rounded-b-xl flex items-center justify-between gap-2">
                     <div className="flex items-center gap-6">
                       <div className="flex items-center gap-2">
-                        <Luggage size={14} className="text-muted-foreground" />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                        <Luggage size={14} className="text-gray-400" />
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                           Included: {flight.includedBags?.[0]?.quantity || 0}x{' '}
                           {flight.includedBags?.[0]?.weight || 0}
                           {flight.includedBags?.[0]?.unit || 'kg'}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <ShieldCheck size={14} className="text-muted-foreground" />
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">
+                        <ShieldCheck size={14} className="text-gray-400" />
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                           Travel Insurance Available
                         </span>
                       </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="md"
+                    <button
                       onClick={() => {
                         setSelectedFlight(flight);
                         setIsDetailOpen(true);
                       }}
-                      className="flex items-center gap-1 text-[10px] font-black text-[hsl(var(--primary))] uppercase tracking-widest hover:text-[hsl(var(--primary)/0.9)] transition-colors"
+                      className="flex items-center gap-1 text-xs font-bold text-[#003b95] uppercase tracking-widest hover:text-[#002a6e] transition-colors"
                     >
                       Flight Details <ChevronRight size={12} />
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-20 bg-card rounded-[2.5rem] border border-border shadow-sm">
-                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-6 gap-2">
-                  <Search size={32} className="text-border" />
+              <div className="text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm">
+                <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 gap-2">
+                  <Search size={32} className="text-gray-300" />
                 </div>
-                <h3 className="text-lg font-black text-foreground">No flights found</h3>
-                <p className="text-xs font-bold text-muted-foreground mt-2 uppercase tracking-wide max-w-xs mx-auto">
+                <h3 className="text-lg font-bold text-gray-900">No flights found</h3>
+                <p className="text-xs text-gray-500 mt-2 max-w-xs mx-auto">
                   Try adjusting your filters or search criteria to find available flights.
                 </p>
-                <Button
+                <button
                   onClick={() =>
                     setFilters({
                       search: '',
@@ -838,10 +825,10 @@ function FlightList() {
                       cabinClass: '',
                     })
                   }
-                  className="mt-8 bg-foreground hover:bg-foreground/80 text-background rounded-xl text-xs font-black uppercase tracking-widest px-8 py-4"
+                  className="mt-8 bg-gray-900 hover:bg-gray-700 text-white rounded-lg px-6 py-2.5 font-semibold text-sm transition-colors"
                 >
                   Clear All Filters
-                </Button>
+                </button>
               </div>
             )}
           </div>

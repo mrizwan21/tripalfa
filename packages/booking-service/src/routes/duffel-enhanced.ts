@@ -1,6 +1,18 @@
+import { Router, Request, Response } from "express";
+
+type AppRouter = ReturnType<typeof Router>;
+const router: AppRouter = Router();
+
 /**
  * @swagger
  * /api/duffel/partial-offer-requests:
+ *   post:
+ *     summary: Create a partial offer request for segment-by-segment pricing
+ *     tags: [Duffel Enhanced]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
  *   post:
  *     summary: Create a partial offer request for segment-by-segment pricing
  *     tags: [Duffel Enhanced]

@@ -37,7 +37,7 @@ export const FareRulesPopup = ({
             {tabs.map((tab: any, index: number) => (
               <Button
                 variant="outline"
-                size="default"
+                size="md"
                 key={index}
                 onClick={() => setActiveTab(index)}
                 className={`px-5 py-2.5 rounded-t-lg text-[10px] font-black uppercase tracking-widest transition-all ${
@@ -52,7 +52,7 @@ export const FareRulesPopup = ({
           </div>
           <Button
             variant="outline"
-            size="default"
+            size="md"
             onClick={onClose}
             className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
           >

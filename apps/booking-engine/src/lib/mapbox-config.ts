@@ -9,7 +9,9 @@
 
 // Mapbox access token - must be set via environment variable
 export const MAPBOX_TOKEN =
-  process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || process.env.MAPBOX_ACCESS_TOKEN;
+  import.meta.env.VITE_MAPBOX_ACCESS_TOKEN ||
+  import.meta.env.VITE_NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ||
+  '';
 
 // Mapbox style URLs
 export const MAPBOX_STYLES = {

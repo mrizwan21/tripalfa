@@ -1,20 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Search,
-  Filter,
-  Plane,
-  ArrowRight,
-  Clock,
-  Calendar,
-  ChevronDown,
-  Luggage,
-  ShieldCheck,
-  Star,
-  ArrowLeft,
-  Zap,
-  Server,
-} from 'lucide-react';
 import { createOfferRequest } from '../services/duffelApiManager';
 import { formatCurrency } from '@tripalfa/ui-components';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
@@ -22,13 +7,14 @@ import { Button } from '../components/ui/button';
 import { useAirlines } from '../hooks/useStaticData';
 import { useBundledStaticData } from '../hooks/useBundledStaticData';
 import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
+import { Zap } from 'lucide-react';
 
 const FILTER_HEADING_CLASS =
-  'text-[10px] font-black text-muted-foreground uppercase tracking-widest';
+  'text-sm font-bold text-[#003b95] uppercase tracking-wider';
 const FILTER_CHECKBOX_CLASS =
-  'w-4 h-4 rounded border-border text-foreground focus:ring-foreground/30';
+  'w-4 h-4 rounded border-gray-200 text-[#003b95] focus:ring-[#003b95]/30';
 const AIRPORT_LABEL_CLASS =
-  'text-[10px] font-black text-muted-foreground uppercase tracking-widest';
+  'text-[11px] font-bold text-gray-500 uppercase tracking-wider';
 
 function FlightSearch() {
   const navigate = useNavigate();
@@ -451,15 +437,15 @@ function FlightSearch() {
   if (!runtimeConfig.features.flightBookingEnabled) {
     return (
       <TripLogerLayout>
-        <div className="bg-[hsl(var(--background))] min-h-screen pb-20 font-sans flex items-center justify-center gap-2">
-          <div className="bg-card rounded-xl shadow-sm border border-border p-10 text-center max-w-xl mx-4 space-y-4">
-            <h1 className="text-2xl font-black text-foreground tracking-tight">
+        <div className="bg-gray-50 min-h-screen pb-20 font-sans flex items-center justify-center gap-2">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center max-w-xl mx-4 space-y-4">
+            <h1 className="text-2xl font-black text-gray-900 tracking-tight">
               Flight Search Disabled
             </h1>
-            <p className="text-sm font-bold text-muted-foreground">
+            <p className="text-sm font-bold text-gray-500">
               Your admin has currently disabled flight booking for this tenant.
             </p>
-            <Button onClick={() => navigate('/')} className="h-11 px-6">
+            <Button onClick={() => navigate('/')} className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200">
               Back to Home
             </Button>
           </div>
@@ -470,52 +456,10 @@ function FlightSearch() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[hsl(var(--background))] min-h-screen pb-20 font-sans">
-        {/* --- Additional Filters --- */}
-        <div className="space-y-6">
-          {/* Country filter */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className={FILTER_HEADING_CLASS}>Country</h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {(staticData.countries.data || []).slice(0, 10).map((country: any) => (
-                <Button
-                  key={country.code}
-                  size="sm"
-                  variant="ghost"
-                  className={`h-7 px-2 py-1 rounded ${selectedCountries.has(country.code) ? 'bg-blue-500 text-background hover:bg-blue-500' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
-                  onClick={() => toggleCountryFilter(country.code)}
-                >
-                  {country.name}
-                </Button>
-              ))}
-            </div>
-          </div>
-          {/* Alliance filter */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <h4 className={FILTER_HEADING_CLASS}>Alliance</h4>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {alliances.map((alliance: string) => (
-                <Button
-                  key={alliance}
-                  size="sm"
-                  variant="ghost"
-                  className={`h-7 px-2 py-1 rounded ${selectedAlliances.has(alliance) ? 'bg-green-500 text-background hover:bg-green-500' : 'bg-muted hover:bg-muted/80 text-foreground'}`}
-                  onClick={() => toggleAllianceFilter(alliance)}
-                >
-                  {alliance}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {/* Elite Search Header */}
-        <div className="bg-card border-b border-border shadow-sm overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-[40%] h-full bg-purple-50/50 pointer-events-none" />
-          <div className="container mx-auto px-4 max-w-7xl pt-12 pb-10 relative z-10">
+      <div className="bg-gray-50 min-h-screen pb-20 font-sans">
+        {/* Search Header */}
+        <section className="bg-white border-b border-gray-100 overflow-hidden">
+          <div className="container-apple pt-12 pb-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -523,89 +467,100 @@ function FlightSearch() {
                     variant="ghost"
                     size="sm"
                     onClick={() => navigate('/')}
-                    className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors p-0 gap-2"
+                    className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                    aria-label="Back to home"
                   >
-                    <ArrowLeft size={16} className="text-muted-foreground" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </Button>
-                  <div className="w-8 h-8 rounded-xl bg-foreground flex items-center justify-center text-background shadow-lg shadow-border gap-2">
-                    <Plane size={16} />
+                  <div className="w-8 h-8 rounded-lg bg-[#003b95] flex items-center justify-center text-white">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3-1 3 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
+                    </svg>
                   </div>
-                  <h1 className="text-[10px] font-black text-foreground uppercase tracking-[0.3em] text-3xl font-bold tracking-tight">
+                  <h1 className="text-sm font-bold text-[#003b95] uppercase tracking-wider">
                     Available Itineraries
                   </h1>
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-foreground tracking-tighter">
+                    <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
                       {origin}
                     </h2>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                       Origin
                     </p>
                   </div>
-                  <ArrowRight className="text-muted-foreground/60 mb-4" size={24} strokeWidth={3} />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-gray-400 mb-4">
+                    <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-foreground tracking-tighter">
+                    <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
                       {destination}
                     </h2>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                       Destination
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 bg-muted/50 p-2 rounded-xl border border-border">
-                <div className="px-4 py-2 border-r border-border">
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">
+              <div className="flex flex-wrap items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                <div className="px-4 py-2 border-r border-gray-200">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">
                     Departure
                   </p>
-                  <p className="text-[11px] font-bold text-foreground leading-none">
+                  <p className="text-sm font-semibold text-gray-900 leading-none">
                     {departureDate}
                   </p>
                 </div>
-                <div className="px-4 py-2 border-r border-border">
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">
+                <div className="px-4 py-2 border-r border-gray-200">
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-0.5">
                     Travelers
                   </p>
-                  <p className="text-[11px] font-bold text-foreground leading-none">
+                  <p className="text-sm font-semibold text-gray-900 leading-none">
                     {travelers} Traveler, {cabinClass}
                   </p>
                 </div>
                 <Button
                   variant="outline"
                   onClick={() => navigate('/')}
-                  className="h-10 px-6 bg-card border border-border rounded-xl text-[9px] font-black uppercase tracking-widest text-foreground hover:border-foreground/30 transition-all"
+                  className="border border-gray-200 text-gray-700 rounded-lg px-6 py-2.5 font-semibold text-sm hover:bg-gray-50 transition-colors"
                 >
                   Modify Search
                 </Button>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <div className="container mx-auto px-4 max-w-7xl mt-12">
+        <div className="container-apple mt-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-            {/* Filters Sidebar - HYBRID APPROACH */}
+            {/* Filters Sidebar */}
             <div className="lg:col-span-3 space-y-8">
-              <div className="bg-card rounded-xl shadow-sm border border-border p-8 space-y-8 sticky top-32">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-6 sticky top-32">
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
+                  <h3 className="text-sm font-bold text-[#003b95] uppercase tracking-wider">
                     Global Filters
                   </h3>
                   <Button
                     variant="ghost"
                     onClick={resetFilters}
-                    className="text-[10px] font-black text-muted-foreground uppercase underline"
+                    className="text-xs font-bold text-gray-500 uppercase hover:text-gray-900 transition-colors"
                   >
                     Reset All
                   </Button>
                 </div>
 
                 {/* Data Source Indicator */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-xl">
-                  <Server size={12} className="text-muted-foreground" />
-                  <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-100">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-gray-500">
+                    <rect x="2" y="2" width="20" height="8" rx="2" stroke="currentColor" strokeWidth="2"/>
+                    <rect x="2" y="14" width="20" height="8" rx="2" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M6 6h4M6 18h4" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     Filters: Real-time + Static
                   </span>
                 </div>
@@ -639,11 +594,11 @@ function FlightSearch() {
                           key={stop.value}
                           className={`flex items-center justify-between cursor-pointer group ${stop.count === 0 ? 'opacity-50' : ''}`}
                         >
-                          <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">
+                          <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                             {stop.label}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-bold text-muted-foreground">
+                            <span className="text-xs text-gray-500 font-medium">
                               ({stop.count})
                             </span>
                             <input
@@ -673,7 +628,7 @@ function FlightSearch() {
                         realtimeAirlines.map(airline => {
                           const staticInfo = getAirlineInfo(airline.code);
                           return (
-                            <label
+                             <label
                               key={airline.code}
                               className="flex items-center justify-between cursor-pointer group gap-2 text-sm font-medium"
                             >
@@ -686,12 +641,12 @@ function FlightSearch() {
                                     e.currentTarget.style.display = 'none';
                                   }}
                                 />
-                                <span className="text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors">
+                                <span className="text-sm text-gray-600 group-hover:text-gray-900 transition-colors">
                                   {airline.name}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-bold text-muted-foreground">
+                                <span className="text-xs text-gray-500 font-medium">
                                   ({airline.count})
                                 </span>
                                 <input
@@ -710,12 +665,12 @@ function FlightSearch() {
                           {Array.from({ length: 4 }).map((_, i) => (
                             <div key={i} className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2 flex-1">
-                                <div className="w-5 h-5 bg-muted rounded animate-pulse" />
-                                <div className="h-4 bg-muted rounded flex-1 max-w-[120px] animate-pulse gap-4" />
+                                <div className="w-5 h-5 bg-gray-100 rounded animate-pulse" />
+                                <div className="h-4 bg-gray-100 rounded flex-1 max-w-[120px] animate-pulse gap-4" />
                               </div>
                               <div className="flex items-center gap-2">
-                                <div className="h-4 bg-muted rounded w-6 animate-pulse" />
-                                <div className="w-4 h-4 bg-muted rounded animate-pulse" />
+                                <div className="h-4 bg-gray-100 rounded w-6 animate-pulse" />
+                                <div className="w-4 h-4 bg-gray-100 rounded animate-pulse" />
                               </div>
                             </div>
                           ))}
@@ -731,21 +686,21 @@ function FlightSearch() {
             <div className="lg:col-span-9 space-y-6">
               <div className="flex items-center justify-between mb-4 gap-2">
                 <div className="flex items-center gap-3">
-                  <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">
                     Found {filteredFlights.length} of {flights.length} results
                   </p>
                   {(selectedStops.size > 0 || selectedAirlines.size > 0) && (
-                    <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-[9px] font-black uppercase">
+                    <span className="px-2 py-1 bg-[#003b95]/10 text-[#003b95] rounded-full text-xs font-bold uppercase">
                       Filtered
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={FILTER_HEADING_CLASS}>Sort By:</span>
+                  <span className="text-sm font-bold text-[#003b95] uppercase tracking-wider">Sort By:</span>
                   <select
                     id="flight-search-sort"
                     name="flight-search-sort"
-                    className="h-9 px-3 bg-card border border-border rounded-lg text-[11px] font-black text-foreground uppercase tracking-widest outline-none"
+                    className="h-12 lg:h-14 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
                   >
                     <option>Recommended</option>
                     <option>Cheapest</option>
@@ -755,15 +710,15 @@ function FlightSearch() {
               </div>
 
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-dashed border-border gap-4">
-                  <div className="w-12 h-12 border-4 border-foreground border-t-transparent rounded-full animate-spin mb-4" />
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-dashed border-gray-200 gap-4">
+                  <div className="w-12 h-12 border-4 border-[#003b95] border-t-transparent rounded-full animate-spin mb-4" />
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">
                     Searching the skies...
                   </p>
                 </div>
               ) : filteredFlights.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-dashed border-border gap-4">
-                  <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">
+                <div className="flex flex-col items-center justify-center py-20 bg-white rounded-xl border border-dashed border-gray-200 gap-4">
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">
                     {flights.length > 0
                       ? 'No flights match your filters'
                       : 'No flights found matching your criteria'}
@@ -772,13 +727,13 @@ function FlightSearch() {
                     <Button
                       variant="ghost"
                       onClick={resetFilters}
-                      className="mt-4 text-[10px] font-black text-muted-foreground uppercase underline"
+                      className="mt-4 bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200"
                     >
                       Clear Filters
                     </Button>
                   )}
                 </div>
-              ) : (
+                              ) : (
                 filteredFlights.map(flight => {
                   const airlineInfo = getAirlineInfo(
                     flight.carrierCode || flight.flightNumber?.slice(0, 2) || ''
@@ -806,36 +761,38 @@ function FlightSearch() {
                   }) => (
                     <div className="space-y-2">
                       {label && (
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                           {label}
                         </p>
                       )}
                       <div className="flex items-center justify-between gap-6">
                         <div className="space-y-0.5">
-                          <p className="text-xl font-black text-foreground tracking-tighter">
+                          <p className="text-xl font-bold text-gray-900 tracking-tight">
                             {leg.departureTime}
                           </p>
                           <p className={AIRPORT_LABEL_CLASS}>{resolveAirportName(leg.origin)}</p>
                           {leg.originCity && (
-                            <p className="text-[9px] text-muted-foreground/60 font-bold">
+                            <p className="text-xs text-gray-500 font-bold">
                               {leg.originCity}
                             </p>
                           )}
                         </div>
                         <div className="flex-1 flex flex-col items-center min-w-0 gap-4">
-                          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider mb-1.5">
+                          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                             {leg.duration}
                           </span>
-                          <div className="w-full h-px bg-border relative">
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-card border border-border flex items-center justify-center text-muted-foreground shadow-sm gap-2">
-                              <Plane size={11} />
+                          <div className="w-full h-px bg-gray-200 relative">
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 shadow-sm">
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3-1 3 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/>
+                              </svg>
                             </div>
                           </div>
                           <div className="mt-2 flex items-center gap-1.5">
                             <div
                               className={`h-1.5 w-1.5 rounded-full ${leg.stops === 0 ? 'bg-green-500' : 'bg-amber-400'}`}
                             />
-                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">
+                            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                               {leg.stops === 0
                                 ? 'Direct'
                                 : `${leg.stops} Stop${leg.stops > 1 ? 's' : ''}`}
@@ -843,14 +800,14 @@ function FlightSearch() {
                           </div>
                         </div>
                         <div className="text-right space-y-0.5">
-                          <p className="text-xl font-black text-foreground tracking-tighter">
+                          <p className="text-xl font-bold text-gray-900 tracking-tight">
                             {leg.arrivalTime}
                           </p>
                           <p className={AIRPORT_LABEL_CLASS}>
                             {resolveAirportName(leg.destination)}
                           </p>
                           {leg.destCity && (
-                            <p className="text-[9px] text-muted-foreground/60 font-bold">
+                            <p className="text-xs text-gray-500 font-bold">
                               {leg.destCity}
                             </p>
                           )}
@@ -862,15 +819,13 @@ function FlightSearch() {
                   return (
                     <div
                       key={flight.id}
-                      className="bg-card rounded-xl border border-border shadow-sm hover:shadow-xl hover:border-foreground/30 transition-all duration-500 group relative overflow-hidden"
+                      className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
                     >
-                      <div className="absolute top-0 left-0 w-1 h-full bg-foreground scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
-
                       {/* Card header — airline + trip type badge + price + CTA */}
-                      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 px-8 pt-8 pb-6">
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 px-6 pt-6 pb-5">
                         {/* Airline info */}
                         <div className="flex items-center gap-4 shrink-0 lg:w-44">
-                          <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center p-2 border border-border gap-2">
+                          <div className="w-11 h-11 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2">
                             <img
                               src={airlineInfo.logo}
                               className="w-full h-full object-contain"
@@ -882,20 +837,20 @@ function FlightSearch() {
                             />
                           </div>
                           <div>
-                            <h4 className="text-sm font-black text-foreground tracking-tight leading-tight">
+                            <h4 className="text-sm font-bold text-gray-900 tracking-tight leading-tight">
                               {flight.airline}
                             </h4>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5">
+                            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mt-0.5">
                               {flight.flightNumber}
                             </p>
                             {/* Trip type badge */}
                             <span
-                              className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${
+                              className={`mt-1.5 inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                                 isRoundTrip
-                                  ? 'bg-indigo-50 text-indigo-600 border-indigo-100'
+                                  ? 'bg-[#003b95]/10 text-[#003b95] border-[#003b95]/20'
                                   : isMultiCity
-                                    ? 'bg-amber-50 text-amber-600 border-amber-100'
-                                    : 'bg-muted text-muted-foreground border-border'
+                                    ? 'bg-amber-50 text-amber-600 border-amber-200'
+                                    : 'bg-gray-50 text-gray-500 border-gray-200'
                               }`}
                             >
                               {isRoundTrip
@@ -932,13 +887,17 @@ function FlightSearch() {
                               <div key={idx}>
                                 {/* Visual divider */}
                                 <div className="flex items-center gap-3 my-3 px-4">
-                                  <div className="flex-1 h-px border-t border-dashed border-border gap-4" />
-                                  <span className="text-[8px] font-black text-muted-foreground/60 uppercase tracking-[2px] flex items-center gap-1">
-                                    <ArrowRight size={8} className="rotate-180" />
+                                  <div className="flex-1 h-px border-t border-dashed border-gray-200" />
+                                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1">
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" className="rotate-180">
+                                      <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
                                     {isRoundTrip ? 'Return' : `Leg ${idx + 2}`}
-                                    <ArrowRight size={8} />
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
+                                      <path d="M6 8l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
                                   </span>
-                                  <div className="flex-1 h-px border-t border-dashed border-border gap-4" />
+                                  <div className="flex-1 h-px border-t border-dashed border-gray-200" />
                                 </div>
                                 <div className="px-0 lg:px-4">
                                   <LegTimeline
@@ -951,18 +910,20 @@ function FlightSearch() {
                         </div>
 
                         {/* Price & CTA */}
-                        <div className="w-full lg:w-52 flex lg:flex-col items-center justify-between lg:justify-center gap-4 lg:border-l border-border lg:pl-8 pt-4 lg:pt-0 shrink-0">
+                        <div className="w-full lg:w-52 flex lg:flex-col items-center justify-between lg:justify-center gap-4 lg:border-l lg:border-gray-100 lg:pl-6 pt-4 lg:pt-0 shrink-0">
                           <div className="text-right lg:text-center">
-                            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">
+                            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-0.5">
                               {isRoundTrip ? 'Round Trip' : isMultiCity ? 'All Legs' : 'Per Person'}
                             </p>
-                            <p className="text-2xl font-black text-foreground tracking-tighter">
+                            <p className="text-2xl font-bold text-[#003b95] tracking-tight">
                               {formatCurrency(flight.amount, flight.currency)}
                             </p>
-                            <div className="flex flex-col items-end lg:items-center gap-1 text-[9px] font-bold mt-1 uppercase tracking-widest">
+                            <div className="flex flex-col items-end lg:items-center gap-1 text-xs font-bold mt-1 uppercase tracking-widest">
                               {flight.refundable ? (
                                 <span className="text-green-600 flex items-center gap-1">
-                                  <ShieldCheck size={9} />
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="currentColor"/>
+                                  </svg>
                                   Refundable
                                   {flight.refundPenalty && flight.refundPenalty !== 'USD 0' && (
                                     <span className="text-green-500 font-normal">
@@ -971,19 +932,23 @@ function FlightSearch() {
                                   )}
                                 </span>
                               ) : (
-                                <span className="text-muted-foreground flex items-center gap-1">
-                                  <Luggage size={9} />
+                                <span className="text-gray-500 flex items-center gap-1">
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+                                    <path d="M20 7h-5V4c0-1.1-.9-2-2-2h-6c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM9 4h6v3H9V4zm11 16H4V9h5c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2h5v11z" fill="currentColor"/>
+                                  </svg>
                                   {flight.includedBags?.[0]?.weight
                                     ? `${flight.includedBags[0].weight}kg bag`
                                     : 'See bags'}
                                 </span>
                               )}
                               {flight.changeable && (
-                                <span className="text-blue-600 flex items-center gap-1">
-                                  <Calendar size={9} />
+                                <span className="text-[#003b95] flex items-center gap-1">
+                                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+                                    <path d="M19 3h-4V1H9v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" fill="currentColor"/>
+                                  </svg>
                                   Changes OK
                                   {flight.changePenalty && flight.changePenalty !== 'USD 0' && (
-                                    <span className="text-blue-500 font-normal">
+                                    <span className="text-[#003b95]/80 font-normal">
                                       (-{flight.changePenalty})
                                     </span>
                                   )}
@@ -995,7 +960,8 @@ function FlightSearch() {
                             onClick={() =>
                               navigate(`/flights/detail?id=${flight.id}&offerId=${flight.offerId}`)
                             }
-                            className="h-11 px-8 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-border hover:bg-[hsl(var(--primary)/0.9)] transition-all hover:-translate-y-0.5 active:scale-95 whitespace-nowrap"
+                            className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200 whitespace-nowrap"
+                            aria-label={`Select flight ${flight.flightNumber}`}
                           >
                             Select Deal
                           </Button>

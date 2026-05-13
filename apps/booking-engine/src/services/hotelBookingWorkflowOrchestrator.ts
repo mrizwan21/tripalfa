@@ -286,9 +286,7 @@ class HotelBookingWorkflowOrchestrator {
   private authToken: string | null;
 
   constructor(
-    walletApiUrl = import.meta.env.VITE_API_URL ||
-      process.env.API_GATEWAY_URL ||
-      'http://localhost:3001/api',
+    walletApiUrl = import.meta.env.VITE_GATEWAY_URL || '/api',
     verbose = false,
     authToken: string | null = null
   ) {

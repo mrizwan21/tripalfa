@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '../../ui/card';
 import { Badge } from '../../ui/badge';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '../../ui/input';
 import {
   Loader2,

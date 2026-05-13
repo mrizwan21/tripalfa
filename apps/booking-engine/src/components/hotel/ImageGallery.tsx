@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 interface ImageGalleryProps {
   images: { url: string; hero?: boolean }[];
@@ -56,7 +56,7 @@ export function ImageGallery({
         {/* Navigation Arrows */}
         <div className="absolute inset-y-0 flex items-center justify-between w-full px-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none gap-2">
           <Button
-            variant="default"
+            variant="primary"
             size="sm"
             onClick={handlePrev}
             className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-primary transition-all border border-white/20 pointer-events-auto gap-2"
@@ -64,7 +64,7 @@ export function ImageGallery({
             <ChevronLeft size={24} />
           </Button>
           <Button
-            variant="default"
+            variant="primary"
             size="sm"
             onClick={handleNext}
             className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-primary transition-all border border-white/20 pointer-events-auto gap-2"
@@ -78,7 +78,7 @@ export function ImageGallery({
       <div className="flex items-center gap-4">
         <Button
           variant="outline"
-          size="default"
+          size="md"
           onClick={() => setCurrentIndex(0)}
           className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg active:scale-95 gap-2"
         >
@@ -86,7 +86,7 @@ export function ImageGallery({
           <ChevronLeft size={16} />
         </Button>
         <Button
-          variant="default"
+          variant="primary"
           size="sm"
           onClick={handlePrev}
           className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg active:scale-95 gap-2"
@@ -102,7 +102,7 @@ export function ImageGallery({
         </div>
 
         <Button
-          variant="default"
+          variant="primary"
           size="sm"
           onClick={handleNext}
           className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg active:scale-95 gap-2"
@@ -111,7 +111,7 @@ export function ImageGallery({
         </Button>
         <Button
           variant="outline"
-          size="default"
+          size="md"
           onClick={() => setCurrentIndex(images.length - 1)}
           className="w-10 h-10 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all shadow-lg active:scale-95 gap-2"
         >

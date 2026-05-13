@@ -22,6 +22,7 @@ import {
   Car,
   Calendar,
   DollarSign,
+  X,
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
@@ -88,7 +89,7 @@ function getSubscriptionIcon(category: AlertSubscription['category']): React.Rea
       return <DollarSign className="w-5 h-5 text-amber-600" />;
     case 'system':
     default:
-      return <Bell className="w-5 h-5 text-muted-foreground" />;
+      return <Bell className="w-5 h-5 text-gray-400" />;
   }
 }
 
@@ -113,18 +114,62 @@ function toAlertSubscription(contentSubscription: {
   };
 }
 
+function normalizeAlertType(type: string | undefined): Alert['type'] {
+  if (type === 'price_drop' || type === 'price_increase' || type === 'booking_status' ||
+      type === 'reminder' || type === 'promotion' || type === 'system') {
+    return type;
+  }
+  return 'system';
+}
+
+function normalizeAlertProductType(productType: string | undefined): Alert['productType'] {
+  if (productType === 'flight' || productType === 'hotel' || productType === 'car' || productType === 'all') {
+    return productType;
+  }
+  return 'all';
+}
+
+function normalizeAlertStatus(status: string | undefined): Alert['status'] {
+  if (status === 'active' || status === 'paused' || status === 'triggered' || status === 'expired') {
+    return status;
+  }
+  return 'active';
+}
+
 function toAlertItem(contentAlert: TenantContentConfig['alerts']['items'][number]): Alert {
+  // Map from content config types to alert domain types
+  const alertTypeMap: Record<string, Alert['type']> = {
+    'system': 'system',
+    'booking': 'booking_status',
+    'payment': 'system',
+    'alert': 'system',
+  };
+  
+  const productTypeMap: Record<string, Alert['productType']> = {
+    'Flight': 'flight',
+    'Hotel': 'hotel',
+    'Car': 'car',
+    'All': 'all',
+  };
+  
+  const statusMap: Record<string, Alert['status']> = {
+    'active': 'active',
+    'inactive': 'paused',
+    'pending': 'paused',
+    'resolved': 'triggered',
+  };
+  
   return {
-    id: contentAlert.id,
-    type: contentAlert.type,
-    title: contentAlert.title,
-    message: contentAlert.message,
-    productType: contentAlert.productType,
-    status: contentAlert.status,
-    createdAt: contentAlert.createdAt,
+    id: contentAlert.id ?? '',
+    type: alertTypeMap[contentAlert.type ?? 'system'] ?? 'system',
+    title: contentAlert.title ?? '',
+    message: contentAlert.message ?? '',
+    productType: productTypeMap[contentAlert.productType ?? 'All'] ?? 'all',
+    status: statusMap[contentAlert.status ?? 'active'] ?? 'active',
+    createdAt: contentAlert.createdAt ?? '',
     triggeredAt: contentAlert.triggeredAt,
     expiresAt: contentAlert.expiresAt,
-    criteria: contentAlert.criteria,
+    criteria: contentAlert.criteria as Alert['criteria'],
   };
 }
 
@@ -134,6 +179,44 @@ const defaultSubscriptions: AlertSubscription[] =
   DEFAULT_CONTENT_CONFIG.alerts.subscriptions.map(toAlertSubscription);
 
 type TabType = 'alerts' | 'subscriptions' | 'settings';
+
+// Get alert border color based on type
+function getAlertBorderColor(type: Alert['type']) {
+  switch (type) {
+    case 'price_drop':
+      return 'border-l-green-500';
+    case 'price_increase':
+      return 'border-l-red-500';
+    case 'booking_status':
+      return 'border-l-blue-500';
+    case 'reminder':
+      return 'border-l-purple-500';
+    case 'promotion':
+      return 'border-l-amber-500';
+    case 'system':
+    default:
+      return 'border-l-gray-400';
+  }
+}
+
+// Get alert icon background
+function getAlertIconBg(type: Alert['type']) {
+  switch (type) {
+    case 'price_drop':
+      return 'bg-green-50 text-green-600';
+    case 'price_increase':
+      return 'bg-red-50 text-red-600';
+    case 'booking_status':
+      return 'bg-blue-50 text-blue-600';
+    case 'reminder':
+      return 'bg-purple-50 text-purple-600';
+    case 'promotion':
+      return 'bg-amber-50 text-amber-600';
+    case 'system':
+    default:
+      return 'bg-gray-50 text-gray-500';
+  }
+}
 
 function Alerts(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<TabType>('alerts');
@@ -211,25 +294,25 @@ function Alerts(): React.JSX.Element {
     switch (status) {
       case 'active':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-[#003b95]">
             <Bell className="w-3 h-3" /> Active
           </span>
         );
       case 'triggered':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-50 text-green-700">
             <CheckCircle2 className="w-3 h-3" /> Triggered
           </span>
         );
       case 'paused':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
             <Pause className="w-3 h-3" /> Paused
           </span>
         );
       case 'expired':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
             <XCircle className="w-3 h-3" /> Expired
           </span>
         );
@@ -250,7 +333,7 @@ function Alerts(): React.JSX.Element {
       case 'promotion':
         return <DollarSign className="w-4 h-4 text-amber-600" />;
       case 'system':
-        return <Bell className="w-4 h-4 text-muted-foreground" />;
+        return <Bell className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -279,96 +362,82 @@ function Alerts(): React.JSX.Element {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Bell className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold">{alerts.length}</div>
-              <div className="text-xs text-muted-foreground">Total Alerts</div>
-            </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#003b95] to-[#002a6e] flex items-center justify-center flex-shrink-0">
+            <Bell className="w-5 h-5 text-white" />
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-50">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold">{triggeredCount}</div>
-              <div className="text-xs text-muted-foreground">Triggered</div>
-            </div>
+          <div>
+            <div className="text-2xl font-bold text-[#1d1d1f]">{alerts.length}</div>
+            <div className="text-xs text-gray-500 font-medium">Total Alerts</div>
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <AlertTriangle className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold">{activeCount}</div>
-              <div className="text-xs text-muted-foreground">Active</div>
-            </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+            <CheckCircle2 className="w-5 h-5 text-green-600" />
           </div>
-        </Card>
-        <Card className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-50">
-              <Settings className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <div className="text-2xl font-semibold">
-                {subscriptions.filter(s => s.enabled).length}
-              </div>
-              <div className="text-xs text-muted-foreground">Subscriptions</div>
-            </div>
+          <div>
+            <div className="text-2xl font-bold text-[#1d1d1f]">{triggeredCount}</div>
+            <div className="text-xs text-gray-500 font-medium">Triggered</div>
           </div>
-        </Card>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-[#1d1d1f]">{activeCount}</div>
+            <div className="text-xs text-gray-500 font-medium">Active</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+            <Settings className="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-[#1d1d1f]">
+              {subscriptions.filter(s => s.enabled).length}
+            </div>
+            <div className="text-xs text-gray-500 font-medium">Subscriptions</div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 p-1 bg-muted rounded-lg w-fit">
-        <Button
-          variant="ghost"
-          size="sm"
+      <div className="flex gap-1 mb-6 p-1 bg-gray-100 rounded-xl w-fit">
+        <button
           onClick={() => setActiveTab('alerts')}
           className={cn(
-            'px-4 py-2 rounded-md text-sm font-medium transition-all',
+            'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
             activeTab === 'alerts'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-white text-[#1d1d1f] shadow-sm'
+              : 'text-gray-500 hover:text-[#1d1d1f]'
           )}
         >
           My Alerts
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
+        </button>
+        <button
           onClick={() => setActiveTab('subscriptions')}
           className={cn(
-            'px-4 py-2 rounded-md text-sm font-medium transition-all',
+            'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
             activeTab === 'subscriptions'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-white text-[#1d1d1f] shadow-sm'
+              : 'text-gray-500 hover:text-[#1d1d1f]'
           )}
         >
           Subscriptions
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
+        </button>
+        <button
           onClick={() => setActiveTab('settings')}
           className={cn(
-            'px-4 py-2 rounded-md text-sm font-medium transition-all',
+            'px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200',
             activeTab === 'settings'
-              ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'bg-white text-[#1d1d1f] shadow-sm'
+              : 'text-gray-500 hover:text-[#1d1d1f]'
           )}
         >
           Settings
-        </Button>
+        </button>
       </div>
 
       {/* Alerts Tab */}
@@ -376,20 +445,20 @@ function Alerts(): React.JSX.Element {
         <div className="space-y-4">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative gap-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search alerts..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border bg-background rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
+                className="w-full pl-10 pr-4 h-12 rounded-xl border border-gray-200 bg-white text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
               />
             </div>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-border bg-background rounded-lg text-sm"
+              className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -400,7 +469,7 @@ function Alerts(): React.JSX.Element {
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value)}
-              className="px-3 py-2 border border-border bg-background rounded-lg text-sm"
+              className="h-12 px-4 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
             >
               <option value="all">All Types</option>
               <option value="price_drop">Price Drop</option>
@@ -414,40 +483,42 @@ function Alerts(): React.JSX.Element {
           {/* Alert List */}
           <div className="space-y-3">
             {filteredAlerts.length === 0 ? (
-              <Card className="p-8 text-center">
-                <Bell className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-foreground">No alerts found</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Create a new alert or adjust your filters
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gray-50 flex items-center justify-center mb-4">
+                  <Bell className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-bold text-[#1d1d1f] mb-1">No alerts found</h3>
+                <p className="text-sm text-gray-500">
+                  Create a new alert or adjust your filters to see results.
                 </p>
-              </Card>
+              </div>
             ) : (
               filteredAlerts.map(alert => (
-                <Card key={alert.id} className="p-4">
+                <div
+                  key={alert.id}
+                  className={cn(
+                    'bg-white rounded-xl border border-gray-100 shadow-sm p-5 border-l-4 hover:shadow-md transition-all duration-200',
+                    getAlertBorderColor(alert.type)
+                  )}
+                >
                   <div className="flex items-start gap-4">
                     <div
                       className={cn(
-                        'p-2 rounded-lg',
-                        alert.type === 'price_drop'
-                          ? 'bg-green-50'
-                          : alert.type === 'price_increase'
-                            ? 'bg-red-50'
-                            : alert.type === 'booking_status'
-                              ? 'bg-primary/10 text-primary'
-                              : alert.type === 'reminder'
-                                ? 'bg-muted text-muted-foreground'
-                                : 'bg-muted'
+                        'p-2.5 rounded-xl flex-shrink-0',
+                        getAlertIconBg(alert.type)
                       )}
                     >
                       {getTypeIcon(alert.type)}
                     </div>
-                    <div className="flex-1 min-w-0 gap-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-foreground">{alert.title}</h4>
-                        {getProductIcon(alert.productType)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h4 className="text-sm font-bold text-[#1d1d1f]">{alert.title}</h4>
+                        {getProductIcon(alert.productType) && (
+                          <span className="text-gray-400">{getProductIcon(alert.productType)}</span>
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{alert.message}</p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <p className="text-sm text-gray-600 mb-2">{alert.message}</p>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
                         <span>Created: {new Date(alert.createdAt).toLocaleDateString()}</span>
                         {alert.triggeredAt && (
                           <span>Triggered: {new Date(alert.triggeredAt).toLocaleDateString()}</span>
@@ -457,19 +528,18 @@ function Alerts(): React.JSX.Element {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       {getStatusBadge(alert.status)}
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
                         onClick={() => deleteAlert(alert.id)}
-                        className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="Delete alert"
                       >
                         <Trash2 className="w-4 h-4" />
-                      </Button>
+                      </button>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))
             )}
           </div>
@@ -480,81 +550,78 @@ function Alerts(): React.JSX.Element {
       {activeTab === 'subscriptions' && (
         <div className="space-y-4">
           {loading && (
-            <Card className="p-4 text-sm text-muted-foreground">Loading subscriptions...</Card>
+            <div className="bg-white rounded-xl border border-gray-100 p-6 text-sm text-gray-500 text-center">
+              Loading subscriptions...
+            </div>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {subscriptions.map(sub => (
-              <Card key={sub.id} className="p-4">
-                <div className="flex items-start justify-between mb-3">
+              <div
+                key={sub.id}
+                className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">{sub.icon}</div>
+                    <div className="p-2.5 rounded-xl bg-gray-50">{sub.icon}</div>
                     <div>
-                      <h4 className="font-medium text-foreground">{sub.name}</h4>
-                      <p className="text-xs text-muted-foreground">{sub.description}</p>
+                      <h4 className="text-sm font-bold text-[#1d1d1f]">{sub.name}</h4>
+                      <p className="text-xs text-gray-500">{sub.description}</p>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => toggleSubscription(sub.id)}
                     className={cn(
-                      'p-2 rounded-lg transition-colors',
+                      'px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200',
                       sub.enabled
-                        ? 'bg-purple-100 text-purple-600'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-blue-50 text-[#003b95] border border-blue-100'
+                        : 'bg-gray-50 text-gray-500 border border-gray-100'
                     )}
                   >
-                    {sub.enabled ? <Eye className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
+                    {sub.enabled ? 'Enabled' : 'Disabled'}
+                  </button>
                 </div>
 
                 {/* Channels */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground mr-2">Channels:</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
+                  <span className="text-xs font-medium text-gray-500 mr-2">Channels:</span>
+                  <button
                     onClick={() => toggleChannel(sub.id, 'email')}
                     className={cn(
-                      'flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors',
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border',
                       sub.channels.email
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-blue-50 text-blue-700 border-blue-100'
+                        : 'bg-gray-50 text-gray-400 border-gray-100'
                     )}
                   >
                     <Mail className="w-3 h-3" />
                     Email
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => toggleChannel(sub.id, 'push')}
                     className={cn(
-                      'flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors',
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border',
                       sub.channels.push
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-green-50 text-green-700 border-green-100'
+                        : 'bg-gray-50 text-gray-400 border-gray-100'
                     )}
                   >
                     <Phone className="w-3 h-3" />
                     Push
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  </button>
+                  <button
                     onClick={() => toggleChannel(sub.id, 'sms')}
                     className={cn(
-                      'flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors',
+                      'flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border',
                       sub.channels.sms
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-purple-50 text-purple-700 border-purple-100'
+                        : 'bg-gray-50 text-gray-400 border-gray-100'
                     )}
                   >
                     <MessageSquare className="w-3 h-3" />
                     SMS
-                  </Button>
+                  </button>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
@@ -563,73 +630,73 @@ function Alerts(): React.JSX.Element {
       {/* Settings Tab */}
       {activeTab === 'settings' && (
         <div className="space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-medium text-foreground mb-4">Notification Settings</h3>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-[#1d1d1f] mb-5">Notification Settings</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 border rounded-lg gap-2">
+              <div className="flex items-center justify-between p-5 rounded-xl border border-gray-100 gap-4 hover:border-gray-200 transition-colors">
                 <div>
-                  <h4 className="font-medium text-foreground">Email Notifications</h4>
-                  <p className="text-sm text-muted-foreground">Receive notifications via email</p>
+                  <h4 className="text-sm font-bold text-[#1d1d1f]">Email Notifications</h4>
+                  <p className="text-sm text-gray-500">Receive notifications via email</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-background after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#003b95]/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#003b95]"></div>
                 </label>
               </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg gap-2">
+              <div className="flex items-center justify-between p-5 rounded-xl border border-gray-100 gap-4 hover:border-gray-200 transition-colors">
                 <div>
-                  <h4 className="font-medium text-foreground">Push Notifications</h4>
-                  <p className="text-sm text-muted-foreground">
+                  <h4 className="text-sm font-bold text-[#1d1d1f]">Push Notifications</h4>
+                  <p className="text-sm text-gray-500">
                     Receive push notifications in browser
                   </p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" defaultChecked className="sr-only peer" />
-                  <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-background after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#003b95]/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#003b95]"></div>
                 </label>
               </div>
-              <div className="flex items-center justify-between p-4 border rounded-lg gap-2">
+              <div className="flex items-center justify-between p-5 rounded-xl border border-gray-100 gap-4 hover:border-gray-200 transition-colors">
                 <div>
-                  <h4 className="font-medium text-foreground">SMS Notifications</h4>
-                  <p className="text-sm text-muted-foreground">Receive important alerts via SMS</p>
+                  <h4 className="text-sm font-bold text-[#1d1d1f]">SMS Notifications</h4>
+                  <p className="text-sm text-gray-500">Receive important alerts via SMS</p>
                 </div>
-                <label className="relative inline-flex items-center cursor-pointer gap-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" className="sr-only peer" />
-                  <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-background after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-background after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#003b95]/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-200 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#003b95]"></div>
                 </label>
               </div>
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-6">
-            <h3 className="text-lg font-medium text-foreground mb-4">Quiet Hours</h3>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-[#1d1d1f] mb-5">Quiet Hours</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                <label className="block text-sm font-medium text-gray-600 mb-2">
                   Start Time
                 </label>
                 <input
                   type="time"
                   defaultValue="22:00"
-                  className="w-full px-3 py-2 border border-border bg-background rounded-lg text-sm"
+                  className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                <label className="block text-sm font-medium text-gray-600 mb-2">
                   End Time
                 </label>
                 <input
                   type="time"
                   defaultValue="08:00"
-                  className="w-full px-3 py-2 border border-border bg-background rounded-lg text-sm"
+                  className="w-full h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
                 />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-xs text-gray-500 mt-3 leading-relaxed">
               During quiet hours, non-urgent notifications will be paused. Urgent notifications
               (like security alerts) will still be sent.
             </p>
-          </Card>
+          </div>
         </div>
       )}
     </div>

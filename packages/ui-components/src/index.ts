@@ -1,4 +1,5 @@
 export { Button, buttonVariants } from './components/Button';
+export { Label } from './components/Label';
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './components/Card';
 export { Input } from './components/Input';
 export { FormInput, type FormInputProps } from './components/FormInput';

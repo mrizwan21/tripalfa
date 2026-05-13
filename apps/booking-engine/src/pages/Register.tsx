@@ -92,26 +92,26 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#003b95] to-[#002a6e] flex flex-col justify-center py-12 sm:px-6 lg:px-8 gap-4">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-foreground">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-white">
           Create a new account
         </h2>
-        <p className="mt-2 text-center text-sm text-muted-foreground">
+        <p className="mt-2 text-center text-sm text-white/80">
           Already have an account?{" "}
           <Link
             to="/login"
-            className="font-medium text-[hsl(var(--primary))] hover:text-[hsl(var(--primary)/0.9)] transition-colors"
+            className="text-[#4da1ff] hover:text-[#80baff] font-medium text-sm transition-colors"
           >
             Sign in
           </Link>
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <Card className="p-8 sm:p-10">
+      <div className="mt-8 sm:mx-auto sm:w-full max-w-md">
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-xl shadow-black/5 ring-1 ring-gray-200/60 p-8 sm:p-10">
           {error && (
-            <div className="mb-6 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+            <div className="mb-6 text-xs text-red-600 font-medium">
               {error}
             </div>
           )}
@@ -119,10 +119,10 @@ const Register = () => {
           <div className="mb-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center gap-2">
-                <div className="w-full border-t border-border" />
+                <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm gap-4">
-                <span className="px-2 bg-background text-muted-foreground">
+                <span className="px-2 bg-white text-gray-500">
                   Or sign up with
                 </span>
               </div>
@@ -131,7 +131,7 @@ const Register = () => {
             <div className="mt-4 grid grid-cols-3 gap-3">
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200"
                 onClick={() => handleSocialSignup("google")}
                 disabled={isLoading || oauthCallback.isPending}
                 title="Sign up with Google"
@@ -158,7 +158,7 @@ const Register = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200"
                 onClick={() => handleSocialSignup("facebook")}
                 disabled={isLoading || oauthCallback.isPending}
                 title="Sign up with Facebook"
@@ -174,7 +174,7 @@ const Register = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200"
                 onClick={() => handleSocialSignup("apple")}
                 disabled={isLoading || oauthCallback.isPending}
                 title="Sign up with Apple"
@@ -193,10 +193,10 @@ const Register = () => {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center gap-2">
-              <div className="w-full border-t border-border" />
+              <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center text-sm gap-4">
-              <span className="px-2 bg-background text-muted-foreground">
+              <span className="px-2 bg-white text-gray-500">
                 Or continue with email
               </span>
             </div>
@@ -205,17 +205,17 @@ const Register = () => {
           <form className="space-y-6 mt-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName" className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">First Name</Label>
                 <div className="mt-2 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 gap-2">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                    <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <Input
                     id="firstName"
                     name="firstName"
                     type="text"
                     required
-                    className="pl-10"
+                    className="h-12 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200"
                     placeholder="First name"
                     value={formData.firstName}
                     onChange={handleChange}
@@ -223,17 +223,17 @@ const Register = () => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName" className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Last Name</Label>
                 <div className="mt-2 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 gap-2">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                    <User className="h-5 w-5 text-gray-400" />
                   </div>
                   <Input
                     id="lastName"
                     name="lastName"
                     type="text"
                     required
-                    className="pl-10"
+                    className="h-12 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200"
                     placeholder="Last name"
                     value={formData.lastName}
                     onChange={handleChange}
@@ -243,10 +243,10 @@ const Register = () => {
             </div>
 
             <div>
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email" className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Email address</Label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 gap-2">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
                   id="email"
@@ -254,7 +254,7 @@ const Register = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="pl-10"
+                  className="h-12 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200"
                   placeholder="you@example.com"
                   value={formData.email}
                   onChange={handleChange}
@@ -263,17 +263,17 @@ const Register = () => {
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Password</Label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 gap-2">
-                  <Lock className="h-5 w-5 text-muted-foreground" />
+                  <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
                   id="password"
                   name="password"
                   type="password"
                   required
-                  className="pl-10"
+                  className="h-12 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200"
                   placeholder="Min 8 characters"
                   value={formData.password}
                   onChange={handleChange}
@@ -287,23 +287,23 @@ const Register = () => {
                 name="terms"
                 type="checkbox"
                 required
-                className="h-4 w-4 rounded border-border text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+                className="h-4 w-4 rounded border-gray-300 text-[#003b95] focus:ring-[#003b95]"
               />
               <label
                 htmlFor="terms"
-                className="ml-2 block text-sm text-foreground font-medium"
+                className="ml-2 block text-sm text-gray-700 font-medium"
               >
                 I agree to the{" "}
                 <a
                   href="#"
-                  className="text-[hsl(var(--primary))] hover:text-[hsl(var(--primary)/0.9)] transition-colors"
+                  className="text-[#003b95] hover:text-[#002a6e] font-medium text-sm transition-colors"
                 >
                   Terms
                 </a>{" "}
                 and{" "}
                 <a
                   href="#"
-                  className="text-[hsl(var(--primary))] hover:text-[hsl(var(--primary)/0.9)] transition-colors"
+                  className="text-[#003b95] hover:text-[#002a6e] font-medium text-sm transition-colors"
                 >
                   Privacy Policy
                 </a>
@@ -314,7 +314,7 @@ const Register = () => {
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full"
+                className="w-full bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200"
                 isLoading={isLoading || oauthCallback.isPending}
               >
                 Create Account

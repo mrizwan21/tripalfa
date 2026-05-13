@@ -9,7 +9,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum TenantType {
@@ -30,8 +29,8 @@ model Tenant {
   name           String
   type           TenantType   @default(SUB_AGENT)
   status         TenantStatus @default(ACTIVE)
-  databaseUrl    String
-  databaseSchema String
+  databaseUrl    String?
+  databaseSchema String?
 
   // Hierarchy
   parentId    String?
@@ -72,9 +71,13 @@ model Tenant {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         User[]
-  salesChannels SalesChannelConfig[]
-  apiKeys       ApiKey[]
+  users            User[]
+  salesChannels    SalesChannelConfig[]
+  apiKeys          ApiKey[]
+  partners         Partner[]
+  agreements       Agreement[]
+  b2bBookings      B2BBooking[]
+  callCenterAgents CallCenterAgent[]
 
   dateOfOperations       DateTime?
   address1               String?
@@ -2733,4 +2736,279 @@ model WebhookLog {
   @@index([eventType])
   @@index([processed])
   @@map("webhook_logs")
+}
+
+// ============================================================
+// B2B PORTAL MODELS
+// ============================================================
+
+model Partner {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  code    String  @unique
+  name    String
+  email   String?
+  phone   String?
+  address String?
+  city    String?
+  country String?
+
+  status String @default("ACTIVE") // ACTIVE, INACTIVE, SUSPENDED
+  type   String @default("RETAIL") // RETAIL, CORPORATE, SUB_AGENT
+
+  commissionRate Float @default(0)
+  markupRate     Float @default(0)
+
+  creditLimit     Float @default(0)
+  availableCredit Float @default(0)
+
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+
+  notes    String?
+  metadata Json?
+
+  agreements  Agreement[]
+  b2bBookings B2BBooking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([code])
+  @@map("partners")
+}
+
+model Agreement {
+  id        String  @id @default(uuid())
+  tenantId  String
+  tenant    Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  partnerId String
+  partner   Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  agreementNumber String @unique
+  title           String
+  type            String @default("STANDARD") // STANDARD, COMMISSION, MARKUP, SPECIAL
+
+  startDate DateTime
+  endDate   DateTime?
+
+  status String @default("ACTIVE") // ACTIVE, EXPIRED, TERMINATED, DRAFT
+
+  commissionRate Float @default(0)
+  markupRate     Float @default(0)
+  discountRate   Float @default(0)
+
+  terms    String?
+  notes    String?
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("agreements")
+}
+
+model B2BBooking {
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  bookingRef String  @unique
+  partnerId  String
+  partner    Partner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  service     String // FLIGHT, HOTEL, CAR, PACKAGE
+  productType String?
+
+  status String @default("PENDING") // PENDING, CONFIRMED, CANCELLED, REFUNDED
+
+  amount     Float
+  currency   String @default("USD")
+  commission Float  @default(0)
+  netAmount  Float
+
+  customerName  String?
+  customerEmail String?
+  customerPhone String?
+
+  travelDate String?
+  returnDate String?
+
+  pnr      String?
+  ticketNo String?
+
+  issuedDate DateTime?
+  bookedBy   String?
+
+  remarks  String?
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([partnerId])
+  @@index([status])
+  @@index([bookingRef])
+  @@index([createdAt])
+  @@map("b2b_bookings")
+}
+
+// ============================================================
+// CALL CENTER MODELS
+// ============================================================
+
+model CallCenterAgent {
+  id       String  @id @default(uuid())
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  username String @unique
+  email    String @unique
+  name     String
+
+  role String @default("AGENT") // AGENT, SUPERVISOR, MANAGER, ADMIN
+
+  passwordHash String
+
+  status String @default("OFFLINE") // ONLINE, OFFLINE, BREAK, AWAY
+
+  skills    String[] // e.g., ["flight_booking", "hotel_booking", "refunds"]
+  languages String[] // e.g., ["en", "es"]
+
+  maxConcurrentCalls Int @default(1)
+
+  isActive Boolean @default(true)
+
+  queueAssignments CallQueueAssignment[]
+  calls            Call[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lastLoginAt DateTime?
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([role])
+  @@map("call_center_agents")
+}
+
+model CallQueue {
+  id       String  @id @default(uuid())
+  tenantId String?
+
+  name        String
+  code        String  @unique
+  description String?
+
+  priority Int @default(0)
+
+  status String @default("ACTIVE") // ACTIVE, INACTIVE, PAUSED
+
+  slaTimeout Int @default(300) // seconds
+
+  assignedAgents CallQueueAssignment[]
+
+  calls Call[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("call_queues")
+}
+
+model CallQueueAssignment {
+  id      String          @id @default(uuid())
+  agentId String
+  agent   CallCenterAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  queueId String
+  queue   CallQueue       @relation(fields: [queueId], references: [id], onDelete: Cascade)
+
+  priority Int @default(0)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@unique([agentId, queueId])
+  @@index([agentId])
+  @@index([queueId])
+  @@map("call_queue_assignments")
+}
+
+model Call {
+  id String @id @default(uuid())
+
+  callId  String     @unique
+  queueId String?
+  queue   CallQueue? @relation(fields: [queueId], references: [id])
+
+  agentId String?
+  agent   CallCenterAgent? @relation(fields: [agentId], references: [id])
+
+  direction String @default("INBOUND") // INBOUND, OUTBOUND
+
+  status String @default("WAITING") // WAITING, RINGING, ANSWERED, COMPLETED, ABANDONED, TRANSFERRED
+
+  callerNumber String?
+  callerName   String?
+  callerEmail  String?
+
+  duration Int @default(0) // seconds
+  waitTime Int @default(0) // seconds
+  talkTime Int @default(0) // seconds
+
+  startedAt  DateTime?
+  answeredAt DateTime?
+  endedAt    DateTime?
+
+  recordingUrl String?
+
+  disposition String? // RESOLVED, FOLLOW_UP, ESCALATED, DROPPED
+
+  remarks  String?
+  metadata Json?
+
+  interactions CallInteraction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([queueId])
+  @@index([agentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("calls")
+}
+
+model CallInteraction {
+  id     String @id @default(uuid())
+  callId String
+  call   Call   @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  type String @default("NOTE") // NOTE, STATUS_CHANGE, TRANSFER, CONFERENCE, HOLD
+
+  content String
+
+  agentId   String?
+  agentName String?
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([callId])
+  @@index([createdAt])
+  @@map("call_interactions")
 }

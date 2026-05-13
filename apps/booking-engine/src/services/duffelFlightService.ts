@@ -8,17 +8,7 @@
  * Frontend → duffelFlightService → duffelApiManager → API Gateway → Booking Service → Duffel API
  */
 
-import type { api as ApiClientInstance } from "../lib/api";
-
-// Lazy import to avoid circular dependency
-// Using require() for lazy loading - works in Vite/Webpack builds
-// TODO: Replace with ESM dynamic import() when circular dependency is resolved
-type ApiClient = typeof ApiClientInstance;
-let api: ApiClient | undefined;
-function getApi() {
-  if (!api) api = require("../lib/api").api as ApiClient;
-  return api;
-}
+import { api } from "../lib/apiClient";
 
 import type {
   DuffelOffer,
@@ -269,8 +259,7 @@ class DuffelFlightService {
       );
 
       // Call API
-      const apiModule = await getApi();
-      const response = await apiModule.post<{
+      const response = await api.post<{
         offers: DuffelOffer[];
         id: string;
       }>(`${this.baseUrl}/offer-requests`, {

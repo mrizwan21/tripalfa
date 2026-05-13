@@ -1,12 +1,14 @@
 import { fileURLToPath } from 'url';
 import path, { dirname } from 'path';
 
+import { Router, Request, Response, NextFunction } from "express";
+import multer from "multer";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 type MulterFile = Express.Multer.File;
 
-const router: ExpressRouter = Router();
+const router: Router = Router();
 
 export interface LoyaltyProgram {
   id: string;

@@ -117,63 +117,74 @@ function Dashboard(): React.JSX.Element {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-4">
-        <Card className="p-3">
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-4">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-gray-500 font-medium">
                 {dashboardContent.cards.totalBookings}
               </div>
               <div className="text-xl font-semibold mt-0.5">{summary.total}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">
+              <div className="text-xs text-gray-500 mt-0.5">
                 {dashboardContent.cards.flights}: {summary.flights} •{' '}
                 {dashboardContent.cards.hotels}: {summary.hotels} • {dashboardContent.cards.cars}:{' '}
                 {summary.cars}
               </div>
             </div>
-            <div className="p-2 rounded bg-primary/10">
-              <BarChart className="w-5 h-5 text-primary" />
+            <div className="p-2 rounded-lg bg-[#003b95]/10">
+              <BarChart className="w-5 h-5 text-[#003b95]" />
             </div>
           </div>
         </Card>
 
-        <Card className="p-3">
-          <div className="text-xs text-muted-foreground">
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+          <div className="text-xs text-gray-500 font-medium">
             {dashboardContent.cards.walletSnapshot}
           </div>
           <div className="mt-1.5 space-y-1.5">
             {wallets.length === 0 ? (
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-gray-500">
                 {dashboardContent.cards.noWallets}
               </div>
             ) : (
               wallets.map(w => (
                 <div key={w.currency} className="flex items-center justify-between gap-2">
-                  <div className="text-xs">{w.currency}</div>
-                  <div className="text-sm font-medium">{formatCurrency(w.currentBalance || 0)}</div>
+                  <div className="text-xs text-gray-700 font-medium">{w.currency}</div>
+                  <div className="text-sm font-medium text-gray-900">{formatCurrency(w.currentBalance || 0)}</div>
                 </div>
               ))
             )}
           </div>
           <div className="mt-2 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/wallet')}>
+            <Button
+              className="inline-flex items-center border border-gray-200 text-gray-700 rounded-lg px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-50 transition-all"
+              size="sm"
+              onClick={() => navigate('/wallet')}
+            >
               {dashboardContent.cards.viewWallet}
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button
+              className="inline-flex items-center border border-gray-200 text-gray-700 rounded-lg px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-50 transition-all"
+              size="sm"
+            >
               {dashboardContent.cards.topUps}
             </Button>
           </div>
         </Card>
 
-        <Card className="p-3">
-          <div className="text-xs text-muted-foreground">{dashboardContent.cards.documents}</div>
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-4">
+          <div className="text-xs text-gray-500 font-medium">{dashboardContent.cards.documents}</div>
           <div className="mt-1.5">
             <div className="text-xl font-semibold">{documents.length}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">
+            <div className="text-xs text-gray-500 mt-0.5">
               {dashboardContent.cards.documentsHint}
             </div>
           </div>
           <div className="mt-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/profile#documents')}>
+            <Button
+              className="inline-flex items-center border border-gray-200 text-gray-700 rounded-lg px-3 py-1.5 text-xs font-medium bg-white hover:bg-gray-50 transition-all"
+              size="sm"
+              onClick={() => navigate('/profile#documents')}
+            >
               {dashboardContent.cards.manageDocuments}
             </Button>
           </div>
@@ -181,13 +192,13 @@ function Dashboard(): React.JSX.Element {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <Card className="p-3 lg:col-span-2">
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-4 lg:col-span-2">
           <div className="section-header mb-2">
             <div>
-              <div className="section-title text-sm">{dashboardContent.chart.title}</div>
-              <div className="text-xs text-muted-foreground">{dashboardContent.chart.subtitle}</div>
+              <div className="text-sm font-bold text-[#003b95] uppercase tracking-wider">{dashboardContent.chart.title}</div>
+              <div className="text-xs text-gray-500">{dashboardContent.chart.subtitle}</div>
             </div>
-            <div className="text-xs text-muted-foreground">{dashboardContent.chart.snapshot}</div>
+            <div className="text-xs text-gray-500">{dashboardContent.chart.snapshot}</div>
           </div>
 
           <div className="mt-2">
@@ -214,7 +225,7 @@ function Dashboard(): React.JSX.Element {
                         x={x + barW / 2}
                         y={95}
                         fontSize="10"
-                        fill="hsl(var(--muted-foreground))"
+                        fill="rgb(100,116,139)"
                         textAnchor="middle"
                       >
                         {c.label}
@@ -223,7 +234,7 @@ function Dashboard(): React.JSX.Element {
                         x={x + barW / 2}
                         y={y - 6}
                         fontSize="11"
-                        fill="hsl(var(--foreground))"
+                        fill="rgb(15,23,42)"
                         textAnchor="middle"
                         fontWeight={600}
                       >
@@ -237,11 +248,11 @@ function Dashboard(): React.JSX.Element {
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-4">
           <div className="section-header">
             <div>
-              <div className="section-title">{dashboardContent.recentBookings.title}</div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-sm font-bold text-[#003b95] uppercase tracking-wider">{dashboardContent.recentBookings.title}</div>
+              <div className="text-xs text-gray-500">
                 {dashboardContent.recentBookings.subtitle}
               </div>
             </div>
@@ -249,7 +260,7 @@ function Dashboard(): React.JSX.Element {
 
           <div className="mt-3 space-y-2">
             {recentBookings.length === 0 ? (
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-500">
                 {dashboardContent.recentBookings.empty}
               </div>
             ) : (
@@ -257,21 +268,21 @@ function Dashboard(): React.JSX.Element {
                 <div
                   key={b.bookingId || b.id}
                   onClick={() => navigate(`/booking-card/${b.id || b.bookingId}`)}
-                  className="flex items-center justify-between p-2 rounded hover:bg-muted cursor-pointer transition-colors gap-2"
+                  className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-all duration-200 gap-2"
                 >
                   <div>
-                    <div className="font-medium">
+                    <div className="font-medium text-gray-900">
                       {b.product?.toUpperCase() || dashboardContent.recentBookings.bookingFallback}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-gray-500">
                       {dashboardContent.recentBookings.idPrefix} {b.bookingId || b.id}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold">
+                    <div className="font-semibold text-gray-900">
                       {formatCurrency(b.total?.amount || b.total || 0)}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-gray-500">
                       {b.status || b.paymentStatus || ''}
                     </div>
                   </div>

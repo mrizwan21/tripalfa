@@ -5,15 +5,7 @@
  * Routes through centralized API Manager for consistency
  */
 
-import type { api as ApiClientInstance } from "../lib/api";
-
-// Lazy import to avoid circular dependency
-type ApiClient = typeof ApiClientInstance;
-let api: ApiClient | undefined;
-function getApi() {
-  if (!api) api = require("../lib/api").api as ApiClient;
-  return api;
-}
+import { api } from "../lib/apiClient";
 
 export type ServiceType =
   | "baggage"

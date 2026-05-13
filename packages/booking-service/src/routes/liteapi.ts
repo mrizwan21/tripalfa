@@ -20,30 +20,27 @@ const LITEAPI_DA_BASE_URL = process.env.LITEAPI_DA_BASE_URL || 'https://da.litea
 // Use production key for coordinates/destinations, sandbox for other endpoints
 const LITEAPI_PROD_API_KEY = process.env.LITEAPI_PROD_API_KEY;
 const LITEAPI_API_KEY = process.env.LITEAPI_API_KEY || process.env.VITE_LITEAPI_TEST_API_KEY;
-const STATIC_DATABASE_URL = process.env.STATIC_DATABASE_URL;
-const staticDbPool = STATIC_DATABASE_URL
-  ? new Pool({
-      connectionString: STATIC_DATABASE_URL,
-      max: 5,
-      connectionTimeoutMillis: 5000,
-      idleTimeoutMillis: 30000,
-    })
-  : null;
 
-// Graceful shutdown: close static DB pool on application termination
-if (staticDbPool) {
-  const closePool = async () => {
-    console.log('[LITEAPI] Closing static database pool...');
+// Static DB pool - lazily created to avoid "end" issues on restart
+let _pool: Pool | null = null;
+let _poolEnded = false;
+function getStaticPool(): Pool | null {
+  if (!_pool || _poolEnded) {
+    const url = process.env.STATIC_DATABASE_URL;
+    if (!url) { console.log('[LITEAPI] No STATIC_DATABASE_URL'); return null; }
     try {
-      await staticDbPool.end();
-      console.log('[LITEAPI] Static database pool closed');
-    } catch (error: any) {
-      console.error('[LITEAPI] Error closing static database pool:', error.message);
-    }
-  };
-
-  process.on('SIGTERM', closePool);
-  process.on('SIGINT', closePool);
+      console.log('[LITEAPI] Creating new pool for:', url.replace(/:[^:@]+@/, ':***@'));
+      _poolEnded = false;
+      _pool = new Pool({
+        connectionString: url,
+        max: 5,
+        connectionTimeoutMillis: 5000,
+        idleTimeoutMillis: 30000,
+      });
+      _pool.on('error', (e) => console.error('[LITEAPI] Pool error:', e.message));
+    } catch (e) { return null; }
+  }
+  return _pool;
 }
 
 // Helper Functions (Compatibility Wrappers)
@@ -213,7 +210,7 @@ async function geocodeAddresses(
  */
 router.get('/exchange-rates/latest', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({
         success: false,
         error: 'Static DB not configured',
@@ -221,7 +218,7 @@ router.get('/exchange-rates/latest', async (req: Request, res: Response) => {
     }
 
     const requestedBase = String(req.query.base || 'USD').toUpperCase();
-    const result = await staticDbPool.query(
+    const result = await getStaticPool().query(
       `SELECT code, rate_vs_usd, precision, updated_at as rate_updated_at
        FROM liteapi_currencies
        WHERE rate_vs_usd IS NOT NULL`
@@ -306,11 +303,11 @@ router.get('/exchange-rates/latest', async (req: Request, res: Response) => {
  */
 router.get('/liteapi/currencies', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
-    const result = await staticDbPool.query(`
+    const result = await getStaticPool().query(`
       SELECT code, name, rate_vs_usd, precision, updated_at
       FROM liteapi_currencies
       ORDER BY code ASC
@@ -346,11 +343,11 @@ router.get('/liteapi/currencies', async (req: Request, res: Response) => {
  */
 router.get('/liteapi/countries', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
-    const result = await staticDbPool.query(`
+    const result = await getStaticPool().query(`
       SELECT code, name, dialing_code
       FROM liteapi_countries
       ORDER BY name ASC
@@ -408,14 +405,14 @@ router.get('/liteapi/countries', async (req: Request, res: Response) => {
  */
 router.get('/liteapi/places', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { q, search, limit = 10 } = req.query;
     const query = (q || search || '') as string;
 
-    const result = await staticDbPool.query(
+    const result = await getStaticPool().query(
       `
       SELECT id, name, country_code, latitude, longitude, timezone
       FROM liteapi_cities
@@ -473,51 +470,67 @@ router.get('/hotels/destinations', async (req: Request, res: Response) => {
  *         description: Failed to fetch languages
  */
 router.get('/liteapi/languages', async (req: Request, res: Response) => {
+  const FALLBACK_LANGUAGES = [
+    { code: 'ar', name: 'Arabic', flag: '🇸🇦', isRtl: true },
+    { code: 'bg', name: 'Bulgarian', flag: '🌐', isRtl: false },
+    { code: 'ca', name: 'Catalan', flag: '🌐', isRtl: false },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳', isRtl: false },
+    { code: 'hr', name: 'Croatian', flag: '🌐', isRtl: false },
+    { code: 'cs', name: 'Czech', flag: '🌐', isRtl: false },
+    { code: 'da', name: 'Danish', flag: '🌐', isRtl: false },
+    { code: 'nl', name: 'Dutch', flag: '🌐', isRtl: false },
+    { code: 'et', name: 'Estonian', flag: '🌐', isRtl: false },
+    { code: 'fi', name: 'Finnish', flag: '🌐', isRtl: false },
+    { code: 'fr', name: 'French', flag: '🇫🇷', isRtl: false },
+    { code: 'de', name: 'German', flag: '🇩🇪', isRtl: false },
+    { code: 'el', name: 'Greek', flag: '🌐', isRtl: false },
+    { code: 'hu', name: 'Hungarian', flag: '🌐', isRtl: false },
+    { code: 'it', name: 'Italian', flag: '🇮🇹', isRtl: false },
+    { code: 'ja', name: 'Japanese', flag: '🇯🇵', isRtl: false },
+    { code: 'lv', name: 'Latvian', flag: '🌐', isRtl: false },
+    { code: 'lt', name: 'Lithuanian', flag: '🌐', isRtl: false },
+    { code: 'nb', name: 'Norwegian', flag: '🌐', isRtl: false },
+    { code: 'pl', name: 'Polish', flag: '🌐', isRtl: false },
+    { code: 'pt', name: 'Portuguese', flag: '🇵🇹', isRtl: false },
+    { code: 'ro', name: 'Romanian', flag: '🌐', isRtl: false },
+    { code: 'ru', name: 'Russian', flag: '🇷🇺', isRtl: false },
+    { code: 'sk', name: 'Slovak', flag: '🌐', isRtl: false },
+    { code: 'sl', name: 'Slovenian', flag: '🌐', isRtl: false },
+    { code: 'es', name: 'Spanish', flag: '🇪🇸', isRtl: false },
+    { code: 'sv', name: 'Swedish', flag: '🌐', isRtl: false },
+    { code: 'tr', name: 'Turkish', flag: '🇹🇷', isRtl: false },
+    { code: 'uk', name: 'Ukrainian', flag: '🌐', isRtl: false },
+    { code: 'en', name: 'English', flag: '🇬🇧', isRtl: false },
+  ];
+
   try {
-    if (!staticDbPool) {
-      return res.status(503).json({
-        success: false,
-        error: 'Static DB not configured',
-      });
+    const pool = getStaticPool();
+    console.log('[LITEAPI] Pool exists:', !!pool);
+    if (!pool) {
+      return res.json({ success: true, data: FALLBACK_LANGUAGES });
     }
 
-    const LANGUAGE_FLAG_MAP: Record<string, string> = {
-      en: '🇺🇸',
-      ar: '🇸🇦',
-      fr: '🇫🇷',
-      es: '🇪🇸',
-      de: '🇩🇪',
-      it: '🇮🇹',
-      pt: '🇵🇹',
-      ru: '🇷🇺',
-      zh: '🇨🇳',
-      ja: '🇯🇵',
-      ko: '🇰🇷',
-      hi: '🇮🇳',
-      tr: '🇹🇷',
-    };
-    const RTL_LANGUAGE_CODES = new Set(['ar', 'he', 'fa', 'ur']);
-
-    const result = await staticDbPool.query(`
+    const result = await pool.query(`
       SELECT code, name
       FROM liteapi_languages
       ORDER BY name ASC
     `);
 
+    if (result.rows.length === 0) {
+      return res.json({ success: true, data: FALLBACK_LANGUAGES });
+    }
+
     const languages = result.rows.map((row: any) => ({
       code: String(row.code).toLowerCase(),
       name: row.name,
-      flag: LANGUAGE_FLAG_MAP[String(row.code).toLowerCase()] || '🌐',
-      isRtl: RTL_LANGUAGE_CODES.has(String(row.code).toLowerCase()),
+      flag: '🌐',
+      isRtl: false,
     }));
 
     res.json({ success: true, data: languages });
   } catch (error: any) {
     console.error('[LITEAPI] /liteapi/languages error:', error.message);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to fetch languages from static DB',
-    });
+    res.json({ success: true, data: FALLBACK_LANGUAGES });
   }
 });
 
@@ -559,13 +572,13 @@ router.get('/data/languages', async (req: Request, res: Response) => {
  */
 router.get('/liteapi/hotel/:hotelId', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
     const { hotelId } = req.params;
 
-    const result = await staticDbPool.query(
+    const result = await getStaticPool().query(
       `
       SELECT * FROM liteapi_hotels
       WHERE id = $1
@@ -652,7 +665,7 @@ router.get('/data/hotel/:hotelId', async (req: Request, res: Response) => {
  */
 router.post('/liteapi/hotel', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
@@ -660,7 +673,7 @@ router.post('/liteapi/hotel', async (req: Request, res: Response) => {
     if (!hotelId)
       return res.status(400).json({ success: false, error: 'hotelId is required in body' });
 
-    const result = await staticDbPool.query(`SELECT * FROM liteapi_hotels WHERE id = $1`, [
+    const result = await getStaticPool().query(`SELECT * FROM liteapi_hotels WHERE id = $1`, [
       hotelId,
     ]);
 
@@ -729,7 +742,7 @@ router.post('/liteapi/hotel', async (req: Request, res: Response) => {
  */
 router.get('/liteapi/hotels', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
@@ -760,7 +773,7 @@ router.get('/liteapi/hotels', async (req: Request, res: Response) => {
     sql += ` LIMIT $${params.length + 1}`;
     params.push(Number(limit));
 
-    const result = await staticDbPool.query(sql, params);
+    const result = await getStaticPool().query(sql, params);
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     console.error('[LITEAPI] /liteapi/hotels error:', error.message);
@@ -803,7 +816,7 @@ router.get('/liteapi/hotels', async (req: Request, res: Response) => {
  */
 router.get('/liteapi/reviews', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool) {
+    if (!getStaticPool()) {
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
     }
 
@@ -813,7 +826,7 @@ router.get('/liteapi/reviews', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'hotelId is required' });
     }
 
-    const result = await staticDbPool.query(
+    const result = await getStaticPool().query(
       `
       SELECT * FROM liteapi_reviews
       WHERE hotel_id = $1
@@ -3878,9 +3891,9 @@ router.post('/loyalty/user/:userId/award-points', async (req: Request, res: Resp
 // Reference Data Routes (Standardized)
 router.get('/liteapi/facilities', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool)
+    if (!getStaticPool())
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
-    const result = await staticDbPool.query('SELECT * FROM liteapi_facilities ORDER BY name ASC');
+    const result = await getStaticPool().query('SELECT * FROM liteapi_facilities ORDER BY name ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -3889,9 +3902,9 @@ router.get('/liteapi/facilities', async (req: Request, res: Response) => {
 
 router.get('/liteapi/hotel-types', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool)
+    if (!getStaticPool())
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
-    const result = await staticDbPool.query('SELECT * FROM liteapi_hotel_types ORDER BY name ASC');
+    const result = await getStaticPool().query('SELECT * FROM liteapi_hotel_types ORDER BY name ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -3900,9 +3913,9 @@ router.get('/liteapi/hotel-types', async (req: Request, res: Response) => {
 
 router.get('/liteapi/chains', async (req: Request, res: Response) => {
   try {
-    if (!staticDbPool)
+    if (!getStaticPool())
       return res.status(503).json({ success: false, error: 'Static DB not configured' });
-    const result = await staticDbPool.query('SELECT * FROM liteapi_chains ORDER BY name ASC');
+    const result = await getStaticPool().query('SELECT * FROM liteapi_chains ORDER BY name ASC');
     res.json({ success: true, data: result.rows });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });

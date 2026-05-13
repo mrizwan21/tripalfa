@@ -1,6 +1,6 @@
 // React API client for wallet service (routed through centralized API)
 
-import { api } from '../lib/api';
+import { api } from '../lib/apiClient';
 
 /**
  * Get user's wallets with balances

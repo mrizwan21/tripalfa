@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Search, Filter, Trash2, Eye, Settings, Loader2 } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '../ui/input';
 import {
   Card,
@@ -341,7 +341,7 @@ export const NotificationCenter = () => {
 
                     {notification.actionUrl && (
                       <Button
-                        variant="default"
+                        variant="primary"
                         size="sm"
                         onClick={() => {
                           window.location.href = notification.actionUrl!;

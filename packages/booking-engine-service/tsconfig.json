@@ -7,12 +7,13 @@
     "rootDir": "./src",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "ignoreDeprecations": "5.0",
     "types": ["node"],
     "paths": {
       "@/*": ["src/*"],
-      "@tripalfa/shared-types": ["../../packages/shared-types"],
-      "@tripalfa/shared-types/*": ["../../packages/shared-types/*"]
+      "@tripalfa/shared-types": ["../../packages/shared-types/src"],
+      "@tripalfa/shared-types/*": ["../../packages/shared-types/src/*"],
+      "@tripalfa/shared-express": ["../../packages/shared-express/src"],
+      "@tripalfa/shared-express/*": ["../../packages/shared-express/src/*"]
     }
   },
   "include": ["src/**/*"],

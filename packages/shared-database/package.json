@@ -1,7 +1,7 @@
 {
   "name": "@tripalfa/shared-database",
   "version": "1.0.0",
-  "description": "Shared Prisma database client factory and connection pooling",
+  "description": "OpenAPI-compliant REST API for TripAlfa PostgreSQL databases",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,10 +9,6 @@
     ".": {
       "import": "./dist/src/index.js",
       "types": "./dist/src/index.d.ts"
-    },
-    "./repositories": {
-      "import": "./dist/src/repositories/index.js",
-      "types": "./dist/src/repositories/index.d.ts"
     }
   },
   "scripts": {
@@ -20,23 +16,43 @@
     "prebuild": "pnpm run db:generate",
     "postbuild": "cp -r generated dist/generated 2>/dev/null || true",
     "dev": "tsc --watch",
+    "start": "node dist/src/index.js",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
     "db:generate": "prisma generate --schema=./prisma/schema.prisma",
     "db:push": "prisma db push --schema=./prisma/schema.prisma",
+    "predb:migrate": "node -e \"const url = new URL(process.env.DATABASE_URL || ''); if (url.pathname.replace('/', '') === 'tripalfa_local') { console.error('\\x1b[31mERROR: Cannot run migrations against tripalfa_local static DB\\x1b[0m'); process.exit(1); }\"",
     "db:migrate": "prisma migrate dev --schema=./prisma/schema.prisma",
     "db:studio": "prisma studio --schema=./prisma/schema.prisma",
     "clean": "rm -rf dist",
     "db:seed": "tsx prisma/seed/index.ts"
   },
   "dependencies": {
-    "@prisma/client": "5.22.0",
-    "dotenv": "^17.3.1"
+    "@prisma/client": "7.7.0",
+    "@tripalfa/shared-openapi": "workspace:*",
+    "bcrypt": "^5.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.4.0",
-    "@types/bcryptjs": "^3.0.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^25.2.3",
+    "@types/pg": "^8.11.10",
+    "@types/uuid": "^9.0.8",
+    "@types/supertest": "^6.0.3",
     "bcryptjs": "^3.0.3",
-    "prisma": "5.22.0",
+    "prisma": "7.7.0",
+    "supertest": "^7.0.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }

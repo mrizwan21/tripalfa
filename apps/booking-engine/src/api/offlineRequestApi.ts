@@ -2,8 +2,6 @@ import axios, { AxiosInstance } from "axios";
 import type {
   OfflineChangeRequest,
   CreateOfflineRequestPayload,
-  SubmitPricingPayload,
-  OfflineRequestAuditLog,
 } from "../../../../packages/shared-types/src/index.js";
 
 interface PaginatedResult<T> {
@@ -35,7 +33,7 @@ interface PaymentRecordResponse {
 
 class OfflineRequestApi {
   private api: AxiosInstance;
-  private baseURL = import.meta.env.VITE_API_URL || "http://localhost:3001/api";
+  private baseURL = import.meta.env.VITE_GATEWAY_URL || "/api";
 
   constructor() {
     this.api = axios.create({
@@ -43,6 +41,7 @@ class OfflineRequestApi {
       headers: {
         "Content-Type": "application/json",
       },
+      timeout: 10000, // 10s timeout for Kong requests
     });
 
     // Add auth token to requests
@@ -53,6 +52,18 @@ class OfflineRequestApi {
       }
       return config;
     });
+
+    // Error handling interceptor
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (!error.response) {
+          console.error("Kong Gateway unreachable:", error.message);
+          // You could trigger a fallback here or show a notification
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   /**
@@ -170,7 +181,7 @@ class OfflineRequestApi {
    */
   async submitPricing(
     requestId: string,
-    payload: SubmitPricingPayload,
+    payload: any,
   ): Promise<OfflineChangeRequest> {
     try {
       const response = await this.api.put<{
@@ -333,7 +344,7 @@ class OfflineRequestApi {
     limit = 100,
     offset = 0,
   ): Promise<{
-    items: OfflineRequestAuditLog[];
+    items: any[];
     total: number;
     limit: number;
     offset: number;
@@ -342,7 +353,7 @@ class OfflineRequestApi {
       const response = await this.api.get<{
         success: boolean;
         data: {
-          items: OfflineRequestAuditLog[];
+          items: any[];
           total: number;
           limit: number;
           offset: number;

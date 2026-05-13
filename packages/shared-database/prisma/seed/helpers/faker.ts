@@ -120,7 +120,6 @@ export function pickN<T>(arr: readonly T[], n: number): T[] {
 // ─── IATA codes pool ──────────────────────────────────────────────────────────
 export const AIRPORTS = ['DXB', 'LHR', 'JFK', 'CDG', 'SIN', 'BOM', 'DOH', 'BAH', 'RUH', 'CAI', 'IST', 'FCO', 'AMS', 'FRA', 'BKK'];
 export const AIRLINES = ['EK', 'QR', 'EY', 'SV', 'GF', 'MS', 'TK', 'LH', 'BA', 'AF'];
-export const CURRENCIES = ['USD', 'BHD', 'SAR'];
 export const COUNTRIES = ['Bahrain', 'Saudi Arabia', 'UAE', 'Kuwait', 'Oman', 'Jordan', 'Egypt', 'United Kingdom', 'India', 'USA'];
 
 // ─── Log helper ───────────────────────────────────────────────────────────────

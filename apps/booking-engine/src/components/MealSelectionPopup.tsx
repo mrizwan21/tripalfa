@@ -154,7 +154,7 @@ export const MealSelectionPopup = ({
             {passengers.map((p) => (
               <Button
                 variant="outline"
-                size="default"
+                size="md"
                 key={p.id}
                 onClick={() => setSelectedPassenger(p.id)}
                 className={`px-6 h-12 rounded-[2rem] flex items-center gap-3 border transition-all ${

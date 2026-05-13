@@ -1,13 +1,11 @@
 import React from 'react';
 import { cn } from '@tripalfa/shared-utils/utils';
-import { Repeat, ArrowRight, ArrowLeftRight } from 'lucide-react';
 
 export type TripType = 'roundtrip' | 'oneway' | 'multicity';
 
 interface TripTypeOption {
   id: TripType;
   label: string;
-  icon: React.ElementType;
 }
 
 interface TripTypeSelectorProps {
@@ -17,15 +15,15 @@ interface TripTypeSelectorProps {
 }
 
 const tripTypes: TripTypeOption[] = [
-  { id: 'roundtrip', label: 'Round Trip', icon: Repeat },
-  { id: 'oneway', label: 'One Way', icon: ArrowRight },
-  { id: 'multicity', label: 'Multi-city', icon: ArrowLeftRight },
+  { id: 'roundtrip', label: 'Round trip' },
+  { id: 'oneway', label: 'One way' },
+  { id: 'multicity', label: 'Multi-city' },
 ];
 
 export function TripTypeSelector({ value, onChange, className }: TripTypeSelectorProps) {
   return (
-    <div className={cn('inline-flex items-center gap-1', className)}>
-      {tripTypes.map(({ id, label, icon: Icon }) => {
+    <div className={cn('inline-flex items-center bg-gray-100 rounded-lg p-1', className)}>
+      {tripTypes.map(({ id, label }) => {
         const isActive = id === value;
         return (
           <button
@@ -33,14 +31,13 @@ export function TripTypeSelector({ value, onChange, className }: TripTypeSelecto
             type="button"
             onClick={() => onChange(id)}
             className={cn(
-              'relative flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 outline-none',
+              'relative px-4 py-1.5 text-sm font-medium transition-all duration-200 outline-none rounded-md',
               isActive
-                ? 'bg-[#F45D48] text-white shadow-sm'
-                : 'text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]'
+                ? 'bg-white text-[#003b95] shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
             )}
           >
-            <Icon className="h-3.5 w-3.5" strokeWidth={isActive ? 2.5 : 2} />
-            <span>{label}</span>
+            {label}
           </button>
         );
       })}

@@ -5,15 +5,7 @@
  * All requests go through the centralized API layer
  */
 
-import type { api as ApiClientInstance } from "../lib/apiClient";
-
-// Lazy import to avoid circular dependency
-type ApiClient = typeof ApiClientInstance;
-let api: ApiClient | undefined;
-function getApi() {
-  if (!api) api = require("../lib/api").api as ApiClient;
-  return api;
-}
+import { api } from "../lib/apiClient";
 
 // Do not use provider secrets in frontend; all calls must go via backend
 const API_ENV = import.meta.env.VITE_DUFFEL_ENV || "test";

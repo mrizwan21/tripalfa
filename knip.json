@@ -49,12 +49,12 @@
     "packages/resilience/src/**",
     "packages/fusionauth-client/src/types.ts",
     "packages/static-data/src/scripts/**",
-    "packages/shared-database/src/index.ts",
     "packages/static-data/src/frontend-index.ts",
+    "**/generated/**",
     "vitest.config.ts",
     "vitest.workspace.ts"
   ],
-  "ignoreBinaries": ["prisma", "playwright"],
+  "ignoreBinaries": ["prisma", "playwright", "nodemon"],
   "ignoreExportsUsedInFile": true,
   "ignoreDependencies": [
     "@types/mapbox-gl",
@@ -76,6 +76,8 @@
     "@types/swagger-ui-express",
     "@types/swagger-jsdoc",
     "@types/bcryptjs",
+    "@faker-js/faker",
+    "bcryptjs",
     "@vitest/coverage-v8",
     "@types/supertest",
     "openapi3-ts",
@@ -179,7 +181,7 @@
     },
     "packages/*": {
       "entry": ["src/index.ts", "index.ts"],
-      "project": ["**/*.{ts,tsx}", "!dist/**"]
+      "project": ["**/*.{ts,tsx}", "!dist/**", "!generated/**"]
     },
     "packages/ui-components": {
       "entry": ["src/index.ts", "index.ts"],

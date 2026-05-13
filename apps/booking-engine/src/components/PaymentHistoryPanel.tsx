@@ -14,8 +14,8 @@ import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
 import PaymentReceiptModal from './PaymentReceiptModal';
-import { Button } from '../ui/button';
-import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
+import { Button } from '@/components/ui/button';
+import { formatDateTime } from '@tripalfa/shared-utils';
 
 interface Payment {
   id: string;
@@ -157,7 +157,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
       {error && (
         <div className="error-message">
           <span>⚠️ {error}</span>
-          <Button variant="outline" size="default" onClick={fetchPaymentHistory}>
+          <Button variant="outline" size="md" onClick={fetchPaymentHistory}>
             Retry
           </Button>
         </div>
@@ -187,7 +187,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
               <div className="col col-date">
                 <Button
                   variant="outline"
-                  size="default"
+                  size="md"
                   className="sort-btn"
                   onClick={() => handleSort('date')}
                 >
@@ -201,7 +201,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
               <div className="col col-amount">
                 <Button
                   variant="outline"
-                  size="default"
+                  size="md"
                   className="sort-btn"
                   onClick={() => handleSort('amount')}
                 >
@@ -212,7 +212,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
               <div className="col col-status">
                 <Button
                   variant="outline"
-                  size="default"
+                  size="md"
                   className="sort-btn"
                   onClick={() => handleSort('status')}
                 >
@@ -266,7 +266,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                   <div className="col col-actions">
                     <Button
                       variant="outline"
-                      size="default"
+                      size="md"
                       className="action-btn"
                       onClick={() => handleDownloadReceipt(payment)}
                       title="Download receipt"
@@ -276,7 +276,7 @@ const PaymentHistoryPanel: FC<PaymentHistoryPanelProps> = ({ customerId }) => {
                     {payment.paymentBreakdown && (
                       <Button
                         variant="outline"
-                        size="default"
+                        size="md"
                         className="action-btn"
                         title="View breakdown"
                         onClick={() =>

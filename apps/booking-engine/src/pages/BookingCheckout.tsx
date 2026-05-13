@@ -23,20 +23,16 @@ import {
 import { Button } from '../components/ui/button';
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { formatCurrency } from '@tripalfa/ui-components';
+import { api, fetchAddonPrices, fetchWallets, confirmFlightBooking, confirmHotelBooking } from '../lib/api';
 import {
-  api,
-  confirmFlightBooking,
-  confirmHotelBooking,
-  fetchWallets,
-  confirmFlightOrder,
   createPaymentIntent,
+  confirmFlightOrder,
   getPaymentMethods,
   getOrderPaymentMethods,
   confirmPayment,
-  processSupplierPayment,
-  fetchAddonPrices,
-} from '../lib/api';
+} from '../services/duffelBookingApi';
 import { createFlightOrder } from '../services/duffelApiManager';
+import { processSupplierPayment } from '../services/supplierPaymentApi';
 import { useQuery } from '@tanstack/react-query';
 import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 import { calculatePricingBreakdown } from '@/lib/tenantRuntimeConfig';
@@ -392,51 +388,50 @@ function BookingCheckout() {
 
   return (
     <TripLogerLayout>
-      <div
-        className="bg-[hsl(var(--background))] min-h-screen pb-24 font-sans"
-        data-testid="checkout-page"
-      >
-        {/* Confirmation Modal - Elite Style */}
+      <div className="bg-gray-50 min-h-screen pb-24" data-testid="checkout-page">
+        {/* Confirmation Modal - OTA Style */}
         {showConfirmation && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 gap-2">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-[hsl(var(--primary)/0.8)] backdrop-blur-md animate-in fade-in duration-500"
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowConfirmation(false)}
             />
-            <div className="relative bg-card w-full max-w-lg rounded-[3rem] shadow-2xl p-12 flex flex-col items-center animate-in zoom-in-95 duration-300 border border-border">
-              <div className="w-24 h-24 rounded-full bg-purple-50 flex items-center justify-center text-foreground mb-8 shadow-xl shadow-purple-50 gap-2">
+            <div className="relative bg-white w-full max-w-lg rounded-xl border border-gray-100 shadow-lg p-8 flex flex-col items-center">
+              <div className="w-24 h-24 rounded-full bg-[#003b95]/10 flex items-center justify-center text-[#003b95] mb-8">
                 <Wallet size={40} />
               </div>
-              <h2 className="text-2xl font-black text-foreground tracking-tight text-center mb-4">
+              <h2 className="text-2xl font-bold text-[#1d1d1f] mb-4 text-center">
                 Confirm Payment
               </h2>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest text-center mb-10 leading-relaxed max-w-xs">
+              <p className="text-sm text-gray-600 text-center mb-10 leading-relaxed max-w-xs">
                 You are about to authorize a payment of {formatCurrency(totalPayable)} from your
                 TripLoger Wallet.
               </p>
 
-              <div className="w-full bg-muted rounded-3xl p-8 mb-10 space-y-4">
-                <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
+              <div className="w-full bg-gray-50 rounded-xl p-6 mb-10 space-y-4 border border-gray-100">
+                <div className="flex justify-between text-sm text-gray-600 px-2">
                   <span>Available Balance</span>
-                  <span className="text-foreground">{formatCurrency(walletBalance)}</span>
+                  <span className="text-[#1d1d1f] font-semibold">{formatCurrency(walletBalance)}</span>
                 </div>
-                <div className="h-px bg-border/50" />
-                <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
+                <div className="h-px bg-gray-200" />
+                <div className="flex justify-between text-sm text-gray-600 px-2">
                   <span>Transaction Amount</span>
-                  <span className="text-red-500">{formatCurrency(totalPayable)}</span>
+                  <span className="text-red-600 font-semibold">{formatCurrency(totalPayable)}</span>
                 </div>
-                <div className="h-px bg-border/50" />
-                <div className="flex justify-between text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
+                <div className="h-px bg-gray-200" />
+                <div className="flex justify-between text-sm text-gray-600 px-2">
                   <span>Remaining Balance</span>
-                  <span className="text-green-600 font-black">
+                  <span className="text-green-600 font-semibold">
                     {formatCurrency(walletBalance - totalPayable)}
                   </span>
                 </div>
                 {holdDeadlineLabel && (
                   <>
-                    <div className="h-px bg-border/50" />
+                    <div className="h-px bg-gray-200" />
                     <div
-                      className={`flex justify-between text-[10px] font-black uppercase tracking-widest px-2 gap-4 ${holdDeadlineExpired ? 'text-red-500' : 'text-amber-600'}`}
+                      className={`flex justify-between text-sm px-2 ${
+                        holdDeadlineExpired ? 'text-red-600' : 'text-yellow-600'
+                      }`}
                     >
                       <span>Hold Expires</span>
                       <span>{holdDeadlineLabel}</span>
@@ -446,45 +441,40 @@ function BookingCheckout() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 w-full">
-                <Button
-                  variant="outline"
+                <button
                   onClick={() => setShowConfirmation(false)}
-                  className="h-14 rounded-2xl border-2 border-border text-muted-foreground font-black text-[10px] uppercase tracking-widest hover:bg-muted transition-all active:scale-95"
+                  className="h-12 border border-gray-200 rounded-lg text-gray-700 font-semibold text-sm hover:bg-gray-50 transition-colors"
                 >
                   Cancel
-                </Button>
+                </button>
                 {hasInsufficientBalance && runtimeConfig.features.walletTopupEnabled ? (
-                  <Button
-                    variant="secondary"
+                  <button
                     onClick={() => navigate('/wallet/topup')}
-                    className="h-14 rounded-2xl text-foreground font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="h-12 bg-gray-900 text-white rounded-lg font-semibold text-sm hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
                   >
                     Top-up Wallet <Plus size={16} strokeWidth={3} />
-                  </Button>
+                  </button>
                 ) : hasInsufficientBalance ? (
-                  <Button
-                    variant="secondary"
+                  <button
                     disabled
-                    className="h-14 rounded-2xl text-muted-foreground font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="h-12 bg-gray-100 text-gray-400 rounded-lg font-semibold text-sm cursor-not-allowed"
                   >
                     Insufficient Balance
-                  </Button>
+                  </button>
                 ) : (
-                  <Button
-                    variant="primary"
+                  <button
                     onClick={handleConfirmPayment}
                     disabled={isProcessing}
-                    data-testid="confirm-pay-button"
-                    className="h-14 rounded-2xl text-primary-foreground font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+                    className="h-12 bg-[#003b95] text-white rounded-lg font-semibold text-sm shadow-md hover:bg-[#002a6e] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     {isProcessing ? (
-                      <div className="w-5 h-5 border-2 border-primary-foreground/20 border-t-primary-foreground rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <>
                         Confirm & Pay <Check size={16} strokeWidth={3} />
                       </>
                     )}
-                  </Button>
+                  </button>
                 )}
               </div>
             </div>
@@ -492,39 +482,39 @@ function BookingCheckout() {
         )}
 
         <div className="container mx-auto px-4 max-w-7xl pt-16">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Left Col: Review & Payment */}
-            <div className="lg:col-span-8 space-y-10">
+            <div className="lg:col-span-8 space-y-8">
               <div className="space-y-2">
-                <h1 className="text-4xl font-black text-foreground tracking-tight">Review & Pay</h1>
-                <p className="text-[11px] font-black text-muted-foreground uppercase tracking-[0.3em]">
+                <h1 className="text-3xl md:text-4xl font-bold text-[#1d1d1f] tracking-tight">
+                  Review & Pay
+                </h1>
+                <p className="text-sm font-bold text-[#003b95] uppercase tracking-widest">
                   Securely complete your premium booking
                 </p>
               </div>
 
               {/* Booking Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-card rounded-[2.5rem] border border-border p-10 space-y-6">
-                  <div className="flex items-center gap-4 border-b border-border/50 pb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-500 gap-2">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-6 space-y-6">
+                  <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                    <div className="w-12 h-12 rounded-xl bg-[#003b95]/10 flex items-center justify-center text-[#003b95]">
                       <User size={24} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
+                      <h3 className="text-sm font-bold text-[#003b95] uppercase tracking-wider">
                         Travelers
                       </h3>
-                      <p className="text-[9px] font-bold text-muted-foreground">
-                        {passengers.length} Passenger(s)
-                      </p>
+                      <p className="text-xs text-gray-500">{passengers.length} Passenger(s)</p>
                     </div>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {passengers.map((p: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-bold text-foreground">
+                      <div key={i} className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-gray-900">
                           {p.firstName} {p.lastName}
                         </span>
-                        <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                           {i === 0 ? 'Primary' : 'Adult'}
                         </span>
                       </div>
@@ -532,21 +522,21 @@ function BookingCheckout() {
                   </div>
                 </div>
 
-                <div className="bg-card rounded-[2.5rem] border border-border p-10 space-y-6">
-                  <div className="flex items-center gap-4 border-b border-border/50 pb-6">
-                    <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-500 gap-2">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-6 space-y-6">
+                  <div className="flex items-center gap-4 border-b border-gray-100 pb-4">
+                    <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center text-green-600">
                       <MapPin size={24} />
                     </div>
                     <div>
-                      <h3 className="text-xs font-black text-foreground uppercase tracking-widest text-xl font-semibold tracking-tight">
+                      <h3 className="text-sm font-bold text-[#003b95] uppercase tracking-wider">
                         Billing Address
                       </h3>
-                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <p className="text-xs text-gray-500">
                         {billingAddress?.city}, {billingAddress?.country}
                       </p>
                     </div>
                   </div>
-                  <p className="text-[11px] font-bold text-muted-foreground leading-relaxed uppercase tracking-tighter">
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     {billingAddress?.street}
                     <br />
                     {billingAddress?.city}, {billingAddress?.zipCode}
@@ -556,50 +546,54 @@ function BookingCheckout() {
                 </div>
               </div>
 
-              {/* Payment Banner */}
-              <div className="bg-secondary rounded-[3.5rem] p-1 shadow-2xl shadow-yellow-500/10">
-                <div className="bg-[hsl(var(--primary))] rounded-[3.4rem] p-12 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-primary-foreground/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-[3s]" />
+              {/* Payment Banner - OTA Style */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                <div className="bg-[#003b95] p-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
-                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
-                    <div className="flex-1 space-y-10">
-                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-secondary flex items-center justify-center text-secondary-foreground gap-2">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div className="flex-1 space-y-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white">
                           <Wallet size={32} />
                         </div>
-                        <div className="space-y-2">
-                          <h2 className="text-xl font-black text-primary-foreground tracking-tight text-2xl font-semibold tracking-tight">
+                        <div className="space-y-1">
+                          <h2 className="text-xl font-bold text-white tracking-tight">
                             TripLoger Wallet
                           </h2>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+                          <p className="text-xs font-bold text-white/60 uppercase tracking-widest">
                             Authorized for Elite Access
                           </p>
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        <p className="text-xs font-bold text-white/60 uppercase tracking-widest">
                           Balance Available
                         </p>
                         <p
-                          className={`text-5xl font-black tracking-tighter ${hasInsufficientBalance ? 'text-red-500' : 'text-primary-foreground'}`}
+                          className={`text-4xl font-bold tracking-tighter ${
+                            hasInsufficientBalance ? 'text-red-300' : 'text-white'
+                          }`}
                         >
                           {formatCurrency(walletBalance)}
                         </p>
                         {hasInsufficientBalance && (
-                          <div className="flex items-center gap-2 text-red-500/80">
+                          <div className="flex items-center gap-2 text-red-300">
                             <Info size={12} />
-                            <span className="text-[9px] font-black uppercase tracking-widest">
+                            <span className="text-xs font-bold uppercase tracking-widest">
                               Insufficient funds for this booking
                             </span>
                           </div>
                         )}
                         {holdDeadlineLabel && (
                           <div
-                            className={`flex items-center gap-2 ${holdDeadlineExpired ? 'text-red-500' : 'text-amber-500'}`}
+                            className={`flex items-center gap-2 ${
+                              holdDeadlineExpired ? 'text-red-300' : 'text-yellow-300'
+                            }`}
                           >
                             <Info size={12} />
-                            <span className="text-[9px] font-black uppercase tracking-widest">
+                            <span className="text-xs font-bold uppercase tracking-widest">
                               Hold payment required by {holdDeadlineLabel}
                             </span>
                           </div>
@@ -607,73 +601,68 @@ function BookingCheckout() {
                       </div>
                     </div>
 
-                    <div className="w-full md:w-64">
+                    <div className="w-full md:w-auto">
                       {hasInsufficientBalance && runtimeConfig.features.walletTopupEnabled ? (
-                        <Button
-                          variant="secondary"
+                        <button
                           onClick={() => navigate('/wallet/topup')}
-                          className="w-full h-16 text-secondary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
+                          className="w-full h-14 bg-white text-[#003b95] rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 shadow-md"
                         >
                           Top-up Wallet <Plus size={16} strokeWidth={3} />
-                        </Button>
+                        </button>
                       ) : hasInsufficientBalance ? (
-                        <Button
-                          variant="secondary"
+                        <button
                           disabled
-                          className="w-full h-16 text-muted-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                          className="w-full h-14 bg-white/10 text-white/40 rounded-lg font-semibold text-sm cursor-not-allowed"
                         >
                           Insufficient Balance
-                        </Button>
+                        </button>
                       ) : (
-                        <Button
-                          variant="secondary"
+                        <button
                           onClick={() => setShowConfirmation(true)}
                           data-testid="complete-booking-button"
-                          className="w-full h-16 text-secondary-foreground rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
+                          className="w-full h-14 bg-white text-[#003b95] rounded-lg font-semibold text-sm hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 shadow-md"
                         >
                           Complete Booking <ArrowRight size={16} strokeWidth={3} />
-                        </Button>
+                        </button>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-card rounded-[2.5rem] border border-border p-8 flex items-center justify-between gap-2">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 gap-2">
+                  <div className="w-10 h-10 rounded-full bg-[#003b95]/10 flex items-center justify-center text-[#003b95]">
                     <Lock size={20} />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-xs font-black text-foreground tracking-tight">
+                    <p className="text-sm font-semibold text-gray-900 tracking-tight">
                       Shielded Payments
                     </p>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">
                       256-bit AES protection active
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <CheckCircle2 size={24} className="text-green-500" />
-                </div>
+                <CheckCircle2 size={24} className="text-green-600" />
               </div>
             </div>
 
             {/* Right Col: Summary Sidebar */}
             <div className="lg:col-span-4 space-y-8">
-              <div className="bg-card rounded-[3rem] border border-border shadow-sm overflow-hidden p-8 sticky top-32">
-                <div className="space-y-10">
-                  <p className="text-[10px] font-black text-foreground uppercase tracking-[0.3em]">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-8 sticky top-8">
+                <div className="space-y-6">
+                  <p className="text-sm font-bold text-[#003b95] uppercase tracking-widest">
                     Final Summary
                   </p>
-                  <h3 className="text-xl font-black text-foreground tracking-tight leading-tight">
+                  <h3 className="text-xl font-bold text-[#1d1d1f] tracking-tight leading-tight">
                     {summary?.type === 'hotel' ? summary?.hotel?.name : 'Elite Business Class'}
                   </h3>
 
-                  <div className="bg-muted rounded-[2rem] p-6 space-y-6">
-                    <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
+                  <div className="bg-gray-50 rounded-xl p-6 space-y-4 border border-gray-100">
+                    <div className="flex justify-between items-center text-sm text-gray-600">
                       <span>{summary?.type === 'hotel' ? 'Accommodation' : 'Fare & Taxes'}</span>
-                      <span className="text-foreground">
+                      <span className="text-gray-900 font-semibold">
                         {formatCurrency(
                           summary?.type === 'hotel'
                             ? summary?.hotel?.price || 0
@@ -682,48 +671,49 @@ function BookingCheckout() {
                       </span>
                     </div>
                     {selectedAddOns.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="h-px bg-border/50" />
-                        <p className="text-[9px] font-black text-foreground uppercase tracking-widest">
+                      <div className="space-y-2">
+                        <div className="h-px bg-gray-200" />
+                        <p className="text-xs font-bold text-[#003b95] uppercase tracking-widest">
                           Specialized Services
                         </p>
                         {selectedAddOns.map(item => (
-                          <div
-                            key={item.id}
-                            className="flex justify-between text-[10px] font-bold text-muted-foreground gap-4"
-                          >
+                          <div key={item.id} className="flex justify-between text-sm text-gray-600">
                             <span>{item.label}</span>
-                            <span>{formatCurrency(item.price)}</span>
+                            <span className="font-semibold">{formatCurrency(item.price)}</span>
                           </div>
                         ))}
                       </div>
                     )}
                     {pricingBreakdown.markupAmount > 0 && (
-                      <div className="flex justify-between text-[10px] font-bold text-muted-foreground gap-4">
+                      <div className="flex justify-between text-sm text-gray-600">
                         <span>Markup</span>
-                        <span>{formatCurrency(pricingBreakdown.markupAmount)}</span>
+                        <span className="font-semibold">
+                          {formatCurrency(pricingBreakdown.markupAmount)}
+                        </span>
                       </div>
                     )}
                     {pricingBreakdown.commissionAmount > 0 && (
-                      <div className="flex justify-between text-[10px] font-bold text-muted-foreground gap-4">
+                      <div className="flex justify-between text-sm text-gray-600">
                         <span>Commission</span>
-                        <span>{formatCurrency(pricingBreakdown.commissionAmount)}</span>
+                        <span className="font-semibold">
+                          {formatCurrency(pricingBreakdown.commissionAmount)}
+                        </span>
                       </div>
                     )}
-                    <div className="h-px bg-foreground/10" />
-                    <div className="flex justify-between items-center gap-4">
-                      <span className="text-sm font-black text-foreground uppercase tracking-widest">
+                    <div className="h-px bg-gray-200" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-gray-900 uppercase tracking-widest">
                         Total Due
                       </span>
-                      <span className="text-3xl font-black text-foreground tracking-tighter">
+                      <span className="text-3xl font-bold text-[#003b95] tracking-tight">
                         {formatCurrency(totalPayable)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-5 bg-purple-50 rounded-2xl flex gap-3 border border-purple-100/50">
-                    <Sparkles size={16} className="text-foreground shrink-0" />
-                    <p className="text-[10px] font-bold text-purple-700 leading-relaxed uppercase tracking-wider">
+                  <div className="p-5 bg-[#003b95]/10 rounded-xl flex gap-3 border border-[#003b95]/20">
+                    <Sparkles size={16} className="text-[#003b95] shrink-0 mt-0.5" />
+                    <p className="text-xs font-bold text-[#1d1d1f] leading-relaxed">
                       {summary?.type === 'hotel'
                         ? 'Early check-in and breakfast included.'
                         : 'Premium booking perks applied. Priority boarding included.'}

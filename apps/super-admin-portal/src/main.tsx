@@ -1,12 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Buffer } from 'buffer'
 import './index.css'
 import AppRouter from './AppRouter.tsx'
 
-if (typeof window !== 'undefined') {
-  window.Buffer = Buffer
+if (typeof window !== 'undefined' && !window.Buffer) {
+  import('buffer').then(({ Buffer }) => {
+    window.Buffer = Buffer
+  }).catch(() => {})
 }
 
 const tripAlfaQueryDefaults = {

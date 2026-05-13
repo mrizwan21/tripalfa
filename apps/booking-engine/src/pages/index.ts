@@ -24,6 +24,7 @@ export { default as Wallet } from "./Wallet";
 export { default as WalletTopUp } from "./WalletTopUp";
 export { default as WalletTransfer } from "./WalletTransfer";
 export { default as Profile } from "./Profile";
+export { default as ProfileWizard } from "./ProfileWizard";
 export { default as AccountSettings } from "./AccountSettings";
 export { default as Loyalty } from "./Loyalty";
 export { default as Dashboard } from "./Dashboard";

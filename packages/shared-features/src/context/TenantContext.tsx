@@ -4,79 +4,84 @@ import { apiManager } from '../services/apiManager';
 import type { TenantConfig } from '../types';
 export type { TenantConfig };
 
-const DEFAULT_TENANTS: Record<string, TenantConfig> = {
-  'saba': {
-    id: 'saba',
-    name: 'Saba Travel & Holidays',
-    logo: 'SABA',
-    primaryColor: '#0f172a', // Navy
-    secondaryColor: '#f0c040', // Gold
-    accentColor: '#3b82f6', // Blue
-    currency: 'BHD',
-    supportPhone: '+973 1234 5678',
-    supportEmail: 'support@sabatravel.com'
-  },
-  'elite': {
-    id: 'elite',
-    name: 'Elite World Holidays',
-    logo: 'ELITE',
-    primaryColor: '#4c0519', // Maroon/Wine
-    secondaryColor: '#9f1239', // Rose
-    accentColor: '#10b981', // Emerald
-    currency: 'USD',
-    supportPhone: '+44 20 7946 0958',
-    supportEmail: 'vip@eliteholidays.com'
-  },
-  'global': {
-    id: 'global',
-    name: 'Global Reach B2B',
-    logo: 'GLOBAL',
-    primaryColor: '#064e3b', // Dark Emerald
-    secondaryColor: '#059669', // Medium Emerald
-    accentColor: '#f59e0b', // Amber
-    currency: 'SAR',
-    supportPhone: '+966 50 123 4567',
-    supportEmail: 'contact@globalreach.sa'
-  }
-};
-
 interface TenantContextType {
- tenant: TenantConfig;
- setTenantById: (id: string) => void;
- availableTenants: string[];
+  tenant: TenantConfig;
+  setTenantById: (id: string) => void;
+  availableTenants: TenantConfig[];
+  isLoading: boolean;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export function TenantProvider({ children }: { children: ReactNode }) {
- const [tenant, setTenant] = useState<TenantConfig>(DEFAULT_TENANTS['saba']);
+  const [tenant, setTenant] = useState<TenantConfig | null>(null);
+  const [availableTenants, setAvailableTenants] = useState<TenantConfig[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
- const setTenantById = (id: string) => {
- if (DEFAULT_TENANTS[id]) {
- setTenant(DEFAULT_TENANTS[id]);
- }
- };
+  useEffect(() => {
+    const loadTenants = async () => {
+      try {
+        const response = await apiManager.getTenants();
+        const tenants = response.data || [];
+        setAvailableTenants(tenants);
+        if (tenants.length > 0 && !tenant) {
+          setTenant(tenants[0]);
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) console.error('Failed to load tenants:', error);
+        // Fallback to default tenant
+        const defaultTenant: TenantConfig = {
+          id: 'default',
+          name: 'Default Travel',
+          logo: 'DEFAULT',
+          primaryColor: '#003b95',
+          secondaryColor: '#f0c040',
+          accentColor: '#10b981',
+          currency: 'USD',
+          supportPhone: '',
+          supportEmail: ''
+        };
+        setTenant(defaultTenant);
+        setAvailableTenants([defaultTenant]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadTenants();
+  }, []);
 
- useEffect(() => {
- // Inject CSS variables for dynamic branding
- const root = document.documentElement;
- root.style.setProperty('--navy', tenant.primaryColor);
- root.style.setProperty('--gold', tenant.secondaryColor);
- root.style.setProperty('--gold-dark', tenant.secondaryColor); // Shorthand for now
- root.style.setProperty('--accent-color', tenant.accentColor);
- 
- // Update document title for the tenant
- document.title = `${tenant.name} | B2B Portal`;
+  const setTenantById = (id: string) => {
+    const found = availableTenants.find(t => t.id === id);
+    if (found) {
+      setTenant(found);
+    }
+  };
 
- // Inject active tenant ID into centralized API gateway configuration
- apiManager.setTenantContext(tenant.id);
- }, [tenant]);
+  useEffect(() => {
+    if (!tenant) return;
+    // Inject CSS variables for dynamic branding
+    const root = document.documentElement;
+    root.style.setProperty('--navy', tenant.primaryColor);
+    root.style.setProperty('--gold', tenant.secondaryColor);
+    root.style.setProperty('--gold-dark', tenant.secondaryColor);
+    root.style.setProperty('--accent-color', tenant.accentColor);
 
- return (
- <TenantContext.Provider value={{ tenant, setTenantById, availableTenants: Object.keys(DEFAULT_TENANTS) }}>
- {children}
- </TenantContext.Provider>
- );
+    // Update document title for the tenant
+    document.title = `${tenant.name} | B2B Portal`;
+
+    // Inject active tenant ID into centralized API gateway configuration
+    apiManager.setTenantContext(tenant.id);
+  }, [tenant]);
+
+  if (isLoading || !tenant) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  return (
+    <TenantContext.Provider value={{ tenant, setTenantById, availableTenants, isLoading }}>
+      {children}
+    </TenantContext.Provider>
+  );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

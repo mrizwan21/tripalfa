@@ -56,7 +56,7 @@ export async function loadTenantBranding(): Promise<TenantBrandingConfig> {
   const cachedConfig = parseCachedBranding();
 
   try {
-    const response = await api.get<BrandingApiResponse>('/branding/colors');
+    const response = await api.get<BrandingApiResponse>('/api/branding/colors');
     const remoteConfig = response?.data;
     if (remoteConfig && typeof remoteConfig === 'object') {
       const normalized = normalizeBrandingConfig(remoteConfig);

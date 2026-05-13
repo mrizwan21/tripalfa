@@ -1,3 +1,5 @@
+export { EnhancedSearchWidget } from './EnhancedSearchWidget';
+
 export { SearchTabs } from './SearchTabs';
 export type { SearchTab } from './SearchTabs';
 
@@ -8,7 +10,7 @@ export { TravelerSelector } from './TravelerSelector';
 export type { TravelerConfig } from './TravelerSelector';
 
 export { FlightSearchForm } from './FlightSearchForm';
-export type { FlightSearchData } from './FlightSearchForm';
+export type { FlightSearchData, TravelerConfig as FlightTravelerConfig } from './FlightSearchForm';
 
 export { HotelSearchForm } from './HotelSearchForm';
 export type { HotelSearchData } from './HotelSearchForm';

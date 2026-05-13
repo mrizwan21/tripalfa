@@ -117,7 +117,7 @@ export function BookingAmendmentPopup({
             {menuItems.map((item) => (
               <Button
                 variant="outline"
-                size="default"
+                size="md"
                 key={item.id}
                 onClick={() => setActiveType(item.id)}
                 className={`w-full text-left px-5 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 ${
@@ -391,7 +391,7 @@ export function BookingAmendmentPopup({
                         {f.name}
                         <Button
                           variant="outline"
-                          size="default"
+                          size="md"
                           onClick={() =>
                             setFiles(files.filter((_, idx) => idx !== i))
                           }
@@ -410,8 +410,8 @@ export function BookingAmendmentPopup({
           {/* Footer Actions */}
           <div className="h-24 border-t border-border flex items-center justify-center bg-muted/50 backdrop-blur-sm px-8 gap-4">
             <Button
-              variant="default"
-              size="default"
+              variant="primary"
+              size="md"
               onClick={onClose}
               className="h-12 w-32 border border-border text-muted-foreground rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-card hover:border-border/80 transition-all"
             >
@@ -419,7 +419,7 @@ export function BookingAmendmentPopup({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className="h-12 w-48 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-200 hover:shadow-2xl hover:-translate-y-1 transition-all active:scale-95 active:translate-y-0"
             >
               Submit Request

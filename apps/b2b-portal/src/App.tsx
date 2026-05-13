@@ -3,8 +3,7 @@ import {
   AppProvider, 
   useApp, 
   TenantProvider, 
-  UserRole,
-  apiManager 
+  UserRole
 } from '@tripalfa/shared-features';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -48,7 +47,12 @@ import {
   CreditFacilityPage,
   CompanyProfilePage,
   SubAgentPermissionPage,
-  RolePermissionPage
+  RolePermissionPage,
+  B2BAdminPage,
+  B2BTenantsPage,
+  B2BPartnersPage,
+  B2BAgreementsPage,
+  B2BBookingsPage
 } from '@tripalfa/shared-features';
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: UserRole[] }) {
@@ -114,6 +118,13 @@ function AppRoutes() {
       <Route path="/company-profile" element={<ProtectedRoute allowedRoles={['Admin']}><CompanyProfilePage /></ProtectedRoute>} />
       <Route path="/sub-agent-permissions" element={<ProtectedRoute allowedRoles={['Admin']}><SubAgentPermissionPage /></ProtectedRoute>} />
       <Route path="/roles-permissions" element={<ProtectedRoute allowedRoles={['Admin']}><RolePermissionPage /></ProtectedRoute>} />
+      
+      {/* B2B Admin Pages */}
+      <Route path="/b2b" element={<ProtectedRoute allowedRoles={['Admin']}><B2BAdminPage /></ProtectedRoute>} />
+      <Route path="/b2b/tenants" element={<ProtectedRoute allowedRoles={['Admin']}><B2BTenantsPage /></ProtectedRoute>} />
+      <Route path="/b2b/partners" element={<ProtectedRoute allowedRoles={['Admin']}><B2BPartnersPage /></ProtectedRoute>} />
+      <Route path="/b2b/agreements" element={<ProtectedRoute allowedRoles={['Admin']}><B2BAgreementsPage /></ProtectedRoute>} />
+      <Route path="/b2b/bookings" element={<ProtectedRoute allowedRoles={['Admin', 'Accountant']}><B2BBookingsPage /></ProtectedRoute>} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

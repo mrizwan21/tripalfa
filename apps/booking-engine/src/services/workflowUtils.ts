@@ -20,7 +20,7 @@ export class WalletService {
   private walletApiUrl: string;
   private authToken: string | null;
 
-  constructor(walletApiUrl: string = 'http://localhost:3001/api', authToken: string | null = null) {
+  constructor(walletApiUrl: string = 'http://localhost:3030/api', authToken: string | null = null) {
     this.walletApiUrl = walletApiUrl;
     this.authToken = authToken;
   }

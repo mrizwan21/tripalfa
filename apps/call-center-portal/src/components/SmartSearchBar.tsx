@@ -15,11 +15,11 @@ export function SmartSearchBar({ onSelect }: { onSelect?: (type: string, id: str
     const isPNR = /^[A-Z0-9]{6}$/.test(query);
     
     if (isEmail) {
-      console.log('Search by Customer Email:', query);
+      // Search by customer email
     } else if (isPNR) {
-      console.log('Search by PNR:', query);
+      // Search by PNR
     } else {
-      console.log('Search by Booking Ref / Name:', query);
+      // Search by booking ref / name
     }
     
     // Navigate to a search results page (or open booking)

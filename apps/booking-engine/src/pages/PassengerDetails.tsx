@@ -72,11 +72,11 @@ type PaymentMode = 'wallet' | 'hold' | 'card' | string;
 type FormValues = Record<string, any>;
 
 const ANCILLARY_CARD_CLASS =
-  'p-6 bg-card border-2 border-border hover:border-foreground/30 rounded-[2rem] transition-all group flex flex-col items-center gap-3 text-center';
+  'p-6 bg-white border-2 border-gray-200 hover:border-gray-300 rounded-xl transition-all group flex flex-col items-center gap-3 text-center';
 const ANCILLARY_ICON_CLASS =
-  'w-10 h-10 rounded-xl bg-muted text-foreground/70 flex items-center justify-center group-hover:bg-foreground group-hover:text-background transition-all';
+  'w-10 h-10 rounded-xl bg-gray-100 text-gray-900/70 flex items-center justify-center group-hover:bg-foreground group-hover:text-background transition-all';
 const BILLING_LABEL_CLASS =
-  'text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1';
+  'text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] ml-1';
 
 // Determine parent schema
 const formSchema = z.object({
@@ -442,15 +442,15 @@ function PassengerDetails() {
     return (
       <TripLogerLayout>
         <div className="bg-[hsl(var(--background))] min-h-screen flex items-center justify-center px-4 gap-2">
-          <div className="bg-card rounded-[2rem] border border-border shadow-sm p-8 text-center max-w-xl w-full">
-            <h1 className="text-2xl font-black text-foreground mb-2">Booking Disabled</h1>
-            <p className="text-sm font-bold text-muted-foreground mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center max-w-xl w-full">
+            <h1 className="text-2xl font-black text-gray-900 mb-2">Booking Disabled</h1>
+            <p className="text-sm font-bold text-gray-500 mb-6">
               {isHotel ? 'Hotel booking' : 'Flight booking'} is currently disabled by your admin
               settings.
             </p>
             <Button
               onClick={() => navigate('/')}
-              className="h-11 px-6 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl"
+              className="h-11 px-6 bg-[hsl(var(--primary))] text-[bg-[#edf2fb]] rounded-xl"
             >
               Back to Home
             </Button>
@@ -467,7 +467,7 @@ function PassengerDetails() {
           <Button
             variant="ghost"
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-black text-[10px] uppercase tracking-[0.2em] mb-10 transition-colors group"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-black text-[10px] uppercase tracking-[0.2em] mb-10 transition-colors group"
           >
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />{' '}
             {summary?.type === 'hotel' ? 'Back to Add-ons' : 'Back to Itinerary'}
@@ -478,19 +478,19 @@ function PassengerDetails() {
             <div className="lg:col-span-8 space-y-10">
               {/* Membership Banner */}
               {!isLoggedIn && (
-                <div className="bg-[hsl(var(--primary))] rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-80 h-80 bg-[hsl(var(--primary-foreground))/0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000" />
+                <div className="bg-[hsl(var(--primary))] rounded-xl p-10 shadow-2xl relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-[bg-[#edf2fb]/0.05] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000" />
                   <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
                     <div className="space-y-4 text-center md:text-left">
                       <div className="flex items-center justify-center md:justify-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-[hsl(var(--secondary-foreground))] shadow-xl gap-2">
+                        <div className="w-12 h-12 rounded-xl bg-[#003b95]econdary flex items-center justify-center text-[hsl(var(--secondary-foreground))] shadow-xl gap-2">
                           <UserCheck size={24} />
                         </div>
-                        <h3 className="text-xl font-black text-[hsl(var(--primary-foreground))] tracking-tight">
+                        <h3 className="text-xl font-black text-[bg-[#edf2fb]] tracking-tight">
                           Elite Member Rewards
                         </h3>
                       </div>
-                      <p className="text-[11px] font-bold text-[hsl(var(--primary-foreground))/0.7] uppercase tracking-widest leading-relaxed max-w-md">
+                      <p className="text-[11px] font-bold text-[bg-[#edf2fb]/0.7] uppercase tracking-widest leading-relaxed max-w-md">
                         Sign in now to sync your personal details, earn reward points, and access
                         member-only flight deals.
                       </p>
@@ -504,7 +504,7 @@ function PassengerDetails() {
                       </Button>
                       <Button
                         variant="outline"
-                        className="px-10 h-12 rounded-xl border border-[hsl(var(--primary-foreground))/0.2] text-[hsl(var(--primary-foreground))] font-black text-[10px] uppercase tracking-widest transition-all hover:bg-[hsl(var(--primary-foreground))/0.05]"
+                        className="px-10 h-12 rounded-xl border border-[bg-[#edf2fb]/0.2] text-[bg-[#edf2fb]] font-black text-[10px] uppercase tracking-widest transition-all hover:bg-[bg-[#edf2fb]/0.05]"
                       >
                         Register
                       </Button>
@@ -547,7 +547,7 @@ function PassengerDetails() {
                   <div className={ANCILLARY_ICON_CLASS}>
                     <Map size={20} />
                   </div>
-                  <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
                     Select Seats
                   </span>
                   {seatsTotal > 0 && (
@@ -568,7 +568,7 @@ function PassengerDetails() {
                   <div className={ANCILLARY_ICON_CLASS}>
                     <Luggage size={20} />
                   </div>
-                  <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
                     Add Baggage
                   </span>
                   {baggageTotal > 0 && (
@@ -589,7 +589,7 @@ function PassengerDetails() {
                   <div className={ANCILLARY_ICON_CLASS}>
                     <Utensils size={20} />
                   </div>
-                  <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
                     Meals
                   </span>
                   {mealsTotal > 0 && (
@@ -610,7 +610,7 @@ function PassengerDetails() {
                   <div className={ANCILLARY_ICON_CLASS}>
                     <Heart size={20} />
                   </div>
-                  <span className="text-[10px] font-black text-foreground uppercase tracking-widest">
+                  <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
                     Special RR
                   </span>
                   {selectedSpecialServices.length > 0 && (
@@ -622,16 +622,16 @@ function PassengerDetails() {
               </div>
 
               {/* Billing Address Section */}
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-sm p-10 space-y-8">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-10 space-y-8">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-foreground gap-2">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-gray-900 gap-2">
                     <MapPin size={24} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-foreground tracking-tight uppercase text-xl font-semibold tracking-tight">
+                    <h3 className="text-sm font-black text-gray-900 tracking-tight uppercase text-xl font-semibold tracking-tight">
                       Billing Information
                     </h3>
-                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest leading-none">
                       Invoice details for your transaction
                     </p>
                   </div>
@@ -645,7 +645,7 @@ function PassengerDetails() {
                     <Input
                       {...methods.register('billingAddress.street')}
                       placeholder="Building, Street Name, District"
-                      className={`w-full h-14 px-6 bg-muted/50 border-2 hover:bg-muted focus:bg-background focus:border-foreground/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-muted-foreground/70 ${methods.formState.errors.billingAddress?.street ? 'border-blue-500/50' : 'border-transparent'}`}
+                      className={`w-full h-14 px-6 bg-gray-50 border-2 hover:bg-gray-100 focus:bg-white focus:border-[#003b95] rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-500/70 ${methods.formState.errors.billingAddress?.street ? 'border-[#003b95]' : 'border-transparent'}`}
                     />
                     {methods.formState.errors.billingAddress?.street && (
                       <div className="flex items-center gap-1 text-blue-500 pl-1">
@@ -663,7 +663,7 @@ function PassengerDetails() {
                     <Input
                       {...methods.register('billingAddress.city')}
                       placeholder="City"
-                      className={`w-full h-14 px-6 bg-muted/50 border-2 hover:bg-muted focus:bg-background focus:border-foreground/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-muted-foreground/70 ${methods.formState.errors.billingAddress?.city ? 'border-blue-500/50' : 'border-transparent'}`}
+                      className={`w-full h-14 px-6 bg-gray-50 border-2 hover:bg-gray-100 focus:bg-white focus:border-[#003b95] rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-500/70 ${methods.formState.errors.billingAddress?.city ? 'border-[#003b95]' : 'border-transparent'}`}
                     />
                     {methods.formState.errors.billingAddress?.city && (
                       <div className="flex items-center gap-1 text-blue-500 pl-1">
@@ -682,7 +682,7 @@ function PassengerDetails() {
                       <Input
                         {...methods.register('billingAddress.zipCode')}
                         placeholder="Zip"
-                        className={`w-full h-14 px-6 bg-muted/50 border-2 hover:bg-muted focus:bg-background focus:border-foreground/30 rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-muted-foreground/70 ${methods.formState.errors.billingAddress?.zipCode ? 'border-blue-500/50' : 'border-transparent'}`}
+                        className={`w-full h-14 px-6 bg-gray-50 border-2 hover:bg-gray-100 focus:bg-white focus:border-[#003b95] rounded-xl text-[11px] font-bold outline-none transition-all placeholder:text-gray-500/70 ${methods.formState.errors.billingAddress?.zipCode ? 'border-[#003b95]' : 'border-transparent'}`}
                       />
                       {methods.formState.errors.billingAddress?.zipCode && (
                         <div className="flex items-center gap-1 text-blue-500 pl-1">
@@ -700,7 +700,7 @@ function PassengerDetails() {
                       <div className="relative">
                         <select
                           {...methods.register('billingAddress.country')}
-                          className={`w-full h-14 px-6 bg-muted/50 border-2 hover:bg-muted focus:bg-background focus:border-foreground/30 rounded-xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-blue-500/50' : 'border-transparent'}`}
+                          className={`w-full h-14 px-6 bg-gray-50 border-2 hover:bg-gray-100 focus:bg-white focus:border-[#003b95] rounded-xl text-[11px] font-bold appearance-none outline-none cursor-pointer ${methods.formState.errors.billingAddress?.country ? 'border-[#003b95]' : 'border-transparent'}`}
                         >
                           <option value="">Select</option>
                           {((countries as any[]) || []).map((c: any) => (
@@ -710,7 +710,7 @@ function PassengerDetails() {
                           ))}
                         </select>
                         <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                          <ChevronDown size={14} className="text-muted-foreground" />
+                          <ChevronDown size={14} className="text-gray-500" />
                         </div>
                       </div>
                       {methods.formState.errors.billingAddress?.country && (
@@ -726,18 +726,18 @@ function PassengerDetails() {
                 </div>
               </div>
 
-              <div className="bg-card rounded-[2.5rem] border border-border shadow-sm p-10 flex items-center justify-between gap-2">
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-10 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 gap-2">
                     <CheckCircle2 size={20} />
                   </div>
-                  <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
                     Secure Booking with 256-bit SSL Encryption
                   </p>
                 </div>
                 <div className="flex -space-x-2">
                   {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="w-10 h-6 bg-muted border border-border rounded-md" />
+                    <div key={i} className="w-10 h-6 bg-gray-100 border border-gray-200 rounded-md" />
                   ))}
                 </div>
               </div>
@@ -745,54 +745,54 @@ function PassengerDetails() {
 
             {/* Right: Summary Sidebar */}
             <div className="lg:col-span-4 space-y-8">
-              <div className="bg-card rounded-[3rem] border border-border shadow-sm overflow-hidden p-8 sticky top-32">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-8 sticky top-32">
                 <div className="space-y-8">
                   <div className="space-y-2">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">
                       {isHotel ? 'Hotel Summary' : 'Trip Summary'}
                     </p>
-                    <h3 className="text-xl font-black text-foreground tracking-tight leading-tight">
+                    <h3 className="text-xl font-black text-gray-900 tracking-tight leading-tight">
                       {isHotel ? hotelSummary?.name : flightSummary.route}
                     </h3>
                   </div>
 
                   {isHotel ? (
-                    <div className="bg-muted rounded-[2rem] p-4 overflow-hidden shadow-inner group">
+                    <div className="bg-gray-100 rounded-xl p-4 overflow-hidden shadow-inner group">
                       <img
                         src={hotelSummary?.image}
                         alt="Hotel"
                         className="w-full h-32 object-cover rounded-xl mb-4 group-hover:scale-105 transition-transform"
                       />
                       <div className="flex items-center gap-2">
-                        <MapPin size={12} className="text-muted-foreground" />
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                        <MapPin size={12} className="text-gray-500" />
+                        <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
                           {hotelSummary?.location}
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-muted rounded-[2rem] p-6 space-y-6">
+                    <div className="bg-gray-100 rounded-xl p-6 space-y-6">
                       {flightSummary.segments.map((seg: any, i: number) => (
                         <div key={i} className="space-y-4">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-card rounded-xl flex items-center justify-center p-2 shadow-sm gap-2">
-                                <Plane size={16} className="text-muted-foreground" />
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm gap-2">
+                                <Plane size={16} className="text-gray-500" />
                               </div>
                               <div>
-                                <p className="text-[11px] font-black text-foreground">
+                                <p className="text-[11px] font-black text-gray-900">
                                   {seg.carrier}
                                 </p>
-                                <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
                                   {seg.code}
                                 </p>
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-[11px] font-black text-foreground leading-none mb-1">
+                              <p className="text-[11px] font-black text-gray-900 leading-none mb-1">
                                 {seg.time}
                               </p>
-                              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">
+                              <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">
                                 {seg.date}
                               </p>
                             </div>
@@ -803,27 +803,27 @@ function PassengerDetails() {
                   )}
 
                   <div className="space-y-4">
-                    <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
+                    <div className="flex justify-between items-center text-[10px] font-black text-gray-500 uppercase tracking-widest px-2 gap-4">
                       <span>{isHotel ? 'Accommodation' : 'Base Fare'}</span>
-                      <span className="text-foreground">
+                      <span className="text-gray-900">
                         {formatCurrency(isHotel ? hotelSummary?.price || 0 : flightSummary.price)}
                       </span>
                     </div>
                     {!isHotel && (
-                      <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 gap-4">
+                      <div className="flex justify-between items-center text-[10px] font-black text-gray-500 uppercase tracking-widest px-2 gap-4">
                         <span>Fees & Taxes</span>
-                        <span className="text-foreground">
+                        <span className="text-gray-900">
                           {formatCurrency(flightSummary.taxes)}
                         </span>
                       </div>
                     )}
                     {(seatsTotal > 0 || baggageTotal > 0 || mealsTotal > 0) && (
-                      <div className="flex justify-between items-center text-[10px] font-black text-muted-foreground uppercase tracking-widest px-2 group gap-4">
+                      <div className="flex justify-between items-center text-[10px] font-black text-gray-500 uppercase tracking-widest px-2 group gap-4">
                         <div className="flex items-center gap-1">
                           <span>Ancillary Fees</span>
                           <Info
                             size={10}
-                            className="text-muted-foreground/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="text-gray-500/60 opacity-0 group-hover:opacity-100 transition-opacity"
                           />
                         </div>
                         <span className="">
@@ -854,10 +854,10 @@ function PassengerDetails() {
                     )}
                     <div className="h-px bg-border" />
                     <div className="flex justify-between items-center px-2 gap-4">
-                      <span className="text-sm font-black text-foreground uppercase tracking-widest">
+                      <span className="text-sm font-black text-gray-900 uppercase tracking-widest">
                         Total
                       </span>
-                      <span className="text-2xl font-black text-foreground tracking-tighter">
+                      <span className="text-2xl font-black text-gray-900 tracking-tighter">
                         {formatCurrency(finalTotal)}
                       </span>
                     </div>
@@ -869,13 +869,13 @@ function PassengerDetails() {
                       <Input
                         {...methods.register('discountCoupon')}
                         placeholder="ENTER COUPON CODE"
-                        className={`w-full h-14 px-6 pr-16 bg-muted border-2 focus:border-foreground/30 focus:bg-background rounded-xl text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all placeholder:text-muted-foreground/70 ${couponError ? 'border-blue-500/50' : couponDiscount > 0 ? 'border-blue-500/50' : 'border-transparent'}`}
+                        className={`w-full h-14 px-6 pr-16 bg-gray-100 border-2 focus:border-[#003b95] focus:bg-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] outline-none transition-all placeholder:text-gray-500/70 ${couponError ? 'border-[#003b95]' : couponDiscount > 0 ? 'border-[#003b95]' : 'border-transparent'}`}
                       />
                       <Button
                         type="button"
                         onClick={handleApplyCoupon}
                         disabled={isValidating}
-                        className={`absolute right-3 top-1/2 -translate-y-1/2 h-8 px-4 text-[hsl(var(--primary-foreground))] text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors ${isValidating ? 'bg-muted-foreground cursor-wait' : 'bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)]'}`}
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 h-8 px-4 text-[bg-[#edf2fb]] text-[9px] font-black uppercase tracking-widest rounded-lg transition-colors ${isValidating ? 'bg-gray-100-foreground cursor-wait' : 'bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)]'}`}
                       >
                         {isValidating ? 'Checking...' : 'Apply'}
                       </Button>
@@ -911,12 +911,12 @@ function PassengerDetails() {
                         variant="outline"
                         onClick={() => handleFormSubmit('hold')}
                         disabled={!holdPaymentEnabled}
-                        className="h-14 bg-card border-2 border-border hover:border-foreground/30 hover:text-foreground text-muted-foreground rounded-xl text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-14 bg-white border-2 border-gray-200 hover:border-gray-300 hover:text-gray-900 text-gray-500 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Hold Booking
                       </Button>
                     ) : (
-                      <div className="p-4 bg-muted rounded-xl border border-border">
+                      <div className="p-4 bg-gray-100 rounded-xl border border-gray-200">
                         <p className="text-[9px] font-black text-orange-600 uppercase tracking-widest text-center">
                           Hold option unavailable for non-refundable {isHotel ? 'rates' : 'fares'}
                         </p>

@@ -18,10 +18,10 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     // "baseUrl": ".", // deprecated, removed for TS 7
-    "paths": {
-      "@/*": ["./src/*"],
-      "@/components/ui/*": ["../../packages/ui-components/ui/*"],
-      "@/components/ui": ["../../packages/ui-components/ui"],
+"paths": {
+        "@/*": ["./src/*"],
+        "@/components/ui/*": ["../../packages/ui-components/dist/components/*"],
+        "@/components/ui/button": ["../../packages/ui-components/dist/components/Button"],
       "@tripalfa/ui-components": ["../../packages/ui-components"],
       "@tripalfa/ui-components/*": ["../../packages/ui-components/*"],
       "@tripalfa/shared-utils": ["../../packages/shared-utils"],

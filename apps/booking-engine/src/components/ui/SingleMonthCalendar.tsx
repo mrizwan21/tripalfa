@@ -86,7 +86,7 @@ export function SingleMonthCalendar({
             <select
               value={format(monthDate, 'M')}
               onChange={e => setCurrentMonth(setMonth(monthDate, parseInt(e.target.value) - 1))}
-              className="text-[10px] font-black uppercase bg-transparent outline-none cursor-pointer"
+              className="text-xs font-bold uppercase bg-transparent outline-none cursor-pointer"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i} value={i + 1}>
@@ -97,7 +97,7 @@ export function SingleMonthCalendar({
             <select
               value={getYear(monthDate)}
               onChange={e => setCurrentMonth(setYear(monthDate, parseInt(e.target.value)))}
-              className="text-[10px] font-black uppercase bg-transparent outline-none cursor-pointer"
+              className="text-xs font-bold uppercase bg-transparent outline-none cursor-pointer"
             >
               {(() => {
                 const minYear = getYear(minDate);
@@ -127,7 +127,7 @@ export function SingleMonthCalendar({
         {/* Day Headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-            <div key={i} className="text-center text-[9px] font-black text-gray-400 py-1">
+            <div key={i} className="text-center text-[10px] font-bold text-gray-400 py-1">
               {day}
             </div>
           ))}
@@ -151,7 +151,7 @@ export function SingleMonthCalendar({
                   bgClass = '';
                 }
                 if (isSelected) {
-                  bgClass = 'bg-[hsl(var(--primary))]';
+                  bgClass = 'bg-[#003b95]';
                   textClass = 'text-white font-bold';
                 }
 
@@ -164,7 +164,7 @@ export function SingleMonthCalendar({
                     }
                     disabled={!isCurrentMonth || isFuture || isTooOld}
                     data-testid={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
-                    className={`w-8 h-8 p-0 flex items-center justify-center rounded-lg text-[10px] transition-all hover:bg-transparent ${bgClass} ${textClass}`}
+                    className={`w-8 h-8 p-0 flex items-center justify-center rounded-lg text-xs transition-all hover:bg-transparent ${bgClass} ${textClass}`}
                   >
                     {format(date, 'd')}
                   </Button>
@@ -186,21 +186,21 @@ export function SingleMonthCalendar({
             className="relative group/field cursor-pointer space-y-1.5"
             data-testid={label.toLowerCase().replace(/\s+/g, '-')}
           >
-            <Label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 text-sm font-medium">
+            <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
               {label}*
             </Label>
             <div
-              className={`w-full h-11 px-4 bg-gray-50/50 border-2 hover:bg-gray-50 rounded-xl flex items-center justify-between text-[11px] font-bold group-hover/field:border-[hsl(var(--primary)/0.3)] transition-all ${error ? 'border-red-500/50' : 'border-transparent'}`}
+              className={`w-full h-12 rounded-xl border bg-white px-4 flex items-center justify-between text-sm font-semibold transition-all duration-200 hover:border-gray-300 ${error ? 'border-red-300 ring-2 ring-red-50' : 'border-gray-200'}`}
             >
-              <span className={selectedDate ? 'text-gray-900' : 'text-gray-300'}>
+              <span className={selectedDate ? 'text-gray-900' : 'text-gray-400'}>
                 {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : 'DD/MM/YYYY'}
               </span>
-              <CalendarIcon size={14} className="text-gray-400" />
+              <CalendarIcon size={16} className="text-gray-400" />
             </div>
             {error && (
               <div className="flex items-center gap-1 text-red-500 pl-1">
-                <AlertCircle size={8} />
-                <span className="text-[8px] font-black uppercase tracking-widest">{error}</span>
+                <AlertCircle size={10} />
+                <span className="text-xs font-bold uppercase tracking-widest">{error}</span>
               </div>
             )}
           </div>

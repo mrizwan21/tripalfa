@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatDateTime } from '@tripalfa/shared-utils/date-utils';
+import { formatDateTime } from '@tripalfa/shared-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import {
   CheckCircle2,
   Clock,

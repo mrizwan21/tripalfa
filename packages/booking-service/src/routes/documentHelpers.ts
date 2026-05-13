@@ -1,5 +1,5 @@
 // Shared HTML document generation helpers for booking routes
-import { DOCUMENT_COLORS } from "./commonTypes";
+import { DOCUMENT_COLORS } from "./commonTypes.js";
 
 const C = DOCUMENT_COLORS; // short alias for template readability
 

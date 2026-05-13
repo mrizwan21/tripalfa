@@ -1,6 +1,6 @@
 import React from "react";
 import { WalletAccount } from "../../lib/srs-types";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 export function WalletSelector({
   accounts,
@@ -15,7 +15,7 @@ export function WalletSelector({
       {accounts.map((a) => (
         <Button
           variant="outline"
-          size="default"
+          size="md"
           key={a.currency}
           className="mr-2 px-3 py-1 border rounded"
           onClick={() => onSelect(a)}

@@ -7,7 +7,7 @@ import {
   Package,
   ArrowRightLeft,
 } from "lucide-react";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 export function BookingFilters({ onFilter }: { onFilter: (f: any) => void }) {
   return (
@@ -66,7 +66,7 @@ export function BookingFilters({ onFilter }: { onFilter: (f: any) => void }) {
 
         {/* Action Button - Standard Size */}
         <Button
-          variant="default"
+          variant="primary"
           size="sm"
           className="h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg text-sm font-bold shadow-sm transition-all flex items-center gap-2 whitespace-nowrap"
         >

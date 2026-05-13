@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 export default function AddOnService({ addons }: { addons: any[] }) {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -20,7 +20,7 @@ export default function AddOnService({ addons }: { addons: any[] }) {
           <div>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               onClick={() => toggle(a.code)}
               className={
                 "px-3 py-1 rounded " +

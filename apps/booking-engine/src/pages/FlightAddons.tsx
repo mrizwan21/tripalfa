@@ -31,7 +31,7 @@ import {
   ChevronUp,
   Info,
 } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Button } from '../components/ui/button'
 import { TripLogerLayout } from '../components/layout/TripLogerLayout';
 import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 
@@ -226,21 +226,21 @@ function FlightAddons() {
   if (!flight) {
     return (
       <TripLogerLayout>
-        <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--background))] gap-2">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50/50 gap-2">
           <div className="text-center space-y-4">
             <AlertCircle size={48} className="text-red-400 mx-auto" />
-            <h2 className="text-xl font-bold text-foreground text-2xl font-semibold tracking-tight">
+            <h2 className="text-xl font-bold text-gray-900">
               No flight selected
             </h2>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-gray-500">
               Please go back and select a flight first.
             </p>
-            <Button
+            <button
               onClick={() => navigate('/flights')}
-              className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl px-8 py-3 font-bold"
+              className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] transition-all duration-200"
             >
               Back to Flights
-            </Button>
+            </button>
           </div>
         </div>
       </TripLogerLayout>
@@ -280,7 +280,7 @@ function FlightAddons() {
     }
   };
 
-  // ── Total calculation (only priced Duffel services count) ────────────────
+  // ── Total calculation (only priced Duffel services count) ───────────────
   const baggageTotal = useMemo(() => {
     let t = 0;
     selectedBaggage.forEach(s => {
@@ -317,18 +317,18 @@ function FlightAddons() {
   if (!runtimeConfig.features.flightBookingEnabled) {
     return (
       <TripLogerLayout>
-        <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--background))] px-4 gap-2">
-          <div className="bg-card rounded-xl border border-border shadow-sm p-8 text-center max-w-xl w-full">
-            <h1 className="text-2xl font-black text-foreground mb-2">Flight Booking Disabled</h1>
-            <p className="text-sm font-bold text-muted-foreground mb-6">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50/50 px-4 gap-2">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center max-w-xl w-full">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Flight Booking Disabled</h1>
+            <p className="text-sm font-semibold text-gray-500 mb-6">
               Flight booking is currently disabled by your admin settings.
             </p>
-            <Button
+            <button
               onClick={() => navigate('/')}
-              className="h-11 px-6 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl"
+              className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] transition-all duration-200"
             >
               Back to Home
-            </Button>
+            </button>
           </div>
         </div>
       </TripLogerLayout>
@@ -337,30 +337,30 @@ function FlightAddons() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[hsl(var(--background))] min-h-screen pb-32 font-sans">
+      <div className="bg-gray-50/50 min-h-screen pb-32 font-sans">
         {/* ── Progress Header ─────────────────────────────────────── */}
-        <div className="bg-card border-b border-border shadow-sm overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-[40%] h-full bg-purple-50/50 pointer-events-none" />
+        <div className="bg-white border-b border-gray-100 shadow-sm overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-[40%] h-full bg-blue-50/30 pointer-events-none" />
           <div className="container mx-auto px-4 max-w-7xl pt-12 pb-10 relative z-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center text-[hsl(var(--primary-foreground))] shadow-lg shadow-purple-100 gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-[#003b95] flex items-center justify-center text-white shadow-sm">
                     <Plus size={16} />
                   </div>
-                  <h1 className="text-[10px] font-black text-[hsl(var(--primary))] uppercase tracking-[0.3em] text-3xl font-bold tracking-tight">
+                  <h1 className="text-sm font-bold text-[#003b95] uppercase tracking-wider">
                     Enhance Experience
                   </h1>
                 </div>
-                <h2 className="text-3xl font-black text-foreground tracking-tighter">
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
                   Premium Add-ons
                 </h2>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                   Services sourced in real-time from {flight.airline || 'the airline'}
                 </p>
               </div>
               {/* Step breadcrumb */}
-              <div className="flex items-center gap-4 bg-muted/50 p-2 rounded-xl border border-border">
+              <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-xl border border-gray-100">
                 {[
                   { label: 'Selection', sub: 'Flight Secured', done: true },
                   { label: 'Current', sub: 'Add-ons', done: false },
@@ -368,18 +368,18 @@ function FlightAddons() {
                 ].map((step, i) => (
                   <div
                     key={i}
-                    className={`flex items-center gap-3 px-6 py-2 ${i < 2 ? 'border-r border-border' : ''}`}
+                    className={`flex items-center gap-3 px-6 py-2 ${i < 2 ? 'border-r border-gray-100' : ''}`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${step.done ? 'bg-green-100 text-green-600' : i === 1 ? 'bg-purple-100 text-purple-600' : 'bg-muted/10 text-muted-foreground'}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold ${step.done ? 'bg-green-100 text-green-700' : i === 1 ? 'bg-blue-100 text-[#003b95]' : 'bg-gray-100 text-gray-400'}`}
                     >
                       {step.done ? <Check size={14} /> : <Plus size={14} />}
                     </div>
                     <div className="text-left">
-                      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                         {step.label}
                       </p>
-                      <p className="text-[11px] font-bold text-foreground">{step.sub}</p>
+                      <p className="text-xs font-bold text-gray-900">{step.sub}</p>
                     </div>
                   </div>
                 ))}
@@ -393,31 +393,31 @@ function FlightAddons() {
             {/* ── Main Column ───────────────────────────────────── */}
             <div className="lg:col-span-8 space-y-10">
               {/* ── 1. Extra Baggage (real Duffel available_services) ── */}
-              <div className="bg-card rounded-xl border border-border shadow-xl shadow-gray-200/40 overflow-hidden">
-                <div className="p-10 border-b border-border/50 flex items-center gap-8">
-                  <div className="w-16 h-16 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-inner gap-2">
-                    <Luggage size={32} strokeWidth={1.5} />
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                <div className="p-8 border-b border-gray-100 flex items-center gap-6">
+                  <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
+                    <Luggage size={28} strokeWidth={1.5} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-foreground tracking-tight text-xl font-semibold tracking-tight">
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                       Extra Baggage
                     </h3>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">
                       Prices set by {flight.airline || 'the airline'} – fetched live from Duffel
                     </p>
                   </div>
                 </div>
 
                 {baggageServices.length === 0 ? (
-                  <div className="p-10 flex items-center gap-4 text-muted-foreground">
-                    <Info size={18} />
+                  <div className="p-8 flex items-center gap-4 text-gray-500">
+                    <Info size={18} className="text-gray-400" />
                     <p className="text-sm font-semibold">
                       No additional baggage services are available for this fare. Check your
                       included allowance below.
                     </p>
                   </div>
                 ) : (
-                  <div className="p-10 space-y-4">
+                  <div className="p-8 space-y-4">
                     {baggageServices.map(svc => {
                       const selected = selectedBaggage.get(svc.id);
                       const qty = selected?.quantity ?? 0;
@@ -425,40 +425,34 @@ function FlightAddons() {
                       return (
                         <div
                           key={svc.id}
-                          className={`flex items-center justify-between p-6 rounded-xl border transition-all duration-200 ${qty > 0 ? 'border-[hsl(var(--primary))] bg-purple-50/30 ring-2 ring-[hsl(var(--primary)/0.1)]' : 'border-border hover:border-border/80'}`}
+                          className={`flex items-center justify-between p-5 rounded-xl border transition-all duration-300 ${qty > 0 ? 'bg-white border-[#003b95] shadow-sm ring-2 ring-[#003b95]/10' : 'bg-white border-gray-100 hover:border-gray-200'}`}
                         >
                           <div className="flex-1 gap-4">
-                            <p
-                              className={`text-sm font-black ${qty > 0 ? 'text-[hsl(var(--primary))]' : 'text-foreground'}`}
-                            >
+                            <p className={`text-sm font-bold ${qty > 0 ? 'text-[#003b95]' : 'text-gray-900'}`}>
                               {baggageLabel(svc)}
                             </p>
-                            <p className="text-[11px] font-bold text-muted-foreground mt-1">
+                            <p className="text-xs text-gray-500 mt-1">
                               {formatMoney(svc.price, svc.currency)} each · max {max} per person
                             </p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
+                            <button
                               onClick={() => handleBaggageQty(svc, qty - 1)}
                               disabled={qty === 0 || !runtimeConfig.features.ancillariesEnabled}
-                              className="w-9 h-9 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:bg-muted/50 disabled:opacity-30 disabled:cursor-not-allowed font-bold text-lg gap-2"
+                              className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed font-bold text-lg transition-colors"
                             >
                               −
-                            </Button>
-                            <span className="w-8 text-center font-black text-foreground">
+                            </button>
+                            <span className="w-8 text-center font-bold text-gray-900">
                               {qty}
                             </span>
-                            <Button
-                              variant="primary"
-                              size="sm"
+                            <button
                               onClick={() => handleBaggageQty(svc, qty + 1)}
                               disabled={qty >= max || !runtimeConfig.features.ancillariesEnabled}
-                              className="w-9 h-9 rounded-full bg-[hsl(var(--primary))] flex items-center justify-center text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary)/0.9)] disabled:opacity-30 disabled:cursor-not-allowed font-bold text-lg gap-2"
+                              className="w-9 h-9 rounded-full bg-[#003b95] flex items-center justify-center text-white hover:bg-[#002a6e] disabled:opacity-30 disabled:cursor-not-allowed font-bold text-lg shadow-sm transition-colors"
                             >
                               +
-                            </Button>
+                            </button>
                           </div>
                         </div>
                       );
@@ -467,11 +461,11 @@ function FlightAddons() {
                     {/* Included baggage info */}
                     {flight.includedBags?.length > 0 && (
                       <div className="mt-6 p-5 rounded-xl bg-green-50 border border-green-100">
-                        <p className="text-[11px] font-black text-green-700 uppercase tracking-widest mb-2">
+                        <p className="text-xs font-bold text-green-800 uppercase tracking-wider mb-2">
                           Already included in your fare
                         </p>
                         {flight.includedBags.map((b: any, i: number) => (
-                          <p key={i} className="text-xs text-green-600 font-semibold">
+                          <p key={i} className="text-xs text-green-700 font-semibold">
                             ✓ {b.quantity}× {b.type} bag
                             {b.maximum_weight_kg
                               ? ` – up to ${b.maximum_weight_kg}kg`
@@ -487,22 +481,22 @@ function FlightAddons() {
               </div>
 
               {/* ── 2. Seat Selection ──────────────────────────── */}
-              <div className="bg-card rounded-xl border border-border shadow-xl shadow-gray-200/40 overflow-hidden">
-                <div className="p-10 border-b border-border/50 flex items-center gap-8">
-                  <div className="w-16 h-16 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 shadow-inner gap-2">
-                    <Armchair size={32} strokeWidth={1.5} />
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                <div className="p-8 border-b border-gray-100 flex items-center gap-6">
+                  <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm">
+                    <Armchair size={28} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 gap-4">
-                    <h3 className="text-2xl font-black text-foreground tracking-tight text-xl font-semibold tracking-tight">
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                       Seat Selection
                     </h3>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">
                       {hasSeatServices
                         ? 'Seat map with pricing loaded from Duffel seat_maps API'
                         : 'Seat map available – pricing shown on selection screen'}
                     </p>
                   </div>
-                  <Button
+                  <button
                     onClick={() =>
                       runtimeConfig.features.seatSelectionEnabled &&
                       navigate('/seat-selection', {
@@ -513,50 +507,46 @@ function FlightAddons() {
                       })
                     }
                     disabled={!runtimeConfig.features.seatSelectionEnabled}
-                    className="h-12 px-8 bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary)/0.9)] text-[hsl(var(--primary-foreground))] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-purple-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-12 px-6 bg-[#003b95] hover:bg-[#002a6e] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold text-sm shadow-md transition-all duration-200 flex items-center gap-2"
                   >
                     Choose Seat <ArrowRight size={16} />
-                  </Button>
+                  </button>
                 </div>
               </div>
 
               {/* ── 3. Meal Preferences (IATA SSR codes) ──────── */}
-              <div className="bg-card rounded-xl border border-border shadow-xl shadow-gray-200/40 overflow-hidden">
-                <Button
-                  variant="ghost"
-                  size="md"
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                <button
                   disabled={!runtimeConfig.features.ancillariesEnabled}
                   onClick={() => setShowMealDetails(v => !v)}
-                  className="w-full p-10 border-b border-border/50 flex items-center gap-8 text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full p-8 border-b border-gray-100 flex items-center gap-6 text-left hover:bg-gray-50/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="w-16 h-16 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-inner flex-shrink-0 gap-2">
-                    <Utensils size={32} strokeWidth={1.5} />
+                  <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm flex-shrink-0">
+                    <Utensils size={28} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 gap-4">
-                    <h3 className="text-2xl font-black text-foreground tracking-tight text-xl font-semibold tracking-tight">
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                       Meal Preference
                     </h3>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">
                       {selectedMeals.size > 0
                         ? `${selectedMeals.size} preference${selectedMeals.size > 1 ? 's' : ''} selected`
                         : 'IATA SSR dietary preferences – complimentary request'}
                     </p>
                   </div>
                   {showMealDetails ? (
-                    <ChevronUp size={20} className="text-muted-foreground" />
+                    <ChevronUp size={20} className="text-gray-400" />
                   ) : (
-                    <ChevronDown size={20} className="text-muted-foreground" />
+                    <ChevronDown size={20} className="text-gray-400" />
                   )}
-                </Button>
+                </button>
 
                 {showMealDetails && (
-                  <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {IATA_MEAL_SSRS.map(meal => {
                       const active = selectedMeals.has(meal.code);
                       return (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           key={meal.code}
                           onClick={() =>
                             setSelectedMeals(prev => {
@@ -566,31 +556,29 @@ function FlightAddons() {
                               return s;
                             })
                           }
-                          className={`flex items-center justify-between p-6 rounded-xl border transition-all duration-200 text-left ${
+                          className={`flex items-center justify-between p-5 rounded-xl border transition-all duration-300 text-left ${
                             active
-                              ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.08)] ring-2 ring-[hsl(var(--primary)/0.12)]'
-                              : 'border-border hover:border-border/80 hover:bg-muted/50'
+                              ? 'bg-white border-[#003b95] shadow-sm ring-2 ring-[#003b95]/10'
+                              : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
                           }`}
                         >
                           <div>
-                            <p
-                              className={`text-sm font-black transition-colors ${active ? 'text-[hsl(var(--primary))]' : 'text-foreground'}`}
-                            >
+                            <p className={`text-sm font-bold transition-colors ${active ? 'text-[#003b95]' : 'text-gray-900'}`}>
                               {meal.label}
                             </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5">
                               {meal.description}
                             </p>
-                            <p className="text-[9px] font-mono text-muted-foreground mt-0.5">
+                            <p className="text-[10px] font-mono text-gray-400 mt-0.5">
                               SSR: {meal.code}
                             </p>
                           </div>
                           <div
-                            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all ${active ? 'bg-[hsl(var(--primary))] border-[hsl(var(--primary))]' : 'border-border'}`}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all ${active ? 'bg-[#003b95] border-[#003b95]' : 'border-gray-300'}`}
                           >
-                            {active && <Check size={14} className="text-white stroke-[3px]" />}
+                            {active && <Check size={14} className="text-white" />}
                           </div>
-                        </Button>
+                        </button>
                       );
                     })}
                   </div>
@@ -598,42 +586,38 @@ function FlightAddons() {
               </div>
 
               {/* ── 4. Special Requests (IATA SSR codes) ─────── */}
-              <div className="bg-card rounded-xl border border-border shadow-xl shadow-gray-200/40 overflow-hidden">
-                <Button
-                  variant="ghost"
-                  size="md"
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                <button
                   disabled={!runtimeConfig.features.ancillariesEnabled}
                   onClick={() => setShowSSRDetails(v => !v)}
-                  className="w-full p-10 border-b border-border/50 flex items-center gap-8 text-left hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full p-8 border-b border-gray-100 flex items-center gap-6 text-left hover:bg-gray-50/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <div className="w-16 h-16 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600 shadow-inner flex-shrink-0 gap-2">
-                    <ShieldCheck size={32} strokeWidth={1.5} />
+                  <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm flex-shrink-0">
+                    <ShieldCheck size={28} strokeWidth={1.5} />
                   </div>
                   <div className="flex-1 gap-4">
-                    <h3 className="text-2xl font-black text-foreground tracking-tight text-xl font-semibold tracking-tight">
+                    <h3 className="text-xl font-bold text-gray-900 tracking-tight">
                       Special Assistance
                     </h3>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mt-1">
                       {selectedSSRs.size > 0
                         ? `${selectedSSRs.size} request${selectedSSRs.size > 1 ? 's' : ''} selected`
                         : 'Mobility, medical & accessibility – IATA SSR codes'}
                     </p>
                   </div>
                   {showSSRDetails ? (
-                    <ChevronUp size={20} className="text-muted-foreground" />
+                    <ChevronUp size={20} className="text-gray-400" />
                   ) : (
-                    <ChevronDown size={20} className="text-muted-foreground" />
+                    <ChevronDown size={20} className="text-gray-400" />
                   )}
-                </Button>
+                </button>
 
                 {showSSRDetails && (
-                  <div className="p-10 space-y-4">
+                  <div className="p-8 space-y-4">
                     {IATA_SPECIAL_SSRS.map(ssr => {
                       const active = selectedSSRs.has(ssr.code);
                       return (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           key={ssr.code}
                           onClick={() =>
                             setSelectedSSRs(prev => {
@@ -643,31 +627,29 @@ function FlightAddons() {
                               return s;
                             })
                           }
-                          className={`w-full flex items-center justify-between p-6 rounded-xl border transition-all duration-200 text-left ${
+                          className={`w-full flex items-center justify-between p-5 rounded-xl border transition-all duration-300 text-left ${
                             active
-                              ? 'border-teal-500 bg-teal-50/40 ring-2 ring-teal-500/10'
-                              : 'border-border hover:border-border/80 hover:bg-muted/50'
+                              ? 'bg-white border-[#003b95] shadow-sm ring-2 ring-[#003b95]/10'
+                              : 'bg-white border-gray-100 hover:border-gray-200 hover:shadow-sm'
                           }`}
                         >
                           <div>
-                            <p
-                              className={`text-sm font-black transition-colors ${active ? 'text-teal-700' : 'text-foreground'}`}
-                            >
+                            <p className={`text-sm font-bold transition-colors ${active ? 'text-[#003b95]' : 'text-gray-900'}`}>
                               {ssr.label}
                             </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5">
                               {ssr.description}
                             </p>
-                            <p className="text-[9px] font-mono text-muted-foreground mt-0.5">
+                            <p className="text-[10px] font-mono text-gray-400 mt-0.5">
                               SSR: {ssr.code}
                             </p>
                           </div>
                           <div
-                            className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all ${active ? 'bg-teal-500 border-teal-500' : 'border-border'}`}
+                            className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 transition-all ${active ? 'bg-[#003b95] border-[#003b95]' : 'border-gray-300'}`}
                           >
-                            {active && <Check size={14} className="text-white stroke-[3px]" />}
+                            {active && <Check size={14} className="text-white" />}
                           </div>
-                        </Button>
+                        </button>
                       );
                     })}
                   </div>
@@ -677,28 +659,28 @@ function FlightAddons() {
 
             {/* ── Sidebar Summary ───────────────────────────────── */}
             <div className="lg:col-span-4">
-              <div className="bg-[hsl(var(--primary))] rounded-xl p-10 text-[hsl(var(--primary-foreground))] shadow-2xl sticky top-32">
-                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-[hsl(var(--secondary))] mb-8 text-xl font-semibold tracking-tight">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 sticky top-32">
+                <h3 className="text-sm font-bold text-[#003b95] uppercase tracking-wider mb-6">
                   Trip Summary
                 </h3>
 
-                <div className="space-y-5 mb-10 pb-10 border-b border-white/10">
+                <div className="space-y-4 mb-6 pb-6 border-b border-gray-100">
                   {/* Base fare */}
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Base Fare
                     </span>
-                    <span className="text-white font-black text-sm">
+                    <span className="text-sm font-bold text-gray-900">
                       {formatMoney(flight.amount || 0, currency)}
                     </span>
                   </div>
 
                   {/* Flight info */}
                   {flight.origin && flight.destination && (
-                    <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       {flight.origin} → {flight.destination}
                       {flight.airline && (
-                        <span className="ml-2 text-muted-foreground">· {flight.airline}</span>
+                        <span className="ml-2 text-gray-400">· {flight.airline}</span>
                       )}
                     </div>
                   )}
@@ -706,10 +688,10 @@ function FlightAddons() {
                   {/* Selected baggage (real prices from Duffel) */}
                   {Array.from(selectedBaggage.values()).map(svc => (
                     <div key={svc.id} className="flex justify-between items-center gap-4">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         {svc.name} ×{svc.quantity}
                       </span>
-                      <span className="text-[11px] font-black text-[hsl(var(--secondary))]">
+                      <span className="text-xs font-bold text-gray-900">
                         +{formatMoney(svc.priceEach * svc.quantity, svc.currency)}
                       </span>
                     </div>
@@ -718,47 +700,45 @@ function FlightAddons() {
                   {/* Meal preferences (no cost) */}
                   {selectedMeals.size > 0 && (
                     <div className="flex justify-between items-center gap-4">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Meal Preference ×{selectedMeals.size}
                       </span>
-                      <span className="text-[11px] font-black text-green-400">Complimentary</span>
+                      <span className="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-xs font-semibold">Included</span>
                     </div>
                   )}
 
                   {/* Special requests (no cost) */}
                   {selectedSSRs.size > 0 && (
                     <div className="flex justify-between items-center gap-4">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                         Special Assistance ×{selectedSSRs.size}
                       </span>
-                      <span className="text-[11px] font-black text-green-400">Complimentary</span>
+                      <span className="bg-green-100 text-green-800 px-2.5 py-0.5 rounded-full text-xs font-semibold">Included</span>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-8">
+                <div className="space-y-6">
                   <div className="flex justify-between items-center gap-4">
-                    <span className="text-lg font-black uppercase tracking-widest">Total</span>
-                    <span className="text-3xl font-black text-[hsl(var(--secondary))]">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Total</span>
+                    <span className="text-2xl font-bold text-[#1d1d1f]">
                       {formatMoney(grandTotal, currency)}
                     </span>
                   </div>
 
-                  <Button
+                  <button
                     onClick={handleContinue}
-                    className="w-full h-16 bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--secondary)/0.9)] text-[hsl(var(--secondary-foreground))] rounded-xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-purple-900/40 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3"
+                    className="w-full h-14 bg-[#003b95] hover:bg-[#002a6e] text-white rounded-lg font-semibold text-sm shadow-md transition-all duration-200 flex items-center justify-center gap-3"
                   >
                     Confirm & Continue <ArrowRight size={18} />
-                  </Button>
+                  </button>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
                     onClick={() => navigate(-1)}
-                    className="w-full text-[10px] font-bold text-muted-foreground hover:text-white transition-colors uppercase tracking-[0.2em]"
+                    className="w-full text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider"
                   >
                     Modify Flight Selection
-                  </Button>
+                  </button>
                 </div>
               </div>
             </div>

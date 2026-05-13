@@ -320,7 +320,7 @@ export async function loadTenantRuntimeConfig(): Promise<TenantRuntimeConfig> {
 
   try {
     const settingsResponse =
-      await api.get<RuntimeSettingsApiResponse>("/branding/settings");
+      await api.get<RuntimeSettingsApiResponse>("/api/branding/settings");
     const normalizedSettings = normalizeRuntimeConfig({
       features: settingsResponse?.features,
       pricing: settingsResponse?.pricing as Partial<TenantPricingPolicy>,
@@ -342,8 +342,8 @@ export async function loadTenantRuntimeConfig(): Promise<TenantRuntimeConfig> {
 
   try {
     const [markupResponse, commissionResponse] = await Promise.allSettled([
-      api.get("/rules/markup?isActive=true&limit=100"),
-      api.get("/rules/commissions?limit=50"),
+      api.get("/api/rules/markup?isActive=true&limit=100"),
+      api.get("/api/rules/commissions?limit=50"),
     ]);
 
     const derivedConfig = parsePricingFromAdminRules(

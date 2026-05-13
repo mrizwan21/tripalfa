@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './HoldOrderDetails.css';
-import { formatDateTime as formatDate } from '@tripalfa/shared-utils/date-utils';
+import { formatDateTime as formatDate } from '@tripalfa/shared-utils';
 
 interface HoldOrder {
   id: string;

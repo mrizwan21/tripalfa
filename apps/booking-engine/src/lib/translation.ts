@@ -293,7 +293,7 @@ async function translateTextBatch(
 
   // Option 3: Use DeepL API (requires API key)
   try {
-    const deeplApiKey = "1143d2d5-1af4-4884-a5b4-947f8e5ee424:fx";
+    const deeplApiKey = import.meta.env.VITE_DEEPL_API_KEY || "";
     if (deeplApiKey) {
       const response = await fetch(TRANSLATION_API_CONFIG.DEEPL_API, {
         method: "POST",

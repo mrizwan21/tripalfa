@@ -8,6 +8,9 @@ import TerminalPage from "./pages/TerminalPage";
 import BookingQueuesPage from "./pages/BookingQueuesPage";
 import SupportRecordPage from "./pages/SupportRecordPage";
 import ImportPnrPage from "./pages/ImportPnrPage";
+import AgentsPage from "./pages/AgentsPage";
+import QueuesPage from "./pages/QueuesPage";
+import CallsPage from "./pages/CallsPage";
 
 // Shared Features
 import { BlankBookingCard, OpenBookingSearch, QuoteApproval } from "@tripalfa/shared-features";
@@ -44,6 +47,18 @@ const router = createBrowserRouter([
       {
         path: "quote",
         element: <div className="max-w-4xl"><QuoteApproval onBack={() => {}} /></div>,
+      },
+      {
+        path: "admin/agents",
+        element: <AgentsPage />,
+      },
+      {
+        path: "admin/queues",
+        element: <QueuesPage />,
+      },
+      {
+        path: "admin/calls",
+        element: <CallsPage />,
       },
     ],
   },

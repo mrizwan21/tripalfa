@@ -13,7 +13,7 @@ import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
 import { Button } from '@tripalfa/ui-components';
-import { formatDate } from '@tripalfa/shared-utils/date-utils';
+import { formatDate } from '@tripalfa/shared-utils';
 
 interface AirlineCredit {
   id: string;
@@ -145,7 +145,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <Button variant="outline" size="default" onClick={fetchAirlineCredits}>
+          <Button variant="outline" size="md" onClick={fetchAirlineCredits}>
             Retry
           </Button>
         </div>
@@ -173,7 +173,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
           <div className="credit-filters">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'all' ? 'active' : ''}`}
               onClick={() => setFilterStatus('all')}
             >
@@ -181,7 +181,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'active' ? 'active' : ''}`}
               onClick={() => setFilterStatus('active')}
             >
@@ -189,7 +189,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'expired' ? 'active' : ''}`}
               onClick={() => setFilterStatus('expired')}
             >
@@ -197,7 +197,7 @@ const AirlineCreditsPanel: FC<AirlineCreditsPanelProps> = ({ customerId }) => {
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`filter-btn ${filterStatus === 'used' ? 'active' : ''}`}
               onClick={() => setFilterStatus('used')}
             >

@@ -11,7 +11,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useWeatherData } from '../hooks/useWeatherData';
 import { useExchangeRate } from '../hooks/useExchangeRate';
 import { CURRENCY_SYMBOLS, CURRENCY_NAMES } from '../api/exchangeRateApi';
-import { formatDate } from '@tripalfa/shared-utils/date-utils';
+import { formatDate } from '@tripalfa/shared-utils';
 import { DEFAULT_CONTENT_CONFIG, loadTenantContentConfig } from '../lib/tenantContentConfig';
 
 type CurrencyCode = string;
@@ -29,13 +29,13 @@ const AnimatedHotelMapAny = AnimatedHotelMap as any;
 function MapFallback({ height = '500px' }: { height?: string }): React.JSX.Element {
   return (
     <div
-      className="flex items-center justify-center bg-foreground rounded-xl gap-2"
+      className="flex items-center justify-center bg-gray-900 rounded-xl gap-2"
       style={{ height }}
     >
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-muted-foreground font-bold">Loading map...</p>
-        <p className="text-muted-foreground text-xs mt-1">Initializing Mapbox</p>
+        <p className="text-gray-500 font-bold">Loading map...</p>
+        <p className="text-gray-500 text-xs mt-1">Initializing Mapbox</p>
       </div>
     </div>
   );
@@ -114,12 +114,12 @@ function WeatherWidget({
   if (loading) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-xl p-6 border border-gray-200 ${className}`}
       >
         <div className="animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-          <div className="h-8 bg-muted rounded w-2/3 mb-2" />
-          <div className="h-3 bg-muted rounded w-1/3" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-4" />
+          <div className="h-8 bg-gray-100 rounded w-2/3 mb-2" />
+          <div className="h-3 bg-gray-100 rounded w-1/3" />
         </div>
       </div>
     );
@@ -128,9 +128,9 @@ function WeatherWidget({
   if (error || !weather) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-xl p-6 border border-gray-200 ${className}`}
       >
-        <p className="text-muted-foreground text-sm">Weather unavailable</p>
+        <p className="text-gray-500 text-sm">Weather unavailable</p>
       </div>
     );
   }
@@ -145,21 +145,21 @@ function WeatherWidget({
 
   return (
     <div
-      className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
     >
       <div className="flex items-center justify-between mb-4 gap-2">
         <div>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
             Weather in {destination.city}
           </p>
-          <p className="text-4xl font-black text-foreground">{temp}°C</p>
+          <p className="text-4xl font-black text-gray-900">{temp}°C</p>
         </div>
         <WeatherIcon condition={condition} size={56} />
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground capitalize">{description}</p>
-        <div className="flex gap-4 text-xs text-muted-foreground">
+        <p className="text-sm text-gray-500 capitalize">{description}</p>
+        <div className="flex gap-4 text-xs text-gray-500">
           <span>Feels like {feelsLike}°C</span>
           <span>•</span>
           <span>Humidity {humidity}%</span>
@@ -192,11 +192,11 @@ function CurrencyWidget({
   if (loading) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-xl p-6 border border-gray-200 ${className}`}
       >
         <div className="animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/2 mb-4" />
-          <div className="h-8 bg-muted rounded w-2/3" />
+          <div className="h-4 bg-gray-100 rounded w-1/2 mb-4" />
+          <div className="h-8 bg-gray-100 rounded w-2/3" />
         </div>
       </div>
     );
@@ -205,9 +205,9 @@ function CurrencyWidget({
   if (error || !rate) {
     return (
       <div
-        className={`bg-card/50 backdrop-blur-md rounded-xl p-6 border border-border ${className}`}
+        className={`bg-white/50 backdrop-blur-md rounded-xl p-6 border border-gray-200 ${className}`}
       >
-        <p className="text-muted-foreground text-sm">Currency conversion unavailable</p>
+        <p className="text-gray-500 text-sm">Currency conversion unavailable</p>
       </div>
     );
   }
@@ -217,26 +217,26 @@ function CurrencyWidget({
 
   return (
     <div
-      className={`bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border ${className}`}
+      className={`bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200 ${className}`}
     >
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
         Currency Exchange
       </p>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-muted-foreground text-sm">{originSymbol} 100</span>
-          <span className="text-muted-foreground">→</span>
-          <span className="text-foreground font-bold text-lg">
+          <span className="text-gray-500 text-sm">{originSymbol} 100</span>
+          <span className="text-gray-500">→</span>
+          <span className="text-gray-900 font-bold text-lg">
             {destSymbol} {conversion?.result.toFixed(2)}
           </span>
         </div>
 
-        <div className="pt-3 border-t border-border">
-          <p className="text-xs text-muted-foreground">
+        <div className="pt-3 border-t border-gray-200">
+          <p className="text-xs text-gray-500">
             1 {userCurrency} = {rate.toFixed(4)} {destinationCurrency}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1">
+          <p className="text-[10px] text-gray-500 mt-1">
             {CURRENCY_NAMES[userCurrency]} → {CURRENCY_NAMES[destinationCurrency]}
           </p>
         </div>
@@ -282,14 +282,14 @@ function SearchProgress({
   }, [tips.length]);
 
   return (
-    <div className="bg-card/50 backdrop-blur-md rounded-xl p-6 border border-border">
+    <div className="bg-white/50 backdrop-blur-md rounded-xl p-6 border border-gray-200">
       <div className="flex items-center justify-between mb-4 gap-2">
-        <p className="text-sm font-bold text-foreground">Searching hotels...</p>
-        <p className="text-xs text-muted-foreground">~{estimatedTime}s remaining</p>
+        <p className="text-sm font-bold text-gray-900">Searching hotels...</p>
+        <p className="text-xs text-gray-500">~{estimatedTime}s remaining</p>
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 bg-border rounded-full overflow-hidden mb-4">
+      <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
         <div
           className="h-full bg-blue-600 rounded-full transition-all duration-300"
           style={{ width: `${progress}%` }}
@@ -298,7 +298,7 @@ function SearchProgress({
 
       {/* Animated tip */}
       <div className="h-12 flex items-center gap-2">
-        <p className="text-xs text-muted-foreground animate-fade-in" key={currentTip}>
+        <p className="text-xs text-gray-500 animate-fade-in" key={currentTip}>
           {tips[currentTip]}
         </p>
       </div>
@@ -329,45 +329,45 @@ function StayInfo({
       : 0;
 
   return (
-    <div className="bg-card/50 backdrop-blur-md rounded-xl p-6 border border-border">
-      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">
+    <div className="bg-white/50 backdrop-blur-md rounded-xl p-6 border border-gray-200">
+      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
         Your Stay
       </p>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Check-in</p>
-          <p className="text-sm font-bold text-foreground">
+          <p className="text-xs text-gray-500 mb-1">Check-in</p>
+          <p className="text-sm font-bold text-gray-900">
             {checkIn
-              ? formatDate(checkIn, { weekday: 'short', month: 'short', day: 'numeric' })
+              ? formatDate(checkIn, 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })
               : 'Select dates'}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Check-out</p>
-          <p className="text-sm font-bold text-foreground">
+          <p className="text-xs text-gray-500 mb-1">Check-out</p>
+          <p className="text-sm font-bold text-gray-900">
             {checkOut
-              ? formatDate(checkOut, { weekday: 'short', month: 'short', day: 'numeric' })
+              ? formatDate(checkOut, 'en-US', { weekday: 'short', month: 'short', day: 'numeric' })
               : 'Select dates'}
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Guests</p>
-          <p className="text-sm font-bold text-foreground">{guests || 2} guests</p>
+          <p className="text-xs text-gray-500 mb-1">Guests</p>
+          <p className="text-sm font-bold text-gray-900">{guests || 2} guests</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Rooms</p>
-          <p className="text-sm font-bold text-foreground">
+          <p className="text-xs text-gray-500 mb-1">Rooms</p>
+          <p className="text-sm font-bold text-gray-900">
             {rooms || 1} room{(rooms || 1) > 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
       {nights > 0 && (
-        <div className="mt-4 pt-4 border-t border-border">
+        <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-center">
             <span className="text-2xl font-black text-blue-600">{nights}</span>
-            <span className="text-sm text-muted-foreground ml-2">night{nights > 1 ? 's' : ''}</span>
+            <span className="text-sm text-gray-500 ml-2">night{nights > 1 ? 's' : ''}</span>
           </p>
         </div>
       )}
@@ -389,12 +389,12 @@ export function HotelSearchLoading({
   className = '',
 }: HotelSearchLoadingProps): React.JSX.Element {
   return (
-    <div className={`min-h-screen bg-background ${className}`}>
+    <div className={`min-h-screen bg-white ${className}`}>
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-foreground mb-2">Finding Your Perfect Stay</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-black text-gray-900 mb-2">Finding Your Perfect Stay</h1>
+          <p className="text-gray-500">
             Searching hotels in {destination.city}, {destination.country}
           </p>
         </div>
@@ -435,30 +435,30 @@ export function HotelSearchLoading({
         </div>
 
         {/* Destination Info */}
-        <div className="mt-8 bg-card/50 backdrop-blur-md rounded-2xl p-6 border border-border">
+        <div className="mt-8 bg-white/50 backdrop-blur-md rounded-2xl p-6 border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                 Destination
               </p>
-              <p className="text-xl font-bold text-foreground">{destination.city}</p>
-              <p className="text-sm text-muted-foreground">{destination.country}</p>
+              <p className="text-xl font-bold text-gray-900">{destination.city}</p>
+              <p className="text-sm text-gray-500">{destination.country}</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                 Area
               </p>
-              <p className="text-xl font-bold text-foreground">{destination.name}</p>
-              <p className="text-sm text-muted-foreground">City center & nearby</p>
+              <p className="text-xl font-bold text-gray-900">{destination.name}</p>
+              <p className="text-sm text-gray-500">City center & nearby</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
                 Local Currency
               </p>
-              <p className="text-xl font-bold text-foreground">
+              <p className="text-xl font-bold text-gray-900">
                 {CURRENCY_SYMBOLS[destination.currency]} {destination.currency}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-500">
                 {CURRENCY_NAMES[destination.currency]}
               </p>
             </div>

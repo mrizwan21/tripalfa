@@ -19,6 +19,13 @@ pnpm -r build
 pnpm -r --if-present test
 ```
 
+## API gateway verification
+
+```bash
+pnpm gateway:verify
+pnpm gateway:preflight
+```
+
 ## Static data caution
 
 Do not run destructive DB commands against `tripalfa_local`.

@@ -4,7 +4,6 @@
  *
  * Architecture:
  * - Redis Cache: Fast in-memory responses for frequent queries
- * - Neon Database: Persistent storage for bookings and transactions
  * - API Manager: Unified response processing through cache layer
  *
  * Documentation: https://duffel.com/docs/api/v2
@@ -14,8 +13,6 @@ import { Router, Request, Response } from 'express';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import { prisma } from '@tripalfa/shared-database';
-import { Pool } from 'pg';
 import {
   cacheOfferRequestMiddleware,
   cacheOfferMiddleware,
@@ -41,27 +38,6 @@ const router: Router = Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 import { duffelClient } from '../utils/duffelClient.js';
-
-const rootDir = resolve(__dirname, '../../../../');
-
-const DB_WRITE_TIMEOUT_MS = 1500;
-
-// Static reference database connection
-const STATIC_DATABASE_URL = process.env.STATIC_DATABASE_URL;
-const staticDbPool = STATIC_DATABASE_URL
-  ? new Pool({
-      connectionString: STATIC_DATABASE_URL,
-      max: 5,
-      connectionTimeoutMillis: 5000,
-    })
-  : null;
-
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T | null> {
-  return Promise.race([
-    promise,
-    new Promise<null>(resolve => setTimeout(() => resolve(null), timeoutMs)),
-  ]);
-}
 
 // ============================================================================
 // Duffel API Helper Functions
@@ -274,39 +250,8 @@ router.post(
       const cancellationData = duffelResponse.data;
       const cancellationId = cancellationData.id;
 
-      // Find the order in database
-      const order = await withTimeout(
-        prisma.duffelOrder.findUnique({
-          where: { externalId: order_id },
-        }),
-        DB_WRITE_TIMEOUT_MS
-      );
-
-      if (order) {
-        // Extract refund details from Duffel response
-        const refundTo = cancellationData.refund_to || 'original_form_of_payment';
-        const airlineCredits = cancellationData.airline_credits || null;
-
-        // Store in database with full cancellation details
-        await prisma.duffelOrderCancellation.create({
-          data: {
-            externalId: cancellationId,
-            orderId: order.id,
-            userId: userId || order.userId, // Track user for airline credits
-            refundAmount: cancellationData.refund_amount
-              ? Number(cancellationData.refund_amount)
-              : 0,
-            refundCurrency: cancellationData.refund_currency || 'USD',
-            refundTo: refundTo,
-            airlineCredits: airlineCredits,
-            status: cancellationData.status || 'pending',
-            expiresAt: cancellationData.expires_at ? new Date(cancellationData.expires_at) : null,
-          },
-        });
-
-        // Invalidate order cache after cancellation
-        await OrderManager.invalidate(order_id, order.userId);
-      }
+      // Note: Database persistence removed - using Duffel API and Redis cache only
+      console.log('[Duffel] Cancellation created via API:', cancellationId);
 
       // Process through cancellation manager
       await CancellationManager.processResponse(cancellationId, cancellationData);
@@ -390,20 +335,6 @@ router.get(
           source: 'api',
         });
       } catch (duffelError) {
-        // Fallback to database
-        const cancellation = await prisma.duffelOrderCancellation.findUnique({
-          where: { externalId: String(id) },
-        });
-
-        if (cancellation) {
-          return res.json({
-            success: true,
-            data: cancellation,
-            cached: false,
-            source: 'neon',
-          });
-        }
-
         return res.status(404).json({ error: 'Cancellation not found' });
       }
     } catch (error: any) {
@@ -464,20 +395,18 @@ router.get('/order-cancellations', async (req: Request, res: Response) => {
   try {
     const { limit = 20, offset = 0 } = req.query;
 
-    const cancellations = await prisma.duffelOrderCancellation.findMany({
-      take: Number(limit),
-      skip: Number(offset),
-      orderBy: { createdAt: 'desc' },
-    });
+    // Note: Database persistence removed - using Duffel API and Redis cache only
+    console.log('[Duffel] List cancellations endpoint called (DB removed)');
 
     res.json({
       success: true,
-      data: cancellations,
+      data: [],
       pagination: {
         limit: Number(limit),
         offset: Number(offset),
-        total: cancellations.length,
+        total: 0,
       },
+      message: 'Database persistence removed - use Duffel API directly',
     });
   } catch (error: any) {
     console.error('[Duffel] List cancellations error:', error.message);
@@ -539,29 +468,8 @@ router.post('/order-cancellations/:id/confirm', async (req: Request, res: Respon
       'POST'
     );
 
-    // Update in database
-    await prisma.duffelOrderCancellation.updateMany({
-      where: { externalId: String(id) },
-      data: {
-        status: 'confirmed',
-        confirmedAt: new Date(),
-      },
-    });
-
-    // Update order status
-    const cancellation = await prisma.duffelOrderCancellation.findUnique({
-      where: { externalId: String(id) },
-    });
-
-    if (cancellation) {
-      await prisma.duffelOrder.update({
-        where: { id: cancellation.orderId },
-        data: {
-          status: 'cancelled',
-          cancelledAt: new Date(),
-        },
-      });
-    }
+    // Note: Database persistence removed - using Duffel API and Redis cache only
+    console.log('[Duffel] Cancellation confirmed via API:', id);
 
     res.json({
       success: true,
@@ -778,24 +686,8 @@ router.post(
 
       const contractData = duffelResponse.data;
 
-      // Store CFAR contract reference in order metadata
-      if (contractData.order_id) {
-        const order = await prisma.duffelOrder.findUnique({
-          where: { externalId: contractData.order_id },
-        });
-
-        if (order) {
-          await prisma.duffelOrder.update({
-            where: { id: order.id },
-            data: {
-              status: order.status,
-            },
-          });
-
-          // Invalidate cache
-          await OrderManager.invalidate(contractData.order_id);
-        }
-      }
+      // Note: Database persistence removed - using Duffel API and Redis cache only
+      console.log('[Duffel] CFAR contract created via API:', contractData.id);
 
       res.json({
         success: true,
@@ -855,6 +747,56 @@ router.get('/cfar-contracts/:id', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[Duffel] Get CFAR contract error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/duffel/cfar-claims/{id}:
+ *   get:
+ *     summary: Get a CFAR claim by ID
+ *     tags: [Duffel]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: CFAR claim retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+router.get('/cfar-claims/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const duffelResponse = await duffelRequest<any>(`/air/cfar_claims/${id}`);
+
+    res.json({
+      success: true,
+      data: duffelResponse.data,
+    });
+  } catch (error: any) {
+    console.error('[Duffel] Get CFAR claim error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });
@@ -929,25 +871,8 @@ router.post(
 
       const claimData = duffelResponse.data;
 
-      // Update order status
-      if (claimData.order_id) {
-        const order = await prisma.duffelOrder.findUnique({
-          where: { externalId: claimData.order_id },
-        });
-
-        if (order) {
-          await prisma.duffelOrder.update({
-            where: { id: order.id },
-            data: {
-              status: 'cancelled',
-              cancelledAt: new Date(),
-            },
-          });
-
-          // Invalidate cache
-          await OrderManager.invalidate(claimData.order_id);
-        }
-      }
+      // Note: Database persistence removed - using Duffel API and Redis cache only
+      console.log('[Duffel] CFAR claim created via API:', claimData.id);
 
       res.json({
         success: true,
@@ -960,6 +885,56 @@ router.post(
     }
   }
 );
+
+/**
+ * @swagger
+ * /api/duffel/cfar-claims/{id}:
+ *   get:
+ *     summary: Get a CFAR claim by ID
+ *     tags: [Duffel]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: CFAR claim retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+router.get('/cfar-claims/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const duffelResponse = await duffelRequest<any>(`/air/cfar_claims/${id}`);
+
+    res.json({
+      success: true,
+      data: duffelResponse.data,
+    });
+  } catch (error: any) {
+    console.error('[Duffel] Get CFAR claim error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
 /**
@@ -1097,22 +1072,8 @@ router.post('/order-change-requests', async (req: Request, res: Response) => {
 
     const changeData = duffelResponse.data;
 
-    // Store in database
-    const order = await prisma.duffelOrder.findUnique({
-      where: { externalId: order_id },
-    });
-
-    if (order) {
-      await prisma.duffelOrderChange.create({
-        data: {
-          externalId: changeData.id,
-          orderId: order.id,
-          requestedChanges: slices,
-          changeOffers: changeData.order_change_offers,
-          status: 'pending',
-        },
-      });
-    }
+    // Note: Database persistence removed - using Duffel API and Redis cache only
+    console.log('[Duffel] Change request created via API:', changeData.id);
 
     res.json({
       success: true,
@@ -1180,19 +1141,6 @@ router.get('/order-change-requests/:id', async (req: Request, res: Response) => 
         data: duffelResponse.data,
       });
     } catch (duffelError) {
-      // Fallback to database
-      const change = await prisma.duffelOrderChange.findUnique({
-        where: { externalId: String(id) },
-      });
-
-      if (change) {
-        return res.json({
-          success: true,
-          data: change,
-          source: 'database',
-        });
-      }
-
       return res.status(404).json({ error: 'Change request not found' });
     }
   } catch (error: any) {
@@ -1335,14 +1283,8 @@ router.post('/order-changes/confirm', async (req: Request, res: Response) => {
       data: { order_change_id },
     });
 
-    // Update in database
-    await prisma.duffelOrderChange.updateMany({
-      where: { externalId: order_change_id },
-      data: {
-        status: 'confirmed',
-        confirmedAt: new Date(),
-      },
-    });
+    // Note: Database persistence removed - using Duffel API and Redis cache only
+    console.log('[Duffel] Order change confirmed via API:', order_change_id);
 
     res.json({
       success: true,
@@ -1596,20 +1538,8 @@ router.post(
 
       const paymentIntentData = duffelResponse.data;
 
-      // Store payment intent reference in order metadata
-      const order = await prisma.duffelOrder.findUnique({
-        where: { externalId: order_id },
-      });
-
-      if (order) {
-        await withTimeout(
-          prisma.duffelOrder.update({
-            where: { id: order.id },
-            data: { status: order.status },
-          }),
-          DB_WRITE_TIMEOUT_MS
-        );
-      }
+      // Note: Database persistence removed - using Duffel API and Redis cache only
+      console.log('[Duffel] Payment intent created via API:', paymentIntentData.id);
 
       res.json({
         success: true,
@@ -1732,31 +1662,16 @@ router.post(
 
       const paymentIntentData = duffelResponse.data;
 
-      // Update order payment status
-      if (paymentIntentData.status === 'succeeded') {
-        const paymentOrderId = paymentIntentData.order_id || paymentIntentData.order?.id;
-        const order = paymentOrderId
-          ? await withTimeout(
-              prisma.duffelOrder.findUnique({
-                where: { externalId: String(paymentOrderId) },
-              }),
-              DB_WRITE_TIMEOUT_MS
-            )
-          : null;
+      // Note: Database persistence removed - using Duffel API and Redis cache only
+      console.log('[Duffel] Payment intent confirmed via API:', id);
 
-        if (order) {
-          await withTimeout(
-            prisma.duffelOrder.update({
-              where: { id: order.id },
-              data: {
-                status: 'paid',
-              },
-            }),
-            DB_WRITE_TIMEOUT_MS
-          );
-
-          // Invalidate order cache
-          await withTimeout(OrderManager.invalidate(order.externalId || ''), DB_WRITE_TIMEOUT_MS);
+      // Invalidate order cache if order ID is available
+      const orderId = paymentIntentData.order_id || paymentIntentData.order?.id;
+      if (orderId) {
+        try {
+          await OrderManager.invalidate(orderId);
+        } catch (cacheError) {
+          console.warn('[Duffel] Cache invalidation failed:', cacheError);
         }
       }
 
@@ -1832,26 +1747,6 @@ router.post(
       const { id } = req.params;
       const { payment_method_type = 'balance' } = req.body;
 
-      // Get order first to check status
-      const order = await withTimeout(
-        prisma.duffelOrder.findUnique({
-          where: { externalId: String(id) },
-        }),
-        DB_WRITE_TIMEOUT_MS
-      );
-
-      if (order?.status === 'cancelled') {
-        return res.status(400).json({ error: 'Cannot pay for a cancelled order' });
-      }
-
-      if (
-        order?.status === 'paid' ||
-        order?.status === 'confirmed' ||
-        order?.status === 'ticketed'
-      ) {
-        return res.status(400).json({ error: 'Order is already paid' });
-      }
-
       // Create payment intent and confirm in one step
       const paymentIntentResponse = await duffelRequest<any>('/air/payment_intents', 'POST', {
         data: {
@@ -1862,23 +1757,11 @@ router.post(
 
       const paymentIntentData = paymentIntentResponse.data;
 
-      // If using balance, payment is instant
-      if (payment_method_type === 'balance' && paymentIntentData.status === 'succeeded') {
-        // Update order in database
-        if (order) {
-          await withTimeout(
-            prisma.duffelOrder.update({
-              where: { id: order.id },
-              data: {
-                status: 'paid',
-              },
-            }),
-            DB_WRITE_TIMEOUT_MS
-          );
-        }
-
-        // Invalidate cache
-        await withTimeout(OrderManager.invalidate(id), DB_WRITE_TIMEOUT_MS);
+      // Invalidate order cache
+      try {
+        await OrderManager.invalidate(id);
+      } catch (cacheError) {
+        console.warn('[Duffel] Cache invalidation failed:', cacheError);
       }
 
       res.json({
@@ -1897,6 +1780,79 @@ router.post(
     }
   }
 );
+
+// ============================================================================
+// GET ORDER BY ID
+// ============================================================================
+
+/**
+ * @swagger
+ * /api/duffel/orders/{id}:
+ *   get:
+ *     summary: Get order by ID
+ *     tags: [Duffel]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Order retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ */
+router.get('/orders/:id', cacheOrderMiddleware, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Try Duffel API first
+    try {
+      const duffelResponse = await duffelRequest<any>(`/air/orders/${id}`);
+
+      // Process through API Manager (caches in Redis)
+      await OrderManager.processResponse(id, duffelResponse.data);
+
+      return res.json({
+        success: true,
+        data: duffelResponse.data,
+        cached: false,
+        source: 'api',
+      });
+    } catch (duffelError) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+  } catch (error: any) {
+    console.error('[Duffel] Get order error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ============================================================================
 // HOLD ORDERS - Create Order with Hold Type
@@ -1980,39 +1936,14 @@ router.post(
       const orderData = duffelResponse.data;
       const orderId = orderData.id;
 
-      // Store in database
-      let order: { id?: string } | null = null;
-      try {
-        order = await withTimeout(
-          prisma.duffelOrder.create({
-            data: {
-              externalId: orderId,
-              customerEmail: contact?.email,
-              customerPhone: contact?.phone,
-              status: orderData.status || 'created',
-              type: 'hold',
-              slices: orderData.slices,
-              passengers: orderData.passengers,
-              baseAmount: orderData.base_amount,
-              taxAmount: orderData.tax_amount || 0,
-              totalAmount: orderData.total_amount,
-              currency: orderData.total_currency || 'USD',
-            },
-          }),
-          DB_WRITE_TIMEOUT_MS
-        );
-      } catch (dbError: any) {
-        console.warn('[Duffel] Hold order local persistence skipped:', dbError?.message || dbError);
-      }
+      // Note: Database persistence removed - using Duffel API and Redis cache only
+      console.log('[Duffel] Hold order created via API:', orderId);
 
       let responseData = orderData;
       let responseSource = 'api';
 
       try {
-        const managedResponse = await withTimeout(
-          OrderManager.processResponse(orderId, orderData, userId),
-          DB_WRITE_TIMEOUT_MS
-        );
+        const managedResponse = await OrderManager.processResponse(orderId, orderData, userId);
         if (managedResponse?.data) {
           responseData = managedResponse.data;
         }
@@ -2027,7 +1958,6 @@ router.post(
       res.json({
         success: true,
         data: responseData,
-        localId: order?.id,
         cached: false,
         source: responseSource,
         type: 'hold',
@@ -2180,11 +2110,10 @@ router.post(
       });
 
       // Invalidate order cache
-      const order = await prisma.duffelOrder.findUnique({
-        where: { externalId: order_id },
-      });
-      if (order) {
-        await OrderManager.invalidate(order_id, order.userId);
+      try {
+        await OrderManager.invalidate(order_id);
+      } catch (cacheError) {
+        console.warn('[Duffel] Cache invalidation failed:', cacheError);
       }
 
       res.json({
@@ -2810,50 +2739,7 @@ router.get('/airports', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Query parameter "q" is required (min 2 characters)' });
     }
 
-    // Attempt to search local static database first for speed
-    if (staticDbPool) {
-      try {
-        const searchTerm = `%${q}%`;
-        const result = await staticDbPool.query(
-          `SELECT 'AIRPORT' as type, iata_code as code, name, city_name, country_name, latitude, longitude
-           FROM duffel_airports
-           WHERE LOWER(name) LIKE LOWER($1) OR LOWER(iata_code) LIKE LOWER($1)
-           UNION ALL
-           SELECT 'CITY' as type, iata_code as code, name as name, name as city_name, country_name, latitude, longitude
-           FROM duffel_cities
-           WHERE LOWER(name) LIKE LOWER($1)
-           LIMIT $2`,
-          [searchTerm, Number(limit)]
-        );
-
-        if (result.rows.length > 0) {
-          const places = result.rows.map((row: any) => ({
-            type: row.type,
-            icon: row.type === 'AIRPORT' ? 'plane' : 'map-pin',
-            title: row.type === 'AIRPORT' ? `${row.name} (${row.code})` : row.name,
-            subtitle: row.city_name
-              ? `${row.city_name}, ${row.country_name}`
-              : row.country_name || '',
-            code: row.code,
-            city: row.city_name || row.name,
-            country: row.country_name || '',
-            countryCode: '', // Add if available
-            latitude: row.latitude,
-            longitude: row.longitude,
-          }));
-
-          return res.json({
-            success: true,
-            data: places,
-            source: 'static-db',
-          });
-        }
-      } catch (dbError) {
-        console.warn('[Duffel] Static DB search failed, falling back to API:', dbError);
-      }
-    }
-
-    // Fallback to Duffel Places API
+    // Use Duffel Places API for airport search
     const params = new URLSearchParams();
     params.append('query', q);
     params.append('limit', String(limit));
@@ -3163,6 +3049,215 @@ router.get('/nearby-airports', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('[Duffel] Nearby airports error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================================
+// FLIGHTS API ALIASES - Map /api/flights/* to /api/duffel/*
+// ============================================================================
+// These aliases ensure frontend calls to /api/flights/* work with the backend /api/duffel/* routes
+
+// Flight search aliases
+router.post('/flights/search', async (req: Request, res: Response) => {
+  try {
+    // Forward the request to the main offers endpoint
+    const duffelResponse = await duffelRequest<any>('/air/offers', 'POST', {
+      data: req.body,
+    });
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight search alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/flights/offers/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const duffelResponse = await duffelRequest<any>(`/air/offers/${id}`);
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight offer alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/flights/orders', async (req: Request, res: Response) => {
+  try {
+    const duffelResponse = await duffelRequest<any>('/air/orders', 'POST', {
+      data: req.body,
+    });
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight order alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/flights/orders/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const duffelResponse = await duffelRequest<any>(`/air/orders/${id}`);
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight order alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/flights/orders/hold', async (req: Request, res: Response) => {
+  try {
+    const duffelResponse = await duffelRequest<any>('/air/orders', 'POST', {
+      data: { ...req.body, type: 'hold' },
+    });
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight hold order alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Airport search aliases
+router.get('/flights/airports', async (req: Request, res: Response) => {
+  try {
+    const { q, limit = 10 } = req.query;
+    
+    if (!q || typeof q !== 'string' || q.length < 2) {
+      return res.status(400).json({ error: 'Query parameter "q" is required (min 2 characters)' });
+    }
+
+    const params = new URLSearchParams();
+    params.append('query', q);
+    params.append('limit', String(limit));
+
+    const duffelResponse = await duffelRequest<any>(`/air/places?${params}`, 'GET');
+    
+    const places = (duffelResponse.data || []).map((place: any) => ({
+      type: place.type === 'airport' ? 'AIRPORT' : 'CITY',
+      icon: place.type === 'airport' ? 'plane' : 'map-pin',
+      title: place.type === 'airport' ? `${place.name} (${place.iata_code})` : place.name,
+      subtitle: place.city_name
+        ? `${place.city_name}, ${place.country_name}`
+        : place.country_name || '',
+      code: place.iata_code || place.id,
+      city: place.city_name || place.name,
+      country: place.country_name || '',
+      countryCode: place.country_code || '',
+      latitude: place.lat,
+      longitude: place.lng,
+    }));
+
+    res.json({
+      success: true,
+      data: places,
+      source: 'api',
+    });
+  } catch (error: any) {
+    console.error('[Duffel] Flight airports alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Seat map aliases
+router.get('/flights/seat-maps', async (req: Request, res: Response) => {
+  try {
+    const { offer_id, order_id, offerId, orderId, segment_id } = req.query;
+    const actualOfferId = (offerId || offer_id) as string;
+    const actualOrderId = (orderId || order_id) as string;
+
+    if (!actualOfferId && !actualOrderId) {
+      return res.status(400).json({ error: 'offerId or orderId is required' });
+    }
+
+    const params = new URLSearchParams();
+    if (actualOfferId) params.append('offer_id', actualOfferId);
+    if (actualOrderId) params.append('order_id', actualOrderId);
+    if (segment_id) params.append('segment_id', segment_id as string);
+
+    const duffelResponse = await duffelRequest<any>(`/air/seat_maps?${params.toString()}`);
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight seat maps alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Payment aliases
+router.post('/flights/payment-intents', async (req: Request, res: Response) => {
+  try {
+    const duffelResponse = await duffelRequest<any>('/air/payment_intents', 'POST', {
+      data: req.body,
+    });
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight payment intents alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/flights/orders/:id/pay', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { payment_method_type = 'balance' } = req.body;
+
+    const paymentIntentResponse = await duffelRequest<any>('/air/payment_intents', 'POST', {
+      data: {
+        order_id: id,
+        payment_method: { type: payment_method_type },
+      },
+    });
+
+    const paymentIntentData = paymentIntentResponse.data;
+
+    res.json({
+      success: true,
+      data: {
+        order_id: id,
+        payment_intent: paymentIntentData,
+        status: paymentIntentData.status,
+        message:
+          paymentIntentData.status === 'succeeded' ? 'Payment successful' : 'Payment pending',
+      },
+    });
+  } catch (error: any) {
+    console.error('[Duffel] Flight pay order alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Available services aliases
+router.get('/flights/offers/:id/available-services', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const duffelResponse = await duffelRequest<any>(`/air/offers/${id}/available_services`);
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight available services alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/flights/orders/:id/available-services', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const duffelResponse = await duffelRequest<any>(`/air/orders/${id}/available_services`);
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight order available services alias error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Baggage aliases
+router.post('/flights/bags', async (req: Request, res: Response) => {
+  try {
+    const duffelResponse = await duffelRequest<any>('/air/order_services', 'POST', {
+      data: req.body,
+    });
+    res.json(duffelResponse.data);
+  } catch (error: any) {
+    console.error('[Duffel] Flight bags alias error:', error.message);
     res.status(500).json({ error: error.message });
   }
 });

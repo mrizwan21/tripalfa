@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from '../../ui/card';
-import { Button } from '../../ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '../../ui/input';
 import { Textarea } from '../../ui/textarea';
 import { Badge } from '../../ui/badge';
@@ -162,7 +162,7 @@ export const OfflineRequestForm: React.FC<OfflineRequestFormProps> = ({
           <h3 className="text-lg font-semibold">
             {isOriginal ? "Original Flight" : "Selected Flight"}
           </h3>
-          {!isOriginal && <Badge variant="default">SELECTED</Badge>}
+          {!isOriginal && <Badge variant="primary">SELECTED</Badge>}
         </div>
 
         <div className="mb-4">
@@ -237,7 +237,7 @@ export const OfflineRequestForm: React.FC<OfflineRequestFormProps> = ({
           <h3 className="text-lg font-semibold">
             {isOriginal ? "Original Hotel" : "Selected Hotel"}
           </h3>
-          {!isOriginal && <Badge variant="default">SELECTED</Badge>}
+          {!isOriginal && <Badge variant="primary">SELECTED</Badge>}
         </div>
 
         <div className="mb-4">

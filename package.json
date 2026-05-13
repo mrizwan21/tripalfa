@@ -17,6 +17,14 @@
     "format:check": "pnpm -r format:check",
     "test": "pnpm -r test",
     "test:integration": "pnpm -r test:integration",
+    "test:e2e": "cd apps/booking-engine && pnpm test:e2e",
+    "test:e2e:all": "cd apps/booking-engine && pnpm test:e2e:all",
+    "test:e2e:yolo": "cd apps/booking-engine && pnpm test:e2e:yolo",
+    "test:e2e:parallel": "cd apps/booking-engine && pnpm test:e2e:parallel",
+    "test:e2e:module": "cd apps/booking-engine && pnpm test:e2e:module",
+    "test:e2e:debug": "cd apps/booking-engine && pnpm test:e2e:debug",
+    "test:e2e:report": "cd apps/booking-engine && pnpm test:e2e:report",
+    "test:e2e:ci": "cd apps/booking-engine && pnpm test:e2e:ci",
     "test:lint": "pnpm exec eslint .",
     "test:format": "pnpm exec prettier --check .",
     "db:migrate": "pnpm --filter @tripalfa/shared-database db:migrate",
@@ -35,12 +43,18 @@
     "gateway:stop": "bash tools/scripts/bin/kong_stop_local.sh",
     "gateway:status": "bash tools/scripts/bin/kong_status_local.sh",
     "gateway:preflight": "bash tools/scripts/bin/gateway_preflight_local.sh",
-    "postinstall": "pnpm --filter @tripalfa/shared-database db:generate"
-    ,
-    "gateway:verify-routes": "node tools/scripts/gateway/verify-route-coverage.mjs"
+    "postinstall": "pnpm --filter @tripalfa/shared-database db:generate",
+    "gateway:verify-routes": "node tools/scripts/gateway/verify-route-coverage.mjs",
+    "gateway:verify-frontends": "node tools/scripts/gateway/verify-frontend-gateway-only.mjs",
+    "gateway:verify": "pnpm gateway:preflight && pnpm gateway:build && pnpm gateway:verify-frontends && pnpm gateway:verify-routes",
+    "gateway:verify-runtime": "pnpm gateway:preflight && pnpm gateway:sync",
+    "gateway:setup-consumers": "bash tools/scripts/bin/gateway_setup_consumers.sh",
+    "local:gateway": "node local-gateway.mjs",
+    "static-data:server": "cd packages/static-data && node server.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^8.57.1",
+    "@playwright/test": "1.59.1",
     "@prisma/client": "^7.7.0",
     "@prisma/config": "^7.7.0",
     "@types/cors": "^2.8.0",
@@ -60,7 +74,6 @@
     "markdownlint-cli": "^0.48.0",
     "prettier": "^3.1.0",
     "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
@@ -69,13 +82,16 @@
     "pnpm": ">=10.0.0"
   },
   "dependencies": {
+    "@prisma/client-runtime-utils": "7.7.0",
     "@tanstack/react-query": "^5.0.0",
     "axios": "^1.15.0",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.0.0",
     "jsonwebtoken": "^9.0.0",
     "node-fetch": "^2.7.0",
     "pg": "^8.11.0",
+    "playwright": "^1.59.1",
     "prisma": "^7.7.0"
   },
   "pnpm": {
@@ -89,6 +105,11 @@
       "@swc/core",
       "electron",
       "msgpackr-extract"
+    ]
+  },
+  "msw": {
+    "workerDirectory": [
+      "apps/booking-engine/public"
     ]
   }
 }

@@ -88,13 +88,13 @@ function FlightDetail() {
     return (
       <TripLogerLayout>
         <div className="flex flex-col items-center justify-center min-h-screen pb-32 gap-4">
-          <h2 className="text-2xl font-black text-foreground mb-2">Flight Booking Disabled</h2>
-          <p className="text-muted-foreground mb-6">
+          <h2 className="text-2xl font-black text-gray-900 mb-2">Flight Booking Disabled</h2>
+          <p className="text-gray-500 mb-6">
             Your admin has currently disabled flight booking for this tenant.
           </p>
           <Button
             onClick={() => navigate('/')}
-            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl px-6 py-3 font-bold uppercase tracking-widest text-xs shadow-lg shadow-purple-100 hover:bg-[hsl(var(--primary)/0.9)]"
+            className="bg-[#003b95] text-white rounded-xl px-6 py-3 font-bold uppercase tracking-widest text-xs shadow-lg shadow-purple-100 hover:bg-[#002a6e]"
           >
             Back to Home
           </Button>
@@ -245,8 +245,8 @@ function FlightDetail() {
     return (
       <TripLogerLayout>
         <div className="flex flex-col items-center justify-center min-h-screen pb-32 gap-4">
-          <Loader2 size={48} className="text-[hsl(var(--primary))] animate-spin mb-4" />
-          <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">
+          <Loader2 size={48} className="text-[#003b95] animate-spin mb-4" />
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">
             Loading Flight Details...
           </p>
         </div>
@@ -258,13 +258,13 @@ function FlightDetail() {
     return (
       <TripLogerLayout>
         <div className="flex flex-col items-center justify-center min-h-screen pb-32 gap-4">
-          <h2 className="text-2xl font-black text-foreground mb-2">Flight Not Found</h2>
-          <p className="text-muted-foreground mb-6">
+          <h2 className="text-2xl font-black text-gray-900 mb-2">Flight Not Found</h2>
+          <p className="text-gray-500 mb-6">
             We couldn't find the flight details you requested.
           </p>
           <Button
             onClick={() => navigate('/flights')}
-            className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] rounded-xl px-6 py-3 font-bold uppercase tracking-widest text-xs shadow-lg shadow-purple-100 hover:bg-[hsl(var(--primary)/0.9)]"
+            className="bg-[#003b95] text-white rounded-xl px-6 py-3 font-bold uppercase tracking-widest text-xs shadow-lg shadow-purple-100 hover:bg-[#002a6e]"
           >
             Back to Search
           </Button>
@@ -275,26 +275,25 @@ function FlightDetail() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[hsl(var(--background))] min-h-screen pb-32 font-sans">
+      <div className="bg-gray-50 min-h-screen pb-32 font-sans">
         {/* Elite Header */}
-        <div className="bg-background border-b border-border sticky top-0 z-40 shadow-sm">
-          <div className="container mx-auto px-4 max-w-7xl h-20 flex items-center justify-between gap-2">
+        <div className="bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl h-20 flex items-center justify-between gap-2">
             <div className="flex items-center gap-6">
-              <Button
-                variant="outline"
-                size="md"
+              <button
                 onClick={() => navigate(-1)}
-                className="w-12 h-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-[hsl(var(--primary))] hover:border-[hsl(var(--primary))] transition-all gap-2"
+                className="w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#003b95] hover:border-[#003b95] transition-all duration-200"
+                aria-label="Go back"
               >
                 <ArrowLeft size={20} />
-              </Button>
+              </button>
               <div>
-                <h1 className="text-sm font-black text-foreground uppercase tracking-widest text-3xl font-bold tracking-tight">
+                <h1 className="text-lg font-bold text-[#1d1d1f] tracking-tight">
                   {flight.tripType === 'multi-city'
                     ? `${flight.origin} → ... → ${flight.destination}`
                     : `${flight.origin} to ${flight.destination}`}
                 </h1>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {flight.tripType === 'multi-city' && flight.slices?.length > 0
                     ? `${flight.slices.length} legs • `
                     : ''}
@@ -303,53 +302,56 @@ function FlightDetail() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-12 h-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover:text-[hsl(var(--primary))] transition-all gap-2"
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {}}
+                className="w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#003b95] hover:border-[#003b95] transition-all duration-200"
+                aria-label="Share flight"
               >
                 <Share2 size={18} />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-12 h-12 rounded-2xl border border-border flex items-center justify-center text-muted-foreground hover: transition-all gap-2"
+              </button>
+              <button
+                onClick={() => {}}
+                className="w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#003b95] hover:border-[#003b95] transition-all duration-200"
+                aria-label="Save flight"
               >
                 <Heart size={18} />
-              </Button>
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 max-w-7xl mt-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl mt-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10">
             {/* Main Content */}
-            <div className="lg:col-span-8 space-y-8">
+            <div className="lg:col-span-8 space-y-6">
               {/* Tabs */}
-              <div className="flex items-center gap-8 border-b border-border">
-                {['segments', 'route', 'baggage', 'rules'].map(tab => (
-                  <Button
-                    variant="outline"
-                    size="md"
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-4 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${
-                      activeTab === tab
-                        ? 'text-[hsl(var(--primary))]'
-                        : 'text-muted-foreground hover:text-foreground'
+              <div className="flex items-center gap-2 border-b border-gray-200 overflow-x-auto pb-0">
+                {[
+                  { key: 'segments', label: 'Segments' },
+                  { key: 'route', label: 'Route' },
+                  { key: 'baggage', label: 'Baggage' },
+                  { key: 'rules', label: 'Fare Rules' },
+                ].map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`pb-3 px-4 text-xs font-semibold uppercase tracking-wider transition-all relative whitespace-nowrap ${
+                      activeTab === tab.key
+                        ? 'text-[#003b95]'
+                        : 'text-gray-500 hover:text-[#1d1d1f]'
                     }`}
                   >
-                    {tab}
-                    {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[hsl(var(--primary))]" />
+                    {tab.label}
+                    {activeTab === tab.key && (
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-[#003b95] rounded-full" />
                     )}
-                  </Button>
+                  </button>
                 ))}
               </div>
 
               {/* Tab Content */}
-              <div className="bg-background rounded-[2.5rem] border border-border shadow-xl shadow-border/40 p-10">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 lg:p-10">
                 {activeTab === 'segments' && (
                   <div className="space-y-12">
                     {/* Show slices for multi-city, or just segments for one-way/round-trip */}
@@ -357,22 +359,22 @@ function FlightDetail() {
                       <div key={sliceIdx} className="relative">
                         {/* Slice Header - Show for multi-city */}
                         {flight.tripType === 'multi-city' && (
-                          <div className="mb-6 pb-4 border-b border-dashed border-border">
-                            <div className="flex items-center justify-between gap-2">
+                          <div className="mb-6 pb-4 border-b border-dashed border-gray-200">
+                            <div className="flex items-center justify-between gap-2 flex-wrap">
                               <div>
-                                <h3 className="text-lg font-black text-[hsl(var(--primary))] tracking-tight">
+                                <h3 className="text-lg font-bold text-[#003b95] tracking-tight">
                                   {slice.sliceLabel}
                                 </h3>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                <p className="text-xs text-gray-500 mt-1">
                                   {slice.departureDate} • {slice.segments?.length} flight(s) •
                                   Total: {slice.totalDuration}
                                 </p>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                   Route:
                                 </span>
-                                <span className="text-sm font-bold text-foreground">
+                                <span className="text-sm font-semibold text-[#1d1d1f]">
                                   {slice.segments?.[0]?.from} →{' '}
                                   {slice.segments?.[slice.segments?.length - 1]?.to}
                                 </span>
@@ -385,52 +387,56 @@ function FlightDetail() {
                         {slice.segments?.map((segment: any, idx: number) => (
                           <div key={`${sliceIdx}-${idx}`} className="relative mb-8 last:mb-0">
                             {idx > 0 && (
-                              <div className="absolute -top-6 left-6 h-6 border-l-2 border-dashed border-border" />
+                              <div className="absolute -top-6 left-6 h-6 border-l-2 border-dashed border-gray-200" />
                             )}
-                            <div className="flex gap-10">
-                              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center shrink-0 gap-2">
+                            <div className="flex gap-6">
+                              <div className="w-12 h-12 rounded-xl bg-[#003b95]/5 flex items-center justify-center shrink-0">
                                 <Plane
-                                  className={idx % 2 === 0 ? '-rotate-45' : 'rotate-45'}
+                                  className={`${idx % 2 === 0 ? '-rotate-45' : 'rotate-45'} text-[#003b95]`}
                                   size={20}
                                 />
                               </div>
                               <div className="flex-1 gap-4">
-                                <div className="flex items-center justify-between mb-6 gap-2">
+                                <div className="flex items-center justify-between mb-6 gap-2 flex-wrap">
                                   <div>
-                                    <h3 className="text-xl font-black text-foreground tracking-tight">
+                                    <h3 className="text-lg font-bold text-[#1d1d1f] tracking-tight">
                                       {segment.from} → {segment.to}
                                     </h3>
-                                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                                    <p className="text-xs text-gray-500 mt-1">
                                       {segment.number} • {segment.airline}
                                     </p>
                                   </div>
                                   <div className="text-right">
-                                    <p className="text-[10px] font-black text-[hsl(var(--primary))] uppercase tracking-widest px-3 py-1 bg-purple-50 rounded-full">
+                                    <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-100">
                                       Confirmed
-                                    </p>
+                                    </span>
                                   </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-10">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                   <div className="space-y-4">
                                     <div className="flex gap-4">
-                                      <Clock className="text-muted-foreground" size={16} />
+                                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                                        <Clock className="text-gray-400" size={16} />
+                                      </div>
                                       <div>
-                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
                                           Departure
                                         </p>
-                                        <p className="text-sm font-bold text-foreground">
+                                        <p className="text-sm font-semibold text-[#1d1d1f]">
                                           {new Date(segment.depart).toLocaleString()}
                                         </p>
                                       </div>
                                     </div>
                                     <div className="flex gap-4">
-                                      <MapPin className="text-muted-foreground" size={16} />
+                                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                                        <MapPin className="text-gray-400" size={16} />
+                                      </div>
                                       <div>
-                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
                                           Arrival
                                         </p>
-                                        <p className="text-sm font-bold text-foreground">
+                                        <p className="text-sm font-semibold text-[#1d1d1f]">
                                           {new Date(segment.arrive).toLocaleString()}
                                         </p>
                                       </div>
@@ -438,31 +444,35 @@ function FlightDetail() {
                                   </div>
                                   <div className="space-y-4">
                                     <div className="flex gap-4">
-                                      <Users className="text-muted-foreground" size={16} />
+                                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                                        <Users className="text-gray-400" size={16} />
+                                      </div>
                                       <div>
-                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
                                           Aircraft
                                         </p>
-                                        <p className="text-sm font-bold text-foreground">
+                                        <p className="text-sm font-semibold text-[#1d1d1f]">
                                           {segment.aircraft || 'Information unavailable'}
                                         </p>
                                       </div>
                                     </div>
                                     <div className="flex gap-4">
-                                      <ShieldCheck className="text-muted-foreground" size={16} />
+                                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                                        <ShieldCheck className="text-gray-400" size={16} />
+                                      </div>
                                       <div>
-                                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
+                                        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">
                                           Duration
                                         </p>
-                                        <p className="text-sm font-bold text-foreground">
+                                        <p className="text-sm font-semibold text-[#1d1d1f]">
                                           {segment.duration}
                                         </p>
                                       </div>
                                     </div>
                                     {segment.layover && (
-                                      <div className="mt-4 px-4 py-3 bg-amber-50 rounded-2xl border border-amber-100 flex items-center gap-3">
-                                        <Clock size={12} className="text-amber-500 shrink-0" />
-                                        <span className="text-[10px] font-black text-amber-700 uppercase tracking-wider">
+                                      <div className="mt-4 px-4 py-3 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-3">
+                                        <Clock size={14} className="text-amber-500 shrink-0" />
+                                        <span className="text-xs font-semibold text-amber-700">
                                           Layover: {segment.layover}
                                         </span>
                                       </div>
@@ -479,12 +489,14 @@ function FlightDetail() {
                 )}
 
                 {activeTab === 'route' && (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     <div className="flex items-center gap-3 mb-6">
-                      <Map className="text-[hsl(var(--primary))]" size={24} />
+                      <div className="w-10 h-10 rounded-xl bg-[#003b95]/5 flex items-center justify-center">
+                        <Map className="text-[#003b95]" size={20} />
+                      </div>
                       <div>
-                        <h3 className="text-lg font-black text-foreground">Flight Route</h3>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                        <h3 className="text-lg font-bold text-[#1d1d1f]">Flight Route</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">
                           Interactive route map
                         </p>
                       </div>
@@ -685,16 +697,16 @@ function FlightDetail() {
                 )}
 
                 {activeTab === 'baggage' && (
-                  <div className="space-y-8">
-                    <div className="flex items-start gap-6 p-8 bg-muted rounded-3xl border border-border">
-                      <div className="p-4 bg-background rounded-2xl shadow-sm">
-                        <Luggage className="text-[hsl(var(--primary))]" size={32} />
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-5 p-6 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="p-3 bg-white rounded-xl shadow-sm shrink-0">
+                        <Luggage className="text-[#003b95]" size={24} />
                       </div>
                       <div>
-                        <h4 className="text-lg font-black text-foreground mb-2">
+                        <h4 className="text-lg font-bold text-[#1d1d1f] mb-2">
                           Check-in Baggage
                         </h4>
-                        <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                        <p className="text-sm text-gray-600 leading-relaxed">
                           Your fare include {flight.includedBags?.[0]?.quantity} bags (
                           {flight.includedBags?.[0]?.weight}
                           {flight.includedBags?.[0]?.unit} each). Maximum dimensions: 158cm (length
@@ -702,13 +714,13 @@ function FlightDetail() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-6 p-8 border border-border rounded-3xl">
-                      <div className="p-4 bg-muted rounded-2xl">
-                        <ShieldCheck className="text-muted-foreground" size={32} />
+                    <div className="flex items-start gap-5 p-6 border border-gray-100 rounded-xl">
+                      <div className="p-3 bg-gray-50 rounded-xl shrink-0">
+                        <ShieldCheck className="text-gray-400" size={24} />
                       </div>
                       <div>
-                        <h4 className="text-lg font-black text-foreground mb-2">Cabin Baggage</h4>
-                        <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                        <h4 className="text-lg font-bold text-[#1d1d1f] mb-2">Cabin Baggage</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">
                           1 piece of 7kg (55 x 35 x 25 cm) plus one small personal item (laptop bag
                           or handbag).
                         </p>
@@ -719,26 +731,26 @@ function FlightDetail() {
 
                 {activeTab === 'rules' && (
                   <div className="space-y-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="text-lg font-black text-foreground">
+                    <div className="flex items-center gap-3 mb-2 flex-wrap">
+                      <h4 className="text-lg font-bold text-[#1d1d1f]">
                         Fare Rules & Conditions
                       </h4>
                       {flight.refundable !== undefined && (
                         <span
-                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${flight.refundable ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-500 border-red-100'}`}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${flight.refundable ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}
                         >
                           {flight.refundable ? 'Refundable' : 'Non-Refundable'}
                         </span>
                       )}
                       {flight.changeable !== undefined && (
                         <span
-                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border ${flight.changeable ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-muted text-muted-foreground border-border'}`}
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${flight.changeable ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-100 text-gray-600 border-gray-200'}`}
                         >
                           {flight.changeable ? 'Changes Allowed' : 'No Changes'}
                         </span>
                       )}
                     </div>
-                    <div className="space-y-4">
+                    <div className="grid gap-4">
                       {(flight.fareRules && flight.fareRules.length > 0
                         ? flight.fareRules
                         : [
@@ -753,13 +765,13 @@ function FlightDetail() {
                       ).map((rule: string, i: number) => (
                         <div
                           key={i}
-                          className="flex gap-4 items-start p-4 bg-muted rounded-2xl border border-border"
+                          className="flex gap-4 items-start p-4 bg-gray-50 rounded-xl border border-gray-100"
                         >
                           <AlertCircle
-                            size={15}
-                            className="text-[hsl(var(--primary))] mt-0.5 shrink-0"
+                            size={16}
+                            className="text-[#003b95] mt-0.5 shrink-0"
                           />
-                          <p className="text-sm font-bold text-muted-foreground leading-relaxed">
+                          <p className="text-sm text-gray-600 leading-relaxed">
                             {rule}
                           </p>
                         </div>

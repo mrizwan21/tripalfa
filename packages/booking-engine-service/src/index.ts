@@ -1,8 +1,7 @@
-import { createServiceApp } from '@tripalfa/shared-types';
+import { createServiceApp } from '@tripalfa/shared-express';
 import dotenv from 'dotenv';
 import express, { ErrorRequestHandler } from 'express';
 
-import flightsRoutes from './routes/flights.js';
 import hotelsRoutes from './routes/hotels.js';
 import offlineRequestsRoutes from './routes/offline-requests.js';
 import staticDataRoutes from './routes/static-data.js';
@@ -22,7 +21,8 @@ app.get('/api', (req, res) => {
     name: 'TripAlfa Booking Engine API',
     version: '1.0.0',
     endpoints: {
-      flights: '/api/flights',
+      // Note: Flight routes moved to booking-service to avoid duplication
+      // flights: '/api/flights',
       hotels: '/api/hotels',
       offlineRequests: '/api/offline-requests',
       staticData: '/api/static',
@@ -30,7 +30,8 @@ app.get('/api', (req, res) => {
   });
 });
 
-app.use('/api/flights', flightsRoutes);
+// Note: Flight routes moved to booking-service to avoid duplication
+// app.use('/api/flights', flightsRoutes);
 app.use('/api/hotels', hotelsRoutes);
 app.use('/api/offline-requests', offlineRequestsRoutes);
 app.use('/api/static', staticDataRoutes);

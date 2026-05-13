@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AlertCircle, Loader2, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { apiManager } from '@tripalfa/shared-features';
 import { useCustomer } from '../context/CustomerContext';
 
 export default function SupportRecordPage() {
@@ -29,7 +30,12 @@ export default function SupportRecordPage() {
     setSubmitting(true);
     setError(null);
     try {
-      // Note: Simulated submission - replace with actual API call when available
+      await apiManager.createSupportTicket({
+        subject: form.subject,
+        description: form.description,
+        priority: form.priority,
+        relatedTo: form.relatedTo || undefined,
+      });
       addNotification({
         title: 'Support Ticket Created',
         message: 'The support record has been successfully logged.',

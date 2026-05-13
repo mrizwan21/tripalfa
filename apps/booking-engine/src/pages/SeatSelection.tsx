@@ -23,7 +23,7 @@ import {
   getSeatMapsForBooking,
   parseSeatPattern,
   getAircraftLayout,
-} from '../lib/api';
+} from '../services/seatMapsApi';
 import type { AircraftConfig, SeatMapWithAircraft } from '../services/seatMapsApi';
 import { useTenantRuntime } from '@/components/providers/TenantRuntimeProvider';
 
@@ -96,9 +96,9 @@ function SeatSelection() {
     return (
       <TripLogerLayout>
         <div className="min-h-screen flex items-center justify-center bg-[hsl(var(--background))] px-4 gap-2">
-          <div className="bg-card rounded-[2rem] border border-border shadow-sm p-8 text-center max-w-xl w-full">
-            <h1 className="text-2xl font-black text-foreground mb-2">Seat Selection Disabled</h1>
-            <p className="text-sm font-bold text-muted-foreground mb-6">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 text-center max-w-xl w-full">
+            <h1 className="text-2xl font-black text-gray-900 mb-2">Seat Selection Disabled</h1>
+            <p className="text-sm font-bold text-gray-500 mb-6">
               Seat selection is currently disabled by your admin settings.
             </p>
             <Button
@@ -188,8 +188,8 @@ function SeatSelection() {
             isSelected
               ? 'bg-blue-600 text-background border-2 border-blue-700 shadow-md'
               : isAvailable
-                ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
-                : 'bg-muted text-muted-foreground cursor-not-allowed'
+                ? 'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                : 'bg-gray-100 text-gray-500 cursor-not-allowed'
           }`}
           title={`Seat ${element.designator} - ${isAvailable ? 'Available' : 'Unavailable'}`}
         >
@@ -204,7 +204,7 @@ function SeatSelection() {
       return (
         <div
           key={`bassinet-${element.designator}`}
-          className="w-10 h-10 flex items-center justify-center text-xs bg-muted border border-dashed border-border rounded shrink-0 gap-2"
+          className="w-10 h-10 flex items-center justify-center text-xs bg-gray-100 border border-dashed border-gray-200 rounded shrink-0 gap-2"
           title="Bassinet"
         >
           👶
@@ -220,7 +220,7 @@ function SeatSelection() {
       return (
         <div
           key={`facility-${element.designator}`}
-          className="px-2 h-10 flex items-center justify-center text-sm opacity-60 bg-muted border border-border rounded flex-1 min-w-0 gap-2"
+          className="px-2 h-10 flex items-center justify-center text-sm opacity-60 bg-gray-100 border border-gray-200 rounded flex-1 min-w-0 gap-2"
           title={element.type.charAt(0).toUpperCase() + element.type.slice(1)}
         >
           {facilityEmoji[element.type] || '?'}
@@ -240,18 +240,18 @@ function SeatSelection() {
         {/* Cabin Header with Aircraft Info */}
         <div className="flex justify-between items-start mb-6 gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-foreground capitalize">
+            <h3 className="text-lg font-semibold text-gray-900 capitalize">
               {cabin.cabin_class} Class
             </h3>
             {aircraft && (
-              <p className="text-sm text-muted-foreground mt-2">
+              <p className="text-sm text-gray-500 mt-2">
                 <Plane className="w-4 h-4 inline mr-1" />
                 {aircraft.aircraftType} • {aircraft.bodyType}-body • Pattern: {layout?.rowPattern}
               </p>
             )}
           </div>
           {layout && (
-            <div className="text-right text-xs text-muted-foreground">
+            <div className="text-right text-xs text-gray-500">
               <p>Pitch: {layout.seatPitch}"</p>
               <p>Width: {layout.seatWidth}"</p>
             </div>
@@ -259,11 +259,11 @@ function SeatSelection() {
         </div>
 
         {/* Seat Grid Container - Dynamic Layout based on Aircraft Configuration */}
-        <div className="inline-block border border-border rounded-lg p-4 bg-muted overflow-x-auto">
+        <div className="inline-block border border-gray-200 rounded-lg p-4 bg-gray-100 overflow-x-auto">
           {cabin.rows.map((row: any, rowIndex: number) => (
             <div key={`row-${rowIndex}`} className="flex gap-3 mb-3 items-stretch">
               {/* Row Number Label - Left aligned */}
-              <span className="w-8 text-center text-xs font-bold text-muted-foreground shrink-0 flex items-center justify-center bg-muted rounded h-10 gap-2">
+              <span className="w-8 text-center text-xs font-bold text-gray-500 shrink-0 flex items-center justify-center bg-gray-100 rounded h-10 gap-2">
                 {layout?.firstRow ? rowIndex + layout.firstRow : rowIndex + 1}
               </span>
 
@@ -287,32 +287,32 @@ function SeatSelection() {
         {/* Legend - Updated to match new display system */}
         <div className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-4 pt-6 border-t">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-card border-2 border-border rounded flex items-center justify-center text-xs font-bold gap-2">
+            <div className="w-8 h-8 bg-white border-2 border-gray-200 rounded flex items-center justify-center text-xs font-bold gap-2">
               1A
             </div>
-            <span className="text-xs text-muted-foreground">Available</span>
+            <span className="text-xs text-gray-500">Available</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 border-2 border-blue-700 rounded flex items-center justify-center text-xs font-bold text-background gap-2">
               1B
             </div>
-            <span className="text-xs text-muted-foreground">Selected</span>
+            <span className="text-xs text-gray-500">Selected</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center text-xs gap-2" />
-            <span className="text-xs text-muted-foreground">Unavailable</span>
+            <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center text-xs gap-2" />
+            <span className="text-xs text-gray-500">Unavailable</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-muted border border-dashed border-border rounded flex items-center justify-center text-xs gap-2">
+            <div className="w-8 h-8 bg-gray-100 border border-dashed border-gray-200 rounded flex items-center justify-center text-xs gap-2">
               👶
             </div>
-            <span className="text-xs text-muted-foreground">Bassinet</span>
+            <span className="text-xs text-gray-500">Bassinet</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="px-2 h-8 bg-muted border border-border rounded flex items-center justify-center text-xs gap-2">
+            <div className="px-2 h-8 bg-gray-100 border border-gray-200 rounded flex items-center justify-center text-xs gap-2">
               🚽
             </div>
-            <span className="text-xs text-muted-foreground">Facilities</span>
+            <span className="text-xs text-gray-500">Facilities</span>
           </div>
         </div>
       </div>
@@ -433,11 +433,11 @@ function SeatSelection() {
     const aisleIndices = calculateAislePositions(seatPattern);
 
     return (
-      <div className="inline-block border border-border rounded-lg p-4 bg-muted">
+      <div className="inline-block border border-gray-200 rounded-lg p-4 bg-gray-100">
         {cabinElement.rows.map((row: any, rowIndex: number) => (
           <div key={`row-${rowIndex}`} className="flex gap-2 mb-2 items-center">
             {/* Row number */}
-            <span className="w-6 text-center text-xs font-bold text-muted-foreground">
+            <span className="w-6 text-center text-xs font-bold text-gray-500">
               {rowIndex + layout.firstRow}
             </span>
 
@@ -476,8 +476,8 @@ function SeatSelection() {
                           isSelected
                             ? 'bg-blue-600 text-background border-2 border-blue-700'
                             : isAvailable
-                              ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
-                              : 'bg-muted text-muted-foreground cursor-not-allowed'
+                              ? 'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                              : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                         }`}
                         title={`Seat ${element.designator}`}
                       >
@@ -488,7 +488,7 @@ function SeatSelection() {
                     ) : (
                       <div
                         key={`special-${elementIndex}`}
-                        className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
+                        className="w-10 h-10 flex items-center justify-center text-xs text-gray-500 opacity-50 gap-2"
                         title={element.type}
                       >
                         {element.type === 'lavatory' && '🚽'}
@@ -512,7 +512,7 @@ function SeatSelection() {
    */
   const renderStaticSeatGrid = (cabinElement: any): React.ReactNode => {
     return (
-      <div className="inline-block border border-border rounded-lg p-4 bg-muted">
+      <div className="inline-block border border-gray-200 rounded-lg p-4 bg-gray-100">
         {cabinElement.rows.map((row: any, rowIndex: number) => (
           <div key={`row-${rowIndex}`} className="flex gap-1 mb-2">
             {row.sections.map((section: any, sectionIndex: number) => (
@@ -546,8 +546,8 @@ function SeatSelection() {
                         isSelected
                           ? 'bg-blue-600 text-background border-2 border-blue-700'
                           : isAvailable
-                            ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
-                            : 'bg-muted text-muted-foreground cursor-not-allowed'
+                            ? 'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                            : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                       }`}
                       title={`Seat ${element.designator}`}
                     >
@@ -558,7 +558,7 @@ function SeatSelection() {
                   ) : (
                     <div
                       key={`special-${elementIndex}`}
-                      className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
+                      className="w-10 h-10 flex items-center justify-center text-xs text-gray-500 opacity-50 gap-2"
                       title={element.type}
                     >
                       {element.type === 'lavatory' && '🚽'}
@@ -596,7 +596,7 @@ function SeatSelection() {
         <div className="flex items-center justify-center min-h-screen gap-2">
           <div className="text-center">
             <Luggage className="w-12 h-12 mx-auto mb-4 animate-bounce text-blue-600" />
-            <p className="text-lg text-muted-foreground">Loading seat maps...</p>
+            <p className="text-lg text-gray-500">Loading seat maps...</p>
           </div>
         </div>
       </TripLogerLayout>
@@ -669,12 +669,12 @@ function SeatSelection() {
               <ChevronLeft className="w-5 h-5" />
               Back
             </Button>
-            <h1 className="text-3xl font-bold text-foreground">Select Your Seats</h1>
-            <p className="text-muted-foreground mt-2">Choose preferred seats for each segment</p>
+            <h1 className="text-3xl font-bold text-gray-900">Select Your Seats</h1>
+            <p className="text-gray-500 mt-2">Choose preferred seats for each segment</p>
           </div>
           {totalSeatCost > 0 && (
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Seat charges</p>
+              <p className="text-sm text-gray-500">Seat charges</p>
               <p className="text-3xl font-bold text-blue-600">
                 {formatCurrency(totalSeatCost, 'USD')}
               </p>
@@ -684,8 +684,8 @@ function SeatSelection() {
 
         {/* Passenger Selector */}
         {passengers.length > 0 && (
-          <div className="bg-card rounded-lg border p-6 mb-6">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Select Passenger</h3>
+          <div className="bg-white rounded-lg border p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Passenger</h3>
             <div className="flex flex-wrap gap-3">
               {passengers.map((passenger: any, index: number) => {
                 const passengerSeat = selectedSeats.find(
@@ -700,14 +700,14 @@ function SeatSelection() {
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all ${
                       activePassengerIndex === index
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-border hover:border-border text-foreground'
+                        : 'border-gray-200 hover:border-gray-200 text-gray-900'
                     }`}
                   >
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                         activePassengerIndex === index
                           ? 'bg-blue-500 text-background'
-                          : 'bg-muted text-muted-foreground'
+                          : 'bg-gray-100 text-gray-500'
                       }`}
                     >
                       {index + 1}
@@ -716,7 +716,7 @@ function SeatSelection() {
                       <p className="font-medium">
                         {passenger.label || passenger.name || `Passenger ${index + 1}`}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-gray-500">
                         {passengerSeat ? `Seat ${passengerSeat.designator}` : 'No seat selected'}
                       </p>
                     </div>
@@ -725,9 +725,9 @@ function SeatSelection() {
                 );
               })}
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-4 text-sm text-gray-500">
               Selecting seats for:{' '}
-              <span className="font-semibold text-foreground">
+              <span className="font-semibold text-gray-900">
                 {activePassenger?.label || `Passenger ${activePassengerIndex + 1}`}
               </span>
             </p>
@@ -753,7 +753,7 @@ function SeatSelection() {
                 className={`px-4 py-3 font-medium transition-colors ${
                   activeSegment === index
                     ? 'border-b-2 border-blue-600 text-blue-600'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
                 Segment {index + 1}
@@ -764,16 +764,16 @@ function SeatSelection() {
 
         {/* Seat Map Display */}
         {currentSeatMap ? (
-          <div className="bg-card rounded-lg border p-8">
+          <div className="bg-white rounded-lg border p-8">
             {/* Cabin Display */}
             {currentSeatMap.cabins.map((cabin, cabinIndex) => (
               <div key={`cabin-${cabinIndex}`} className="mb-12">
-                <h3 className="text-lg font-semibold text-foreground mb-6 capitalize">
+                <h3 className="text-lg font-semibold text-gray-900 mb-6 capitalize">
                   {cabin.cabin_class} Class
                 </h3>
 
                 {/* Seat Grid */}
-                <div className="inline-block border border-border rounded-lg p-4 bg-muted">
+                <div className="inline-block border border-gray-200 rounded-lg p-4 bg-gray-100">
                   {cabin.rows.map((row, rowIndex) => (
                     <div key={`row-${rowIndex}`} className="flex gap-1 mb-2">
                       {row.sections.map((section, sectionIndex) => (
@@ -809,8 +809,8 @@ function SeatSelection() {
                                   isSelected
                                     ? 'bg-blue-600 text-background border-2 border-blue-700'
                                     : isAvailable
-                                      ? 'bg-card border-2 border-border text-foreground hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
-                                      : 'bg-muted text-muted-foreground cursor-not-allowed'
+                                      ? 'bg-white border-2 border-gray-200 text-gray-900 hover:border-blue-400 hover:bg-blue-50 cursor-pointer'
+                                      : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                                 }`}
                                 title={`Seat ${element.designator}`}
                               >
@@ -821,7 +821,7 @@ function SeatSelection() {
                             ) : (
                               <div
                                 key={`special-${elementIndex}`}
-                                className="w-10 h-10 flex items-center justify-center text-xs text-muted-foreground opacity-50 gap-2"
+                                className="w-10 h-10 flex items-center justify-center text-xs text-gray-500 opacity-50 gap-2"
                               >
                                 {element.type === 'lavatory' && '🚽'}
                                 {element.type === 'galley' && '🍽️'}
@@ -839,20 +839,20 @@ function SeatSelection() {
                 {/* Legend */}
                 <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t">
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-card border-2 border-border rounded" />
-                    <span className="text-sm text-muted-foreground">Available</span>
+                    <div className="w-6 h-6 bg-white border-2 border-gray-200 rounded" />
+                    <span className="text-sm text-gray-500">Available</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-blue-600 border-2 border-blue-700 rounded" />
-                    <span className="text-sm text-muted-foreground">Selected</span>
+                    <span className="text-sm text-gray-500">Selected</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 bg-muted rounded" />
-                    <span className="text-sm text-muted-foreground">Unavailable</span>
+                    <div className="w-6 h-6 bg-gray-100 rounded" />
+                    <span className="text-sm text-gray-500">Unavailable</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm">🚽</span>
-                    <span className="text-sm text-muted-foreground">Facilities</span>
+                    <span className="text-sm text-gray-500">Facilities</span>
                   </div>
                 </div>
               </div>
@@ -864,7 +864,7 @@ function SeatSelection() {
                 variant="outline"
                 size="md"
                 onClick={handleBack}
-                className="px-6 py-3 border-2 border-border text-foreground rounded-lg font-semibold hover:bg-muted"
+                className="px-6 py-3 border-2 border-gray-200 text-gray-900 rounded-lg font-semibold hover:bg-gray-100"
               >
                 Back
               </Button>
@@ -880,9 +880,9 @@ function SeatSelection() {
             </div>
           </div>
         ) : (
-          <div className="bg-muted rounded-lg p-8 text-center">
-            <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">No seat maps available for this segment</p>
+          <div className="bg-gray-100 rounded-lg p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+            <p className="text-gray-500">No seat maps available for this segment</p>
           </div>
         )}
       </div>

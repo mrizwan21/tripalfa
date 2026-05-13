@@ -103,7 +103,7 @@ export function NotificationDetailsPopup({
           </div>
           <Button
             variant="outline"
-            size="default"
+            size="md"
             onClick={onClose}
             className="p-2.5 hover:bg-muted rounded-full transition-all text-muted-foreground hover:text-foreground active:scale-90"
             data-testid="popup-close-button"
@@ -243,15 +243,15 @@ export function NotificationDetailsPopup({
         {/* Footer Actions */}
         <div className="p-8 bg-muted/50 border-t border-border/50 flex flex-col sm:flex-row gap-4">
           <Button
-            variant="default"
-            size="default"
+            variant="primary"
+            size="md"
             className="flex-1 h-12 rounded-2xl bg-card border border-border text-[10px] font-black uppercase tracking-widest text-foreground hover:bg-muted/50 hover:border-border/80 transition-all shadow-sm active:scale-95 gap-4"
           >
             Download Receipt
           </Button>
           <Button
-            variant="default"
-            size="default"
+            variant="primary"
+            size="md"
             className="flex-1 h-12 rounded-2xl bg-primary text-[10px] font-black uppercase tracking-widest text-white hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 active:scale-95 gap-4"
           >
             Contact Support

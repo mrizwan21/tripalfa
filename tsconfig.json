@@ -16,7 +16,9 @@
         "strict": false,
         "noImplicitAny": false,
         "forceConsistentCasingInFileNames": true,
-        "baseUrl": ".",
+        "paths": {
+            "*": ["./*"]
+        },
         "typeRoots": [
             "./types",
             "./node_modules/@types"

@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  e2e-runner:
+    image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      - PLAYWRIGHT_WORKERS=4
+    command: >
+      sh -c "pnpm install --frozen-lockfile &&
+             pnpm test:e2e:yolo"
+    profiles:
+      - e2e
+
+  e2e-parallel:
+    image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      - PLAYWRIGHT_WORKERS=8
+    command: >
+      sh -c "pnpm install --frozen-lockfile &&
+             pnpm test:e2e:parallel"
+    profiles:
+      - e2e-parallel
+
+  e2e-module:
+    image: mcr.microsoft.com/playwright:v1.40.0-jammy
+    working_dir: /app
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      - MODULE_NAME=${MODULE_NAME:-auth}
+    command: >
+      sh -c "pnpm install --frozen-lockfile &&
+             pnpm test:e2e:module --module=$$MODULE_NAME"
+    profiles:
+      - e2e-module
+
+volumes:
+  node_modules:

@@ -1,0 +1,55 @@
+{
+  "autonomousMode": true,
+  "yoloMode": true,
+  "parallelExecution": true,
+  "modules": {
+    "booking-engine": {
+      "agent": "agent-booking",
+      "tests": [
+        "flight-search",
+        "flight-booking",
+        "hotel-search",
+        "hotel-booking",
+        "wallet-operations",
+        "user-profile",
+        "loyalty-program"
+      ],
+      "priority": "high"
+    },
+    "b2b-portal": {
+      "agent": "agent-b2b",
+      "tests": [
+        "multi-role-auth",
+        "flight-booking-flow",
+        "hotel-booking-flow",
+        "markup-commission",
+        "supplier-management",
+        "booking-queues",
+        "offline-booking"
+      ],
+      "priority": "high"
+    },
+    "call-center-portal": {
+      "agent": "agent-callcenter",
+      "tests": [
+        "terminal-operations",
+        "booking-queues",
+        "pnr-import",
+        "blank-booking",
+        "support-records",
+        "agent-management"
+      ],
+      "priority": "medium"
+    },
+    "super-admin-portal": {
+      "agent": "agent-admin",
+      "tests": [
+        "tenant-management",
+        "system-admin",
+        "user-management",
+        "dashboard-analytics"
+      ],
+      "priority": "medium"
+    }
+  }
+}

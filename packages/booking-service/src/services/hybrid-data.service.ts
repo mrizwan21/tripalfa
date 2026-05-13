@@ -12,11 +12,11 @@
  * - Cost-effective caching with configurable TTL
  */
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@tripalfa/shared-database";
 import CacheService, { CacheKeys, CACHE_TTL } from "../cache/redis.js";
 
-// Initialize Neon Prisma client
-const neon = new PrismaClient();
+// Use shared prisma client
+const neon = prisma;
 
 export type { PrismaClient };
 

@@ -36,7 +36,7 @@ const SupplierRemittancePopup = ({ isOpen, onClose }: { isOpen: boolean; onClose
           </h2>
           <Button
             variant="outline"
-            size="default"
+            size="md"
             onClick={onClose}
             className="p-2 hover:bg-muted rounded-full transition-colors"
           >
@@ -50,7 +50,7 @@ const SupplierRemittancePopup = ({ isOpen, onClose }: { isOpen: boolean; onClose
           <div className="flex justify-start pt-4 border-t border-border gap-4">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               onClick={onClose}
               className="px-10 h-10 bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl shadow-yellow-100 transition-all active:scale-95 hover:bg-[hsl(var(--secondary)/0.9)]"
             >
@@ -135,15 +135,15 @@ function HotelBookingCard() {
             </div>
             <div className="flex gap-3">
               <Button
-                variant="default"
-                size="default"
+                variant="primary"
+                size="md"
                 className="h-9 px-8 border border-[hsl(var(--primary-foreground))/0.3] text-[hsl(var(--primary-foreground))] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[hsl(var(--primary-foreground))/0.1] transition-all flex items-center gap-2 relative"
               >
                 <RefreshCw size={12} /> Sync
               </Button>
               <Button
                 variant="outline"
-                size="default"
+                size="md"
                 onClick={() => navigate(-1)}
                 className="h-9 px-8 bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-yellow-500/20 hover:-translate-y-0.5 transition-all"
               >
@@ -158,7 +158,7 @@ function HotelBookingCard() {
           {tabs.map(tab => (
             <Button
               variant="outline"
-              size="default"
+              size="md"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`px-10 py-3 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all relative ${
@@ -216,7 +216,7 @@ function HotelBookingCard() {
             </div>
             <div className="relative group ml-4">
               <Button
-                variant="default"
+                variant="primary"
                 size="sm"
                 className="h-10 px-6 bg-card rounded-lg border border-border text-[11px] font-black uppercase tracking-widest text-[hsl(var(--primary))] flex items-center gap-3 shadow-sm group-hover:bg-muted transition-all min-w-[120px] justify-between"
               >
@@ -226,7 +226,7 @@ function HotelBookingCard() {
                 {['Refund', 'Amendment', 'Cancel', 'Special Request'].map(opt => (
                   <Button
                     variant="outline"
-                    size="default"
+                    size="md"
                     key={opt}
                     onClick={() => setIsAmendmentOpen(true)}
                     className={`w-full text-left px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] rounded-xl transition-all ${
@@ -506,7 +506,7 @@ function HotelBookingCard() {
                 </div>
                 <Button
                   variant="outline"
-                  size="default"
+                  size="md"
                   onClick={() => {
                     const btn = document.getElementById('sync-btn-hotel');
                     if (btn) btn.classList.add('animate-spin');
@@ -630,7 +630,7 @@ function HotelBookingCard() {
                             {item.status === 'REJECTED' && (
                               <Button
                                 variant="outline"
-                                size="default"
+                                size="md"
                                 onClick={() => setSelectedNotification(item)}
                                 className="text-[10px] font-black uppercase tracking-widest text-[hsl(var(--primary))] hover:underline"
                               >
@@ -640,7 +640,7 @@ function HotelBookingCard() {
                             {item.status === 'REJECTED' && (
                               <Button
                                 variant="outline"
-                                size="default"
+                                size="md"
                                 onClick={() => {
                                   setAmendmentPrefill(item);
                                   setIsAmendmentOpen(true);

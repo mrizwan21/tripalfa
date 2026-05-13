@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { api as ApiClientInstance } from '../lib/api';
-// Lazy import to avoid circular dependency
-type ApiClient = typeof ApiClientInstance;
-let api: ApiClient | undefined;
-function getApi() {
-  if (!api) api = require('../lib/api').api as ApiClient;
-  return api;
-}
+import { api } from '../lib/apiClient';
 
 interface Notification {
   id: string;
@@ -63,7 +56,7 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['notifications', offset],
     queryFn: async () => {
-      const response = await getApi().get(`/notifications?limit=${limit}&offset=${offset}`);
+      const response = await api.get(`/notifications?limit=${limit}&offset=${offset}`);
       return response;
     },
     staleTime: 30000, // 30 seconds
@@ -71,7 +64,7 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      await getApi().patch(`/notifications/${notificationId}/read`, {});
+      await api.patch(`/notifications/${notificationId}/read`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -81,7 +74,7 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await getApi().patch('/notifications/read-all', {});
+      await api.patch('/notifications/read-all', {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -91,7 +84,7 @@ export const useNotifications = (limit = 20): UseNotificationsReturn => {
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      await getApi().delete(`/notifications/${notificationId}`);
+      await api.delete(`/notifications/${notificationId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
@@ -232,7 +225,7 @@ const usePushNotifications = () => {
 
   const unsubscribeMutation = useMutation({
     mutationFn: async (subscriptionId: string) => {
-      await getApi().delete(`/notifications/subscribe/${subscriptionId}`);
+      await api.delete(`/notifications/subscribe/${subscriptionId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
@@ -263,7 +256,7 @@ const useRealtimeNotifications = () => {
     if (!token) return;
 
     const ws = new WebSocket(
-      `${import.meta.env.VITE_WS_URL || 'ws://localhost:3001'}/notifications?token=${token}`
+      `${import.meta.env.VITE_GATEWAY_WS_URL || import.meta.env.VITE_GATEWAY_URL?.replace('http', 'ws') || 'ws://localhost:8000'}/notifications?token=${token}`
     );
 
     ws.onopen = () => setIsConnected(true);

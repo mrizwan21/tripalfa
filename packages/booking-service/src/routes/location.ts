@@ -6,14 +6,21 @@ const { Pool } = pg;
 const router: Router = Router();
 
 // ipapi.co API key from environment
-const IPAPI_KEY = process.env.IPAPI_API_KEY;
-const STATIC_DATABASE_URL =
-  process.env.STATIC_DATABASE_URL || 'postgresql://postgres@localhost:5432/staticdatabase';
+const IPAPI_KEY = process.env.IPAPI_KEY;
 
-// Database pool for static data
-const pool = new Pool({
-  connectionString: STATIC_DATABASE_URL,
-});
+// Database pool - lazily created
+let _pool: Pool | null = null;
+function getPool(): Pool | null {
+  if (!_pool) {
+    const url = process.env.STATIC_DATABASE_URL;
+    if (!url) return null;
+    try {
+      _pool = new Pool({ connectionString: url });
+      _getPool()?.on('error', (e) => console.error('[Location] Pool error:', e.message));
+    } catch { return null; }
+  }
+  return _pool;
+}
 
 /**
  * @swagger
@@ -86,7 +93,7 @@ router.get('/me', async (req: Request, res: Response) => {
 
     // Try to fetch from local cache first
     try {
-      const cacheResult = await pool.query('SELECT * FROM hotel.ip_locations WHERE ip = $1', [
+      const cacheResult = await getPool()?.query('SELECT * FROM hotel.ip_locations WHERE ip = $1', [
         clientIp,
       ]);
 

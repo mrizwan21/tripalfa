@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "@tripalfa/static-data",
   "version": "1.0.0",
   "type": "module",
@@ -6,7 +7,9 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./frontend": "./src/frontend.ts"
+    "./frontend": "./src/frontend-client.ts",
+    "./frontend-client": "./src/frontend-client.ts",
+    "./server": "./src/frontend.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -15,10 +18,12 @@
     "sync:liteapi": "echo \"LiteAPI sync moved to infrastructure pipelines\"",
     "sync:exchange-rates": "echo \"FX sync moved to infrastructure pipelines\"",
     "sync:timezone": "echo \"Timezone sync moved to infrastructure pipelines\"",
-    "sync:start": "echo \"Static data sync scheduler is externalized\""
+    "sync:start": "echo \"Static data sync scheduler is externalized\"",
+    "server": "node server.mjs"
   },
-  "devDependencies": {
-    "typescript": "^6.0.2",
-    "vitest": "^4.0.18"
+  "dependencies": {
+    "pg": "^8.11.0",
+    "express": "^4.18.2",
+    "dotenv": "^17.3.1"
   }
 }

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { useTenantRuntime } from "./components/providers/TenantRuntimeProvider";
 import { useBootstrapStaticData } from "./hooks/useBootstrapStaticData";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy Loaded Pages
 const FlightHome = lazy(() => import("./pages/FlightHome"));
@@ -28,6 +29,7 @@ const HotelBookingCard = lazy(() => import("./pages/HotelBookingCard"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const WalletTopUp = lazy(() => import("./pages/WalletTopUp"));
 const WalletTransfer = lazy(() => import("./pages/WalletTransfer"));
+const ProfileWizard = lazy(() => import("./pages/ProfileWizard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const AccountSettings = lazy(() => import("./pages/AccountSettings"));
 const Loyalty = lazy(() => import("./pages/Loyalty"));
@@ -80,8 +82,9 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
           {/* Auth Routes - No Layout */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -103,6 +106,7 @@ function App() {
 
             {/* Profile & Account */}
             <Route path="profile" element={<Profile />} />
+            <Route path="profile/wizard" element={<ProfileWizard />} />
             <Route path="account-settings" element={<AccountSettings />} />
 
             {/* Notifications */}
@@ -380,6 +384,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }

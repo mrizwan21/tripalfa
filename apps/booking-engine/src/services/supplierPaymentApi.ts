@@ -40,8 +40,18 @@ export async function processSupplierPayment(
       success: true,
       data: result,
     };
-  } catch (error) {
-    console.error("[Supplier] Payment processing error:", error);
+  } catch (error: any) {
+    // Log detailed error information for debugging
+    console.error("[Supplier] Payment processing error:", {
+      message: error?.message || String(error),
+      name: error?.name,
+      stack: error?.stack,
+      status: error?.status,
+      body: error?.body,
+      bookingId,
+      amount,
+      paymentMethod,
+    });
     throw error;
   }
 }

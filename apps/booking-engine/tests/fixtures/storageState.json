@@ -2,10 +2,10 @@
   "cookies": [
     {
       "name": "WMF-Uniq",
-      "value": "20B1DmcB6DA-Eihvm_zfpgMdAAAAAFvd_C2Fv9hdjC8Unh3GoQmR3lrIK5-MitXA",
+      "value": "BH4oYChW6r3w-S8HC4eIuQNfAAAAAFvdyTlaH1PovwUpKLP5zfkZosdEY8xnqAVf",
       "domain": ".upload.wikimedia.org",
       "path": "/",
-      "expires": 1804520350.037613,
+      "expires": 1810198253.890915,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
@@ -25,7 +25,11 @@
         },
         {
           "name": "tenant_runtime_config",
-          "value": "{\"config\":{\"features\":{\"walletEnabled\":true,\"walletTopupEnabled\":true,\"flightBookingEnabled\":true,\"hotelBookingEnabled\":true,\"seatSelectionEnabled\":true,\"ancillariesEnabled\":true},\"pricing\":{\"markupPercent\":0,\"markupFlat\":0,\"commissionPercent\":0,\"commissionFlat\":0,\"commissionChargeableToCustomer\":false},\"checkout\":{\"defaultPaymentMethod\":\"wallet\",\"allowedPaymentMethods\":[\"wallet\"],\"enforceSupplierWallet\":true},\"branding\":{\"appName\":\"TripAlfa\",\"logoUrl\":\"/logo.png\",\"defaultAvatarUrl\":\"\",\"rtlEnabled\":true}},\"timestamp\":1772987484949}"
+          "value": "{\"config\":{\"features\":{\"walletEnabled\":true,\"walletTopupEnabled\":true,\"flightBookingEnabled\":true,\"hotelBookingEnabled\":true,\"seatSelectionEnabled\":true,\"ancillariesEnabled\":true},\"pricing\":{\"markupPercent\":0,\"markupFlat\":0,\"commissionPercent\":0,\"commissionFlat\":0,\"commissionChargeableToCustomer\":false},\"checkout\":{\"defaultPaymentMethod\":\"wallet\",\"allowedPaymentMethods\":[\"wallet\"],\"enforceSupplierWallet\":true},\"branding\":{\"appName\":\"TripAlfa\",\"logoUrl\":\"/logo.png\",\"defaultAvatarUrl\":\"\",\"rtlEnabled\":true}},\"timestamp\":1778664970874}"
+        },
+        {
+          "name": "branding_config",
+          "value": "{\"colors\":{\"primaryColor\":\"#000000\",\"primaryForeground\":\"0 0% 100%\",\"secondaryColor\":\"#ffffff\",\"secondaryForeground\":\"240 6% 10%\",\"accentColor\":\"211 100% 62%\",\"accentForeground\":\"0 0% 100%\",\"fontFamily\":\"Inter, -apple-system, BlinkMacSystemFont, sans-serif\",\"buttonRadius\":\"0.5rem\",\"inputRadius\":\"0.5rem\"}}"
         }
       ]
     }

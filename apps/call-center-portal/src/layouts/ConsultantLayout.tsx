@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, Phone, Upload, Bell, Search, LogOut, Settings, X, CheckCircle2, AlertCircle, Info } from 'lucide-react';
+import { LayoutDashboard, FileText, Phone, Upload, Bell, Search, LogOut, Settings, X, CheckCircle2, AlertCircle, Info, Users, Inbox, PhoneCall } from 'lucide-react';
 import { useCustomer } from '../context/CustomerContext';
 import { cn } from '@tripalfa/shared-features';
 
@@ -14,6 +14,9 @@ export default function ConsultantLayout() {
     { path: '/queues', label: 'Booking Queues', icon: FileText },
     { path: '/support/new', label: 'Support', icon: Phone },
     { path: '/import-pnr', label: 'Import PNR', icon: Upload },
+    { path: '/admin/agents', label: 'Agents', icon: Users },
+    { path: '/admin/queues', label: 'Call Queues', icon: Inbox },
+    { path: '/admin/calls', label: 'Calls', icon: PhoneCall },
   ];
 
   const isActive = (path: string, exact?: boolean) =>

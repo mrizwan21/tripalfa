@@ -19,7 +19,7 @@ import WalletManagementPanel from "./WalletManagementPanel";
 import AirlineCreditsPanel from "./AirlineCreditsPanel";
 import BookingPaymentStatusPanel from "./BookingPaymentStatusPanel";
 import RefundStatusPanel from "./RefundStatusPanel";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 type DashboardTab = "overview" | "payments" | "wallet" | "credits" | "refunds";
 
@@ -85,7 +85,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
         <h1>Payment Dashboard</h1>
         <Button
           variant="outline"
-          size="default"
+          size="md"
           className="refresh-btn"
           onClick={fetchDashboardStats}
           disabled={loading}
@@ -102,7 +102,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
           <p>{error}</p>
           <Button
             variant="outline"
-            size="default"
+            size="md"
             onClick={fetchDashboardStats}
           >
             Retry
@@ -167,7 +167,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
           <div className="dashboard-tabs">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`tab-btn ${activeTab === "overview" ? "active" : ""}`}
               onClick={() => setActiveTab("overview")}
             >
@@ -175,7 +175,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`tab-btn ${activeTab === "payments" ? "active" : ""}`}
               onClick={() => setActiveTab("payments")}
             >
@@ -183,7 +183,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`tab-btn ${activeTab === "wallet" ? "active" : ""}`}
               onClick={() => setActiveTab("wallet")}
             >
@@ -191,7 +191,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`tab-btn ${activeTab === "credits" ? "active" : ""}`}
               onClick={() => setActiveTab("credits")}
             >
@@ -199,7 +199,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`tab-btn ${activeTab === "refunds" ? "active" : ""}`}
               onClick={() => setActiveTab("refunds")}
             >
@@ -216,7 +216,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
                   <div className="quick-links">
                     <Button
                       variant="outline"
-                      size="default"
+                      size="md"
                       className="quick-link-btn"
                       onClick={() => setActiveTab("wallet")}
                     >
@@ -224,7 +224,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
                     </Button>
                     <Button
                       variant="outline"
-                      size="default"
+                      size="md"
                       className="quick-link-btn"
                       onClick={() => setActiveTab("payments")}
                     >
@@ -232,7 +232,7 @@ const UserPaymentDashboard: FC<UserPaymentDashboardProps> = ({
                     </Button>
                     <Button
                       variant="outline"
-                      size="default"
+                      size="md"
                       className="quick-link-btn"
                       onClick={() => setActiveTab("credits")}
                     >

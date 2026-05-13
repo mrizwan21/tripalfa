@@ -60,9 +60,10 @@ class ApiManager {
  private activeToken: string | null = null;
  private activeUserId: string | null = null;
 
- private constructor() {
+  private constructor() {
+    const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:4000/api';
  this.client = axios.create({
- baseURL: import.meta.env.VITE_API_GATEWAY_URL || 'http://localhost:4000/api',
+ baseURL: gatewayUrl,
  timeout: 30000,
  });
 
@@ -195,10 +196,15 @@ class ApiManager {
  /**
  * Generic PUT request
  */
- public async put<TReturnType>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<TReturnType> {
- const response = await this.client.put(url, data, config);
- return response.data as TReturnType;
- }
+  public async put<TReturnType>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<TReturnType> {
+  const response = await this.client.put(url, data, config);
+  return response.data as TReturnType;
+  }
+
+  public async patch<TReturnType>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<TReturnType> {
+  const response = await this.client.patch(url, data, config);
+  return response.data as TReturnType;
+  }
 
   public async voidTicket(ticketId: string, cancelBookings: boolean, reason: string): Promise<{ success: boolean; message: string; creditNoteNo?: string }> {
     return { 
@@ -2436,10 +2442,181 @@ class ApiManager {
  /**
  * Get cancel and reschedule requests
  */
- public async getCancelAndRescheduleRequests(filters?: Record<string, unknown>): Promise<any[]> {
- return this.get<any[]>('/service-requests/cancel-reschedule', { params: filters });
- }
-}
+  public async getCancelAndRescheduleRequests(filters?: Record<string, unknown>): Promise<any[]> {
+  return this.get<any[]>('/service-requests/cancel-reschedule', { params: filters });
+  }
 
+  // ============================================================
+  // B2B Endpoints (Prisma-based)
+  // ============================================================
+  public async getTenants(params?: { page?: number; limit?: number; name?: string; industry?: string; status?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/b2b/tenants', { params });
+  }
+
+  public async getB2BTenantById(id: string): Promise<any> {
+    return this.get<any>(`/api/b2b/tenants/${id}`);
+  }
+
+  public async createB2BTenant(data: Record<string, unknown>): Promise<any> {
+    return this.post<any>('/api/b2b/tenants', data);
+  }
+
+  public async updateB2BTenant(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.put<any>(`/api/b2b/tenants/${id}`, data);
+  }
+
+  public async deleteB2BTenant(id: string): Promise<any> {
+    return this.delete<any>(`/api/b2b/tenants/${id}`);
+  }
+
+  public async getPartners(params?: { page?: number; limit?: number; name?: string; type?: string; status?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/b2b/partners', { params });
+  }
+
+  public async getPartnerById(id: string): Promise<any> {
+    return this.get<any>(`/api/b2b/partners/${id}`);
+  }
+
+  public async createPartner(data: Record<string, unknown>): Promise<any> {
+    return this.post<any>('/api/b2b/partners', data);
+  }
+
+  public async updatePartner(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.put<any>(`/api/b2b/partners/${id}`, data);
+  }
+
+  public async deletePartner(id: string): Promise<any> {
+    return this.delete<any>(`/api/b2b/partners/${id}`);
+  }
+
+  public async getAgreements(params?: { page?: number; limit?: number; type?: string; status?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/b2b/agreements', { params });
+  }
+
+  public async getAgreementById(id: string): Promise<any> {
+    return this.get<any>(`/api/b2b/agreements/${id}`);
+  }
+
+  public async createAgreement(data: Record<string, unknown>): Promise<any> {
+    return this.post<any>('/api/b2b/agreements', data);
+  }
+
+  public async updateAgreement(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.put<any>(`/api/b2b/agreements/${id}`, data);
+  }
+
+  public async deleteAgreement(id: string): Promise<any> {
+    return this.delete<any>(`/api/b2b/agreements/${id}`);
+  }
+
+  public async getB2BBookings(params?: { page?: number; limit?: number; status?: string; referenceNo?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/b2b/bookings', { params });
+  }
+
+  public async updateB2BBookingStatus(id: string, status: string): Promise<any> {
+    return this.patch<any>(`/api/b2b/bookings/${id}/status`, { status });
+  }
+
+  // ============================================================
+  // Call Center Endpoints (Prisma-based)
+  // ============================================================
+  public async getCallCenterAgents(params?: { page?: number; limit?: number; status?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/call-center/agents', { params });
+  }
+
+  public async getCallCenterAgentById(id: string): Promise<any> {
+    return this.get<any>(`/api/call-center/agents/${id}`);
+  }
+
+  public async createCallCenterAgent(data: Record<string, unknown>): Promise<any> {
+    return this.post<any>('/api/call-center/agents', data);
+  }
+
+  public async updateCallCenterAgent(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.put<any>(`/api/call-center/agents/${id}`, data);
+  }
+
+  public async deleteCallCenterAgent(id: string): Promise<any> {
+    return this.delete<any>(`/api/call-center/agents/${id}`);
+  }
+
+  public async getCallCenterQueues(params?: { page?: number; limit?: number; status?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/call-center/queues', { params });
+  }
+
+  public async getCallCenterQueueById(id: string): Promise<any> {
+    return this.get<any>(`/api/call-center/queues/${id}`);
+  }
+
+  public async createCallCenterQueue(data: Record<string, unknown>): Promise<any> {
+    return this.post<any>('/api/call-center/queues', data);
+  }
+
+  public async updateCallCenterQueue(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.put<any>(`/api/call-center/queues/${id}`, data);
+  }
+
+  public async deleteCallCenterQueue(id: string): Promise<any> {
+    return this.delete<any>(`/api/call-center/queues/${id}`);
+  }
+
+  public async getCallCenterCalls(params?: { page?: number; limit?: number; status?: string; agentId?: string; queueId?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/call-center/calls', { params });
+  }
+
+  public async getCallCenterCallById(id: string): Promise<any> {
+    return this.get<any>(`/api/call-center/calls/${id}`);
+  }
+
+  public async updateCallStatus(id: string, status: string, notes?: string): Promise<any> {
+    return this.put<any>(`/api/call-center/calls/${id}/status`, { status, notes });
+  }
+
+  public async getCallInteractions(callId: string): Promise<any[]> {
+    return this.get<any[]>(`/api/call-center/calls/${callId}/interactions`);
+  }
+
+  public async addCallInteraction(callId: string, data: { type: string; notes?: string }): Promise<any> {
+    return this.post<any>(`/api/call-center/calls/${callId}/interactions`, data);
+  }
+
+  public async getCallQueueAssignments(params?: { agentId?: string; queueId?: string }): Promise<{ data: any[] }> {
+    return this.get<{ data: any[] }>('/api/call-center/call-queue-assignments', { params });
+  }
+
+  public async createCallQueueAssignment(data: { agentId: string; queueId: string; priority?: number; isActive?: boolean }): Promise<any> {
+    return this.post<any>('/api/call-center/call-queue-assignments', data);
+  }
+
+  public async deleteCallQueueAssignment(id: string): Promise<any> {
+    return this.delete<any>(`/api/call-center/call-queue-assignments/${id}`);
+  }
+
+  // ============================================================
+  // Support Ticket Endpoints
+  // ============================================================
+  public async getSupportTickets(params?: { page?: number; limit?: number; status?: string }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
+    return this.get<{ data: any[]; total: number; page: number; limit: number }>('/api/call-center/support-tickets', { params });
+  }
+
+  public async createSupportTicket(data: Record<string, unknown>): Promise<any> {
+    return this.post<any>('/api/call-center/support-tickets', data);
+  }
+
+  public async updateSupportTicket(id: string, data: Record<string, unknown>): Promise<any> {
+    return this.put<any>(`/api/call-center/support-tickets/${id}`, data);
+  }
+
+  public async deleteSupportTicket(id: string): Promise<any> {
+    return this.delete<any>(`/api/call-center/support-tickets/${id}`);
+  }
+
+  // ============================================================
+  // B2B Dashboard Stats
+  // ============================================================
+  public async getB2BDashboardStats(): Promise<{ data: { tenantsCount: number; partnersCount: number; agreementsCount: number; bookingsCount: number } }> {
+    return this.get<{ data: { tenantsCount: number; partnersCount: number; agreementsCount: number; bookingsCount: number } }>('/api/b2b/dashboard/stats');
+  }
+}
 
 export const apiManager = ApiManager.getInstance();

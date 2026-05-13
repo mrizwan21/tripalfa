@@ -22,6 +22,14 @@ export default defineConfig({
         replacement: path.resolve(__dirname, "../../packages/ui-components"),
       },
       {
+        find: /^@tripalfa\/design-tokens$/,
+        replacement: path.resolve(__dirname, "../../packages/design-tokens"),
+      },
+      {
+        find: /@tripalfa\/design-tokens\/(.*)/,
+        replacement: path.resolve(__dirname, "../../packages/design-tokens/$1"),
+      },
+      {
         find: "@tripalfa/shared-types",
         replacement: path.resolve(__dirname, "../../packages/shared-types"),
       },
@@ -55,60 +63,43 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5176,
     proxy: {
+      // Proxy API requests through Kong gateway (default: http://localhost:8000)
+      "/api": {
+        target: process.env.VITE_GATEWAY_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
+      // User endpoints (preferences, profile, bookings)
+      "/user": {
+        target: process.env.VITE_GATEWAY_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
+      // Auth endpoints
+      "/auth": {
+        target: process.env.VITE_GATEWAY_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
+      // Static data endpoints
+      "/static": {
+        target: process.env.VITE_GATEWAY_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
+      // Notifications endpoints
+      "/notifications": {
+        target: process.env.VITE_GATEWAY_URL || "http://localhost:8000",
+        changeOrigin: true,
+      },
+      // Duffel API proxy (external supplier)
       "/duffel-api": {
         target: "https://api.duffel.com/air",
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/duffel-api/, ""),
       },
-      // ── Kiwi Tequila / Nomad — multi-city only ──────────────────────────────
+      // Kiwi Tequila / Nomad — multi-city only
       "/kiwi": {
         target: "https://api.tequila.kiwi.com",
         changeOrigin: true,
         secure: true,
         rewrite: (p) => p.replace(/^\/kiwi/, ""),
-      },
-      "/search": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-        // Booking-service mounts liteApiRoutes at /api — rewrite /search/... → /api/search/...
-        rewrite: (p) => `/api${p}`,
-      },
-      "/route": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-      },
-      "/api": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-      },
-      // LiteAPI: hotel rates & hotel search endpoints
-      // Booking-service mounts liteApiRoutes at /api, so /hotels/rates → /api/hotels/rates
-      "/hotels": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-        rewrite: (p) => `/api${p}`,
-      },
-      // LiteAPI: prebook & book endpoints (/rates/prebook → /api/rates/prebook)
-      "/rates": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-        rewrite: (p) => `/api${p}`,
-      },
-      "/bookings": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-        rewrite: (p) => `/api${p}`,
-      },
-      "/duffel": {
-        target: "http://localhost:3030",
-        changeOrigin: true,
-        rewrite: (p) => `/api${p}`,
-      },
-      // Static data direct access to packages/static-data running on port 3002
-      "/api/static": {
-        target: "http://localhost:3002",
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/static/, "/api"),
       },
     },
   },

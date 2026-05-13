@@ -82,30 +82,30 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#003b95] to-[#002a6e] flex flex-col justify-center py-12 sm:px-6 lg:px-8 gap-4">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-white">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-600">
+        <p className="mt-2 text-center text-sm text-white/80">
           Or{" "}
           <Link
             to="/register"
-            className="font-medium text-[hsl(var(--primary))] hover:text-[hsl(var(--primary)/0.9)] transition-colors"
+            className="text-[#4da1ff] hover:text-[#80baff] font-medium text-sm transition-colors"
           >
             create a new account
           </Link>
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <Card className="p-8 sm:p-10">
+      <div className="mt-8 sm:mx-auto sm:w-full max-w-md">
+        <Card className="bg-white rounded-xl border border-gray-100 shadow-xl shadow-black/5 ring-1 ring-gray-200/60 p-8 sm:p-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="email" className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Email address</Label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 gap-2">
-                  <Mail className="h-5 w-5 text-slate-400" />
+                  <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
                   id="email"
@@ -114,17 +114,17 @@ const Login = () => {
                   autoComplete="email"
                   required
                   data-testid="login-email"
-                  className="pl-10"
+                  className="h-12 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200"
                   placeholder="you@example.com"
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Password</Label>
               <div className="mt-2 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10 gap-2">
-                  <Lock className="h-5 w-5 text-slate-400" />
+                  <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <Input
                   id="password"
@@ -133,14 +133,14 @@ const Login = () => {
                   autoComplete="current-password"
                   required
                   data-testid="login-password"
-                  className="pl-10"
+                  className="h-12 rounded-xl border border-gray-200 bg-white hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 px-4 pl-10 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all duration-200"
                   placeholder="Enter your password"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+              <div className="mt-1.5 text-xs text-red-600 font-medium">
                 {error}
               </div>
             )}
@@ -151,11 +151,11 @@ const Login = () => {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 rounded border-slate-300 text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+                  className="h-4 w-4 rounded border-gray-300 text-[#003b95] focus:ring-[#003b95]"
                 />
                 <label
                   htmlFor="remember-me"
-                  className="ml-2 block text-sm text-slate-700 font-medium"
+                  className="ml-2 block text-sm text-gray-700 font-medium"
                 >
                   Remember me
                 </label>
@@ -164,7 +164,7 @@ const Login = () => {
               <div className="text-sm">
                 <Link
                   to="/forgot-password"
-                  className="font-medium text-[hsl(var(--primary))] hover:text-[hsl(var(--primary)/0.9)] transition-colors"
+                  className="text-[#003b95] hover:text-[#002a6e] font-medium text-sm transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -175,7 +175,7 @@ const Login = () => {
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full"
+                className="w-full bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200"
                 isLoading={isLoading}
                 data-testid="login-submit"
               >
@@ -187,10 +187,10 @@ const Login = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center gap-2">
-                <div className="w-full border-t border-slate-200" />
+                <div className="w-full border-t border-gray-200" />
               </div>
               <div className="relative flex justify-center text-sm gap-4">
-                <span className="px-2 bg-card text-muted-foreground">
+                <span className="px-2 bg-white text-gray-500">
                   Or continue with
                 </span>
               </div>
@@ -199,7 +199,7 @@ const Login = () => {
             <div className="mt-6 grid grid-cols-3 gap-3">
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200"
                 onClick={() => handleSocialLogin("google")}
                 disabled={isLoading}
                 title="Sign in with Google"
@@ -226,7 +226,7 @@ const Login = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200"
                 onClick={() => handleSocialLogin("facebook")}
                 disabled={isLoading}
                 title="Sign in with Facebook"
@@ -242,7 +242,7 @@ const Login = () => {
               </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200"
                 onClick={() => handleSocialLogin("apple")}
                 disabled={isLoading}
                 title="Sign in with Apple"

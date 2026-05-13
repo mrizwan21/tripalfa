@@ -27,8 +27,12 @@ pnpm -r --if-present test
 ## API gateway (local Kong + Wicked)
 
 ```bash
-pnpm gateway:preflight
+pnpm gateway:verify
 pnpm gateway:build
+pnpm gateway:verify-frontends
+pnpm gateway:verify-routes
+pnpm gateway:preflight
+pnpm gateway:verify-runtime
 pnpm gateway:start
 pnpm gateway:sync
 ```

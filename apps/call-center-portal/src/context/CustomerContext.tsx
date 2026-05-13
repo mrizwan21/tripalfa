@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import type { TenantConfig } from '@tripalfa/shared-features';
 
 interface CustomerData {
   id: string;

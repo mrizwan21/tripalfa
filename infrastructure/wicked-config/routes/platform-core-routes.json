@@ -73,6 +73,21 @@
       "strip_path": true
     },
     {
+      "name": "b2b-portal",
+      "service": "b2b-portal-service",
+      "paths": ["/api/b2b"]
+    },
+    {
+      "name": "call-center",
+      "service": "call-center-service",
+      "paths": ["/api/call-center"]
+    },
+    {
+      "name": "super-admin",
+      "service": "super-admin-service",
+      "paths": ["/api/super-admin"]
+    },
+    {
       "name": "booking-fallback",
       "service": "booking-service",
       "paths": ["/api"]

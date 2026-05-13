@@ -11,9 +11,12 @@ Kong is expected to run locally on your machine, and this project provides:
 ## Build Kong Config from Wicked Catalog
 
 ```bash
-pnpm gateway:preflight
+pnpm gateway:verify
 pnpm gateway:build
 pnpm gateway:verify-routes
+pnpm gateway:verify-frontends
+pnpm gateway:preflight
+pnpm gateway:verify-runtime
 ```
 
 ## Start/Stop Local Kong

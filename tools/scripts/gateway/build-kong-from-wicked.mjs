@@ -172,9 +172,52 @@ function build() {
           max_age: 3600,
         },
       },
+      // Audit logging plugin (required by API Gateway Policy)
+      {
+        name: 'file-log',
+        config: {
+          path: './infrastructure/kong/.runtime/logs/audit.log',
+          reopen: true,
+        },
+        tags: ['audit', 'logging'],
+      },
       ...plugins,
     ],
   };
+
+  // Add rate-limiting to all services (required by API Gateway Policy)
+  const rateLimits = {
+    'booking-engine-service': 12000,
+    'booking-service': 12000,
+    'b2b-portal-service': 10000,
+    'call-center-service': 10000,
+    'super-admin-service': 10000,
+    'external-duffel': 6000,
+    'external-liteapi': 6000,
+  };
+
+  for (const [serviceName, limit] of Object.entries(rateLimits)) {
+    declarative.plugins.push({
+      name: 'rate-limiting',
+      config: {
+        minute: limit,
+        policy: 'local',
+      },
+      service: { name: serviceName },
+    });
+  }
+
+  // Add key-auth plugin for auth enforcement (required by API Gateway Policy)
+  // Consumers and credentials must be set up via Kong Admin API
+  declarative.plugins.push({
+    name: 'key-auth',
+    config: {
+      key_names: ['apikey'],
+      key_in_body: false,
+      hide_credentials: true,
+    },
+    tags: ['auth', 'security'],
+  });
 
   if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
   fs.writeFileSync(outputPath, `${toYaml(declarative)}\n`, 'utf8');

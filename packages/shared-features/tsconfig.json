@@ -6,13 +6,11 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@tripalfa/shared-features/*": ["./src/*"]
+      "@/*": ["src/*"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
-    "ignoreDeprecations": "5.0"
+    "types": ["vite/client"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

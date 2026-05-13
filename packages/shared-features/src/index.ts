@@ -54,6 +54,12 @@ export { default as CorporateQueuePage } from './pages/CorporateQueuePage';
 export { default as ServiceRequestQueuePage } from './pages/ServiceRequestQueuePage';
 export { default as VoidReissueRefundPage } from './pages/VoidReissueRefundPage';
 
+export { default as B2BTenantsPage } from './pages/B2BTenantsPage';
+export { default as B2BPartnersPage } from './pages/B2BPartnersPage';
+export { default as B2BAgreementsPage } from './pages/B2BAgreementsPage';
+export { default as B2BBookingsPage } from './pages/B2BBookingsPage';
+export { default as B2BAdminPage } from './pages/B2BAdminPage';
+
 // Shared Components
 export { default as DocumentPreview } from './components/shared/DocumentPreview';
 export { default as EmailPreviewModal } from './components/shared/EmailPreviewModal';

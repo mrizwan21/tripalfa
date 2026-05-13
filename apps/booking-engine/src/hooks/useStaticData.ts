@@ -1,209 +1,248 @@
-/**
- * Static Data Hooks - All data fetched through centralized API manager
- * These hooks provide access to reference data (airports, airlines, countries, etc.)
- * All API calls are routed through the centralized api.ts facade.
- */
-
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import {
-  fetchPopularDestinations,
+  fetchDestinations,
   fetchAirports,
-  fetchAirlines,
-  fetchCities,
   fetchCountries,
+  fetchAirlines,
+  fetchAmenities,
   fetchCurrencies,
-  fetchNationalities,
-  fetchPhoneCodes,
-  fetchLoyaltyPrograms,
-  fetchLoyaltyProgramsAll,
-  fetchHotelAmenities,
-  fetchHotelTypes,
+  fetchPopularDestinations,
   fetchBoardTypes,
-  fetchRoomTypesDB,
-  fetchSuggestions,
-  queryKeys,
-} from '../lib/api';
+  fetchHotelTypes,
+  fetchRoomTypes,
+  fetchStarRatings,
+  fetchLoyaltyPrograms,
+  getEnvironmentInfo,
+} from "../lib/dataFetchStrategy";
 
-/**
- * Hook to fetch popular destinations for homepage
- */
-export function usePopularDestinations(limit = 20) {
+const staticApiClient = {
+  get: async (url: string) => {
+    const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || "";
+    const res = await fetch(`${gatewayUrl}${url}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(5000),
+    });
+    const data = await res.json();
+    return { data };
+  },
+};
+
+// Static data query keys
+const allKey = ["staticData"] as const;
+
+export const staticDataKeys = {
+  all: allKey,
+  amenities: () => [...allKey, "amenities"] as const,
+  boardTypes: () => [...allKey, "boardTypes"] as const,
+  hotelTypes: () => [...allKey, "hotelTypes"] as const,
+  chains: () => [...allKey, "chains"] as const,
+  starRatings: () => [...allKey, "starRatings"] as const,
+  roomTypes: () => [...allKey, "roomTypes"] as const,
+  viewTypes: () => [...allKey, "viewTypes"] as const,
+  paymentTypes: () => [...allKey, "paymentTypes"] as const,
+  destinations: (query?: string) => [...allKey, "destinations", query] as const,
+  airports: () => [...allKey, "airports"] as const,
+  airlines: () => [...allKey, "airlines"] as const,
+  countries: () => [...allKey, "countries"] as const,
+  currencies: () => [...allKey, "currencies"] as const,
+  popularDestinations: () => [...allKey, "popularDestinations"] as const,
+  popularHotels: (limit?: number) => [...allKey, "popularHotels", limit] as const,
+};
+
+// Hooks for static data with caching (stale time: 1 hour)
+export const useAmenities = () => {
   return useQuery({
-    queryKey: ['popularDestinations', limit],
-    queryFn: () => fetchPopularDestinations(limit),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: staticDataKeys.amenities(),
+    queryFn: async () => {
+      const result = await fetchAmenities();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch popular hotels for homepage
- * Alias for usePopularDestinations with hotel-specific context
- */
-export function usePopularHotels(limit = 20) {
+export const useBoardTypes = () => {
   return useQuery({
-    queryKey: ['popularHotels', limit],
-    queryFn: () => fetchPopularDestinations(limit),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: staticDataKeys.boardTypes(),
+    queryFn: async () => {
+      const result = await fetchBoardTypes();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch airports with optional search query
- */
-export function useAirports(query?: string) {
+export const useHotelTypes = () => {
   return useQuery({
-    queryKey: ['airports', query],
-    queryFn: () => fetchAirports(query),
-    enabled: !query || query.length >= 2,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    queryKey: staticDataKeys.hotelTypes(),
+    queryFn: async () => {
+      const result = await fetchHotelTypes();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch airlines with optional search query
- */
-export function useAirlines(query?: string) {
+export const useHotelChains = () => {
   return useQuery({
-    queryKey: ['airlines', query],
-    queryFn: () => fetchAirlines(query),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    queryKey: staticDataKeys.chains(),
+    queryFn: async () => {
+      const result = await fetchDestinations({ type: "hotel_chains" });
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch cities with optional search query
- */
-export function useCities(query?: string) {
+export const useStarRatings = () => {
   return useQuery({
-    queryKey: ['cities', query],
-    queryFn: () => fetchCities(query),
-    enabled: !query || query.length >= 2,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: staticDataKeys.starRatings(),
+    queryFn: async () => {
+      const result = await fetchStarRatings();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch countries for dropdowns
- */
-export function useCountries(query?: string) {
+export const useRoomTypes = () => {
   return useQuery({
-    queryKey: ['countries', query],
-    queryFn: () => fetchCountries(query),
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: staticDataKeys.roomTypes(),
+    queryFn: async () => {
+      const result = await fetchRoomTypes();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch currencies
- */
-export function useCurrencies() {
+export const useViewTypes = () => {
   return useQuery({
-    queryKey: ['currencies'],
-    queryFn: fetchCurrencies,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: staticDataKeys.viewTypes(),
+    queryFn: async () => {
+      const result = await fetchDestinations({ type: "view_types" });
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch nationalities
- */
-function useNationalities(query?: string) {
+export const usePaymentTypes = () => {
   return useQuery({
-    queryKey: ['nationalities', query],
-    queryFn: () => fetchNationalities(query),
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: staticDataKeys.paymentTypes(),
+    queryFn: async () => {
+      const result = await fetchDestinations({ type: "payment_types" });
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch phone country codes
- */
-function usePhoneCodes() {
+export const useDestinations = (query?: string) => {
   return useQuery({
-    queryKey: ['phoneCodes'],
-    queryFn: fetchPhoneCodes,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: staticDataKeys.destinations(query),
+    queryFn: async () => {
+      const result = await fetchDestinations({ type: "city", limit: 20 });
+      if (query) {
+        return result.data?.filter((d: any) =>
+          d.name?.toLowerCase().includes(query.toLowerCase()) ||
+          d.city?.toLowerCase().includes(query.toLowerCase())
+        ) || [];
+      }
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch loyalty programs
- */
-export function useLoyaltyPrograms(query?: string) {
+export const useAirports = (query?: string) => {
   return useQuery({
-    queryKey: ['loyaltyPrograms', query],
-    queryFn: () => fetchLoyaltyPrograms(query),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    queryKey: [...staticDataKeys.airports(), query],
+    queryFn: async () => {
+      const result = await fetchAirports(query);
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch all loyalty programs (airline + hotel)
- */
-function useLoyaltyProgramsAll(type?: 'airline' | 'hotel') {
+export const useAirlines = (query?: string) => {
   return useQuery({
-    queryKey: ['loyaltyProgramsAll', type],
-    queryFn: () => fetchLoyaltyProgramsAll(type),
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    queryKey: [...staticDataKeys.airlines(), query],
+    queryFn: async () => {
+      const result = await fetchAirlines(query);
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch hotel amenities
- */
-export function useHotelAmenities(params?: { category?: string; popular?: boolean }) {
+export const useCountries = (query?: string) => {
   return useQuery({
-    queryKey: ['hotelAmenities', params],
-    queryFn: () => fetchHotelAmenities(params),
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: [...staticDataKeys.countries(), query],
+    queryFn: async () => {
+      const result = await fetchCountries(query);
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch hotel types
- */
-export function useHotelTypes() {
+export const useCurrencies = () => {
   return useQuery({
-    queryKey: ['hotelTypes'],
-    queryFn: fetchHotelTypes,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: staticDataKeys.currencies(),
+    queryFn: async () => {
+      const result = await fetchCurrencies();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch board types (meal plans)
- */
-export function useBoardTypes() {
+export const usePopularDestinations = (limit: number = 10) => {
   return useQuery({
-    queryKey: ['boardTypes'],
-    queryFn: fetchBoardTypes,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    queryKey: [...staticDataKeys.popularDestinations(), limit],
+    queryFn: async () => {
+      const result = await fetchPopularDestinations(limit);
+      return (result?.data ?? []) as any[];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook to fetch room types
- */
-function useRoomTypes(hotelId?: string) {
+// Alias for useDestinations (used by useBundledStaticData)
+export const useCities = useDestinations;
+
+export const usePopularHotels = (limit: number = 12) => {
   return useQuery({
-    queryKey: ['roomTypes', hotelId],
-    queryFn: () => fetchRoomTypesDB(hotelId),
-    enabled: !!hotelId,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    queryKey: [...staticDataKeys.popularHotels(limit)],
+    queryFn: async () => {
+      const result = await fetchPopularDestinations(limit);
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-/**
- * Hook for autocomplete suggestions (airports, cities)
- */
-function useSuggestions(query: string, type: 'flight' | 'hotel' = 'flight') {
+export const useLoyaltyPrograms = () => {
   return useQuery({
-    queryKey: ['suggestions', query, type],
-    queryFn: () => fetchSuggestions(query, type),
-    enabled: query.length >= 2,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    queryKey: [...staticDataKeys.all, "loyaltyPrograms"],
+    queryFn: async () => {
+      const result = await fetchLoyaltyPrograms();
+      return result.data || [];
+    },
+    staleTime: 60 * 60 * 1000,
   });
-}
+};
 
-// Re-export query keys for convenience
-export { queryKeys };
+export const useHotelAmenities = () => {
+  return useAmenities();
+};
+
+export const queryKeys = staticDataKeys;
+
+// Export environment info for debugging
+export const useEnvironmentInfo = () => {
+  return getEnvironmentInfo();
+};

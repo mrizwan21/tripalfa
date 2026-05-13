@@ -3,18 +3,14 @@ import { listNotifications, markNotificationRead } from '../lib/api';
 import { format } from 'date-fns';
 import {
   Bell,
-  CheckCircle2,
-  Clock,
+  Check,
   Trash2,
   Inbox,
-  ChevronRight,
-  Info,
-  Search,
   ChevronLeft,
   ChevronRight as ChevronRightIcon,
   AlertCircle,
+  Search,
 } from 'lucide-react';
-import { Button } from '../components/ui/button';
 import { cn } from '@tripalfa/ui-components';
 import { NotificationDetailsPopup } from '../components/NotificationDetailsPopup';
 import { Toaster } from '../components/ui/toast';
@@ -33,7 +29,7 @@ function Notifications() {
   const [error, setError] = useState<string | null>(null);
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const pollingIntervalRef = useRef<NodeJS.Timeout>(undefined);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const lastTotalNotificationCountRef = useRef(0);
   const [toasts, setToasts] = useState<
     Array<{
@@ -194,43 +190,47 @@ function Notifications() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-20">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="max-w-4xl mx-auto pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
             Notifications
             {unreadCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-background text-xs font-medium gap-4">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#003b95] text-white text-xs font-medium">
                 {unreadCount}
               </span>
             )}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Personalized alerts about your trips and account.
           </p>
         </div>
-        <Button variant="outline" onClick={handleMarkAllAsRead} disabled={unreadCount === 0}>
+        <button
+          onClick={handleMarkAllAsRead}
+          disabled={unreadCount === 0}
+          className="border border-gray-200 text-gray-700 rounded-lg px-6 py-2.5 font-semibold text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           Mark all as read
-        </Button>
+        </button>
       </div>
 
       {!loading && items.length > 0 && (
-        <div className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-3">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 space-y-3 mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
               placeholder="Search notifications..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary)/0.2)] focus:border-[hsl(var(--primary))]"
+              className="w-full h-12 rounded-xl border border-gray-200 bg-white pl-10 pr-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
             />
           </div>
           <div className="flex flex-wrap gap-2">
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value as NotificationType | 'ALL')}
-              className="px-3 py-2 border border-border rounded-lg text-sm"
+              className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
             >
               <option value="ALL">All Types</option>
               <option value="SUCCESS">Success</option>
@@ -241,7 +241,7 @@ function Notifications() {
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value as NotificationStatus | 'ALL')}
-              className="px-3 py-2 border border-border rounded-lg text-sm"
+              className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10"
             >
               <option value="ALL">All Status</option>
               <option value="PENDING">Pending</option>
@@ -253,21 +253,25 @@ function Notifications() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent" />
-          <p className="mt-3 text-sm text-muted-foreground">Loading...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#003b95] border-t-transparent" />
+          <p className="text-sm text-gray-500">Loading...</p>
         </div>
       ) : error ? (
         <div className="text-center py-16">
-          <AlertCircle size={32} className="text-neutral-500 mx-auto mb-3" />
-          <h3 className="text-lg font-medium">Error loading notifications</h3>
-          <Button onClick={load} className="mt-3">
+          <AlertCircle size={32} className="text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-gray-900">Error loading notifications</h3>
+          <button
+            onClick={load}
+            className="mt-3 bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] transition-all duration-200"
+          >
             Try Again
-          </Button>
+          </button>
         </div>
       ) : totalFilteredCount === 0 ? (
         <div className="text-center py-16">
-          <Inbox size={32} className="text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-medium">No notifications found</h3>
+          <Inbox size={32} className="text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-medium text-gray-900">No notifications found</h3>
+          <p className="text-sm text-gray-500 mt-1">Check back later for new updates.</p>
         </div>
       ) : (
         <>
@@ -276,62 +280,67 @@ function Notifications() {
               <div
                 key={n.id}
                 className={cn(
-                  'group relative bg-card rounded-lg border transition-all',
-                  n.read ? 'border-border opacity-75' : 'border-border shadow-sm'
+                  'bg-white rounded-xl border transition-all duration-300',
+                  n.read
+                    ? 'border-gray-100 opacity-75'
+                    : 'border-gray-100 shadow-sm hover:shadow-md'
                 )}
               >
-                <div className="p-4 flex items-start gap-3">
-                  <div
-                    className={cn(
-                      'h-10 w-10 rounded-lg flex items-center justify-center',
-                      n.type === 'SUCCESS'
-                        ? 'bg-muted text-[hsl(var(--primary))]'
-                        : 'bg-muted text-muted-foreground'
+                <div className="p-4 flex items-start gap-4">
+                  {/* Unread indicator */}
+                  <div className="mt-1.5 shrink-0">
+                    {!n.read ? (
+                      <div className="h-2.5 w-2.5 rounded-full bg-[#003b95]" />
+                    ) : (
+                      <div className="h-2.5 w-2.5 rounded-full bg-gray-300" />
                     )}
-                  >
-                    {n.type === 'SUCCESS' ? <CheckCircle2 size={18} /> : <Bell size={18} />}
                   </div>
-                  <div className="flex-1 gap-4">
+
+                  <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start gap-4">
                       <h4
                         className={cn(
-                          'font-medium',
-                          n.read ? 'text-muted-foreground' : 'text-foreground'
+                          'text-sm',
+                          n.read ? 'text-gray-600 font-normal' : 'text-gray-900 font-semibold'
                         )}
                       >
                         {n.title}
                       </h4>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-gray-400 shrink-0 whitespace-nowrap">
                         {format(new Date(n.when), 'MMM d, h:mm a')}
                       </span>
                     </div>
                     <p
                       className={cn(
-                        'mt-0.5 text-sm',
-                        n.read ? 'text-muted-foreground' : 'text-foreground'
+                        'mt-1 text-sm',
+                        n.read ? 'text-gray-500' : 'text-gray-700'
                       )}
                     >
                       {n.message}
                     </p>
-                    <div className="mt-2 flex items-center gap-3">
+                    <div className="mt-3 flex items-center gap-2">
                       {!n.read && (
-                        <Button
-                          variant="outline"
-                          size="md"
+                        <button
                           onClick={() => markRead(n.id)}
-                          className="text-xs font-medium text-[hsl(var(--primary))]"
+                          className="border border-gray-200 text-gray-700 rounded-lg px-4 py-1.5 font-semibold text-xs hover:bg-gray-50 transition-colors flex items-center gap-1.5"
                         >
+                          <Check size={14} />
                           Mark as read
-                        </Button>
+                        </button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="md"
+                      <button
                         onClick={() => handleViewDetails(n)}
-                        className="text-xs font-medium text-muted-foreground"
+                        className="border border-gray-200 text-gray-700 rounded-lg px-4 py-1.5 font-semibold text-xs hover:bg-gray-50 transition-colors"
                       >
                         View Details
-                      </Button>
+                      </button>
+                      <button
+                        onClick={() => {}}
+                        className="border border-red-200 text-red-600 rounded-lg px-4 py-1.5 font-semibold text-xs hover:bg-red-50 transition-colors flex items-center gap-1.5"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -341,42 +350,38 @@ function Notifications() {
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-6 gap-2">
-              <div className="text-sm text-muted-foreground">
+              <div className="text-sm text-gray-500">
                 Page {currentPage} of {totalPages}
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
+                  className="border border-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   First
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
+                </button>
+                <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
+                  className="border border-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
+                  <ChevronLeft size={16} />
+                </button>
+                <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
+                  className="border border-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
+                  <ChevronRightIcon size={16} />
+                </button>
+                <button
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
+                  className="border border-gray-200 text-gray-700 rounded-lg px-4 py-2 text-sm font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Last
-                </Button>
+                </button>
               </div>
             </div>
           )}

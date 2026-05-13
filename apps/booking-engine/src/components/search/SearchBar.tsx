@@ -7,7 +7,8 @@ import { FlightSearchForm } from './FlightSearchForm';
 import { HotelSearchForm } from './HotelSearchForm';
 import { PackagesSearchForm } from './PackagesSearchForm';
 import { CarsSearchForm } from './CarsSearchForm';
-import { Sparkles, Car, Plane, Hotel } from 'lucide-react';
+import { FlightSearchData } from './FlightSearchForm';
+import { HotelSearchData } from './HotelSearchForm';
 
 interface SearchBarProps {
   activeTab: SearchTab;
@@ -40,6 +41,8 @@ interface SearchBarProps {
     searchCtaLabel: string;
     disabledLabel?: string;
   };
+  onFlightSearch?: (data: FlightSearchData) => void;
+  onHotelSearch?: (data: HotelSearchData) => void;
 }
 
 export function SearchBar({
@@ -57,47 +60,33 @@ export function SearchBar({
   isHotelBookingEnabled,
   flightSearchLabels,
   hotelSearchLabels,
+  onFlightSearch,
+  onHotelSearch,
 }: SearchBarProps) {
   return (
     <div className="w-full">
-      <div className="bg-white/[0.98] backdrop-blur-2xl rounded-3xl shadow-2xl shadow-black/[0.08] ring-1 ring-black/[0.05] overflow-hidden">
+      {/* Main Search Card - Kayak-style clean design */}
+      <div className="bg-white rounded-lg shadow-lg shadow-black/10 overflow-hidden">
         {/* Tab Navigation */}
-        <div className="border-b border-[hsl(var(--border))]/40">
-          <div className="flex flex-wrap items-center justify-between gap-4 p-5">
-            <SearchTabs
-              activeTab={activeTab}
-              onTabChange={onTabChange}
-            />
-
-            {activeTab === 'flights' && isFlightBookingEnabled && (
-              <div className="flex items-center gap-3">
-                <TripTypeSelector value={tripType} onChange={onTripTypeChange} />
-                <TravelerSelector
-                  value={travelers}
-                  onChange={onTravelersChange}
-                  cabinClass={cabinClass}
-                  onCabinChange={onCabinChange}
-                />
-                <label className="flex items-center gap-2 cursor-pointer pl-2">
-                  <input
-                    type="checkbox"
-                    checked={directFlightsOnly}
-                    onChange={(e) => onDirectFlightsChange(e.target.checked)}
-                    className="w-4 h-4 rounded border-[hsl(var(--border))] text-[#F45D48] focus:ring-[#F45D48]/20 focus:ring-2"
-                  />
-                  <span className="text-sm text-[hsl(var(--muted-foreground))] font-medium">Direct only</span>
-                </label>
-              </div>
-            )}
-          </div>
+        <div className="border-b border-gray-100">
+          <SearchTabs activeTab={activeTab} onTabChange={onTabChange} />
         </div>
 
-        {/* Search Form Area */}
-        <div className="p-5">
+        {/* Form Area */}
+        <div className="bg-white p-3">
           {activeTab === 'flights' && (
             <FlightSearchForm
               searchLabels={flightSearchLabels}
               isSearchEnabled={isFlightBookingEnabled}
+              tripType={tripType}
+              onTripTypeChange={onTripTypeChange}
+              travelers={travelers}
+              onTravelersChange={onTravelersChange}
+              cabinClass={cabinClass}
+              onCabinChange={onCabinChange}
+              directFlightsOnly={directFlightsOnly}
+              onDirectFlightsChange={onDirectFlightsChange}
+              onSearch={onFlightSearch}
             />
           )}
 
@@ -105,19 +94,16 @@ export function SearchBar({
             <HotelSearchForm
               searchLabels={hotelSearchLabels}
               isSearchEnabled={isHotelBookingEnabled}
+              onSearch={onHotelSearch}
             />
           )}
 
           {activeTab === 'packages' && (
-            <PackagesSearchForm
-              isSearchEnabled={false}
-            />
+            <PackagesSearchForm isSearchEnabled={false} />
           )}
 
           {activeTab === 'cars' && (
-            <CarsSearchForm
-              isSearchEnabled={false}
-            />
+            <CarsSearchForm isSearchEnabled={false} />
           )}
         </div>
       </div>

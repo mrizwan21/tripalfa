@@ -207,6 +207,37 @@ export interface ServiceBootstrapConfig {
   routesSetup?: (app: Application) => void;
 }
 
+// ============================================================
+// SERVICE APP FACTORY
+// ============================================================
+
+export interface CreateServiceAppConfig {
+  serviceName: string;
+  port?: number;
+}
+
+/**
+ * Creates an Express app with standard middleware for a service
+ * @param config - Service configuration
+ * @returns Configured Express application
+ */
+export function createServiceApp(config: CreateServiceAppConfig): Application {
+  const { serviceName, port = process.env.PORT || 3000 } = config;
+
+  // Create app with standard middleware
+  const app = createExpressApp();
+
+  // Health check endpoint
+  app.get('/health', createHealthCheck({
+    serviceName: serviceName.toLowerCase().replace(/\s+/g, '-'),
+  }));
+
+  // Standard error handling (MUST be last)
+  app.use(errorHandler);
+
+  return app;
+}
+
 /**
  * Bootstraps a service with standard configuration, middleware, and startup
  * @param config - Service bootstrap configuration

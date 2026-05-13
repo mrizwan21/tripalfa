@@ -12,8 +12,8 @@
 import React, { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { getStoredAuthToken } from '../lib/authToken';
-import { Button } from '../ui/button';
-import { formatDate } from '@tripalfa/shared-utils/date-utils';
+import { Button } from '@/components/ui/button';
+import { formatDate } from '@tripalfa/shared-utils';
 
 interface BookingDetails {
   id: string;
@@ -175,7 +175,7 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
         <div className="error-alert">
           <span>⚠️</span>
           <p>{error}</p>
-          <Button variant="outline" size="default" onClick={fetchBookingStatus}>
+          <Button variant="outline" size="md" onClick={fetchBookingStatus}>
             Retry
           </Button>
         </div>
@@ -200,7 +200,7 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
           <div className="sort-controls">
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`sort-btn ${sortField === 'date' ? 'active' : ''}`}
               onClick={() => handleSort('date')}
             >
@@ -209,7 +209,7 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`sort-btn ${sortField === 'amount' ? 'active' : ''}`}
               onClick={() => handleSort('amount')}
             >
@@ -218,7 +218,7 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
             </Button>
             <Button
               variant="outline"
-              size="default"
+              size="md"
               className={`sort-btn ${sortField === 'status' ? 'active' : ''}`}
               onClick={() => handleSort('status')}
             >
@@ -345,25 +345,25 @@ const BookingPaymentStatusPanel: FC<BookingPaymentStatusPanelProps> = ({
                     <div className="booking-actions">
                       <Button
                         variant="outline"
-                        size="default"
+                        size="md"
                         className="action-btn primary"
                         onClick={() => onNavigateToBooking?.(booking.id)}
                       >
                         View Booking
                       </Button>
                       {booking.paymentStatus === 'pending' && (
-                        <Button variant="outline" size="default" className="action-btn">
+                        <Button variant="outline" size="md" className="action-btn">
                           Complete Payment
                         </Button>
                       )}
                       {booking.paymentStatus === 'failed' && (
-                        <Button variant="outline" size="default" className="action-btn warning">
+                        <Button variant="outline" size="md" className="action-btn warning">
                           Retry Payment
                         </Button>
                       )}
                       <Button
                         variant="outline"
-                        size="default"
+                        size="md"
                         className="action-btn secondary"
                         onClick={() =>
                           setExpandedBooking(expandedBooking === booking.id ? null : booking.id)

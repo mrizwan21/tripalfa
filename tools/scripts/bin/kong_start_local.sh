@@ -21,5 +21,5 @@ echo "[gateway] Starting Kong with $KONG_CONF"
 "$KONG_BIN" start -c "$KONG_CONF"
 
 echo "[gateway] Kong started."
-echo "[gateway] Proxy: http://localhost:3030"
+echo "[gateway] Proxy: http://localhost:8000"
 echo "[gateway] Admin: http://localhost:8001"

@@ -24,6 +24,9 @@ import { API_BASE_URL, API_ENDPOINTS } from './constants';
 import { api } from './apiClient';
 export { api };
 
+// Static Data API URL - bypass gateway for static data per architecture plan
+const STATIC_API_URL = import.meta.env.VITE_STATIC_API_URL || 'http://localhost:3022';
+
 // ============================================================================
 // STATIC DATA - Direct PostgreSQL Access (Not through API Manager)
 // ============================================================================
@@ -34,15 +37,15 @@ import { HOTEL_STATIC_DATA, searchHotelDestinations } from './constants/hotel-st
 
 /**
  * Static data fetch wrapper.
- * Routes through the APIManager gateway to the booking-engine-service's /api/static/* endpoints.
+ * Bypasses API Gateway to fetch directly from static-data server on port 3022.
  */
 async function staticFetch<T = any>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}/api/static${path}`, {
+  const res = await fetch(`${STATIC_API_URL}${path}`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
     signal: AbortSignal.timeout(8000),
   });
-  if (!res.ok) throw new Error(`API Gateway static route ${res.status} for ${path}`);
+  if (!res.ok) throw new Error(`Static Data API ${res.status} for ${path}`);
   const json = await res.json();
   // Handle case where service returns 200 OK with { error: "Not found" }
   if (json && typeof json === 'object' && 'error' in json && !('data' in json)) {
@@ -51,84 +54,13 @@ async function staticFetch<T = any>(path: string): Promise<T> {
   return json as Promise<T>;
 }
 
-// Duffel Flight Booking API - New API Manager (routes through gateway)
-export {
-  createOfferRequest,
-  getOfferRequest,
-  listOfferRequests,
-  getOfferDetails,
-  createFlightOrder,
-  getFlightOrder,
-  listFlightOrders,
-  updateFlightOrder,
-  getOrderAvailableServices,
-  priceFlightOrder,
-  addOrderServices,
-  getSeatMap,
-  createOrderCancellation,
-  getOrderCancellation,
-  listOrderCancellations,
-  confirmOrderCancellation,
-  createOrderChangeRequest,
-  getOrderChangeRequest,
-  listOrderChangeOffers,
-  getOrderChangeOffer,
-  createOrderChange,
-  confirmOrderChange,
-  getOrderChange,
-  listAirlineCredits,
-  getAirlineCredit,
-  createAirlineCredit,
-  updateAirlineCredit,
-  searchAirports,
-  type OfferRequestParams,
-  type PassengerData,
-  type CreateOrderParams,
-  type PaymentIntentParams,
-  type SelectedSeat,
-  type SeatElement,
-  type SeatSection,
-  type SeatRow,
-  type Cabin,
-  type SeatMap,
-  type GetSeatMapsResponse,
-} from '../services/duffelApiManager';
+// Duffel Flight Booking API functions are now imported directly from services
 
-// Legacy Duffel Flight Booking API (Offers, Orders, Payments) - for backward compatibility
-export {
-  createPaymentIntent,
-  confirmFlightOrder,
-  completeBookingFlow,
-  handlePaymentCallback,
-  getPaymentMethods,
-  getOrderPaymentMethods,
-  confirmPayment,
-  getPayment,
-  type PaymentMethod,
-  type PaymentConfirmParams,
-} from '../services/duffelBookingApi';
 
-// Seat Maps API
-export {
-  getSeatMaps,
-  getSeatMapsForBooking,
-  selectSeats,
-  getSeatMapForSegment,
-  updateBookingSeats,
-  getBookingSeatHistory,
-  getAircraftLayout,
-  parseSeatPattern,
-  generateSeatDesignators,
-  type SeatMapWithAircraft,
-  type AircraftConfig,
-  type CabinLayout,
-  type PostBookingSeatResponse,
-  type SeatOperationContext,
-  type SeatOperationRequest,
-} from '../services/seatMapsApi';
 
-// Supplier Payment API
-export { processSupplierPayment } from '../services/supplierPaymentApi';
+
+
+
 
 // Innstant Travel Static Data API Configuration (disabled - using centralized package)
 // const INNSTANT_API_KEY = '$2y$10$yWot7dUYoc7.viH8vK1s0OG.D0n5uKm19Z84WznDiB.ESBnPOikr6';
@@ -257,7 +189,7 @@ export async function fetchHotelAmenities(params?: { category?: string; popular?
   const liteAPIData = await fetchLiteAPIAmenities(params);
   if (liteAPIData.length > 0) return liteAPIData;
 
-  // Final fallback to static data
+// Final fallback to static data
   return HOTEL_STATIC_DATA.AMENITIES.all as any[];
 }
 
@@ -296,9 +228,9 @@ export async function fetchBoardTypesDB() {
   const liteAPIData = await fetchLiteAPIBoardTypes();
   if (liteAPIData.length > 0) return liteAPIData;
 
-  // Final fallback to static data
-  return HOTEL_STATIC_DATA.BOARD_TYPES.all as any[];
-}
+// Final fallback to static data
+   return HOTEL_STATIC_DATA.BOARD_TYPES.all as any[];
+ }
 
 /**
  * LiteAPI hotel types fallback - called when PostgreSQL is unavailable.
@@ -335,9 +267,9 @@ export async function fetchHotelTypesDB() {
   const liteAPIData = await fetchLiteAPIHotelTypes();
   if (liteAPIData.length > 0) return liteAPIData;
 
-  // Final fallback to static data
-  return HOTEL_STATIC_DATA.TYPES.all as any[];
-}
+// Final fallback to static data
+   return HOTEL_STATIC_DATA.TYPES.all as any[];
+ }
 
 /**
  * Fetch room types from PostgreSQL. No static fallback (hotel-specific data).
@@ -834,13 +766,14 @@ export async function searchHotels(params: any) {
  */
 export async function fetchFacilities() {
   try {
-    // Use static hotel amenities data
-    return HOTEL_STATIC_DATA.AMENITIES.all.map(amenity => ({
+    // Use static hotel amenities data (from frontend-client - synchronous)
+    const amenities = HOTEL_STATIC_DATA.AMENITIES;
+    return amenities?.all.map(amenity => ({
       code: amenity.code,
       name: amenity.name,
-      category: amenity.category,
+      category: (amenity as any).category,
       is_popular: amenity.is_popular || false,
-    }));
+    })) || [];
   } catch (error) {
     console.error('Failed to fetch facilities:', error);
     // Fallback to basic amenities
@@ -855,12 +788,13 @@ export async function fetchFacilities() {
  */
 export async function fetchHotelTypes() {
   try {
-    // Use static hotel types data
-    return HOTEL_STATIC_DATA.TYPES.all.map(type => ({
+    // Use static hotel types data (from frontend-client - synchronous)
+    const types = HOTEL_STATIC_DATA.TYPES;
+    return types?.all.map(type => ({
       code: type.code,
       name: type.name,
-      description: type.description,
-    }));
+      description: (type as any).description,
+    })) || [];
   } catch (error) {
     console.error('Failed to fetch hotel types:', error);
     return ['Hotel', 'Apartment', 'Resort', 'Villa'].map(n => ({ name: n }));
@@ -872,7 +806,7 @@ export async function fetchHotelTypes() {
  */
 export async function fetchHotelChains() {
   try {
-    // Use static hotel chains data
+    // Use static hotel chains data (synchronous getter from frontend-client)
     return HOTEL_STATIC_DATA.CHAINS.all.map(chain => ({
       code: chain.code,
       name: chain.name,
@@ -911,7 +845,14 @@ export async function fetchInitialSuggestions(limit = 10) {
  */
 export async function fetchStarRatings() {
   try {
-    return HOTEL_STATIC_DATA.STAR_RATINGS.all;
+    // Use static star ratings data (synchronous getter from frontend-client)
+    return HOTEL_STATIC_DATA.STAR_RATINGS.all || [
+      { value: 1, label: '1 Star', icon: '★' },
+      { value: 2, label: '2 Stars', icon: '★★' },
+      { value: 3, label: '3 Stars', icon: '★★★' },
+      { value: 4, label: '4 Stars', icon: '★★★★' },
+      { value: 5, label: '5 Stars', icon: '★★★★★' },
+    ];
   } catch (error) {
     console.error('Failed to fetch star ratings:', error);
     return [
@@ -929,7 +870,8 @@ export async function fetchStarRatings() {
  */
 export async function fetchRoomTypes() {
   try {
-    return HOTEL_STATIC_DATA.ROOM_TYPES.all;
+    // Use static room types data (synchronous getter from frontend-client)
+    return HOTEL_STATIC_DATA.ROOM_TYPES.all || [];
   } catch (error) {
     console.error('Failed to fetch room types:', error);
     return [];
@@ -941,7 +883,8 @@ export async function fetchRoomTypes() {
  */
 export async function fetchBoardTypes() {
   try {
-    return HOTEL_STATIC_DATA.BOARD_TYPES.all;
+    // Use static board types data (synchronous getter from frontend-client)
+    return HOTEL_STATIC_DATA.BOARD_TYPES.all || [];
   } catch (error) {
     console.error('Failed to fetch board types:', error);
     return [];
@@ -953,7 +896,8 @@ export async function fetchBoardTypes() {
  */
 export async function fetchViewTypes() {
   try {
-    return HOTEL_STATIC_DATA.VIEW_TYPES.all;
+    // Use static view types data (synchronous getter from frontend-client)
+    return HOTEL_STATIC_DATA.VIEW_TYPES.all || [];
   } catch (error) {
     console.error('Failed to fetch view types:', error);
     return [];
@@ -965,7 +909,8 @@ export async function fetchViewTypes() {
  */
 export async function fetchPaymentTypes() {
   try {
-    return HOTEL_STATIC_DATA.PAYMENT_TYPES.all;
+    // Use static payment types data (synchronous getter from frontend-client)
+    return HOTEL_STATIC_DATA.PAYMENT_TYPES.all || [];
   } catch (error) {
     console.error('Failed to fetch payment types:', error);
     return [];
@@ -1314,35 +1259,9 @@ export async function fetchSeatMaps(offerId: string) {
   }
 }
 
-// Re-export from new Duffel seat maps service
-export {
-  duffelSeatMapsService,
-  groupSeatsByRow,
-  getSeatPattern,
-  getAvailableSeats,
-  calculateTotalSeatCost,
-  isSeatElement,
-  type SeatMapServiceResponse,
-  type SeatSelectionResponse,
-} from '../services/duffelSeatMapsService';
 
-// Re-export types
-export type {
-  DuffelSeatMap,
-  DuffelSeatService,
-  DuffelSeatElement,
-  DuffelCabinRowSectionElement,
-  DuffelCabinClass,
-  DuffelCabin,
-  DuffelCabinRow,
-  DuffelCabinRowSection,
-  DuffelWingPosition,
-  DuffelGetSeatMapsResponse,
-  FlattenedSeat,
-  ProcessedSeatMap,
-  SelectedSeatForBooking,
-  SeatSelectionPayload,
-} from '../types/duffel-seat-maps';
+
+
 
 // Real Notifications
 export async function listNotifications() {

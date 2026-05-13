@@ -5,30 +5,30 @@
  * 1. Hold Booking - Reserve hotel room without immediate payment
  * 2. Itinerary Generation - Create hotel booking itinerary document
  * 3. Invoice Generation - Create commercial invoice
- * 4. Retrieve Booking - Get booking details and status
- * 5. Issue Voucher - Convert hold to confirmed hotel voucher
- * 6. Generate Receipt - Create payment receipt
+ * 4. Receipt Generation - Create payment receipt
+ * 5. Retrieve Booking - Get booking details and status
+ * 6. Issue Voucher - Convert hold to confirmed hotel voucher
  * 7. Cancel Booking - Cancel hotel reservation
  * 8. Generate Refund Note - Create refund documentation
  *
  * Routes:
  * - POST /api/hotel-booking/hold - Create hold booking (Step 1)
  * - POST /api/hotel-booking/payment - Process payment (Step 2)
- * - GET /api/hotel-booking/:bookingId - Retrieve booking (Step 3)
- * - POST /api/hotel-booking/voucher - Issue hotel voucher (Step 4)
- * - POST /api/hotel-booking/receipt - Generate receipt
- * - POST /api/hotel-booking/cancel - Cancel booking (Step 5)
- * - POST /api/hotel-booking/refund - Generate refund note (Step 6)
- * - GET /api/hotel-booking/workflow/:workflowId - Get workflow state
- * - GET /api/hotel-booking/workflows - List all workflows
- * - POST /api/hotel-booking/full-flow - Execute complete flow (testing)
+ * - POST /api/hotel-booking/receipt - Generate receipt (Step 3)
+ * - GET  /api/hotel-booking/:bookingId - Retrieve booking (Step 4)
+ * - POST /api/hotel-booking/voucher - Issue hotel voucher (Step 5)
+ * - POST /api/hotel-booking/cancel - Cancel booking (Step 6)
+ * - POST /api/hotel-booking/refund - Generate refund note (Step 7)
+ * - GET  /api/hotel-booking/workflow/:workflowId - Get workflow state
+ * - GET  /api/hotel-booking/workflows - List all workflows
+ * - POST /api/hotel-booking/full-flow - Execute complete E2E flow (testing)
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
 import type { Router as RouterType } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { HotelWorkflowState } from "./hotelWorkflowState";
-import { generateHotelItineraryHtml, generateHotelInvoiceHtml, generateHotelReceiptHtml, generateHotelVoucherHtml, generateHotelRefundNoteHtml } from "./documentHelpers";
+import { HotelWorkflowState } from "./hotelWorkflowState.js";
+import { generateHotelItineraryHtml, generateHotelInvoiceHtml, generateHotelReceiptHtml, generateHotelVoucherHtml, generateHotelRefundNoteHtml } from "./documentHelpers.js";
 
 const router: RouterType = Router();
 
@@ -505,6 +505,69 @@ router.post('/voucher', async (req: Request, res: Response, next: NextFunction) 
       issuedAt: new Date().toISOString(),
       status: 'confirmed',
       documents: { voucher: workflowState.documents!.voucher },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ * /api/hotel-booking/receipt:
+ *   post:
+ *     summary: Generate receipt for hotel booking
+ *     tags: [Hotel Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [bookingId, workflowId]
+ *             properties:
+ *               bookingId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Receipt generated successfully
+ *       400:
+ *         description: Missing required fields
+ *       404:
+ *         description: Workflow not found
+ */
+router.post('/receipt', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { bookingId, workflowId } = req.body;
+
+    if (!bookingId || !workflowId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: bookingId, workflowId',
+      });
+    }
+
+    const workflowState = hotelWorkflowStates.get(workflowId);
+    if (!workflowState) {
+      return res.status(404).json({
+        success: false,
+        error: 'Workflow not found',
+      });
+    }
+
+    // Generate receipt document
+    workflowState.documents!.receipt = generateHotelReceiptHtml(
+      { bookingReference: workflowState.bookingReference, hotelName: workflowState.booking!.hotelName },
+      workflowState.customer!,
+      { total: workflowState.booking!.totalAmount, currency: workflowState.booking!.currency }
+    );
+
+    hotelWorkflowStates.set(workflowId, workflowState);
+
+    res.status(200).json({
+      success: true,
+      documents: { receipt: workflowState.documents!.receipt },
     });
   } catch (error) {
     next(error);

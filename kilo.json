@@ -1,7 +1,9 @@
 {
+  "$schema": "https://app.kilo.ai/config.json",
   "default_agent": "frontend",
   "model": "anthropic/claude-sonnet-4",
   "instructions": [
     "packages/design-system/**/DESIGN.md"
-  ]
+  ],
+  "snapshot": false
 }

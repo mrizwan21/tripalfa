@@ -32,7 +32,7 @@ import {
 /**
  * Wraps res.json() to cache responses automatically
  */
-function setupCacheInterceptor(
+export function setupCacheInterceptor(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -62,7 +62,7 @@ function setupCacheInterceptor(
 /**
  * Cache middleware for GET /api/flights/offer-requests/:id
  */
-async function cacheOfferRequestMiddleware(
+export async function cacheOfferRequestMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -96,7 +96,7 @@ async function cacheOfferRequestMiddleware(
 /**
  * Cache middleware for GET /api/flights/offers/:id
  */
-async function cacheOfferMiddleware(
+export async function cacheOfferMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -126,7 +126,7 @@ async function cacheOfferMiddleware(
 /**
  * Cache middleware for GET /api/flights/orders/:id
  */
-async function cacheOrderMiddleware(
+export async function cacheOrderMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -322,7 +322,7 @@ export async function invalidateCacheAfterMutationMiddleware(
 /**
  * Track cache hit/miss statistics
  */
-function cacheStatsMiddleware(
+export function cacheStatsMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -356,7 +356,7 @@ function cacheStatsMiddleware(
 /**
  * Warm up cache with frequently accessed data
  */
-async function warmCacheMiddleware(
+export async function warmCacheMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -384,7 +384,7 @@ async function warmCacheMiddleware(
 /**
  * Try cache on API errors
  */
-async function cacheErrorFallbackMiddleware(
+export async function cacheErrorFallbackMiddleware(
   req: Request,
   res: Response,
   next: NextFunction,
@@ -416,7 +416,7 @@ async function cacheErrorFallbackMiddleware(
 /**
  * Apply all cache middlewares to a router
  */
-function applyCacheMiddlewares(router: any) {
+export function applyCacheMiddlewares(router: any) {
   // Setup cache interceptor first
   router.use(setupCacheInterceptor);
 

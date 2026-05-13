@@ -297,6 +297,10 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
           typeof contact.email === 'string'
             ? contact.email
             : DEFAULT_CONTENT_CONFIG.helpCenter.contact.email,
+        whatsapp:
+          typeof contact.whatsapp === 'string'
+            ? contact.whatsapp
+            : DEFAULT_CONTENT_CONFIG.helpCenter.contact.whatsapp,
         chatLabel:
           typeof contact.chatLabel === 'string'
             ? contact.chatLabel
@@ -1098,7 +1102,7 @@ function normalizeContentConfig(value: unknown): TenantContentConfig {
 
 export async function loadTenantContentConfig(): Promise<TenantContentConfig> {
   try {
-    const response = await api.get('/branding/settings');
+    const response = await api.get('/api/branding/settings');
     const payload = isObject(response?.data?.data) ? response.data.data : response?.data;
     const content = isObject(payload) ? payload.content : null;
     return normalizeContentConfig(content);

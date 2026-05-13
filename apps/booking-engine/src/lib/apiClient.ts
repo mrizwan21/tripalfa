@@ -10,13 +10,13 @@ import { API_BASE_URL } from "./constants";
 
 // Safe logging helpers to avoid console spam in production
 const safeLog = (...args: unknown[]) => {
-  if (process.env.NODE_ENV !== "production") console.log(...args);
+  if (import.meta.env.MODE !== "production") console.log(...args);
 };
 const safeWarn = (...args: unknown[]) => {
-  if (process.env.NODE_ENV !== "production") console.warn(...args);
+  if (import.meta.env.MODE !== "production") console.warn(...args);
 };
 const safeError = (...args: unknown[]) => {
-  console.error(...args);
+  if (import.meta.env.MODE !== "production") console.error(...args);
 };
 
 /**
@@ -60,9 +60,14 @@ async function remoteFetch(
     const result = await response.json();
     return result;
   } catch (error: any) {
+    // Log detailed error information for debugging
     safeError(`[apiClient] Exception:`, {
-      message: error?.message,
+      message: error?.message || String(error),
       name: error?.name,
+      stack: error?.stack,
+      status: error?.status,
+      body: error?.body,
+      url: url,
     });
     throw error;
   } finally {

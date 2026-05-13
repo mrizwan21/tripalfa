@@ -15,11 +15,14 @@ import {
   Calendar,
   User,
   Check,
+  LayoutList,
+  LayoutGrid,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { useLiteApiHotels } from '../hooks/useLiteApiHotels';
 import { fetchHotelResults } from '../services/liteApiManager';
 import { Button } from '../components/ui/button';
-import { Card } from '../components/ui/card';
 import { SearchAutocomplete } from '../components/ui/SearchAutocomplete';
 import { formatCurrency } from '@tripalfa/ui-components';
 import { BookingStepper } from '../components/ui/BookingStepper';
@@ -41,6 +44,8 @@ interface Hotel {
   type?: string;
   propertyType?: string;
   facilities?: string[];
+  latitude?: number;
+  longitude?: number;
   [key: string]: any;
 }
 
@@ -101,7 +106,7 @@ function HotelList() {
   // Fetch hotel data using LiteAPI hook
   useEffect(() => {
     const location = searchParams.get('location') || 'Dubai';
-    const checkin = searchParams.get('checkin') || '2024-10-25';
+    const checkin = searchParams.get('check-in') || '2024-10-25';
     const checkout = searchParams.get('checkout') || '2024-10-26';
     const adults = parseInt(searchParams.get('adults') || '2');
 
@@ -129,6 +134,8 @@ function HotelList() {
         stars: h.rating,
         rating: h.rating,
         facilities: h.amenities,
+        latitude: h.latitude,
+        longitude: h.longitude,
       }));
       setDisplayHotels(mapped);
       setTotalHotels(initialHotels.length); // will be corrected by Redis
@@ -143,6 +150,7 @@ function HotelList() {
   // Interactive Filter State
   const [activeFilter, setActiveFilter] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState('Recommended');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filters, setFilters] = useState<FilterState>({
     stars: [],
     price: [],
@@ -241,6 +249,8 @@ function HotelList() {
           stars: h.rating,
           rating: h.rating,
           facilities: h.amenities,
+          latitude: h.latitude,
+          longitude: h.longitude,
         }));
         setDisplayHotels(mapped);
         setTotalHotels(res.total);
@@ -261,11 +271,13 @@ function HotelList() {
   if (searchLoading) {
     return (
       <TripLogerLayout>
-        <div className="container mx-auto px-4 py-40 flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[hsl(var(--primary))] border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p className="text-foreground font-bold uppercase tracking-widest text-sm">
-            Searching the globe...
-          </p>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 size={48} className="text-[#003b95] animate-spin" />
+            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider animate-pulse">
+              Searching the globe...
+            </p>
+          </div>
         </div>
       </TripLogerLayout>
     );
@@ -273,22 +285,22 @@ function HotelList() {
 
   return (
     <TripLogerLayout>
-      <div className="bg-[hsl(var(--background))] min-h-screen pt-32">
+      <div className="min-h-screen bg-gray-50">
         <BookingStepper currentStep={1} />
 
-        <div className="container mx-auto px-4 max-w-6xl">
-          {/* Top Search & Filter Bar (Homepage Glass Finish & Standardized Width) */}
-          <Card className="p-0 mb-6 bg-card/20 backdrop-blur-md shadow-2xl border border-border/30 overflow-visible rounded-3xl relative z-20 w-full">
-            <div className="flex flex-wrap lg:flex-nowrap items-end gap-0 px-5 py-2.5">
-              <div className="flex-1 min-w-[220px] relative border-r border-white/10 pr-4 mr-4 gap-4">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block text-sm font-medium">
+        <div className="container mx-auto px-4 max-w-6xl pt-8">
+          {/* Top Search Bar */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 mb-8">
+            <div className="flex flex-wrap lg:flex-nowrap items-end gap-4">
+              <div className="flex-1 min-w-[220px] relative">
+                <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">
                   Destination
                 </Label>
                 <div className="relative">
                   <SearchAutocomplete
                     type="hotel"
                     placeholder="Where are you going?"
-                    icon={<MapPin size={16} className="text-[hsl(var(--secondary))]" />}
+                    icon={<MapPin size={16} className="text-gray-400" />}
                     value={destination}
                     onChange={setDestination}
                     onSelect={(item: Suggestion) => {
@@ -302,147 +314,84 @@ function HotelList() {
                 </div>
               </div>
 
-              <div className="w-full sm:w-36 relative border-r border-white/10 pr-4 mr-4">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block text-sm font-medium">
-                  Check-in
-                </Label>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    size={16}
-                  />
-                  <input
-                    type="date"
-                    defaultValue={searchParams.get('checkin') || ''}
-                    className="w-full h-8 pl-6 bg-transparent border-none text-sm font-bold text-foreground cursor-pointer truncate focus:ring-0 p-0"
-                  />
-                </div>
-              </div>
-
-              <div className="w-full sm:w-36 relative border-r border-white/10 pr-4 mr-4">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block text-sm font-medium">
-                  Check-out
-                </Label>
-                <div className="relative">
-                  <Calendar
-                    className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    size={16}
-                  />
-                  <input
-                    type="date"
-                    defaultValue={searchParams.get('checkout') || ''}
-                    className="w-full h-8 pl-6 bg-transparent border-none text-sm font-bold text-foreground cursor-pointer truncate focus:ring-0 p-0"
-                  />
-                </div>
-              </div>
-
-              <div className="w-full sm:w-48 relative mr-6">
-                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1 block text-sm font-medium">
-                  Guests & Rooms
-                </Label>
-                <div className="relative">
-                  <User
-                    className="absolute left-0 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    size={16}
-                  />
-                  <input
-                    type="text"
-                    defaultValue={`${searchParams.get('adults') || 2} Adults, ${searchParams.get('children') || 0} Child`}
-                    readOnly
-                    className="w-full h-8 pl-6 bg-transparent border-none text-sm font-bold text-foreground cursor-pointer truncate focus:ring-0 p-0"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-2 shrink-0 py-1">
-                <Button
-                  onClick={() => {
-                    const params = new URLSearchParams(searchParams);
-                    if (destination) params.set('location', destination);
-                    // Add other params update logic if needed (dates are currently not managed by state here but inputs should be)
-                    navigate(`/hotels/list?${params.toString()}`);
-                  }}
-                  className="bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--secondary)/0.9)] h-9 px-5 font-black rounded-xl shadow-lg shadow-indigo-100 uppercase text-[8px] tracking-wide"
-                >
-                  <Search size={14} className="mr-1" /> Search
-                </Button>
+              <div className="flex gap-2 shrink-0">
+                <button className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200">
+                  <Search size={14} className="mr-2 inline" /> Search
+                </button>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Subfilter Bar with Placeholders (Interactive) */}
-          <div className="flex flex-wrap gap-3 mb-10 mt-8 relative z-10">
-            {[
-              {
-                id: 'stars',
-                label: 'Hotel Categories',
-                placeholder: 'Any Stars',
-                options: ['Any', '1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
-              },
-              {
-                id: 'price',
-                label: 'Price Range',
-                placeholder: 'Any Price',
-                options: ['Any Price', 'Under $100', '$100 - $300', '$300 - $500', '$500+'],
-              },
-              {
-                id: 'board',
-                label: 'Board Basis',
-                placeholder: 'Any Basis',
-                options: ['Any', ...(boardTypesQuery.data || []).map(b => b.name)],
-              },
-              {
-                id: 'type',
-                label: 'Property Type',
-                placeholder: 'Any Type',
-                options: ['Any', ...filterOptions.types],
-              },
-              {
-                id: 'rating',
-                label: 'Guest Rating',
-                placeholder: 'Any Rating',
-                options: ['Any', '7+ Good', '8+ Very Good', '9+ Superb'],
-              },
-              {
-                id: 'facilities',
-                label: 'Facilities',
-                placeholder: 'Any Facility',
-                options: ['Any', ...filterOptions.facilities],
-              },
+          {/* Subfilter Bar */}
+          <div className="flex flex-wrap gap-3 mb-8 relative z-50">
+            {[{
+              id: 'stars',
+              label: 'Hotel Categories',
+              placeholder: 'Any Stars',
+              options: ['Any', '1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'],
+            },
+            {
+              id: 'price',
+              label: 'Price Range',
+              placeholder: 'Any Price',
+              options: ['Any Price', 'Under $100', '$100 - $300', '$300 - $500', '$500+'],
+            },
+            {
+              id: 'board',
+              label: 'Board Basis',
+              placeholder: 'Any Basis',
+              options: ['Any', ...(boardTypesQuery.data || []).map(b => b.name)],
+            },
+            {
+              id: 'type',
+              label: 'Property Type',
+              placeholder: 'Any Type',
+              options: ['Any', ...filterOptions.types],
+            },
+            {
+              id: 'rating',
+              label: 'Guest Rating',
+              placeholder: 'Any Rating',
+              options: ['Any', '7+ Good', '8+ Very Good', '9+ Superb'],
+            },
+            {
+              id: 'facilities',
+              label: 'Facilities',
+              placeholder: 'Any Facility',
+              options: ['Any', ...filterOptions.facilities],
+            },
             ].map((f, i) => {
               const selectedCount = filters[f.id as keyof typeof filters].length;
               return (
                 <div key={i} className="flex flex-col gap-1 min-w-[130px] flex-1 relative">
-                  <Label className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.1em] ml-1 text-sm font-medium">
+                  <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 ml-1">
                     {f.label}
                   </Label>
-                  <div
+                  <button
                     onClick={e => {
                       e.stopPropagation();
                       setActiveFilter(activeFilter === i ? null : i);
                     }}
-                    className={`h-10 px-3 bg-card border rounded-xl flex items-center justify-between shadow-sm cursor-pointer hover:border-[hsl(var(--secondary))] hover:shadow-md transition-all group ${activeFilter === i || selectedCount > 0 ? 'border-[hsl(var(--secondary))] ring-2 ring-indigo-50' : 'border-border'}`}
+                    className={`h-10 px-3 bg-white border rounded-xl flex items-center justify-between shadow-sm cursor-pointer transition-all ${activeFilter === i || selectedCount > 0 ? 'border-[#003b95] ring-2 ring-[#003b95]/10' : 'border-gray-200 hover:border-gray-300'}`}
                   >
-                    <span
-                      className={`text-[10px] font-bold ${selectedCount > 0 ? 'text-[hsl(var(--secondary))]' : 'text-muted-foreground'} group-hover:text-foreground`}
-                    >
+                    <span className={`text-xs font-bold ${selectedCount > 0 ? 'text-[#003b95]' : 'text-gray-500'}`}>
                       {selectedCount > 0 ? `${selectedCount} Selected` : f.placeholder}
                     </span>
                     <ChevronDown
                       size={14}
-                      className={`text-muted-foreground group-hover:text-[hsl(var(--secondary))] transition-transform duration-300 ${activeFilter === i ? 'rotate-180' : ''}`}
+                      className={`text-gray-400 transition-transform duration-300 ${activeFilter === i ? 'rotate-180' : ''}`}
                     />
-                  </div>
+                  </button>
 
                   {/* Dropdown Menu */}
                   {activeFilter === i && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-card/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-border p-2 z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
-                      <div className="max-h-60 overflow-y-auto no-scrollbar space-y-2">
+                    <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 p-2 z-[60]">
+                      <div className="max-h-60 overflow-y-auto no-scrollbar space-y-1">
                         {isLoadingFilters && (f.id === 'facilities' || f.id === 'type')
                           ? // Loading skeleton for amenities and types filters
                             Array.from({ length: 4 }).map((_, idx) => (
                               <div key={idx} className="px-4 py-2.5 rounded-xl">
-                                <div className="h-4 bg-muted rounded animate-pulse" />
+                                <div className="h-4 bg-gray-100 rounded animate-pulse" />
                               </div>
                             ))
                           : f.options.map((opt, idx) => {
@@ -455,15 +404,13 @@ function HotelList() {
                                     e.stopPropagation();
                                     toggleFilter(f.id as keyof typeof filters, opt);
                                   }}
-                                  className={`px-4 py-2.5 rounded-xl hover:bg-muted/10 flex items-center justify-between group cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50' : ''}`}
+                                  className={`px-4 py-2.5 rounded-xl flex items-center justify-between cursor-pointer transition-colors ${isSelected ? 'bg-[#003b95]/5' : 'hover:bg-gray-50'}`}
                                 >
-                                  <span
-                                    className={`text-xs font-bold ${isSelected ? 'text-[hsl(var(--secondary))]' : 'text-foreground'}`}
-                                  >
+                                  <span className={`text-sm font-medium ${isSelected ? 'text-[#003b95]' : 'text-gray-700'}`}>
                                     {opt}
                                   </span>
                                   {isSelected && (
-                                    <Check size={12} className="text-[hsl(var(--secondary))]" />
+                                    <Check size={12} className="text-[#003b95]" />
                                   )}
                                 </div>
                               );
@@ -481,177 +428,265 @@ function HotelList() {
             <div className="lg:w-[58%] space-y-6">
               <div className="flex items-center justify-between mb-4 px-2 gap-2">
                 <div>
-                  <h2 className="text-xl font-black text-foreground text-2xl font-semibold tracking-tight">
+                  <h2 className="text-xl font-bold text-gray-900 tracking-tight">
                     Recommended Stays
                   </h2>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     Based on {totalHotels} verified properties found
                   </p>
                 </div>
-                <div className="flex items-center gap-4 hidden sm:flex">
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                    Sort by:
-                  </span>
-                  <select
-                    id="hotel-list-sort"
-                    name="hotel-list-sort"
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value)}
-                    className="bg-transparent text-xs font-black text-foreground uppercase tracking-widest outline-none cursor-pointer border px-3 py-2 rounded-xl border-border focus:border-[hsl(var(--secondary))]"
-                  >
-                    <option value="Recommended">Recommended</option>
-                    <option value="Price: Low to High">Price: Low to High</option>
-                    <option value="Price: High to Low">Price: High to Low</option>
-                    <option value="Rating: High to Low">Rating: High to Low</option>
-                  </select>
+                <div className="flex items-center gap-4">
+                  {/* View Mode Toggles */}
+                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-[#003b95] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      <LayoutList size={16} />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-[#003b95] text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                    >
+                      <LayoutGrid size={16} />
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-4">
+                    <span className="text-xs text-gray-500 uppercase tracking-wider">
+                      Sort by:
+                    </span>
+                    <select
+                      id="hotel-list-sort"
+                      name="hotel-list-sort"
+                      value={sortBy}
+                      onChange={e => setSortBy(e.target.value)}
+                      className="h-12 lg:h-14 rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-gray-300 focus:border-[#003b95] focus:ring-2 focus:ring-[#003b95]/10 cursor-pointer"
+                    >
+                      <option value="Recommended">Recommended</option>
+                      <option value="Price: Low to High">Price: Low to High</option>
+                      <option value="Price: High to Low">Price: High to Low</option>
+                      <option value="Rating: High to Low">Rating: High to Low</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               {filterLoading ? (
-                <div className="flex justify-center p-8">
-                  <div className="w-8 h-8 rounded-full border-4 border-t-indigo-500 animate-spin" />
+                <div className="flex flex-col items-center justify-center py-32 space-y-4">
+                  <Loader2 size={32} className="text-[#003b95] animate-spin" />
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider animate-pulse">
+                    Updating results...
+                  </p>
                 </div>
-              ) : (
-                displayHotels.map(h => (
-                  <Card
-                    key={h.id}
-                    className="group overflow-hidden border-none shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 flex h-64 bg-card rounded-3xl"
-                  >
-                    {/* Hotel Image */}
-                    <div className="w-[38%] relative overflow-hidden">
-                      <img
-                        src={h.image}
-                        alt={h.name}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-card/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-[hsl(var(--secondary))] shadow-xl border border-border/50">
-                          Top Rated
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Hotel Info (Refined Alignment) */}
-                    <div className="flex-1 p-6 flex flex-col gap-4">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1 pr-4 gap-4">
-                          <div className="flex items-center gap-1 mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} size={12} className="text-yellow-400 fill-current" />
-                            ))}
-                          </div>
-                          <h3 className="text-xl font-black text-foreground group-hover:text-[hsl(var(--secondary))] transition-colors leading-tight mb-2">
-                            {h.name}
-                          </h3>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <MapPin size={14} className="text-[hsl(var(--secondary))]" />
-                            <span className="text-[11px] font-black uppercase tracking-tighter">
-                              {h.location}
+              ) : displayHotels.length > 0 ? (
+                <>
+                  {viewMode === 'list' ? (
+                    displayHotels.map(h => (
+                      <div
+                        key={h.id}
+                        className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex h-64"
+                      >
+                        {/* Hotel Image */}
+                        <div className="w-[38%] relative overflow-hidden">
+                          <img
+                            src={h.image}
+                            alt={h.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute top-4 left-4">
+                            <span className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#003b95] shadow-sm border border-gray-100">
+                              Top Rated
                             </span>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">
-                            Total Stay
-                          </p>
-                          <p className="text-2xl font-black text-[hsl(var(--secondary))] tracking-tighter">
-                            {formatCurrency(h.price?.amount || 0)}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground font-bold mt-1">
-                            ✓ Taxes Included
-                          </p>
+
+                        {/* Hotel Info */}
+                        <div className="flex-1 p-6 flex flex-col gap-4">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex-1 pr-4 gap-4">
+                              <div className="flex items-center gap-1 mb-2">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} size={12} className="text-yellow-400 fill-current" />
+                                ))}
+                              </div>
+                              <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#003b95] transition-colors leading-tight mb-2">
+                                {h.name}
+                              </h3>
+                              <div className="flex items-center gap-1.5 text-gray-500">
+                                <MapPin size={14} className="text-[#003b95]" />
+                                <span className="text-xs font-bold uppercase tracking-tighter">
+                                  {h.location}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                Total Stay
+                              </p>
+                              <p className="text-2xl font-bold text-[#1d1d1f] tracking-tighter">
+                                {formatCurrency(h.price?.amount || 0)}
+                              </p>
+                              <p className="text-[10px] text-gray-500 font-bold mt-1">
+                                {' '}Taxes Included
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 p-3 bg-gray-50 rounded-xl flex flex-wrap gap-4">
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase">
+                              <Wifi size={14} className="text-blue-500" /> WiFi
+                            </span>
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase">
+                              <Coffee size={14} className="text-orange-500" /> Breakfast
+                            </span>
+                            <span className="flex items-center gap-1.5 text-xs font-bold text-gray-700 uppercase">
+                              <Waves size={14} className="text-cyan-500" /> Pool
+                            </span>
+                          </div>
+
+                          <div className="mt-auto flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className="bg-[#003b95] text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-sm">
+                                {h.rating}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-tighter text-gray-900 leading-none">
+                                  Excellent
+                                </p>
+                                <p className="text-[10px] font-bold text-gray-500 uppercase leading-none mt-1">
+                                  420 Reviews
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              className="bg-[#003b95] text-white rounded-lg px-6 py-2.5 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+                              onClick={() => navigate(`/hotels/${h.id}`)}
+                            >
+                              Select Room
+                            </button>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="mt-4 p-3 bg-muted/10 rounded-2xl flex flex-wrap gap-4">
-                        <span className="flex items-center gap-1.5 text-[10px] font-black text-foreground uppercase">
-                          <Wifi size={14} className="text-blue-500" /> WiFi
-                        </span>
-                        <span className="flex items-center gap-1.5 text-[10px] font-black text-foreground uppercase">
-                          <Coffee size={14} className="text-orange-500" /> Breakfast
-                        </span>
-                        <span className="flex items-center gap-1.5 text-[10px] font-black text-foreground uppercase">
-                          <Waves size={14} className="text-cyan-500" /> Pool
-                        </span>
-                      </div>
-
-                      <div className="mt-auto flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm shadow-sm gap-2">
-                            {h.rating}
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black uppercase tracking-tighter text-foreground leading-none">
-                              Excellent
-                            </p>
-                            <p className="text-[9px] font-bold text-muted-foreground uppercase leading-none mt-1">
-                              420 Reviews
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          className="bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--secondary)/0.9)] h-10 px-5 font-black rounded-xl shadow-lg shadow-indigo-100 uppercase text-[8px] tracking-wide"
-                          onClick={() => navigate(`/hotels/${h.id}`)}
+                    ))
+                  ) : (
+                    <div className="grid grid-cols-2 gap-4">
+                      {displayHotels.map(h => (
+                        <div
+                          key={h.id}
+                          className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden flex flex-col"
                         >
-                          Select Room
-                        </Button>
-                      </div>
+                          <div className="h-48 relative overflow-hidden">
+                            <img
+                              src={h.image}
+                              alt={h.name}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                            <div className="absolute top-4 left-4">
+                              <span className="bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#003b95] shadow-sm border border-gray-100">
+                                Top Rated
+                              </span>
+                            </div>
+                          </div>
+                          <div className="p-4 flex flex-col gap-3 flex-1">
+                            <div className="flex items-center gap-1 mb-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={12} className="text-yellow-400 fill-current" />
+                              ))}
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 group-hover:text-[#003b95] transition-colors leading-tight">
+                              {h.name}
+                            </h3>
+                            <div className="flex items-center gap-1.5 text-gray-500 mb-2">
+                              <MapPin size={14} className="text-[#003b95]" />
+                              <span className="text-xs font-bold uppercase tracking-tighter">
+                                {h.location}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              <span className="flex items-center gap-1 text-xs font-bold text-gray-700 uppercase">
+                                <Wifi size={12} className="text-blue-500" /> WiFi
+                              </span>
+                              <span className="flex items-center gap-1 text-xs font-bold text-gray-700 uppercase">
+                                <Coffee size={12} className="text-orange-500" /> Breakfast
+                              </span>
+                            </div>
+                            <div className="mt-auto flex items-center justify-between gap-2">
+                              <div className="text-right">
+                                <p className="text-2xl font-bold text-[#1d1d1f]">
+                                  {formatCurrency(h.price?.amount || 0)}
+                                </p>
+                              </div>
+                              <button
+                                className="bg-[#003b95] text-white rounded-lg px-5 py-2 font-semibold text-sm shadow-md hover:bg-[#002a6e] hover:shadow-lg active:scale-[0.98] transition-all duration-200"
+                                onClick={() => navigate(`/hotels/${h.id}`)}
+                              >
+                                Select Room
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </Card>
-                ))
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm">
+                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 gap-2">
+                    <Search size={32} className="text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">No hotels found</h3>
+                  <p className="text-xs text-gray-500 mt-2 max-w-xs mx-auto">
+                    Try adjusting your filters or search criteria to find available hotels.
+                  </p>
+                  <button
+                    onClick={() =>
+                      setFilters({
+                        stars: [],
+                        price: [],
+                        board: [],
+                        type: [],
+                        rating: [],
+                        facilities: [],
+                      })
+                    }
+                    className="mt-8 bg-gray-900 hover:bg-gray-700 text-white rounded-lg px-6 py-2.5 font-semibold text-sm transition-colors"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
               )}
 
               {/* Pagination */}
               <div className="flex items-center justify-center gap-3 pt-12 pb-10">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="w-10 h-10 flex items-center justify-center rounded-2xl border-2 border-border text-muted-foreground hover:bg-card/90 transition-all gap-2"
-                >
+                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-[#003b95] hover:text-[#003b95] transition-all bg-white">
                   <ChevronRight size={18} className="rotate-180" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-10 h-10 flex items-center justify-center rounded-2xl bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] font-black text-sm shadow-lg shadow-indigo-100 gap-2"
-                >
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#003b95] text-white font-bold text-sm shadow-sm">
                   1
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-card/90 text-foreground font-black text-sm border-2 border-transparent gap-2"
-                >
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:border-[#003b95] hover:text-[#003b95] transition-all bg-white">
                   2
-                </Button>
-                <span className="text-muted-foreground font-black">...</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-10 h-10 flex items-center justify-center rounded-2xl hover:bg-card/90 text-foreground font-black text-sm border-2 border-transparent gap-2"
-                >
+                </button>
+                <span className="text-gray-400 font-bold">...</span>
+                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-700 font-bold text-sm hover:border-[#003b95] hover:text-[#003b95] transition-all bg-white">
                   10
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="w-10 h-10 flex items-center justify-center rounded-2xl border-2 border-border text-muted-foreground hover:bg-card/90 transition-all gap-2"
-                >
+                </button>
+                <button className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 text-gray-500 hover:border-[#003b95] hover:text-[#003b95] transition-all bg-white">
                   <ChevronRight size={18} />
-                </Button>
+                </button>
               </div>
             </div>
 
-            {/* Right Column: Sticky Mapbox Map */}
-            <div className="hidden lg:block lg:w-[42%] sticky top-24 h-[calc(100vh-120px)] rounded-[2.5rem] overflow-hidden shadow-2xl border-8 border-white relative">
+            {/* Right Column: Sticky Map */}
+            <div className="hidden lg:block lg:w-[42%] sticky top-24 h-[calc(100vh-120px)] rounded-xl overflow-hidden shadow-lg border border-gray-100 relative bg-white">
               {/* Refresh button overlay */}
               <div className="absolute top-6 left-1/2 -translate-x-1/2 z-10">
-                <Button
+                <button
                   onClick={() => window.location.reload()}
-                  className="bg-card/90 backdrop-blur-xl text-foreground hover:bg-card/90 shadow-2xl h-12 px-8 font-black border-none rounded-2xl transition-all scale-95 hover:scale-100"
+                  className="bg-white rounded-lg px-4 py-2 font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center gap-2 border border-gray-100"
                 >
-                  <RotateCcw size={18} className="mr-3 text-[hsl(var(--secondary))]" /> Refresh Map
-                </Button>
+                  <RotateCcw size={18} className="text-[#003b95]" /> Refresh Map
+                </button>
               </div>
 
               <HotelMap

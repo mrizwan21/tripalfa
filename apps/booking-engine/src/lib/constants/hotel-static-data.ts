@@ -2,7 +2,7 @@
  * Hotel Static Data Constants
  *
  * Fallback data used when static-data-service is unavailable.
- * Imports base data from @tripalfa/static-data/frontend and augments
+ * Imports base data from @tripalfa/static-data/frontend-client and augments
  * with app-specific data (AMENITY_ICONS, etc.).
  *
  * Primary source: PostgreSQL static-data-service running locally on port 3002
@@ -14,7 +14,7 @@
 import {
   HOTEL_STATIC_DATA as BASE_HOTEL_STATIC_DATA,
   searchHotelDestinations as baseSearchDestinations,
-} from '@tripalfa/static-data/frontend';
+  } from '@tripalfa/static-data/frontend-client';
 
 // Re-export searchHotelDestinations from the shared package
 export const searchHotelDestinations = baseSearchDestinations;

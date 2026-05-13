@@ -9,12 +9,12 @@ KONG_ADMIN_URL="${KONG_ADMIN_URL:-http://localhost:8001}"
 echo "[gateway] Running local preflight checks..."
 
 if ! command -v "$KONG_BIN" >/dev/null 2>&1; then
-  echo "[gateway] FAIL: Kong binary not found in PATH."
+  echo "[gateway] WARN: Kong binary not found in PATH."
   echo "[gateway] Hint: install Kong Gateway locally and ensure 'kong' is available."
-  exit 1
+  echo "[gateway] Continuing with config verification (some checks will be skipped)..."
+else
+  echo "[gateway] PASS: Kong binary found: $(command -v "$KONG_BIN")"
 fi
-
-echo "[gateway] PASS: Kong binary found: $(command -v "$KONG_BIN")"
 
 echo "[gateway] Building Kong config from Wicked definitions..."
 node "$ROOT_DIR/tools/scripts/gateway/build-kong-from-wicked.mjs" >/dev/null

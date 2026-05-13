@@ -123,7 +123,7 @@ export const AdditionalBaggagePopup = ({
           {/* Passenger Selection */}
           <div className="flex items-center justify-center gap-6 border-b border-border pb-10">
             <Button
-              variant="default"
+              variant="primary"
               size="sm"
               className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-primary hover:bg-primary/10 transition-all gap-2"
             >
@@ -155,7 +155,7 @@ export const AdditionalBaggagePopup = ({
               ))}
             </div>
             <Button
-              variant="default"
+              variant="primary"
               size="sm"
               className="w-8 h-8 rounded-full bg-card border border-border flex items-center justify-center text-primary hover:bg-primary/10 transition-all gap-2"
             >
@@ -169,7 +169,7 @@ export const AdditionalBaggagePopup = ({
             <div className="flex justify-center gap-4">
               <div className="bg-card p-2 rounded-2xl flex gap-4">
                 <Button
-                  variant="default"
+                  variant="primary"
                   size="sm"
                   className="px-10 py-3 bg-primary text-primary-foreground rounded-xl text-xs font-black uppercase tracking-widest shadow-lg flex items-center gap-3"
                 >

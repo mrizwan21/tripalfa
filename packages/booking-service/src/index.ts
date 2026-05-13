@@ -31,6 +31,10 @@ import locationRoutes from './routes/location.js';
 import staticRoutes from './routes/static.routes.js';
 import contentRoutes from './routes/content.routes.js';
 import hotelStaticRoutes from './routes/hotels.static.routes.js';
+import brandingRoutes from './routes/branding.routes.js';
+import rulesRoutes from './routes/rules.routes.js';
+import tenantRoutes from './routes/tenant.routes.js';
+import callcenterRoutes from './routes/callcenter.routes.js';
 import { randomUUID } from 'crypto';
 import { CacheService } from './cache/redis.js';
 import { setupBookingSwagger } from './swagger.js';
@@ -472,6 +476,81 @@ app.post('/api/flights/search', async (req: Request, res: Response) => {
   }
 });
 
+// Get flight details by offer ID
+app.get('/api/flights/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ error: 'Offer ID is required' });
+    }
+
+    const duffelResponse = await duffelApi<any>(`/air/offers/${id}`);
+    const offer = duffelResponse.data;
+
+    if (!offer) {
+      return res.status(404).json({ error: 'Flight offer not found' });
+    }
+
+    // Map to FlightResult format
+    const slice = offer.slices?.[0];
+    if (!slice || !slice.segments || slice.segments.length === 0) {
+      return res.status(404).json({ error: 'Invalid offer data' });
+    }
+
+    const mapped = {
+      id: offer.id,
+      offerId: offer.id,
+      airline: offer.owner?.name || 'Unknown',
+      airlineCode: offer.owner?.iata_code || '',
+      flightNumber: slice.segments[0]?.marketing_carrier_flight_number || '',
+      carrierCode: offer.owner?.iata_code || '',
+      departureTime: slice.segments[0]?.departing_at || '',
+      arrivalTime: slice.segments[slice.segments.length - 1]?.arriving_at || '',
+      origin: slice.segments[0]?.origin?.iata_code || '',
+      destination: slice.segments[slice.segments.length - 1]?.destination?.iata_code || '',
+      duration: slice.duration || '',
+      stops: slice.segments.length - 1,
+      amount: parseFloat(offer.total_amount) || 0,
+      currency: offer.total_currency || 'USD',
+      cabin: slice.segments[0]?.passengers?.[0]?.cabin_class || 'economy',
+      refundable: offer.conditions?.refund_before_departure?.allowed || false,
+      changeable: offer.conditions?.change_before_departure?.allowed || false,
+      segments: slice.segments.map((seg: any) => ({
+        origin: seg.origin?.iata_code,
+        destination: seg.destination?.iata_code,
+        departureTime: seg.departing_at,
+        arrivalTime: seg.arriving_at,
+        carrierCode: seg.marketing_carrier?.iata_code,
+        flightNumber: seg.marketing_carrier_flight_number,
+        carrier: seg.marketing_carrier?.name,
+        duration: seg.duration,
+        aircraft: seg.aircraft?.name,
+        originCity: seg.origin?.city_name || seg.origin?.name || seg.origin?.iata_code,
+        destinationCity:
+          seg.destination?.city_name || seg.destination?.name || seg.destination?.iata_code,
+      })),
+      ancillaries: (offer.available_services || []).map((s: any) => ({
+        id: s.id,
+        name: s.metadata?.name || s.type,
+        price: parseFloat(s.total_amount || '0'),
+        currency: s.total_currency,
+        type: s.type === 'baggage' ? 'baggage' : s.type === 'seat' ? 'seat' : 'other',
+        raw: s,
+      })),
+      rawOffer: offer,
+    };
+
+    res.json({
+      success: true,
+      data: mapped,
+    });
+  } catch (error: any) {
+    console.error('[Flight] Get flight details error:', error.message);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/flights/search/results/:searchId', async (req: Request, res: Response) => {
   try {
     const { searchId } = req.params;
@@ -588,7 +667,6 @@ app.use('/api/bookings', bookingsRoutes);
 app.use('/api/documents', documentsRoutes);
 
 // V2 Booking Routes (with workflow state machine)
-// app.use('/api/v2/admin/bookings', bookingsV2Routes)
 
 // Legacy admin routes
 app.use('/api/order-management', orderManagementRoutes);
@@ -635,6 +713,21 @@ app.use('/api/content', contentRoutes);
 
 // Hotel Static Routes (Destination search, Static hotel details, Reviews)
 app.use('/api', hotelStaticRoutes);
+
+// Branding Routes (Tenant colors, settings)
+app.use('/api/branding', brandingRoutes);
+
+// Rules Routes (Markup, Commission rules)
+app.use('/api/rules', rulesRoutes);
+
+// Tenant API Routes (B2B Portal, Call Center - sub-users, travellers, etc.)
+app.use('/api/tenant', tenantRoutes);
+
+// B2B API Routes (same handlers as tenant routes)
+app.use('/api/b2b', tenantRoutes);
+
+// Call Center Routes
+app.use('/api/call-center', callcenterRoutes);
 
 // 404 Handler
 app.use((req, res) => {

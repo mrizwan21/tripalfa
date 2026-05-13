@@ -27,10 +27,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import type { Router as RouterType } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { CacheService, CACHE_TTL } from '../cache/redis';
-import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth';
-import { FlightWorkflowState } from "./flightWorkflowState";
-import { generateItineraryHtml, generateInvoiceHtml, generateReceiptHtml, generateETicketHtml, generateRefundNoteHtml } from "./documentHelpers";
+import { CacheService, CACHE_TTL } from '../cache/redis.js';
+import { authMiddleware, optionalAuth, AuthRequest } from '../middleware/auth.js';
+import { FlightWorkflowState } from "./flightWorkflowState.js";
+import { generateItineraryHtml, generateInvoiceHtml, generateReceiptHtml, generateETicketHtml, generateRefundNoteHtml } from "./documentHelpers.js";
 
 const router: RouterType = Router();
 
@@ -71,26 +71,127 @@ async function getWorkflowState(workflowId: string): Promise<BookingWorkflowStat
 }
 
 /**
- * Get workflow state by orderId
+ * Generate receipt for booking
+ * POST /api/flight-booking/receipt
  */
-async function getWorkflowByOrderId(orderId: string): Promise<BookingWorkflowState | null> {
-  const key = WorkflowKeys.orderWorkflow(orderId);
-  return CacheService.get<BookingWorkflowState>(key);
+async function generateReceipt(request: ReceiptRequest): Promise<ReceiptResponse> {
+  try {
+    const response = await api.post<ReceiptResponse>(
+      "/flight-booking/receipt",
+      request,
+    );
+    return response;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { error?: string } }; message?: string };
+    return {
+      success: false,
+      error:
+        err.response?.data?.error ||
+        err.message ||
+        "Failed to generate receipt",
+    };
+  }
 }
 
-// ============================================================================
-// TYPES & INTERFACES
-// ============================================================================
+/**
+ * @swagger
+ * /api/flight-booking/receipt:
+ *   post:
+ *     summary: Generate receipt for booking
+ *     tags: [Flight Booking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [orderId, workflowId]
+ *             properties:
+ *               orderId:
+ *                 type: string
+ *               workflowId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Receipt generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 receiptNumber:
+ *                   type: string
+ *                 message:
+ *                   type: string
+ *                 documents:
+ *                   type: object
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 error:
+ *                   type: string
+ */
+router.post(
+  '/receipt',
+  authMiddleware,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const { orderId, workflowId } = req.body;
 
-interface FlightBookingParticipant {
-  title: string;
-  given_name: string;
-  family_name: string;
-  email: string;
-  phone_number: string;
-  born_on: string;
-  gender: string;
-}
+      if (!orderId || !workflowId) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields: orderId, workflowId',
+        });
+      }
+
+      const workflowState = await getWorkflowState(workflowId);
+      if (!workflowState) {
+        return res.status(404).json({
+          success: false,
+          error: 'Workflow not found',
+        });
+      }
+
+      const receiptNumber = `RCP-${Date.now()}`;
+
+      // Generate receipt document
+      workflowState.documents!.receipt = generateReceiptHtml(
+        { bookingReference: workflowState.bookingReference },
+        workflowState.customer!,
+        { 
+          total: workflowState.booking?.totalAmount || 0,
+          currency: workflowState.booking?.currency || 'USD',
+          paymentMethod: 'card'
+        }
+      );
+
+      // Persist updated workflow state to Redis
+      await saveWorkflowState(workflowState);
+
+      res.status(200).json({
+        success: true,
+        workflowId,
+        orderId,
+        receiptNumber,
+        message: 'Receipt generated successfully',
+        documents: {
+          receipt: workflowState.documents!.receipt,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 interface CreateHoldBookingRequest {
   offerId: string;
@@ -1142,7 +1243,7 @@ router.get(
     try {
       // Note: Listing all workflows requires scanning Redis keys
       // This is a potentially expensive operation, so we limit it
-      const { getRedisClient } = await import('../cache/redis');
+      const { getRedisClient } = await import('../cache/redis.js');
       const client = await getRedisClient();
       const keys = await client.keys('flight:workflow:*');
 
@@ -1227,6 +1328,244 @@ router.get(
  *                 error:
  *                   type: string
  */
+// Alias for frontend compatibility
+router.post(
+  '/complete-flow',
+  authMiddleware,
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    try {
+      const {
+        offerId,
+        passengers,
+        customerId,
+        customerEmail,
+        customerPhone,
+        totalAmount,
+        currency,
+        paymentMethod,
+        cancelAfterTicketing,
+        refundAmount,
+      } = req.body;
+
+      // Validate required fields
+      if (!offerId || !passengers || !customerId || !customerEmail || !totalAmount || !currency) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required booking fields',
+        });
+      }
+
+      const results: any = { steps: {} };
+
+      // Step 1: Create Hold Booking
+      const holdWorkflowId = uuidv4();
+      const bookingReference = `TA${Date.now()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+      const orderId = `ORD-${Date.now()}`;
+
+      const customer = {
+        id: customerId,
+        name: `${passengers[0]?.given_name || ''} ${passengers[0]?.family_name || ''}`.trim(),
+        email: customerEmail,
+        phone: customerPhone,
+      };
+
+      const workflowState: BookingWorkflowState = {
+        workflowId: holdWorkflowId,
+        orderId,
+        bookingReference,
+        status: 'hold',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        steps: {
+          hold: { completed: true, timestamp: new Date() },
+          payment: { completed: false },
+          ticketing: { completed: false },
+          cancellation: { completed: false },
+          refund: { completed: false },
+        },
+        customer,
+        booking: {
+          offerId,
+          passengers,
+          totalAmount,
+          currency,
+        },
+        documents: {},
+      };
+
+      // Generate itinerary and invoice
+      workflowState.documents!.itinerary = generateItineraryHtml(
+        { bookingReference, passengers },
+        customer
+      );
+      workflowState.documents!.invoice = generateInvoiceHtml(
+        { bookingReference, totalAmount },
+        customer,
+        { total: totalAmount, currency }
+      );
+
+      // Persist workflow state to Redis
+      await saveWorkflowState(workflowState);
+
+      results.steps.hold = {
+        success: true,
+        workflowId: holdWorkflowId,
+        orderId,
+        bookingReference,
+        documents: {
+          itinerary: workflowState.documents!.itinerary,
+          invoice: workflowState.documents!.invoice,
+        },
+      };
+
+      // Step 2: Process Payment (if requested)
+      if (paymentMethod) {
+        const paymentReference = `PAY-${Date.now()}`;
+
+        workflowState.status = 'paid';
+        workflowState.updatedAt = new Date();
+        workflowState.steps.payment = {
+          completed: true,
+          timestamp: new Date(),
+          data: {
+            paymentReference,
+            amount: totalAmount,
+            currency,
+            paymentMethod,
+          },
+        };
+
+        workflowState.documents!.receipt = generateReceiptHtml({ bookingReference }, customer, {
+          total: totalAmount,
+          currency,
+          paymentMethod,
+        });
+
+        // Persist updated state to Redis
+        await saveWorkflowState(workflowState);
+
+        results.steps.payment = {
+          success: true,
+          workflowId: holdWorkflowId,
+          paymentReference,
+          paymentStatus: 'paid',
+          documents: {
+            receipt: workflowState.documents!.receipt,
+          },
+        };
+
+        // Step 4: Issue Ticket
+        const ticketNumber = `176${Date.now()}0001`;
+
+        workflowState.status = 'ticketed';
+        workflowState.updatedAt = new Date();
+        workflowState.steps.ticketing = {
+          completed: true,
+          timestamp: new Date(),
+          data: { ticketNumber, issuedAt: new Date() },
+        };
+
+        workflowState.documents!.ticket = generateETicketHtml({ bookingReference }, customer, {
+          ticketNumber,
+        });
+
+        // Persist updated state to Redis
+        await saveWorkflowState(workflowState);
+
+        results.steps.ticketing = {
+          success: true,
+          workflowId: holdWorkflowId,
+          ticketNumber,
+          status: 'ticketed',
+          documents: {
+            ticket: workflowState.documents!.ticket,
+          },
+        };
+
+        // Step 5 & 6: Cancel and Refund (if requested)
+        if (cancelAfterTicketing) {
+          const cancellationReason =
+            cancelAfterTicketing.reason || 'Customer requested cancellation';
+
+          workflowState.status = 'cancelled';
+          workflowState.updatedAt = new Date();
+          workflowState.steps.cancellation = {
+            completed: true,
+            timestamp: new Date(),
+            data: { reason: cancellationReason, cancelledAt: new Date() },
+          };
+
+          // Persist updated state to Redis
+          await saveWorkflowState(workflowState);
+
+          results.steps.cancellation = {
+            success: true,
+            workflowId: holdWorkflowId,
+            cancellationId: `CNL-${Date.now()}`,
+            status: 'cancelled',
+          };
+
+          if (refundAmount) {
+            const refundNumber = `RFN-${Date.now()}`;
+
+            workflowState.status = 'refunded';
+            workflowState.updatedAt = new Date();
+            workflowState.steps.refund = {
+              completed: true,
+              timestamp: new Date(),
+              data: {
+                refundNumber,
+                amount: refundAmount,
+                currency,
+                reason: cancellationReason,
+                processedAt: new Date(),
+              },
+            };
+
+            workflowState.documents!.refundNote = generateRefundNoteHtml(
+              { bookingReference },
+              customer,
+              {
+                refundNumber,
+                amount: refundAmount,
+                currency,
+                reason: cancellationReason,
+              }
+            );
+
+            // Persist updated state to Redis
+            await saveWorkflowState(workflowState);
+
+            results.steps.refund = {
+              success: true,
+              workflowId: holdWorkflowId,
+              refundNumber,
+              refundAmount,
+              currency,
+              status: 'refunded',
+              documents: {
+                refundNote: workflowState.documents!.refundNote,
+              },
+            };
+          }
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        workflowId: holdWorkflowId,
+        orderId,
+        bookingReference,
+        status: workflowState.status,
+        flowCompleted: cancelAfterTicketing ? true : false,
+        results: results,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 router.post(
   '/full-flow',
   authMiddleware,

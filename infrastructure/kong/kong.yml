@@ -163,27 +163,6 @@ routes:
       - "tripalfa"
       - "wicked"
   -
-    name: "booking-engine-static"
-    service:
-      name: "booking-engine-service"
-    paths:
-      - "/api/static"
-    strip_path: false
-    preserve_host: false
-    protocols:
-      - "http"
-      - "https"
-    methods:
-      - "GET"
-      - "POST"
-      - "PUT"
-      - "PATCH"
-      - "DELETE"
-      - "OPTIONS"
-    tags:
-      - "tripalfa"
-      - "wicked"
-  -
     name: "booking-admin"
     service:
       name: "booking-service"
@@ -306,6 +285,9 @@ routes:
       - "/api/weather"
       - "/api/user"
       - "/api/search"
+      - "/api/static"
+      - "/api/branding"
+      - "/api/rules"
     strip_path: false
     preserve_host: false
     protocols:
@@ -406,6 +388,69 @@ routes:
       - "tripalfa"
       - "wicked"
   -
+    name: "b2b-portal"
+    service:
+      name: "b2b-portal-service"
+    paths:
+      - "/api/b2b"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "call-center"
+    service:
+      name: "call-center-service"
+    paths:
+      - "/api/call-center"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
+    name: "super-admin"
+    service:
+      name: "super-admin-service"
+    paths:
+      - "/api/super-admin"
+    strip_path: false
+    preserve_host: false
+    protocols:
+      - "http"
+      - "https"
+    methods:
+      - "GET"
+      - "POST"
+      - "PUT"
+      - "PATCH"
+      - "DELETE"
+      - "OPTIONS"
+    tags:
+      - "tripalfa"
+      - "wicked"
+  -
     name: "booking-fallback"
     service:
       name: "booking-service"
@@ -450,6 +495,14 @@ plugins:
       credentials: true
       max_age: 3600
   -
+    name: "file-log"
+    config:
+      path: "./infrastructure/kong/.runtime/logs/audit.log"
+      reopen: true
+    tags:
+      - "audit"
+      - "logging"
+  -
     name: "rate-limiting"
     config:
       minute: 12000
@@ -466,6 +519,27 @@ plugins:
   -
     name: "rate-limiting"
     config:
+      minute: 10000
+      policy: "local"
+    service:
+      name: "b2b-portal-service"
+  -
+    name: "rate-limiting"
+    config:
+      minute: 10000
+      policy: "local"
+    service:
+      name: "call-center-service"
+  -
+    name: "rate-limiting"
+    config:
+      minute: 10000
+      policy: "local"
+    service:
+      name: "super-admin-service"
+  -
+    name: "rate-limiting"
+    config:
       minute: 6000
       policy: "local"
     service:
@@ -477,3 +551,21 @@ plugins:
       policy: "local"
     service:
       name: "external-liteapi"
+  -
+    name: "key-auth"
+    config:
+      key_names:
+        - "apikey"
+      key_in_body: false
+      hide_credentials: true
+    tags:
+      - "auth"
+      - "security"
+  -
+    name: "prometheus"
+    config:
+      per_consumer: true
+      status_code_metrics: true
+    tags:
+      - "monitoring"
+      - "metrics"

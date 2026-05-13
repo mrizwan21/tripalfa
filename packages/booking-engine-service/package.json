@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tripalfa/shared-database": "workspace:*",
+    "@tripalfa/shared-express": "workspace:*",
     "@tripalfa/shared-openapi": "workspace:*",
     "@tripalfa/shared-types": "workspace:*",
     "axios": "^1.7.9",
@@ -22,7 +23,6 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^25.2.3",

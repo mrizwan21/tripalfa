@@ -2,6 +2,7 @@
  * OTA Database Seed Orchestrator
  */
 import { PrismaClient } from '../../generated/prisma-client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { seedSystem } from './01-system.js';
 import { seedTenants } from './02-tenants.js';
 import { seedSuppliers } from './03-suppliers.js';
@@ -19,8 +20,15 @@ import { seedNotifications } from './14-notifications.js';
 import { seedEnquiries } from './15-enquiries.js';
 import { seedSupport } from './16-support.js';
 import { seedWhitelabel } from './17-whitelabel.js';
+import { seedB2BAndCallCenter } from './18-b2b-callcenter.js';
 
-const prisma = new PrismaClient();
+const pgAdapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5433/tripalfa_platform'
+});
+
+const prisma = new PrismaClient({
+  adapter: pgAdapter
+});
 
 async function main() {
   console.log('🚀 Starting Database Seed...');
@@ -53,6 +61,7 @@ async function main() {
     await seedEnquiries(prisma);
     await seedSupport(prisma);
     await seedWhitelabel(prisma);
+    await seedB2BAndCallCenter(prisma);
     
     console.log('\n✅ Seed completed successfully!');
   } catch (error) {

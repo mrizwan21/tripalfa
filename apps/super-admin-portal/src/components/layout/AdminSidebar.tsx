@@ -116,7 +116,7 @@ export default function AdminSidebar() {
             <p className="text-[9px] text-white/30 tracking-wider uppercase mt-0.5">Full Access</p>
           </div>
         </div>
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20">
+        <button onClick={() => { localStorage.removeItem('authToken'); localStorage.removeItem('authUser'); window.location.href = '/login'; }} className="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold text-white/30 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all border border-transparent hover:border-red-500/20">
           <LogOut size={14} />
           Sign Out
         </button>

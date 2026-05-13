@@ -59,5 +59,12 @@ export default defineConfig({
     hmr: {
       overlay: true,
     },
+    proxy: {
+      // Proxy API requests through Local Gateway (port 8000)
+      '/api': {
+        target: (import.meta.env || {}).VITE_API_GATEWAY_URL || (import.meta.env || {}).VITE_GATEWAY_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
 })

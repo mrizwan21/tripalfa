@@ -14,6 +14,21 @@ export default defineConfig({
       '@tripalfa/shared-types': path.resolve(__dirname, '../../packages/shared-types'),
     },
   },
+  server: {
+    port: 5173,
+    proxy: {
+      // Proxy API requests through Local Gateway (port 8000)
+      '/api': {
+        target: process.env.VITE_GATEWAY_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      // B2B tenant API routes
+      '/tenant': {
+        target: process.env.VITE_GATEWAY_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
+  },
   // Build configuration to address large chunk warnings
   build: {
     // Increase the chunk size warning limit (default is 500KB)

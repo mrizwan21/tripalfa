@@ -18,8 +18,11 @@ Kong runtime is expected to be deployed locally (outside this repository deploym
 - Core route mapping: `infrastructure/wicked-config/routes/platform-core-routes.json`
 - Generated Kong declarative config: `infrastructure/kong/kong.yml`
 - Run preflight checks: `pnpm gateway:preflight`
+- Run full gateway verification: `pnpm gateway:verify`
+- Run runtime verification (requires local Kong): `pnpm gateway:verify-runtime`
 - Build config: `pnpm gateway:build`
 - Verify route coverage: `pnpm gateway:verify-routes`
+- Verify frontend gateway-only usage: `pnpm gateway:verify-frontends`
 - Start local Kong runtime: `pnpm gateway:start`
 - Sync to local Kong: `bash tools/scripts/bin/gateway_sync_local.sh`
 

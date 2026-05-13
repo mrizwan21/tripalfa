@@ -8,7 +8,7 @@ import { api } from "../../lib/api";
 import { NAV_LINKS, APP_NAME } from "../../lib/constants";
 import { useTranslation } from "../../lib/translation";
 import { useCurrency } from "../../lib/currency";
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -207,32 +207,36 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-14 items-center justify-between">
+    /* Apple Navigation Glass: 48px height, translucent dark bg, backdrop-filter blur */
+    <header className="sticky top-0 z-50 w-full nav-glass" style={{ height: '48px' }}>
+      <div className="container-apple h-full">
+        <div className="flex h-full items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center space-x-2 gap-2">
+            <Link to="/" className="flex items-center space-x-2 gap-2" aria-label="Home">
               {logoUrl ? (
                 <img
                   src={logoUrl}
                   alt={appName}
-                  className="h-8 w-auto object-contain"
+                  className="h-6 w-auto object-contain"
+                  style={{ maxHeight: '28px' }}
                 />
               ) : (
-                <span className="text-lg font-bold text-slate-900">
+                <span className="text-sm font-semibold text-white">
                   {appName}
                 </span>
               )}
             </Link>
 
-            <nav className="hidden md:flex items-center gap-5">
+            {/* Navigation Links - Apple style: 12px, weight 400, white text */}
+            <nav className="hidden md:flex items-center gap-5 h-full">
               {NAV_LINKS.map(({ href, icon: Icon, label }) => (
                 <Link
                   key={href}
                   to={href}
-                  className="flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-1.5 text-[12px] font-medium text-white/90 hover:text-white transition-colors h-full"
+                  style={{ fontSize: '12px', fontWeight: 400, letterSpacing: 'normal' }}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3 w-3" />
                   {label}
                 </Link>
               ))}
@@ -246,20 +250,21 @@ export function Header() {
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button
-                    variant="outline"
-                    size="default"
-                    className="flex items-center gap-2 bg-slate-50 rounded px-3 py-1 text-sm"
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 bg-transparent hover:bg-white/10 text-white px-3 py-1 text-[12px]"
+                    style={{ fontSize: '12px' }}
                   >
-                    <span className="text-lg">
+                    <span className="text-base">
                       {languages.find((l) => l.code === currentLang)?.flag ||
                         "🌐"}
                     </span>
-                    <span className="whitespace-nowrap">
+                    <span className="max-w-[80px] truncate">
                       {languages.find((l) => l.code === currentLang)?.name ||
                         currentLang}
                     </span>
                     <svg
-                      className="h-4 w-4 text-slate-600"
+                      className="h-3 w-3 text-white/70"
                       viewBox="0 0 20 20"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -278,16 +283,16 @@ export function Header() {
                 <DropdownMenu.Content
                   side="bottom"
                   align="end"
-                  className="min-w-[10rem] bg-white border rounded shadow p-1 z-50"
+                  className="min-w-[12rem] bg-white border rounded shadow-lg p-1 z-50"
                 >
                   {languages.map((l) => (
                     <DropdownMenu.Item
                       key={l.code}
                       onSelect={() => onChangeLanguage(l.code)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer rounded"
                     >
-                      <span className="text-lg">{l.flag || "🌐"}</span>
-                      <span>{l.name}</span>
+                      <span className="text-base">{l.flag || "🌐"}</span>
+                      <span className="truncate">{l.name}</span>
                     </DropdownMenu.Item>
                   ))}
                 </DropdownMenu.Content>
@@ -297,16 +302,17 @@ export function Header() {
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button
-                    variant="outline"
-                    size="default"
-                    className="flex items-center gap-2 bg-slate-50 rounded px-3 py-1 text-sm"
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center gap-2 bg-transparent hover:bg-white/10 text-white px-3 py-1 text-[12px]"
+                    style={{ fontSize: '12px' }}
                   >
-                    <span className="text-sm font-medium">
+                    <span className="font-medium">
                       {CUR_ICON_MAP[currency] || currency}
                     </span>
-                    <span className="whitespace-nowrap">{currency}</span>
+                    <span className="max-w-[60px] truncate">{currency}</span>
                     <svg
-                      className="h-4 w-4 text-slate-600"
+                      className="h-3 w-3 text-white/70"
                       viewBox="0 0 20 20"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
@@ -325,13 +331,13 @@ export function Header() {
                 <DropdownMenu.Content
                   side="bottom"
                   align="end"
-                  className="min-w-[8rem] bg-white border rounded shadow p-1 z-50"
+                  className="min-w-[6rem] bg-white border rounded shadow-lg p-1 z-50"
                 >
                   {currencies.map((c) => (
                     <DropdownMenu.Item
                       key={c}
                       onSelect={() => onChangeCurrency(c)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer"
+                      className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-slate-50 cursor-pointer rounded"
                     >
                       <span className="w-6 text-left">
                         {CUR_ICON_MAP[c] || c}
@@ -343,20 +349,21 @@ export function Header() {
               </DropdownMenu.Root>
             </div>
 
-            <div className="h-4 w-px bg-slate-200 hidden md:block" />
+            <div className="h-4 w-px bg-white/20 hidden md:block" />
 
             {/* Notifications (only when logged in) */}
             {isLoggedIn ? (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button
-                    variant="outline"
-                    size="default"
-                    className="relative p-2 rounded-md hover:bg-slate-100"
+                    variant="ghost"
+                    size="sm"
+                    className="relative p-2 rounded-md hover:bg-white/10 text-white"
+                    aria-label="Notifications"
                   >
-                    <Bell className="h-5 w-5 text-slate-700" />
+                    <Bell className="h-4 w-4" />
                     {unread > 0 && (
-                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold leading-none text-white bg-red-500 rounded-full gap-2">
+                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-[#0071e3] rounded-full">
                         {unread}
                       </span>
                     )}
@@ -366,12 +373,12 @@ export function Header() {
                 <DropdownMenu.Content
                   side="bottom"
                   align="end"
-                  className="min-w-[16rem] bg-white border rounded shadow p-2 z-50"
+                  className="min-w-[16rem] bg-white border rounded shadow-lg p-2 z-50"
                 >
-                  <div className="text-sm font-medium px-2 py-1">
+                  <div className="text-sm font-medium px-2 py-1 text-gray-900">
                     {t("header.notifications")}
                   </div>
-                  <div className="max-h-56 overflow-auto">
+                  <div className="max-h-56 overflow-y-auto scrollbar-thin">
                     {notifications.length === 0 ? (
                       <div className="px-3 py-2 text-sm text-slate-500">
                         No notifications
@@ -381,11 +388,11 @@ export function Header() {
                         <DropdownMenu.Item
                           key={n.id || JSON.stringify(n)}
                           onSelect={() => handleNotificationClick(n)}
-                          className={`flex items-start gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer ${!n.read ? "bg-white/5" : ""}`}
+                          className={`flex items-start gap-2 px-3 py-2 hover:bg-slate-50 cursor-pointer rounded ${!n.read ? "bg-slate-50" : ""}`}
                         >
-                          <div className="flex-1 gap-4">
+                          <div className="flex-1 gap-4 min-w-0">
                             <div
-                              className={`text-sm ${!n.read ? "font-semibold" : ""}`}
+                              className={`text-sm ${!n.read ? "font-semibold" : ""} truncate`}
                             >
                               {n.title || n.message || n.text}
                             </div>
@@ -400,7 +407,7 @@ export function Header() {
                   <div className="p-2 text-center">
                     <Button
                       variant="outline"
-                      size="default"
+                      size="sm"
                       onClick={() => (window.location.href = "/notifications")}
                       className="text-sm text-blue-600"
                     >
@@ -423,14 +430,16 @@ export function Header() {
               <>
                 <Link
                   to="/login"
-                  className="hidden md:flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900"
+                  className="hidden md:flex items-center gap-2 text-[12px] font-medium text-white/90 hover:text-white transition-colors"
+                  style={{ fontSize: '12px', fontWeight: 400 }}
                 >
-                  <LogIn className="h-4 w-4" />
+                  <LogIn className="h-3 w-3" />
                   {t("header.sign_in")}
                 </Link>
                 <Link
                   to="/register"
                   className="btn btn-primary btn-sm hidden md:flex"
+                  style={{ borderRadius: '980px', fontSize: '12px' }}
                 >
                   {t("header.register")}
                 </Link>
@@ -438,46 +447,47 @@ export function Header() {
             )}
 
             <Button
-              variant="outline"
-              size="default"
-              className="md:hidden p-2 text-slate-600"
+              variant="ghost"
+              size="sm"
+              className="md:hidden p-2 text-white hover:bg-white/10"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5" />
               )}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Full-screen overlay like Apple */}
       {isMenuOpen && (
-        <div className="md:hidden border-t bg-white">
-          <div className="space-y-1 px-4 py-3">
+        <div className="md:hidden fixed inset-0 bg-black/95 backdrop-blur-xl z-40 pt-16">
+          <div className="container-apple py-8 space-y-6">
             {NAV_LINKS.map(({ href, icon: Icon, label }) => (
               <Link
                 key={href}
                 to={href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50 hover:text-blue-600"
+                className="flex items-center gap-4 px-4 py-3 text-lg font-medium text-white/90 hover:text-white"
                 onClick={() => setIsMenuOpen(false)}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-6 w-6" />
                 {label}
               </Link>
             ))}
-            <div className="mt-4 border-t border-slate-100 pt-4 space-y-3">
+            <div className="border-t border-white/20 pt-6 space-y-4">
               <Link
                 to="/profile"
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50"
+                className="flex w-full items-center gap-4 px-4 py-3 text-lg font-medium text-white/90 hover:text-white"
               >
                 {t("header.language_currency")}
               </Link>
               <Link
                 to="/login"
-                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-base font-medium text-slate-600 hover:bg-slate-50"
+                className="flex w-full items-center gap-4 px-4 py-3 text-lg font-medium text-white/90 hover:text-white"
               >
                 Sign In
               </Link>
